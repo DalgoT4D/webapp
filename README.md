@@ -1,4 +1,4 @@
-## DDP_backend
+## DDP frontend
 
 This is a [Next.js](https://nextjs.org/) based project
 ## Getting Started
