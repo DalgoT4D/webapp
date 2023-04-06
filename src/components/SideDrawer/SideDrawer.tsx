@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { Fragment, ReactNode, useState } from 'react';
 import { useRouter } from 'next/router';
 import {
   Collapse,
@@ -63,7 +63,7 @@ export const SideDrawer = () => {
         const itemColor = selectedIndex === item.index ? 'primary' : 'inherit';
         return (
           !item.parent && (
-            <>
+            <Fragment key={item.title}>
               <ListItem>
                 <ItemButton
                   item={item}
@@ -104,7 +104,7 @@ export const SideDrawer = () => {
                   </List>
                 </Collapse>
               )}
-            </>
+            </Fragment>
           )
         );
       })}
