@@ -10,7 +10,7 @@ export default function Home() {
       </Head>
       <main className={styles.main}>
         <Typography variant="h1" gutterBottom color="primary.main">
-          DDP platform
+          DDP platform pipeline page
         </Typography>
       </main>
     </>

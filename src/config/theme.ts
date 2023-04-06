@@ -12,6 +12,9 @@ const primaryColor = '#00897B';
 // Create a theme instance.
 const theme = createTheme({
   palette: {
+    background: {
+      default: '#F5FAFA',
+    },
     primary: {
       main: primaryColor,
     },
@@ -36,6 +39,13 @@ const theme = createTheme({
           fontWeight: 700,
         },
       },
+    },
+    MuiListItemIcon: {
+      styleOverrides: {
+        root: {
+          minWidth: '34px'
+        }
+      }
     },
     MuiButton: {
       styleOverrides: {
