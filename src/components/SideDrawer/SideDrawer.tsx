@@ -28,6 +28,7 @@ const ItemButton: React.FC<ItemButtonProps> = ({
 }: ItemButtonProps) => (
   <ListItemButton
     disableRipple
+    data-test="listButton"
     onClick={() => onClick(item)}
     selected={isSelected}
   >
