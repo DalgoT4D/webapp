@@ -7,12 +7,21 @@ on:
     branches: [main]
 
 jobs:
-  cypress-run:
-    runs-on: ubuntu-22.04
+  test:
+    name: CI
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Cypress run
-        uses: cypress-io/github-action@v5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          component: true
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run test and generate coverage report
+        run: yarn test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
