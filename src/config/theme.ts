@@ -3,7 +3,7 @@ import { red } from '@mui/material/colors';
 import { Rajdhani } from 'next/font/google';
 
 export const rajdhani = Rajdhani({
-  weight: ['300', '400', '500', '600'],
+  weight: ['300', '400', '500', '600', "700"],
   subsets: ['devanagari'],
 });
 
@@ -56,7 +56,20 @@ const theme = createTheme({
         },
       },
     },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          fontWeight: 700,
+          fontSize: "1rem",
+          paddingLeft: 0,
+          paddingRight: 0,
+          marginRight: '1rem'
+
+        }
+      }
+    }
   },
+
 
   typography: {
     fontFamily: rajdhani.style.fontFamily,
