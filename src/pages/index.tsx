@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Data development platform</title>
+        <title>Development Data Platform</title>
       </Head>
       <main className={styles.main}>
         <Typography variant="h1" gutterBottom color="primary.main">
