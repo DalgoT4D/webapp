@@ -5,8 +5,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from '@/config/theme';
 import { Box } from '@mui/material';
+import { SWRConfig } from 'swr';
 
-import { SideDrawer } from '@/components/SideDrawer/SideDrawer';
 import { Main } from '@/components/Layouts/Main';
 import { Auth } from '@/components/Layouts/Auth';
 
@@ -16,9 +16,21 @@ export default function App({ Component, pageProps }: AppProps) {
       <ThemeProvider theme={theme}>
         <Box sx={{ display: 'flex' }}>
           <CssBaseline />
-          <Main>
-            <Component {...pageProps} />
-          </Main>
+          <SWRConfig
+            value={{
+              refreshInterval: 3000,
+              fetcher: (resource, init) =>
+                fetch(resource, {
+                  headers: {
+                    Authorization: 'Bearer ',
+                  },
+                }).then((res) => res.json()),
+            }}
+          >
+            <Main>
+              <Component {...pageProps} />
+            </Main>
+          </SWRConfig>
         </Box>
       </ThemeProvider>
     </main>
