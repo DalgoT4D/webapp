@@ -3,6 +3,8 @@ import styles from '@/styles/Home.module.css';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import React from 'react';
 import useSWR from 'swr';
+import { backendUrl } from '@/config/constant';
+import { PageHead } from '@/components/PageHead';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -30,7 +32,6 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 console.log(process.env);
 export default function Ingest() {
   const [value, setValue] = React.useState(0);
@@ -45,9 +46,7 @@ export default function Ingest() {
 
   return (
     <>
-      <Head>
-        <title>Data development platform</title>
-      </Head>
+      <PageHead title="Development Data Platform" />
       <main className={styles.main}>
         <Typography
           sx={{ fontWeight: 700 }}
