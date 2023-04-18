@@ -11,8 +11,6 @@ const rows: Array<Array<string>> = [
   createData('AWS-Postgres', 'Postgres', 'host.docker.internal'),
 ];
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
 const headers = ['Name', 'Type', 'Host'];
 
 export const Destinations = () => {
