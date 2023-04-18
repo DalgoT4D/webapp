@@ -1,56 +1,46 @@
-import { useState } from 'react';
+import { Box, Button, TextField } from '@mui/material';
 import { signIn } from 'next-auth/react';
 import { redirect } from 'next/dist/server/api-utils';
+import { useForm } from 'react-hook-form';
 
 export const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-
-  const onUsernameChange = (event: any) => {
-    console.log('value', event.target.value);
-    setUsername(event.target.value);
-  };
-
-  const onPasswordChange = (event: any) => {
-    console.log('value', event.target.value);
-    setPassword(event.target.value);
-  };
-
-  const onSubmit = async () => {
+  const { register, handleSubmit } = useForm();
+  const onSubmit = async (data: any) => {
     const result = await signIn('credentials', {
-      username: username,
-      password: password,
+      username: data.username,
+      password: data.password,
       redirect: true,
       callbackUrl: '/',
     });
-    console.log(result);
   };
 
   return (
-    <div>
-      <h1>Login</h1>
-      <div>
-        <label>Username</label>
-        <input
-          type="text"
-          name="username"
-          value={username}
-          onChange={onUsernameChange}
-        />
-      </div>
-      <div>
-        <label>Password</label>
-        <input
-          type="password"
-          name="password"
-          value={password}
-          onChange={onPasswordChange}
-        />
-      </div>
-      <div>
-        <button onClick={onSubmit}>Login</button>
-      </div>
-    </div>
+    <Box>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Box>
+          <TextField
+            id="outlined-basic"
+            label="Business email*"
+            variant="outlined"
+            {...register('username', { required: true })}
+          />
+        </Box>
+        <Box>
+          <TextField
+            id="outlined-password-input"
+            label="Password*"
+            type="password"
+            autoComplete="current-password"
+            {...register('password', { required: true })}
+          />
+        </Box>
+        <Box>
+          <Button variant="contained" type="submit">
+            Login
+          </Button>
+        </Box>
+      </form>
+    </Box>
   );
 };
 
