@@ -17,7 +17,7 @@ export const Main = ({ children }: any) => {
           }).then((res) => res.json()),
       }}
     >
-      <SideDrawer /> {children}{' '}
+      <SideDrawer /> {children}
     </SWRConfig>
   ) : (
     children
