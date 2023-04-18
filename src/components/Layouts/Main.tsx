@@ -1,9 +1,13 @@
+import { useSession } from 'next-auth/react';
+
 import { SideDrawer } from '../SideDrawer/SideDrawer';
 
 export const Main = ({ children }: any) => {
+  const { data: session, status } = useSession();
+
   return (
     <>
-      <SideDrawer />
+      {session ? <SideDrawer /> : ''}
       {children}
     </>
   );
