@@ -4,6 +4,22 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { backendUrl } from '@/config/constant';
 
 export const authOptions: NextAuthOptions = {
+  callbacks: {
+    async session({ session, token }: any) {
+      if (token.id) {
+        session.user.token = token.id
+      }
+      // Send properties to the client, like an access_token and user id from a provider.
+      return session
+    }
+    , async jwt({ token, user }: any) {
+      // Persist the OAuth access_token and or the user id to the token right after signin
+      if (user?.token) {
+        token.id = user.token;
+      }
+      return token
+    }
+  },
   // Configure one or more authentication providers
   providers: [
     CredentialsProvider({
@@ -33,7 +49,6 @@ export const authOptions: NextAuthOptions = {
         });
 
         const user = await res.json();
-        console.log('user', user);
         if (res.ok && user) {
           // Any object returned will be saved in `user` property of the JWT
           return user;

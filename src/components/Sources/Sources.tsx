@@ -37,12 +37,6 @@ export const Sources = () => {
     return <CircularProgress />;
   }
 
-  if (data && data.length > 0) {
-    data.forEach((element: any) => {
-      rows.push(createData(element.name, element.sourceDest));
-    });
-  }
-
   return (
     <List openDialog={() => {}} title="Source" headers={headers} rows={rows} />
   );
