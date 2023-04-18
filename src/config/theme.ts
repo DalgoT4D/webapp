@@ -19,7 +19,7 @@ const theme = createTheme({
       main: primaryColor,
     },
     secondary: {
-      main: '#003D37',
+      main: '#758397',
     },
     error: {
       main: red.A400,
@@ -117,6 +117,17 @@ const theme = createTheme({
           padding: "0.2rem",
           border: 0,
           overflow: 'hidden'
+        }
+      }
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        notchedOutline: {
+          border: '0px'
+        },
+        root: {
+          backgroundColor: '#F2F2EB',
+
         }
       }
     }

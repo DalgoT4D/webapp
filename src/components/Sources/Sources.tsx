@@ -1,14 +1,14 @@
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { CircularProgress } from '@mui/material';
-import { Pager } from '../Pager/Pager';
+import { List } from '../List/List';
 import { backendUrl } from '@/config/constant';
 
 function createData(details: string, type: string) {
   return [details, type];
 }
 
-const rows: Array<Array<string>> = [
+const fakeRows: Array<Array<string>> = [
   createData('Stir-SurveyCTO - 1', 'SurveyCTO'),
   createData('Stir-SurveyCTO - 2', 'SurveyCTO'),
 ];
@@ -16,9 +16,22 @@ const rows: Array<Array<string>> = [
 const headers = ['Source details', 'Type'];
 
 export const Sources = () => {
+  const [rows, setRows] = useState<Array<Array<string>>>([]);
   const { data, isLoading, error } = useSWR(
     `${backendUrl}/api/airbyte/sources`
   );
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      const rows = data.map((element: any) => [
+        element.name,
+        element.sourceDest,
+      ]);
+      setRows(rows);
+    } else {
+      setRows(fakeRows);
+    }
+  }, [data]);
 
   if (isLoading) {
     return <CircularProgress />;
@@ -30,5 +43,7 @@ export const Sources = () => {
     });
   }
 
-  return <Pager headers={headers} rows={rows} />;
+  return (
+    <List openDialog={() => {}} title="Source" headers={headers} rows={rows} />
+  );
 };
