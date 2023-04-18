@@ -1,10 +1,10 @@
-import Head from 'next/head';
 import styles from '@/styles/Home.module.css';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import React from 'react';
 import { Connections } from '@/components/Connections/Connections';
 import { Sources } from '@/components/Sources/Sources';
 import { Destinations } from '@/components/Destinations/Destinations';
+import { PageHead } from '@/components/PageHead';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -37,9 +37,7 @@ export default function Ingest() {
 
   return (
     <>
-      <Head>
-        <title>Data development platform</title>
-      </Head>
+      <PageHead title="Development Data Platform" />
       <main className={styles.main}>
         <Typography
           sx={{ fontWeight: 700 }}

@@ -2,6 +2,7 @@ import * as React from 'react';
 import useSWR from 'swr';
 import { CircularProgress } from '@mui/material';
 import { Pager } from '../Pager/Pager';
+import { backendUrl } from '@/config/constant';
 
 function createData(details: string, type: string) {
   return [details, type];
@@ -11,8 +12,6 @@ const rows: Array<Array<string>> = [
   createData('Stir-SurveyCTO - 1', 'SurveyCTO'),
   createData('Stir-SurveyCTO - 2', 'SurveyCTO'),
 ];
-
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const headers = ['Source details', 'Type'];
 
