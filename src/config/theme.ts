@@ -67,6 +67,58 @@ const theme = createTheme({
 
         }
       }
+    },
+    MuiTable: {
+      styleOverrides:
+      {
+        root: {
+          borderCollapse: 'separate',
+          borderSpacing: '0 15px'
+        }
+      }
+    },
+    MuiTableContainer: {
+      styleOverrides: {
+        root: {
+          background: "transparent",
+          boxShadow: 'none'
+        }
+      }
+    },
+
+    MuiTableBody: {
+      styleOverrides: {
+        root: {
+          background: "white"
+        }
+      }
+    },
+
+    MuiTableRow: {
+      styleOverrides: {
+        head: {
+          borderRadius: '0px',
+          transform: 'none',
+          boxShadow: "none",
+        },
+        root: {
+          borderRadius: '12px',
+          transform: 'scale(1)',
+          boxShadow: "0px 1px 5px rgba(0,0,0,0.1)",
+        }
+      }
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        body: {
+          border: 0,
+        },
+        head: {
+          padding: "0.2rem",
+          border: 0,
+          overflow: 'hidden'
+        }
+      }
     }
   },
 

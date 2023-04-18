@@ -1,9 +1,9 @@
-import Head from 'next/head';
 import styles from '@/styles/Home.module.css';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import React from 'react';
-import useSWR from 'swr';
-import { backendUrl } from '@/config/constant';
+import { Connections } from '@/components/Connections/Connections';
+import { Sources } from '@/components/Sources/Sources';
+import { Destinations } from '@/components/Destinations/Destinations';
 import { PageHead } from '@/components/PageHead';
 
 interface TabPanelProps {
@@ -23,22 +23,13 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
 
-console.log(process.env);
 export default function Ingest() {
   const [value, setValue] = React.useState(0);
-
-  const { data, isLoading, error } = useSWR(
-    `${backendUrl}/api/airbyte/connections`
-  );
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -67,12 +58,14 @@ export default function Ingest() {
             <Tab label="Destinations" />
           </Tabs>
         </Box>
-        <TabPanel value={value} index={0}></TabPanel>
+        <TabPanel value={value} index={0}>
+          <Connections />
+        </TabPanel>
         <TabPanel value={value} index={1}>
-          Sources
+          <Sources />
         </TabPanel>
         <TabPanel value={value} index={2}>
-          Destinations
+          <Destinations />
         </TabPanel>
       </main>
     </>
