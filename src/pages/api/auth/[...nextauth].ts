@@ -7,18 +7,18 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, token }: any) {
       if (token.id) {
-        session.user.token = token.id
+        session.user.token = token.id;
       }
       // Send properties to the client, like an access_token and user id from a provider.
-      return session
-    }
-    , async jwt({ token, user }: any) {
+      return session;
+    },
+    async jwt({ token, user }: any) {
       // Persist the OAuth access_token and or the user id to the token right after signin
       if (user?.token) {
         token.id = user.token;
       }
-      return token
-    }
+      return token;
+    },
   },
   // Configure one or more authentication providers
   providers: [
@@ -64,9 +64,9 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
-  // pages: {
-  //   signIn: '/login',
-  // },
+  pages: {
+    signIn: '/login',
+  },
 };
 
 export default NextAuth(authOptions);

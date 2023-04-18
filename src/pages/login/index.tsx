@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { signIn } from 'next-auth';
+import { signIn } from 'next-auth/react';
 import { redirect } from 'next/dist/server/api-utils';
 
 export const Login = () => {
