@@ -11,6 +11,8 @@ import {
   ListItemText,
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { signOut } from 'next-auth/react';
+
 import { MenuOption, drawerWidth, sideMenu } from '@/config/menu';
 
 export interface ItemButtonProps {
@@ -129,6 +131,9 @@ export const SideDrawer = () => {
       variant="permanent"
     >
       {getList}
+      <ListItemButton onClick={() => signOut()}>
+        <ListItemText>Sign out</ListItemText>
+      </ListItemButton>
     </Drawer>
   );
 };

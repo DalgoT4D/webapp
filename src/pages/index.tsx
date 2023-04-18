@@ -7,11 +7,9 @@ export default function Home() {
   return (
     <>
       <PageHead title="Development Data Platform" />
-      <main className={styles.main}>
-        <Typography variant="h1" gutterBottom color="primary.main">
-          DDP platform
-        </Typography>
-      </main>
+      <Typography variant="h1" gutterBottom color="primary.main">
+        DDP platform
+      </Typography>
     </>
   );
 }
