@@ -2,6 +2,7 @@ import * as React from 'react';
 import useSWR from 'swr';
 import { CircularProgress } from '@mui/material';
 import { Pager } from '../Pager/Pager';
+import { backendUrl } from '@/config/constant';
 
 function createData(name: string, type: string, host: string) {
   return [name, type, host];
