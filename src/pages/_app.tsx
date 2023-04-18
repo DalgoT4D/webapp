@@ -18,9 +18,9 @@ export default function App({ Component, pageProps }: AppProps) {
           <CssBaseline />
           <SWRConfig
             value={{
-              refreshInterval: 3000,
               fetcher: (resource, init) =>
                 fetch(resource, {
+                  ...init,
                   headers: {
                     Authorization: 'Bearer ',
                   },
