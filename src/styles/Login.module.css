@@ -1,0 +1,9 @@
+.Container {
+  flex-grow: 1;
+  margin: 10px;
+  background-color: '#F5F5F5';
+}
+
+.Input {
+  padding: 10px;
+}
