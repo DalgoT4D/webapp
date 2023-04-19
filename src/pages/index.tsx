@@ -1,5 +1,3 @@
-import Head from 'next/head';
-import styles from '@/styles/Home.module.css';
 import { Typography } from '@mui/material';
 import { PageHead } from '@/components/PageHead';
 

@@ -16,14 +16,12 @@ export default function App({
   return (
     <main className={rajdhani.className}>
       <ThemeProvider theme={theme}>
-        <Box sx={{ display: 'flex' }}>
-          <CssBaseline />
-          <SessionProvider session={session}>
-            <Main>
-              <Component {...pageProps} />
-            </Main>
-          </SessionProvider>
-        </Box>
+        <CssBaseline />
+        <SessionProvider session={session}>
+          <Main>
+            <Component {...pageProps} />
+          </Main>
+        </SessionProvider>
       </ThemeProvider>
     </main>
   );

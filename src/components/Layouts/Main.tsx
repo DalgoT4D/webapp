@@ -2,6 +2,8 @@ import { useSession } from 'next-auth/react';
 import { SWRConfig } from 'swr';
 
 import { SideDrawer } from '../SideDrawer/SideDrawer';
+import { Header } from '../Header/Header';
+import { Box } from '@mui/material';
 
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
@@ -17,7 +19,11 @@ export const Main = ({ children }: any) => {
           }).then((res) => res.json()),
       }}
     >
-      <SideDrawer /> {children}
+      <Header />
+      <Box sx={{ display: 'flex', pt: 6 }}>
+        <SideDrawer />
+        {children}
+      </Box>
     </SWRConfig>
   ) : (
     children
