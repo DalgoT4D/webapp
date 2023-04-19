@@ -124,6 +124,7 @@ export const SideDrawer = () => {
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
+          paddingTop: 8,
         },
       }}
       open
@@ -131,9 +132,6 @@ export const SideDrawer = () => {
       variant="permanent"
     >
       {getList}
-      <ListItemButton onClick={() => signOut()}>
-        <ListItemText>Sign out</ListItemText>
-      </ListItemButton>
     </Drawer>
   );
 };

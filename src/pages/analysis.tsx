@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import styles from '@/styles/Home.module.css';
-import { Typography } from '@mui/material';
+import Image from 'next/image';
+import Superset from '@/images/superset.png';
 
 export default function Analysis() {
   return (
@@ -8,11 +9,13 @@ export default function Analysis() {
       <Head>
         <title>Data development platform</title>
       </Head>
-      <main className={styles.main}>
-        <Typography variant="h1" gutterBottom color="primary.main">
-          DDP platform analysis page
-        </Typography>
-      </main>
+      <div>
+        <Image
+          src={Superset}
+          alt="Banner"
+          style={{ width: '100%', height: '100%' }}
+        />
+      </div>
     </>
   );
 }
