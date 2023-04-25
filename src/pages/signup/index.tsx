@@ -1,6 +1,7 @@
 import { Box, Button, Grid, Paper, TextField, Link } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import Banner from '@/images/banner.png';
@@ -15,11 +16,11 @@ export const SignUp = () => {
   if (session?.user.token) {
     router.push('/');
   }
-  var signupError;
+  const [signupError, setSignupError] = useState(null);
   const { register, handleSubmit } = useForm();
   const onSubmit = async (data: any) => {
     console.log("register using " + data.username + " and " + data.password);
-    signupError = null;
+    setSignupError(null);
     fetch(`${backendUrl}/api/organizations/users/`, {
       method: 'POST',
       headers: {
@@ -48,15 +49,13 @@ export const SignUp = () => {
       } else {
         console.error("caught application error");
         response.json().then((errorMessage) => {
-          signupError = errorMessage.error;
-          console.log("set signupError = ");
-          console.log(signupError);
+          setSignupError(errorMessage.error);
         })
       }
     }).catch((error) => {
       console.error("caught network error ");
       console.error(error);
-      signupError = error;
+      setSignupError(error);
     });
 
   };
@@ -102,7 +101,7 @@ export const SignUp = () => {
                   </Link>
                 </Box>
               </form>
-              <div>signupError: {signupError}</div>
+              <div>{signupError}</div>
             </Paper>
           </Grid>
         </Grid>
