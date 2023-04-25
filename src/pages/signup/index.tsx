@@ -19,7 +19,6 @@ export const SignUp = () => {
   const [signupError, setSignupError] = useState(null);
   const { register, handleSubmit } = useForm();
   const onSubmit = async (data: any) => {
-    console.log("register using " + data.username + " and " + data.password);
     setSignupError(null);
     fetch(`${backendUrl}/api/organizations/users/`, {
       method: 'POST',
@@ -31,14 +30,8 @@ export const SignUp = () => {
         password: data.password,
       }),
     }).then((response) => {
-      console.log(response);
       if (response.ok) {
-        console.log("success");
         response.json().then((message) => {
-          console.log("email=" + message.email);
-          console.log("active=" + message.active);
-          console.log("role=" + message.role);
-          console.log("org=" + message.org);
           signIn('credentials', {
             username: data.username,
             password: data.password,
@@ -47,14 +40,11 @@ export const SignUp = () => {
           });
         })
       } else {
-        console.error("caught application error");
         response.json().then((errorMessage) => {
           setSignupError(errorMessage.error);
         })
       }
     }).catch((error) => {
-      console.error("caught network error ");
-      console.error(error);
       setSignupError(error);
     });
 
