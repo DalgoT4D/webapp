@@ -17,6 +17,7 @@ import { backendUrl } from '@/config/constant';
 import { Close } from '@mui/icons-material';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
+import { SourceConfigInput } from './SourceConfigInput';
 
 function createData(details: string, type: string) {
   return [details, type];
@@ -37,9 +38,9 @@ export const Sources = () => {
   );
   const [showDialog, setShowDialog] = useState(false);
   const [sourceDefs, setSourceDefs] = useState([]);
-  const [sourceDefSpecs, setSourceDefSpecs] = useState(null);
+  const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<Object>>([]);
 
-  const { register, handleSubmit, control, watch } = useForm({
+  const { register, handleSubmit, control, watch, reset } = useForm({
     defaultValues: {
       name: '',
       sourceDef: { id: '', label: '' },
@@ -88,7 +89,7 @@ export const Sources = () => {
   }, [showDialog]);
 
   useEffect(() => {
-    if (watchSelectedSourceDef.id) {
+    if (watchSelectedSourceDef?.id) {
       (async () => {
         await fetch(
           `${backendUrl}/api/airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`,
@@ -103,8 +104,17 @@ export const Sources = () => {
             return response.json();
           })
           .then((data) => {
-            setSourceDefSpecs(data);
-            console.log('setting source def specs', data);
+            // Prepare the specs config before setting it
+            let specsConfigFields: Array<Object> = [];
+            for (const [key, value] of Object.entries(data?.properties || {})) {
+              specsConfigFields.push({
+                ...(value as object),
+                field: key,
+                required: data?.required.includes(key),
+              });
+            }
+            setSourceDefSpecs(specsConfigFields);
+            console.log(specsConfigFields);
           })
           .catch((err) => {
             console.log('something went wrong', err);
@@ -113,11 +123,9 @@ export const Sources = () => {
     }
   }, [watchSelectedSourceDef]);
 
-  if (isLoading) {
-    return <CircularProgress />;
-  }
-
   const handleClose = () => {
+    reset();
+    setSourceDefSpecs([]);
     setShowDialog(false);
   };
 
@@ -126,7 +134,7 @@ export const Sources = () => {
   };
 
   const onSubmit = async (data: any) => {
-    console.log('submitting form');
+    console.log('submitting form', data);
     // await fetch(`${backendUrl}/api/airbyte/connections/`, {
     //   method: 'POST',
     //   headers: {
@@ -142,6 +150,10 @@ export const Sources = () => {
     //   handleClose();
     // });
   };
+
+  if (isLoading) {
+    return <CircularProgress />;
+  }
 
   return (
     <>
@@ -183,6 +195,11 @@ export const Sources = () => {
                     )}
                   />
                 )}
+              />
+              <Box sx={{ m: 2 }} />
+              <SourceConfigInput
+                specs={sourceDefSpecs}
+                registerFormFieldValue={register}
               />
             </Box>
           </DialogContent>
