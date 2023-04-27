@@ -19,28 +19,19 @@ import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { SourceConfigInput } from './SourceConfigInput';
 
-function createData(details: string, type: string) {
-  return [details, type];
-}
-
-const fakeRows: Array<Array<string>> = [
-  createData('Stir-SurveyCTO - 1', 'SurveyCTO'),
-  createData('Stir-SurveyCTO - 2', 'SurveyCTO'),
-];
-
 const headers = ['Source details', 'Type'];
 
 export const Sources = () => {
   const { data: session }: any = useSession();
   const [rows, setRows] = useState<Array<Array<string>>>([]);
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, error, mutate } = useSWR(
     `${backendUrl}/api/airbyte/sources`
   );
   const [showDialog, setShowDialog] = useState(false);
   const [sourceDefs, setSourceDefs] = useState([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<Object>>([]);
 
-  const { register, handleSubmit, control, watch, reset } = useForm({
+  const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
       name: '',
       sourceDef: { id: '', label: '' },
@@ -57,8 +48,6 @@ export const Sources = () => {
         element.sourceDest,
       ]);
       setRows(rows);
-    } else {
-      setRows(fakeRows);
     }
   }, [data]);
 
@@ -114,7 +103,6 @@ export const Sources = () => {
               });
             }
             setSourceDefSpecs(specsConfigFields);
-            console.log(specsConfigFields);
           })
           .catch((err) => {
             console.log('something went wrong', err);
@@ -134,21 +122,24 @@ export const Sources = () => {
   };
 
   const onSubmit = async (data: any) => {
-    console.log('submitting form', data);
-    // await fetch(`${backendUrl}/api/airbyte/connections/`, {
-    //   method: 'POST',
-    //   headers: {
-    //     Authorization: `Bearer ${session?.user.token}`,
-    //   },
-    //   body: JSON.stringify({
-    //     name: data.name,
-    //     sourceId: data.sources.id,
-    //     destinationId: data.destinations.id,
-    //     streamNames: ['some_random_stream_name'],
-    //   }),
-    // }).then(() => {
-    //   handleClose();
-    // });
+    await fetch(`${backendUrl}/api/airbyte/sources/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session?.user.token}`,
+      },
+      body: JSON.stringify({
+        name: data.name,
+        sourceDefId: data.sourceDef.id,
+        config: data.config,
+      }),
+    })
+      .then(() => {
+        mutate();
+        handleClose();
+      })
+      .catch((err) => {
+        console.log('something went wrong', err);
+      });
   };
 
   if (isLoading) {
@@ -200,6 +191,8 @@ export const Sources = () => {
               <SourceConfigInput
                 specs={sourceDefSpecs}
                 registerFormFieldValue={register}
+                control={control}
+                setFormValue={setValue}
               />
             </Box>
           </DialogContent>
