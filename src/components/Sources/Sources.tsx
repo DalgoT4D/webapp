@@ -64,7 +64,7 @@ export const Sources = () => {
             return response.json();
           })
           .then((data) => {
-            const sourceDefRows = data.map((element: any) => ({
+            const sourceDefRows = data?.map((element: any) => ({
               label: element.name,
               id: element.sourceDefinitionId,
             }));
@@ -202,7 +202,12 @@ export const Sources = () => {
             <Button variant="contained" type="submit">
               Save changes and test
             </Button>
-            <Button color="secondary" variant="outlined" onClick={handleClose}>
+            <Button
+              color="secondary"
+              variant="outlined"
+              onClick={handleClose}
+              data-testid="cancel"
+            >
               Cancel
             </Button>
           </DialogActions>
