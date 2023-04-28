@@ -6,8 +6,8 @@ export interface MultiTagInput {
   field: string;
   label: string;
   fieldValueArr: Array<string>;
-  onFieldChange: Function;
-  setFormValue: Function;
+  onFieldChange: (...args: any) => any;
+  setFormValue: (...args: any) => any;
 }
 
 const MultiTagInput = ({
@@ -20,8 +20,8 @@ const MultiTagInput = ({
   const [currentValue, setCurrentValue] = useState<string>('');
 
   const handleChipClose = (e: any) => {
-    let tempArr: any = fieldValueArr || [];
-    let updatedTempArr: Array<string> = [].concat(
+    const tempArr: any = fieldValueArr || [];
+    const updatedTempArr: Array<string> = [].concat(
       tempArr.slice(0, Number(e.target.id)),
       tempArr.slice(Number(e.target.id) + 1, tempArr.length)
     );
