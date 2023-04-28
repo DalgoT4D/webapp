@@ -29,7 +29,7 @@ export const Sources = () => {
   );
   const [showDialog, setShowDialog] = useState(false);
   const [sourceDefs, setSourceDefs] = useState([]);
-  const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<Object>>([]);
+  const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
 
   const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
@@ -94,7 +94,7 @@ export const Sources = () => {
           })
           .then((data) => {
             // Prepare the specs config before setting it
-            let specsConfigFields: Array<Object> = [];
+            const specsConfigFields: Array<any> = [];
             for (const [key, value] of Object.entries(data?.properties || {})) {
               specsConfigFields.push({
                 ...(value as object),

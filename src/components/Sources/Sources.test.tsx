@@ -63,7 +63,7 @@ describe('Sources', () => {
     });
 
     // Close dialogue box
-    let closeButton = screen.getByTestId('CloseIcon');
+    const closeButton = screen.getByTestId('CloseIcon');
     userEvent.click(closeButton);
     await waitFor(() => {
       expect(() => screen.getByText('Add a new source')).toThrow();
@@ -85,7 +85,7 @@ describe('Sources', () => {
     });
 
     // Close dialogue box
-    let closeButton = screen.getByTestId('cancel');
+    const closeButton = screen.getByTestId('cancel');
     userEvent.click(closeButton);
     await waitFor(() => {
       expect(() => screen.getByText('Add a new source')).toThrow();

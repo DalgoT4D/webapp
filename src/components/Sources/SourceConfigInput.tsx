@@ -5,9 +5,9 @@ import { Controller } from 'react-hook-form';
 
 export interface SourceConfigInputprops {
   specs: Array<any>;
-  registerFormFieldValue: Function;
+  registerFormFieldValue: (...args: any) => any;
   control: any;
-  setFormValue: Function;
+  setFormValue: (...args: any) => any;
 }
 
 export const SourceConfigInput = ({
