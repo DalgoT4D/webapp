@@ -14,8 +14,9 @@ export default function Transform() {
   const [progressMessages, setProgressMessages] = useState([]);
   const [setupStatus, setSetupStatus] = useState("not-started");
   const [failureMessage, setFailureMessage] = useState(null);
+  const [workspace, setWorkspace] = useState({ status: '', gitrepo_url: '', target_name: '', target_schema: '' });
 
-  var checkProgress = async function (taskId: string) {
+  const checkProgress = async function (taskId: string) {
     await fetch(`${backendUrl}/api/tasks/${taskId}`, {
       method: 'GET',
       headers: {
@@ -37,7 +38,7 @@ export default function Transform() {
             setFailureMessage(lastMessage['message']);
 
           } else {
-            setTimeout(() => { checkProgress(taskId) }, 1000);
+            setTimeout(() => { checkProgress(taskId) }, 2000);
           }
         });
       }
@@ -74,6 +75,54 @@ export default function Transform() {
     });
   };
 
+  async function fetchDbtWorkspace() {
+    await fetch(`${backendUrl}/api/dbt/dbt_workspace`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${session?.user.token}`,
+      },
+    }).then((response) => {
+      if (response.ok) {
+        response.json().then((message) => {
+          if (message.error === 'no dbt workspace has been configured') {
+            setWorkspace({ ...workspace, status: 'fetched' });
+            // do nothing
+          } else {
+            message.status = 'fetched';
+            setWorkspace(message);
+          }
+        });
+      } else {
+        response.json().then((message) => {
+          console.error(message);
+        })
+      }
+    });
+  }
+
+  if (workspace.status === '') {
+
+    fetchDbtWorkspace();
+  }
+
+
+  // async function fetchCurrentUser() {
+  //   await fetch(`${backendUrl}/api/currentuser`, {
+  //     method: 'GET',
+  //     headers: {
+  //       Authorization: `Bearer ${session?.user.token}`,
+  //     },
+  //   }).then((response) => {
+  //     if (response.ok) {
+  //       response.json().then((message) => {
+  //         console.log(message);
+  //       });
+  //     }
+  //   });
+  // }
+
+  // fetchCurrentUser();
+
   return (
     <>
       <PageHead title="Development Data Platform" />
@@ -85,6 +134,14 @@ export default function Transform() {
           <Grid container columns={5}>
             <Grid item xs={8}>
               <Paper elevation={3} sx={{ p: 4 }}>
+
+                {workspace.status &&
+                  <>
+                    <div>{workspace.gitrepo_url}</div>
+                    <div>dbt target: {workspace.target_name}</div>
+                    <div>dbt target schema: {workspace.target_schema}</div>
+                  </>
+                }
 
                 {
                   setupStatus === 'not-started' &&
@@ -109,7 +166,8 @@ export default function Transform() {
                   setupStatus === 'started' &&
                   <>
                     <div>Setting up workspace...</div>
-                    <div>{progressMessages.map(message => <div key={message.stepnum}>{message.message}</div>)}</div>
+                    <div>{progressMessages.map(message => <div key={message.stepnum}>{message.stepnum}. {message.message}</div>)}</div>
+                    <div>...</div>
                   </>
                 }
                 {
