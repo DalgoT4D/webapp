@@ -33,13 +33,17 @@ export const Destinations = () => {
     }
   }, [data]);
 
+  const handleClickOpen = () => {
+    const a = 1;
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
 
   return (
     <List
-      openDialog={() => {}}
+      openDialog={handleClickOpen}
       title="Destination"
       headers={headers}
       rows={rows}

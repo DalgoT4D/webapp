@@ -1,20 +1,53 @@
 import { Box, Button, Grid, Paper, TextField, Link } from '@mui/material';
-import { signIn } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import Banner from '@/images/banner.png';
-
+import { backendUrl } from '@/config/constant';
+import { signIn } from 'next-auth/react';
 import styles from '@/styles/Login.module.css';
 
-export const Login = () => {
+export const SignUp = () => {
+
+  const { data: session }: any = useSession();
+  const router = useRouter();
+  if (session?.user.token) {
+    router.push('/');
+  }
+  const [signupError, setSignupError] = useState(null);
   const { register, handleSubmit } = useForm();
   const onSubmit = async (data: any) => {
-    const result = await signIn('credentials', {
-      username: data.username,
-      password: data.password,
-      redirect: true,
-      callbackUrl: '/',
+    setSignupError(null);
+    fetch(`${backendUrl}/api/organizations/users/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session?.user.token}`,
+      },
+      body: JSON.stringify({
+        email: data.username,
+        password: data.password,
+      }),
+    }).then((response) => {
+      if (response.ok) {
+        response.json().then((message) => {
+          signIn('credentials', {
+            username: data.username,
+            password: data.password,
+            redirect: true,
+            callbackUrl: '/',
+          });
+        })
+      } else {
+        response.json().then((errorMessage) => {
+          setSignupError(errorMessage.error);
+        })
+      }
+    }).catch((error) => {
+      setSignupError(error);
     });
+
   };
 
   return (
@@ -49,15 +82,16 @@ export const Login = () => {
                 </Box>
                 <Box className={styles.Input}>
                   <Button variant="contained" type="submit">
-                    Login
+                    Sign Up
                   </Button>
-                  <Link href="/signup">
+                  <Link href="/login">
                     <Button variant="contained" type="button">
-                      Sign Up
+                      Login
                     </Button>
                   </Link>
                 </Box>
               </form>
+              <div>{signupError}</div>
             </Paper>
           </Grid>
         </Grid>
@@ -70,4 +104,4 @@ export const Login = () => {
   );
 };
 
-export default Login;
+export default SignUp;
