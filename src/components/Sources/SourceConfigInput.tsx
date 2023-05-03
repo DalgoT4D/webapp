@@ -21,13 +21,13 @@ export const SourceConfigInput = ({
   const [showPasswords, setShowPasswords] = useState<any>({});
 
   const handleClickShowPassword = (field: string) => {
-    let tempShowPasswords: any = { ...showPasswords };
+    const tempShowPasswords: any = { ...showPasswords };
     tempShowPasswords[field] = !showPasswords[field];
     setShowPasswords(tempShowPasswords);
   };
 
   useEffect(() => {
-    let tempShowPasswords: any = {};
+    const tempShowPasswords: any = {};
     specs.forEach((element) => {
       if (element?.airbyte_secret) {
         tempShowPasswords[element.field] = false;
