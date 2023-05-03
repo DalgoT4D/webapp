@@ -4,7 +4,6 @@ import { Sources } from './Sources';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
-const user = userEvent.setup();
 
 describe('Sources', () => {
   const mockSession: Session = {
@@ -13,7 +12,6 @@ describe('Sources', () => {
   };
 
   // Mock fetch to handle useEffect in components
-  let originFetch: any;
   beforeEach(() => {
     const fakeResponse = {};
     const mRes = { json: jest.fn().mockResolvedValueOnce(fakeResponse) };

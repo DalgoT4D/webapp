@@ -10,7 +10,6 @@ import { signIn } from 'next-auth/react';
 import styles from '@/styles/Login.module.css';
 
 export const SignUp = () => {
-
   const { data: session }: any = useSession();
   const router = useRouter();
   if (session?.user.token) {
@@ -29,25 +28,27 @@ export const SignUp = () => {
         email: data.username,
         password: data.password,
       }),
-    }).then((response) => {
-      if (response.ok) {
-        response.json().then((message) => {
-          signIn('credentials', {
-            username: data.username,
-            password: data.password,
-            redirect: true,
-            callbackUrl: '/',
+    })
+      .then((response) => {
+        if (response.ok) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          response.json().then((message) => {
+            signIn('credentials', {
+              username: data.username,
+              password: data.password,
+              redirect: true,
+              callbackUrl: '/',
+            });
           });
-        })
-      } else {
-        response.json().then((errorMessage) => {
-          setSignupError(errorMessage.error);
-        })
-      }
-    }).catch((error) => {
-      setSignupError(error);
-    });
-
+        } else {
+          response.json().then((errorMessage) => {
+            setSignupError(errorMessage.error);
+          });
+        }
+      })
+      .catch((error) => {
+        setSignupError(error);
+      });
   };
 
   return (
