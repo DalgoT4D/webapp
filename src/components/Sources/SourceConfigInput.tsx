@@ -58,6 +58,7 @@ export const SourceConfigInput = ({
               variant="outlined"
               {...registerFormFieldValue(`config.${spec.field}`, {
                 required: spec.required,
+                valueAsNumber: true,
               })}
               defaultValue={spec?.default}
               type="number"
