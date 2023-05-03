@@ -97,6 +97,7 @@ export const Sources = () => {
             const specsConfigFields: Array<any> = [];
             for (const [key, value] of Object.entries(data?.properties || {})) {
               specsConfigFields.push({
+                airbyte_secret: false,
                 ...(value as object),
                 field: key,
                 required: data?.required.includes(key),
