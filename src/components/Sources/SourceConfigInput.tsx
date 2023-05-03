@@ -96,12 +96,11 @@ export const SourceConfigInput = ({
                 name={`config.${spec.field}`}
                 control={control}
                 rules={{ required: spec.required }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field: { value } }) => (
                   <MultiTagInput
                     field={`config.${spec.field}`}
                     label={spec.title}
                     fieldValueArr={value}
-                    onFieldChange={onChange}
                     setFormValue={setFormValue}
                   />
                 )}
