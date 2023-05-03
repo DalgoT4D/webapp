@@ -19,7 +19,11 @@ export const List = ({ title, openDialog, headers, rows }: ListProps) => {
   return (
     <>
       <Box display="flex" justifyContent="flex-end">
-        <Button variant="contained" onClick={() => openDialog()}>
+        <Button
+          data-testid={`add-new-${title}`.toLowerCase()}
+          variant="contained"
+          onClick={() => openDialog()}
+        >
           + New {title}
         </Button>
       </Box>
