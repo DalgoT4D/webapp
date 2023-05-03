@@ -42,9 +42,7 @@ export const Connections = () => {
   const [rows, setRows] = useState<Array<Array<string>>>([]);
   const [sources, setSources] = useState<Array<string>>([]);
   const [destinations, setDestinations] = useState<Array<string>>([]);
-  const { data, isLoading, error } = useSWR(
-    `${backendUrl}/api/airbyte/connections`
-  );
+  const { data, isLoading } = useSWR(`${backendUrl}/api/airbyte/connections`);
 
   const { data: sourcesData } = useSWR(`${backendUrl}/api/airbyte/sources`);
   const { data: destinationData } = useSWR(

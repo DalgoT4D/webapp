@@ -11,7 +11,6 @@ import {
   ListItemText,
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
-import { signOut } from 'next-auth/react';
 
 import { MenuOption, drawerWidth, sideMenu } from '@/config/menu';
 
