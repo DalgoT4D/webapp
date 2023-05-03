@@ -1,12 +1,11 @@
 import { Box, Chip, Stack, TextField } from '@mui/material';
 import React, { useState } from 'react';
-import { Delete, Close } from '@mui/icons-material';
+import { Close } from '@mui/icons-material';
 
 export interface MultiTagInput {
   field: string;
   label: string;
   fieldValueArr: Array<string>;
-  onFieldChange: (...args: any) => any;
   setFormValue: (...args: any) => any;
 }
 
@@ -14,7 +13,6 @@ const MultiTagInput = ({
   field,
   label,
   fieldValueArr,
-  onFieldChange,
   setFormValue,
 }: MultiTagInput) => {
   const [currentValue, setCurrentValue] = useState<string>('');
