@@ -67,6 +67,8 @@ export const DestinationConfigInput = ({
               ></TextField>
               <Box sx={{ m: 2 }} />
             </React.Fragment>
+          ) : spec.type === 'object' ? (
+            {}
           ) : (
             ''
           )
