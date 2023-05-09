@@ -11,7 +11,7 @@ export const Main = ({ children }: any) => {
   return session?.user.token ? (
     <SWRConfig
       value={{
-        fetcher: (resource, init) =>
+        fetcher: (resource) =>
           fetch(resource, {
             headers: {
               Authorization: `Bearer ${session?.user.token}`,

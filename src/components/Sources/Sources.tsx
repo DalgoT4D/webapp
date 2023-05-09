@@ -24,7 +24,7 @@ const headers = ['Source details', 'Type'];
 export const Sources = () => {
   const { data: session }: any = useSession();
   const [rows, setRows] = useState<Array<Array<string>>>([]);
-  const { data, isLoading, error, mutate } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/sources`
   );
   const [showDialog, setShowDialog] = useState(false);
@@ -97,6 +97,7 @@ export const Sources = () => {
             const specsConfigFields: Array<any> = [];
             for (const [key, value] of Object.entries(data?.properties || {})) {
               specsConfigFields.push({
+                airbyte_secret: false,
                 ...(value as object),
                 field: key,
                 required: data?.required.includes(key),

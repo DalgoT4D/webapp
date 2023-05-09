@@ -16,9 +16,7 @@ const headers = ['Name', 'Type', 'Host'];
 
 export const Destinations = () => {
   const [rows, setRows] = useState<Array<Array<string>>>([]);
-  const { data, isLoading, error } = useSWR(
-    `${backendUrl}/api/airbyte/destinations`
-  );
+  const { data, isLoading } = useSWR(`${backendUrl}/api/airbyte/destinations`);
 
   useEffect(() => {
     if (data && data.length > 0) {
@@ -34,6 +32,7 @@ export const Destinations = () => {
   }, [data]);
 
   const handleClickOpen = () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const a = 1;
   };
 
