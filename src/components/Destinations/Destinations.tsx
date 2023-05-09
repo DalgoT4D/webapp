@@ -29,7 +29,9 @@ export const Destinations = () => {
   );
   const [showDialog, setShowDialog] = useState(false);
   const [destinationDefs, setDestinationDefs] = useState([]);
-  const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>([]);
+  const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>(
+    []
+  );
 
   const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
@@ -77,6 +79,81 @@ export const Destinations = () => {
     }
   }, [showDialog]);
 
+  const prePrepareConfigSpecs = (
+    result: any,
+    data: any,
+    parent = 'parent',
+    exclude: any[] = [],
+    dropdownEnums: any[] = []
+  ) => {
+    for (const [key, value] of Object.entries<any>(data?.properties || {})) {
+      // The parent oneOf key has already been added to the array
+      if (exclude.includes(key)) {
+        dropdownEnums.push(value?.const);
+        continue;
+      }
+
+      let objParentKey = `${parent}.${key}`;
+
+      if (value?.type === 'object') {
+        let commonField: string[] = [];
+
+        // Find common property among all array elements of 'oneOf' array
+        if (value['oneOf'].length > 1) {
+          value['oneOf']?.forEach((ele: any) => {
+            if (commonField.length > 0) {
+              commonField = ele?.required.filter((value: any) =>
+                commonField.includes(value)
+              );
+            } else {
+              commonField = ele?.required;
+            }
+          });
+        }
+
+        let objResult = {
+          field: `${objParentKey}.${commonField}`,
+          type: value?.type,
+          order: value?.order,
+          title: value?.title,
+          description: value?.description,
+          parent:
+            dropdownEnums.length > 0
+              ? dropdownEnums[dropdownEnums.length - 1]
+              : '',
+          enum: [],
+          specs: [],
+        };
+
+        result.push(objResult);
+
+        value?.oneOf.forEach((eachEnum: any) => {
+          prePrepareConfigSpecs(
+            objResult.specs,
+            eachEnum,
+            objParentKey,
+            commonField,
+            objResult.enum
+          );
+        });
+
+        continue;
+      }
+
+      result.push({
+        ...value,
+        field: objParentKey,
+        parent:
+          dropdownEnums.length > 0
+            ? dropdownEnums[dropdownEnums.length - 1]
+            : '',
+        required: data?.required.includes(key),
+      });
+    }
+
+    return result;
+  };
+
   useEffect(() => {
     if (watchSelectedDestinationDef?.id) {
       (async () => {
@@ -94,14 +171,13 @@ export const Destinations = () => {
           })
           .then((data) => {
             // Prepare the specs config before setting it
-            const specsConfigFields: Array<any> = [];
-            for (const [key, value] of Object.entries(data?.properties || {})) {
-              specsConfigFields.push({
-                ...(value as object),
-                field: key,
-                required: data?.required.includes(key),
-              });
-            }
+            let specsConfigFields = prePrepareConfigSpecs(
+              [],
+              data,
+              'config',
+              [],
+              []
+            );
             setDestinationDefSpecs(specsConfigFields);
           })
           .catch((err) => {
@@ -122,6 +198,7 @@ export const Destinations = () => {
   };
 
   const onSubmit = async (data: any) => {
+    console.log(data);
     await fetch(`${backendUrl}/api/airbyte/destinations/`, {
       method: 'POST',
       headers: {
@@ -193,6 +270,7 @@ export const Destinations = () => {
                 registerFormFieldValue={register}
                 control={control}
                 setFormValue={setValue}
+                configName={'config'}
               />
             </Box>
           </DialogContent>
