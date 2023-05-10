@@ -45,13 +45,13 @@ export const DestinationConfigInput = ({
     fieldOnChangeFunc.onChange(dropDownVal);
 
     // Fetch the current selected spec of type object based on selection
-    let selectedSpec: any = connectorSpecs.find(
+    const selectedSpec: any = connectorSpecs.find(
       (ele: any) => ele.field === field
     );
 
     // Filter all specs that are under selectedSpec and have parent as selectedSpec
     // Check if any child specs has type object
-    let filteredChildSpecs: any = [];
+    const filteredChildSpecs: any = [];
     selectedSpec?.specs.forEach((ele: any) => {
       if (ele.parent === dropDownVal) {
         // Check if the child has another level or not
@@ -72,11 +72,11 @@ export const DestinationConfigInput = ({
     // Update the specs state
 
     // Find the specs that will have parent in the following enum array
-    let enumsToRemove: string[] = selectedSpec?.enum.filter(
+    const enumsToRemove: string[] = selectedSpec?.enum.filter(
       (ele: any) => ele !== dropDownVal
     );
 
-    let tempSpecs = connectorSpecs
+    const tempSpecs = connectorSpecs
       .filter((sp: any) => !enumsToRemove.includes(sp?.parent))
       .concat(filteredChildSpecs);
 
@@ -204,7 +204,7 @@ export const DestinationConfigInput = ({
                 control={control}
                 rules={{ required: spec.required }}
                 defaultValue={spec?.default}
-                render={({ field: { value, onChange } }) => (
+                render={({ field: { value } }) => (
                   <Stack direction={'row'} alignItems="center" gap={'10%'}>
                     <Box>{spec.title}</Box>
                     <Switch
@@ -224,7 +224,7 @@ export const DestinationConfigInput = ({
                 name={`${spec.field}`}
                 control={control}
                 rules={{ required: spec.required }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field: { value } }) => (
                   <MultiTagInput
                     field={`${spec.field}`}
                     label={spec.title}

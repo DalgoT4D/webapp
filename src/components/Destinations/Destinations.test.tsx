@@ -4,7 +4,6 @@ import { Destinations } from './Destinations';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
-const user = userEvent.setup();
 
 describe('Destinations', () => {
   const mockSession: Session = {
@@ -13,7 +12,6 @@ describe('Destinations', () => {
   };
 
   // Mock fetch to handle useEffect in components
-  let originFetch: any;
   beforeEach(() => {
     const fakeResponse = {};
     const mRes = { json: jest.fn().mockResolvedValueOnce(fakeResponse) };
