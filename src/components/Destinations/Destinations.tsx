@@ -24,7 +24,7 @@ const headers = ['Destination details', 'Type'];
 export const Destinations = () => {
   const { data: session }: any = useSession();
   const [rows, setRows] = useState<Array<Array<string>>>([]);
-  const { data, isLoading, error, mutate } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/destinations`
   );
   const [showDialog, setShowDialog] = useState(false);
@@ -105,7 +105,7 @@ export const Destinations = () => {
       // The parent oneOf key has already been added to the array
       if (exclude.includes(key)) continue;
 
-      let objParentKey = `${parent}.${key}`;
+      const objParentKey = `${parent}.${key}`;
 
       if (value?.type === 'object') {
         let commonField: string[] = [];
@@ -123,7 +123,7 @@ export const Destinations = () => {
           });
         }
 
-        let objResult = {
+        const objResult = {
           field: `${objParentKey}.${commonField}`,
           type: value?.type,
           order: value?.order,
@@ -183,7 +183,7 @@ export const Destinations = () => {
           })
           .then((data) => {
             // Prepare the specs config before setting it
-            let specsConfigFields = prePrepareConfigSpecs(
+            const specsConfigFields = prePrepareConfigSpecs(
               [],
               data,
               'config',
