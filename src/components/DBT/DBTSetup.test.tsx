@@ -43,12 +43,14 @@ describe('dbt Setup', () => {
         <DBTSetup />
       </SessionProvider>
     );
-    const inputfield = screen.getByTestId('github-url');
-    expect(inputfield).toBeInTheDocument();
+    const urlinputfield = screen.getByTestId('github-url');
+    expect(urlinputfield).toBeInTheDocument();
+
+    const patinputfield = screen.getByTestId('github-pat');
+    expect(patinputfield).toBeInTheDocument();
+
     const button = screen.getByTestId('save-github-url');
-    expect(button).toHaveTextContent(
-      'Save'
-    );
+    expect(button).toHaveTextContent('Save');
   });
 
 });

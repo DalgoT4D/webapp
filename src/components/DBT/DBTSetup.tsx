@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 export const DBTSetup = () => {
 
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm({ defaultValues: { schema: 'public' } });
   const { data: session }: any = useSession();
   const [progressMessages, setProgressMessages] = useState([]);
   const [setupStatus, setSetupStatus] = useState("not-started");
@@ -32,6 +32,7 @@ export const DBTSetup = () => {
 
           if (lastMessage['status'] === 'completed') {
             setSetupStatus("completed");
+            fetchDbtWorkspace();
 
           } else if (lastMessage['status'] === 'failed') {
             setSetupStatus("failed");
@@ -49,20 +50,25 @@ export const DBTSetup = () => {
 
     setSetupStatus("started");
 
+    var payload = {
+      gitrepoUrl: data.gitrepoUrl,
+      dbtVersion: "1.4.5",
+      profile: {
+        name: 'dbt',
+        target: 'dev',
+        target_configs_schema: data.schema,
+      }
+    } as any;
+    if (data.gitrepoAccessToken) {
+      payload.gitrepoAccessToken = data.gitrepoAccessToken;
+    }
+
     await fetch(`${backendUrl}/api/dbt/workspace/`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${session?.user.token}`,
       },
-      body: JSON.stringify({
-        gitrepoUrl: data.gitrepoUrl,
-        dbtVersion: "1.4.5",
-        profile: {
-          name: 'dbt',
-          target: 'dev',
-          target_configs_schema: 'public',
-        }
-      }),
+      body: JSON.stringify(payload),
     }).then((response) => {
 
       if (response.ok) {
@@ -167,6 +173,22 @@ export const DBTSetup = () => {
               label="GitHub repo URL"
               variant="outlined"
               {...register('gitrepoUrl', { required: true })}
+            />
+          </Box>
+          <Box className={styles.Input}>
+            <TextField
+              data-testid="github-pat"
+              label="Personal access token"
+              variant="outlined"
+              {...register('gitrepoAccessToken', { required: false })}
+            />
+          </Box>
+          <Box className={styles.Input}>
+            <TextField
+              data-testid="dbt-target-schema"
+              label="dbt target schema"
+              variant="outlined"
+              {...register('schema')}
             />
           </Box>
           <Box className={styles.Input}>
