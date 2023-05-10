@@ -86,12 +86,16 @@ export const Destinations = () => {
     exclude: any[] = [],
     dropdownEnums: any[] = []
   ) => {
+    // Push the parent enum in the array
+    if (exclude.length > 0) {
+      if (exclude[0] in data?.properties) {
+        dropdownEnums.push(data?.properties[exclude[0]]?.const);
+      }
+    }
+
     for (const [key, value] of Object.entries<any>(data?.properties || {})) {
       // The parent oneOf key has already been added to the array
-      if (exclude.includes(key)) {
-        dropdownEnums.push(value?.const);
-        continue;
-      }
+      if (exclude.includes(key)) continue;
 
       let objParentKey = `${parent}.${key}`;
 
