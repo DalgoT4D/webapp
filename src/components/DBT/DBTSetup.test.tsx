@@ -1,11 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { DBTSetup } from './DBTSetup';
-import userEvent from '@testing-library/user-event';
+// import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
-const user = userEvent.setup();
+// const user = userEvent.setup();
 
 const pushMock = jest.fn();
 

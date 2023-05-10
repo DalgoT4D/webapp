@@ -7,9 +7,9 @@ import { useState } from 'react';
 
 export const DBTSetup = () => {
 
-  const { register, handleSubmit } = useForm({ defaultValues: { schema: 'public' } });
+  const { register, handleSubmit } = useForm({ defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: 'public' } });
   const { data: session }: any = useSession();
-  const [progressMessages, setProgressMessages] = useState([]);
+  const [progressMessages, setProgressMessages] = useState<any[]>([]);
   const [setupStatus, setSetupStatus] = useState("not-started");
   const [failureMessage, setFailureMessage] = useState(null);
   const [workspace, setWorkspace] = useState({ status: '', gitrepo_url: '', target_name: '', target_schema: '' });
@@ -28,7 +28,7 @@ export const DBTSetup = () => {
 
           setProgressMessages(message['progress']);
 
-          var lastMessage = message['progress'][message['progress'].length - 1];
+          const lastMessage = message['progress'][message['progress'].length - 1];
 
           if (lastMessage['status'] === 'completed') {
             setSetupStatus("completed");
@@ -50,7 +50,7 @@ export const DBTSetup = () => {
 
     setSetupStatus("started");
 
-    var payload = {
+    const payload = {
       gitrepoUrl: data.gitrepoUrl,
       dbtVersion: "1.4.5",
       profile: {
@@ -125,31 +125,31 @@ export const DBTSetup = () => {
   }
 
 
-  async function fetchCurrentUser() {
+  // async function fetchCurrentUser() {
 
-    if (!session) {
-      return;
-    }
+  //   if (!session) {
+  //     return;
+  //   }
 
-    await fetch(`${backendUrl}/api/currentuser`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-    }).then((response) => {
+  //   await fetch(`${backendUrl}/api/currentuser`, {
+  //     method: 'GET',
+  //     headers: {
+  //       Authorization: `Bearer ${session?.user.token}`,
+  //     },
+  //   }).then((response) => {
 
-      if (response.ok) {
-        response.json().then((message) => {
-          console.log(message);
-        });
-      } else {
+  //     if (response.ok) {
+  //       response.json().then((message) => {
+  //         console.log(message);
+  //       });
+  //     } else {
 
-        response.json().then((message) => {
-          console.error(message);
-        })
-      }
-    });
-  }
+  //       response.json().then((message) => {
+  //         console.error(message);
+  //       })
+  //     }
+  //   });
+  // }
 
   // fetchCurrentUser();
 
