@@ -33,7 +33,15 @@ export const Destinations = () => {
     []
   );
 
-  const { register, handleSubmit, control, watch, reset, setValue } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    setValue,
+    unregister,
+  } = useForm({
     defaultValues: {
       name: '',
       destinationDef: { id: '', label: '' },
@@ -202,16 +210,16 @@ export const Destinations = () => {
   };
 
   const onSubmit = async (data: any) => {
-    console.log(data);
-    await fetch(`${backendUrl}/api/airbyte/destinations/`, {
+    await fetch(`${backendUrl}/api/organizations/warehouse/`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${session?.user.token}`,
       },
       body: JSON.stringify({
+        wtype: data.destinationDef.label.toLowerCase(),
         name: data.name,
         destinationDefId: data.destinationDef.id,
-        config: data.config,
+        airbyteConfig: data.config,
       }),
     })
       .then(() => {
@@ -274,7 +282,7 @@ export const Destinations = () => {
                 registerFormFieldValue={register}
                 control={control}
                 setFormValue={setValue}
-                configName={'config'}
+                unregisterFormField={unregister}
               />
             </Box>
           </DialogContent>
