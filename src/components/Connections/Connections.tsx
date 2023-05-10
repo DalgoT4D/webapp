@@ -36,6 +36,7 @@ export const Connections = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [rows, setRows] = useState<Array<Array<string>>>([]);
 
+  const [connections, setConnections] = useState<object[]>([]);
   const [sources, setSources] = useState<Array<string>>([]);
   const [sourceStreams, setSourceStreams] = useState<Array<string>>([]);
 
@@ -51,6 +52,13 @@ export const Connections = () => {
         element.lastSync,
       ]);
       setRows(rows);
+    }
+  }, [data]);
+
+  // when the connection list changes
+  useEffect(() => {
+    if (data && data.length > 0) {
+      setConnections(data);
     }
   }, [data]);
 
@@ -174,6 +182,24 @@ export const Connections = () => {
     });
   };
 
+  const syncConnection = (connection: any) => {
+    console.log(connection);
+    (async () => {
+      await fetch(`${backendUrl}/api/airbyte/connections/${connection.blockId}/sync/`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session?.user.token}`,
+        },
+      }).then((response) => {
+        if (response.ok) {
+          response.json().then((message) => {
+            console.log(message);
+          })
+        }
+      });
+    })();
+  };
+
   return (
     <>
       <Dialog open={showDialog} onClose={handleClose}>
@@ -266,6 +292,17 @@ export const Connections = () => {
         headers={headers}
         rows={rows}
       />
+
+      {connections && connections.length > 0 &&
+        <>
+          <div>(/for demo/)</div>
+          {connections.map((connection: any) =>
+            <button key={connection.blockId} onClick={() => syncConnection(connection)}>SYNC "{connection.name}"</button>
+          )}
+        </>
+      }
+
+
     </>
   );
 };
