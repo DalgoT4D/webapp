@@ -124,7 +124,7 @@ export const Connections = () => {
               //     },
               //     "catalogId": "f1b42ce1-dc1f-4633-963c-dd28aff0aef9"
               // }
-              var streamNames: any[] = [];
+              const streamNames: any[] = [];
               message['catalog']['streams'].forEach((el: any) => {
                 streamNames.push(el.stream.name);
               })
@@ -153,7 +153,7 @@ export const Connections = () => {
 
   // create a new connection
   const onSubmit = async (data: any) => {
-    var payload: any = {
+    const payload: any = {
       name: data.name,
       sourceId: data.sources.id,
       streamNames: sourceStreams,
