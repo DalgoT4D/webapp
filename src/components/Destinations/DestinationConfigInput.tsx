@@ -70,7 +70,9 @@ export const DestinationConfigInput = ({
       ele.order = selectedSpec.order;
     });
     // Update the specs state
-    let tempSpecs = specs.concat(filteredChildSpecs);
+    let tempSpecs = connectorSpecs
+      .filter((sp: any) => !selectedSpec?.enum.includes(sp?.parent))
+      .concat(filteredChildSpecs);
     setConnectorSpecs(tempSpecs);
   };
 
