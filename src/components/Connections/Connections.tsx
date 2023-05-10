@@ -22,12 +22,12 @@ const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 
 export const Connections = () => {
   const { data: session }: any = useSession();
-  const { register, handleSubmit, control, watch } = useForm({
+  const { register, handleSubmit, control, watch, reset } = useForm({
     defaultValues: {
       name: '',
       sources: { label: '', id: '' },
       destinations: { label: '', id: '' },
-      destinationSchema: 'public',
+      destinationSchema: '',
     },
   });
 
@@ -41,7 +41,6 @@ export const Connections = () => {
 
   const { data, isLoading, mutate } = useSWR(`${backendUrl}/api/airbyte/connections`);
   const { data: sourcesData } = useSWR(`${backendUrl}/api/airbyte/sources`);
-  const { data: destinationData } = useSWR(`${backendUrl}/api/airbyte/destinations`);
 
   // when the connection list changes
   useEffect(() => {
@@ -148,6 +147,7 @@ export const Connections = () => {
   };
 
   const handleClose = () => {
+    reset();
     setShowDialog(false);
   };
 
@@ -169,6 +169,7 @@ export const Connections = () => {
       body: JSON.stringify(payload),
     }).then(() => {
       mutate();
+      reset();
       handleClose();
     });
   };
