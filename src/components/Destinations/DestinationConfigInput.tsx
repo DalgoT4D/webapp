@@ -118,7 +118,7 @@ export const DestinationConfigInput = ({
                   label={spec.const}
                   variant="outlined"
                   value={spec?.const}
-                  {...registerFormFieldValue(`${spec.field}`, {
+                  {...registerFormFieldValue(spec.field, {
                     required: spec.required,
                   })}
                 ></TextField>
@@ -130,8 +130,8 @@ export const DestinationConfigInput = ({
                   sx={{ width: '100%' }}
                   label={spec?.title}
                   variant="outlined"
-                  type={showPasswords[`${spec.field}`] ? 'text' : 'password'}
-                  {...registerFormFieldValue(`${spec.field}`, {
+                  type={showPasswords[spec.field] ? 'text' : 'password'}
+                  {...registerFormFieldValue(spec.field, {
                     required: spec.required,
                   })}
                   defaultValue={spec?.default}
@@ -140,12 +140,10 @@ export const DestinationConfigInput = ({
                       <InputAdornment position="end">
                         <Box>
                           <IconButton
-                            onClick={() =>
-                              handleClickShowPassword(`${spec.field}`)
-                            }
+                            onClick={() => handleClickShowPassword(spec.field)}
                             edge="end"
                           >
-                            {showPasswords[`${spec.field}`] ? (
+                            {showPasswords[spec.field] ? (
                               <VisibilityOutlinedIcon />
                             ) : (
                               <VisibilityOffOutlinedIcon />
@@ -161,7 +159,7 @@ export const DestinationConfigInput = ({
             ) : spec?.enum?.length > 0 ? ( // type == string and a dropdown select
               <React.Fragment key={idx}>
                 <Controller
-                  name={`${spec.field}`}
+                  name={spec.field}
                   control={control}
                   rules={{ required: spec?.required }}
                   render={({ field }) => (
@@ -189,7 +187,7 @@ export const DestinationConfigInput = ({
                   sx={{ width: '100%' }}
                   label={spec?.title}
                   variant="outlined"
-                  {...registerFormFieldValue(`${spec.field}`, {
+                  {...registerFormFieldValue(spec.field, {
                     required: spec.required,
                   })}
                   defaultValue={spec?.default}
@@ -200,7 +198,7 @@ export const DestinationConfigInput = ({
           ) : spec.type === 'boolean' ? (
             <React.Fragment key={idx}>
               <Controller
-                name={`${spec.field}`}
+                name={spec.field}
                 control={control}
                 rules={{ required: spec.required }}
                 defaultValue={spec?.default}
@@ -210,7 +208,7 @@ export const DestinationConfigInput = ({
                     <Switch
                       value={value}
                       onChange={(event, value) => {
-                        setFormValue(`${spec.field}`, value);
+                        setFormValue(spec.field, value);
                       }}
                     />
                   </Stack>
@@ -221,12 +219,12 @@ export const DestinationConfigInput = ({
           ) : spec.type === 'array' ? (
             <React.Fragment key={idx}>
               <Controller
-                name={`${spec.field}`}
+                name={spec.field}
                 control={control}
                 rules={{ required: spec.required }}
                 render={({ field: { value } }) => (
                   <MultiTagInput
-                    field={`${spec.field}`}
+                    field={spec.field}
                     label={spec.title}
                     fieldValueArr={value}
                     setFormValue={setFormValue}
@@ -241,7 +239,7 @@ export const DestinationConfigInput = ({
                 sx={{ width: '100%' }}
                 label={spec?.title}
                 variant="outlined"
-                {...registerFormFieldValue(`${spec.field}`, {
+                {...registerFormFieldValue(spec.field, {
                   required: spec.required,
                   valueAsNumber: true,
                 })}
@@ -253,7 +251,7 @@ export const DestinationConfigInput = ({
           ) : spec.type === 'object' ? (
             <React.Fragment key={idx}>
               <Controller
-                name={`${spec.field}`}
+                name={spec.field}
                 control={control}
                 rules={{ required: spec?.required }}
                 render={({ field }) => (
