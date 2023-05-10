@@ -163,14 +163,14 @@ export const DBTSetup = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <Box className={styles.Input} >
             <TextField
-              id="outlined-basic"
+              data-testid="github-url"
               label="GitHub repo URL"
               variant="outlined"
               {...register('gitrepoUrl', { required: true })}
             />
           </Box>
           <Box className={styles.Input}>
-            <Button variant="contained" type="submit">
+            <Button variant="contained" type="submit" data-testid="save-github-url">
               Save
             </Button>
           </Box>
