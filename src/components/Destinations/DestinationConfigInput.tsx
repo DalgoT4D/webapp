@@ -18,7 +18,7 @@ export interface DestinationConfigInputprops {
   registerFormFieldValue: (...args: any) => any;
   control: any;
   setFormValue: (...args: any) => any;
-  configName: 'config';
+  unregisterFormField: (...args: any) => any;
 }
 
 export const DestinationConfigInput = ({
@@ -26,7 +26,7 @@ export const DestinationConfigInput = ({
   registerFormFieldValue,
   control,
   setFormValue,
-  configName,
+  unregisterFormField,
 }: DestinationConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<any>([]);
   const [showPasswords, setShowPasswords] = useState<any>({});
@@ -70,9 +70,21 @@ export const DestinationConfigInput = ({
       ele.order = selectedSpec.order;
     });
     // Update the specs state
+
+    // Find the specs that will have parent in the following enum array
+    let enumsToRemove: string[] = selectedSpec?.enum.filter(
+      (ele: any) => ele !== dropDownVal
+    );
+
     let tempSpecs = connectorSpecs
-      .filter((sp: any) => !selectedSpec?.enum.includes(sp?.parent))
+      .filter((sp: any) => !enumsToRemove.includes(sp?.parent))
       .concat(filteredChildSpecs);
+
+    // Unregister the form fields that have parent in enumsToRemove
+    connectorSpecs.forEach((sp: any) => {
+      if (enumsToRemove.includes(sp?.parent)) unregisterFormField(sp?.field);
+    });
+
     setConnectorSpecs(tempSpecs);
   };
 
