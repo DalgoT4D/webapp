@@ -1,5 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { SWRConfig } from 'swr';
+import { useRouter } from 'next/router';
 
 import { SideDrawer } from '../SideDrawer/SideDrawer';
 import { Header } from '../Header/Header';
@@ -8,7 +9,10 @@ import { Box } from '@mui/material';
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
 
-  return session?.user.token ? (
+  const router = useRouter();
+  const inSignup = router.pathname === '/signup/createorg' || router.pathname === '/signup';
+
+  return (session?.user.token && !inSignup) ? (
     <SWRConfig
       value={{
         fetcher: (resource) =>
