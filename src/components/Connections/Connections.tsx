@@ -156,6 +156,7 @@ export const Connections = () => {
 
   const handleClose = () => {
     reset();
+    setSourceStreams([]);
     setShowDialog(false);
   };
 
