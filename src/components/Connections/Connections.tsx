@@ -297,7 +297,7 @@ export const Connections = () => {
         <>
           <div>(/for demo/)</div>
           {connections.map((connection: any) =>
-            <button key={connection.blockId} onClick={() => syncConnection(connection)}>SYNC "{connection.name}"</button>
+            <button key={connection.blockId} onClick={() => syncConnection(connection)}>SYNC &quot{connection.name}&quot</button>
           )}
         </>
       }
