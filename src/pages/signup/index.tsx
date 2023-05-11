@@ -37,7 +37,7 @@ export const SignUp = () => {
               username: data.username,
               password: data.password,
               redirect: true,
-              callbackUrl: '/',
+              callbackUrl: '/signup/createorg',
             });
           });
         } else {
