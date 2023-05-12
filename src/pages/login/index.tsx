@@ -1,20 +1,29 @@
 import { Box, Button, Grid, Paper, TextField, Link } from '@mui/material';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import Banner from '@/images/banner.png';
 
 import styles from '@/styles/Login.module.css';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 
 export const Login = () => {
   const { register, handleSubmit } = useForm();
-  const onSubmit = async (data: any) => {
-    await signIn('credentials', {
-      username: data.username,
-      password: data.password,
-      redirect: true,
+  const router = useRouter();
+
+  const onSubmit = async (reqData: any) => {
+    const res: any = await signIn('credentials', {
+      username: reqData.username,
+      password: reqData.password,
+      redirect: false,
       callbackUrl: '/',
     });
+    if (res.ok) {
+      router.push('/');
+    } else {
+      // show toast error
+    }
   };
 
   return (
@@ -51,9 +60,7 @@ export const Login = () => {
                   <Button variant="contained" type="submit">
                     Login
                   </Button>
-                  <Link href="/signup">
-                    Sign Up
-                  </Link>
+                  <Link href="/signup">Sign Up</Link>
                 </Box>
               </form>
             </Paper>
