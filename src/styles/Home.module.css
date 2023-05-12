@@ -12,3 +12,8 @@
   z-index: 2;
   font-family: var(--font-mono);
 }
+
+.Input {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
