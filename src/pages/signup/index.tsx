@@ -86,9 +86,7 @@ export const SignUp = () => {
                     Sign Up
                   </Button>
                   <Link href="/login">
-                    <Button variant="contained" type="button">
-                      Login
-                    </Button>
+                    Login
                   </Link>
                 </Box>
               </form>

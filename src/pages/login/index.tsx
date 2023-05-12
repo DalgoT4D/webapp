@@ -52,9 +52,7 @@ export const Login = () => {
                     Login
                   </Button>
                   <Link href="/signup">
-                    <Button variant="contained" type="button">
-                      Sign Up
-                    </Button>
+                    Sign Up
                   </Link>
                 </Box>
               </form>
