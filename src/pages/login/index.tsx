@@ -9,7 +9,7 @@ import styles from '@/styles/Login.module.css';
 export const Login = () => {
   const { register, handleSubmit } = useForm();
   const onSubmit = async (data: any) => {
-    const result = await signIn('credentials', {
+    await signIn('credentials', {
       username: data.username,
       password: data.password,
       redirect: true,
