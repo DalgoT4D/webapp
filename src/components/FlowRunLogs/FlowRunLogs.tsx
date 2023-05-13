@@ -8,12 +8,13 @@
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
+import { useEffect } from 'react';
 
 export const FlowRunLogs = ({ flowRunId }: any) => {
 
   const { data: session }: any = useSession();
   const [logs, setLogs] = useState<Array<logMessage>>([]);
-  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [done, setDone] = useState<boolean>(false);
 
   type logMessage = {
     level: number;
@@ -23,34 +24,39 @@ export const FlowRunLogs = ({ flowRunId }: any) => {
 
   const fetchLogs = async () => {
 
-    await fetch(`${backendUrl}/api/prefect/flow_runs/${flowRunId}/logs`, {
+    if (done) {
+      return;
+    }
+
+    const offset = logs.length;
+    const response = await fetch(`${backendUrl}/api/prefect/flow_runs/${flowRunId}/logs?offset=${offset}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${session?.user.token}`,
       },
-    }).then((response) => {
-
-      if (response.ok) {
-        response.json().then(({ logs: packet }) => {
-          // console.log(packet);
-          setLogs(packet.logs);
-          setHasMore(false);
-        });
-      } else {
-        setHasMore(false);
-      }
     });
+
+    if (response.ok) {
+      const { logs: packet } = await response.json();
+      // packet = {logs: [logMessage], offset: int}
+      if (packet.logs.length > 0) {
+        setLogs(logs.concat(packet.logs));
+      } else {
+        setDone(true);
+      }
+    }
   };
 
-  if (hasMore) {
+  useEffect(() => {
     fetchLogs();
-  }
+  }, []);
 
   return (
     <>
       <div style={{
         overflowY: "scroll",
-        height: "100px",
+        height: "50%",
+        maxHeight: "50vh",
         paddingTop: "5px",
         paddingBottom: "5px",
         paddingLeft: "10px",
@@ -74,6 +80,12 @@ export const FlowRunLogs = ({ flowRunId }: any) => {
               }
             </div>
           )
+        }
+        {!done &&
+          <div style={{ fontWeight: 'bold', cursor: 'pointer' }} onClick={fetchLogs}>fetch more</div>
+        }
+        {done &&
+          <div>-- End of logs --</div>
         }
       </div>
     </>
