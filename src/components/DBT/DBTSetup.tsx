@@ -124,35 +124,6 @@ export const DBTSetup = () => {
     fetchDbtWorkspace();
   }
 
-
-  // async function fetchCurrentUser() {
-
-  //   if (!session) {
-  //     return;
-  //   }
-
-  //   await fetch(`${backendUrl}/api/currentuser`, {
-  //     method: 'GET',
-  //     headers: {
-  //       Authorization: `Bearer ${session?.user.token}`,
-  //     },
-  //   }).then((response) => {
-
-  //     if (response.ok) {
-  //       response.json().then((message) => {
-  //         console.log(message);
-  //       });
-  //     } else {
-
-  //       response.json().then((message) => {
-  //         console.error(message);
-  //       })
-  //     }
-  //   });
-  // }
-
-  // fetchCurrentUser();
-
   return (
     <>
       {workspace.status &&
