@@ -1,11 +1,9 @@
-import { getSession, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { SWRConfig } from 'swr';
 import { useRouter } from 'next/router';
-import { backendUrl } from '@/config/constant';
 import { SideDrawer } from '../SideDrawer/SideDrawer';
 import { Header } from '../Header/Header';
 import { Box } from '@mui/material';
-import { useState } from 'react';
 
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
