@@ -17,8 +17,10 @@ export const Main = ({ children }: any) => {
 
   // User is logged in
   if (session?.user?.org) {
-    return (
-      router.pathname !== '/signup/createorg' && (
+    if (router.pathname === '/signup/createorg') {
+      router.push('/');
+    } else {
+      return (
         <SWRConfig
           value={{
             fetcher: (resource) =>
@@ -35,8 +37,8 @@ export const Main = ({ children }: any) => {
             {children}
           </Box>
         </SWRConfig>
-      )
-    );
+      );
+    }
   } else {
     if (router.pathname === '/signup/createorg') return children;
     router.push('/signup/createorg');
