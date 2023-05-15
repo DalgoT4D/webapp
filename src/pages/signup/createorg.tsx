@@ -7,7 +7,7 @@ import { backendUrl } from '@/config/constant';
 import styles from '@/styles/Login.module.css';
 
 export const CreateOrg = () => {
-  const { data: session }: any = useSession();
+  const { data: session, update }: any = useSession();
   const router = useRouter();
   const [saveError, setSaveError] = useState(null);
   const { register, handleSubmit } = useForm();
@@ -26,7 +26,11 @@ export const CreateOrg = () => {
     })
       .then((response) => {
         if (response.ok) {
-          response.json().then(() => {
+          response.json().then((res) => {
+            (async () => {
+              update({ org: res.name });
+            })();
+
             router.push('/');
           });
         } else {
@@ -75,6 +79,6 @@ export const CreateOrg = () => {
       </Grid>
     </Box>
   );
-}
+};
 
 export default CreateOrg;
