@@ -1,5 +1,5 @@
 export const successToast = (
-  message: string = '',
+  message = '',
   messages: Array<string> = [],
   context: any
 ) => {
@@ -16,7 +16,7 @@ export const successToast = (
 };
 
 export const errorToast = (
-  message: string = '',
+  message = '',
   messages: Array<string> = [],
   context: any
 ) => {
