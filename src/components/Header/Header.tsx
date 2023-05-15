@@ -2,6 +2,8 @@ import { Box, Button, Paper, Typography } from '@mui/material';
 import styles from './Header.module.css';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { useContext } from 'react';
 
 export const Header = () => {
   const router = useRouter();
