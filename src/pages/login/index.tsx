@@ -6,11 +6,18 @@ import Banner from '@/images/banner.png';
 
 import styles from '@/styles/Login.module.css';
 import { useRouter } from 'next/router';
+import { useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
 
 export const Login = () => {
   const { register, handleSubmit } = useForm();
   const router = useRouter();
   const { data: session }: any = useSession();
+  const context = useContext(GlobalContext);
 
   const onSubmit = async (reqData: any) => {
     const res: any = await signIn('credentials', {
@@ -21,8 +28,13 @@ export const Login = () => {
     });
     if (res.ok) {
       router.push('/');
+      successToast('User logged in successfully', [], context);
     } else {
-      // show toast error
+      errorToast(
+        'Something went wrong. Please check your credentials',
+        [],
+        context
+      );
     }
   };
 
