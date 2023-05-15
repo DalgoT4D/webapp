@@ -10,8 +10,6 @@ export const Main = ({ children }: any) => {
 
   const router = useRouter();
 
-  // if (['/login', '/signup', '/'].includes(router.pathname)) return children;
-
   // if the user is not logged in, return immediately
   if (!session?.user.token) return children;
 
