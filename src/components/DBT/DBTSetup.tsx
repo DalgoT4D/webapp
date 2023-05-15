@@ -3,7 +3,7 @@ import styles from '@/styles/Home.module.css';
 import { useForm } from 'react-hook-form';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const DBTSetup = () => {
 
@@ -119,39 +119,9 @@ export const DBTSetup = () => {
     });
   }
 
-  if (workspace.status === '') {
-
+  useEffect(() => {
     fetchDbtWorkspace();
-  }
-
-
-  // async function fetchCurrentUser() {
-
-  //   if (!session) {
-  //     return;
-  //   }
-
-  //   await fetch(`${backendUrl}/api/currentuser`, {
-  //     method: 'GET',
-  //     headers: {
-  //       Authorization: `Bearer ${session?.user.token}`,
-  //     },
-  //   }).then((response) => {
-
-  //     if (response.ok) {
-  //       response.json().then((message) => {
-  //         console.log(message);
-  //       });
-  //     } else {
-
-  //       response.json().then((message) => {
-  //         console.error(message);
-  //       })
-  //     }
-  //   });
-  // }
-
-  // fetchCurrentUser();
+  }, []);
 
   return (
     <>
