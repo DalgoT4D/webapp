@@ -9,6 +9,9 @@ export const authOptions: NextAuthOptions = {
       if (token.id) {
         session.user.token = token.id;
         session.user.org = token.org;
+        session.user.email = token.email;
+        session.user.role = token.role;
+        session.user.active = token.active;
       }
       // Send properties to the client, like an access_token and user id from a provider.
       return session;
@@ -23,6 +26,9 @@ export const authOptions: NextAuthOptions = {
       if (user?.token) {
         token.id = user.token;
         token.org = user.org;
+        token.email = user.email;
+        token.role = user.role;
+        token.active = user.active;
       }
       return token;
     },
