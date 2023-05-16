@@ -3,21 +3,27 @@ import styles from '@/styles/Home.module.css';
 import { useForm } from 'react-hook-form';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
 
-export const DBTCreateProfile = () => {
+export const DBTCreateProfile = (props: any) => {
 
-  const { register, handleSubmit } = useForm({ defaultValues: { name: '', schema: '' } });
+  const { register, handleSubmit } = useForm({ defaultValues: { name: '', target_configs_schema: '' } });
   const { data: session }: any = useSession();
-  const [failureMessage, setFailureMessage] = useState<string>('');
+  const context = useContext(GlobalContext);
 
   type Profile = {
     name: string;
-    target: string;
     target_configs_schema: string;
   };
 
-  const createProfile = async function (profile: Profile) {
+  const createDbtProfile = async function (profile: Profile) {
+
+    console.log(profile);
 
     const response = await fetch(`${backendUrl}/api/prefect/blocks/dbt/`, {
       method: 'POST',
@@ -31,30 +37,29 @@ export const DBTCreateProfile = () => {
 
     if (response.ok) {
       const message = await response.json();
-      console.log(message);
+      if (message.success) {
+        successToast("Success", [], context);
+        props.createdProfile(message.block_names);
+      }
+
     } else {
       if (response.body) {
         const error = await response.json();
-        setFailureMessage(JSON.stringify(error));
+        errorToast(JSON.stringify(error), [], context);
       }
     }
 
   };
 
-  const onSubmit = async (data: any) => {
-    console.log(data);
-    await createProfile({
-      name: data.schema, target: 'dev', target_configs_schema: data.schema
-    } as Profile);
-  };
-
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <h3>Add a dbt profile</h3>
+      <i>From your dbt_project.yml</i>
+      <form onSubmit={handleSubmit(createDbtProfile)}>
         <Box className={styles.Input} >
           <TextField
             data-testid="target-schema"
-            label="Profile name"
+            label="Profile name from dbt_project.yml"
             variant="outlined"
             {...register('name', { required: true })}
           />
@@ -62,9 +67,9 @@ export const DBTCreateProfile = () => {
         <Box className={styles.Input} >
           <TextField
             data-testid="target-schema"
-            label="Target schema"
+            label="Target schema in warehouse"
             variant="outlined"
-            {...register('schema')}
+            {...register('target_configs_schema')}
           />
         </Box>
         <Box className={styles.Input}>
