@@ -5,14 +5,13 @@ import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
-export const DBTSetup = () => {
+export const DBTSetup = ({ onCreateWorkspace }: any) => {
 
-  const { register, handleSubmit } = useForm({ defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: 'public' } });
+  const { register, handleSubmit } = useForm({ defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: '' } });
   const { data: session }: any = useSession();
   const [progressMessages, setProgressMessages] = useState<any[]>([]);
   const [setupStatus, setSetupStatus] = useState("not-started");
   const [failureMessage, setFailureMessage] = useState(null);
-  const [workspace, setWorkspace] = useState({ status: '', gitrepo_url: '', target_name: '', target_schema: '' });
 
   const checkProgress = async function (taskId: string) {
 
@@ -32,7 +31,6 @@ export const DBTSetup = () => {
 
           if (lastMessage['status'] === 'completed') {
             setSetupStatus("completed");
-            fetchDbtWorkspace();
 
           } else if (lastMessage['status'] === 'failed') {
             setSetupStatus("failed");
@@ -84,85 +82,8 @@ export const DBTSetup = () => {
     });
   };
 
-  async function fetchDbtWorkspace() {
-
-    if (!session) {
-      return;
-    }
-
-    await fetch(`${backendUrl}/api/dbt/dbt_workspace`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-    }).then((response) => {
-
-      if (response.ok) {
-        response.json().then((message) => {
-          if (message.error === 'no dbt workspace has been configured') {
-            setWorkspace({ ...workspace, status: 'fetched' });
-            // do nothing
-          } else if (message.error) {
-            setFailureMessage(message.error);
-
-          } else {
-            message.status = 'fetched';
-            setWorkspace(message);
-          }
-        });
-      } else {
-
-        response.json().then((message) => {
-          console.error(message);
-        })
-      }
-    });
-  }
-
-  if (workspace.status === '') {
-
-    fetchDbtWorkspace();
-  }
-
-
-  // async function fetchCurrentUser() {
-
-  //   if (!session) {
-  //     return;
-  //   }
-
-  //   await fetch(`${backendUrl}/api/currentuser`, {
-  //     method: 'GET',
-  //     headers: {
-  //       Authorization: `Bearer ${session?.user.token}`,
-  //     },
-  //   }).then((response) => {
-
-  //     if (response.ok) {
-  //       response.json().then((message) => {
-  //         console.log(message);
-  //       });
-  //     } else {
-
-  //       response.json().then((message) => {
-  //         console.error(message);
-  //       })
-  //     }
-  //   });
-  // }
-
-  // fetchCurrentUser();
-
   return (
     <>
-      {workspace.status &&
-        <>
-          <div>{workspace.gitrepo_url}</div>
-          <div>dbt target: {workspace.target_name}</div>
-          <div>dbt target schema: {workspace.target_schema}</div>
-        </>
-      }
-
       {
         setupStatus === 'not-started' &&
 
@@ -188,7 +109,7 @@ export const DBTSetup = () => {
               data-testid="dbt-target-schema"
               label="dbt target schema"
               variant="outlined"
-              {...register('schema')}
+              {...register('schema', { required: true })}
             />
           </Box>
           <Box className={styles.Input}>
@@ -210,7 +131,10 @@ export const DBTSetup = () => {
 
       {
         setupStatus === 'completed' &&
-        <div>Setup complete</div>
+        <>
+          <div>Setup complete</div>
+          <button onClick={() => onCreateWorkspace()}>Continue</button>
+        </>
       }
 
       {
