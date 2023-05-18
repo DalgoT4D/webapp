@@ -3,7 +3,7 @@ import styles from '@/styles/Home.module.css';
 import { useForm } from 'react-hook-form';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import {
   errorToast,
@@ -15,6 +15,7 @@ export const DBTCreateProfile = (props: any) => {
   const { register, handleSubmit } = useForm({ defaultValues: { name: '', target_configs_schema: '' } });
   const { data: session }: any = useSession();
   const context = useContext(GlobalContext);
+  const [running, setRunning] = useState(false);
 
   type Profile = {
     name: string;
@@ -23,7 +24,7 @@ export const DBTCreateProfile = (props: any) => {
 
   const createDbtProfile = async function (profile: Profile) {
 
-    console.log(profile);
+    setRunning(true);
 
     const response = await fetch(`${backendUrl}/api/prefect/blocks/dbt/`, {
       method: 'POST',
@@ -49,6 +50,7 @@ export const DBTCreateProfile = (props: any) => {
       }
     }
 
+    setRunning(false);
   };
 
   return (
@@ -73,9 +75,16 @@ export const DBTCreateProfile = (props: any) => {
           />
         </Box>
         <Box className={styles.Input}>
-          <Button variant="contained" type="submit" data-testid="save-profile">
-            Save
-          </Button>
+          {
+            running &&
+            <div>Please wait...</div>
+          }
+          {
+            !running &&
+            <Button variant="contained" type="submit" data-testid="save-profile">
+              Save
+            </Button>
+          }
         </Box>
       </form>
     </>
