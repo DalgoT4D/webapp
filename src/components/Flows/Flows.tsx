@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 
 interface FlowInterface {
   name: string;
-  schedule: string;
-  status: string;
+  cron: string;
+  deploymentName: string;
+  deploymentId: string;
+  lastRun: any;
 }
 
 interface FlowsInterface {
@@ -49,12 +51,14 @@ const Flows = ({ flows, updateCrudVal }: FlowsInterface) => {
             }}
             key={idx}
           >
-            <Box>{flow.name}</Box>
+            <Box>
+              {flow.name} | cron: {flow.cron}
+            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
               <Typography component="p" sx={{ color: '#399D47' }}>
-                Running
+                Running (dummy)
               </Typography>
-              <Typography component="p">Last run 7 hrs ago</Typography>
+              <Typography component="p">Last run 7 hrs ago (dummy)</Typography>
               <Button
                 variant="contained"
                 sx={{
