@@ -1,3 +1,4 @@
+import { backendUrl } from '@/config/constant';
 import { Delete, Add } from '@mui/icons-material';
 import {
   Autocomplete,
@@ -8,10 +9,12 @@ import {
   InputLabel,
   Link,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
-import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 
 interface FlowCreateInterface {
@@ -19,6 +22,7 @@ interface FlowCreateInterface {
 }
 
 const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
+  const { data: session }: any = useSession();
   const [currentSelectedConn, setCurrentSelectedConn] = useState<any>(null);
   const [connections, setConnections] = useState<any>([
     { id: 'block1', label: 'block1' },
@@ -62,8 +66,64 @@ const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
     setConnections(tempConns);
   };
 
+  const processCronExpression = (cron: string) => {
+    switch (cron) {
+      case 'daily':
+        return '0 1 * * *';
+      case 'weekly':
+        return '0 1 * * 1';
+      default: // daily is the default
+        return '0 1 * * *';
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      await fetch(`${backendUrl}/api/airbyte/connections`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${session?.user.token}`,
+        },
+      })
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          // Prepare the specs config before setting it
+          const tempConns: Array<any> = [];
+          data.forEach((conn: any) => {
+            tempConns.push({ id: conn?.blockName, label: conn?.name });
+          });
+          setConnections(tempConns);
+        })
+        .catch((err) => {
+          console.log('something went wrong', err);
+        });
+    })();
+  }, []);
+
   const onSubmit = async (data: any) => {
-    console.log(data);
+    await fetch(`${backendUrl}/api/prefect/flows/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session?.user.token}`,
+      },
+      body: JSON.stringify({
+        name: data.name,
+        connectionBlocks: data.connectionBlocks,
+        dbtTransform: data.dbtTransform,
+        cron: processCronExpression(data.cron),
+      }),
+    })
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((err) => {
+        console.log('something went wrong', err);
+      });
   };
   return (
     <>
@@ -150,27 +210,29 @@ const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
                     <TextField
                       {...params}
                       variant="outlined"
-                      label="select connection"
+                      label="add connection"
                     />
                   )}
                 />
-                <IconButton
-                  onClick={() =>
-                    append({ seq: 0, blockName: 'stir-surveycto-postgres' })
-                  }
-                >
-                  <Add />
-                </IconButton>
               </Box>
               <Box>
                 <InputLabel sx={{ marginBottom: '5px' }}>
-                  Transformation
+                  Transform data ?
                 </InputLabel>
-                <TextField
-                  sx={{ width: '100%' }}
-                  variant="outlined"
-                  {...register('dbtTransform', { required: true })}
-                ></TextField>
+                <Controller
+                  name="dbtTransform"
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <Stack direction={'row'} alignItems="center" gap={'10%'}>
+                      <Switch
+                        value={value}
+                        onChange={(event, value) => {
+                          onChange(value ? 'yes' : 'no');
+                        }}
+                      />
+                    </Stack>
+                  )}
+                />
               </Box>
             </Stack>
           </Box>
@@ -189,7 +251,6 @@ const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
                     options={[
                       { id: 'daily', label: 'daily' },
                       { id: 'weekly', label: 'weekly' },
-                      { id: 'monthly', label: 'monthly' },
                     ]}
                     onChange={(e, data) => field.onChange(data)}
                     isOptionEqualToValue={(option: any, val: any) =>
