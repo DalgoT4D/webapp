@@ -17,6 +17,10 @@ import { backendUrl } from '@/config/constant';
 import { Close } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
+import { httpGet, httpPost } from '@/helpers/http';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { useContext } from 'react';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 
@@ -42,6 +46,8 @@ export const Connections = () => {
 
   const { data, isLoading, mutate } = useSWR(`${backendUrl}/api/airbyte/connections`);
   const { data: sourcesData } = useSWR(`${backendUrl}/api/airbyte/sources`);
+
+  const toastContext = useContext(GlobalContext);
 
   // when the connection list changes
   useEffect(() => {
@@ -76,71 +82,66 @@ export const Connections = () => {
   // source selection changes
   useEffect(() => {
     if (watchSourceSelection?.id) {
-      console.log(watchSourceSelection);
+      // console.log(watchSourceSelection);
+
       (async () => {
-        await fetch(`${backendUrl}/api/airbyte/sources/${watchSourceSelection.id}/schema_catalog`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${session?.user.token}`,
-          },
-        }).then((response) => {
-
-          if (response.ok) {
-            response.json().then((message) => {
-              // message looks like {
-              //     "catalog": {
-              //         "streams": [
-              //             {
-              //                 "stream": {
-              //                     "name": "ngo1_visits_per_day",
-              //                     "jsonSchema": {
-              //                         "type": "object",
-              //                         "properties": {
-              //                             "date": { "format": "date", "type": "string"},
-              //                             "gender": { "type": "string"},
-              //                             "count": {"airbyte_type": "integer","type": "number"}
-              //                         }
-              //                     },
-              //                     "supportedSyncModes": ["full_refresh","incremental"],
-              //                     "defaultCursorField": [],
-              //                     "sourceDefinedPrimaryKey": [],
-              //                     "namespace": "public"
-              //                 },
-              //                 "config": {
-              //                     "syncMode": "full_refresh",
-              //                     "cursorField": [],
-              //                     "destinationSyncMode": "append",
-              //                     "primaryKey": [],
-              //                     "aliasName": "ngo1_visits_per_day",
-              //                     "selected": true,
-              //                     "suggested": true
-              //                 }
-              //             }
-              //         ]
-              //     },
-              //     "jobInfo": {
-              //         "id": "8004c637-eb94-4d9b-a12a-aa4ca3493534",
-              //         "configType": "discover_schema",
-              //         "configId": "NoConfiguration",
-              //         "createdAt": 0,
-              //         "endedAt": 0,
-              //         "succeeded": true,
-              //         "connectorConfigurationUpdated": false,
-              //         "logs": {
-              //             "logLines": []
-              //         }
-              //     },
-              //     "catalogId": "f1b42ce1-dc1f-4633-963c-dd28aff0aef9"
-              // }
-              const streamNames: any[] = [];
-              message['catalog']['streams'].forEach((el: any) => {
-                streamNames.push(el.stream.name);
-              })
-              setSourceStreams(streamNames);
-            });
-          }
-
-        });
+        try {
+          const message = await httpGet(session, `airbyte/sources/${watchSourceSelection.id}/schema_catalog`);
+          const streamNames: any[] = [];
+          message['catalog']['streams'].forEach((el: any) => {
+            streamNames.push(el.stream.name);
+          })
+          setSourceStreams(streamNames);
+        }
+        catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], toastContext);
+        };
+        // message looks like {
+        //     "catalog": {
+        //         "streams": [
+        //             {
+        //                 "stream": {
+        //                     "name": "ngo1_visits_per_day",
+        //                     "jsonSchema": {
+        //                         "type": "object",
+        //                         "properties": {
+        //                             "date": { "format": "date", "type": "string"},
+        //                             "gender": { "type": "string"},
+        //                             "count": {"airbyte_type": "integer","type": "number"}
+        //                         }
+        //                     },
+        //                     "supportedSyncModes": ["full_refresh","incremental"],
+        //                     "defaultCursorField": [],
+        //                     "sourceDefinedPrimaryKey": [],
+        //                     "namespace": "public"
+        //                 },
+        //                 "config": {
+        //                     "syncMode": "full_refresh",
+        //                     "cursorField": [],
+        //                     "destinationSyncMode": "append",
+        //                     "primaryKey": [],
+        //                     "aliasName": "ngo1_visits_per_day",
+        //                     "selected": true,
+        //                     "suggested": true
+        //                 }
+        //             }
+        //         ]
+        //     },
+        //     "jobInfo": {
+        //         "id": "8004c637-eb94-4d9b-a12a-aa4ca3493534",
+        //         "configType": "discover_schema",
+        //         "configId": "NoConfiguration",
+        //         "createdAt": 0,
+        //         "endedAt": 0,
+        //         "succeeded": true,
+        //         "connectorConfigurationUpdated": false,
+        //         "logs": {
+        //             "logLines": []
+        //         }
+        //     },
+        //     "catalogId": "f1b42ce1-dc1f-4633-963c-dd28aff0aef9"
+        // }
       })();
     }
   }, [watchSourceSelection]);
@@ -170,34 +171,30 @@ export const Connections = () => {
     if (data.destinationSchema) {
       payload.destinationSchema = data.destinationSchema;
     }
-    await fetch(`${backendUrl}/api/airbyte/connections/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify(payload),
-    }).then(() => {
+    try {
+      await httpPost(session, 'airbyte/connections/', payload);
       mutate();
       reset();
       handleClose();
-    });
+      successToast("created connection", [], toastContext);
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    };
   };
 
   const syncConnection = (connection: any) => {
     console.log(connection);
     (async () => {
-      await fetch(`${backendUrl}/api/airbyte/connections/${connection.blockId}/sync/`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session?.user.token}`,
-        },
-      }).then((response) => {
-        if (response.ok) {
-          response.json().then((message) => {
-            console.log(message);
-          })
-        }
-      });
+      try {
+        const message = await httpPost(session, `airbyte/connections/${connection.blockId}/sync/`, {});
+        successToast(message, [], toastContext);
+      }
+      catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+      };
     })();
   };
 

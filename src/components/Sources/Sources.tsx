@@ -18,6 +18,10 @@ import { Close } from '@mui/icons-material';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { SourceConfigInput } from './SourceConfigInput';
+import { httpGet, httpPost } from '@/helpers/http';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { useContext } from 'react';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 
 const headers = ['Source details', 'Type'];
 
@@ -30,6 +34,7 @@ export const Sources = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [sourceDefs, setSourceDefs] = useState([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
+  const toastContext = useContext(GlobalContext);
 
   const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
@@ -53,26 +58,20 @@ export const Sources = () => {
 
   useEffect(() => {
     if (showDialog && sourceDefs.length === 0) {
+
       (async () => {
-        await fetch(`${backendUrl}/api/airbyte/source_definitions`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${session?.user.token}`,
-          },
-        })
-          .then((response) => {
-            return response.json();
-          })
-          .then((data) => {
-            const sourceDefRows = data?.map((element: any) => ({
-              label: element.name,
-              id: element.sourceDefinitionId,
-            }));
-            setSourceDefs(sourceDefRows);
-          })
-          .catch((err) => {
-            console.log('something went wrong', err);
-          });
+        try {
+          const data = await httpGet(session, 'airbyte/source_definitions');
+          const sourceDefRows = data?.map((element: any) => ({
+            label: element.name,
+            id: element.sourceDefinitionId,
+          }));
+          setSourceDefs(sourceDefRows);
+        }
+        catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], toastContext);
+        };
       })();
     }
   }, [showDialog]);
@@ -80,34 +79,24 @@ export const Sources = () => {
   useEffect(() => {
     if (watchSelectedSourceDef?.id) {
       (async () => {
-        await fetch(
-          `${backendUrl}/api/airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${session?.user.token}`,
-            },
+        try {
+          const data = await httpGet(session, `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`);
+          // Prepare the specs config before setting it
+          const specsConfigFields: Array<any> = [];
+          for (const [key, value] of Object.entries(data?.properties || {})) {
+            specsConfigFields.push({
+              airbyte_secret: false,
+              ...(value as object),
+              field: key,
+              required: data?.required.includes(key),
+            });
           }
-        )
-          .then((response) => {
-            return response.json();
-          })
-          .then((data) => {
-            // Prepare the specs config before setting it
-            const specsConfigFields: Array<any> = [];
-            for (const [key, value] of Object.entries(data?.properties || {})) {
-              specsConfigFields.push({
-                airbyte_secret: false,
-                ...(value as object),
-                field: key,
-                required: data?.required.includes(key),
-              });
-            }
-            setSourceDefSpecs(specsConfigFields);
-          })
-          .catch((err) => {
-            console.log('something went wrong', err);
-          });
+          setSourceDefSpecs(specsConfigFields);
+        }
+        catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], toastContext);
+        }
       })();
     }
   }, [watchSelectedSourceDef]);
@@ -123,24 +112,20 @@ export const Sources = () => {
   };
 
   const onSubmit = async (data: any) => {
-    await fetch(`${backendUrl}/api/airbyte/sources/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify({
+    try {
+      await httpPost(session, 'airbyte/sources/', {
         name: data.name,
         sourceDefId: data.sourceDef.id,
         config: data.config,
-      }),
-    })
-      .then(() => {
-        mutate();
-        handleClose();
-      })
-      .catch((err) => {
-        console.log('something went wrong', err);
       });
+      mutate();
+      handleClose();
+      successToast("Source added", [], toastContext);
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
   };
 
   if (isLoading) {
