@@ -1,4 +1,5 @@
 import { backendUrl } from '@/config/constant';
+import { GlobalContext } from '@/contexts/ContextProvider';
 import { Delete, Add } from '@mui/icons-material';
 import {
   Autocomplete,
@@ -14,8 +15,9 @@ import {
   Typography,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -23,6 +25,7 @@ interface FlowCreateInterface {
 
 const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
   const { data: session }: any = useSession();
+  const context = useContext(GlobalContext);
   const [currentSelectedConn, setCurrentSelectedConn] = useState<any>(null);
   const [connections, setConnections] = useState<any>([
     { id: 'block1', label: 'block1' },
@@ -119,10 +122,11 @@ const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
         return response.json();
       })
       .then((data) => {
-        console.log(data);
+        updateCrudVal('index');
+        successToast('Flow created successfully', [], context);
       })
       .catch((err) => {
-        console.log('something went wrong', err);
+        errorToast(String(err), [], context);
       });
   };
   return (
