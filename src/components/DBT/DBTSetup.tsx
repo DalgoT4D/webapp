@@ -1,11 +1,10 @@
 import { Box, Button, TextField } from '@mui/material';
 import styles from '@/styles/Home.module.css';
 import { useForm } from 'react-hook-form';
-import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { useState, useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpGet, httpPost } from '@/helpers/http';
 
 export const DBTSetup = ({ onCreateWorkspace }: any) => {
@@ -39,7 +38,7 @@ export const DBTSetup = ({ onCreateWorkspace }: any) => {
     catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-    };
+    }
 
   }
 
@@ -68,7 +67,7 @@ export const DBTSetup = ({ onCreateWorkspace }: any) => {
       console.error(err);
       errorToast(err.message, [], toastContext);
       setSetupStatus("failed");
-    };
+    }
   };
 
   return (

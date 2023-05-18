@@ -26,7 +26,7 @@ export const CreateOrg = () => {
     catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-    };
+    }
   };
 
   return (

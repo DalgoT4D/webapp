@@ -80,7 +80,7 @@ export const Destinations = () => {
         catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
-        };
+        }
       })();
     }
   }, [showDialog]);
@@ -182,7 +182,7 @@ export const Destinations = () => {
         catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
-        };
+        }
       })();
     }
   }, [watchSelectedDestinationDef]);
@@ -212,7 +212,7 @@ export const Destinations = () => {
     catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-    };
+    }
   };
 
   if (isLoading) {

@@ -71,7 +71,7 @@ export const Sources = () => {
         catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
-        };
+        }
       })();
     }
   }, [showDialog]);
