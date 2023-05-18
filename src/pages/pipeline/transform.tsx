@@ -4,22 +4,18 @@ import { Typography } from '@mui/material';
 import { PageHead } from '@/components/PageHead';
 import { DBTSetup } from '@/components/DBT/DBTSetup';
 import { DBTCreateProfile } from '@/components/DBT/DBTCreateProfile';
-import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect, useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
-
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import { httpPost, httpGet } from '@/helpers/http';
 
 export default function Transform() {
 
   const [workspace, setWorkspace] = useState({ status: '', gitrepo_url: '', default_schema: '' });
   const [dbtJobStatus, setDbtJobStatus] = useState<boolean>(false);
   const { data: session }: any = useSession();
-  const context = useContext(GlobalContext);
+  const toastContext = useContext(GlobalContext);
 
   type displayBlock = {
     blockName: string;
@@ -35,30 +31,24 @@ export default function Transform() {
       return;
     }
 
-    const response = await fetch(`${backendUrl}/api/dbt/dbt_workspace`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-    });
-
-    if (response.ok) {
-      const message = await response.json()
+    try {
+      const message = await httpGet(session, 'dbt/dbt_workspace');
       if (message.error === 'no dbt workspace has been configured') {
         setWorkspace({ ...workspace, status: 'fetched' });
         // do nothing
       } else if (message.error) {
-        errorToast(message.error, [], context);
+        errorToast(message.error, [], toastContext);
 
       } else {
         message.status = 'fetched';
         setWorkspace(message);
       }
-    } else {
-
-      const errormessage = await response.json()
-      console.error(errormessage);
     }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    };
+
   }
 
   useEffect(() => {
@@ -82,26 +72,19 @@ export default function Transform() {
 
   const fetchDbtBlocks = async function () {
 
-    const response = await fetch(`${backendUrl}/api/prefect/blocks/dbt/`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-    });
-
-    if (response.ok) {
-      const message = await response.json();
-      console.log(message);
+    try {
+      const message = await httpGet(session, 'prefect/blocks/dbt');
       setDispBlocks(message.map((block: dbtBlock) => {
         return {
           blockName: block.blockName,
           displayName: block.blockName.split('-')[3],
         }
       }));
-    } else {
-      const error = await response.json();
-      errorToast(JSON.stringify(error), [], context);
     }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    };
   };
 
   useEffect(() => {
@@ -113,24 +96,21 @@ export default function Transform() {
     setDbtJobStatus(true);
     setDbtRunLogs([]);
 
-    const response = await fetch(`${backendUrl}/api/prefect/flows/dbt_run/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify({
+    try {
+      const message = await httpPost(session, 'prefect/flows/dbt_run/', {
         blockName: block.blockName,
         // flowName: 'rc-flow-name',
         // flowRunName: 'rc-flow-run-name',
-      })
-    });
-
-    if (response.ok) {
-      const message = await response.json();
+      });
       console.log(message);
-      successToast("Job ran successfully", [], context);
+      successToast("Job ran successfully", [], toastContext);
       setDbtRunLogs(message);
     }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    };
+
     setDbtJobStatus(false);
   };
 
