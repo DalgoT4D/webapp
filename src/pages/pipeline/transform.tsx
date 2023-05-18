@@ -17,6 +17,7 @@ import {
 export default function Transform() {
 
   const [workspace, setWorkspace] = useState({ status: '', gitrepo_url: '', default_schema: '' });
+  const [dbtJobStatus, setDbtJobStatus] = useState<boolean>(false);
   const { data: session }: any = useSession();
   const context = useContext(GlobalContext);
 
@@ -34,33 +35,30 @@ export default function Transform() {
       return;
     }
 
-    await fetch(`${backendUrl}/api/dbt/dbt_workspace`, {
+    const response = await fetch(`${backendUrl}/api/dbt/dbt_workspace`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${session?.user.token}`,
       },
-    }).then((response) => {
-
-      if (response.ok) {
-        response.json().then((message) => {
-          if (message.error === 'no dbt workspace has been configured') {
-            setWorkspace({ ...workspace, status: 'fetched' });
-            // do nothing
-          } else if (message.error) {
-            errorToast(message.error, [], context);
-
-          } else {
-            message.status = 'fetched';
-            setWorkspace(message);
-          }
-        });
-      } else {
-
-        response.json().then((message) => {
-          console.error(message);
-        })
-      }
     });
+
+    if (response.ok) {
+      const message = await response.json()
+      if (message.error === 'no dbt workspace has been configured') {
+        setWorkspace({ ...workspace, status: 'fetched' });
+        // do nothing
+      } else if (message.error) {
+        errorToast(message.error, [], context);
+
+      } else {
+        message.status = 'fetched';
+        setWorkspace(message);
+      }
+    } else {
+
+      const errormessage = await response.json()
+      console.error(errormessage);
+    }
   }
 
   useEffect(() => {
@@ -112,6 +110,9 @@ export default function Transform() {
 
   const runDbtJob = async function (block: displayBlock) {
 
+    setDbtJobStatus(true);
+    setDbtRunLogs([]);
+
     const response = await fetch(`${backendUrl}/api/prefect/flows/dbt_run/`, {
       method: 'POST',
       headers: {
@@ -130,6 +131,7 @@ export default function Transform() {
       successToast("Job ran successfully", [], context);
       setDbtRunLogs(message);
     }
+    setDbtJobStatus(false);
   };
 
   return (
@@ -144,11 +146,11 @@ export default function Transform() {
             <Grid item xs={8}>
               <Paper elevation={3} sx={{ p: 4 }}>
                 {/* add github info */
-                  !workspace &&
-                  <DBTSetup />
+                  !workspace.gitrepo_url &&
+                  <DBTSetup onCreateWorkspace={() => fetchDbtWorkspace()} />
                 }
                 {/* create profile */
-                  workspace && workspace.status &&
+                  workspace && workspace.gitrepo_url &&
                   <>
                     <div>
                       <a href={workspace.gitrepo_url}>GitHub repo</a>
@@ -159,14 +161,24 @@ export default function Transform() {
                       <DBTCreateProfile createdProfile={onCreatedProfile} />
                     }
                     {
-                      dispBlocks.length > 0 &&
-                      dispBlocks.map((dispBlock) => (
-                        <div key={dispBlock.blockName}>
-                          <button onClick={() => runDbtJob(dispBlock)}>
-                            {dispBlock.displayName}
-                          </button>
-                        </div>
-                      ))
+                      dispBlocks.length > 0 && !dbtJobStatus &&
+                      <>
+                        {
+                          dispBlocks.map((dispBlock: displayBlock) => (
+                            <div key={dispBlock.blockName}>
+                              <button onClick={() => runDbtJob(dispBlock)}>
+                                {dispBlock.displayName}
+                              </button>
+                            </div>
+                          ))
+                        }
+                      </>
+                    }
+                    {
+                      dispBlocks.length > 0 && dbtJobStatus &&
+                      <>
+                        <div>Please wait...</div>
+                      </>
                     }
                     {
                       dbtRunLogs.length > 0 &&
