@@ -47,7 +47,7 @@ export default function Transform() {
     catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-    };
+    }
 
   }
 
@@ -84,7 +84,7 @@ export default function Transform() {
     catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-    };
+    }
   };
 
   useEffect(() => {
@@ -109,7 +109,7 @@ export default function Transform() {
     catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-    };
+    }
 
     setDbtJobStatus(false);
   };

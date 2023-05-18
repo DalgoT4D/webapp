@@ -38,7 +38,7 @@ export const DBTCreateProfile = (props: any) => {
     catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-    };
+    }
 
     setRunning(false);
   };

@@ -96,7 +96,7 @@ export const Connections = () => {
         catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
-        };
+        }
         // message looks like {
         //     "catalog": {
         //         "streams": [
@@ -181,7 +181,7 @@ export const Connections = () => {
     catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-    };
+    }
   };
 
   const syncConnection = (connection: any) => {
@@ -194,7 +194,7 @@ export const Connections = () => {
       catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
-      };
+      }
     })();
   };
 

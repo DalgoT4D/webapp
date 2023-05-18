@@ -13,7 +13,7 @@ import { httpPost } from '@/helpers/http';
 
 
 export const SignUp = () => {
-  const { data: session, update }: any = useSession();
+  const { data: session }: any = useSession();
   const router = useRouter();
   if (session?.user.token) {
     router.push('/');
@@ -38,7 +38,7 @@ export const SignUp = () => {
     catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-    };
+    }
   };
 
   return (
