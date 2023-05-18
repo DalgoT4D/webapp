@@ -5,9 +5,9 @@ import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
-export const DBTSetup = () => {
+export const DBTSetup = ({ onCreateWorkspace }: any) => {
 
-  const { register, handleSubmit } = useForm({ defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: 'public' } });
+  const { register, handleSubmit } = useForm({ defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: '' } });
   const { data: session }: any = useSession();
   const [progressMessages, setProgressMessages] = useState<any[]>([]);
   const [setupStatus, setSetupStatus] = useState("not-started");
@@ -109,7 +109,7 @@ export const DBTSetup = () => {
               data-testid="dbt-target-schema"
               label="dbt target schema"
               variant="outlined"
-              {...register('schema')}
+              {...register('schema', { required: true })}
             />
           </Box>
           <Box className={styles.Input}>
@@ -131,7 +131,10 @@ export const DBTSetup = () => {
 
       {
         setupStatus === 'completed' &&
-        <div>Setup complete</div>
+        <>
+          <div>Setup complete</div>
+          <button onClick={() => onCreateWorkspace()}>Continue</button>
+        </>
       }
 
       {
