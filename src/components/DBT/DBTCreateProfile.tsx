@@ -1,7 +1,6 @@
 import { Box, Button, TextField } from '@mui/material';
 import styles from '@/styles/Home.module.css';
 import { useForm } from 'react-hook-form';
-import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -9,12 +8,13 @@ import {
   errorToast,
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
+import { httpPost } from '@/helpers/http';
 
 export const DBTCreateProfile = (props: any) => {
 
   const { register, handleSubmit } = useForm({ defaultValues: { name: '', target_configs_schema: '' } });
   const { data: session }: any = useSession();
-  const context = useContext(GlobalContext);
+  const toastContext = useContext(GlobalContext);
   const [running, setRunning] = useState(false);
 
   type Profile = {
@@ -26,29 +26,19 @@ export const DBTCreateProfile = (props: any) => {
 
     setRunning(true);
 
-    const response = await fetch(`${backendUrl}/api/prefect/blocks/dbt/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify({
+    try {
+      const message = await httpPost(session, `prefect/blocks/dbt/`, {
         profile
-      })
-    });
-
-    if (response.ok) {
-      const message = await response.json();
+      });
       if (message.success) {
-        successToast("Success", [], context);
+        successToast("Success", [], toastContext);
         props.createdProfile(message.block_names);
       }
-
-    } else {
-      if (response.body) {
-        const error = await response.json();
-        errorToast(JSON.stringify(error), [], context);
-      }
     }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    };
 
     setRunning(false);
   };

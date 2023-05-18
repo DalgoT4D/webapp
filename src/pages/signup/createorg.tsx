@@ -1,47 +1,32 @@
 import { Box, Button, Grid, Paper, TextField } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { backendUrl } from '@/config/constant';
 import styles from '@/styles/Login.module.css';
+import { useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import { httpPost } from '@/helpers/http';
 
 export const CreateOrg = () => {
   const { data: session, update }: any = useSession();
   const router = useRouter();
-  const [saveError, setSaveError] = useState(null);
   const { register, handleSubmit } = useForm();
+  const toastContext = useContext(GlobalContext);
 
   const onSubmit = async (data: any) => {
-    setSaveError(null);
-
-    fetch(`${backendUrl}/api/organizations/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify({
+    try {
+      const message = await httpPost(session, 'organizations/', {
         name: data.name,
-      }),
-    })
-      .then((response) => {
-        if (response.ok) {
-          response.json().then((res) => {
-            (async () => {
-              update({ org: res.name });
-            })();
-
-            router.push('/');
-          });
-        } else {
-          response.json().then((errorMessage) => {
-            setSaveError(errorMessage.error);
-          });
-        }
-      })
-      .catch((error) => {
-        setSaveError(error);
       });
+      update({ org: message.name });
+      successToast("Success", [], toastContext);
+      router.push('/');
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    };
   };
 
   return (
@@ -72,7 +57,6 @@ export const CreateOrg = () => {
                   </Button>
                 </Box>
               </form>
-              <div>{saveError}</div>
             </Paper>
           </Grid>
         </Grid>
