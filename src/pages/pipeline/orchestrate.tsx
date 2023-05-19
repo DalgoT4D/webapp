@@ -1,4 +1,5 @@
 import styles from '@/styles/Home.module.css';
+import useSWR from 'swr';
 import { Box, Button, Typography } from '@mui/material';
 import { PageHead } from '@/components/PageHead';
 import Flows from '@/components/Flows/Flows';
@@ -15,34 +16,21 @@ export default function Orchestrate() {
     setCrudVal(crudState);
   };
 
-  const { data: session }: any = useSession();
+  const { data, mutate } = useSWR(`${backendUrl}/api/prefect/flows/`);
 
+  // when the flows list changes
   useEffect(() => {
-    (async () => {
-      await fetch(`${backendUrl}/api/prefect/flows/`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${session?.user.token}`,
-        },
-      })
-        .then((response) => {
-          return response.json();
-        })
-        .then((data) => {
-          setFlows(data);
-        })
-        .catch((err) => {
-          console.log('something went wrong', err);
-        });
-    })();
-  }, []);
+    if (data && data.length > 0) {
+      setFlows(data);
+    }
+  }, [data]);
 
   return (
     <>
       <PageHead title="Orchestrate" />
       <main className={styles.main}>
         {crudVal === 'index' ? (
-          <Flows flows={flows} updateCrudVal={updateCrudVal} />
+          <Flows flows={flows} updateCrudVal={updateCrudVal} mutate={mutate} />
         ) : (
           <FlowCreate updateCrudVal={updateCrudVal} />
         )}
