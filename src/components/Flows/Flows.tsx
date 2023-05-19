@@ -49,11 +49,7 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
   const handleQuickRunDeployment = (deploymentId: string) => {
     (async () => {
       try {
-        const data = await httpPost(
-          session,
-          `prefect/flows/${deploymentId}/flow_run`,
-          {}
-        );
+        await httpPost(session, `prefect/flows/${deploymentId}/flow_run`, {});
         successToast('Flow run inititated successfully', [], toastContext);
       } catch (err: any) {
         console.error(err);
