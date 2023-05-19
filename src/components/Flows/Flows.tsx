@@ -1,10 +1,24 @@
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
+import moment from 'moment';
 import React, { useContext } from 'react';
 import { Delete } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpDelete } from '@/helpers/http';
+import { httpDelete, httpPost } from '@/helpers/http';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 interface FlowInterface {
   name: string;
@@ -28,19 +42,33 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
 
+  const lastRunTime = (startTime: string) => {
+    return moment(new Date(startTime)).fromNow();
+  };
+
+  const handleQuickRunDeployment = (deploymentId: string) => {
+    (async () => {
+      try {
+        await httpPost(session, `prefect/flows/${deploymentId}/flow_run`, {});
+        successToast('Flow run inititated successfully', [], toastContext);
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+      }
+    })();
+  };
+
   const handleDeleteFlow = (deploymentId: string) => {
     (async () => {
       try {
-        const data = await httpDelete(session, `prefect/flows/${deploymentId}`)
+        const data = await httpDelete(session, `prefect/flows/${deploymentId}`);
         mutate();
         if (data?.success) {
           successToast('Flow deleted successfully', [], toastContext);
-
         } else {
           errorToast('Something went wrong', [], toastContext);
         }
-      }
-      catch (err: any) {
+      } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
       }
@@ -66,49 +94,87 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
           + New Flow
         </Button>
       </Box>
-      <Box sx={{ marginTop: '50px' }}>
-        {flows.map((flow: FlowInterface, idx: number) => (
-          <Box
-            sx={{
-              backgroundColor: 'white',
-              padding: '15px',
-              marginTop: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderRadius: '8px',
-            }}
-            key={idx}
-          >
-            <Box>
-              {flow.name} | cron: {flow.cron}
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
-              <Typography component="p" sx={{ color: '#399D47' }}>
-                Running (dummy)
-              </Typography>
-              <Typography component="p">Last run 7 hrs ago (dummy)</Typography>
-              <Button
-                variant="contained"
-                sx={{
-                  m: 1,
-                  backgroundColor: 'background.default',
-                  color: 'secondary.main',
-                  ':hover': { backgroundColor: 'background.default' },
-                }}
-              >
-                last log
-              </Button>
-              <Button variant="contained" sx={{ m: 1 }}>
-                Run
-              </Button>
-              <IconButton onClick={() => handleDeleteFlow(flow.deploymentId)}>
-                <Delete />
-              </IconButton>
-            </Box>
-          </Box>
-        ))}
-      </Box>
+      <TableContainer sx={{ marginTop: '50px' }}>
+        <Table>
+          <TableHead></TableHead>
+          <TableBody>
+            {flows.map((flow: any, idx: number) => (
+              <TableRow key={idx}>
+                <TableCell>
+                  {flow.name} | cron: {flow.cron}
+                </TableCell>
+                <TableCell>
+                  {!flow?.lastRun || flow?.lastRun?.status === 'COMPLETED' ? (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        color: '#399D47',
+                        gap: '3px',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <TaskAltIcon
+                        sx={{ alignItems: 'center', fontSize: 'medium' }}
+                      />
+                      <Typography component="p">Running</Typography>
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        color: '#981F1F',
+                        gap: '3px',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <WarningAmberIcon
+                        sx={{ alignItems: 'center', fontSize: 'medium' }}
+                      />
+                      <Typography component="p">Failed</Typography>
+                    </Box>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {flow?.lastRun ? (
+                    <Typography component="p">
+                      Last run {lastRunTime(flow?.lastRun?.startTime)}
+                    </Typography>
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    sx={{
+                      m: 1,
+                      backgroundColor: 'background.default',
+                      color: 'secondary.main',
+                      ':hover': { backgroundColor: 'background.default' },
+                    }}
+                  >
+                    last log
+                  </Button>
+                </TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="contained"
+                    sx={{ m: 1 }}
+                    onClick={() => handleQuickRunDeployment(flow?.deploymentId)}
+                  >
+                    Run
+                  </Button>
+                  <IconButton
+                    onClick={() => handleDeleteFlow(flow.deploymentId)}
+                  >
+                    <Delete />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </>
   );
 };
