@@ -112,6 +112,21 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
             </Box>
           </Box>
         ))}
+        {flows.length == 0 && (
+          <Box
+            sx={{
+              backgroundColor: 'white',
+              padding: '15px',
+              marginTop: '12px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: '8px',
+            }}
+          >
+            No flows scheduled
+          </Box>
+        )}
       </Box>
     </>
   );
