@@ -1,5 +1,10 @@
-import { Box, Button, Typography } from '@mui/material';
-import React, { useState } from 'react';
+import { Box, Button, IconButton, Typography } from '@mui/material';
+import React, { useContext, useState } from 'react';
+import { Delete } from '@mui/icons-material';
+import { backendUrl } from '@/config/constant';
+import { useSession } from 'next-auth/react';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface FlowInterface {
   name: string;
@@ -12,12 +17,40 @@ interface FlowInterface {
 interface FlowsInterface {
   flows: Array<FlowInterface>;
   updateCrudVal: (...args: any) => any;
+  mutate: (...args: any) => any;
 }
 
-const Flows = ({ flows, updateCrudVal }: FlowsInterface) => {
+const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
   const handleClickCreateFlow = () => {
     updateCrudVal('create');
   };
+
+  const { data: session }: any = useSession();
+  const context = useContext(GlobalContext);
+
+  const handleDeleteFlow = (deploymentId: string) => {
+    (async () => {
+      await fetch(`${backendUrl}/api/prefect/flows/${deploymentId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${session?.user.token}`,
+        },
+      })
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          mutate();
+          if (data?.success)
+            successToast('Flow deleted successfully', [], context);
+          else errorToast('Something went wrong', [], context);
+        })
+        .catch((err) => {
+          errorToast(String(err), [], context);
+        });
+    })();
+  };
+
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -73,6 +106,9 @@ const Flows = ({ flows, updateCrudVal }: FlowsInterface) => {
               <Button variant="contained" sx={{ m: 1 }}>
                 Run
               </Button>
+              <IconButton onClick={() => handleDeleteFlow(flow.deploymentId)}>
+                <Delete />
+              </IconButton>
             </Box>
           </Box>
         ))}
