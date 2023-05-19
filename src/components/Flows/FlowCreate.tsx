@@ -21,9 +21,10 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
+  mutate: (...args: any) => any;
 }
 
-const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
+const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
   const { data: session }: any = useSession();
   const context = useContext(GlobalContext);
   const [currentSelectedConn, setCurrentSelectedConn] = useState<any>(null);
@@ -122,6 +123,7 @@ const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
         return response.json();
       })
       .then((data) => {
+        mutate();
         updateCrudVal('index');
         successToast(`Flow ${data?.name} created successfully`, [], context);
       })

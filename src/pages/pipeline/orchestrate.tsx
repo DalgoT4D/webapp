@@ -30,7 +30,7 @@ export default function Orchestrate() {
         {crudVal === 'index' ? (
           <Flows flows={flows} updateCrudVal={updateCrudVal} mutate={mutate} />
         ) : (
-          <FlowCreate updateCrudVal={updateCrudVal} />
+          <FlowCreate updateCrudVal={updateCrudVal} mutate={mutate} />
         )}
       </main>
     </>
