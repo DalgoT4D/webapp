@@ -1,9 +1,11 @@
 import { Box, Button, TextField } from '@mui/material';
 import styles from '@/styles/Home.module.css';
 import { useForm } from 'react-hook-form';
-import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { httpGet, httpPost } from '@/helpers/http';
 
 export const DBTSetup = ({ onCreateWorkspace }: any) => {
 
@@ -12,36 +14,32 @@ export const DBTSetup = ({ onCreateWorkspace }: any) => {
   const [progressMessages, setProgressMessages] = useState<any[]>([]);
   const [setupStatus, setSetupStatus] = useState("not-started");
   const [failureMessage, setFailureMessage] = useState(null);
+  const toastContext = useContext(GlobalContext);
 
   const checkProgress = async function (taskId: string) {
 
-    await fetch(`${backendUrl}/api/tasks/${taskId}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-    }).then((response) => {
+    try {
+      const message = await httpGet(session, `tasks/${taskId}`);
+      setProgressMessages(message['progress']);
 
-      if (response.ok) {
-        response.json().then((message) => {
+      const lastMessage = message['progress'][message['progress'].length - 1];
 
-          setProgressMessages(message['progress']);
+      if (lastMessage['status'] === 'completed') {
+        setSetupStatus("completed");
 
-          const lastMessage = message['progress'][message['progress'].length - 1];
+      } else if (lastMessage['status'] === 'failed') {
+        setSetupStatus("failed");
+        setFailureMessage(lastMessage['message']);
 
-          if (lastMessage['status'] === 'completed') {
-            setSetupStatus("completed");
-
-          } else if (lastMessage['status'] === 'failed') {
-            setSetupStatus("failed");
-            setFailureMessage(lastMessage['message']);
-
-          } else {
-            setTimeout(() => { checkProgress(taskId) }, 2000);
-          }
-        });
+      } else {
+        setTimeout(() => { checkProgress(taskId) }, 2000);
       }
-    });
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
+
   }
 
   const onSubmit = async (data: any) => {
@@ -61,25 +59,15 @@ export const DBTSetup = ({ onCreateWorkspace }: any) => {
       payload.gitrepoAccessToken = data.gitrepoAccessToken;
     }
 
-    await fetch(`${backendUrl}/api/dbt/workspace/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify(payload),
-    }).then((response) => {
-
-      if (response.ok) {
-        response.json().then((message) => {
-          setTimeout(() => { checkProgress(message.task_id) }, 1000);
-        });
-      } else {
-        response.json().then((message) => {
-          console.error(message);
-        })
-        setSetupStatus("failed");
-      }
-    });
+    try {
+      const message = await httpPost(session, 'dbt/workspace/', payload);
+      setTimeout(() => { checkProgress(message.task_id) }, 1000);
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+      setSetupStatus("failed");
+    }
   };
 
   return (

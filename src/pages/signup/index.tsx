@@ -1,13 +1,16 @@
 import { Box, Button, Grid, Paper, TextField, Link } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import Banner from '@/images/banner.png';
-import { backendUrl } from '@/config/constant';
 import { signIn } from 'next-auth/react';
 import styles from '@/styles/Login.module.css';
+import { useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { httpPost } from '@/helpers/http';
+
 
 export const SignUp = () => {
   const { data: session }: any = useSession();
@@ -15,40 +18,27 @@ export const SignUp = () => {
   if (session?.user.token) {
     router.push('/');
   }
-  const [signupError, setSignupError] = useState(null);
   const { register, handleSubmit } = useForm();
+  const toastContext = useContext(GlobalContext);
+
   const onSubmit = async (data: any) => {
-    setSignupError(null);
-    fetch(`${backendUrl}/api/organizations/users/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify({
+
+    try {
+      await httpPost(session, 'organizations/users/', {
         email: data.username,
         password: data.password,
-      }),
-    })
-      .then((response) => {
-        if (response.ok) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          response.json().then((message) => {
-            signIn('credentials', {
-              username: data.username,
-              password: data.password,
-              redirect: true,
-              callbackUrl: '/signup/createorg',
-            });
-          });
-        } else {
-          response.json().then((errorMessage) => {
-            setSignupError(errorMessage.error);
-          });
-        }
-      })
-      .catch((error) => {
-        setSignupError(error);
       });
+      signIn('credentials', {
+        username: data.username,
+        password: data.password,
+        redirect: true,
+        callbackUrl: '/signup/createorg',
+      });
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
   };
 
   return (
@@ -90,7 +80,6 @@ export const SignUp = () => {
                   </Link>
                 </Box>
               </form>
-              <div>{signupError}</div>
             </Paper>
           </Grid>
         </Grid>

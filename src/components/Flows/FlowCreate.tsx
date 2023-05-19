@@ -1,4 +1,3 @@
-import { backendUrl } from '@/config/constant';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { Delete } from '@mui/icons-material';
 import {
@@ -18,20 +17,36 @@ import { useSession } from 'next-auth/react';
 import React, { useContext, useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { httpGet, httpPost } from '@/helpers/http';
+
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
 }
 
+type apiResponseConnection = {
+  blockName: string;
+  name: string;
+}
+// dispConnection is for the AutoComplete list: {id, label}
+type dispConnection = {
+  id: string;
+  label: string;
+}
+type fieldListElement = {
+  id: string;   // set by the field-array
+  blockName: string;
+  name: string;
+  seq: number;
+}
+
 const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
   const { data: session }: any = useSession();
-  const context = useContext(GlobalContext);
+  const toastContext = useContext(GlobalContext);
   const [currentSelectedConn, setCurrentSelectedConn] = useState<any>(null);
-  const [connections, setConnections] = useState<any>([
-    { id: 'block1', label: 'block1' },
-    { id: 'block2', label: 'block2' },
-  ]);
+
+  const [connections, setConnections] = useState<dispConnection[]>([]);
   const { register, handleSubmit, control } = useForm({
     defaultValues: {
       name: '',
@@ -50,22 +65,22 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
     updateCrudVal('index');
   };
 
-  const handleAddConnectionSelectChange = (e: any, data: any) => {
+  const handleAddConnectionSelectChange = (e: any, data: dispConnection) => {
     setCurrentSelectedConn(null);
-    if (data?.id) {
-      append({ seq: fields.length + 1, blockName: data.id });
+    if (data) {
+      append({ seq: fields.length + 1, blockName: data.id, name: data.label });
       // remove from the select dropdown to add new connection
-      const tempConns = connections?.filter((conn: any) => conn?.id != data.id);
+      const tempConns = connections?.filter((conn: dispConnection) => conn.id != data.id);
       setConnections(tempConns);
     }
   };
 
   const handleDeleteConnection = (idx: number) => {
     remove(idx);
-    const tempConns: Array<any> = connections ? connections : [];
+    const tempConns: Array<dispConnection> = connections ? connections : [];
     tempConns.push({
-      id: fields[idx]?.blockName,
-      label: fields[idx]?.blockName,
+      id: fields[idx].blockName,
+      label: fields[idx].name,
     });
     setConnections(tempConns);
   };
@@ -83,53 +98,36 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
 
   useEffect(() => {
     (async () => {
-      await fetch(`${backendUrl}/api/airbyte/connections`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${session?.user.token}`,
-        },
-      })
-        .then((response) => {
-          return response.json();
-        })
-        .then((data) => {
-          // Prepare the specs config before setting it
-          const tempConns: Array<any> = [];
-          data.forEach((conn: any) => {
-            tempConns.push({ id: conn?.blockName, label: conn?.name });
-          });
-          setConnections(tempConns);
-        })
-        .catch((err) => {
-          console.log('something went wrong', err);
+      try {
+        const data = await httpGet(session, 'airbyte/connections');
+        const tempConns: Array<dispConnection> = data.map((conn: apiResponseConnection) => {
+          return { id: conn.blockName, label: conn.name }
         });
+        setConnections(tempConns);
+      }
+      catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+      }
     })();
   }, []);
 
   const onSubmit = async (data: any) => {
-    await fetch(`${backendUrl}/api/prefect/flows/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify({
+    try {
+      const response = await httpPost(session, 'prefect/flows/', {
         name: data.name,
         connectionBlocks: data.connectionBlocks,
         dbtTransform: data.dbtTransform,
         cron: processCronExpression(data.cron),
-      }),
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        mutate();
-        updateCrudVal('index');
-        successToast(`Flow ${data?.name} created successfully`, [], context);
-      })
-      .catch((err) => {
-        errorToast(String(err), [], context);
       });
+      mutate();
+      updateCrudVal('index');
+      successToast(`Flow ${response.name} created successfully`, [], toastContext);
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
   };
   return (
     <>
@@ -184,7 +182,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                 <InputLabel sx={{ marginBottom: '5px' }}>
                   Connections
                 </InputLabel>
-                {fields.map((conn: any, idx: number) => (
+                {fields.map((conn: fieldListElement, idx: number) => (
                   <Box
                     key={idx}
                     sx={{
@@ -195,7 +193,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                   >
                     <TextField
                       sx={{ marginBottom: '10px', width: '90%' }}
-                      value={conn.blockName}
+                      value={conn.name}
                       aria-readonly
                     />
 

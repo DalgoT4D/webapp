@@ -1,10 +1,10 @@
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import React, { useContext } from 'react';
 import { Delete } from '@mui/icons-material';
-import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { httpDelete } from '@/helpers/http';
 
 interface FlowInterface {
   name: string;
@@ -26,28 +26,24 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
   };
 
   const { data: session }: any = useSession();
-  const context = useContext(GlobalContext);
+  const toastContext = useContext(GlobalContext);
 
   const handleDeleteFlow = (deploymentId: string) => {
     (async () => {
-      await fetch(`${backendUrl}/api/prefect/flows/${deploymentId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${session?.user.token}`,
-        },
-      })
-        .then((response) => {
-          return response.json();
-        })
-        .then((data) => {
-          mutate();
-          if (data?.success)
-            successToast('Flow deleted successfully', [], context);
-          else errorToast('Something went wrong', [], context);
-        })
-        .catch((err) => {
-          errorToast(String(err), [], context);
-        });
+      try {
+        const data = await httpDelete(session, `prefect/flows/${deploymentId}`)
+        mutate();
+        if (data?.success) {
+          successToast('Flow deleted successfully', [], toastContext);
+
+        } else {
+          errorToast('Something went wrong', [], toastContext);
+        }
+      }
+      catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+      }
     })();
   };
 
