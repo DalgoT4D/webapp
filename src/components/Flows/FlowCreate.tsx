@@ -37,7 +37,7 @@ type fieldListElement = {
   id: string;   // set by the field-array
   blockName: string;
   name: string;
-  seq: Number;
+  seq: number;
 }
 
 const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
