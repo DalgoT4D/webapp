@@ -1,6 +1,6 @@
 import { backendUrl } from '@/config/constant';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { Delete, Add } from '@mui/icons-material';
+import { Delete } from '@mui/icons-material';
 import {
   Autocomplete,
   Box,
@@ -31,7 +31,7 @@ const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
     { id: 'block1', label: 'block1' },
     { id: 'block2', label: 'block2' },
   ]);
-  const { register, handleSubmit, control, watch, reset, setValue } = useForm({
+  const { register, handleSubmit, control } = useForm({
     defaultValues: {
       name: '',
       dbtTransform: 'no',
@@ -123,7 +123,7 @@ const FlowCreate = ({ updateCrudVal }: FlowCreateInterface) => {
       })
       .then((data) => {
         updateCrudVal('index');
-        successToast('Flow created successfully', [], context);
+        successToast(`Flow ${data?.name} created successfully`, [], context);
       })
       .catch((err) => {
         errorToast(String(err), [], context);
