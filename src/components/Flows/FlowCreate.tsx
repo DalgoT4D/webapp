@@ -1,4 +1,3 @@
-import { backendUrl } from '@/config/constant';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { Delete } from '@mui/icons-material';
 import {
@@ -18,6 +17,8 @@ import { useSession } from 'next-auth/react';
 import React, { useContext, useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { httpGet, httpPost } from '@/helpers/http';
+
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -42,7 +43,7 @@ type fieldListElement = {
 
 const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
   const { data: session }: any = useSession();
-  const context = useContext(GlobalContext);
+  const toastContext = useContext(GlobalContext);
   const [currentSelectedConn, setCurrentSelectedConn] = useState<any>(null);
 
   const [connections, setConnections] = useState<dispConnection[]>([]);
@@ -97,53 +98,36 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
 
   useEffect(() => {
     (async () => {
-      await fetch(`${backendUrl}/api/airbyte/connections`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${session?.user.token}`,
-        },
-      })
-        .then((response) => {
-          return response.json();
-        })
-        .then((data) => {
-          // Prepare the specs config before setting it
-          const tempConns: Array<dispConnection> = [];
-          data.forEach((conn: apiResponseConnection) => {
-            tempConns.push({ id: conn.blockName, label: conn.name });
-          });
-          setConnections(tempConns);
-        })
-        .catch((err) => {
-          console.log('something went wrong', err);
+      try {
+        const data = await httpGet(session, 'airbyte/connections');
+        const tempConns: Array<dispConnection> = data.map((conn: apiResponseConnection) => {
+          return { id: conn.blockName, label: conn.name }
         });
+        setConnections(tempConns);
+      }
+      catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+      }
     })();
   }, []);
 
   const onSubmit = async (data: any) => {
-    await fetch(`${backendUrl}/api/prefect/flows/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify({
+    try {
+      const response = await httpPost(session, 'prefect/flows/', {
         name: data.name,
         connectionBlocks: data.connectionBlocks,
         dbtTransform: data.dbtTransform,
         cron: processCronExpression(data.cron),
-      }),
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        mutate();
-        updateCrudVal('index');
-        successToast(`Flow ${data.name} created successfully`, [], context);
-      })
-      .catch((err) => {
-        errorToast(String(err), [], context);
       });
+      mutate();
+      updateCrudVal('index');
+      successToast(`Flow ${response.name} created successfully`, [], toastContext);
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
   };
   return (
     <>

@@ -18,6 +18,10 @@ import { Close } from '@mui/icons-material';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { DestinationConfigInput } from './DestinationConfigInput';
+import { httpGet, httpPost } from '@/helpers/http';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { useContext } from 'react';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 
 const headers = ['Destination details', 'Type'];
 
@@ -32,6 +36,7 @@ export const Destinations = () => {
   const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>(
     []
   );
+  const toastContext = useContext(GlobalContext);
 
   const {
     register,
@@ -64,25 +69,18 @@ export const Destinations = () => {
   useEffect(() => {
     if (showDialog && destinationDefs.length === 0) {
       (async () => {
-        await fetch(`${backendUrl}/api/airbyte/destination_definitions`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${session?.user.token}`,
-          },
-        })
-          .then((response) => {
-            return response.json();
-          })
-          .then((data) => {
-            const destinationDefRows = data?.map((element: any) => ({
-              label: element.name,
-              id: element.destinationDefinitionId,
-            }));
-            setDestinationDefs(destinationDefRows);
-          })
-          .catch((err) => {
-            console.log('something went wrong', err);
-          });
+        try {
+          const data = await httpGet(session, 'airbyte/destination_definitions');
+          const destinationDefRows = data?.map((element: any) => ({
+            label: element.name,
+            id: element.destinationDefinitionId,
+          }));
+          setDestinationDefs(destinationDefRows);
+        }
+        catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], toastContext);
+        }
       })();
     }
   }, [showDialog]);
@@ -169,32 +167,22 @@ export const Destinations = () => {
   useEffect(() => {
     if (watchSelectedDestinationDef?.id) {
       (async () => {
-        await fetch(
-          `${backendUrl}/api/airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${session?.user.token}`,
-            },
-          }
-        )
-          .then((response) => {
-            return response.json();
-          })
-          .then((data) => {
-            // Prepare the specs config before setting it
-            const specsConfigFields = prePrepareConfigSpecs(
-              [],
-              data,
-              'config',
-              [],
-              []
-            );
-            setDestinationDefSpecs(specsConfigFields);
-          })
-          .catch((err) => {
-            console.log('something went wrong', err);
-          });
+        try {
+          const data = await httpGet(session, `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`);
+          // Prepare the specs config before setting it
+          const specsConfigFields = prePrepareConfigSpecs(
+            [],
+            data,
+            'config',
+            [],
+            []
+          );
+          setDestinationDefSpecs(specsConfigFields);
+        }
+        catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], toastContext);
+        }
       })();
     }
   }, [watchSelectedDestinationDef]);
@@ -210,25 +198,21 @@ export const Destinations = () => {
   };
 
   const onSubmit = async (data: any) => {
-    await fetch(`${backendUrl}/api/organizations/warehouse/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify({
+    try {
+      await httpPost(session, 'organizations/warehouse/', {
         wtype: data.destinationDef.label.toLowerCase(),
         name: data.name,
         destinationDefId: data.destinationDef.id,
         airbyteConfig: data.config,
-      }),
-    })
-      .then(() => {
-        mutate();
-        handleClose();
-      })
-      .catch((err) => {
-        console.log('something went wrong', err);
       });
+      mutate();
+      handleClose();
+      successToast("Warehouse created", [], toastContext);
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
   };
 
   if (isLoading) {
