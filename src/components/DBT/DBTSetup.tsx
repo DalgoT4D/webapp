@@ -1,49 +1,45 @@
 import { Box, Button, TextField } from '@mui/material';
 import styles from '@/styles/Home.module.css';
 import { useForm } from 'react-hook-form';
-import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { httpGet, httpPost } from '@/helpers/http';
 
-export const DBTSetup = () => {
+export const DBTSetup = ({ onCreateWorkspace }: any) => {
 
-  const { register, handleSubmit } = useForm({ defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: 'public' } });
+  const { register, handleSubmit } = useForm({ defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: '' } });
   const { data: session }: any = useSession();
   const [progressMessages, setProgressMessages] = useState<any[]>([]);
   const [setupStatus, setSetupStatus] = useState("not-started");
   const [failureMessage, setFailureMessage] = useState(null);
-  const [workspace, setWorkspace] = useState({ status: '', gitrepo_url: '', target_name: '', target_schema: '' });
+  const toastContext = useContext(GlobalContext);
 
   const checkProgress = async function (taskId: string) {
 
-    await fetch(`${backendUrl}/api/tasks/${taskId}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-    }).then((response) => {
+    try {
+      const message = await httpGet(session, `tasks/${taskId}`);
+      setProgressMessages(message['progress']);
 
-      if (response.ok) {
-        response.json().then((message) => {
+      const lastMessage = message['progress'][message['progress'].length - 1];
 
-          setProgressMessages(message['progress']);
+      if (lastMessage['status'] === 'completed') {
+        setSetupStatus("completed");
 
-          const lastMessage = message['progress'][message['progress'].length - 1];
+      } else if (lastMessage['status'] === 'failed') {
+        setSetupStatus("failed");
+        setFailureMessage(lastMessage['message']);
 
-          if (lastMessage['status'] === 'completed') {
-            setSetupStatus("completed");
-            fetchDbtWorkspace();
-
-          } else if (lastMessage['status'] === 'failed') {
-            setSetupStatus("failed");
-            setFailureMessage(lastMessage['message']);
-
-          } else {
-            setTimeout(() => { checkProgress(taskId) }, 2000);
-          }
-        });
+      } else {
+        setTimeout(() => { checkProgress(taskId) }, 2000);
       }
-    });
+    }
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
+
   }
 
   const onSubmit = async (data: any) => {
@@ -63,106 +59,19 @@ export const DBTSetup = () => {
       payload.gitrepoAccessToken = data.gitrepoAccessToken;
     }
 
-    await fetch(`${backendUrl}/api/dbt/workspace/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-      body: JSON.stringify(payload),
-    }).then((response) => {
-
-      if (response.ok) {
-        response.json().then((message) => {
-          setTimeout(() => { checkProgress(message.task_id) }, 1000);
-        });
-      } else {
-        response.json().then((message) => {
-          console.error(message);
-        })
-        setSetupStatus("failed");
-      }
-    });
-  };
-
-  async function fetchDbtWorkspace() {
-
-    if (!session) {
-      return;
+    try {
+      const message = await httpPost(session, 'dbt/workspace/', payload);
+      setTimeout(() => { checkProgress(message.task_id) }, 1000);
     }
-
-    await fetch(`${backendUrl}/api/dbt/dbt_workspace`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${session?.user.token}`,
-      },
-    }).then((response) => {
-
-      if (response.ok) {
-        response.json().then((message) => {
-          if (message.error === 'no dbt workspace has been configured') {
-            setWorkspace({ ...workspace, status: 'fetched' });
-            // do nothing
-          } else if (message.error) {
-            setFailureMessage(message.error);
-
-          } else {
-            message.status = 'fetched';
-            setWorkspace(message);
-          }
-        });
-      } else {
-
-        response.json().then((message) => {
-          console.error(message);
-        })
-      }
-    });
-  }
-
-  if (workspace.status === '') {
-
-    fetchDbtWorkspace();
-  }
-
-
-  // async function fetchCurrentUser() {
-
-  //   if (!session) {
-  //     return;
-  //   }
-
-  //   await fetch(`${backendUrl}/api/currentuser`, {
-  //     method: 'GET',
-  //     headers: {
-  //       Authorization: `Bearer ${session?.user.token}`,
-  //     },
-  //   }).then((response) => {
-
-  //     if (response.ok) {
-  //       response.json().then((message) => {
-  //         console.log(message);
-  //       });
-  //     } else {
-
-  //       response.json().then((message) => {
-  //         console.error(message);
-  //       })
-  //     }
-  //   });
-  // }
-
-  // fetchCurrentUser();
+    catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+      setSetupStatus("failed");
+    }
+  };
 
   return (
     <>
-      {workspace.status &&
-        <>
-          <div>{workspace.gitrepo_url}</div>
-          <div>dbt target: {workspace.target_name}</div>
-          <div>dbt target schema: {workspace.target_schema}</div>
-        </>
-      }
-
       {
         setupStatus === 'not-started' &&
 
@@ -188,7 +97,7 @@ export const DBTSetup = () => {
               data-testid="dbt-target-schema"
               label="dbt target schema"
               variant="outlined"
-              {...register('schema')}
+              {...register('schema', { required: true })}
             />
           </Box>
           <Box className={styles.Input}>
@@ -210,7 +119,10 @@ export const DBTSetup = () => {
 
       {
         setupStatus === 'completed' &&
-        <div>Setup complete</div>
+        <>
+          <div>Setup complete</div>
+          <button onClick={() => onCreateWorkspace()}>Continue</button>
+        </>
       }
 
       {
