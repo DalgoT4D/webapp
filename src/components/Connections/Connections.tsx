@@ -20,7 +20,10 @@ import { useSession } from 'next-auth/react';
 import { httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useContext } from 'react';
-import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 
@@ -44,7 +47,9 @@ export const Connections = () => {
   const [sources, setSources] = useState<Array<string>>([]);
   const [sourceStreams, setSourceStreams] = useState<Array<string>>([]);
 
-  const { data, isLoading, mutate } = useSWR(`${backendUrl}/api/airbyte/connections`);
+  const { data, isLoading, mutate } = useSWR(
+    `${backendUrl}/api/airbyte/connections`
+  );
   const { data: sourcesData } = useSWR(`${backendUrl}/api/airbyte/sources`);
 
   const toastContext = useContext(GlobalContext);
@@ -52,10 +57,19 @@ export const Connections = () => {
   // when the connection list changes
   useEffect(() => {
     if (data && data.length > 0) {
-      const rows = data.map((element: any) => [
-        element.name,
-        element.sourceDest,
-        element.lastSync,
+      const rows = data.map((connection: any) => [
+        connection.name,
+        connection.sourceDest,
+        connection.lastSync,
+        [
+          <Button
+            variant="contained"
+            sx={{ m: 1 }}
+            onClick={() => syncConnection(connection)}
+          >
+            Sync
+          </Button>,
+        ],
       ]);
       setRows(rows);
     }
@@ -86,14 +100,16 @@ export const Connections = () => {
 
       (async () => {
         try {
-          const message = await httpGet(session, `airbyte/sources/${watchSourceSelection.id}/schema_catalog`);
+          const message = await httpGet(
+            session,
+            `airbyte/sources/${watchSourceSelection.id}/schema_catalog`
+          );
           const streamNames: any[] = [];
           message['catalog']['streams'].forEach((el: any) => {
             streamNames.push(el.stream.name);
-          })
+          });
           setSourceStreams(streamNames);
-        }
-        catch (err: any) {
+        } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
         }
@@ -167,7 +183,7 @@ export const Connections = () => {
       name: data.name,
       sourceId: data.sources.id,
       streamNames: sourceStreams,
-    }
+    };
     if (data.destinationSchema) {
       payload.destinationSchema = data.destinationSchema;
     }
@@ -176,9 +192,8 @@ export const Connections = () => {
       mutate();
       reset();
       handleClose();
-      successToast("created connection", [], toastContext);
-    }
-    catch (err: any) {
+      successToast('created connection', [], toastContext);
+    } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
     }
@@ -188,10 +203,13 @@ export const Connections = () => {
     console.log(connection);
     (async () => {
       try {
-        const message = await httpPost(session, `airbyte/connections/${connection.blockId}/sync/`, {});
+        const message = await httpPost(
+          session,
+          `airbyte/connections/${connection.blockId}/sync/`,
+          {}
+        );
         successToast(message, [], toastContext);
-      }
-      catch (err: any) {
+      } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
       }
@@ -201,7 +219,6 @@ export const Connections = () => {
   return (
     <>
       <Dialog open={showDialog} onClose={handleClose}>
-
         <DialogTitle>
           <Box display="flex" alignItems="center">
             <Box flexGrow={1}> Add a new connection</Box>
@@ -216,7 +233,6 @@ export const Connections = () => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent sx={{ minWidth: '400px' }}>
             <Box sx={{ pt: 2, pb: 4 }}>
-
               <TextField
                 sx={{ width: '100%' }}
                 label="Name"
@@ -256,19 +272,17 @@ export const Connections = () => {
 
               <Box sx={{ m: 2 }} />
 
-              {sourceStreams.length > 0 &&
+              {sourceStreams.length > 0 && (
                 <>
                   <div>Available Tables / Views</div>
                   <ul>
-                    {sourceStreams.map((stream) =>
+                    {sourceStreams.map((stream) => (
                       <li key={stream}>{stream}</li>
-                    )}
+                    ))}
                   </ul>
                   <div>For now we will sync all, selection coming soon</div>
                 </>
-              }
-
-
+              )}
             </Box>
           </DialogContent>
           <DialogActions
@@ -290,17 +304,6 @@ export const Connections = () => {
         headers={headers}
         rows={rows}
       />
-
-      {connections && connections.length > 0 &&
-        <>
-          <div>(/for demo/)</div>
-          {connections.map((connection: any) =>
-            <button key={connection.blockId} onClick={() => syncConnection(connection)}>SYNC &quot;{connection.name}&quot;</button>
-          )}
-        </>
-      }
-
-
     </>
   );
 };
