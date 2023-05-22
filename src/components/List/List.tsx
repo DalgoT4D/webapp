@@ -6,7 +6,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 interface ListProps {
   title: string;
@@ -29,12 +29,16 @@ export const List = ({ title, openDialog, headers, rows }: ListProps) => {
       </Box>
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead>
+          <TableHead sx={{ display: 'table-header-group' }}>
             <TableRow>
               {headers.map((header) => (
-                <TableCell key={header}>{header}</TableCell>
+                <TableCell sx={{ padding: '16px' }} key={header}>
+                  {header}
+                </TableCell>
               ))}
-              <TableCell align="right">Actions</TableCell>
+              <TableCell sx={{ padding: '16px' }} align="right">
+                Actions
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -43,10 +47,29 @@ export const List = ({ title, openDialog, headers, rows }: ListProps) => {
                 key={row.name}
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
-                {row.map((column: any) => (
-                  <TableCell key={column}>{column}</TableCell>
-                ))}
-                <TableCell align="right">Actions</TableCell>
+                {row.map(
+                  // if action is sent render with right align
+                  (column: any, idx: number) => (
+                    <TableCell
+                      key={column}
+                      align={
+                        headers.length + 1 === row.length &&
+                        idx === row.length - 1
+                          ? 'right'
+                          : 'left'
+                      }
+                    >
+                      {column}
+                    </TableCell>
+                  )
+                )}
+                {headers.length + 1 !== row.length ? ( // if actions is not sent render some text
+                  <TableCell sx={{ padding: '16px' }} align="right">
+                    Actions
+                  </TableCell>
+                ) : (
+                  ''
+                )}
               </TableRow>
             ))}
           </TableBody>
