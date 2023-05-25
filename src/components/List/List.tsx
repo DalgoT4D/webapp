@@ -13,19 +13,28 @@ interface ListProps {
   headers: Array<string>;
   rows: Array<any>;
   openDialog: any;
+  onlyList?: boolean;
 }
 
-export const List = ({ title, openDialog, headers, rows }: ListProps) => {
+export const List = ({
+  title,
+  openDialog,
+  headers,
+  rows,
+  onlyList,
+}: ListProps) => {
   return (
     <>
       <Box display="flex" justifyContent="flex-end">
-        <Button
-          data-testid={`add-new-${title}`.toLowerCase()}
-          variant="contained"
-          onClick={() => openDialog()}
-        >
-          + New {title}
-        </Button>
+        {!onlyList && (
+          <Button
+            data-testid={`add-new-${title}`.toLowerCase()}
+            variant="contained"
+            onClick={() => openDialog()}
+          >
+            + New {title}
+          </Button>
+        )}
       </Box>
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
@@ -42,16 +51,16 @@ export const List = ({ title, openDialog, headers, rows }: ListProps) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row: any) => (
+            {rows.map((row: any, idx: number) => (
               <TableRow
-                key={row.name}
+                key={idx}
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
                 {row.map(
                   // if action is sent render with right align
                   (column: any, idx: number) => (
                     <TableCell
-                      key={column}
+                      key={idx}
                       align={
                         headers.length + 1 === row.length &&
                         idx === row.length - 1

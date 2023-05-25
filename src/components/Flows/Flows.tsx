@@ -100,7 +100,6 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
           <>
             <Button
               variant="contained"
-              sx={{ m: 1 }}
               onClick={() => handleQuickRunDeployment(flow?.deploymentId)}
             >
               Run
