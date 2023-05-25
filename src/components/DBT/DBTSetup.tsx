@@ -1,23 +1,50 @@
-import { Box, Button, TextField } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  TextField,
+  Typography,
+} from '@mui/material';
 import styles from '@/styles/Home.module.css';
 import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpGet, httpPost } from '@/helpers/http';
+import { Close } from '@mui/icons-material';
 
-export const DBTSetup = ({ onCreateWorkspace }: any) => {
+interface DBTSetupProps {
+  onCreateWorkspace: (...args: any) => any;
+  logs: Array<any>;
+  setLogs: (...args: any) => any;
+  setExpandLogs: (...args: any) => any;
+  showDialog: boolean;
+  setShowDialog: (...args: any) => any;
+}
 
-  const { register, handleSubmit } = useForm({ defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: '' } });
+export const DBTSetup = ({
+  onCreateWorkspace,
+  logs,
+  setLogs,
+  setExpandLogs,
+  showDialog,
+  setShowDialog,
+}: DBTSetupProps) => {
+  const { register, handleSubmit, reset } = useForm({
+    defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: '' },
+  });
   const { data: session }: any = useSession();
   const [progressMessages, setProgressMessages] = useState<any[]>([]);
-  const [setupStatus, setSetupStatus] = useState("not-started");
+  const [setupStatus, setSetupStatus] = useState('not-started');
   const [failureMessage, setFailureMessage] = useState(null);
   const toastContext = useContext(GlobalContext);
 
   const checkProgress = async function (taskId: string) {
-
     try {
       const message = await httpGet(session, `tasks/${taskId}`);
       setProgressMessages(message['progress']);
@@ -25,35 +52,61 @@ export const DBTSetup = ({ onCreateWorkspace }: any) => {
       const lastMessage = message['progress'][message['progress'].length - 1];
 
       if (lastMessage['status'] === 'completed') {
-        setSetupStatus("completed");
-
+        setSetupStatus('completed');
       } else if (lastMessage['status'] === 'failed') {
-        setSetupStatus("failed");
+        setSetupStatus('failed');
         setFailureMessage(lastMessage['message']);
-
       } else {
-        setTimeout(() => { checkProgress(taskId) }, 2000);
+        setTimeout(() => {
+          checkProgress(taskId);
+        }, 2000);
       }
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
     }
+  };
 
-  }
+  useEffect(() => {
+    setLogs(
+      progressMessages.map(
+        (msg) => `${msg.stepnum ? msg.stepnum + '. ' : ''}${msg.message}`
+      )
+    );
+  }, [progressMessages]);
+
+  useEffect(() => {
+    const progressMsgs = [];
+    if (setupStatus === 'started')
+      progressMsgs.push({ stepnum: '', message: 'Setting up workspace...' });
+
+    if (setupStatus === 'completed') {
+      onCreateWorkspace();
+      progressMsgs.push({ stepnum: '', message: 'Setup completed' });
+    }
+
+    if (setupStatus === 'failed')
+      progressMsgs.push({
+        stepnum: '',
+        message: `Setup failed: ${failureMessage}`,
+      });
+
+    setProgressMessages(progressMessages.concat(progressMsgs));
+  }, [setupStatus]);
 
   const onSubmit = async (data: any) => {
-
-    setSetupStatus("started");
+    setSetupStatus('started');
+    handleClose();
+    setExpandLogs(true);
 
     const payload = {
       gitrepoUrl: data.gitrepoUrl,
-      dbtVersion: "1.4.5",
+      dbtVersion: '1.4.5',
       profile: {
         name: 'dbt',
         target: 'dev',
         target_configs_schema: data.schema,
-      }
+      },
     } as any;
     if (data.gitrepoAccessToken) {
       payload.gitrepoAccessToken = data.gitrepoAccessToken;
@@ -61,76 +114,88 @@ export const DBTSetup = ({ onCreateWorkspace }: any) => {
 
     try {
       const message = await httpPost(session, 'dbt/workspace/', payload);
-      setTimeout(() => { checkProgress(message.task_id) }, 1000);
-    }
-    catch (err: any) {
+      setTimeout(() => {
+        checkProgress(message.task_id);
+      }, 1000);
+    } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
-      setSetupStatus("failed");
+      setSetupStatus('failed');
     }
+  };
+
+  const handleClose = () => {
+    reset();
+    setShowDialog(false);
   };
 
   return (
     <>
-      {
-        setupStatus === 'not-started' &&
-
+      <Dialog open={showDialog} onClose={handleClose}>
+        <DialogTitle>
+          <Box display="flex" alignItems="center">
+            <Box flexGrow={1}> Connect Repo</Box>
+            <Box>
+              <IconButton onClick={handleClose}>
+                <Close />
+              </IconButton>
+            </Box>
+          </Box>
+        </DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Box className={styles.Input} >
-            <TextField
-              data-testid="github-url"
-              label="GitHub repo URL"
-              variant="outlined"
-              {...register('gitrepoUrl', { required: true })}
-            />
-          </Box>
-          <Box className={styles.Input}>
-            <TextField
-              data-testid="github-pat"
-              label="Personal access token"
-              variant="outlined"
-              {...register('gitrepoAccessToken', { required: false })}
-            />
-          </Box>
-          <Box className={styles.Input}>
-            <TextField
-              data-testid="dbt-target-schema"
-              label="dbt target schema"
-              variant="outlined"
-              {...register('schema', { required: true })}
-            />
-          </Box>
-          <Box className={styles.Input}>
-            <Button variant="contained" type="submit" data-testid="save-github-url">
+          <DialogContent sx={{ minWidth: '400px' }}>
+            <Box>
+              <TextField
+                sx={{ width: '100%' }}
+                data-testid="github-url"
+                label="GitHub repo URL"
+                variant="outlined"
+                {...register('gitrepoUrl', { required: true })}
+              />
+            </Box>
+            <Box sx={{ m: 2 }} />
+            <Box>
+              <TextField
+                sx={{ width: '100%' }}
+                data-testid="github-pat"
+                label="Personal access token"
+                variant="outlined"
+                {...register('gitrepoAccessToken', { required: false })}
+              />
+            </Box>
+            <Box sx={{ m: 2 }} />
+            <Box>
+              <TextField
+                sx={{ width: '100%' }}
+                data-testid="dbt-target-schema"
+                label="dbt target schema"
+                variant="outlined"
+                {...register('schema', { required: true })}
+              />
+            </Box>
+            <Box sx={{ m: 2 }} />
+          </DialogContent>
+          <DialogActions
+            sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}
+          >
+            <Button
+              variant="contained"
+              type="submit"
+              data-testid="save-github-url"
+            >
               Save
             </Button>
-          </Box>
+            <Button
+              color="secondary"
+              variant="outlined"
+              onClick={handleClose}
+              data-testid="cancel"
+            >
+              Cancel
+            </Button>
+          </DialogActions>
         </form>
-      }
-
-      {
-        setupStatus === 'started' &&
-        <>
-          <div>Setting up workspace...</div>
-          <div>{progressMessages.map(message => <div key={message.stepnum}>{message.stepnum}. {message.message}</div>)}</div>
-          <div>...</div>
-        </>
-      }
-
-      {
-        setupStatus === 'completed' &&
-        <>
-          <div>Setup complete</div>
-          <button onClick={() => onCreateWorkspace()}>Continue</button>
-        </>
-      }
-
-      {
-        setupStatus === 'failed' &&
-        <>
-          <div>Setup failed: {failureMessage}</div>
-        </>
-      }
+      </Dialog>
     </>
   );
-}
+};

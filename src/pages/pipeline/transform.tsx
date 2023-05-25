@@ -1,98 +1,109 @@
-import { Box, Grid, Paper } from '@mui/material';
-import styles from '@/styles/Home.module.css';
-import { Typography } from '@mui/material';
-import { PageHead } from '@/components/PageHead';
-import { DBTSetup } from '@/components/DBT/DBTSetup';
 import { DBTCreateProfile } from '@/components/DBT/DBTCreateProfile';
-import { useSession } from 'next-auth/react';
-import { useState, useEffect, useContext } from 'react';
+import { DBTSetup } from '@/components/DBT/DBTSetup';
+import { List } from '@/components/List/List';
+import { PageHead } from '@/components/PageHead';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
-import { httpPost, httpGet } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
+import styles from '@/styles/Home.module.css';
+import { ExpandMore } from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  CircularProgress,
+  Collapse,
+  IconButton,
+  Link,
+  Typography,
+} from '@mui/material';
+import { useSession } from 'next-auth/react';
+import React, { useContext, useEffect, useState } from 'react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Dbt from '@/images/dbt.png';
+import Image from 'next/image';
 
-export default function Transform() {
+type DbtBlock = {
+  blockName: string;
+  displayName: string;
+};
 
-  const [workspace, setWorkspace] = useState({ status: '', gitrepo_url: '', default_schema: '' });
+const transform = () => {
+  const [workspace, setWorkspace] = useState({
+    status: '',
+    gitrepo_url: '',
+    default_schema: '',
+  });
+  const [dbtBlocks, setDbtBlocks] = useState<DbtBlock[]>([]);
+  const [dbtRunLogs, setDbtRunLogs] = useState<string[]>([]);
   const [dbtJobStatus, setDbtJobStatus] = useState<boolean>(false);
+  const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, create-profile, complete
+  const [expandLogs, setExpandLogs] = useState<boolean>(false);
+  const [showConnectRepoDialog, setShowConnectRepoDialog] =
+    useState<boolean>(false);
+  const [showAddProfileDialog, setShowAddProfileDialog] =
+    useState<boolean>(false);
+  const [rerender, setRerender] = useState<boolean>(false);
+
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
 
-  type displayBlock = {
-    blockName: string;
-    displayName: string;
-  };
-  const [dispBlocks, setDispBlocks] = useState<displayBlock[]>([]);
-
-  const [dbtRunLogs, setDbtRunLogs] = useState<string[]>([]);
-
-  async function fetchDbtWorkspace() {
-
-    if (!session) {
-      return;
-    }
+  const fetchDbtWorkspace = async () => {
+    if (!session) return;
 
     try {
-      const message = await httpGet(session, 'dbt/dbt_workspace');
-      if (message.error === 'no dbt workspace has been configured') {
+      const response = await httpGet(session, 'dbt/dbt_workspace');
+      setDbtSetupStage('create-workspace');
+      if (response.error === 'no dbt workspace has been configured') {
         setWorkspace({ ...workspace, status: 'fetched' });
         // do nothing
-      } else if (message.error) {
-        errorToast(message.error, [], toastContext);
-
+      } else if (response.error) {
+        errorToast(response.error, [], toastContext);
       } else {
-        message.status = 'fetched';
-        setWorkspace(message);
+        response.status = 'fetched';
+        setWorkspace(response);
+        setDbtSetupStage('create-profile');
       }
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
     }
+  };
 
-  }
+  const fetchDbtBlocks = async () => {
+    if (!session) return;
+    try {
+      const response = await httpGet(session, 'prefect/blocks/dbt');
+      setDbtBlocks(
+        response.map((block: DbtBlock) => {
+          return [
+            block.blockName.split('-')[3],
+            <>
+              <Button variant="contained" onClick={() => runDbtJob(block)}>
+                Run
+              </Button>
+            </>,
+          ];
+        })
+      );
+      if (response && response?.length > 0) setDbtSetupStage('complete');
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
+  };
 
   useEffect(() => {
     fetchDbtWorkspace();
-  }, []);
+    fetchDbtBlocks();
+  }, [session, rerender]);
 
-  const onCreatedProfile = async function (blockNames: string[]) {
-    setDispBlocks(blockNames.map((blockName: string) => {
-      return {
-        blockName,
-        displayName: blockName.split('-')[3],
-      }
-    }));
-  };
-
-  type dbtBlock = {
-    blockType: string,
-    blockId: string,
-    blockName: string,
-  };
-
-  const fetchDbtBlocks = async function () {
-
-    try {
-      const message = await httpGet(session, 'prefect/blocks/dbt');
-      setDispBlocks(message.map((block: dbtBlock) => {
-        return {
-          blockName: block.blockName,
-          displayName: block.blockName.split('-')[3],
-        }
-      }));
-    }
-    catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], toastContext);
-    }
-  };
-
-  useEffect(() => {
-    fetchDbtBlocks()
-  }, []);
-
-  const runDbtJob = async function (block: displayBlock) {
-
+  const runDbtJob = async function (block: DbtBlock) {
     setDbtJobStatus(true);
     setDbtRunLogs([]);
 
@@ -103,80 +114,189 @@ export default function Transform() {
         // flowRunName: 'rc-flow-run-name',
       });
       console.log(message);
-      successToast("Job ran successfully", [], toastContext);
-      setDbtRunLogs(message);
-    }
-    catch (err: any) {
+      if (message?.success)
+        successToast('Job ran successfully', [], toastContext);
+      // setDbtRunLogs(message);
+    } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
     }
 
     setDbtJobStatus(false);
+    console.log('inside dbt run block');
   };
 
   return (
     <>
-      <PageHead title="Development Data Platform" />
+      <PageHead title="This is the new one" />
       <main className={styles.main}>
-        <Typography variant="h1" gutterBottom color="primary.main">
-          DDP platform transform page
+        <Typography
+          sx={{ fontWeight: 700 }}
+          variant="h4"
+          gutterBottom
+          color="#000"
+        >
+          Transformation
         </Typography>
-        <Box className={styles.Container}>
-          <Grid container columns={5}>
-            <Grid item xs={8}>
-              <Paper elevation={3} sx={{ p: 4 }}>
-                {/* add github info */
-                  !workspace.gitrepo_url &&
-                  <DBTSetup onCreateWorkspace={() => fetchDbtWorkspace()} />
-                }
-                {/* create profile */
-                  workspace && workspace.gitrepo_url &&
-                  <>
-                    <div>
-                      <a href={workspace.gitrepo_url}>GitHub repo</a>
-                    </div>
-                    <div>default target schema: {workspace.default_schema}</div>
-                    {
-                      dispBlocks.length === 0 &&
-                      <DBTCreateProfile createdProfile={onCreatedProfile} />
-                    }
-                    {
-                      dispBlocks.length > 0 && !dbtJobStatus &&
-                      <>
-                        {
-                          dispBlocks.map((dispBlock: displayBlock) => (
-                            <div key={dispBlock.blockName}>
-                              <button onClick={() => runDbtJob(dispBlock)}>
-                                {dispBlock.displayName}
-                              </button>
-                            </div>
-                          ))
-                        }
-                      </>
-                    }
-                    {
-                      dispBlocks.length > 0 && dbtJobStatus &&
-                      <>
-                        <div>Please wait...</div>
-                      </>
-                    }
-                    {
-                      dbtRunLogs.length > 0 &&
-                      <div style={{ border: "2px solid darkgray", borderRadius: "4px", padding: "5px" }}>
-                        {
-                          dbtRunLogs.map((logMessage, idx) => (
-                            <div key={idx}>{logMessage}</div>
-                          ))
-                        }
-                      </div>
-                    }
-                  </>
-                }
-              </Paper>
-            </Grid>
-          </Grid>
+        <Card
+          sx={{
+            background: 'white',
+            display: 'flex',
+            borderRadius: '8px',
+            padding: '16px',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '10px',
+              alignItems: 'center',
+            }}
+          >
+            <Image
+              src={Dbt}
+              alt="Banner"
+              style={{ width: '46px', height: '46px' }}
+            />
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '5px',
+              }}
+            >
+              <Typography sx={{ fontWeight: 700 }} variant="h4" color="#000">
+                DBT REPOSITORY
+              </Typography>
+              {workspace && workspace.gitrepo_url ? (
+                <>
+                  <Link
+                    sx={{
+                      backgroundColor: '#F2F2EB',
+                      borderRadius: '6px',
+                      padding: '3px 6px 3px 6px',
+                      width: 'min-content',
+                      display: 'inline-flex',
+                      textDecoration: 'none',
+                      ':hover': { cursor: 'pointer' },
+                    }}
+                    target="_blank"
+                    rel="noopener"
+                    href={workspace?.gitrepo_url || '#'}
+                  >
+                    <Typography sx={{ fontWeight: 600, color: '#0F2440' }}>
+                      {workspace?.gitrepo_url}
+                    </Typography>
+                  </Link>
+                  <Box
+                    sx={{
+                      backgroundColor: '#F2F2EB',
+                      borderRadius: '6px',
+                      padding: '3px 6px 3px 6px',
+                      width: 'min-content',
+                      display: 'inline-flex',
+                    }}
+                  >
+                    <Typography sx={{ fontWeight: 600, color: '#0F2440' }}>
+                      {workspace?.default_schema}
+                    </Typography>
+                  </Box>
+                </>
+              ) : (
+                ''
+              )}
+            </Box>
+          </Box>
+          <Box>
+            {dbtSetupStage === 'create-workspace' ? (
+              <Button
+                variant="contained"
+                onClick={() => setShowConnectRepoDialog(true)}
+              >
+                Connect & Setup Repo{' '}
+              </Button>
+            ) : dbtSetupStage === 'create-profile' ? (
+              <Button
+                variant="contained"
+                onClick={() => setShowAddProfileDialog(true)}
+              >
+                Add Profile
+              </Button>
+            ) : (
+              ''
+            )}
+          </Box>
+        </Card>
+        <Box>
+          {dbtSetupStage === 'complete' ? ( // show blocks list
+            <List
+              title={'Dbt Setup'}
+              headers={['Block']}
+              rows={dbtBlocks}
+              openDialog={() =>
+                console.log('do nothing, this button is hidden')
+              }
+              onlyList={true}
+            />
+          ) : dbtSetupStage === 'create-profile' ? (
+            <DBTCreateProfile
+              createdProfile={() => {
+                setDbtSetupStage('complete');
+                setRerender(!rerender);
+              }}
+              showDialog={showAddProfileDialog}
+              setShowDialog={setShowAddProfileDialog}
+            />
+          ) : dbtSetupStage === 'create-workspace' ? (
+            <DBTSetup
+              logs={dbtRunLogs}
+              setLogs={setDbtRunLogs}
+              setExpandLogs={setExpandLogs}
+              onCreateWorkspace={() => {
+                setDbtSetupStage('create-profile');
+                setRerender(!rerender);
+              }}
+              showDialog={showConnectRepoDialog}
+              setShowDialog={setShowConnectRepoDialog}
+            />
+          ) : (
+            ''
+          )}
+          <Card
+            sx={{
+              marginTop: '10px',
+              padding: '4px',
+              borderRadius: '8px',
+              color: '#092540',
+            }}
+          >
+            <CardActions
+              sx={{ display: 'flex', justifyContent: 'space-between' }}
+            >
+              <Box>Logs</Box>
+              <IconButton onClick={() => setExpandLogs(!expandLogs)}>
+                <ExpandMoreIcon
+                  sx={{
+                    transform: expandLogs ? 'rotate(0deg)' : 'rotate(180deg)',
+                  }}
+                />
+              </IconButton>
+            </CardActions>
+            <Collapse in={expandLogs} unmountOnExit>
+              <CardContent>
+                {dbtRunLogs?.map((logMessage, idx) => (
+                  <Box key={idx}>{logMessage}</Box>
+                ))}
+              </CardContent>
+            </Collapse>
+          </Card>
         </Box>
       </main>
     </>
   );
-}
+};
+
+export default transform;
