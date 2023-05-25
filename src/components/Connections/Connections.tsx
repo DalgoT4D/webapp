@@ -64,7 +64,6 @@ export const Connections = () => {
         [
           <Button
             variant="contained"
-            sx={{ m: 1 }}
             onClick={() => syncConnection(connection)}
           >
             Sync
