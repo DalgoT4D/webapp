@@ -17,6 +17,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpGet, httpPost } from '@/helpers/http';
 import { Close } from '@mui/icons-material';
+import CustomDialog from '../Dialog/CustomDialog';
 
 interface DBTSetupProps {
   onCreateWorkspace: (...args: any) => any;
@@ -129,55 +130,53 @@ export const DBTSetup = ({
     setShowDialog(false);
   };
 
+  const AddWorkspaceSetupForm = () => {
+    return (
+      <>
+        <Box>
+          <TextField
+            sx={{ width: '100%' }}
+            data-testid="github-url"
+            label="GitHub repo URL"
+            variant="outlined"
+            {...register('gitrepoUrl', { required: true })}
+          />
+        </Box>
+        <Box sx={{ m: 2 }} />
+        <Box>
+          <TextField
+            sx={{ width: '100%' }}
+            data-testid="github-pat"
+            label="Personal access token"
+            variant="outlined"
+            {...register('gitrepoAccessToken', { required: false })}
+          />
+        </Box>
+        <Box sx={{ m: 2 }} />
+        <Box>
+          <TextField
+            sx={{ width: '100%' }}
+            data-testid="dbt-target-schema"
+            label="dbt target schema"
+            variant="outlined"
+            {...register('schema', { required: true })}
+          />
+        </Box>
+        <Box sx={{ m: 2 }} />
+      </>
+    );
+  };
+
   return (
     <>
-      <Dialog open={showDialog} onClose={handleClose}>
-        <DialogTitle>
-          <Box display="flex" alignItems="center">
-            <Box flexGrow={1}> Connect Repo</Box>
-            <Box>
-              <IconButton onClick={handleClose}>
-                <Close />
-              </IconButton>
-            </Box>
-          </Box>
-        </DialogTitle>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogContent sx={{ minWidth: '400px' }}>
-            <Box>
-              <TextField
-                sx={{ width: '100%' }}
-                data-testid="github-url"
-                label="GitHub repo URL"
-                variant="outlined"
-                {...register('gitrepoUrl', { required: true })}
-              />
-            </Box>
-            <Box sx={{ m: 2 }} />
-            <Box>
-              <TextField
-                sx={{ width: '100%' }}
-                data-testid="github-pat"
-                label="Personal access token"
-                variant="outlined"
-                {...register('gitrepoAccessToken', { required: false })}
-              />
-            </Box>
-            <Box sx={{ m: 2 }} />
-            <Box>
-              <TextField
-                sx={{ width: '100%' }}
-                data-testid="dbt-target-schema"
-                label="dbt target schema"
-                variant="outlined"
-                {...register('schema', { required: true })}
-              />
-            </Box>
-            <Box sx={{ m: 2 }} />
-          </DialogContent>
-          <DialogActions
-            sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}
-          >
+      <CustomDialog
+        title={'Conect Repo'}
+        show={showDialog}
+        handleClose={handleClose}
+        handleSubmit={handleSubmit}
+        formContent={<AddWorkspaceSetupForm />}
+        formActions={
+          <>
             <Button
               variant="contained"
               type="submit"
@@ -193,9 +192,9 @@ export const DBTSetup = ({
             >
               Cancel
             </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+          </>
+        }
+      ></CustomDialog>
     </>
   );
 };

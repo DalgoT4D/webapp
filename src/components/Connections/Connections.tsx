@@ -1,20 +1,10 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import {
-  Autocomplete,
-  Box,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-} from '@mui/material';
+import { Autocomplete, Box, CircularProgress } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { backendUrl } from '@/config/constant';
-import { Close } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -24,6 +14,7 @@ import {
   errorToast,
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
+import CustomDialog from '../Dialog/CustomDialog';
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 
@@ -215,87 +206,84 @@ export const Connections = () => {
     })();
   };
 
-  return (
-    <>
-      <Dialog open={showDialog} onClose={handleClose}>
-        <DialogTitle>
-          <Box display="flex" alignItems="center">
-            <Box flexGrow={1}> Add a new connection</Box>
-            <Box>
-              <IconButton onClick={handleClose}>
-                <Close />
-              </IconButton>
-            </Box>
-          </Box>
-        </DialogTitle>
+  const CreateConnectionForm = () => {
+    return (
+      <>
+        <Box sx={{ pt: 2, pb: 4 }}>
+          <TextField
+            sx={{ width: '100%' }}
+            label="Name"
+            variant="outlined"
+            {...register('name', { required: true })}
+          ></TextField>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogContent sx={{ minWidth: '400px' }}>
-            <Box sx={{ pt: 2, pb: 4 }}>
-              <TextField
-                sx={{ width: '100%' }}
-                label="Name"
-                variant="outlined"
-                {...register('name', { required: true })}
-              ></TextField>
+          <Box sx={{ m: 2 }} />
 
-              <Box sx={{ m: 2 }} />
+          <TextField
+            sx={{ width: '100%' }}
+            label="Destination Schema"
+            variant="outlined"
+            {...register('destinationSchema')}
+          ></TextField>
 
-              <TextField
-                sx={{ width: '100%' }}
-                label="Destination Schema"
-                variant="outlined"
-                {...register('destinationSchema')}
-              ></TextField>
+          <Box sx={{ m: 2 }} />
 
-              <Box sx={{ m: 2 }} />
-
-              <Controller
-                name="sources"
-                control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <Autocomplete
-                    options={sources}
-                    onChange={(e, data) => field.onChange(data)}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Select source"
-                        variant="outlined"
-                      />
-                    )}
+          <Controller
+            name="sources"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => (
+              <Autocomplete
+                options={sources}
+                onChange={(e, data) => field.onChange(data)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select source"
+                    variant="outlined"
                   />
                 )}
               />
+            )}
+          />
 
-              <Box sx={{ m: 2 }} />
+          <Box sx={{ m: 2 }} />
 
-              {sourceStreams.length > 0 && (
-                <>
-                  <div>Available Tables / Views</div>
-                  <ul>
-                    {sourceStreams.map((stream) => (
-                      <li key={stream}>{stream}</li>
-                    ))}
-                  </ul>
-                  <div>For now we will sync all, selection coming soon</div>
-                </>
-              )}
-            </Box>
-          </DialogContent>
-          <DialogActions
-            sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}
-          >
+          {sourceStreams.length > 0 && (
+            <>
+              <div>Available Tables / Views</div>
+              <ul>
+                {sourceStreams.map((stream) => (
+                  <li key={stream}>{stream}</li>
+                ))}
+              </ul>
+              <div>For now we will sync all, selection coming soon</div>
+            </>
+          )}
+        </Box>
+      </>
+    );
+  };
+
+  return (
+    <>
+      <CustomDialog
+        title={'Add a new connection'}
+        show={showDialog}
+        handleClose={handleClose}
+        handleSubmit={handleSubmit(onSubmit)}
+        formContent={<CreateConnectionForm />}
+        formActions={
+          <>
             <Button variant="contained" type="submit">
               Connect
             </Button>
             <Button color="secondary" variant="outlined" onClick={handleClose}>
               Cancel
             </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+          </>
+        }
+      ></CustomDialog>
 
       <List
         openDialog={handleClickOpen}

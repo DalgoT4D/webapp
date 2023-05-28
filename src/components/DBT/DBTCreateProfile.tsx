@@ -19,6 +19,7 @@ import {
 } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 import { Close } from '@mui/icons-material';
+import CustomDialog from '../Dialog/CustomDialog';
 
 interface DBTCreateProfileProps {
   createdProfile: (...args: any) => any;
@@ -67,44 +68,41 @@ export const DBTCreateProfile = ({
     setShowDialog(false);
   };
 
+  const AddDbtProfileForm = () => {
+    return (
+      <>
+        <Box>
+          <TextField
+            sx={{ width: '100%' }}
+            data-testid="target-schema"
+            label="Profile name from dbt_project.yml"
+            variant="outlined"
+            {...register('name', { required: true })}
+          />
+        </Box>
+        <Box>
+          <TextField
+            sx={{ width: '100%' }}
+            data-testid="target-schema"
+            label="Target schema in warehouse"
+            variant="outlined"
+            {...register('target_configs_schema')}
+          />
+        </Box>
+      </>
+    );
+  };
+
   return (
     <>
-      <Dialog open={showDialog} onClose={handleClose}>
-        <DialogTitle>
-          <Box display="flex" alignItems="center">
-            <Box flexGrow={1}>Add dbt profile</Box>
-            <Box>
-              <IconButton onClick={handleClose}>
-                <Close />
-              </IconButton>
-            </Box>
-          </Box>
-          <i>From your dbt_project.yml</i>
-        </DialogTitle>
-        <form onSubmit={handleSubmit(createDbtProfile)}>
-          <DialogContent sx={{ minWidth: '400px' }}>
-            <Box className={styles.Input}>
-              <TextField
-                sx={{ width: '100%' }}
-                data-testid="target-schema"
-                label="Profile name from dbt_project.yml"
-                variant="outlined"
-                {...register('name', { required: true })}
-              />
-            </Box>
-            <Box className={styles.Input}>
-              <TextField
-                sx={{ width: '100%' }}
-                data-testid="target-schema"
-                label="Target schema in warehouse"
-                variant="outlined"
-                {...register('target_configs_schema')}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions
-            sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}
-          >
+      <CustomDialog
+        title={'Add dbt profile'}
+        show={showDialog}
+        handleClose={handleClose}
+        handleSubmit={handleSubmit}
+        formContent={<AddDbtProfileForm />}
+        formActions={
+          <>
             <Button
               variant="contained"
               type="submit"
@@ -120,9 +118,9 @@ export const DBTCreateProfile = ({
             >
               Cancel
             </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+          </>
+        }
+      ></CustomDialog>
     </>
   );
 };
