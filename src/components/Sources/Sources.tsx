@@ -21,7 +21,11 @@ import { SourceConfigInput } from './SourceConfigInput';
 import { httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useContext } from 'react';
-import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
+import CustomDialog from '../Dialog/CustomDialog';
 
 const headers = ['Source details', 'Type'];
 
@@ -58,7 +62,6 @@ export const Sources = () => {
 
   useEffect(() => {
     if (showDialog && sourceDefs.length === 0) {
-
       (async () => {
         try {
           const data = await httpGet(session, 'airbyte/source_definitions');
@@ -67,8 +70,7 @@ export const Sources = () => {
             id: element.sourceDefinitionId,
           }));
           setSourceDefs(sourceDefRows);
-        }
-        catch (err: any) {
+        } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
         }
@@ -80,7 +82,10 @@ export const Sources = () => {
     if (watchSelectedSourceDef?.id) {
       (async () => {
         try {
-          const data = await httpGet(session, `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`);
+          const data = await httpGet(
+            session,
+            `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`
+          );
           // Prepare the specs config before setting it
           const specsConfigFields: Array<any> = [];
           for (const [key, value] of Object.entries(data?.properties || {})) {
@@ -92,8 +97,7 @@ export const Sources = () => {
             });
           }
           setSourceDefSpecs(specsConfigFields);
-        }
-        catch (err: any) {
+        } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
         }
@@ -120,9 +124,8 @@ export const Sources = () => {
       });
       mutate();
       handleClose();
-      successToast("Source added", [], toastContext);
-    }
-    catch (err: any) {
+      successToast('Source added', [], toastContext);
+    } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
     }
@@ -132,59 +135,57 @@ export const Sources = () => {
     return <CircularProgress />;
   }
 
-  return (
-    <>
-      <Dialog open={showDialog} onClose={handleClose}>
-        <DialogTitle>
-          <Box display="flex" alignItems="center">
-            <Box flexGrow={1}> Add a new source</Box>
-            <Box>
-              <IconButton onClick={handleClose}>
-                <Close />
-              </IconButton>
-            </Box>
-          </Box>
-        </DialogTitle>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogContent sx={{ minWidth: '400px' }}>
-            <Box sx={{ pt: 2, pb: 4 }}>
-              <TextField
-                sx={{ width: '100%' }}
-                label="Name"
-                variant="outlined"
-                {...register('name', { required: true })}
-              ></TextField>
-              <Box sx={{ m: 2 }} />
-              <Controller
-                name="sourceDef"
-                control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <Autocomplete
-                    options={sourceDefs}
-                    onChange={(e, data) => field.onChange(data)}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Select source type"
-                        variant="outlined"
-                      />
-                    )}
+  const CreateSourceForm = () => {
+    return (
+      <>
+        <Box sx={{ pt: 2, pb: 4 }}>
+          <TextField
+            sx={{ width: '100%' }}
+            label="Name"
+            variant="outlined"
+            {...register('name', { required: true })}
+          ></TextField>
+          <Box sx={{ m: 2 }} />
+          <Controller
+            name="sourceDef"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => (
+              <Autocomplete
+                options={sourceDefs}
+                onChange={(e, data) => field.onChange(data)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select source type"
+                    variant="outlined"
                   />
                 )}
               />
-              <Box sx={{ m: 2 }} />
-              <SourceConfigInput
-                specs={sourceDefSpecs}
-                registerFormFieldValue={register}
-                control={control}
-                setFormValue={setValue}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions
-            sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}
-          >
+            )}
+          />
+          <Box sx={{ m: 2 }} />
+          <SourceConfigInput
+            specs={sourceDefSpecs}
+            registerFormFieldValue={register}
+            control={control}
+            setFormValue={setValue}
+          />
+        </Box>
+      </>
+    );
+  };
+
+  return (
+    <>
+      <CustomDialog
+        title={'Add a new source'}
+        show={showDialog}
+        handleClose={handleClose}
+        handleSubmit={handleSubmit(onSubmit)}
+        formContent={<CreateSourceForm />}
+        formActions={
+          <>
             <Button variant="contained" type="submit">
               Save changes and test
             </Button>
@@ -196,9 +197,9 @@ export const Sources = () => {
             >
               Cancel
             </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+          </>
+        }
+      ></CustomDialog>
       <List
         openDialog={handleClickOpen}
         title="Source"
