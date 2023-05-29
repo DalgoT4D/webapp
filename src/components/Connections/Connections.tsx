@@ -34,7 +34,6 @@ export const Connections = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [rows, setRows] = useState<Array<Array<string>>>([]);
 
-  const [connections, setConnections] = useState<object[]>([]);
   const [sources, setSources] = useState<Array<string>>([]);
   const [sourceStreams, setSourceStreams] = useState<Array<string>>([]);
 
@@ -48,7 +47,7 @@ export const Connections = () => {
   // when the connection list changes
   useEffect(() => {
     if (data && data.length > 0) {
-      const rows = data.map((connection: any) => [
+      const rows = data.map((connection: any, idx: number) => [
         connection.name,
         connection.sourceDest,
         connection.lastSync,
@@ -56,19 +55,13 @@ export const Connections = () => {
           <Button
             variant="contained"
             onClick={() => syncConnection(connection)}
+            key={idx}
           >
             Sync
           </Button>,
         ],
       ]);
       setRows(rows);
-    }
-  }, [data]);
-
-  // when the connection list changes
-  useEffect(() => {
-    if (data && data.length > 0) {
-      setConnections(data);
     }
   }, [data]);
 

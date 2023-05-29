@@ -1,14 +1,4 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  TextField,
-} from '@mui/material';
-import styles from '@/styles/Home.module.css';
+import { Box, Button, CircularProgress, TextField } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { useContext, useState } from 'react';
@@ -18,7 +8,6 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
-import { Close } from '@mui/icons-material';
 import CustomDialog from '../Dialog/CustomDialog';
 
 interface DBTCreateProfileProps {
@@ -95,32 +84,36 @@ export const DBTCreateProfile = ({
 
   return (
     <>
-      <CustomDialog
-        title={'Add dbt profile'}
-        show={showDialog}
-        handleClose={handleClose}
-        handleSubmit={handleSubmit}
-        formContent={<AddDbtProfileForm />}
-        formActions={
-          <>
-            <Button
-              variant="contained"
-              type="submit"
-              data-testid="save-profile"
-            >
-              Save
-            </Button>
-            <Button
-              color="secondary"
-              variant="outlined"
-              onClick={handleClose}
-              data-testid="cancel"
-            >
-              Cancel
-            </Button>
-          </>
-        }
-      ></CustomDialog>
+      {!running ? (
+        <CustomDialog
+          title={'Add dbt profile'}
+          show={showDialog}
+          handleClose={handleClose}
+          handleSubmit={handleSubmit(createDbtProfile)}
+          formContent={<AddDbtProfileForm />}
+          formActions={
+            <>
+              <Button
+                variant="contained"
+                type="submit"
+                data-testid="save-profile"
+              >
+                Save
+              </Button>
+              <Button
+                color="secondary"
+                variant="outlined"
+                onClick={handleClose}
+                data-testid="cancel"
+              >
+                Cancel
+              </Button>
+            </>
+          }
+        ></CustomDialog>
+      ) : (
+        <CircularProgress />
+      )}
     </>
   );
 };

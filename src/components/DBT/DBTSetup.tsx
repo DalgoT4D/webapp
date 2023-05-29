@@ -1,27 +1,14 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  TextField,
-  Typography,
-} from '@mui/material';
-import styles from '@/styles/Home.module.css';
+import { Box, Button, TextField } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { useState, useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpGet, httpPost } from '@/helpers/http';
-import { Close } from '@mui/icons-material';
 import CustomDialog from '../Dialog/CustomDialog';
 
 interface DBTSetupProps {
   onCreateWorkspace: (...args: any) => any;
-  logs: Array<any>;
   setLogs: (...args: any) => any;
   setExpandLogs: (...args: any) => any;
   showDialog: boolean;
@@ -30,7 +17,6 @@ interface DBTSetupProps {
 
 export const DBTSetup = ({
   onCreateWorkspace,
-  logs,
   setLogs,
   setExpandLogs,
   showDialog,
@@ -173,7 +159,7 @@ export const DBTSetup = ({
         title={'Conect Repo'}
         show={showDialog}
         handleClose={handleClose}
-        handleSubmit={handleSubmit}
+        handleSubmit={handleSubmit(onSubmit)}
         formContent={<AddWorkspaceSetupForm />}
         formActions={
           <>

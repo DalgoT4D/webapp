@@ -5,16 +5,10 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
   TextField,
 } from '@mui/material';
 import { List } from '../List/List';
 import { backendUrl } from '@/config/constant';
-import { Close } from '@mui/icons-material';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { DestinationConfigInput } from './DestinationConfigInput';

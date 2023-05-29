@@ -9,7 +9,6 @@ import {
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
-import { ExpandMore } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -33,7 +32,7 @@ type DbtBlock = {
   displayName: string;
 };
 
-const transform = () => {
+const Transform = () => {
   const [workspace, setWorkspace] = useState({
     status: '',
     gitrepo_url: '',
@@ -252,7 +251,6 @@ const transform = () => {
             />
           ) : dbtSetupStage === 'create-workspace' ? (
             <DBTSetup
-              logs={dbtRunLogs}
               setLogs={setDbtRunLogs}
               setExpandLogs={setExpandLogs}
               onCreateWorkspace={() => {
@@ -286,11 +284,15 @@ const transform = () => {
               </IconButton>
             </CardActions>
             <Collapse in={expandLogs} unmountOnExit>
-              <CardContent>
-                {dbtRunLogs?.map((logMessage, idx) => (
-                  <Box key={idx}>{logMessage}</Box>
-                ))}
-              </CardContent>
+              {!dbtJobStatus ? (
+                <CardContent>
+                  {dbtRunLogs?.map((logMessage, idx) => (
+                    <Box key={idx}>{logMessage}</Box>
+                  ))}
+                </CardContent>
+              ) : (
+                <CircularProgress />
+              )}
             </Collapse>
           </Card>
         </Box>
@@ -299,4 +301,4 @@ const transform = () => {
   );
 };
 
-export default transform;
+export default Transform;
