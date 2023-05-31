@@ -44,6 +44,9 @@ export const Connections = () => {
 
   const toastContext = useContext(GlobalContext);
 
+  const [syncStatus, setSyncStatus] = useState<string>("");
+  const [syncLogs, setSyncLogs] = useState<Array<string>>([]);
+
   // when the connection list changes
   useEffect(() => {
     if (data && data.length > 0) {
@@ -191,12 +194,50 @@ export const Connections = () => {
           `airbyte/connections/${connection.blockId}/sync/`,
           {}
         );
-        successToast(message, [], toastContext);
+        if (message.success) {
+          successToast("sync started", [], toastContext);
+          if (message.celery_task_id) {
+            checkCeleryTask(message.celery_task_id);
+          }
+        }
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
       }
     })();
+  };
+
+  const checkCeleryTask = async (celeryTaskId: string) => {
+    try {
+      const result = await httpGet(session, `tasks/${celeryTaskId}`);
+      if (result.progress && result.progress.length > 1) {
+        const lastStep = result.progress[1]
+        if (lastStep.airbyte_job_num) {
+          const airbyteJob = await httpGet(session, `airbyte/jobs/${lastStep.airbyte_job_num}`);
+          setSyncStatus(airbyteJob.status);
+          if (airbyteJob.status === 'failed') {
+            setSyncLogs(airbyteJob.logs);
+          }
+          if (['succeeded', 'failed'].indexOf(airbyteJob.status) < 0) {
+            setTimeout(() => {
+              checkCeleryTask(celeryTaskId);
+            }, 3000);
+          }
+          // airbyteJob = {status, logs}
+        } else if (lastStep.status) {
+          errorToast(lastStep.status, [], toastContext);
+        }
+      } else {
+        setTimeout(() => {
+          checkCeleryTask(celeryTaskId);
+        }, 3000);
+      }
+    }
+    catch (error: any) {
+      setTimeout(() => {
+        checkCeleryTask(celeryTaskId);
+      }, 5000);
+    }
   };
 
   const CreateConnectionForm = () => {
