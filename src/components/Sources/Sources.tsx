@@ -1,25 +1,8 @@
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  CircularProgress,
-  TextField,
-} from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import { List } from '../List/List';
 import { backendUrl } from '@/config/constant';
-import { Controller, useForm } from 'react-hook-form';
-import { useSession } from 'next-auth/react';
-import { SourceConfigInput } from './SourceConfigInput';
-import { httpGet, httpPost } from '@/helpers/http';
-import { GlobalContext } from '@/contexts/ContextProvider';
-import { useContext } from 'react';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
-import CustomDialog from '../Dialog/CustomDialog';
 import CreateSourceForm from './CreateSourceForm';
 
 const headers = ['Source details', 'Type'];
