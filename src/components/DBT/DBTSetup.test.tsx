@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
-import { SessionProvider } from 'next-auth/react';
-import { Session } from 'next-auth';
-import { DBTSetup } from './DBTSetup';
+// import { render, screen } from '@testing-library/react';
+// import { SessionProvider } from 'next-auth/react';
+// import { Session } from 'next-auth';
+// import { DBTSetup } from './DBTSetup';
 // import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -32,10 +32,10 @@ afterEach(() => {
 });
 
 describe('dbt Setup', () => {
-  const mockSession: Session = {
-    expires: '1',
-    user: { email: 'a', name: 'Delta', image: 'c' },
-  };
+  // const mockSession: Session = {
+  //   expires: '1',
+  //   user: { email: 'a', name: 'Delta', image: 'c' },
+  // };
 
   it('renders the form', () => {
     // render(

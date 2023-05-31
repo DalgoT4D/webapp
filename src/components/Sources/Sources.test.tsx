@@ -1,9 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Sources } from './Sources';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
-import userEvent from '@testing-library/user-event';
+// import userEvent from '@testing-library/user-event';
 
 describe('Sources', () => {
   const mockSession: Session = {
