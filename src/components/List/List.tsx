@@ -13,40 +13,72 @@ interface ListProps {
   headers: Array<string>;
   rows: Array<any>;
   openDialog: any;
+  onlyList?: boolean;
 }
 
-export const List = ({ title, openDialog, headers, rows }: ListProps) => {
+export const List = ({
+  title,
+  openDialog,
+  headers,
+  rows,
+  onlyList,
+}: ListProps) => {
   return (
     <>
       <Box display="flex" justifyContent="flex-end">
-        <Button
-          data-testid={`add-new-${title}`.toLowerCase()}
-          variant="contained"
-          onClick={() => openDialog()}
-        >
-          + New {title}
-        </Button>
+        {!onlyList && (
+          <Button
+            data-testid={`add-new-${title}`.toLowerCase()}
+            variant="contained"
+            onClick={() => openDialog()}
+          >
+            + New {title}
+          </Button>
+        )}
       </Box>
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead>
+          <TableHead sx={{ display: 'table-header-group' }}>
             <TableRow>
               {headers.map((header) => (
-                <TableCell key={header}>{header}</TableCell>
+                <TableCell sx={{ padding: '16px' }} key={header}>
+                  {header}
+                </TableCell>
               ))}
-              <TableCell align="right">Actions</TableCell>
+              <TableCell sx={{ padding: '16px' }} align="right">
+                Actions
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row: any) => (
+            {rows.map((row: any, idx: number) => (
               <TableRow
-                key={row.name}
+                key={idx}
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
-                {row.map((column: any) => (
-                  <TableCell key={column}>{column}</TableCell>
-                ))}
-                <TableCell align="right">Actions</TableCell>
+                {row.map(
+                  // if action is sent render with right align
+                  (column: any, idx: number) => (
+                    <TableCell
+                      key={idx}
+                      align={
+                        headers.length + 1 === row.length &&
+                        idx === row.length - 1
+                          ? 'right'
+                          : 'left'
+                      }
+                    >
+                      {column}
+                    </TableCell>
+                  )
+                )}
+                {headers.length + 1 !== row.length ? ( // if actions is not sent render some text
+                  <TableCell sx={{ padding: '16px' }} align="right">
+                    Actions
+                  </TableCell>
+                ) : (
+                  ''
+                )}
               </TableRow>
             ))}
           </TableBody>
