@@ -233,6 +233,7 @@ export const Destinations = () => {
           render={({ field }) => (
             <Autocomplete
               options={destinationDefs}
+              value={field.value}
               onChange={(e, data) => field.onChange(data)}
               renderInput={(params) => (
                 <TextField
