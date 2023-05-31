@@ -1,6 +1,7 @@
 import { Close } from '@mui/icons-material';
 import {
   Box,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -16,6 +17,7 @@ interface CustomDialogProps {
   handleSubmit: (...args: any) => any;
   formContent: any;
   formActions: any;
+  loading?: boolean;
 }
 
 const CustomDialog = ({
@@ -25,6 +27,7 @@ const CustomDialog = ({
   show,
   handleClose,
   handleSubmit,
+  loading,
 }: CustomDialogProps) => {
   return (
     <Dialog open={show} onClose={handleClose}>
@@ -40,9 +43,23 @@ const CustomDialog = ({
       </DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent sx={{ minWidth: '400px' }}>{formContent}</DialogContent>
-        <DialogActions sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}>
-          {formActions}
-        </DialogActions>
+        {loading ? (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              padding: '1.5rem',
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : (
+          <DialogActions
+            sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}
+          >
+            {formActions}
+          </DialogActions>
+        )}
       </form>
     </Dialog>
   );

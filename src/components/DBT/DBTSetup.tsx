@@ -156,7 +156,7 @@ export const DBTSetup = ({
   return (
     <>
       <CustomDialog
-        title={'Conect Repo'}
+        title={'Connect Repo'}
         show={showDialog}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
