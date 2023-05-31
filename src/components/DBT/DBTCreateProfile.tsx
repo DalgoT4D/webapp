@@ -69,6 +69,7 @@ export const DBTCreateProfile = ({
             {...register('name', { required: true })}
           />
         </Box>
+        <Box sx={{ m: 2 }} />
         <Box>
           <TextField
             sx={{ width: '100%' }}
@@ -84,36 +85,33 @@ export const DBTCreateProfile = ({
 
   return (
     <>
-      {!running ? (
-        <CustomDialog
-          title={'Add dbt profile'}
-          show={showDialog}
-          handleClose={handleClose}
-          handleSubmit={handleSubmit(createDbtProfile)}
-          formContent={<AddDbtProfileForm />}
-          formActions={
-            <>
-              <Button
-                variant="contained"
-                type="submit"
-                data-testid="save-profile"
-              >
-                Save
-              </Button>
-              <Button
-                color="secondary"
-                variant="outlined"
-                onClick={handleClose}
-                data-testid="cancel"
-              >
-                Cancel
-              </Button>
-            </>
-          }
-        ></CustomDialog>
-      ) : (
-        <CircularProgress />
-      )}
+      <CustomDialog
+        title={'Add dbt profile'}
+        show={showDialog}
+        handleClose={handleClose}
+        handleSubmit={handleSubmit(createDbtProfile)}
+        formContent={<AddDbtProfileForm />}
+        formActions={
+          <>
+            <Button
+              variant="contained"
+              type="submit"
+              data-testid="save-profile"
+            >
+              Save
+            </Button>
+            <Button
+              color="secondary"
+              variant="outlined"
+              onClick={handleClose}
+              data-testid="cancel"
+            >
+              Cancel
+            </Button>
+          </>
+        }
+        loading={running}
+      ></CustomDialog>
     </>
   );
 };
