@@ -22,6 +22,8 @@ const CreateSourceForm = ({
   const { data: session }: any = useSession();
   const [sourceDefs, setSourceDefs] = useState([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
+  const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
+  const [checking, setChecking] = useState<boolean>(false);
   const toastContext = useContext(GlobalContext);
 
   const { register, handleSubmit, control, watch, reset, setValue } = useForm({
@@ -83,9 +85,33 @@ const CreateSourceForm = ({
     reset();
     setSourceDefSpecs([]);
     setShowForm(false);
+    setSetupLogs([]);
+    setChecking(false);
   };
 
-  const onSubmit = async (data: any) => {
+  const checkSourceConnectivity = async (data: any) => {
+    setChecking(true);
+    setSetupLogs([]);
+    try {
+      const checkResponse = await httpPost(session, `airbyte/sources/check_connection/`, {
+        name: data.name,
+        sourceDefId: data.sourceDef.id,
+        config: data.config,
+      })
+      if (checkResponse.status === 'succeeded') {
+        await createSource(data);
+      } else {
+        errorToast("Something went wrong", [], toastContext);
+        setSetupLogs(checkResponse.logs);
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
+    setChecking(false);
+  };
+
+  const createSource = async (data: any) => {
     try {
       await httpPost(session, 'airbyte/sources/', {
         name: data.name,
@@ -99,6 +125,10 @@ const CreateSourceForm = ({
       console.error(err);
       errorToast(err.message, [], toastContext);
     }
+  }
+
+  const onSubmit = async (data: any) => {
+    await checkSourceConnectivity(data);
   };
 
   const FormContent = () => {
@@ -155,6 +185,15 @@ const CreateSourceForm = ({
         formContent={<FormContent />}
         formActions={
           <>
+            {
+              setupLogs && (
+                <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
+                  {
+                    setupLogs.map((logmessage) => <Box>{logmessage}</Box>)
+                  }
+                </Box>
+              )
+            }
             <Button variant="contained" type="submit">
               Save changes and test
             </Button>
@@ -168,6 +207,7 @@ const CreateSourceForm = ({
             </Button>
           </>
         }
+        loading={checking}
       ></CustomDialog>
     </>
   );
