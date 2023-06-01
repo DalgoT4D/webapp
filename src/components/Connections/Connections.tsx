@@ -18,6 +18,7 @@ const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 
 export const Connections = () => {
   const { data: session }: any = useSession();
+  const toastContext = useContext(GlobalContext);
 
   const [showDialog, setShowDialog] = useState(false);
   const [rows, setRows] = useState<Array<Array<string>>>([]);
@@ -26,7 +27,24 @@ export const Connections = () => {
     `${backendUrl}/api/airbyte/connections`
   );
 
-  const toastContext = useContext(GlobalContext);
+  const syncConnection = (connection: any) => {
+    console.log(connection);
+    (async () => {
+      try {
+        const message = await httpPost(
+          session,
+          `airbyte/connections/${connection.blockId}/sync/`,
+          {}
+        );
+        if (message.success) {
+          successToast("Sync started... check for logs in two minutes", [], toastContext);
+        }
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+      }
+    })();
+  };
 
   // when the connection list changes
   useEffect(() => {
@@ -57,25 +75,6 @@ export const Connections = () => {
   if (isLoading) {
     return <CircularProgress />;
   }
-
-  const syncConnection = (connection: any) => {
-    console.log(connection);
-    (async () => {
-      try {
-        const message = await httpPost(
-          session,
-          `airbyte/connections/${connection.blockId}/sync/`,
-          {}
-        );
-        if (message.success) {
-          successToast("Sync started... check for logs in two minutes", [], toastContext);
-        }
-      } catch (err: any) {
-        console.error(err);
-        errorToast(err.message, [], toastContext);
-      }
-    })();
-  };
 
   return (
     <>
