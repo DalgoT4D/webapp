@@ -5,7 +5,7 @@ import { List } from '../List/List';
 import Button from '@mui/material/Button';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
-import { httpPost, httpGet } from '@/helpers/http';
+import { httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useContext } from 'react';
 import {
