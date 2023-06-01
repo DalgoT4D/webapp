@@ -34,6 +34,7 @@ export const Destinations = () => {
   const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>(
     []
   );
+  const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
   const toastContext = useContext(GlobalContext);
 
   const {
@@ -193,6 +194,7 @@ export const Destinations = () => {
     reset();
     setDestinationDefSpecs([]);
     setShowDialog(false);
+    setSetupLogs([]);
   };
 
   const handleClickOpen = () => {
@@ -201,15 +203,26 @@ export const Destinations = () => {
 
   const onSubmit = async (data: any) => {
     try {
-      await httpPost(session, 'organizations/warehouse/', {
-        wtype: data.destinationDef.label.toLowerCase(),
+      setSetupLogs([]);
+      const connectivityCheck = await httpPost(session, 'airbyte/destinations/check_connection/', {
         name: data.name,
         destinationDefId: data.destinationDef.id,
-        airbyteConfig: data.config,
+        config: data.config,
       });
-      mutate();
-      handleClose();
-      successToast('Warehouse created', [], toastContext);
+      if (connectivityCheck.status === 'succeeded') {
+        await httpPost(session, 'organizations/warehouse/', {
+          wtype: data.destinationDef.label.toLowerCase(),
+          name: data.name,
+          destinationDefId: data.destinationDef.id,
+          airbyteConfig: data.config,
+        });
+        mutate();
+        handleClose();
+        successToast('Warehouse created', [], toastContext);
+      } else {
+        setSetupLogs(connectivityCheck.logs);
+        errorToast('Failed to connect to warehouse', [], toastContext);
+      }
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
@@ -271,6 +284,15 @@ export const Destinations = () => {
         formContent={<CreateDestinationForm />}
         formActions={
           <>
+            {
+              setupLogs && (
+                <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
+                  {
+                    setupLogs.map((logmessage, idx) => <Box key={idx}>{logmessage}</Box>)
+                  }
+                </Box>
+              )
+            }
             <Button variant="contained" type="submit">
               Save changes and test
             </Button>
