@@ -18,7 +18,7 @@ const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 
 export const Connections = () => {
   const { data: session }: any = useSession();
-  const globalContext = useContext(GlobalContext);
+  const toastContext = useContext(GlobalContext);
 
   const [showDialog, setShowDialog] = useState(false);
   const [rows, setRows] = useState<Array<Array<string>>>([]);
@@ -36,10 +36,12 @@ export const Connections = () => {
           `airbyte/connections/${connection.blockId}/sync/`,
           {}
         );
-        successToast(message, [], globalContext);
+        if (message.success) {
+          successToast("Sync started... check for logs in two minutes", [], toastContext);
+        }
       } catch (err: any) {
         console.error(err);
-        errorToast(err.message, [], globalContext);
+        errorToast(err.message, [], toastContext);
       }
     })();
   };
