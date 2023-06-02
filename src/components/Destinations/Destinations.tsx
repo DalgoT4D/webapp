@@ -5,23 +5,21 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
   TextField,
 } from '@mui/material';
 import { List } from '../List/List';
 import { backendUrl } from '@/config/constant';
-import { Close } from '@mui/icons-material';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { DestinationConfigInput } from './DestinationConfigInput';
 import { httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useContext } from 'react';
-import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
+import CustomDialog from '../Dialog/CustomDialog';
 
 const headers = ['Destination details', 'Type'];
 
@@ -70,14 +68,16 @@ export const Destinations = () => {
     if (showDialog && destinationDefs.length === 0) {
       (async () => {
         try {
-          const data = await httpGet(session, 'airbyte/destination_definitions');
+          const data = await httpGet(
+            session,
+            'airbyte/destination_definitions'
+          );
           const destinationDefRows = data?.map((element: any) => ({
             label: element.name,
             id: element.destinationDefinitionId,
           }));
           setDestinationDefs(destinationDefRows);
-        }
-        catch (err: any) {
+        } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
         }
@@ -168,7 +168,10 @@ export const Destinations = () => {
     if (watchSelectedDestinationDef?.id) {
       (async () => {
         try {
-          const data = await httpGet(session, `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`);
+          const data = await httpGet(
+            session,
+            `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`
+          );
           // Prepare the specs config before setting it
           const specsConfigFields = prePrepareConfigSpecs(
             [],
@@ -178,8 +181,7 @@ export const Destinations = () => {
             []
           );
           setDestinationDefSpecs(specsConfigFields);
-        }
-        catch (err: any) {
+        } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
         }
@@ -207,12 +209,52 @@ export const Destinations = () => {
       });
       mutate();
       handleClose();
-      successToast("Warehouse created", [], toastContext);
-    }
-    catch (err: any) {
+      successToast('Warehouse created', [], toastContext);
+    } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
     }
+  };
+
+  const CreateDestinationForm = () => {
+    return (
+      <Box sx={{ pt: 2, pb: 4 }}>
+        <TextField
+          sx={{ width: '100%' }}
+          label="Name"
+          variant="outlined"
+          {...register('name', { required: true })}
+        ></TextField>
+        <Box sx={{ m: 2 }} />
+        <Controller
+          name="destinationDef"
+          control={control}
+          rules={{ required: true }}
+          render={({ field }) => (
+            <Autocomplete
+              options={destinationDefs}
+              value={field.value}
+              onChange={(e, data) => field.onChange(data)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select destination type"
+                  variant="outlined"
+                />
+              )}
+            />
+          )}
+        />
+        <Box sx={{ m: 2 }} />
+        <DestinationConfigInput
+          specs={destinationDefSpecs}
+          registerFormFieldValue={register}
+          control={control}
+          setFormValue={setValue}
+          unregisterFormField={unregister}
+        />
+      </Box>
+    );
   };
 
   if (isLoading) {
@@ -221,58 +263,14 @@ export const Destinations = () => {
 
   return (
     <>
-      <Dialog open={showDialog} onClose={handleClose}>
-        <DialogTitle>
-          <Box display="flex" alignItems="center">
-            <Box flexGrow={1}> Add a new destination</Box>
-            <Box>
-              <IconButton onClick={handleClose}>
-                <Close />
-              </IconButton>
-            </Box>
-          </Box>
-        </DialogTitle>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogContent sx={{ minWidth: '400px' }}>
-            <Box sx={{ pt: 2, pb: 4 }}>
-              <TextField
-                sx={{ width: '100%' }}
-                label="Name"
-                variant="outlined"
-                {...register('name', { required: true })}
-              ></TextField>
-              <Box sx={{ m: 2 }} />
-              <Controller
-                name="destinationDef"
-                control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <Autocomplete
-                    options={destinationDefs}
-                    onChange={(e, data) => field.onChange(data)}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Select destination type"
-                        variant="outlined"
-                      />
-                    )}
-                  />
-                )}
-              />
-              <Box sx={{ m: 2 }} />
-              <DestinationConfigInput
-                specs={destinationDefSpecs}
-                registerFormFieldValue={register}
-                control={control}
-                setFormValue={setValue}
-                unregisterFormField={unregister}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions
-            sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}
-          >
+      <CustomDialog
+        title={'Add a new destination'}
+        show={showDialog}
+        handleClose={handleClose}
+        handleSubmit={handleSubmit(onSubmit)}
+        formContent={<CreateDestinationForm />}
+        formActions={
+          <>
             <Button variant="contained" type="submit">
               Save changes and test
             </Button>
@@ -284,9 +282,9 @@ export const Destinations = () => {
             >
               Cancel
             </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+          </>
+        }
+      />
       <List
         openDialog={handleClickOpen}
         title="Destination"
