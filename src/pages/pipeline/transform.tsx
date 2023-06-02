@@ -67,6 +67,7 @@ const Transform = () => {
         response.status = 'fetched';
         setWorkspace(response);
         setDbtSetupStage('create-profile');
+        fetchDbtBlocks();
       }
     } catch (err: any) {
       console.error(err);
@@ -99,7 +100,6 @@ const Transform = () => {
 
   useEffect(() => {
     fetchDbtWorkspace();
-    fetchDbtBlocks();
   }, [session, rerender]);
 
   const runDbtJob = async function (block: DbtBlock) {
