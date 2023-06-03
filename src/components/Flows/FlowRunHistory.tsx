@@ -2,6 +2,9 @@ import { httpGet } from '@/helpers/http';
 import { Close } from '@mui/icons-material';
 import {
   Box,
+  Button,
+  Card,
+  CardActions,
   CardContent,
   Collapse,
   Dialog,
@@ -9,6 +12,7 @@ import {
   DialogTitle,
   Divider,
   IconButton,
+  Link,
   Stack,
   Typography,
 } from '@mui/material';
@@ -33,6 +37,7 @@ const FlowRunHistory = ({
 }: FlowRunHistoryProps) => {
   const { data: session }: any = useSession();
   const [flowRuns, setFlowRuns] = useState<Array<any>>([]);
+  const [showLogs, setShowLogs] = useState<Array<boolean>>([]);
   const globalContext = useContext(GlobalContext);
   const handleClose = () => {
     setShowFlowRunHistory(false);
@@ -51,6 +56,7 @@ const FlowRunHistory = ({
             `prefect/flows/${deploymentId}/flow_runs/history`
           );
           setFlowRuns(data);
+          setShowLogs(new Array(data.length).fill(false));
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
@@ -58,6 +64,12 @@ const FlowRunHistory = ({
       })();
     }
   }, [showFlowRunHistory, deploymentId]);
+
+  const handleShowMore = (idx: number) => {
+    const tempLogs = showLogs.slice();
+    tempLogs[idx] = !tempLogs[idx];
+    setShowLogs(tempLogs);
+  };
 
   return (
     <Dialog open={showFlowRunHistory}>
@@ -71,10 +83,10 @@ const FlowRunHistory = ({
           </Box>
         </Box>
       </DialogTitle>
-      <DialogContent sx={{ marginLeft: '20px' }}>
+      <DialogContent sx={{ marginLeft: '20px', overflowX: 'hidden' }}>
         <Stack width="100rem">
-          {flowRuns.map((flowRun: any) => (
-            <Box display="flex" gap="10px">
+          {flowRuns.map((flowRun: any, idx: number) => (
+            <Box display="flex" gap="10px" key={idx}>
               <Box
                 sx={{
                   display: 'flex',
@@ -86,15 +98,23 @@ const FlowRunHistory = ({
                   sx={{
                     height: '7px',
                     width: '7px',
-                    backgroundColor: 'black',
                     borderRadius: '50%',
-                    display: 'inline-block',
+                    backgroundColor:
+                      flowRun['status'] === 'COMPLETED' ? '#399D47' : '#981F1F',
                   }}
-                ></Box>
+                >
+                  <Typography color="white">i</Typography>
+                </Box>
                 <Divider orientation="vertical" />
               </Box>
               <Box
-                sx={{ gap: '10px', display: 'flex', flexDirection: 'column' }}
+                sx={{
+                  gap: '10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  paddingTop: '10px',
+                  paddingBottom: '20px',
+                }}
               >
                 <Typography>{lastRunTime(flowRun['startTime'])}</Typography>
                 <Box
@@ -124,20 +144,29 @@ const FlowRunHistory = ({
                       }}
                     />
                   )}
-                  <Box sx={{ marginLeft: 'auto' }}>show more</Box>
+                  <Button onClick={() => handleShowMore(idx)}>
+                    {showLogs[idx] ? 'show less' : 'show more'}
+                  </Button>
                 </Box>
-                <Collapse in={true} unmountOnExit>
+                <Collapse
+                  sx={{
+                    width: '60%',
+                    overflowX: 'scroll',
+                    overflowY: 'hidden',
+                    backgroundColor: 'background.default',
+                  }}
+                  in={showLogs[idx]}
+                  timeout="auto"
+                  unmountOnExit
+                >
                   <CardContent
                     sx={{
                       width: '100%',
-                      overflow: 'auto',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      margin: 0,
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    {flowRun?.logs?.map((log: any, idx: number) => (
-                      <Box key={idx}>{log?.message}</Box>
+                    {flowRun?.logs?.map((log: any, idx1: number) => (
+                      <Box key={idx1}>{log?.message}</Box>
                     ))}
                   </CardContent>
                 </Collapse>
