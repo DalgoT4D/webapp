@@ -9,6 +9,7 @@ import { httpDelete, httpPost } from '@/helpers/http';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { List } from '../List/List';
+import FlowRunHistory from './FlowRunHistory';
 
 interface FlowInterface {
   name: string;
@@ -76,34 +77,49 @@ const FlowLastRun = (flow: any) => {
 
 const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
   const [rows, setRows] = useState<Array<Array<any>>>([]);
+  const [showFlowRunHistory, setShowFlowRunHistory] = useState<boolean>(false);
+  const [flowRunHistoryDeploymentId, setFlowRunHistoryDeploymentId] =
+    useState<string>('');
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
 
   useEffect(() => {
     if (flows && flows.length > 0) {
-      const rows = flows.map((flow: any) => [
+      const rows = flows.map((flow: any, idx: number) => [
         `${flow.name} | ${flow.cron}`,
         FlowState(flow),
         FlowLastRun(flow),
         [
-          <>
+          <Box key={idx}>
+            <Button
+              sx={{
+                marginRight: '5px',
+                backgroundColor: 'background.default',
+              }}
+              onClick={() => handleOpenFlowRunHistory(flow?.deploymentId)}
+            >
+              last logs
+            </Button>
             <Button
               variant="contained"
               onClick={() => handleQuickRunDeployment(flow?.deploymentId)}
             >
               Run
             </Button>
-          </>,
-          <>
             <IconButton onClick={() => handleDeleteFlow(flow.deploymentId)}>
               <Delete />
             </IconButton>
-          </>,
+          </Box>,
         ],
       ]);
       setRows(rows);
     }
   }, [flows]);
+
+  const handleOpenFlowRunHistory = (deploymentId: string) => {
+    setFlowRunHistoryDeploymentId(deploymentId);
+    setShowFlowRunHistory(true);
+  };
 
   const handleClickCreateFlow = () => {
     updateCrudVal('create');
@@ -156,6 +172,12 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
         openDialog={handleClickCreateFlow}
         headers={['Flow', 'Status', 'Last Run']}
         title={'Flow'}
+      />
+
+      <FlowRunHistory
+        showFlowRunHistory={showFlowRunHistory}
+        setShowFlowRunHistory={setShowFlowRunHistory}
+        deploymentId={flowRunHistoryDeploymentId}
       />
     </>
   );
