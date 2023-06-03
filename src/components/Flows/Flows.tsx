@@ -85,12 +85,12 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
 
   useEffect(() => {
     if (flows && flows.length > 0) {
-      const rows = flows.map((flow: any) => [
+      const rows = flows.map((flow: any, idx: number) => [
         `${flow.name} | ${flow.cron}`,
         FlowState(flow),
         FlowLastRun(flow),
         [
-          <Box sx={{}}>
+          <Box key={idx}>
             <Button
               sx={{
                 marginRight: '5px',
