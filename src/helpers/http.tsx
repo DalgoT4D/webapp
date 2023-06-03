@@ -15,7 +15,7 @@ export async function httpGet(session: any, path: string) {
     return message;
   } else {
     const error = await response.json();
-    throw new Error(error);
+    throw new Error("error", { "cause": error });
   }
 }
 
@@ -34,7 +34,7 @@ export async function httpPost(session: any, path: string, payload: object) {
     return message;
   } else {
     const error = await response.json();
-    throw new Error(error);
+    throw new Error("error", { "cause": error });
   }
 }
 
@@ -52,6 +52,6 @@ export async function httpDelete(session: any, path: string) {
     return message;
   } else {
     const error = await response.json();
-    throw new Error(error);
+    throw new Error("error", { "cause": error });
   }
 }
