@@ -309,7 +309,7 @@ export const Destinations = () => {
           color="primary"
           variant="outlined"
           onClick={() => setShowDialog(true)}
-          data-testid="add-dest"
+          data-testid="add-new-destination"
         >
           Add a new warehouse
         </Button>

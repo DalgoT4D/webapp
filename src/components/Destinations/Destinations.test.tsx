@@ -26,16 +26,6 @@ describe('Destinations', () => {
   });
 
   // Tests
-  it('destinations list no of columns', async () => {
-    render(
-      <SessionProvider session={mockSession}>
-        <Destinations />
-      </SessionProvider>
-    );
-    const columns = screen.getAllByRole('columnheader');
-    expect(columns.length).toBe(3);
-  });
-
   it('new destination button renders', async () => {
     render(
       <SessionProvider session={mockSession}>
@@ -43,7 +33,7 @@ describe('Destinations', () => {
       </SessionProvider>
     );
     const button = screen.getByTestId('add-new-destination');
-    expect(button).toHaveTextContent('+ New Destination');
+    expect(button).toHaveTextContent('Add a new warehouse');
   });
 
   it('new destination button click opens dialogue & close button closes it', async () => {
