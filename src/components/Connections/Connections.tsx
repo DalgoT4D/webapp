@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, Box } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
-import { httpPost } from '@/helpers/http';
+import { httpDelete, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useContext } from 'react';
 import {
@@ -46,6 +46,25 @@ export const Connections = () => {
     })();
   };
 
+  const deleteConnection = (connection: any) => {
+    console.log(connection);
+    (async () => {
+      try {
+        const message = await httpDelete(
+          session,
+          `airbyte/connections/${connection.blockId}`
+        );
+        if (message.success) {
+          successToast("Connection deleted", [], toastContext);
+          mutate();
+        }
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+      }
+    })();
+  };
+
   // when the connection list changes
   useEffect(() => {
     if (data && data.length > 0) {
@@ -54,13 +73,24 @@ export const Connections = () => {
         connection.sourceDest,
         connection.lastSync,
         [
-          <Button
-            variant="contained"
-            onClick={() => syncConnection(connection)}
-            key={idx}
-          >
-            Sync
-          </Button>,
+          <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
+            <Button
+              variant="contained"
+              onClick={() => syncConnection(connection)}
+              key={'sync-' + idx}
+              sx={{ marginRight: '10px' }}
+            >
+              Sync
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => deleteConnection(connection)}
+              key={'del-' + idx}
+              sx={{ backgroundColor: '#d84141' }}
+            >
+              Delete
+            </Button>
+          </Box>
         ],
       ]);
       setRows(rows);
