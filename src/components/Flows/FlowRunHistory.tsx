@@ -3,8 +3,6 @@ import { Close } from '@mui/icons-material';
 import {
   Box,
   Button,
-  Card,
-  CardActions,
   CardContent,
   Collapse,
   Dialog,
@@ -12,7 +10,6 @@ import {
   DialogTitle,
   Divider,
   IconButton,
-  Link,
   Stack,
   Typography,
 } from '@mui/material';
