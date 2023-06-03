@@ -172,7 +172,7 @@ const CreateConnectionForm = ({
   };
 
   const updateThisStreamTo_ = (stream: SourceStream, newStream: SourceStream) => {
-    let newstreams: SourceStream[] = [];
+    const newstreams: SourceStream[] = [];
     for (let idx = 0; idx < sourceStreams.length; idx++) {
       if (sourceStreams[idx].name === stream.name) {
         newstreams.push(newStream);

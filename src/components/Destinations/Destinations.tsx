@@ -8,7 +8,7 @@ import {
   Typography,
   TextField
 } from '@mui/material';
-import { Table, TableBody, TableCell, TableHead, TableRow, FormControlLabel } from '@mui/material';
+import { Table, TableBody, TableCell, TableRow } from '@mui/material';
 import { backendUrl } from '@/config/constant';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
@@ -21,8 +21,6 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import CustomDialog from '../Dialog/CustomDialog';
-
-const headers = ['Destination details', 'Type'];
 
 export const Destinations = () => {
   const { data: session }: any = useSession();
@@ -197,10 +195,6 @@ export const Destinations = () => {
     setDestinationDefSpecs([]);
     setShowDialog(false);
     setSetupLogs([]);
-  };
-
-  const handleClickOpen = () => {
-    setShowDialog(true);
   };
 
   const onSubmit = async (data: any) => {
