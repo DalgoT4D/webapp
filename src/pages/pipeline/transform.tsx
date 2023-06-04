@@ -1,13 +1,11 @@
 import { DBTCreateProfile } from '@/components/DBT/DBTCreateProfile';
 import { DBTSetup } from '@/components/DBT/DBTSetup';
-import { List } from '@/components/List/List';
 import { PageHead } from '@/components/PageHead';
 import {
   errorToast,
-  successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
 import {
   Box,
@@ -15,7 +13,6 @@ import {
   Card,
   CardActions,
   CardContent,
-  CircularProgress,
   Collapse,
   IconButton,
   Link,
@@ -26,10 +23,19 @@ import React, { useContext, useEffect, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Dbt from '@/images/dbt.png';
 import Image from 'next/image';
+import { DBTTarget } from '@/components/DBT/DBTTarget';
 
 type DbtBlock = {
   blockName: string;
   displayName: string;
+  target: string;
+  action: string;
+};
+type TargetBlocks = {
+  [id: string]: DbtBlock[];
+};
+type ExpandTarget = {
+  [id: string]: boolean;
 };
 
 const Transform = () => {
@@ -38,16 +44,13 @@ const Transform = () => {
     gitrepo_url: '',
     default_schema: '',
   });
-  const [dbtBlocks, setDbtBlocks] = useState<DbtBlock[]>([]);
-  const [dbtRunLogs, setDbtRunLogs] = useState<string[]>([]);
-  const [dbtJobStatus, setDbtJobStatus] = useState<boolean>(false);
+  const [dbtBlocks, setDbtBlocks] = useState<TargetBlocks>({});
   const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, create-profile, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
-  const [showConnectRepoDialog, setShowConnectRepoDialog] =
-    useState<boolean>(false);
-  const [showAddProfileDialog, setShowAddProfileDialog] =
-    useState<boolean>(false);
+  const [showConnectRepoDialog, setShowConnectRepoDialog] = useState<boolean>(false);
+  const [showAddProfileDialog, setShowAddProfileDialog] = useState<boolean>(false);
   const [rerender, setRerender] = useState<boolean>(false);
+  const [dbtSetupLogs, setDbtSetupLogs] = useState<string[]>([]);
 
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
@@ -79,19 +82,29 @@ const Transform = () => {
     if (!session) return;
     try {
       const response = await httpGet(session, 'prefect/blocks/dbt');
-      setDbtBlocks(
-        response.map((block: DbtBlock) => {
-          return [
-            block.blockName.split('-')[3],
-            <>
-              <Button variant="contained" onClick={() => runDbtJob(block)}>
-                Run
-              </Button>
-            </>,
-          ];
-        })
-      );
-      if (response && response?.length > 0) setDbtSetupStage('complete');
+
+      const blocksByTarget: TargetBlocks = {};
+      const expandByTargets: ExpandTarget = {};
+
+      response.forEach((block: DbtBlock) => {
+
+        const components: string[] = block.blockName.split('-');
+        block.target = components[2];
+        block.action = components[3];
+
+        if (!blocksByTarget.hasOwnProperty(block.target)) {
+          blocksByTarget[block.target] = [];
+          expandByTargets[block.target] = false;
+        }
+        blocksByTarget[block.target].push(block);
+      });
+
+      setDbtBlocks(blocksByTarget);
+
+      if (response && response?.length > 0) {
+        setDbtSetupStage('complete');
+      }
+
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
@@ -102,28 +115,6 @@ const Transform = () => {
     fetchDbtWorkspace();
   }, [session, rerender]);
 
-  const runDbtJob = async function (block: DbtBlock) {
-    setDbtJobStatus(true);
-    setDbtRunLogs([]);
-
-    try {
-      const message = await httpPost(session, 'prefect/flows/dbt_run/', {
-        blockName: block.blockName,
-        // flowName: 'rc-flow-name',
-        // flowRunName: 'rc-flow-run-name',
-      });
-      console.log(message);
-      if (message?.success)
-        successToast('Job ran successfully', [], toastContext);
-      // setDbtRunLogs(message);
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], toastContext);
-    }
-
-    setDbtJobStatus(false);
-    console.log('inside dbt run block');
-  };
 
   return (
     <>
@@ -231,15 +222,11 @@ const Transform = () => {
         </Card>
         <Box>
           {dbtSetupStage === 'complete' ? ( // show blocks list
-            <List
-              title={'Dbt Setup'}
-              headers={['Block']}
-              rows={dbtBlocks}
-              openDialog={() =>
-                console.log('do nothing, this button is hidden')
-              }
-              onlyList={true}
-            />
+            Object.keys(dbtBlocks).map(
+              (target) => (
+                <DBTTarget key={target} target={target} blocks={dbtBlocks[target]} />
+              )
+            )
           ) : dbtSetupStage === 'create-profile' ? (
             <DBTCreateProfile
               createdProfile={() => {
@@ -251,7 +238,7 @@ const Transform = () => {
             />
           ) : dbtSetupStage === 'create-workspace' ? (
             <DBTSetup
-              setLogs={setDbtRunLogs}
+              setLogs={setDbtSetupLogs}
               setExpandLogs={setExpandLogs}
               onCreateWorkspace={() => {
                 setDbtSetupStage('create-profile');
@@ -278,21 +265,19 @@ const Transform = () => {
               <IconButton onClick={() => setExpandLogs(!expandLogs)}>
                 <ExpandMoreIcon
                   sx={{
-                    transform: expandLogs ? 'rotate(0deg)' : 'rotate(180deg)',
+                    transform: !expandLogs ? 'rotate(0deg)' : 'rotate(180deg)',
                   }}
                 />
               </IconButton>
             </CardActions>
             <Collapse in={expandLogs} unmountOnExit>
-              {!dbtJobStatus ? (
+              {
                 <CardContent>
-                  {dbtRunLogs?.map((logMessage, idx) => (
+                  {dbtSetupLogs?.map((logMessage, idx) => (
                     <Box key={idx}>{logMessage}</Box>
                   ))}
                 </CardContent>
-              ) : (
-                <CircularProgress />
-              )}
+              }
             </Collapse>
           </Card>
         </Box>
