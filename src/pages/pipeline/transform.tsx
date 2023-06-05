@@ -1,9 +1,7 @@
 import { DBTCreateProfile } from '@/components/DBT/DBTCreateProfile';
 import { DBTSetup } from '@/components/DBT/DBTSetup';
 import { PageHead } from '@/components/PageHead';
-import {
-  errorToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
@@ -47,8 +45,10 @@ const Transform = () => {
   const [dbtBlocks, setDbtBlocks] = useState<TargetBlocks>({});
   const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, create-profile, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
-  const [showConnectRepoDialog, setShowConnectRepoDialog] = useState<boolean>(false);
-  const [showAddProfileDialog, setShowAddProfileDialog] = useState<boolean>(false);
+  const [showConnectRepoDialog, setShowConnectRepoDialog] =
+    useState<boolean>(false);
+  const [showAddProfileDialog, setShowAddProfileDialog] =
+    useState<boolean>(false);
   const [rerender, setRerender] = useState<boolean>(false);
   const [dbtSetupLogs, setDbtSetupLogs] = useState<string[]>([]);
 
@@ -87,10 +87,9 @@ const Transform = () => {
       const expandByTargets: ExpandTarget = {};
 
       response.forEach((block: DbtBlock) => {
-
-        const components: string[] = block.blockName.split('-');
-        block.target = components[2];
-        block.action = components[3];
+        // const components: string[] = block.blockName.split('-');
+        // block.target = block?.dbtTargetSchem;
+        // block.action = components[3];
 
         if (!blocksByTarget.hasOwnProperty(block.target)) {
           blocksByTarget[block.target] = [];
@@ -104,7 +103,6 @@ const Transform = () => {
       if (response && response?.length > 0) {
         setDbtSetupStage('complete');
       }
-
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
@@ -114,7 +112,6 @@ const Transform = () => {
   useEffect(() => {
     fetchDbtWorkspace();
   }, [session, rerender]);
-
 
   return (
     <>
@@ -222,11 +219,13 @@ const Transform = () => {
         </Card>
         <Box>
           {dbtSetupStage === 'complete' ? ( // show blocks list
-            Object.keys(dbtBlocks).map(
-              (target) => (
-                <DBTTarget key={target} target={target} blocks={dbtBlocks[target]} />
-              )
-            )
+            Object.keys(dbtBlocks).map((target) => (
+              <DBTTarget
+                key={target}
+                target={target}
+                blocks={dbtBlocks[target]}
+              />
+            ))
           ) : dbtSetupStage === 'create-profile' ? (
             <DBTCreateProfile
               createdProfile={() => {
