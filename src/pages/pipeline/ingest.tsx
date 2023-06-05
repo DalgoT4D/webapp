@@ -53,15 +53,15 @@ export default function Ingest() {
             onChange={handleChange}
             aria-label="basic tabs example"
           >
-            <Tab label="Connections" />
             <Tab label="Sources" />
-            <Tab label="Destinations" />
+            <Tab label="Connections" />
+            <Tab label="Your Warehouse" />
           </Tabs>
         </Box>
-        <TabPanel value={value} index={0}>
+        <TabPanel value={value} index={1}>
           <Connections />
         </TabPanel>
-        <TabPanel value={value} index={1}>
+        <TabPanel value={value} index={0}>
           <Sources />
         </TabPanel>
         <TabPanel value={value} index={2}>

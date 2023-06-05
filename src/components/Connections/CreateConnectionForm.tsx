@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import CustomDialog from '../Dialog/CustomDialog';
-import { Autocomplete, Box, Button, TextField } from '@mui/material';
+import { Autocomplete, Box, Button, TextField, Switch, Select, MenuItem } from '@mui/material';
+import { Table, TableBody, TableCell, TableHead, TableRow, FormControlLabel } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -13,6 +14,14 @@ interface CreateConnectionFormProps {
   mutate: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
+}
+
+interface SourceStream {
+  name: string;
+  supportsIncremental: boolean;
+  selected: boolean;
+  syncMode: string; // incremental | full_refresh
+  destinationSyncMode: string; // append | overwrite | append_dedup
 }
 
 const CreateConnectionForm = ({
@@ -30,7 +39,10 @@ const CreateConnectionForm = ({
     },
   });
   const [sources, setSources] = useState<Array<string>>([]);
-  const [sourceStreams, setSourceStreams] = useState<Array<string>>([]);
+  const [sourceStreams, setSourceStreams] = useState<Array<SourceStream>>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
+  const [normalize, setNormalize] = useState<boolean>(false);
 
   const { data: sourcesData } = useSWR(`${backendUrl}/api/airbyte/sources`);
 
@@ -53,6 +65,7 @@ const CreateConnectionForm = ({
   useEffect(() => {
     if (watchSourceSelection?.id) {
       // console.log(watchSourceSelection);
+      setLoading(true);
 
       (async () => {
         try {
@@ -60,15 +73,25 @@ const CreateConnectionForm = ({
             session,
             `airbyte/sources/${watchSourceSelection.id}/schema_catalog`
           );
-          const streamNames: any[] = [];
+          const streams: SourceStream[] = [];
           message['catalog']['streams'].forEach((el: any) => {
-            streamNames.push(el.stream.name);
-          });
-          setSourceStreams(streamNames);
+            streams.push({
+              name: el.stream.name,
+              supportsIncremental: el.stream.supportedSyncModes.indexOf('incremental') > -1,
+              selected: false,
+              syncMode: 'full_refresh',
+              destinationSyncMode: 'append',
+            });
+          })
+          setSourceStreams(streams);
         } catch (err: any) {
-          console.error(err);
-          errorToast(err.message, [], globalContext);
+          if (err.cause) {
+            errorToast(err.cause.detail, [], globalContext);
+          } else {
+            errorToast(err.message, [], globalContext);
+          }
         }
+        setLoading(false);
         // message looks like {
         //     "catalog": {
         //         "streams": [
@@ -115,6 +138,8 @@ const CreateConnectionForm = ({
         //     "catalogId": "f1b42ce1-dc1f-4633-963c-dd28aff0aef9"
         // }
       })();
+    } else {
+      setSourceStreams([]);
     }
   }, [watchSourceSelection]);
 
@@ -129,7 +154,8 @@ const CreateConnectionForm = ({
     const payload: any = {
       name: data.name,
       sourceId: data.sources.id,
-      streamNames: sourceStreams,
+      streams: sourceStreams,
+      normalize: normalize,
     };
     if (data.destinationSchema) {
       payload.destinationSchema = data.destinationSchema;
@@ -143,6 +169,46 @@ const CreateConnectionForm = ({
       console.error(err);
       errorToast(err.message, [], globalContext);
     }
+  };
+
+  const updateThisStreamTo_ = (stream: SourceStream, newStream: SourceStream) => {
+    const newstreams: SourceStream[] = [];
+    for (let idx = 0; idx < sourceStreams.length; idx++) {
+      if (sourceStreams[idx].name === stream.name) {
+        newstreams.push(newStream);
+      } else {
+        newstreams.push(sourceStreams[idx]);
+      }
+    }
+    setSourceStreams(newstreams);
+    setSomeStreamSelected(newstreams.some((stream) => stream.selected));
+  }
+  const selectStream = (checked: boolean, stream: SourceStream) => {
+    updateThisStreamTo_(stream, {
+      name: stream.name,
+      supportsIncremental: stream.supportsIncremental,
+      selected: checked,
+      syncMode: stream.syncMode,
+      destinationSyncMode: stream.destinationSyncMode,
+    } as SourceStream);
+  };
+  const setStreamIncr = (checked: boolean, stream: SourceStream) => {
+    updateThisStreamTo_(stream, {
+      name: stream.name,
+      supportsIncremental: stream.supportsIncremental,
+      selected: stream.selected,
+      syncMode: checked ? 'incremental' : 'full_refresh',
+      destinationSyncMode: stream.destinationSyncMode,
+    } as SourceStream);
+  };
+  const setDestinationSyncMode = (value: string, stream: SourceStream) => {
+    updateThisStreamTo_(stream, {
+      name: stream.name,
+      supportsIncremental: stream.supportsIncremental,
+      selected: stream.selected,
+      syncMode: stream.syncMode,
+      destinationSyncMode: value,
+    } as SourceStream);
   };
 
   const FormContent = () => {
@@ -189,15 +255,68 @@ const CreateConnectionForm = ({
 
           <Box sx={{ m: 2 }} />
 
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <FormControlLabel
+              control={<Switch
+                checked={normalize}
+                onChange={(event) => setNormalize(event.target.checked)} />
+              }
+              label="Normalize after sync?"
+            />
+          </Box>
+
           {sourceStreams.length > 0 && (
             <>
-              <div>Available Tables / Views</div>
-              <ul>
-                {sourceStreams.map((stream) => (
-                  <li key={stream}>{stream}</li>
-                ))}
-              </ul>
-              <div>For now we will sync all, selection coming soon</div>
+              <Table sx={{ minWidth: '600px' }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell key="streamname" align='center'>
+                      Stream
+                    </TableCell>
+                    <TableCell key="selected" align='center'>
+                      Sync?
+                    </TableCell>
+                    <TableCell key="incremental" align='center'>
+                      Incremental?
+                    </TableCell>
+                    <TableCell key="destsyncmode" align='center'>
+                      Destination
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {sourceStreams.map((stream) => (
+                    <TableRow
+                      key={stream.name}
+                      sx={{}}>
+                      <TableCell key="name" align='center' sx={stream.selected ? { color: 'green', fontWeight: 700 } : {}}>
+                        {stream.name}
+                      </TableCell>
+                      <TableCell key="sel" align='center'>
+                        <Switch
+                          checked={stream.selected}
+                          onChange={(event) => selectStream(event.target.checked, stream)} />
+                      </TableCell>
+                      <TableCell key="inc" align='center'>
+                        <Switch
+                          disabled={!stream.supportsIncremental || !stream.selected}
+                          checked={stream.syncMode === 'incremental' && stream.selected}
+                          onChange={(event) => setStreamIncr(event.target.checked, stream)} />
+                      </TableCell>
+                      <TableCell key="destination" align='center'>
+                        <Select
+                          disabled={!stream.selected}
+                          value={stream.destinationSyncMode}
+                          onChange={(event) => { setDestinationSyncMode(event.target.value, stream) }}>
+                          <MenuItem value='append'>Append</MenuItem>
+                          <MenuItem value='overwrite'>Overwrite</MenuItem>
+                          <MenuItem value='append_dedup'>Append / Dedup</MenuItem>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </>
           )}
         </Box>
@@ -214,7 +333,7 @@ const CreateConnectionForm = ({
         formContent={<FormContent />}
         formActions={
           <>
-            <Button variant="contained" type="submit">
+            <Button variant="contained" type="submit" disabled={!someStreamSelected}>
               Connect
             </Button>
             <Button color="secondary" variant="outlined" onClick={handleClose}>
@@ -222,6 +341,7 @@ const CreateConnectionForm = ({
             </Button>
           </>
         }
+        loading={loading}
       ></CustomDialog>
     </>
   );
