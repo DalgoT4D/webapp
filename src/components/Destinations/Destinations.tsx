@@ -5,9 +5,10 @@ import {
   Box,
   Button,
   CircularProgress,
-  TextField,
+  Typography,
+  TextField
 } from '@mui/material';
-import { List } from '../List/List';
+import { Table, TableBody, TableCell, TableRow } from '@mui/material';
 import { backendUrl } from '@/config/constant';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
@@ -21,14 +22,12 @@ import {
 } from '@/components/ToastMessage/ToastHelper';
 import CustomDialog from '../Dialog/CustomDialog';
 
-const headers = ['Destination details', 'Type'];
-
 export const Destinations = () => {
   const { data: session }: any = useSession();
-  const [rows, setRows] = useState<Array<Array<string>>>([]);
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/destinations`
   );
+  const [warehouse, setWarehouse] = useState<any>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [destinationDefs, setDestinationDefs] = useState([]);
   const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>(
@@ -57,11 +56,12 @@ export const Destinations = () => {
 
   useEffect(() => {
     if (data && data.length > 0) {
-      const rows = data.map((element: any) => [
-        element.name,
-        element.destinationDest,
-      ]);
-      setRows(rows);
+      setWarehouse({
+        name: data[0].destinationName,
+        wtype: data[0].destinationName,
+        icon: data[0].icon,
+        connectionConfiguration: data[0].connectionConfiguration,
+      })
     }
   }, [data]);
 
@@ -197,10 +197,6 @@ export const Destinations = () => {
     setSetupLogs([]);
   };
 
-  const handleClickOpen = () => {
-    setShowDialog(true);
-  };
-
   const onSubmit = async (data: any) => {
     try {
       setSetupLogs([]);
@@ -274,45 +270,83 @@ export const Destinations = () => {
     return <CircularProgress />;
   }
 
+  const deleteDestination = async () => {
+    // TODO
+  }
+
   return (
     <>
-      <CustomDialog
-        title={'Add a new destination'}
-        show={showDialog}
-        handleClose={handleClose}
-        handleSubmit={handleSubmit(onSubmit)}
-        formContent={<CreateDestinationForm />}
-        formActions={
-          <>
-            {
-              setupLogs && (
-                <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
-                  {
-                    setupLogs.map((logmessage, idx) => <Box key={idx}>{logmessage}</Box>)
-                  }
-                </Box>
-              )
-            }
-            <Button variant="contained" type="submit">
-              Save changes and test
-            </Button>
-            <Button
-              color="secondary"
-              variant="outlined"
-              onClick={handleClose}
-              data-testid="cancel"
-            >
-              Cancel
-            </Button>
-          </>
-        }
-      />
-      <List
-        openDialog={handleClickOpen}
-        title="Destination"
-        headers={headers}
-        rows={rows}
-      />
+      {warehouse && warehouse.wtype === 'Postgres' &&
+        <>
+          <Typography variant="h3">{warehouse.name}</Typography>
+          <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
+          <Table sx={{ maxWidth: '600px' }}>
+            <TableBody>
+              <TableRow><TableCell>Host</TableCell><TableCell align="right">{warehouse.connectionConfiguration.host}</TableCell></TableRow>
+              <TableRow><TableCell>Port</TableCell><TableCell align="right">{warehouse.connectionConfiguration.port}</TableCell></TableRow>
+              <TableRow><TableCell>Database</TableCell><TableCell align="right">{warehouse.connectionConfiguration.database}</TableCell></TableRow>
+              <TableRow><TableCell>User</TableCell><TableCell align="right">{warehouse.connectionConfiguration.username}</TableCell></TableRow>
+            </TableBody>
+          </Table>
+        </>
+      }
+      {warehouse && warehouse.wtype === 'BigQuery' &&
+        <>
+          <Typography variant="h3">{warehouse.name}</Typography>
+          <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
+        </>
+      }
+      {warehouse &&
+        <Button variant="contained"
+          sx={{ backgroundColor: '#d84141' }}
+          onClick={() => deleteDestination()}
+        >
+          Delete connection to warehouse (TODO)
+        </Button>
+      }
+      {!warehouse && !showDialog &&
+        <Button
+          color="primary"
+          variant="outlined"
+          onClick={() => setShowDialog(true)}
+          data-testid="add-new-destination"
+        >
+          Add a new warehouse
+        </Button>
+      }
+      {!warehouse &&
+        <CustomDialog
+          title={'Add a new destination'}
+          show={showDialog}
+          handleClose={handleClose}
+          handleSubmit={handleSubmit(onSubmit)}
+          formContent={<CreateDestinationForm />}
+          formActions={
+            <>
+              {
+                setupLogs && (
+                  <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
+                    {
+                      setupLogs.map((logmessage, idx) => <Box key={idx}>{logmessage}</Box>)
+                    }
+                  </Box>
+                )
+              }
+              <Button variant="contained" type="submit">
+                Save changes and test
+              </Button>
+              <Button
+                color="secondary"
+                variant="outlined"
+                onClick={handleClose}
+                data-testid="cancel"
+              >
+                Cancel
+              </Button>
+            </>
+          }
+        />
+      }
     </>
   );
 };
