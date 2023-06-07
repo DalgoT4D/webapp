@@ -10,6 +10,7 @@ export interface SourceConfigInputprops {
   registerFormFieldValue: (...args: any) => any;
   control: any;
   setFormValue: (...args: any) => any;
+  source?: any;
 }
 
 export const SourceConfigInput = ({
@@ -17,6 +18,7 @@ export const SourceConfigInput = ({
   registerFormFieldValue,
   control,
   setFormValue,
+  source,
 }: SourceConfigInputprops) => {
   const [showPasswords, setShowPasswords] = useState<any>({});
 
