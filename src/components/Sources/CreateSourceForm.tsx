@@ -69,7 +69,8 @@ const CreateSourceForm = ({
           let maxOrder: number = -1;
 
           for (const [key, value] of Object.entries(dataProperties)) {
-            let order: any = (value as any)?.order || -1;
+            let order: any =
+              (value as any)?.order >= 0 ? (value as any)?.order : -1;
             specsConfigFields.push({
               airbyte_secret: false,
               ...(value as object),
