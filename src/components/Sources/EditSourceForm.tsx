@@ -100,7 +100,8 @@ const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
           let maxOrder: number = -1;
 
           for (const [key, value] of Object.entries(dataProperties)) {
-            let order: any = (value as any)?.order || -1;
+            let order: any =
+              (value as any)?.order >= 0 ? (value as any)?.order : -1;
             specsConfigFields.push({
               airbyte_secret: false,
               ...(value as object),
@@ -119,7 +120,7 @@ const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
           }
           setSourceDefSpecs(specsConfigFields);
 
-          //   Set the edit form prefilled values of the current source
+          // Set the edit form prefilled values of the current source
           for (const spec of specsConfigFields) {
             const field: any = spec.field;
             setValue(
