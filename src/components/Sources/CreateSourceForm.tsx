@@ -63,7 +63,6 @@ const CreateSourceForm = ({
             session,
             `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`
           );
-          console.log(data);
           // Prepare the specs config before setting it
           const specsConfigFields: Array<any> = [];
           const dataProperties: any = data?.properties || {};
