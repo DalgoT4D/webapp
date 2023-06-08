@@ -43,7 +43,7 @@ export const DBTBlock = ({
       }
       setDbtRunLogs(message.result);
     } catch (err: any) {
-      console.error(err);
+      console.error(err.cause);
       errorToast(err.message, [], toastContext);
     }
 
@@ -72,7 +72,7 @@ export const DBTBlock = ({
       }
       {
         <Box sx={{ border: '1px solid #092540', borderRadius: '5px', 'padding': '10px', overflow: 'scroll', height: '100px', width: '600px' }}>
-          {dbtRunLogs.map((log, idx) => <Typography key={idx}>{log}</Typography>)}
+          {dbtRunLogs.map((log, idx) => <Typography key={idx} data-testid={'logline-' + idx}>{log}</Typography>)}
         </Box>
       }
     </Box>
