@@ -10,6 +10,7 @@ export interface SourceConfigInputprops {
   registerFormFieldValue: (...args: any) => any;
   control: any;
   setFormValue: (...args: any) => any;
+  source?: any;
 }
 
 export const SourceConfigInput = ({

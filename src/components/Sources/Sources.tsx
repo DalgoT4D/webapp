@@ -6,6 +6,7 @@ import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { httpDelete } from '@/helpers/http';
 import CreateSourceForm from './CreateSourceForm';
+import EditSourceForm from './EditSourceForm';
 
 const headers = ['Source details', 'Type'];
 
@@ -15,7 +16,16 @@ export const Sources = () => {
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/sources`
   );
-  const [showDialog, setShowDialog] = useState(false);
+  const [showCreateSourceDialog, setShowCreateSourceDialog] =
+    useState<boolean>(false);
+  const [showEditSourceDialog, setShowEditSourceDialog] =
+    useState<boolean>(false);
+  const [sourceIdToEdit, setSourceIdToEdit] = useState<string>('');
+
+  const handleEditSource = (sourceId: string) => {
+    setSourceIdToEdit(sourceId);
+    setShowEditSourceDialog(true);
+  };
 
   useEffect(() => {
     if (data && data.length > 0) {
@@ -23,7 +33,17 @@ export const Sources = () => {
         source.name,
         source.sourceDest,
         [
-          <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
+          <Box
+            sx={{ justifyContent: 'end', display: 'flex', gap: '5px' }}
+            key={'box-' + idx}
+          >
+            <Button
+              variant="contained"
+              onClick={() => handleEditSource(source?.sourceId)}
+              key={'edit-' + idx}
+            >
+              Edit
+            </Button>
             <Button
               variant="contained"
               onClick={() => deleteSource(source)}
@@ -32,16 +52,15 @@ export const Sources = () => {
             >
               Delete
             </Button>
-          </Box>
-
-        ]
+          </Box>,
+        ],
       ]);
       setRows(rows);
     }
   }, [data]);
 
   const handleClickOpen = () => {
-    setShowDialog(true);
+    setShowCreateSourceDialog(true);
   };
 
   if (isLoading) {
@@ -51,14 +70,19 @@ export const Sources = () => {
   const deleteSource = async (source: any) => {
     await httpDelete(session, `airbyte/sources/${source.sourceId}`);
     mutate();
-  }
+  };
 
   return (
     <>
       <CreateSourceForm
         mutate={mutate}
-        showForm={showDialog}
-        setShowForm={setShowDialog}
+        showForm={showCreateSourceDialog}
+        setShowForm={setShowCreateSourceDialog}
+      />
+      <EditSourceForm
+        showForm={showEditSourceDialog}
+        setShowForm={setShowEditSourceDialog}
+        sourceId={sourceIdToEdit}
       />
       <List
         openDialog={handleClickOpen}
