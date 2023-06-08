@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { CreateOrg } from '../createorg'
+import { CreateOrg } from '../pages/signup/createorg'
 import { SessionProvider } from 'next-auth/react';
 import * as nextRouter from 'next/router';
 

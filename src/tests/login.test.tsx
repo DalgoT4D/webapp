@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { SignUp } from '../index'
+import { Login } from '../pages/login/index'
 import { SessionProvider } from 'next-auth/react';
 import * as nextRouter from 'next/router';
 
-describe("tests for signup form", () => {
+describe("tests for login form", () => {
 
   const mockSession: Session = {
     expires: '1',
@@ -17,11 +17,11 @@ describe("tests for signup form", () => {
 
     render(
       <SessionProvider session={mockSession}>
-        <SignUp />
+        <Login />
       </SessionProvider>
     );
 
-    const form = screen.getByTestId('signup-form');
+    const form = screen.getByTestId('login-form');
     expect(form).toBeDefined();
 
     const usernameField = screen.getByTestId('username');
