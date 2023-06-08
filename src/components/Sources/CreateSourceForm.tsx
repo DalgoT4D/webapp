@@ -203,14 +203,7 @@ const CreateSourceForm = ({
         handleSubmit={handleSubmit(onSubmit)}
         formContent={<FormContent />}
         formActions={
-          <>
-            {setupLogs && (
-              <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
-                {setupLogs.map((logmessage, idx) => (
-                  <Box key={idx}>{logmessage}</Box>
-                ))}
-              </Box>
-            )}
+          <Box>
             <Button variant="contained" type="submit">
               Save changes and test
             </Button>
@@ -219,10 +212,18 @@ const CreateSourceForm = ({
               variant="outlined"
               onClick={handleClose}
               data-testid="cancel"
+              sx={{ marginLeft: '5px' }}
             >
               Cancel
             </Button>
-          </>
+            {setupLogs && (
+              <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
+                {setupLogs.map((logmessage, idx) => (
+                  <Box key={idx}>{logmessage}</Box>
+                ))}
+              </Box>
+            )}
+          </Box>
         }
         loading={checking}
       ></CustomDialog>

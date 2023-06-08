@@ -256,6 +256,7 @@ export const DestinationConfigInput = ({
                 rules={{ required: spec?.required }}
                 render={({ field }) => (
                   <Autocomplete
+                    value={field.value}
                     options={spec?.enum}
                     onChange={(e, data: any) => {
                       handleObjectFieldOnChange(data, spec.field, field);

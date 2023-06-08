@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { DestinationConfigInput } from './DestinationConfigInput';
@@ -70,15 +70,6 @@ const EditDestinationForm = ({
               id: element.destinationDefinitionId,
             };
           });
-
-          // Set the edit form prefilled values of the current source
-          for (const spec of specsConfigFields) {
-            const field: any = spec.field;
-            setValue(
-              `config.${field}`,
-              source?.connectionConfiguration[`${spec.field}`]
-            );
-          }
 
           setDestinationDefs(destinationDefRows);
         } catch (err: any) {
@@ -202,6 +193,15 @@ const EditDestinationForm = ({
             []
           );
           setDestinationDefSpecs(specsConfigFields);
+
+          // Prefill the warehouse name
+          setValue('name', warehouse.name);
+
+          // Prefill the warehouse config
+          setPrefilledFormFieldsForWarehouse(
+            warehouse.connectionConfiguration,
+            'config'
+          );
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
@@ -210,11 +210,47 @@ const EditDestinationForm = ({
     }
   }, [watchSelectedDestinationDef]);
 
+  const setPrefilledFormFieldsForWarehouse = (
+    connectionConfiguration: any,
+    parent: string = 'config'
+  ) => {
+    for (const [key, value] of Object.entries(connectionConfiguration)) {
+      let field: any = `${parent}.${key}`;
+
+      let valIsObject =
+        typeof value === 'object' && value !== null && !Array.isArray(value);
+
+      if (valIsObject) {
+        setPrefilledFormFieldsForWarehouse(value, field);
+      } else {
+        setValue(field, value);
+      }
+    }
+  };
+
   const handleClose = () => {
     reset();
     setDestinationDefSpecs([]);
     setShowForm(false);
     setSetupLogs([]);
+  };
+
+  const editWarehouse = async (data: any) => {
+    try {
+      await httpPut(
+        session,
+        `airbyte/destinations/${warehouse.destinationId}/`,
+        {
+          name: data.name,
+          destinationDefId: data.destinationDef.id,
+          config: data.config,
+        }
+      );
+      handleClose();
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
   };
 
   const onSubmit = async (data: any) => {
@@ -223,22 +259,20 @@ const EditDestinationForm = ({
       setSetupLogs([]);
       const connectivityCheck = await httpPost(
         session,
-        'airbyte/destinations/check_connection/',
+        `airbyte/destinations/${warehouse.destinationId}/check_connection_for_update/`,
         {
           name: data.name,
-          destinationDefId: data.destinationDef.id,
           config: data.config,
         }
       );
       if (connectivityCheck.status === 'succeeded') {
-        await httpPost(session, 'organizations/warehouse/', {
-          wtype: data.destinationDef.label.toLowerCase(),
-          name: data.name,
-          destinationDefId: data.destinationDef.id,
-          airbyteConfig: data.config,
-        });
+        await editWarehouse(data);
         handleClose();
-        successToast('Warehouse created', [], globalContext);
+        successToast(
+          'Warehouse details updated successfully',
+          [],
+          globalContext
+        );
       } else {
         setSetupLogs(connectivityCheck.logs);
         errorToast('Failed to connect to warehouse', [], globalContext);
