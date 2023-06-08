@@ -14,7 +14,11 @@ interface EditSourceFormProps {
   sourceId: string;
 }
 
-const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
+const EditSourceForm = ({
+  showForm,
+  setShowForm,
+  sourceId,
+}: EditSourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
   const {
@@ -34,6 +38,7 @@ const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
   });
   const watchSelectedSourceDef = watch('sourceDef');
   const [loading, setLoading] = useState<boolean>(false);
+  const [logs, setLogs] = useState<Array<any>>([]);
   const [source, setSource] = useState<any>(null);
   const [sourceDefs, setSourceDefs] = useState([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
@@ -41,6 +46,7 @@ const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
   const handleClose = () => {
     reset();
     setShowForm(false);
+    setLogs([]);
   };
 
   useEffect(() => {
@@ -122,11 +128,8 @@ const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
 
           // Set the edit form prefilled values of the current source
           for (const spec of specsConfigFields) {
-            const field: any = spec.field;
-            setValue(
-              `config.${field}`,
-              source?.connectionConfiguration[`${spec.field}`]
-            );
+            const field: any = `config.${spec.field}`;
+            setValue(field, source?.connectionConfiguration[`${spec.field}`]);
           }
         } catch (err: any) {
           console.error(err);
@@ -153,10 +156,11 @@ const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
 
   const checkSourceConnectivityForUpdate = async (data: any) => {
     setLoading(true);
+    setLogs([]);
     try {
       const checkResponse = await httpPost(
         session,
-        `airbyte/sources/check_connection/`,
+        `airbyte/sources/${sourceId}/check_connection_for_update/`,
         {
           name: data.name,
           sourceDefId: data.sourceDef.id,
@@ -167,6 +171,7 @@ const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
         await editSource(data);
         setLoading(false);
       } else {
+        setLogs(checkResponse.logs);
         errorToast('Something went wrong', [], globalContext);
       }
     } catch (err: any) {
@@ -231,7 +236,7 @@ const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
       handleSubmit={handleSubmit(onSubmit)}
       formContent={<FormContent />}
       formActions={
-        <>
+        <Box>
           <Button variant="contained" type="submit">
             Save changes and test
           </Button>
@@ -240,10 +245,18 @@ const EditSourceForm = ({ showForm, setShowForm, sourceId }: any) => {
             variant="outlined"
             onClick={handleClose}
             data-testid="cancel"
+            sx={{ marginLeft: '5px' }}
           >
             Cancel
           </Button>
-        </>
+          {logs && (
+            <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
+              {logs.map((logmessage, idx) => (
+                <Box key={idx}>{logmessage}</Box>
+              ))}
+            </Box>
+          )}
+        </Box>
       }
       loading={loading}
     />

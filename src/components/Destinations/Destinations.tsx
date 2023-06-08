@@ -20,7 +20,7 @@ export const Destinations = () => {
       setWarehouse({
         destinationId: data[0].destinationId,
         destinationDefinitionId: data[0].destinationDefinitionId,
-        name: data[0].destinationName,
+        name: data[0].name,
         wtype: data[0].destinationName,
         icon: data[0].icon,
         connectionConfiguration: data[0].connectionConfiguration,
@@ -40,7 +40,7 @@ export const Destinations = () => {
     <>
       {warehouse && warehouse.wtype === 'Postgres' && (
         <>
-          <Typography variant="h3">{warehouse.name}</Typography>
+          <Typography variant="h3">{warehouse.wtype}</Typography>
           <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
           <Table sx={{ maxWidth: '600px' }}>
             <TableBody>
@@ -74,7 +74,7 @@ export const Destinations = () => {
       )}
       {warehouse && warehouse.wtype === 'BigQuery' && (
         <>
-          <Typography variant="h3">{warehouse.name}</Typography>
+          <Typography variant="h3">{warehouse.wtype}</Typography>
           <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
         </>
       )}
