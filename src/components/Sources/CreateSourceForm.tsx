@@ -56,21 +56,36 @@ const CreateSourceForm = ({
 
   useEffect(() => {
     if (watchSelectedSourceDef?.id) {
+      console.log('here');
       (async () => {
         try {
-          const data = await httpGet(
+          const data: any = await httpGet(
             session,
             `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`
           );
           // Prepare the specs config before setting it
           const specsConfigFields: Array<any> = [];
-          for (const [key, value] of Object.entries(data?.properties || {})) {
+          const dataProperties: any = data?.properties || {};
+          let maxOrder = -1;
+
+          for (const [key, value] of Object.entries(dataProperties)) {
+            const order: any =
+              (value as any)?.order >= 0 ? (value as any)?.order : -1;
             specsConfigFields.push({
               airbyte_secret: false,
               ...(value as object),
               field: key,
               required: data?.required.includes(key),
+              order: order,
             });
+            maxOrder = order > maxOrder ? order : maxOrder;
+          }
+
+          // Attach order to all specs
+          for (const spec of specsConfigFields) {
+            if (spec.order === -1) {
+              spec.order = ++maxOrder;
+            }
           }
           setSourceDefSpecs(specsConfigFields);
         } catch (err: any) {
@@ -93,15 +108,19 @@ const CreateSourceForm = ({
     setChecking(true);
     setSetupLogs([]);
     try {
-      const checkResponse = await httpPost(session, `airbyte/sources/check_connection/`, {
-        name: data.name,
-        sourceDefId: data.sourceDef.id,
-        config: data.config,
-      })
+      const checkResponse = await httpPost(
+        session,
+        `airbyte/sources/check_connection/`,
+        {
+          name: data.name,
+          sourceDefId: data.sourceDef.id,
+          config: data.config,
+        }
+      );
       if (checkResponse.status === 'succeeded') {
         await createSource(data);
       } else {
-        errorToast("Something went wrong", [], toastContext);
+        errorToast('Something went wrong', [], toastContext);
         setSetupLogs(checkResponse.logs);
       }
     } catch (err: any) {
@@ -125,7 +144,7 @@ const CreateSourceForm = ({
       console.error(err);
       errorToast(err.message, [], toastContext);
     }
-  }
+  };
 
   const onSubmit = async (data: any) => {
     await checkSourceConnectivity(data);
@@ -184,16 +203,7 @@ const CreateSourceForm = ({
         handleSubmit={handleSubmit(onSubmit)}
         formContent={<FormContent />}
         formActions={
-          <>
-            {
-              setupLogs && (
-                <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
-                  {
-                    setupLogs.map((logmessage, idx) => <Box key={idx}>{logmessage}</Box>)
-                  }
-                </Box>
-              )
-            }
+          <Box>
             <Button variant="contained" type="submit">
               Save changes and test
             </Button>
@@ -202,10 +212,18 @@ const CreateSourceForm = ({
               variant="outlined"
               onClick={handleClose}
               data-testid="cancel"
+              sx={{ marginLeft: '5px' }}
             >
               Cancel
             </Button>
-          </>
+            {setupLogs && (
+              <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
+                {setupLogs.map((logmessage, idx) => (
+                  <Box key={idx}>{logmessage}</Box>
+                ))}
+              </Box>
+            )}
+          </Box>
         }
         loading={checking}
       ></CustomDialog>
