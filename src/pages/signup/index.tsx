@@ -27,6 +27,7 @@ export const SignUp = () => {
       await httpPost(session, 'organizations/users/', {
         email: data.username,
         password: data.password,
+        signupcode: data.signupcode,
       });
       signIn('credentials', {
         username: data.username,
@@ -37,7 +38,7 @@ export const SignUp = () => {
     }
     catch (err: any) {
       console.error(err);
-      errorToast(err.message, [], toastContext);
+      errorToast(err.cause.detail, [], toastContext);
     }
   };
 
@@ -69,6 +70,14 @@ export const SignUp = () => {
                     type="password"
                     autoComplete="current-password"
                     {...register('password', { required: true })}
+                  />
+                </Box>
+                <Box className={styles.Input}>
+                  <TextField
+                    id="outlined-basic"
+                    label="Signup code"
+                    variant="outlined"
+                    {...register('signupcode', { required: true })}
                   />
                 </Box>
                 <Box className={styles.Input}>
