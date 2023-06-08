@@ -57,6 +57,7 @@ export const DBTBlock = ({
         !running &&
         <Box sx={{ width: '100px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Button
+            data-testid="dbtactionbutton"
             variant="contained"
             onClick={() => runDbtJob()}>
             dbt {action}
