@@ -14,11 +14,12 @@ export const Header = () => {
   return (
     <Paper className={styles.Header}>
       <Box display="flex" justifyContent="flex-end" alignItems="center">
-        <Typography sx={{ fontWeight: 700 }} color="#000">
+        <Typography sx={{ fontWeight: 700 }} color="#000" data-testid="useremail">
           {session?.user?.email || 'no user'}
         </Typography>
         <Button
           variant="contained"
+          data-testid="signout"
           color="secondary"
           onClick={handleSignout}
           sx={{ m: 1 }}
