@@ -41,7 +41,7 @@ export const CreateOrg = () => {
             alignItems="center"
           >
             <Paper elevation={3} sx={{ p: 4 }}>
-              <form onSubmit={handleSubmit(onSubmit)}>
+              <form onSubmit={handleSubmit(onSubmit)} data-testid="createorg-form">
                 <Box className={styles.Input}>
                   <TextField
                     id="outlined-basic"
