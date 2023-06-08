@@ -18,7 +18,6 @@ export const SourceConfigInput = ({
   registerFormFieldValue,
   control,
   setFormValue,
-  source,
 }: SourceConfigInputprops) => {
   const [showPasswords, setShowPasswords] = useState<any>({});
 

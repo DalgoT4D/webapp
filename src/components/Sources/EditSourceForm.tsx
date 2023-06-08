@@ -21,15 +21,7 @@ const EditSourceForm = ({
 }: EditSourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    reset,
-    setValue,
-    formState: { dirtyFields },
-  } = useForm({
+  const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
       name: '',
       sourceDef: { id: '', label: '' },
@@ -103,10 +95,10 @@ const EditSourceForm = ({
           // Prepare the specs config before setting it
           const specsConfigFields: Array<any> = [];
           const dataProperties: any = data?.properties || {};
-          let maxOrder: number = -1;
+          let maxOrder = -1;
 
           for (const [key, value] of Object.entries(dataProperties)) {
-            let order: any =
+            const order: any =
               (value as any)?.order >= 0 ? (value as any)?.order : -1;
             specsConfigFields.push({
               airbyte_secret: false,

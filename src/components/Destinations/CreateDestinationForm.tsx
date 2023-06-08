@@ -156,17 +156,17 @@ const CreateDestinationForm = ({
           );
 
           const dataProperties: any = data?.properties || {};
-          let maxOrder: number = -1;
+          let maxOrder = -1;
 
           for (const [key, value] of Object.entries(dataProperties)) {
-            let order: any =
+            const order: any =
               (value as any)?.order >= 0 ? (value as any)?.order : -1;
             data.properties[key]['order'] = order;
             maxOrder = order > maxOrder ? order : maxOrder;
           }
 
           // Attach order to all specs
-          for (const [key, value] of Object.entries(dataProperties)) {
+          for (const key in dataProperties) {
             if (data.properties[key]['order'] === -1)
               data.properties[key]['order'] = ++maxOrder;
           }
