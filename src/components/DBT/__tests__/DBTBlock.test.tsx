@@ -21,7 +21,7 @@ describe("tests for dbt-block component", () => {
       </SessionProvider>
     );
 
-    const actionButton = screen.getByTestId('dbtactionbutton');
+    const actionButton = screen.getByTestId('dbtactionbutton-dbt-block-action');
 
     expect(actionButton).toHaveTextContent('dbt dbt-block-action');
 
@@ -53,7 +53,7 @@ describe("tests for dbt-block component", () => {
       </SessionProvider>
     );
 
-    const actionButton = screen.getByTestId('dbtactionbutton');
+    const actionButton = screen.getByTestId('dbtactionbutton-dbt-block-action');
     await userEvent.click(actionButton);
 
     const logline0 = screen.getByTestId('logline-0');
@@ -89,7 +89,7 @@ describe("tests for dbt-block component", () => {
       </SessionProvider>
     );
 
-    const actionButton = screen.getByTestId('dbtactionbutton');
+    const actionButton = screen.getByTestId('dbtactionbutton-dbt-block-action');
     await userEvent.click(actionButton);
 
     const logline0 = screen.getByTestId('logline-0');
