@@ -35,7 +35,7 @@ const CustomDialog = ({
         <Box display="flex" alignItems="center">
           <Box flexGrow={1}>{title}</Box>
           <Box>
-            <IconButton onClick={handleClose}>
+            <IconButton onClick={handleClose} data-testid="closebutton">
               <Close />
             </IconButton>
           </Box>
@@ -51,7 +51,7 @@ const CustomDialog = ({
               padding: '1.5rem',
             }}
           >
-            <CircularProgress />
+            <CircularProgress data-testid="circularprogress" />
           </Box>
         ) : (
           <DialogActions
