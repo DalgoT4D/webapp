@@ -16,7 +16,7 @@
     "@emotion/styled": "^11.10.8",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.12.3",
-    "eslint": "8.40.0",
+    "eslint": "8.41.0",
     "eslint-config-next": "13.4.3",
     "moment": "^2.29.4",
     "next": "13.4.3",
