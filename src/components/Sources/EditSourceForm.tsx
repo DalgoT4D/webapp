@@ -50,13 +50,13 @@ const EditSourceForm = ({
           setValue('name', data?.name);
           setSource(data);
           await fetchSourceDefinitions();
-          setLoading(false);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
         }
       })();
     }
+    setLoading(false);
   }, [showForm]);
 
   const fetchSourceDefinitions = async () => {
@@ -229,14 +229,14 @@ const EditSourceForm = ({
       formContent={<FormContent />}
       formActions={
         <Box>
-          <Button variant="contained" type="submit">
+          <Button variant="contained" type="submit" data-testid="savebutton">
             Save changes and test
           </Button>
           <Button
             color="secondary"
             variant="outlined"
             onClick={handleClose}
-            data-testid="cancel"
+            data-testid="cancelbutton"
             sx={{ marginLeft: '5px' }}
           >
             Cancel
