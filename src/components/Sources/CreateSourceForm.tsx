@@ -153,7 +153,7 @@ const CreateSourceForm = ({
   const FormContent = () => {
     return (
       <>
-        <Box sx={{ pt: 2, pb: 4 }}>
+        <Box sx={{ pt: 2, pb: 4 }} data-testid="temp__1">
           <TextField
             sx={{ width: '100%' }}
             label="Name"
@@ -184,6 +184,7 @@ const CreateSourceForm = ({
           />
           <Box sx={{ m: 2 }} />
           <SourceConfigInput
+            data-testid="sourceconfiginput"
             specs={sourceDefSpecs}
             registerFormFieldValue={register}
             control={control}
@@ -204,14 +205,14 @@ const CreateSourceForm = ({
         formContent={<FormContent />}
         formActions={
           <Box>
-            <Button variant="contained" type="submit">
+            <Button variant="contained" type="submit" data-testid="savebutton">
               Save changes and test
             </Button>
             <Button
               color="secondary"
               variant="outlined"
               onClick={handleClose}
-              data-testid="cancel"
+              data-testid="cancelbutton"
               sx={{ marginLeft: '5px' }}
             >
               Cancel
