@@ -13,6 +13,7 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import CreateConnectionForm from './CreateConnectionForm';
+import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 
@@ -21,6 +22,9 @@ export const Connections = () => {
   const toastContext = useContext(GlobalContext);
 
   const [showDialog, setShowDialog] = useState(false);
+  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
+    useState<boolean>(false);
+  const [connectionToBeDeleted, setConnectionToBeDeleted] = useState<any>(null);
   const [rows, setRows] = useState<Array<Array<string>>>([]);
 
   const { data, isLoading, mutate } = useSWR(
@@ -37,7 +41,11 @@ export const Connections = () => {
           {}
         );
         if (message.success) {
-          successToast("Sync started... check for logs in two minutes", [], toastContext);
+          successToast(
+            'Sync started... check for logs in two minutes',
+            [],
+            toastContext
+          );
         }
       } catch (err: any) {
         console.error(err);
@@ -47,7 +55,6 @@ export const Connections = () => {
   };
 
   const deleteConnection = (connection: any) => {
-    console.log(connection);
     (async () => {
       try {
         const message = await httpDelete(
@@ -55,7 +62,7 @@ export const Connections = () => {
           `airbyte/connections/${connection.blockId}`
         );
         if (message.success) {
-          successToast("Connection deleted", [], toastContext);
+          successToast('Connection deleted', [], toastContext);
           mutate();
         }
       } catch (err: any) {
@@ -63,17 +70,21 @@ export const Connections = () => {
         errorToast(err.message, [], toastContext);
       }
     })();
+    handleCancelDeleteConnection();
   };
 
   // when the connection list changes
   useEffect(() => {
-    if (data && data.length > 0) {
+    if (data && data.length >= 0) {
       const rows = data.map((connection: any, idx: number) => [
         connection.name,
         connection.sourceDest,
         connection.lastSync,
         [
-          <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
+          <Box
+            sx={{ justifyContent: 'end', display: 'flex' }}
+            key={'box-' + idx}
+          >
             <Button
               variant="contained"
               onClick={() => syncConnection(connection)}
@@ -84,13 +95,13 @@ export const Connections = () => {
             </Button>
             <Button
               variant="contained"
-              onClick={() => deleteConnection(connection)}
+              onClick={() => handleDeleteConnection(connection)}
               key={'del-' + idx}
               sx={{ backgroundColor: '#d84141' }}
             >
               Delete
             </Button>
-          </Box>
+          </Box>,
         ],
       ]);
       setRows(rows);
@@ -99,6 +110,16 @@ export const Connections = () => {
 
   const handleClickOpen = () => {
     setShowDialog(true);
+  };
+
+  const handleDeleteConnection = (connection: any) => {
+    setConnectionToBeDeleted(connection);
+    setShowConfirmDeleteDialog(true);
+  };
+
+  const handleCancelDeleteConnection = () => {
+    setConnectionToBeDeleted(null);
+    setShowConfirmDeleteDialog(false);
   };
 
   // show load progress indicator
@@ -118,6 +139,12 @@ export const Connections = () => {
         title="Connection"
         headers={headers}
         rows={rows}
+      />
+      <ConfirmationDialog
+        show={showConfirmDeleteDialog}
+        handleClose={() => handleCancelDeleteConnection()}
+        handleConfirm={() => deleteConnection(connectionToBeDeleted)}
+        message="This will delete the connection permanently and all the flows built on top of this."
       />
     </>
   );
