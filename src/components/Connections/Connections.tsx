@@ -70,8 +70,7 @@ export const Connections = () => {
         errorToast(err.message, [], toastContext);
       }
     })();
-    setShowConfirmDeleteDialog(false);
-    setConnectionToBeDeleted(null);
+    handleCancelDeleteConnection();
   };
 
   // when the connection list changes
@@ -118,6 +117,11 @@ export const Connections = () => {
     setShowConfirmDeleteDialog(true);
   };
 
+  const handleCancelDeleteConnection = () => {
+    setConnectionToBeDeleted(null);
+    setShowConfirmDeleteDialog(false);
+  };
+
   // show load progress indicator
   if (isLoading) {
     return <CircularProgress />;
@@ -138,7 +142,7 @@ export const Connections = () => {
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
-        handleClose={() => setShowConfirmDeleteDialog(false)}
+        handleClose={() => handleCancelDeleteConnection()}
         handleConfirm={() => deleteConnection(connectionToBeDeleted)}
         message="This will delete the connection permanently and all the flows built on top of this."
       />
