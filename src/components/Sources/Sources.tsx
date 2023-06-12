@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import useSWR from 'swr';
 import { CircularProgress, Box, Button } from '@mui/material';
 import { List } from '../List/List';
@@ -7,11 +7,15 @@ import { useSession } from 'next-auth/react';
 import { httpDelete } from '@/helpers/http';
 import CreateSourceForm from './CreateSourceForm';
 import EditSourceForm from './EditSourceForm';
+import ConfirmationDialog from '../Dialog/ConfirmationDialog';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 const headers = ['Source details', 'Type'];
 
 export const Sources = () => {
   const { data: session }: any = useSession();
+  const globalContext = useContext(GlobalContext);
   const [rows, setRows] = useState<Array<Array<string>>>([]);
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/sources`
@@ -20,7 +24,10 @@ export const Sources = () => {
     useState<boolean>(false);
   const [showEditSourceDialog, setShowEditSourceDialog] =
     useState<boolean>(false);
+  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
+    useState<boolean>(false);
   const [sourceIdToEdit, setSourceIdToEdit] = useState<string>('');
+  const [sourceToBeDeleted, setSourceToBeDeleted] = useState<any>(null);
 
   const handleEditSource = (sourceId: string) => {
     setSourceIdToEdit(sourceId);
@@ -28,7 +35,7 @@ export const Sources = () => {
   };
 
   useEffect(() => {
-    if (data && data.length > 0) {
+    if (data && data.length >= 0) {
       const rows = data.map((source: any, idx: number) => [
         source.name,
         source.sourceDest,
@@ -46,7 +53,7 @@ export const Sources = () => {
             </Button>
             <Button
               variant="contained"
-              onClick={() => deleteSource(source)}
+              onClick={() => handleDeleteSource(source)}
               key={'del-' + idx}
               sx={{ backgroundColor: '#d84141' }}
             >
@@ -63,14 +70,38 @@ export const Sources = () => {
     setShowCreateSourceDialog(true);
   };
 
+  const handleDeleteSource = (source: any) => {
+    setSourceToBeDeleted(source);
+    setShowConfirmDeleteDialog(true);
+  };
+
+  const handleCancelDeleteSource = () => {
+    setSourceToBeDeleted(null);
+    setShowConfirmDeleteDialog(false);
+  };
+
+  const deleteSource = async (source: any) => {
+    try {
+      const response = await httpDelete(
+        session,
+        `airbyte/sources/${source.sourceId}`
+      );
+      if (response.success) {
+        successToast('Source deleted', [], globalContext);
+        mutate();
+      } else {
+        errorToast('Something went wrong. Please try again', [], globalContext);
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+    handleCancelDeleteSource();
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
-
-  const deleteSource = async (source: any) => {
-    await httpDelete(session, `airbyte/sources/${source.sourceId}`);
-    mutate();
-  };
 
   return (
     <>
@@ -89,6 +120,12 @@ export const Sources = () => {
         title="Source"
         headers={headers}
         rows={rows}
+      />
+      <ConfirmationDialog
+        show={showConfirmDeleteDialog}
+        handleClose={() => handleCancelDeleteSource()}
+        handleConfirm={() => deleteSource(sourceToBeDeleted)}
+        message="This will delete the source permanentely and remove from the listing. It will also delete any connections related to it."
       />
     </>
   );

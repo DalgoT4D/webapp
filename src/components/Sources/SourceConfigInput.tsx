@@ -53,7 +53,7 @@ export const SourceConfigInput = ({
                   {...registerFormFieldValue(`config.${spec.field}`, {
                     required: spec.required,
                   })}
-                  defaultValue={spec?.default}
+                  value={spec?.default}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -86,7 +86,7 @@ export const SourceConfigInput = ({
                   {...registerFormFieldValue(`config.${spec.field}`, {
                     required: spec.required,
                   })}
-                  defaultValue={spec?.default}
+                  value={spec?.default}
                 ></TextField>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
@@ -118,7 +118,7 @@ export const SourceConfigInput = ({
                   required: spec.required,
                   valueAsNumber: true,
                 })}
-                defaultValue={spec?.default}
+                value={spec?.default}
                 type="number"
               ></TextField>
               <Box sx={{ m: 2 }} />
