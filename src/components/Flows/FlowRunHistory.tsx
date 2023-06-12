@@ -40,8 +40,11 @@ const FlowRunHistory = ({
     setShowFlowRunHistory(false);
   };
 
-  const lastRunTime = (startTime: string) => {
-    return moment(new Date(startTime)).fromNow();
+  const lastRunTime = (flowRun: any) => {
+    // When the flow run fails startTime is null, so we look at the expectedStartTime
+    return moment(
+      new Date(flowRun?.startTime || flowRun.expectedStartTime)
+    ).fromNow();
   };
 
   useEffect(() => {
@@ -111,9 +114,11 @@ const FlowRunHistory = ({
                   flexDirection: 'column',
                   paddingTop: '10px',
                   paddingBottom: '20px',
+                  width: '50%',
+                  wordWrap: 'break-word',
                 }}
               >
-                <Typography>{lastRunTime(flowRun['startTime'])}</Typography>
+                <Typography>{lastRunTime(flowRun)}</Typography>
                 <Box
                   sx={{
                     display: 'flex',
@@ -148,22 +153,15 @@ const FlowRunHistory = ({
                 <Collapse
                   sx={{
                     width: '60%',
-                    overflowX: 'scroll',
-                    overflowY: 'hidden',
                     backgroundColor: 'background.default',
                   }}
                   in={showLogs[idx]}
                   timeout="auto"
                   unmountOnExit
                 >
-                  <CardContent
-                    sx={{
-                      width: '100%',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
+                  <CardContent sx={{}}>
                     {flowRun?.logs?.map((log: any, idx1: number) => (
-                      <Box key={idx1}>{log?.message}</Box>
+                      <Box key={idx1}>- {log?.message}</Box>
                     ))}
                   </CardContent>
                 </Collapse>
