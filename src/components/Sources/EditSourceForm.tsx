@@ -67,17 +67,16 @@ const EditSourceForm = ({
     try {
       const data = await httpGet(session, 'airbyte/source_definitions');
       const sourceDefRows = data?.map((element: any) => {
-        if (element?.sourceDefinitionId == source?.sourceDefinitionId) {
-          setValue('sourceDef', {
-            label: element.name,
-            id: element.sourceDefinitionId,
-          });
-        }
-
-        return {
+        const sourceDef = {
           label: element.name,
           id: element.sourceDefinitionId,
-        };
+        }
+
+        if (element?.sourceDefinitionId == source?.sourceDefinitionId) {
+          setValue('sourceDef', sourceDef);
+        }
+
+        return sourceDef;
       });
       setSourceDefs(sourceDefRows);
     } catch (err: any) {
