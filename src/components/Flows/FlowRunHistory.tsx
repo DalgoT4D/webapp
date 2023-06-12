@@ -115,6 +115,7 @@ const FlowRunHistory = ({
                   paddingTop: '10px',
                   paddingBottom: '20px',
                   width: '50%',
+                  wordWrap: 'break-word',
                 }}
               >
                 <Typography>{lastRunTime(flowRun)}</Typography>
