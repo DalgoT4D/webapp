@@ -38,7 +38,7 @@ const ConfirmationDialog = ({
           </Box>
           <Box>
             <IconButton onClick={handleClose}>
-              <Close />
+              <Close data-testid="closeicon" />
             </IconButton>
           </Box>
         </Box>
@@ -48,6 +48,7 @@ const ConfirmationDialog = ({
           Please read before you continue!
         </Typography>
         <Typography
+          data-testid="messageholder"
           component="p"
           marginTop="12px"
           fontSize="16px"
@@ -69,11 +70,12 @@ const ConfirmationDialog = ({
             padding: '1.5rem',
           }}
         >
-          <CircularProgress />
+          <CircularProgress data-testid="circularprogress" />
         </Box>
       ) : (
         <DialogActions sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}>
           <Button
+            data-testid="confirmbutton"
             onClick={handleConfirm}
             sx={{
               width: '100%',
@@ -88,10 +90,10 @@ const ConfirmationDialog = ({
             I Understand the consequences, confirm
           </Button>
           <Button
+            data-testid="cancelbutton"
             color="secondary"
             variant="outlined"
             onClick={handleClose}
-            data-testid="cancel"
             sx={{ marginLeft: '5px' }}
           >
             Cancel
