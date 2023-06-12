@@ -75,6 +75,11 @@ export const Sources = () => {
     setShowConfirmDeleteDialog(true);
   };
 
+  const handleCancelDeleteSource = () => {
+    setSourceToBeDeleted(null);
+    setShowConfirmDeleteDialog(false);
+  };
+
   const deleteSource = async (source: any) => {
     try {
       const response = await httpDelete(
@@ -91,8 +96,7 @@ export const Sources = () => {
       console.error(err);
       errorToast(err.message, [], globalContext);
     }
-    setShowConfirmDeleteDialog(false);
-    setSourceToBeDeleted(null);
+    handleCancelDeleteSource();
   };
 
   if (isLoading) {
@@ -119,7 +123,7 @@ export const Sources = () => {
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
-        handleClose={() => setShowConfirmDeleteDialog(false)}
+        handleClose={() => handleCancelDeleteSource()}
         handleConfirm={() => deleteSource(sourceToBeDeleted)}
         message="This will delete the source permanentely and remove from the listing. It will also delete any connections related to it."
       />
