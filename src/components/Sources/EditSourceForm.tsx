@@ -38,50 +38,53 @@ const EditSourceForm = ({
   const handleClose = () => {
     reset();
     setShowForm(false);
+    setSource(null);
+    setSourceDefs([]);
+    setSourceDefSpecs([]);
     setLogs([]);
   };
 
   useEffect(() => {
-    setLoading(true);
     if (showForm && sourceId) {
+      setLoading(true);
       (async () => {
         try {
           const data = await httpGet(session, `airbyte/sources/${sourceId}`);
           setValue('name', data?.name);
           setSource(data);
-          await fetchSourceDefinitions();
+          await fetchSourceDefinitions(data);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
         }
       })();
+      setLoading(false);
     }
     setLoading(false);
   }, [showForm]);
 
-  const fetchSourceDefinitions = async () => {
-    if (source) {
-      try {
-        const data = await httpGet(session, 'airbyte/source_definitions');
-        const sourceDefRows = data?.map((element: any) => {
-          if (element?.sourceDefinitionId == source?.sourceDefinitionId) {
-            setValue('sourceDef', {
-              label: element.name,
-              id: element.sourceDefinitionId,
-            });
-          }
+  const fetchSourceDefinitions = async (source: any) => {
+    setLoading(true);
+    try {
+      const data = await httpGet(session, 'airbyte/source_definitions');
+      const sourceDefRows = data?.map((element: any) => {
+        const sourceDef = {
+          label: element.name,
+          id: element.sourceDefinitionId,
+        }
 
-          return {
-            label: element.name,
-            id: element.sourceDefinitionId,
-          };
-        });
-        setSourceDefs(sourceDefRows);
-      } catch (err: any) {
-        console.error(err);
-        errorToast(err.message, [], globalContext);
-      }
+        if (element?.sourceDefinitionId == source?.sourceDefinitionId) {
+          setValue('sourceDef', sourceDef);
+        }
+
+        return sourceDef;
+      });
+      setSourceDefs(sourceDefRows);
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
