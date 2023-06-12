@@ -119,6 +119,23 @@ export const Destinations = () => {
                   {warehouse.connectionConfiguration.loading_method.method}
                 </TableCell>
               </TableRow>
+              {
+                warehouse.connectionConfiguration.loading_method.method === 'GCS Staging' &&
+                <>
+                  <TableRow>
+                    <TableCell>GCS Bucket &amp; Path</TableCell>
+                    <TableCell align="right">
+                      {warehouse.connectionConfiguration.loading_method.gcs_bucket_name} / {warehouse.connectionConfiguration.loading_method.gcs_bucket_path}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>GCS Temp Files</TableCell>
+                    <TableCell align="right">
+                      {warehouse.connectionConfiguration.loading_method['keep_files_in_gcs-bucket']}
+                    </TableCell>
+                  </TableRow>
+                </>
+              }
               <TableRow>
                 <TableCell>Transformation Priority</TableCell>
                 <TableCell align="right">
