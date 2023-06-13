@@ -86,7 +86,7 @@ const Transform = () => {
       const blocksByTarget: TargetBlocks = {};
       const expandByTargets: ExpandTarget = {};
 
-      response.forEach((block: DbtBlock) => {
+      response?.forEach((block: DbtBlock) => {
         // const components: string[] = block.blockName.split('-');
         // block.target = block?.dbtTargetSchem;
         // block.action = components[3];
@@ -172,10 +172,10 @@ const Transform = () => {
                     }}
                     target="_blank"
                     rel="noopener"
-                    href={workspace?.gitrepo_url || '#'}
+                    href={workspace.gitrepo_url}
                   >
                     <Typography sx={{ fontWeight: 600, color: '#0F2440' }}>
-                      {workspace?.gitrepo_url}
+                      {workspace.gitrepo_url}
                     </Typography>
                   </Link>
                   <Box
