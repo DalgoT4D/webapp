@@ -91,7 +91,7 @@ export const SourceConfigInput = ({
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             )
-          ) : spec.type === 'array' ? (
+          ) : spec?.type === 'array' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={`config.${spec.field}`}
