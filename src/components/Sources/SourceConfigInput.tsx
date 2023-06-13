@@ -108,7 +108,7 @@ export const SourceConfigInput = ({
               />
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec.type === 'integer' ? (
+          ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
               <TextField
                 sx={{ width: '100%' }}
