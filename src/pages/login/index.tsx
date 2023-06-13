@@ -51,10 +51,11 @@ export const Login = () => {
               alignItems="center"
             >
               <Paper elevation={3} sx={{ p: 4 }}>
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
                   <Box className={styles.Input}>
                     <TextField
                       id="outlined-basic"
+                      data-testid="username"
                       label="Business email"
                       variant="outlined"
                       {...register('username', { required: true })}
@@ -63,6 +64,7 @@ export const Login = () => {
                   <Box className={styles.Input}>
                     <TextField
                       id="outlined-password-input"
+                      data-testid="password"
                       label="Password"
                       type="password"
                       autoComplete="current-password"
@@ -70,7 +72,7 @@ export const Login = () => {
                     />
                   </Box>
                   <Box className={styles.Input}>
-                    <Button variant="contained" type="submit">
+                    <Button variant="contained" type="submit" data-testid="submit">
                       Login
                     </Button>
                     <Link href="/signup">Sign Up</Link>

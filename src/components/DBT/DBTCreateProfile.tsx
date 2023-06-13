@@ -63,7 +63,7 @@ export const DBTCreateProfile = ({
         <Box>
           <TextField
             sx={{ width: '100%' }}
-            data-testid="target-schema"
+            data-testid="profilename"
             label="Profile name from dbt_project.yml"
             variant="outlined"
             {...register('name', { required: true })}
@@ -73,7 +73,7 @@ export const DBTCreateProfile = ({
         <Box>
           <TextField
             sx={{ width: '100%' }}
-            data-testid="target-schema"
+            data-testid="targetschema"
             label="Target schema in warehouse"
             variant="outlined"
             {...register('target_configs_schema')}
@@ -86,6 +86,7 @@ export const DBTCreateProfile = ({
   return (
     <>
       <CustomDialog
+        data-testid="dialog"
         title={'Add dbt profile'}
         show={showDialog}
         handleClose={handleClose}
@@ -96,7 +97,7 @@ export const DBTCreateProfile = ({
             <Button
               variant="contained"
               type="submit"
-              data-testid="save-profile"
+              data-testid="savebutton"
             >
               Save
             </Button>
@@ -104,7 +105,7 @@ export const DBTCreateProfile = ({
               color="secondary"
               variant="outlined"
               onClick={handleClose}
-              data-testid="cancel"
+              data-testid="cancelbutton"
             >
               Cancel
             </Button>
