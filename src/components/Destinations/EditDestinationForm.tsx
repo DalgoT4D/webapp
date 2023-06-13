@@ -14,6 +14,19 @@ interface EditDestinationFormProps {
   warehouse: any;
 }
 
+interface DestinationDefinitionsApiResponse {
+  destinationDefinitionId: string;
+  name: string;
+  sourceType: string;
+  releaseStage: string;
+  protocolVersion: string;
+  maxSecondsBetweenMessages: number;
+  documentationUrl: string;
+  dockerRepository: string;
+  dockerImageTag: string;
+  normalizationConfig: any;
+}
+
 const EditDestinationForm = ({
   showForm,
   setShowForm,
@@ -25,7 +38,9 @@ const EditDestinationForm = ({
   const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>(
     []
   );
-  const [destinationDefs, setDestinationDefs] = useState([]);
+  const [destinationDefs, setDestinationDefs] = useState<
+    Array<{ id: string; label: string }>
+  >([]);
   const globalContext = useContext(GlobalContext);
 
   const {
@@ -50,26 +65,28 @@ const EditDestinationForm = ({
     if (warehouse && showForm) {
       (async () => {
         try {
-          const data = await httpGet(
+          const data: Array<DestinationDefinitionsApiResponse> = await httpGet(
             session,
             'airbyte/destination_definitions'
           );
-          const destinationDefRows = data?.map((element: any) => {
-            if (
-              element?.destinationDefinitionId ==
-              warehouse?.destinationDefinitionId
-            ) {
-              setValue('destinationDef', {
+          const destinationDefRows: { id: string; label: string }[] = data?.map(
+            (element: DestinationDefinitionsApiResponse) => {
+              if (
+                element?.destinationDefinitionId ==
+                warehouse?.destinationDefinitionId
+              ) {
+                setValue('destinationDef', {
+                  label: element.name,
+                  id: element.destinationDefinitionId,
+                });
+              }
+
+              return {
                 label: element.name,
                 id: element.destinationDefinitionId,
-              });
+              };
             }
-
-            return {
-              label: element.name,
-              id: element.destinationDefinitionId,
-            };
-          });
+          );
 
           setDestinationDefs(destinationDefRows);
         } catch (err: any) {
