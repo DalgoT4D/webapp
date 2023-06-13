@@ -172,10 +172,10 @@ const Transform = () => {
                     }}
                     target="_blank"
                     rel="noopener"
-                    href={workspace?.gitrepo_url || '#'}
+                    href={workspace.gitrepo_url || '#'}
                   >
                     <Typography sx={{ fontWeight: 600, color: '#0F2440' }}>
-                      {workspace?.gitrepo_url}
+                      {workspace.gitrepo_url}
                     </Typography>
                   </Link>
                   <Box
