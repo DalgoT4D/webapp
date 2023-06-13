@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
-import { Sources } from './Sources';
+import { Sources } from '../Sources';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 // import userEvent from '@testing-library/user-event';

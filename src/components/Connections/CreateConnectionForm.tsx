@@ -216,6 +216,7 @@ const CreateConnectionForm = ({
       <>
         <Box sx={{ pt: 2, pb: 4 }}>
           <TextField
+            data-testid="connectionName"
             sx={{ width: '100%' }}
             label="Name"
             variant="outlined"
@@ -225,6 +226,7 @@ const CreateConnectionForm = ({
           <Box sx={{ m: 2 }} />
 
           <TextField
+            data-testid="schemaName"
             sx={{ width: '100%' }}
             label="Destination Schema"
             variant="outlined"
@@ -239,6 +241,7 @@ const CreateConnectionForm = ({
             rules={{ required: true }}
             render={({ field }: any) => (
               <Autocomplete
+                data-testid="sourceList"
                 options={sources}
                 value={field.value}
                 onChange={(e, data) => field.onChange(data)}
@@ -257,6 +260,7 @@ const CreateConnectionForm = ({
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <FormControlLabel
+              data-testid="normalizationCheckbox"
               control={<Switch
                 checked={normalize}
                 onChange={(event) => setNormalize(event.target.checked)} />
@@ -267,7 +271,7 @@ const CreateConnectionForm = ({
 
           {sourceStreams.length > 0 && (
             <>
-              <Table sx={{ minWidth: '600px' }}>
+              <Table sx={{ minWidth: '600px' }} data-testid="sourceStreamTable">
                 <TableHead>
                   <TableRow>
                     <TableCell key="streamname" align='center'>
@@ -326,6 +330,7 @@ const CreateConnectionForm = ({
   return (
     <>
       <CustomDialog
+        data-testid="dialog"
         title={'Add a new connection'}
         show={showForm}
         handleClose={handleClose}

@@ -60,6 +60,7 @@ const EditSourceForm = ({
       })();
       setLoading(false);
     }
+    setLoading(false);
   }, [showForm]);
 
   const fetchSourceDefinitions = async (source: any) => {
@@ -231,14 +232,14 @@ const EditSourceForm = ({
       formContent={<FormContent />}
       formActions={
         <Box>
-          <Button variant="contained" type="submit">
+          <Button variant="contained" type="submit" data-testid="savebutton">
             Save changes and test
           </Button>
           <Button
             color="secondary"
             variant="outlined"
             onClick={handleClose}
-            data-testid="cancel"
+            data-testid="cancelbutton"
             sx={{ marginLeft: '5px' }}
           >
             Cancel
