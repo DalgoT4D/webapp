@@ -104,8 +104,8 @@ const EditDestinationForm = ({
         let commonField: string[] = [];
 
         // Find common property among all array elements of 'oneOf' array
-        if (value['oneOf'].length > 1) {
-          value['oneOf']?.forEach((ele: any) => {
+        if (value['oneOf'] && value['oneOf'].length > 1) {
+          value['oneOf'].forEach((ele: any) => {
             if (commonField.length > 0) {
               commonField = ele?.required.filter((value: any) =>
                 commonField.includes(value)
