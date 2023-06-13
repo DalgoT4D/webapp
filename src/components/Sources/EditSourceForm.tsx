@@ -104,7 +104,7 @@ const EditSourceForm = ({
             id: element.sourceDefinitionId,
           };
 
-          if (element?.sourceDefinitionId == source?.sourceDefinitionId) {
+          if (element.sourceDefinitionId === source.sourceDefinitionId) {
             setValue('sourceDef', sourceDef);
           }
 
