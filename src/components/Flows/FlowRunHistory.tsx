@@ -100,7 +100,9 @@ const FlowRunHistory = ({
                     width: '7px',
                     borderRadius: '50%',
                     backgroundColor:
-                      flowRun['status'] === 'COMPLETED' ? '#399D47' : '#981F1F',
+                      flowRun && flowRun.status === 'COMPLETED'
+                        ? '#399D47'
+                        : '#981F1F',
                   }}
                 >
                   <Typography color="white">i</Typography>
