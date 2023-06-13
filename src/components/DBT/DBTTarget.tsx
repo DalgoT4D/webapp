@@ -10,7 +10,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import React, { useState } from 'react';
 
-type DbtBlock = {
+export type DbtBlock = {
   blockName: string;
   displayName: string;
   target: string;
@@ -37,8 +37,8 @@ export const DBTTarget = ({ target, blocks }: params) => {
         <CardActions
           sx={{ display: 'flex', justifyContent: 'space-between' }}
         >
-          <Box>{target}</Box>
-          <IconButton onClick={() => setExpandTarget(!expandTarget)}>
+          <Box data-testid="title">{target}</Box>
+          <IconButton onClick={() => setExpandTarget(!expandTarget)} data-testid={'expand-' + target}>
             <ExpandMoreIcon
               sx={{
                 transform: !expandTarget ? 'rotate(0deg)' : 'rotate(180deg)',
@@ -50,6 +50,7 @@ export const DBTTarget = ({ target, blocks }: params) => {
           {
             blocks.map((block: DbtBlock) => (
               <DBTBlock
+                data-testid={'dbtblock-' + block.blockName}
                 key={block.blockName}
                 blockName={block.blockName}
                 action={block.action} />
