@@ -72,7 +72,7 @@ const EditDestinationForm = ({
           const destinationDefRows: { id: string; label: string }[] = data?.map(
             (element: DestinationDefinitionsApiResponse) => {
               if (
-                element?.destinationDefinitionId ==
+                element.destinationDefinitionId ===
                 warehouse?.destinationDefinitionId
               ) {
                 setValue('destinationDef', {
