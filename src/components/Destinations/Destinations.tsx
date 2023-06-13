@@ -6,25 +6,48 @@ import { backendUrl } from '@/config/constant';
 import CreateDestinationForm from './CreateDestinationForm';
 import EditDestinationForm from './EditDestinationForm';
 
+interface ConnectionConfiguration {
+  host?: string;
+  port?: string;
+  database?: string;
+  username?: string;
+  project_id?: string;
+  dataset_id?: string;
+  dataset_location?: string;
+  transformation_priority?: string;
+  loading_method?: any;
+}
+
+interface Warehouse {
+  destinationId: string;
+  destinationDefinitionId: string;
+  name: string;
+  wtype: string;
+  icon: string;
+  connectionConfiguration: ConnectionConfiguration;
+}
+
 export const Destinations = () => {
   const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/airbyte/destinations`
+    `${backendUrl}/api/organizations/warehouses`,
+    { revalidateOnFocus: false, }
   );
-  const [warehouse, setWarehouse] = useState<any>(null);
+  const [warehouse, setWarehouse] = useState<Warehouse>();
   const [showCreateWarehouseDialog, setShowCreateWarehouseDialog] =
     useState(false);
   const [showEditWarehouseDialog, setShowEditWarehouseDialog] = useState(false);
 
   useEffect(() => {
-    if (data && data.length > 0) {
+    if (data && data.warehouses && data.warehouses.length > 0) {
+      const w_house = data.warehouses[0];
       setWarehouse({
-        destinationId: data[0].destinationId,
-        destinationDefinitionId: data[0].destinationDefinitionId,
-        name: data[0].name,
-        wtype: data[0].destinationName,
-        icon: data[0].icon,
-        connectionConfiguration: data[0].connectionConfiguration,
-      });
+        destinationId: w_house.airbyte_destination.destinationId,
+        destinationDefinitionId: w_house.airbyte_destination.destinationDefinitionId,
+        name: w_house.airbyte_destination.name,
+        wtype: w_house.wtype,
+        icon: w_house.airbyte_destination.icon,
+        connectionConfiguration: w_house.airbyte_destination.connectionConfiguration,
+      } as Warehouse);
     }
   }, [data]);
 
@@ -38,7 +61,7 @@ export const Destinations = () => {
 
   return (
     <>
-      {warehouse && warehouse.wtype === 'Postgres' && (
+      {warehouse && warehouse.wtype === 'postgres' && (
         <>
           <Typography variant="h3">{warehouse.wtype}</Typography>
           <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
@@ -72,10 +95,55 @@ export const Destinations = () => {
           </Table>
         </>
       )}
-      {warehouse && warehouse.wtype === 'BigQuery' && (
+      {warehouse && warehouse.wtype === 'bigquery' && (
         <>
           <Typography variant="h3">{warehouse.wtype}</Typography>
           <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
+          <Table sx={{ maxWidth: '600px' }}>
+            <TableBody>
+              <TableRow>
+                <TableCell>Project</TableCell>
+                <TableCell align="right">
+                  {warehouse.connectionConfiguration.project_id}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Dataset</TableCell>
+                <TableCell align="right">
+                  {warehouse.connectionConfiguration.dataset_id} / {warehouse.connectionConfiguration.dataset_location}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Loading Method</TableCell>
+                <TableCell align="right">
+                  {warehouse.connectionConfiguration.loading_method.method}
+                </TableCell>
+              </TableRow>
+              {
+                warehouse.connectionConfiguration.loading_method.method === 'GCS Staging' &&
+                <>
+                  <TableRow>
+                    <TableCell>GCS Bucket &amp; Path</TableCell>
+                    <TableCell align="right">
+                      {warehouse.connectionConfiguration.loading_method.gcs_bucket_name} / {warehouse.connectionConfiguration.loading_method.gcs_bucket_path}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>GCS Temp Files</TableCell>
+                    <TableCell align="right">
+                      {warehouse.connectionConfiguration.loading_method['keep_files_in_gcs-bucket']}
+                    </TableCell>
+                  </TableRow>
+                </>
+              }
+              <TableRow>
+                <TableCell>Transformation Priority</TableCell>
+                <TableCell align="right">
+                  {warehouse.connectionConfiguration.transformation_priority}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </>
       )}
       {warehouse && (
