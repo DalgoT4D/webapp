@@ -41,4 +41,6 @@ export const Main = ({ children }: any) => {
     if (router.pathname === '/signup/createorg') return children;
     router.push('/signup/createorg');
   }
+
+  return null;
 };

@@ -14,6 +14,28 @@ interface EditSourceFormProps {
   sourceId: string;
 }
 
+interface SourceApiResponse {
+  connectionConfiguration: any;
+  icon: string;
+  name: string;
+  sourceDefinitionId: string;
+  sourceId: string;
+  sourceName: string;
+  workspaceId: string;
+}
+
+interface SourceDefinitionsApiResponse {
+  sourceDefinitionId: string;
+  name: string;
+  sourceType: string;
+  releaseStage: string;
+  protocolVersion: string;
+  maxSecondsBetweenMessages: number;
+  documentationUrl: string;
+  dockerRepository: string;
+  dockerImageTag: string;
+}
+
 const EditSourceForm = ({
   showForm,
   setShowForm,
@@ -32,7 +54,9 @@ const EditSourceForm = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [logs, setLogs] = useState<Array<any>>([]);
   const [source, setSource] = useState<any>(null);
-  const [sourceDefs, setSourceDefs] = useState([]);
+  const [sourceDefs, setSourceDefs] = useState<
+    Array<{ id: string; label: string }>
+  >([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
 
   const handleClose = () => {
@@ -49,7 +73,10 @@ const EditSourceForm = ({
       setLoading(true);
       (async () => {
         try {
-          const data = await httpGet(session, `airbyte/sources/${sourceId}`);
+          const data: SourceApiResponse = await httpGet(
+            session,
+            `airbyte/sources/${sourceId}`
+          );
           setValue('name', data?.name);
           setSource(data);
           await fetchSourceDefinitions(data);
@@ -66,19 +93,24 @@ const EditSourceForm = ({
   const fetchSourceDefinitions = async (source: any) => {
     setLoading(true);
     try {
-      const data = await httpGet(session, 'airbyte/source_definitions');
-      const sourceDefRows = data?.map((element: any) => {
-        const sourceDef = {
-          label: element.name,
-          id: element.sourceDefinitionId,
-        }
+      const data: Array<SourceDefinitionsApiResponse> = await httpGet(
+        session,
+        'airbyte/source_definitions'
+      );
+      const sourceDefRows: { label: string; id: string }[] = data?.map(
+        (element: SourceDefinitionsApiResponse) => {
+          const sourceDef = {
+            label: element.name,
+            id: element.sourceDefinitionId,
+          };
 
-        if (element?.sourceDefinitionId == source?.sourceDefinitionId) {
-          setValue('sourceDef', sourceDef);
-        }
+          if (element.sourceDefinitionId === source.sourceDefinitionId) {
+            setValue('sourceDef', sourceDef);
+          }
 
-        return sourceDef;
-      });
+          return sourceDef;
+        }
+      );
       setSourceDefs(sourceDefRows);
     } catch (err: any) {
       console.error(err);
