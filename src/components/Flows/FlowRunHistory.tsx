@@ -130,7 +130,7 @@ const FlowRunHistory = ({
                     }}
                   >
                     <Typography sx={{ color: 'black', fontWeight: '700' }}>
-                      {flowRun.name}
+                      {flowRun?.name}
                     </Typography>
                     {flowRun.status === 'COMPLETED' ? (
                       <TaskAltIcon
