@@ -42,5 +42,5 @@ export const Main = ({ children }: any) => {
     router.push('/signup/createorg');
   }
 
-  return;
+  return null;
 };
