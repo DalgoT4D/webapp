@@ -195,7 +195,7 @@ export const DestinationConfigInput = ({
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             )
-          ) : spec.type === 'boolean' ? (
+          ) : spec?.type === 'boolean' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={spec.field}
@@ -216,7 +216,7 @@ export const DestinationConfigInput = ({
               />
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec.type === 'array' ? (
+          ) : spec?.type === 'array' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={spec.field}
@@ -233,7 +233,7 @@ export const DestinationConfigInput = ({
               />
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec.type === 'integer' ? (
+          ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
               <TextField
                 sx={{ width: '100%' }}
@@ -248,7 +248,7 @@ export const DestinationConfigInput = ({
               ></TextField>
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec.type === 'object' ? (
+          ) : spec?.type === 'object' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={spec.field}
