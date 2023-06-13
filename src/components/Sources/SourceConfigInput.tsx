@@ -42,7 +42,7 @@ export const SourceConfigInput = ({
       {specs
         ?.sort((input1, input2) => input1.order - input2.order)
         .map((spec: any, idx: number) =>
-          spec.type === 'string' ? (
+          spec?.type === 'string' ? (
             spec.airbyte_secret ? (
               <React.Fragment key={idx}>
                 <TextField
