@@ -86,7 +86,7 @@ const Transform = () => {
       const blocksByTarget: TargetBlocks = {};
       const expandByTargets: ExpandTarget = {};
 
-      response.forEach((block: DbtBlock) => {
+      response?.forEach((block: DbtBlock) => {
         // const components: string[] = block.blockName.split('-');
         // block.target = block?.dbtTargetSchem;
         // block.action = components[3];
