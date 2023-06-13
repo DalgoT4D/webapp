@@ -42,7 +42,7 @@ export const SourceConfigInput = ({
       {specs
         ?.sort((input1, input2) => input1.order - input2.order)
         .map((spec: any, idx: number) =>
-          spec.type === 'string' ? (
+          spec?.type === 'string' ? (
             spec.airbyte_secret ? (
               <React.Fragment key={idx}>
                 <TextField
@@ -91,7 +91,7 @@ export const SourceConfigInput = ({
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             )
-          ) : spec.type === 'array' ? (
+          ) : spec?.type === 'array' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={`config.${spec.field}`}
@@ -108,7 +108,7 @@ export const SourceConfigInput = ({
               />
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec.type === 'integer' ? (
+          ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
               <TextField
                 sx={{ width: '100%' }}
