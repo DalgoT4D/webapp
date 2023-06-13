@@ -53,7 +53,7 @@ export const DestinationConfigInput = ({
     // Check if any child specs has type object
     const filteredChildSpecs: any = [];
     selectedSpec?.specs.forEach((ele: any) => {
-      if (ele.parent === dropDownVal) {
+      if (ele?.parent === dropDownVal) {
         // Check if the child has another level or not
         if (ele?.specs && ele?.enum.length === 0) {
           ele.specs.forEach((childEle: any) => {
@@ -110,7 +110,7 @@ export const DestinationConfigInput = ({
           return input1.order - input2.order;
         })
         ?.map((spec: any, idx: number) =>
-          spec.type === 'string' ? (
+          spec?.type === 'string' ? (
             spec?.const ? ( // type == string and a const selected value
               <React.Fragment key={idx}>
                 <TextField
