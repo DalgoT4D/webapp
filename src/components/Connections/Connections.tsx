@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { CircularProgress, Box } from '@mui/material';
 import { List } from '../List/List';
@@ -12,8 +12,10 @@ import {
   errorToast,
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
+import connectionIcon from '@/assets/icons/connection.svg';
 import CreateConnectionForm from './CreateConnectionForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
+import Image from 'next/image';
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 
@@ -25,14 +27,13 @@ export const Connections = () => {
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [connectionToBeDeleted, setConnectionToBeDeleted] = useState<any>(null);
-  const [rows, setRows] = useState<Array<Array<string>>>([]);
+  const [rows, setRows] = useState<Array<Array<ReactNode>>>([]);
 
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/connections`
   );
 
   const syncConnection = (connection: any) => {
-    console.log(connection);
     (async () => {
       try {
         const message = await httpPost(
@@ -77,32 +78,34 @@ export const Connections = () => {
   useEffect(() => {
     if (data && data.length >= 0) {
       const rows = data.map((connection: any, idx: number) => [
-        connection.name,
+        <Box key={idx} sx={{ display: 'flex', alignItems: 'center' }}>
+          <Image
+            style={{ marginRight: 10 }}
+            src={connectionIcon}
+            alt="connection icon"
+          />
+          {connection.name}
+        </Box>,
         connection.sourceDest,
         connection.lastSync,
-        [
-          <Box
-            sx={{ justifyContent: 'end', display: 'flex' }}
-            key={'box-' + idx}
+        <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
+          <Button
+            variant="contained"
+            onClick={() => syncConnection(connection)}
+            key={'sync-' + idx}
+            sx={{ marginRight: '10px' }}
           >
-            <Button
-              variant="contained"
-              onClick={() => syncConnection(connection)}
-              key={'sync-' + idx}
-              sx={{ marginRight: '10px' }}
-            >
-              Sync
-            </Button>
-            <Button
-              variant="contained"
-              onClick={() => handleDeleteConnection(connection)}
-              key={'del-' + idx}
-              sx={{ backgroundColor: '#d84141' }}
-            >
-              Delete
-            </Button>
-          </Box>,
-        ],
+            Sync
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => handleDeleteConnection(connection)}
+            key={'del-' + idx}
+            sx={{ backgroundColor: '#d84141' }}
+          >
+            Delete
+          </Button>
+        </Box>,
       ]);
       setRows(rows);
     }

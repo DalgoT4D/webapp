@@ -41,11 +41,11 @@ export const List = ({
           <TableHead sx={{ display: 'table-header-group' }}>
             <TableRow>
               {headers.map((header) => (
-                <TableCell sx={{ padding: '16px' }} key={header}>
+                <TableCell sx={{ p: 1 }} key={header}>
                   {header}
                 </TableCell>
               ))}
-              <TableCell sx={{ padding: '16px' }} align="right">
+              <TableCell sx={{ p: 1 }} align="right">
                 Actions
               </TableCell>
             </TableRow>
@@ -73,7 +73,7 @@ export const List = ({
                   )
                 )}
                 {headers.length + 1 !== row.length ? ( // if actions is not sent render some text
-                  <TableCell sx={{ padding: '16px' }} align="right">
+                  <TableCell sx={{ p: 1 }} align="right">
                     Actions
                   </TableCell>
                 ) : (
