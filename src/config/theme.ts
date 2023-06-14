@@ -3,7 +3,7 @@ import { red } from '@mui/material/colors';
 import { Rajdhani } from 'next/font/google';
 
 export const rajdhani = Rajdhani({
-  weight: ['300', '400', '500', '600', "700"],
+  weight: ['300', '400', '500', '600', '700'],
   subsets: ['devanagari'],
 });
 
@@ -29,6 +29,7 @@ const theme = createTheme({
     MuiListItemButton: {
       styleOverrides: {
         root: {
+          color: '#0F24408A',
           borderRadius: '6px',
         },
       },
@@ -43,9 +44,9 @@ const theme = createTheme({
     MuiListItemIcon: {
       styleOverrides: {
         root: {
-          minWidth: '34px'
-        }
-      }
+          minWidth: '34px',
+        },
+      },
     },
     MuiButton: {
       styleOverrides: {
@@ -56,42 +57,56 @@ const theme = createTheme({
         },
       },
     },
+    MuiBackdrop: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#0F2440DE',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          '&.MuiDialog-paper': {
+            minWidth: '560px',
+          },
+        },
+      },
+    },
     MuiTab: {
       styleOverrides: {
         root: {
           fontWeight: 700,
-          fontSize: "1rem",
+          fontSize: '1rem',
           paddingLeft: 0,
           paddingRight: 0,
-          marginRight: '1rem'
-
-        }
-      }
+          marginRight: '1rem',
+        },
+      },
     },
     MuiTable: {
-      styleOverrides:
-      {
+      styleOverrides: {
         root: {
           borderCollapse: 'separate',
-          borderSpacing: '0 15px'
-        }
-      }
+          borderSpacing: '0 6px',
+        },
+      },
     },
     MuiTableContainer: {
       styleOverrides: {
         root: {
-          background: "transparent",
-          boxShadow: 'none'
-        }
-      }
+          background: 'transparent',
+          boxShadow: 'none',
+        },
+      },
     },
 
     MuiTableBody: {
       styleOverrides: {
         root: {
-          background: "white"
-        }
-      }
+          background: 'white',
+        },
+      },
     },
 
     MuiTableRow: {
@@ -99,14 +114,14 @@ const theme = createTheme({
         head: {
           borderRadius: '0px',
           transform: 'none',
-          boxShadow: "none",
+          boxShadow: 'none',
         },
         root: {
           borderRadius: '12px',
           transform: 'scale(1)',
-          boxShadow: "0px 1px 5px rgba(0,0,0,0.1)",
-        }
-      }
+          boxShadow: '0px 1px 5px rgba(0,0,0,0.1)',
+        },
+      },
     },
     MuiTableCell: {
       styleOverrides: {
@@ -114,25 +129,23 @@ const theme = createTheme({
           border: 0,
         },
         head: {
-          padding: "0.2rem",
+          padding: '0.2rem',
           border: 0,
-          overflow: 'hidden'
-        }
-      }
+          overflow: 'hidden',
+        },
+      },
     },
     MuiOutlinedInput: {
       styleOverrides: {
         notchedOutline: {
-          border: '0px'
+          border: '0px',
         },
         root: {
           backgroundColor: '#F2F2EB',
-
-        }
-      }
-    }
+        },
+      },
+    },
   },
-
 
   typography: {
     fontFamily: rajdhani.style.fontFamily,

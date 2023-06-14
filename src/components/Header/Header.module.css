@@ -1,4 +1,5 @@
 .Header {
+  display: flex;
   position: fixed;
   z-index: 1201;
   width: 100%;

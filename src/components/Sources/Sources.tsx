@@ -8,8 +8,10 @@ import { httpDelete } from '@/helpers/http';
 import CreateSourceForm from './CreateSourceForm';
 import EditSourceForm from './EditSourceForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
+import connectionIcon from '@/assets/icons/connection.svg';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import Image from 'next/image';
 
 const headers = ['Source details', 'Type'];
 
@@ -37,30 +39,36 @@ export const Sources = () => {
   useEffect(() => {
     if (data && data.length >= 0) {
       const rows = data.map((source: any, idx: number) => [
-        source.name,
+        <Box key={idx} sx={{ display: 'flex', alignItems: 'center' }}>
+          <Image
+            style={{ marginRight: 10 }}
+            src={connectionIcon}
+            alt="connection icon"
+          />
+          {source.name}
+        </Box>,
         source.sourceDest,
-        [
-          <Box
-            sx={{ justifyContent: 'end', display: 'flex', gap: '5px' }}
-            key={'box-' + idx}
+
+        <Box
+          sx={{ justifyContent: 'end', display: 'flex', gap: '5px' }}
+          key={'box-' + idx}
+        >
+          <Button
+            variant="contained"
+            onClick={() => handleEditSource(source?.sourceId)}
+            key={'edit-' + idx}
           >
-            <Button
-              variant="contained"
-              onClick={() => handleEditSource(source?.sourceId)}
-              key={'edit-' + idx}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="contained"
-              onClick={() => handleDeleteSource(source)}
-              key={'del-' + idx}
-              sx={{ backgroundColor: '#d84141' }}
-            >
-              Delete
-            </Button>
-          </Box>,
-        ],
+            Edit
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => handleDeleteSource(source)}
+            key={'del-' + idx}
+            sx={{ backgroundColor: '#d84141' }}
+          >
+            Delete
+          </Button>
+        </Box>,
       ]);
       setRows(rows);
     }
