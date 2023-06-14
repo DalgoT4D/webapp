@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import CustomDialog from './CustomDialog';
+import CustomDialog from '../CustomDialog';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
