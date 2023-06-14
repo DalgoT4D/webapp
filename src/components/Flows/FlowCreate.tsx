@@ -19,35 +19,41 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpGet, httpPost } from '@/helpers/http';
 
-
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
 }
 
-type apiResponseConnection = {
+type ApiResponseConnection = {
   blockName: string;
   name: string;
-}
-// dispConnection is for the AutoComplete list: {id, label}
-type dispConnection = {
+};
+// DispConnection is for the AutoComplete list: {id, label}
+type DispConnection = {
   id: string;
   label: string;
-}
-type fieldListElement = {
-  id: string;   // set by the field-array
+};
+type FieldListElement = {
+  id: string; // set by the field-array
   blockName: string;
   name: string;
   seq: number;
-}
+};
+type DeploymentDef = {
+  name: string;
+  dbtTransform: string;
+  connectionBlocks: Array<any>;
+  cron: string;
+};
 
 const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
-  const { data: session }: any = useSession();
+  const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
-  const [currentSelectedConn, setCurrentSelectedConn] = useState<any>(null);
+  const [currentSelectedConn, setCurrentSelectedConn] =
+    useState<DispConnection | null>(null);
 
-  const [connections, setConnections] = useState<dispConnection[]>([]);
-  const { register, handleSubmit, control } = useForm({
+  const [connections, setConnections] = useState<DispConnection[]>([]);
+  const { register, handleSubmit, control } = useForm<DeploymentDef>({
     defaultValues: {
       name: '',
       dbtTransform: 'no',
@@ -56,7 +62,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
     },
   });
 
-  const { append, remove, fields }: any = useFieldArray<any>({
+  const { append, remove, fields } = useFieldArray({
     control,
     name: 'connectionBlocks',
   });
@@ -65,19 +71,24 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
     updateCrudVal('index');
   };
 
-  const handleAddConnectionSelectChange = (e: any, data: dispConnection) => {
+  const handleAddConnectionSelectChange = (
+    e: any,
+    data: DispConnection | null
+  ) => {
     setCurrentSelectedConn(null);
     if (data) {
       append({ seq: fields.length + 1, blockName: data.id, name: data.label });
       // remove from the select dropdown to add new connection
-      const tempConns = connections?.filter((conn: dispConnection) => conn.id != data.id);
+      const tempConns = connections?.filter(
+        (conn: DispConnection) => conn.id != data.id
+      );
       setConnections(tempConns);
     }
   };
 
   const handleDeleteConnection = (idx: number) => {
     remove(idx);
-    const tempConns: Array<dispConnection> = connections ? connections : [];
+    const tempConns: Array<DispConnection> = connections ? connections : [];
     tempConns.push({
       id: fields[idx].blockName,
       label: fields[idx].name,
@@ -100,12 +111,13 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
     (async () => {
       try {
         const data = await httpGet(session, 'airbyte/connections');
-        const tempConns: Array<dispConnection> = data.map((conn: apiResponseConnection) => {
-          return { id: conn.blockName, label: conn.name }
-        });
+        const tempConns: Array<DispConnection> = data.map(
+          (conn: ApiResponseConnection) => {
+            return { id: conn.blockName, label: conn.name };
+          }
+        );
         setConnections(tempConns);
-      }
-      catch (err: any) {
+      } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
       }
@@ -113,25 +125,29 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
   }, []);
 
   const onSubmit = async (data: any) => {
+    console.log(data);
     try {
       const response = await httpPost(session, 'prefect/flows/', {
         name: data.name,
         connectionBlocks: data.connectionBlocks,
         dbtTransform: data.dbtTransform,
-        cron: processCronExpression(data.cron),
+        cron: processCronExpression(data.cron.id),
       });
       mutate();
       updateCrudVal('index');
-      successToast(`Flow ${response.name} created successfully`, [], toastContext);
-    }
-    catch (err: any) {
+      successToast(
+        `Flow ${response.name} created successfully`,
+        [],
+        toastContext
+      );
+    } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
     }
   };
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} data-testid="form">
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography
             sx={{ fontWeight: 700 }}
@@ -143,12 +159,18 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
           </Typography>
           <Box>
             <Link
+              data-testid="cancellink"
               onClick={handleClickCancel}
               sx={{ m: 1, ':hover': { cursor: 'pointer' } }}
             >
               Cancel
             </Link>
-            <Button variant="contained" sx={{ m: 1 }} type="submit">
+            <Button
+              variant="contained"
+              sx={{ m: 1 }}
+              type="submit"
+              data-testid="savebutton"
+            >
               Save changes
             </Button>
           </Box>
@@ -182,7 +204,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                 <InputLabel sx={{ marginBottom: '5px' }}>
                   Connections
                 </InputLabel>
-                {fields.map((conn: fieldListElement, idx: number) => (
+                {fields.map((conn: FieldListElement, idx: number) => (
                   <Box
                     key={idx}
                     sx={{
@@ -192,6 +214,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                     }}
                   >
                     <TextField
+                      data-testid={'selectedconn-' + idx}
                       sx={{ marginBottom: '10px', width: '90%' }}
                       value={conn.name}
                       aria-readonly
@@ -203,6 +226,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                   </Box>
                 ))}
                 <Autocomplete
+                  data-testid="connectionautocomplete"
                   value={currentSelectedConn}
                   sx={{ marginBottom: '10px', width: '90%' }}
                   options={connections}
@@ -252,6 +276,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                 rules={{ required: true }}
                 render={({ field }) => (
                   <Autocomplete
+                    data-testid="cronautocomplete"
                     options={[
                       { id: 'daily', label: 'daily' },
                       { id: 'weekly', label: 'weekly' },
