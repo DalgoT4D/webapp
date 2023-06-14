@@ -1,7 +1,10 @@
 ## DDP frontend
 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Code coverage badge](https://img.shields.io/codecov/c/github/DevDataPlatform/webapp/main.svg)](https://codecov.io/gh/DevDataPlatform/webapp/branch/main)
 
 ## Install
+
 ```bash
 yarn install
 ```
@@ -11,6 +14,7 @@ yarn install
 ```bash
 yarn dev
 ```
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Development conventions
