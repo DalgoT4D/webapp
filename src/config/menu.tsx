@@ -1,14 +1,14 @@
-import {
-  InboxOutlined,
-  DraftsOutlined,
-  TransformOutlined,
-  EqualizerOutlined,
-  HubOutlined,
-} from '@mui/icons-material';
+import AnalysisIcon from '@/assets/icons/analysis';
+import IngestIcon from '@/assets/icons/ingest';
+import TransformIcon from '@/assets/icons/transform';
+import PipelineIcon from '@/assets/icons/pipeline';
+import OrchestrateIcon from '@/assets/icons/orchestrate';
+
+import { primaryColor } from './theme';
 
 export const drawerWidth = 250;
 
-const getColor = (selected: boolean) => (selected ? 'primary' : 'inherit');
+const getColor = (selected: boolean) => (selected ? primaryColor : '');
 
 export interface MenuOption {
   index: number;
@@ -23,37 +23,33 @@ export const sideMenu: MenuOption[] = [
     index: 1,
     title: 'Analysis',
     path: '/analysis',
-    icon: (selected: boolean) => (
-      <EqualizerOutlined color={getColor(selected)} />
-    ),
+    icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
   },
   {
     index: 2,
     title: 'Data pipeline',
     path: '/pipeline',
-    icon: (selected: boolean) => <InboxOutlined color={getColor(selected)} />,
+    icon: (selected: boolean) => <PipelineIcon fill={getColor(selected)} />,
   },
 
   {
     index: 2.1,
     title: 'Ingest',
-    icon: (selected: boolean) => <HubOutlined color={getColor(selected)} />,
+    icon: (selected: boolean) => <IngestIcon fill={getColor(selected)} />,
     path: '/pipeline/ingest',
     parent: 2,
   },
   {
     index: 2.2,
     title: 'Transform',
-    icon: (selected: boolean) => (
-      <TransformOutlined color={getColor(selected)} />
-    ),
+    icon: (selected: boolean) => <TransformIcon fill={getColor(selected)} />,
     parent: 2,
     path: '/pipeline/transform',
   },
   {
     index: 2.3,
     title: 'Orchestrate',
-    icon: (selected: boolean) => <DraftsOutlined color={getColor(selected)} />,
+    icon: (selected: boolean) => <OrchestrateIcon fill={getColor(selected)} />,
     path: '/pipeline/orchestrate',
     parent: 2,
   },

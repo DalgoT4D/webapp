@@ -7,7 +7,7 @@ export const rajdhani = Rajdhani({
   subsets: ['devanagari'],
 });
 
-const primaryColor = '#00897B';
+export const primaryColor = '#00897B';
 
 // Create a theme instance.
 const theme = createTheme({
@@ -61,6 +61,20 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: '#0F2440DE',
+        },
+      },
+    },
+    MuiDialogContent: {
+      styleOverrides: {
+        root: {
+          padding: '20px 33px',
+        },
+      },
+    },
+    MuiDialogTitle: {
+      styleOverrides: {
+        root: {
+          padding: '16px 33px',
         },
       },
     },

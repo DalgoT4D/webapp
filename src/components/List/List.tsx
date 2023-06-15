@@ -41,11 +41,11 @@ export const List = ({
           <TableHead sx={{ display: 'table-header-group' }}>
             <TableRow>
               {headers.map((header) => (
-                <TableCell sx={{ p: 1 }} key={header}>
+                <TableCell sx={{ px: 2, py: 1 }} key={header}>
                   {header}
                 </TableCell>
               ))}
-              <TableCell sx={{ p: 1 }} align="right">
+              <TableCell sx={{ px: 2, py: 1 }} align="right">
                 Actions
               </TableCell>
             </TableRow>
