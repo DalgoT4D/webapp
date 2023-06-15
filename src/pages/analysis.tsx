@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import '@/styles/Home.module.css';
 import Image from 'next/image';
-import Superset from '@/images/superset.png';
+import Superset from '@/assets/images/superset.png';
 
 export default function Analysis() {
   return (
