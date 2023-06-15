@@ -231,39 +231,37 @@ const EditSourceForm = ({
             {...register('name', { required: true })}
           ></TextField>
           <Box sx={{ m: 2 }} />
-          {sourceDefs && sourceDefs.length && (
-            <>
-              <Controller
-                name="sourceDef"
-                control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <Autocomplete
-                    value={field.value}
-                    options={sourceDefs}
-                    onChange={(e, data) => field.onChange(data)}
-                    renderInput={(params) => {
-                      return (
-                        <TextField
-                          {...params}
-                          label="Select source type"
-                          variant="outlined"
-                        />
-                      );
-                    }}
-                  />
-                )}
-              />
-              <Box sx={{ m: 2 }} />
-              <SourceConfigInput
-                specs={sourceDefSpecs}
-                registerFormFieldValue={register}
-                control={control}
-                setFormValue={setValue}
-                source={source}
-              />
-            </>
-          )}
+          <>
+            <Controller
+              name="sourceDef"
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <Autocomplete
+                  value={field.value}
+                  options={sourceDefs}
+                  onChange={(e, data) => field.onChange(data)}
+                  renderInput={(params) => {
+                    return (
+                      <TextField
+                        {...params}
+                        label="Select source type"
+                        variant="outlined"
+                      />
+                    );
+                  }}
+                />
+              )}
+            />
+            <Box sx={{ m: 2 }} />
+            <SourceConfigInput
+              specs={sourceDefSpecs}
+              registerFormFieldValue={register}
+              control={control}
+              setFormValue={setValue}
+              source={source}
+            />
+          </>
         </Box>
       </>
     );
