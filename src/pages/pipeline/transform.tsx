@@ -19,7 +19,7 @@ import {
 import { useSession } from 'next-auth/react';
 import React, { useContext, useEffect, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Dbt from '@/images/dbt.png';
+import Dbt from '@/assets/images/dbt.png';
 import Image from 'next/image';
 import { DBTTarget } from '@/components/DBT/DBTTarget';
 

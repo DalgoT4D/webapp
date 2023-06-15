@@ -447,7 +447,7 @@ describe('Flow Creation', () => {
     expect(mutateMock).toHaveBeenCalled();
 
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
-    console.log(requestBody);
+
     expect(requestBody.name).toBe('MyFlow');
     expect(requestBody.dbtTransform).toBe('no');
     expect(requestBody.connectionBlocks.length).toBe(1);
