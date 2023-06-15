@@ -1,16 +1,14 @@
-import { Box, Button, Grid, Paper, TextField, Link } from '@mui/material';
+import { Box, Button, TextField, Link, Divider } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Image from 'next/image';
 import { useForm } from 'react-hook-form';
-import Banner from '@/images/banner.png';
+import Auth from '@/components/Layouts/Auth';
 import { signIn } from 'next-auth/react';
 import styles from '@/styles/Login.module.css';
 import { useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
-
 
 export const SignUp = () => {
   const { data: session }: any = useSession();
@@ -22,7 +20,6 @@ export const SignUp = () => {
   const toastContext = useContext(GlobalContext);
 
   const onSubmit = async (data: any) => {
-
     try {
       await httpPost(session, 'organizations/users/', {
         email: data.username,
@@ -35,71 +32,63 @@ export const SignUp = () => {
         redirect: true,
         callbackUrl: '/signup/createorg',
       });
-    }
-    catch (err: any) {
+    } catch (err: any) {
       console.error(err);
       errorToast(err.cause.detail, [], toastContext);
     }
   };
 
   return (
-    <Box className={styles.Container}>
-      <Grid container columns={16}>
-        <Grid item xs={8}>
-          <Grid
-            container
-            height="100vh"
-            direction="row"
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Paper elevation={3} sx={{ p: 4 }}>
-              <form onSubmit={handleSubmit(onSubmit)} data-testid="signup-form">
-                <Box className={styles.Input}>
-                  <TextField
-                    id="outlined-basic"
-                    data-testid="username"
-                    label="Business email"
-                    variant="outlined"
-                    {...register('username', { required: true })}
-                  />
-                </Box>
-                <Box className={styles.Input}>
-                  <TextField
-                    id="outlined-password-input"
-                    data-testid="password"
-                    label="Password"
-                    type="password"
-                    autoComplete="current-password"
-                    {...register('password', { required: true })}
-                  />
-                </Box>
-                <Box className={styles.Input}>
-                  <TextField
-                    id="outlined-basic"
-                    label="Signup code"
-                    variant="outlined"
-                    {...register('signupcode', { required: true })}
-                  />
-                </Box>
-                <Box className={styles.Input}>
-                  <Button variant="contained" type="submit" data-testid="submit">
-                    Sign Up
-                  </Button>
-                  <Link href="/login">
-                    Login
-                  </Link>
-                </Box>
-              </form>
-            </Paper>
-          </Grid>
-        </Grid>
+    <Auth
+      heading="Create an account"
+      subHeading="Please enter correct registration details below"
+    >
+      <form onSubmit={handleSubmit(onSubmit)} data-testid="signup-form">
+        <Box className={styles.Container}>
+          <TextField
+            sx={{ width: '100%', pb: 3, mt: 2 }}
+            id="outlined-basic"
+            data-testid="username"
+            label="Business email"
+            variant="outlined"
+            {...register('username', { required: true })}
+          />
 
-        <Grid item xs={8}>
-          <Image src={Banner} alt="Banner" style={{ width: '100%' }} />
-        </Grid>
-      </Grid>
-    </Box>
+          <TextField
+            sx={{ width: '100%', pb: 3 }}
+            id="outlined-password-input"
+            data-testid="password"
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            {...register('password', { required: true })}
+          />
+
+          <TextField
+            sx={{ width: '100%', pb: 3 }}
+            id="outlined-basic"
+            label="Signup code"
+            variant="outlined"
+            {...register('signupcode', { required: true })}
+          />
+          <Button
+            sx={{ width: '100%', mb: 3 }}
+            variant="contained"
+            type="submit"
+            data-testid="submit"
+          >
+            Sign Up
+          </Button>
+          <Divider>OR</Divider>
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            Already a member?{' '}
+            <Link href="/login" sx={{ textDecoration: 'none' }}>
+              Log in
+            </Link>
+          </Box>
+        </Box>
+      </form>
+    </Auth>
   );
 };
 
