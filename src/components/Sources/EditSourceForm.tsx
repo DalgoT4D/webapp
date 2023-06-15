@@ -36,6 +36,11 @@ interface SourceDefinitionsApiResponse {
   dockerImageTag: string;
 }
 
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+};
+
 const EditSourceForm = ({
   showForm,
   setShowForm,
@@ -54,9 +59,7 @@ const EditSourceForm = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [logs, setLogs] = useState<Array<any>>([]);
   const [source, setSource] = useState<any>(null);
-  const [sourceDefs, setSourceDefs] = useState<
-    Array<{ id: string; label: string }>
-  >([]);
+  const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
 
   const handleClose = () => {
@@ -69,7 +72,13 @@ const EditSourceForm = ({
   };
 
   useEffect(() => {
-    if (showForm && sourceId) {
+    (async () => {
+      await fetchSourceDefinitions();
+    })();
+  }, [showForm]);
+
+  useEffect(() => {
+    if (showForm && sourceId && sourceDefs.length === 0) {
       setLoading(true);
       (async () => {
         try {
@@ -79,7 +88,13 @@ const EditSourceForm = ({
           );
           setValue('name', data?.name);
           setSource(data);
-          await fetchSourceDefinitions(data);
+
+          for (let idx = 0; idx < sourceDefs.length; idx++) {
+            if (sourceDefs[idx].id === source.sourceDefinitionId) {
+              setValue('sourceDef', sourceDefs[idx]);
+              break;
+            }
+          }
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
@@ -88,27 +103,21 @@ const EditSourceForm = ({
       setLoading(false);
     }
     setLoading(false);
-  }, [showForm]);
+  }, [sourceDefs]);
 
-  const fetchSourceDefinitions = async (source: any) => {
+  const fetchSourceDefinitions = async () => {
     setLoading(true);
     try {
       const data: Array<SourceDefinitionsApiResponse> = await httpGet(
         session,
         'airbyte/source_definitions'
       );
-      const sourceDefRows: { label: string; id: string }[] = data?.map(
+      const sourceDefRows: AutoCompleteOption[] = data?.map(
         (element: SourceDefinitionsApiResponse) => {
-          const sourceDef = {
+          return {
             label: element.name,
             id: element.sourceDefinitionId,
-          };
-
-          if (element.sourceDefinitionId === source.sourceDefinitionId) {
-            setValue('sourceDef', sourceDef);
-          }
-
-          return sourceDef;
+          } as AutoCompleteOption;
         }
       );
       setSourceDefs(sourceDefRows);
@@ -222,35 +231,39 @@ const EditSourceForm = ({
             {...register('name', { required: true })}
           ></TextField>
           <Box sx={{ m: 2 }} />
-          <Controller
-            name="sourceDef"
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <Autocomplete
-                value={field.value}
-                options={sourceDefs}
-                onChange={(e, data) => field.onChange(data)}
-                renderInput={(params) => {
-                  return (
-                    <TextField
-                      {...params}
-                      label="Select source type"
-                      variant="outlined"
-                    />
-                  );
-                }}
+          {sourceDefs && sourceDefs.length && (
+            <>
+              <Controller
+                name="sourceDef"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Autocomplete
+                    value={field.value}
+                    options={sourceDefs}
+                    onChange={(e, data) => field.onChange(data)}
+                    renderInput={(params) => {
+                      return (
+                        <TextField
+                          {...params}
+                          label="Select source type"
+                          variant="outlined"
+                        />
+                      );
+                    }}
+                  />
+                )}
               />
-            )}
-          />
-          <Box sx={{ m: 2 }} />
-          <SourceConfigInput
-            specs={sourceDefSpecs}
-            registerFormFieldValue={register}
-            control={control}
-            setFormValue={setValue}
-            source={source}
-          />
+              <Box sx={{ m: 2 }} />
+              <SourceConfigInput
+                specs={sourceDefSpecs}
+                registerFormFieldValue={register}
+                control={control}
+                setFormValue={setValue}
+                source={source}
+              />
+            </>
+          )}
         </Box>
       </>
     );
@@ -285,7 +298,7 @@ const EditSourceForm = ({
           )}
         </Box>
       }
-      loading={loading}
+      loading={loading || !source}
     />
   );
 };
