@@ -1,8 +1,23 @@
 import React, { useContext, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import CustomDialog from '../Dialog/CustomDialog';
-import { Autocomplete, Box, Button, TextField, Switch, Select, MenuItem } from '@mui/material';
-import { Table, TableBody, TableCell, TableHead, TableRow, FormControlLabel } from '@mui/material';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  TextField,
+  Switch,
+  Select,
+  MenuItem,
+} from '@mui/material';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  FormControlLabel,
+} from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -77,12 +92,13 @@ const CreateConnectionForm = ({
           message['catalog']['streams'].forEach((el: any) => {
             streams.push({
               name: el.stream.name,
-              supportsIncremental: el.stream.supportedSyncModes.indexOf('incremental') > -1,
+              supportsIncremental:
+                el.stream.supportedSyncModes.indexOf('incremental') > -1,
               selected: false,
               syncMode: 'full_refresh',
               destinationSyncMode: 'append',
             });
-          })
+          });
           setSourceStreams(streams);
         } catch (err: any) {
           if (err.cause) {
@@ -171,7 +187,10 @@ const CreateConnectionForm = ({
     }
   };
 
-  const updateThisStreamTo_ = (stream: SourceStream, newStream: SourceStream) => {
+  const updateThisStreamTo_ = (
+    stream: SourceStream,
+    newStream: SourceStream
+  ) => {
     const newstreams: SourceStream[] = [];
     for (let idx = 0; idx < sourceStreams.length; idx++) {
       if (sourceStreams[idx].name === stream.name) {
@@ -182,7 +201,7 @@ const CreateConnectionForm = ({
     }
     setSourceStreams(newstreams);
     setSomeStreamSelected(newstreams.some((stream) => stream.selected));
-  }
+  };
   const selectStream = (checked: boolean, stream: SourceStream) => {
     updateThisStreamTo_(stream, {
       name: stream.name,
@@ -258,12 +277,20 @@ const CreateConnectionForm = ({
 
           <Box sx={{ m: 2 }} />
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             <FormControlLabel
               data-testid="normalizationCheckbox"
-              control={<Switch
-                checked={normalize}
-                onChange={(event) => setNormalize(event.target.checked)} />
+              control={
+                <Switch
+                  checked={normalize}
+                  onChange={(event) => setNormalize(event.target.checked)}
+                />
               }
               label="Normalize after sync?"
             />
@@ -274,47 +301,71 @@ const CreateConnectionForm = ({
               <Table sx={{ minWidth: '600px' }} data-testid="sourceStreamTable">
                 <TableHead>
                   <TableRow>
-                    <TableCell key="streamname" align='center'>
+                    <TableCell key="streamname" align="center">
                       Stream
                     </TableCell>
-                    <TableCell key="selected" align='center'>
+                    <TableCell key="selected" align="center">
                       Sync?
                     </TableCell>
-                    <TableCell key="incremental" align='center'>
+                    <TableCell key="incremental" align="center">
                       Incremental?
                     </TableCell>
-                    <TableCell key="destsyncmode" align='center'>
+                    <TableCell key="destsyncmode" align="center">
                       Destination
                     </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sourceStreams.map((stream) => (
-                    <TableRow
-                      key={stream.name}
-                      sx={{}}>
-                      <TableCell key="name" align='center' sx={stream.selected ? { color: 'green', fontWeight: 700 } : {}}>
+                  {sourceStreams.map((stream, idx: number) => (
+                    <TableRow key={stream.name}>
+                      <TableCell
+                        key="name"
+                        align="center"
+                        sx={
+                          stream.selected
+                            ? { color: 'green', fontWeight: 700 }
+                            : {}
+                        }
+                      >
                         {stream.name}
                       </TableCell>
-                      <TableCell key="sel" align='center'>
+                      <TableCell key="sel" align="center">
                         <Switch
+                          data-testid={`stream-sync-${idx}`}
                           checked={stream.selected}
-                          onChange={(event) => selectStream(event.target.checked, stream)} />
+                          onChange={(event) =>
+                            selectStream(event.target.checked, stream)
+                          }
+                        />
                       </TableCell>
-                      <TableCell key="inc" align='center'>
+                      <TableCell key="inc" align="center">
                         <Switch
-                          disabled={!stream.supportsIncremental || !stream.selected}
-                          checked={stream.syncMode === 'incremental' && stream.selected}
-                          onChange={(event) => setStreamIncr(event.target.checked, stream)} />
+                          data-testid={`stream-incremental-${idx}`}
+                          disabled={
+                            !stream.supportsIncremental || !stream.selected
+                          }
+                          checked={
+                            stream.syncMode === 'incremental' && stream.selected
+                          }
+                          onChange={(event) =>
+                            setStreamIncr(event.target.checked, stream)
+                          }
+                        />
                       </TableCell>
-                      <TableCell key="destination" align='center'>
+                      <TableCell key="destination" align="center">
                         <Select
+                          data-testid={`stream-destmode-${idx}`}
                           disabled={!stream.selected}
                           value={stream.destinationSyncMode}
-                          onChange={(event) => { setDestinationSyncMode(event.target.value, stream) }}>
-                          <MenuItem value='append'>Append</MenuItem>
-                          <MenuItem value='overwrite'>Overwrite</MenuItem>
-                          <MenuItem value='append_dedup'>Append / Dedup</MenuItem>
+                          onChange={(event) => {
+                            setDestinationSyncMode(event.target.value, stream);
+                          }}
+                        >
+                          <MenuItem value="append">Append</MenuItem>
+                          <MenuItem value="overwrite">Overwrite</MenuItem>
+                          <MenuItem value="append_dedup">
+                            Append / Dedup
+                          </MenuItem>
                         </Select>
                       </TableCell>
                     </TableRow>
@@ -338,7 +389,11 @@ const CreateConnectionForm = ({
         formContent={<FormContent />}
         formActions={
           <>
-            <Button variant="contained" type="submit" disabled={!someStreamSelected}>
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={!someStreamSelected}
+            >
               Connect
             </Button>
             <Button color="secondary" variant="outlined" onClick={handleClose}>
