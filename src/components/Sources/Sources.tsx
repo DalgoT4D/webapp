@@ -47,7 +47,7 @@ export const Sources = () => {
           />
           {source.name}
         </Box>,
-        source.sourceDest,
+        source.sourceName,
 
         <Box
           sx={{ justifyContent: 'end', display: 'flex', gap: '5px' }}
