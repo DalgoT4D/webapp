@@ -51,6 +51,10 @@ describe('Connections Setup', () => {
   const STREAMS = [
     {
       name: 'stream-1',
+      supportedSyncModes: ['full_refresh', 'incremental'],
+    },
+    {
+      name: 'stream-2',
       supportedSyncModes: ['full_refresh'],
     },
   ];
@@ -98,6 +102,9 @@ describe('Connections Setup', () => {
             streams: [
               {
                 stream: STREAMS[0],
+              },
+              {
+                stream: STREAMS[1],
               },
             ],
           },
@@ -147,7 +154,7 @@ describe('Connections Setup', () => {
 
     // source stream table should have two rows i.e. header and one source stream
     const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
-    expect(sourceStreamTableRows.length).toBe(2);
+    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 1);
 
     // check if the headers are correct
     const headerCells = within(sourceStreamTableRows[0]).getAllByRole(
@@ -165,5 +172,60 @@ describe('Connections Setup', () => {
     );
     expect(streamRowCells.length).toBe(4);
     expect(streamRowCells[0].textContent).toBe(STREAMS[0].name);
+
+    const connectButton = screen.getByText('Connect').closest('button');
+    const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
+    let streamIncrementalSwitch = screen.getByTestId(
+      'stream-incremental-0'
+    ).firstChild;
+    let streamSelectDestinationMode =
+      screen.getByTestId('stream-destmode-0').childNodes[1];
+
+    // stream is not selected for sync
+    expect(streamSyncSwitch).not.toBeChecked();
+    expect(connectButton).toBeDisabled();
+    expect(streamIncrementalSwitch).toBeDisabled();
+    expect(streamSelectDestinationMode).toBeDisabled();
+
+    // select stream for sync
+    await waitFor(() => userEvent.click(streamSyncSwitch));
+
+    // Need to redraw these elements since jest updates its dom but
+    // does not pass reference to some elements
+    streamIncrementalSwitch = screen.getByTestId(
+      'stream-incremental-0'
+    ).firstChild;
+    streamSelectDestinationMode =
+      screen.getByTestId('stream-destmode-0').childNodes[1];
+
+    // check if elements are abled
+    expect(streamSyncSwitch).toBeChecked();
+    expect(connectButton).not.toBeDisabled();
+    expect(streamIncrementalSwitch).not.toBeDisabled();
+    expect(streamSelectDestinationMode).not.toBeDisabled();
+
+    // check stream incremental checkbox
+    expect(streamIncrementalSwitch).not.toBeChecked();
+    await act(() => userEvent.click(streamIncrementalSwitch));
+    expect(streamIncrementalSwitch).toBeChecked();
+
+    // check normalization after sync checkbox
+    const normalizationCheckbox = screen.getByTestId('normalizationCheckbox')
+      .firstChild?.firstChild?.firstChild;
+    expect(normalizationCheckbox).not.toBeChecked();
+    await act(() => userEvent.click(normalizationCheckbox));
+    expect(normalizationCheckbox).toBeChecked();
+
+    // stream not supporting incremental sync mode we should always have
+    // incremental switch disabled
+    // stream 2 doesn't support incremental sync
+    const streamSyncSwitch1 = screen.getByTestId('stream-sync-1').firstChild;
+    let streamIncrementalSwitch1 = screen.getByTestId(
+      'stream-incremental-1'
+    ).firstChild;
+    expect(streamIncrementalSwitch1).toBeDisabled();
+    // select stream 2 to sync
+    await waitFor(() => userEvent.click(streamSyncSwitch1));
+    expect(streamIncrementalSwitch1).toBeDisabled();
   });
 });
