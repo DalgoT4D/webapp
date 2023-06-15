@@ -5,7 +5,6 @@ import {
   fireEvent,
   act,
   waitFor,
-  getAllByRole,
 } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
@@ -220,7 +219,7 @@ describe('Connections Setup', () => {
     // incremental switch disabled
     // stream 2 doesn't support incremental sync
     const streamSyncSwitch1 = screen.getByTestId('stream-sync-1').firstChild;
-    let streamIncrementalSwitch1 = screen.getByTestId(
+    const streamIncrementalSwitch1 = screen.getByTestId(
       'stream-incremental-1'
     ).firstChild;
     expect(streamIncrementalSwitch1).toBeDisabled();
