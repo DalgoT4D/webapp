@@ -32,7 +32,7 @@ jobs:
 
       - name: Pull the code & build
         run: |
-          cd ${{ secrets.WEBAPP_WORKDIR }} 
+          cd webapp
           git pull
           pm2 stop prefect-agent
           yarn build
