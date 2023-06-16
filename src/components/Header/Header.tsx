@@ -47,32 +47,7 @@ export const Header = () => {
           horizontal: 'right',
         }}
         PaperProps={{
-          sx: {
-            boxShadow: 'unset',
-            border: '0.5px solid rgba(15, 36, 64, 0.54)',
-            borderTopRightRadius: 'unset',
-            overflow: 'visible',
-            '&:after': {
-              content: "''",
-              position: 'absolute',
-              width: '0',
-              height: '0',
-              borderBottom: '15px solid #fff',
-              borderLeft: '15px solid transparent',
-              top: '-15px',
-              right: '0px',
-            },
-            '&:before': {
-              content: "''",
-              position: 'absolute',
-              width: '0',
-              height: '0',
-              borderBottom: '17px solid rgba(15, 36, 64, 0.54)',
-              borderLeft: '16px solid transparent',
-              top: '-17px',
-              right: '-0.5px',
-            },
-          },
+          className: styles.Paper,
         }}
         transformOrigin={{
           vertical: 'top',

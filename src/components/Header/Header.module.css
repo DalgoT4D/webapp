@@ -7,4 +7,31 @@
   box-shadow: 0px 6px 11px rgba(64, 68, 77, 0.06);
 }
 
- 
+.Paper {
+  box-shadow: unset;
+  border: 0.5px solid rgba(15, 36, 64, 0.54);
+  border-top-right-radius: unset;
+  overflow: visible;
+}
+
+.Paper::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-bottom: 15px solid #fff;
+  border-left: 15px solid transparent;
+  top: -15px;
+  right: 0px;
+}
+
+.Paper::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-bottom: 17px solid rgba(15, 36, 64, 0.54);
+  border-left: 16px solid transparent;
+  top: -17px;
+  right: -0.5px;
+}
