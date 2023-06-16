@@ -34,19 +34,18 @@ export const Connections = () => {
   const syncConnection = (connection: any) => {
     console.log(connection);
     (async () => {
+      if (!connection.deploymentId) {
+        errorToast('Deployment not created', [], toastContext);
+        return;
+      }
       try {
-        const message = await httpPost(
+        const response = await httpPost(
           session,
-          `airbyte/connections/${connection.blockId}/sync/`,
+          `prefect/flows/${connection.deploymentId}/flow_run`,
           {}
         );
-        if (message.success) {
-          successToast(
-            'Sync started... check for logs in two minutes',
-            [],
-            toastContext
-          );
-        }
+        if (response?.detail) errorToast(response.detail, [], toastContext);
+        else successToast('Sync inititated successfully', [], toastContext);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
