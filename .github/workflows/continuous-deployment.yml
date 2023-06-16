@@ -26,6 +26,7 @@ jobs:
 
       - name: Connect to server
         run: |
+          eval `ssh-agent`
           ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
 
