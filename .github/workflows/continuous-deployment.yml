@@ -1,0 +1,38 @@
+name: Deploy code
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Create known_hosts file
+        run: |
+          mkdir -p ~/.ssh
+          touch ~/.ssh/known_hosts
+
+      - name: Add remote host to known_hosts
+        run: ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: connect to server
+        run: |
+          eval `ssh-agent -s`
+          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+
+      - name: pull the code and build
+        run: |
+          cd ${{ secrets.WEBAPP_WORKDIR }} 
+          git pull
+          yarn build
+          pm2 restart ddp-webapp
