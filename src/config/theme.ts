@@ -24,6 +24,9 @@ const theme = createTheme({
     error: {
       main: red.A400,
     },
+    info: {
+      main: '#F5FAFA',
+    },
   },
   components: {
     MuiListItemButton: {
@@ -51,6 +54,7 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
+          boxShadow: 'unset',
           fontWeight: 700,
           textTransform: 'none',
           borderRadius: '6px',
@@ -59,8 +63,9 @@ const theme = createTheme({
     },
     MuiBackdrop: {
       styleOverrides: {
-        root: {
-          backgroundColor: '#0F2440DE',
+        root: ({ ownerState }) => {
+          if (ownerState.className?.endsWith('MuiDialog-backdrop'))
+            return { backgroundColor: '#0F2440DE' };
         },
       },
     },
