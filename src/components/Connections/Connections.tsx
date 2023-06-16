@@ -28,8 +28,14 @@ import CreateConnectionForm from './CreateConnectionForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import Image from 'next/image';
 import styles from './Connections.module.css';
+import { lastRunTime } from '@/utils/common';
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
+const getSourceDest = (connection: any) =>
+  `${connection.source.name} → ${connection.destination.name}`;
+
+const getLastSync = (connection: any) =>
+  lastRunTime(connection?.lastRun?.startTime);
 
 export const Connections = () => {
   const { data: session }: any = useSession();
@@ -40,6 +46,7 @@ export const Connections = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (blockId: string, event: HTMLElement | null) => {
+    console.log(event);
     setBlockId(blockId);
     setAnchorEl(event);
   };
@@ -116,7 +123,9 @@ export const Connections = () => {
           'Sync'
         )}
       </Button>
+
       <Button
+        itemID={idx}
         aria-controls={open ? 'basic-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}
@@ -135,8 +144,11 @@ export const Connections = () => {
   let rows = [];
 
   if (data && data.length >= 0) {
-    rows = data.map((connection: any, idx: number) => [
-      <Box key={idx} sx={{ display: 'flex', alignItems: 'center' }}>
+    rows = data.map((connection: any) => [
+      <Box
+        key={`box1-${connection.blockId}`}
+        sx={{ display: 'flex', alignItems: 'center' }}
+      >
         <Image
           style={{ marginRight: 10 }}
           src={connectionIcon}
@@ -144,9 +156,14 @@ export const Connections = () => {
         />
         {connection.name}
       </Box>,
-      connection.sourceDest,
-      connection.lastSync,
-      <Actions key={idx} connection={connection} idx={idx} />,
+      getSourceDest(connection),
+      getLastSync(connection),
+
+      <Actions
+        key={`box2-${connection.blockId}`}
+        connection={connection}
+        idx={connection.blockId}
+      />,
     ]);
   }
 
