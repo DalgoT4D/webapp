@@ -30,7 +30,7 @@ jobs:
           ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
 
-      - name: Pull the code and build
+      - name: Pull the code & build
         run: |
           cd ${{ secrets.WEBAPP_WORKDIR }} 
           git pull
