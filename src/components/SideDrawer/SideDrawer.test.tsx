@@ -17,7 +17,7 @@ describe('Side drawer', () => {
   it('renders ', () => {
     render(<SideDrawer />);
     expect(screen.getAllByTestId('listButton').at(0)).toHaveTextContent(
-      'Analysis'
+      'Data pipeline'
     );
   });
 
@@ -26,7 +26,7 @@ describe('Side drawer', () => {
     const button = screen.getAllByTestId('listButton').at(0);
     user.click(button);
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith('/analysis');
+      expect(pushMock).toHaveBeenCalledWith('/pipeline');
     });
   });
 });
