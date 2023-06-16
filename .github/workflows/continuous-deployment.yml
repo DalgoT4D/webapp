@@ -24,19 +24,16 @@ jobs:
       - name: Add remote host to known_hosts
         run: ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Connect to server
-        run: |
-          eval `ssh-agent -s`
-          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
-          echo $(pwd)
-
-      - name: Pull the code & build
-        run: |
-          echo $(pwd)
-          cd webapp
-          git pull
-          pm2 stop prefect-agent
-          yarn build
-          pm2 start prefect-agent
-          pm2 restart ddp-webapp
+      - name: Execute commands in remote server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          proxy_host: ${{ secrets.SSH_HOST }}
+          proxy_username: ${{ secrets.SSH_USER }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ddp/webapp
+            git pull
+            pm2 stop prefect-agent
+            yarn build
+            pm2 start prefect-agent
+            pm2 restart ddp-webapp
