@@ -46,7 +46,6 @@ export const Connections = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (blockId: string, event: HTMLElement | null) => {
-    console.log(event);
     setBlockId(blockId);
     setAnchorEl(event);
   };
@@ -190,41 +189,45 @@ export const Connections = () => {
     return <CircularProgress />;
   }
 
+  const actionsMenu = (
+    <Menu
+      id="basic-menu"
+      anchorEl={anchorEl}
+      open={open}
+      sx={{ marginTop: 2, py: 0 }}
+      onClose={handleClose}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'right',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'right',
+      }}
+      MenuListProps={{
+        sx: { p: 0 },
+        'aria-labelledby': 'basic-button',
+      }}
+    >
+      <MenuItem sx={{ my: 0 }} onClick={handleClose}>
+        <ListItemIcon style={{ minWidth: 28 }}>
+          <Image src={EditIcon} alt="edit icon" />
+        </ListItemIcon>
+        Edit
+      </MenuItem>
+      <Divider style={{ margin: 0 }} />
+      <MenuItem onClick={() => handleDeleteConnection(blockId)}>
+        <ListItemIcon style={{ minWidth: 28 }}>
+          <Image src={DeleteIcon} alt="delete icon" />
+        </ListItemIcon>
+        Delete
+      </MenuItem>
+    </Menu>
+  );
+
   return (
     <>
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={open}
-        sx={{ marginTop: 2, py: 0 }}
-        onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        MenuListProps={{
-          sx: { p: 0 },
-          'aria-labelledby': 'basic-button',
-        }}
-      >
-        <MenuItem sx={{ my: 0 }} onClick={handleClose}>
-          <ListItemIcon style={{ minWidth: 28 }}>
-            <Image src={EditIcon} alt="edit icon" />
-          </ListItemIcon>
-          Edit
-        </MenuItem>
-        <Divider style={{ margin: 0 }} />
-        <MenuItem onClick={() => handleDeleteConnection(blockId)}>
-          <ListItemIcon style={{ minWidth: 28 }}>
-            <Image src={DeleteIcon} alt="delete icon" />
-          </ListItemIcon>
-          Delete
-        </MenuItem>
-      </Menu>
+      {actionsMenu}
       <CreateConnectionForm
         mutate={mutate}
         showForm={showDialog}
