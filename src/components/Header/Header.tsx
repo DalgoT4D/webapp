@@ -32,7 +32,7 @@ export const Header = () => {
         <Image
           style={{ marginRight: 24, cursor: 'pointer' }}
           src={ProfileIcon}
-          alt="ddp logo"
+          alt="profile icon"
           onClick={(event) => handleClick(event.currentTarget)}
         />
       </Box>
