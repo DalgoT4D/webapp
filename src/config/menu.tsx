@@ -1,4 +1,4 @@
-import AnalysisIcon from '@/assets/icons/analysis';
+// import AnalysisIcon from '@/assets/icons/analysis';
 import IngestIcon from '@/assets/icons/ingest';
 import TransformIcon from '@/assets/icons/transform';
 import PipelineIcon from '@/assets/icons/pipeline';
