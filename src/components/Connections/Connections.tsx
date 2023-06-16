@@ -56,21 +56,20 @@ export const Connections = () => {
     `${backendUrl}/api/airbyte/connections`
   );
 
-  const syncConnection = (blockId: any) => {
+  const syncConnection = (deploymentId: any) => {
     (async () => {
+      if (!deploymentId) {
+        errorToast('Deployment not created', [], toastContext);
+        return;
+      }
       try {
-        const message = await httpPost(
+        const response = await httpPost(
           session,
-          `airbyte/connections/${blockId}/sync/`,
+          `prefect/flows/${deploymentId}/flow_run`,
           {}
         );
-        if (message.success) {
-          successToast(
-            'Sync started... check for logs in two minutes',
-            [],
-            toastContext
-          );
-        }
+        if (response?.detail) errorToast(response.detail, [], toastContext);
+        else successToast('Sync inititated successfully', [], toastContext);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
@@ -99,13 +98,13 @@ export const Connections = () => {
     handleCancelDeleteConnection();
   };
 
-  const Actions = ({ blockId, idx }: any) => (
+  const Actions = ({ connection: { blockId, deploymentId }, idx }: any) => (
     <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
       <Button
         variant="contained"
         onClick={() => {
           setSyncingBlockId(blockId);
-          syncConnection(blockId);
+          syncConnection(deploymentId);
         }}
         disabled={syncingBlockId === blockId}
         key={'sync-' + idx}
@@ -147,7 +146,7 @@ export const Connections = () => {
       </Box>,
       connection.sourceDest,
       connection.lastSync,
-      <Actions key={idx} blockId={connection.blockId} idx={idx} />,
+      <Actions key={idx} connection={connection} idx={idx} />,
     ]);
   }
 
@@ -177,11 +176,6 @@ export const Connections = () => {
         id="basic-menu"
         anchorEl={anchorEl}
         open={open}
-        slotProps={{
-          backdrop: {
-            invisible: true,
-          },
-        }}
         sx={{ marginTop: 2, py: 0 }}
         onClose={handleClose}
         anchorOrigin={{
