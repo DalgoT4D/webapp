@@ -1,12 +1,22 @@
 import { ReactNode, useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { CircularProgress, Box } from '@mui/material';
+import {
+  CircularProgress,
+  Box,
+  Menu,
+  MenuItem,
+  Divider,
+  ListItemIcon,
+} from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
+import EditIcon from '@/assets/icons/edit.svg';
+import DeleteIcon from '@/assets/icons/delete.svg';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { httpDelete, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useContext } from 'react';
 import {
   errorToast,
@@ -22,6 +32,17 @@ const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 export const Connections = () => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
+  const [blockId, setBlockId] = useState<string>('');
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (blockId: string, event: HTMLElement | null) => {
+    setBlockId(blockId);
+    setAnchorEl(event);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const [showDialog, setShowDialog] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
@@ -33,12 +54,12 @@ export const Connections = () => {
     `${backendUrl}/api/airbyte/connections`
   );
 
-  const syncConnection = (connection: any) => {
+  const syncConnection = (blockId: any) => {
     (async () => {
       try {
         const message = await httpPost(
           session,
-          `airbyte/connections/${connection.blockId}/sync/`,
+          `airbyte/connections/${blockId}/sync/`,
           {}
         );
         if (message.success) {
@@ -55,12 +76,12 @@ export const Connections = () => {
     })();
   };
 
-  const deleteConnection = (connection: any) => {
+  const deleteConnection = (blockId: any) => {
     (async () => {
       try {
         const message = await httpDelete(
           session,
-          `airbyte/connections/${connection.blockId}`
+          `airbyte/connections/${blockId}`
         );
         if (message.success) {
           successToast('Connection deleted', [], toastContext);
@@ -73,6 +94,31 @@ export const Connections = () => {
     })();
     handleCancelDeleteConnection();
   };
+
+  const Actions = ({ blockId, idx }: any) => (
+    <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
+      <Button
+        variant="contained"
+        onClick={() => syncConnection(blockId)}
+        key={'sync-' + idx}
+        sx={{ marginRight: '10px' }}
+      >
+        Sync
+      </Button>
+      <Button
+        aria-controls={open ? 'basic-menu' : undefined}
+        aria-haspopup="true"
+        aria-expanded={open ? 'true' : undefined}
+        onClick={(event) => handleClick(blockId, event.currentTarget)}
+        variant="contained"
+        key={'del-' + idx}
+        color="info"
+        sx={{ p: 0, minWidth: 32 }}
+      >
+        <MoreHorizIcon />
+      </Button>
+    </Box>
+  );
 
   // when the connection list changes
   useEffect(() => {
@@ -88,24 +134,7 @@ export const Connections = () => {
         </Box>,
         connection.sourceDest,
         connection.lastSync,
-        <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
-          <Button
-            variant="contained"
-            onClick={() => syncConnection(connection)}
-            key={'sync-' + idx}
-            sx={{ marginRight: '10px' }}
-          >
-            Sync
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => handleDeleteConnection(connection)}
-            key={'del-' + idx}
-            sx={{ backgroundColor: '#d84141' }}
-          >
-            Delete
-          </Button>
-        </Box>,
+        <Actions key={idx} blockId={connection.blockId} idx={idx} />,
       ]);
       setRows(rows);
     }
@@ -115,8 +144,9 @@ export const Connections = () => {
     setShowDialog(true);
   };
 
-  const handleDeleteConnection = (connection: any) => {
-    setConnectionToBeDeleted(connection);
+  const handleDeleteConnection = (id: any) => {
+    handleClose();
+    setConnectionToBeDeleted(id);
     setShowConfirmDeleteDialog(true);
   };
 
@@ -132,6 +162,44 @@ export const Connections = () => {
 
   return (
     <>
+      <Menu
+        id="basic-menu"
+        anchorEl={anchorEl}
+        open={open}
+        slotProps={{
+          backdrop: {
+            invisible: true,
+          },
+        }}
+        sx={{ marginTop: 2, py: 0 }}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        MenuListProps={{
+          sx: { p: 0 },
+          'aria-labelledby': 'basic-button',
+        }}
+      >
+        <MenuItem sx={{ my: 0 }} onClick={handleClose}>
+          <ListItemIcon style={{ minWidth: 28 }}>
+            <Image src={EditIcon} alt="edit icon" />
+          </ListItemIcon>
+          Edit
+        </MenuItem>
+        <Divider style={{ margin: 0 }} />
+        <MenuItem onClick={() => handleDeleteConnection(blockId)}>
+          <ListItemIcon style={{ minWidth: 28 }}>
+            <Image src={DeleteIcon} alt="delete icon" />
+          </ListItemIcon>
+          Delete
+        </MenuItem>
+      </Menu>
       <CreateConnectionForm
         mutate={mutate}
         showForm={showDialog}

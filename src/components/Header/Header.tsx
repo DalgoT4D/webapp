@@ -1,9 +1,11 @@
-import { Box, Button, Paper, Typography } from '@mui/material';
+import { Box, Divider, Menu, MenuItem, Paper } from '@mui/material';
 import styles from './Header.module.css';
+import ProfileIcon from '@/assets/icons/profile.svg';
 import { signOut, useSession } from 'next-auth/react';
 import Logo from '@/assets/images/logo.svg';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+import { useState } from 'react';
 
 export const Header = () => {
   const router = useRouter();
@@ -13,27 +15,51 @@ export const Header = () => {
     signOut({ redirect: false });
   };
   const { data: session }: any = useSession();
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: HTMLElement | null) => {
+    setAnchorEl(event);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
   return (
     <Paper className={styles.Header}>
       <Image src={Logo} style={{ margin: 4, marginLeft: 12 }} alt="ddp logo" />
       <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
-        <Typography
-          sx={{ fontWeight: 700 }}
-          color="#000"
-          data-testid="useremail"
-        >
-          {session?.user?.email || 'no user'}
-        </Typography>
-        <Button
-          variant="contained"
-          data-testid="signout"
-          color="secondary"
-          onClick={handleSignout}
-          sx={{ m: 1 }}
-        >
-          Sign out
-        </Button>
+        <Image
+          style={{ marginRight: 24, cursor: 'pointer' }}
+          src={ProfileIcon}
+          alt="ddp logo"
+          onClick={(event) => handleClick(event.currentTarget)}
+        />
       </Box>
+      <Menu
+        id="basic-menu"
+        anchorEl={anchorEl}
+        open={open}
+        sx={{ marginTop: 2, py: 0 }}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        MenuListProps={{
+          sx: { p: 0 },
+          'aria-labelledby': 'basic-button',
+        }}
+      >
+        <MenuItem sx={{ my: 0 }} onClick={handleClose}>
+          {session?.user?.email || 'no user'}
+        </MenuItem>
+        <Divider style={{ margin: 0 }} />
+        <MenuItem onClick={() => handleSignout()}>Sign out</MenuItem>
+      </Menu>
     </Paper>
   );
 };
