@@ -31,10 +31,4 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          cd /home/ddp/webapp
-          git pull
-          pm2 stop prefect-agent
-          yarn build
-          pm2 start prefect-agent
-          pm2 restart ddp-webapp
+          script: sh deploy-webapp.sh
