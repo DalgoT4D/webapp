@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import {
   CircularProgress,
@@ -106,7 +106,7 @@ export const Connections = () => {
   };
 
   const Actions = ({ connection: { blockId, deploymentId }, idx }: any) => (
-    <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
+    <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
       <Button
         variant="contained"
         onClick={() => {
@@ -125,13 +125,13 @@ export const Connections = () => {
       </Button>
 
       <Button
-        itemID={idx}
+        id={idx}
         aria-controls={open ? 'basic-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}
         onClick={(event) => handleClick(blockId, event.currentTarget)}
         variant="contained"
-        key={'del-' + idx}
+        key={'menu-' + idx}
         color="info"
         sx={{ p: 0, minWidth: 32 }}
       >
@@ -143,29 +143,32 @@ export const Connections = () => {
   // when the connection list changes
   let rows = [];
 
-  if (data && data.length >= 0) {
-    rows = data.map((connection: any) => [
-      <Box
-        key={`box1-${connection.blockId}`}
-        sx={{ display: 'flex', alignItems: 'center' }}
-      >
-        <Image
-          style={{ marginRight: 10 }}
-          src={connectionIcon}
-          alt="connection icon"
-        />
-        {connection.name}
-      </Box>,
-      getSourceDest(connection),
-      getLastSync(connection),
+  rows = useMemo(() => {
+    if (data && data.length >= 0) {
+      return data.map((connection: any) => [
+        <Box
+          key={`name-${connection.blockId}`}
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
+          <Image
+            style={{ marginRight: 10 }}
+            src={connectionIcon}
+            alt="connection icon"
+          />
+          {connection.name}
+        </Box>,
+        getSourceDest(connection),
+        getLastSync(connection),
 
-      <Actions
-        key={`box2-${connection.blockId}`}
-        connection={connection}
-        idx={connection.blockId}
-      />,
-    ]);
-  }
+        <Actions
+          key={`actions-${connection.blockId}`}
+          connection={connection}
+          idx={connection.blockId}
+        />,
+      ]);
+    }
+    return [];
+  }, [data, syncingBlockId]);
 
   const handleClickOpen = () => {
     setShowDialog(true);
