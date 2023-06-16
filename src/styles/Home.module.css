@@ -17,3 +17,8 @@
   margin-top: 12px;
   margin-bottom: 12px;
 }
+
+.Box {
+  padding: 16px;
+  border-radius: 16px;
+}
