@@ -32,6 +32,7 @@ jobs:
 
       - name: Pull the code & build
         run: |
+          echo $(pwd)
           cd webapp
           git pull
           pm2 stop prefect-agent
