@@ -26,10 +26,9 @@ jobs:
 
       - name: Connect to server
         run: |
-          eval $(ssh-agent)
-          echo "Ran ssh-agent command"
+          eval`ssh-agent -s`
           ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -f -N
 
       - name: Pull the code and build
         run: |
