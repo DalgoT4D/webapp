@@ -1,6 +1,7 @@
 import { Box, Divider, Menu, MenuItem, Paper } from '@mui/material';
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
+import LogoutIcon from '@/assets/icons/logout.svg';
 import { signOut, useSession } from 'next-auth/react';
 import Logo from '@/assets/images/logo.svg';
 import { useRouter } from 'next/router';
@@ -39,11 +40,39 @@ export const Header = () => {
         id="basic-menu"
         anchorEl={anchorEl}
         open={open}
-        sx={{ marginTop: 2, py: 0 }}
+        sx={{ marginTop: 4, marginLeft: -2, paddingRight: 2, py: 0 }}
         onClose={handleClose}
         anchorOrigin={{
           vertical: 'bottom',
           horizontal: 'right',
+        }}
+        PaperProps={{
+          sx: {
+            boxShadow: 'unset',
+            border: '0.5px solid rgba(15, 36, 64, 0.54)',
+            borderTopRightRadius: 'unset',
+            overflow: 'visible',
+            '&:after': {
+              content: "''",
+              position: 'absolute',
+              width: '0',
+              height: '0',
+              borderBottom: '15px solid #fff',
+              borderLeft: '15px solid transparent',
+              top: '-15px',
+              right: '0px',
+            },
+            '&:before': {
+              content: "''",
+              position: 'absolute',
+              width: '0',
+              height: '0',
+              borderBottom: '17px solid rgba(15, 36, 64, 0.54)',
+              borderLeft: '16px solid transparent',
+              top: '-17px',
+              right: '-0.5px',
+            },
+          },
         }}
         transformOrigin={{
           vertical: 'top',
@@ -54,11 +83,18 @@ export const Header = () => {
           'aria-labelledby': 'basic-button',
         }}
       >
-        <MenuItem sx={{ my: 0 }} onClick={handleClose}>
+        <Box sx={{ my: 0, py: 1, px: 2 }} onClick={handleClose}>
           {session?.user?.email || 'no user'}
-        </MenuItem>
+        </Box>
         <Divider style={{ margin: 0 }} />
-        <MenuItem onClick={() => handleSignout()}>Sign out</MenuItem>
+        <MenuItem onClick={() => handleSignout()}>
+          <Image
+            style={{ marginRight: 8 }}
+            src={LogoutIcon}
+            alt="logout icon"
+          />
+          Logout
+        </MenuItem>
       </Menu>
     </Paper>
   );

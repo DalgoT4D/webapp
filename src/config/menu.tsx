@@ -19,12 +19,13 @@ export interface MenuOption {
 }
 
 export const sideMenu: MenuOption[] = [
-  {
-    index: 1,
-    title: 'Analysis',
-    path: '/analysis',
-    icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
-  },
+  // This will be added at a later stage
+  // {
+  //   index: 1,
+  //   title: 'Analysis',
+  //   path: '/analysis',
+  //   icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
+  // },
   {
     index: 2,
     title: 'Data pipeline',
