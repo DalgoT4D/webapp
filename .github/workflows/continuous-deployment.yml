@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main branch
@@ -24,15 +24,16 @@ jobs:
       - name: Add remote host to known_hosts
         run: ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: connect to server
+      - name: Connect to server
         run: |
-          eval `ssh-agent -s`
           ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
 
-      - name: pull the code and build
+      - name: Pull the code and build
         run: |
           cd ${{ secrets.WEBAPP_WORKDIR }} 
           git pull
+          pm2 stop prefect-agent
           yarn build
+          pm2 start prefect-agent
           pm2 restart ddp-webapp
