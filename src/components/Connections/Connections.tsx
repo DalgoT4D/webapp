@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { useState } from 'react';
 import useSWR from 'swr';
 import {
   CircularProgress,
@@ -12,6 +12,7 @@ import { List } from '../List/List';
 import Button from '@mui/material/Button';
 import EditIcon from '@/assets/icons/edit.svg';
 import DeleteIcon from '@/assets/icons/delete.svg';
+import SyncIcon from '@/assets/icons/sync.svg';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { httpDelete, httpPost } from '@/helpers/http';
@@ -26,6 +27,7 @@ import connectionIcon from '@/assets/icons/connection.svg';
 import CreateConnectionForm from './CreateConnectionForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import Image from 'next/image';
+import styles from './Connections.module.css';
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 
@@ -33,6 +35,7 @@ export const Connections = () => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
   const [blockId, setBlockId] = useState<string>('');
+  const [syncingBlockId, setSyncingBlockId] = useState<string>('');
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -48,7 +51,6 @@ export const Connections = () => {
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [connectionToBeDeleted, setConnectionToBeDeleted] = useState<any>(null);
-  const [rows, setRows] = useState<Array<Array<ReactNode>>>([]);
 
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/connections`
@@ -72,6 +74,8 @@ export const Connections = () => {
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
+      } finally {
+        setSyncingBlockId('');
       }
     })();
   };
@@ -99,11 +103,19 @@ export const Connections = () => {
     <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
       <Button
         variant="contained"
-        onClick={() => syncConnection(blockId)}
+        onClick={() => {
+          setSyncingBlockId(blockId);
+          syncConnection(blockId);
+        }}
+        disabled={syncingBlockId === blockId}
         key={'sync-' + idx}
         sx={{ marginRight: '10px' }}
       >
-        Sync
+        {syncingBlockId === blockId ? (
+          <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
+        ) : (
+          'Sync'
+        )}
       </Button>
       <Button
         aria-controls={open ? 'basic-menu' : undefined}
@@ -121,24 +133,23 @@ export const Connections = () => {
   );
 
   // when the connection list changes
-  useEffect(() => {
-    if (data && data.length >= 0) {
-      const rows = data.map((connection: any, idx: number) => [
-        <Box key={idx} sx={{ display: 'flex', alignItems: 'center' }}>
-          <Image
-            style={{ marginRight: 10 }}
-            src={connectionIcon}
-            alt="connection icon"
-          />
-          {connection.name}
-        </Box>,
-        connection.sourceDest,
-        connection.lastSync,
-        <Actions key={idx} blockId={connection.blockId} idx={idx} />,
-      ]);
-      setRows(rows);
-    }
-  }, [data]);
+  let rows = [];
+
+  if (data && data.length >= 0) {
+    rows = data.map((connection: any, idx: number) => [
+      <Box key={idx} sx={{ display: 'flex', alignItems: 'center' }}>
+        <Image
+          style={{ marginRight: 10 }}
+          src={connectionIcon}
+          alt="connection icon"
+        />
+        {connection.name}
+      </Box>,
+      connection.sourceDest,
+      connection.lastSync,
+      <Actions key={idx} blockId={connection.blockId} idx={idx} />,
+    ]);
+  }
 
   const handleClickOpen = () => {
     setShowDialog(true);
