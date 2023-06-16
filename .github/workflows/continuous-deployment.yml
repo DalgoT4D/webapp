@@ -12,17 +12,18 @@ jobs:
     steps:
       - name: Checkout main branch
         uses: actions/checkout@v3
+
+      - name: Install yarn
+        uses: actions/setup-node@v3
         with:
-          fetch-depth: 0
-          ref: main
+          node-version: '18'
+          cache: 'yarn'
 
-      - name: Create known_hosts file
-        run: |
-          mkdir -p ~/.ssh
-          touch ~/.ssh/known_hosts
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
 
-      - name: Add remote host to known_hosts
-        run: ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Install pm2
+        run: npm install pm2 -g
 
       - name: Execute commands in remote server
         uses: appleboy/ssh-action@v0.1.10
