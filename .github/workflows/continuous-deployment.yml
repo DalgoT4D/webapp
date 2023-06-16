@@ -27,9 +27,9 @@ jobs:
       - name: Execute commands in remote server
         uses: appleboy/ssh-action@v0.1.10
         with:
-          proxy_host: ${{ secrets.SSH_HOST }}
-          proxy_username: ${{ secrets.SSH_USER }}
-          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/ddp/webapp
             git pull
