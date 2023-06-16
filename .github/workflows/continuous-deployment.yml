@@ -13,22 +13,16 @@ jobs:
       - name: Checkout main branch
         uses: actions/checkout@v3
 
-      - name: Install yarn
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'yarn'
-
-      - name: Install Dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Install pm2
-        run: npm install pm2 -g
-
       - name: Execute commands in remote server
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: sh deploy-webapp.sh
+          script: |
+            cd /home/ddp/webapp
+            git pull
+            pm2 stop prefect-agent
+            yarn build
+            pm2 start prefect-agent
+            pm2 restart ddp-webapp
