@@ -111,13 +111,13 @@ export default function Home() {
 
           {orchestrationRuns.map((run) => {
             return (
-              <>
+              <React.Fragment key={run.name}>
                 <Box sx={{ mt: 4 }}>{run.name}</Box>
                 <Paper elevation={0} sx={{ p: 4 }}>
                   <Box>Last performed</Box>
                   <BarChart />
                 </Paper>
-              </>
+              </React.Fragment>
             );
           })}
         </Box>
