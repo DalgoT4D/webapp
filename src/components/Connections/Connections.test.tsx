@@ -8,7 +8,7 @@ import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
 import userEvent from '@testing-library/user-event';
 import { Dialog } from '@mui/material';
-
+import { lastRunTime } from '@/utils/common';
 // const user = userEvent.setup();
 
 const pushMock = jest.fn();
@@ -58,13 +58,15 @@ describe('Connections Setup', () => {
   const CONNECTIONS = [
     {
       name: 'test-conn-1',
-      sourceDest: 'surveyCTO->postgres',
-      lastSync: 'a day ago',
+      source: { name: 'surveyCTO' },
+      destination: { name: 'postgres' },
+      lastRun: { startTime: '1686937507' },
     },
     {
       name: 'test-conn-2',
-      sourceDest: 'surveyCTO->postgres',
-      lastSync: 'a day ago',
+      source: { name: 'surveyCTO' },
+      destination: { name: 'postgres' },
+      lastRun: { startTime: '1686937507' },
     },
   ];
 
@@ -133,8 +135,14 @@ describe('Connections Setup', () => {
       );
       expect(connCells.length).toBe(4);
       expect(connCells[0].textContent).toBe(CONNECTIONS[i]['name']);
-      expect(connCells[1].textContent).toBe(CONNECTIONS[i]['sourceDest']);
-      expect(connCells[2].textContent).toBe(CONNECTIONS[i]['lastSync']);
+      expect(connCells[1].textContent).toBe(
+        CONNECTIONS[i]['source']['name'] +
+          ' → ' +
+          CONNECTIONS[i]['destination']['name']
+      );
+      expect(connCells[2].textContent).toBe(
+        lastRunTime(CONNECTIONS[i]['lastRun']['startTime'])
+      );
     }
   });
 
