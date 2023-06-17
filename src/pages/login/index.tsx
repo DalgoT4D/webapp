@@ -26,7 +26,7 @@ export const Login = () => {
       callbackUrl: '/',
     });
     if (res.ok) {
-      router.push('/');
+      router.push('/pipeline');
       successToast('User logged in successfully', [], context);
     } else {
       errorToast(
