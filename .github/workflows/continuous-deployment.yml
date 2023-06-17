@@ -21,7 +21,7 @@ jobs:
       - name: Add remote host key to known_hosts
         run: ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Connect to server and run commands
+      - name: Connect to server & run commands
         run: |
           eval `ssh-agent -s`
           ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
