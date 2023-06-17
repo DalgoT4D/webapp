@@ -1,4 +1,4 @@
-import { Fragment, ReactNode, useState } from 'react';
+import { Fragment, ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import {
   Collapse,
@@ -50,6 +50,12 @@ export const SideDrawer = () => {
   const [selectedIndex, setSelectedIndex] = useState(
     sideMenu.find((item) => item.path === router.pathname)?.index
   );
+
+  useEffect(() => {
+    setSelectedIndex(
+      sideMenu.find((item) => item.path === router.pathname)?.index
+    );
+  }, [router.pathname]);
 
   const handleListItemClick = (item: MenuOption) => {
     setSelectedIndex(item.index);
