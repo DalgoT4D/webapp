@@ -23,7 +23,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
     </div>
   );
 }
@@ -51,17 +51,17 @@ export default function Ingest() {
           <Tabs
             value={value}
             onChange={handleChange}
-            aria-label="basic tabs example"
+            aria-label="ingestion tabs"
           >
-            <Tab label="Sources" />
-            <Tab label="Connections" />
+            <Tab label="Connections" sx={{ mr: 4 }} />
+            <Tab label="Sources" sx={{ mr: 4 }} />
             <Tab label="Your Warehouse" />
           </Tabs>
         </Box>
-        <TabPanel value={value} index={1}>
+        <TabPanel value={value} index={0}>
           <Connections />
         </TabPanel>
-        <TabPanel value={value} index={0}>
+        <TabPanel value={value} index={1}>
           <Sources />
         </TabPanel>
         <TabPanel value={value} index={2}>
