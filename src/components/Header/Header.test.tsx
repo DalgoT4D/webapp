@@ -1,66 +1,49 @@
-import { render, screen } from '@testing-library/react';
-import { Header } from './Header'
+import { fireEvent, render, screen } from '@testing-library/react';
+import { Header } from './Header';
 import { SessionProvider } from 'next-auth/react';
 import * as nextRouter from 'next/router';
+import { Session } from 'next-auth';
 
-describe("tests for page header", () => {
-
+describe('tests for page header', () => {
   nextRouter.useRouter = jest.fn();
   nextRouter.useRouter.mockImplementation(() => ({ route: '/' }));
 
-  it("checks for signout button", () => {
-
-    const mockSession: Session = {
-      expires: '1',
-      user: { email: 'a', name: 'Delta', image: 'c' },
-    };
-
+  const mockSession: Session = {
+    expires: '1',
+    user: { email: 'test@example.com', name: 'Delta', image: 'c' },
+  };
+  it('renders the logo', () => {
     render(
       <SessionProvider session={mockSession}>
         <Header />
       </SessionProvider>
     );
 
-    const signoutButton = screen.getByTestId('signout');
-
-    expect(signoutButton).toBeDefined();
-
+    const logo = screen.getByAltText('ddp logo');
+    expect(logo).toBeInTheDocument();
   });
 
-  it("shows \"no user\" if no user is logged in", () => {
-
-    const mockSession: Session = {
-      user: null
-    };
-
+  it('opens the menu when the profile icon is clicked', () => {
     render(
       <SessionProvider session={mockSession}>
         <Header />
       </SessionProvider>
     );
-
-    const userEmail = screen.getByTestId('useremail');
-
-    expect(userEmail).toHaveTextContent("no user");
-
+    const profileIcon = screen.getByAltText('profile icon');
+    fireEvent.click(profileIcon);
+    const menu = screen.getByRole('menu');
+    expect(menu).toBeInTheDocument();
   });
 
-  it("shows user's password if user is logged in", () => {
-
-    const mockSession: Session = {
-      user: { email: 'users-email' }
-    };
-
+  it('displays the user email in the menu', () => {
     render(
       <SessionProvider session={mockSession}>
         <Header />
       </SessionProvider>
     );
-
-    const userEmail = screen.getByTestId('useremail');
-
-    expect(userEmail).toHaveTextContent("users-email");
-
+    const profileIcon = screen.getByAltText('profile icon');
+    fireEvent.click(profileIcon);
+    const userEmail = screen.getByText('test@example.com');
+    expect(userEmail).toBeInTheDocument();
   });
-
 });
