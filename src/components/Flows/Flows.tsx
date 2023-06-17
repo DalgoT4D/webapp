@@ -1,5 +1,4 @@
 import { Box, Button, IconButton, Typography } from '@mui/material';
-import moment from 'moment';
 import React, { useContext, useEffect, useState } from 'react';
 import { Delete } from '@mui/icons-material';
 import { useSession } from 'next-auth/react';
@@ -10,6 +9,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { List } from '../List/List';
 import FlowRunHistory from './FlowRunHistory';
+import { lastRunTime } from '@/utils/common';
 
 interface FlowInterface {
   name: string;
@@ -24,10 +24,6 @@ interface FlowsInterface {
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
 }
-
-const lastRunTime = (startTime: string) => {
-  return moment(new Date(startTime)).fromNow();
-};
 
 const FlowState = (flow: any) => {
   return (
