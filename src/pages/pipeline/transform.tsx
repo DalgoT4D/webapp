@@ -115,7 +115,7 @@ const Transform = () => {
 
   return (
     <>
-      <PageHead title="This is the new one" />
+      <PageHead title="DDP: Transform" />
       <main className={styles.main}>
         <Typography
           sx={{ fontWeight: 700 }}
