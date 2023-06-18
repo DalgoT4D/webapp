@@ -19,20 +19,38 @@ import * as d3 from 'd3';
 
 const BarChart = () => {
   const svgRef = useRef(null);
+  const width = 800;
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
 
+    const data = Array.from({ length: 50 }, () => {
+      const value = Math.random();
+      const status = value < 0.2 ? 'failure' : 'success';
+      const color = value < 0.2 ? '#C15E5E' : '#00897B';
+      const lastRun = Math.floor(Math.random() * 100) + 1; // Random number for the last run
+      return { color, status, lastRun };
+    });
+
     // Generate random data for bar colors
-    const data = Array.from({ length: 50 }, () =>
-      Math.random() < 0.2 ? '#C15E5E' : '#00897B'
-    );
 
     const height = 48;
 
     // Set dimensions and margins for the bars
     const barWidth = 8;
     const barHeight = height;
+
+    const tooltip = d3
+      .select('body')
+      .append('div')
+      .style('position', 'absolute')
+      .style('visibility', 'hidden')
+      .style('background-color', 'white')
+      .style('border', '1px solid black')
+      .style('border-radius', '10px')
+      .style('padding', '8px')
+      .style('font-family', 'Arial')
+      .style('font-size', '12px');
 
     // Create the bars
     svg
@@ -41,15 +59,40 @@ const BarChart = () => {
       .enter()
       .append('rect')
       .attr('x', (d, i) => i * (barWidth + 8)) // Adding 10 for t
-      .attr('y', 0)
+      .attr('y', height)
       .attr('width', barWidth)
-      .attr('height', barHeight)
-      .attr('fill', (d) => d);
+      .attr('height', 0) // Initially set the height to 0
+      .attr('fill', (d) => d.color)
+      .on('mouseover', (event, d) => {
+        // Show tooltip on mouseover
+        tooltip
+          .style('visibility', 'visible')
+          .html(`Run date: ${d.lastRun}<br>Status: ${d.status}`)
+          .style('left', `${event.pageX + 2}px`)
+          .style('top', `${event.pageY - 28}px`);
+      })
+      .on('mouseout', () => {
+        // Hide tooltip on mouseout
+        tooltip.style('visibility', 'hidden');
+      })
+      .transition() // Apply transition animation
+      .duration(1000) // Set the duration for the animation in milliseconds
+      .attr('y', () => height - barHeight) // Move the bars to their final y position
+      .attr('height', barHeight); // Set the
+
+    svg
+      .append('line')
+      .attr('x1', 0)
+      .attr('y1', height + 8) // 8 pixels below the bars
+      .attr('x2', width)
+      .attr('y2', height + 8)
+      .attr('stroke', '#758397')
+      .attr('stroke-width', 1);
   }, []);
 
   return (
     <div>
-      <svg ref={svgRef} width={800} height={48}></svg>
+      <svg ref={svgRef} width={width} height={58}></svg>
     </div>
   );
 };
@@ -112,9 +155,24 @@ export default function Home() {
           {orchestrationRuns.map((run) => {
             return (
               <React.Fragment key={run.name}>
-                <Box sx={{ mt: 4 }}>{run.name}</Box>
-                <Paper elevation={0} sx={{ p: 4 }}>
-                  <Box>Last performed</Box>
+                <Typography
+                  variant="body1"
+                  sx={{ mt: 4, fontWeight: 700, pb: 1, color: '#092540BF' }}
+                >
+                  {run.name}
+                </Typography>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    px: 4,
+                    py: 2,
+                    boxShadow: '0px 1px 5px rgba(0,0,0,0.1)',
+                    borderRadius: '12px',
+                  }}
+                >
+                  <Typography variant="subtitle2" mb={2}>
+                    last performed at 5:00pm on 5 Feb
+                  </Typography>
                   <BarChart />
                 </Paper>
               </React.Fragment>
