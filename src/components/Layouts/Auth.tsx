@@ -7,7 +7,7 @@ import { ReactNode } from 'react';
 type AuthProps = {
   children: ReactNode;
   heading: string;
-  subHeading: string;
+  subHeading?: string;
 };
 export const Auth: React.FC<AuthProps> = ({
   heading,
@@ -17,10 +17,17 @@ export const Auth: React.FC<AuthProps> = ({
   return (
     <Box>
       <Grid container columns={16}>
-        <Grid item xs={8}>
+        <Grid
+          item
+          xs={8}
+          sx={{
+            pt: '60px',
+            overflow: 'scroll',
+            height: '100vh  ',
+          }}
+        >
           <Grid
             container
-            height="100vh"
             direction="column"
             justifyContent="center"
             alignItems="center"
@@ -30,25 +37,23 @@ export const Auth: React.FC<AuthProps> = ({
               sx={{
                 p: 4,
                 mt: 5,
-                maxWidth: 414,
+                width: 414,
                 boxShadow: '0px 6px 11px rgba(64, 68, 77, 0.06)',
               }}
             >
-              <Typography variant="h5" align="center" fontWeight={600}>
-                {heading}
-              </Typography>
-              {subHeading && (
-                <Typography variant="body1" color="#0F244054" align="center">
-                  {subHeading}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="h5" align="center" fontWeight={600}>
+                  {heading}
                 </Typography>
-              )}
+                {subHeading && (
+                  <Typography variant="body1" color="#0F244054" align="center">
+                    {subHeading}
+                  </Typography>
+                )}
+              </Box>
               {children}
             </Paper>
-            <Typography
-              variant="body1"
-              sx={{ position: 'absolute', bottom: 20 }}
-              mt={2}
-            >
+            <Typography variant="body1" mt={4} pb={3}>
               © 2023 DDP. All Rights Reserved.
             </Typography>
           </Grid>
