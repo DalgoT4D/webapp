@@ -27,20 +27,31 @@ interface FlowRunHistoryProps {
   setShowFlowRunHistory: (...args: any) => any;
 }
 
-const FlowRunHistory = ({
+export type FlowRunLogMessage = {
+  message: string;
+};
+export type FlowRun = {
+  name: string;
+  status: string;
+  logs: Array<FlowRunLogMessage>;
+  startTime: string;
+  expectedStartTime: string;
+};
+
+export const FlowRunHistory = ({
   deploymentId,
   showFlowRunHistory,
   setShowFlowRunHistory,
 }: FlowRunHistoryProps) => {
   const { data: session }: any = useSession();
-  const [flowRuns, setFlowRuns] = useState<Array<any>>([]);
+  const [flowRuns, setFlowRuns] = useState<Array<FlowRun>>([]);
   const [showLogs, setShowLogs] = useState<Array<boolean>>([]);
   const globalContext = useContext(GlobalContext);
   const handleClose = () => {
     setShowFlowRunHistory(false);
   };
 
-  const lastRunTime = (flowRun: any) => {
+  const lastRunTime = (flowRun: FlowRun) => {
     // When the flow run fails startTime is null, so we look at the expectedStartTime
     return moment(
       new Date(flowRun?.startTime || flowRun.expectedStartTime)
@@ -78,7 +89,7 @@ const FlowRunHistory = ({
           <Box flexGrow={1}>Flow Runs</Box>
           <Box>
             <IconButton onClick={handleClose}>
-              <Close />
+              <Close data-testid="closebutton" />
             </IconButton>
           </Box>
         </Box>
@@ -86,7 +97,7 @@ const FlowRunHistory = ({
       <DialogContent sx={{ marginLeft: '20px', overflowX: 'hidden' }}>
         <Stack width="100rem">
           {flowRuns &&
-            flowRuns.map((flowRun: any, idx: number) => (
+            flowRuns.map((flowRun: FlowRun, idx: number) => (
               <Box display="flex" gap="10px" key={idx}>
                 <Box
                   sx={{
@@ -96,6 +107,7 @@ const FlowRunHistory = ({
                   }}
                 >
                   <Box
+                    data-testid={'info-' + idx}
                     sx={{
                       height: '7px',
                       width: '7px',
@@ -121,7 +133,9 @@ const FlowRunHistory = ({
                     wordWrap: 'break-word',
                   }}
                 >
-                  <Typography>{lastRunTime(flowRun)}</Typography>
+                  <Typography data-testid={'lastrun-' + idx}>
+                    {lastRunTime(flowRun)}
+                  </Typography>
                   <Box
                     sx={{
                       display: 'flex',
@@ -134,6 +148,7 @@ const FlowRunHistory = ({
                     </Typography>
                     {flowRun?.status === 'COMPLETED' ? (
                       <TaskAltIcon
+                        data-testid={'taskalticon-' + idx}
                         sx={{
                           alignItems: 'center',
                           fontSize: 'medium',
@@ -142,6 +157,7 @@ const FlowRunHistory = ({
                       />
                     ) : (
                       <WarningAmberIcon
+                        data-testid={'warningambericon-' + idx}
                         sx={{
                           alignItems: 'center',
                           fontSize: 'medium',
@@ -149,7 +165,10 @@ const FlowRunHistory = ({
                         }}
                       />
                     )}
-                    <Button onClick={() => handleShowMore(idx)}>
+                    <Button
+                      data-testid={'showlogs-' + idx}
+                      onClick={() => handleShowMore(idx)}
+                    >
                       {showLogs[idx] ? 'show less' : 'show more'}
                     </Button>
                   </Box>
@@ -162,7 +181,7 @@ const FlowRunHistory = ({
                     timeout="auto"
                     unmountOnExit
                   >
-                    <CardContent sx={{}}>
+                    <CardContent data-testid={'logmessages-' + idx} sx={{}}>
                       {flowRun?.logs?.map((log: any, idx1: number) => (
                         <Box key={idx1}>- {log?.message}</Box>
                       ))}
@@ -176,5 +195,3 @@ const FlowRunHistory = ({
     </Dialog>
   );
 };
-
-export default FlowRunHistory;

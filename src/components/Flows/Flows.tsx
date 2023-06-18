@@ -8,7 +8,7 @@ import { httpDelete, httpPost } from '@/helpers/http';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { List } from '../List/List';
-import FlowRunHistory from './FlowRunHistory';
+import { FlowRunHistory } from './FlowRunHistory';
 import { lastRunTime } from '@/utils/common';
 
 interface FlowInterface {
