@@ -8,28 +8,29 @@ import { httpDelete, httpPost } from '@/helpers/http';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { List } from '../List/List';
-import { FlowRunHistory } from './FlowRunHistory';
+import { FlowRunHistory, FlowRun } from './FlowRunHistory';
 import { lastRunTime } from '@/utils/common';
 
-interface FlowInterface {
+export interface FlowInterface {
   name: string;
   cron: string;
   deploymentName: string;
   deploymentId: string;
-  lastRun: any;
+  lastRun?: FlowRun;
 }
 
-interface FlowsInterface {
+export interface FlowsInterface {
   flows: Array<FlowInterface>;
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
 }
 
-const FlowState = (flow: any) => {
+const FlowState = (flow: FlowInterface) => {
   return (
     <>
       {!flow?.lastRun || flow?.lastRun?.status === 'COMPLETED' ? (
         <Box
+          data-testid={'flowstate-' + flow.name}
           sx={{
             display: 'flex',
             color: '#399D47',
@@ -42,6 +43,7 @@ const FlowState = (flow: any) => {
         </Box>
       ) : (
         <Box
+          data-testid={'flowstate-' + flow.name}
           sx={{
             display: 'flex',
             color: '#981F1F',
@@ -57,11 +59,11 @@ const FlowState = (flow: any) => {
   );
 };
 
-const FlowLastRun = (flow: any) => {
+const FlowLastRun = (flow: FlowInterface) => {
   return (
     <>
       {flow?.lastRun ? (
-        <Typography component="p">
+        <Typography data-testid={'flowlastrun-' + flow.name} component="p">
           Last run {lastRunTime(flow?.lastRun?.startTime)}
         </Typography>
       ) : (
@@ -71,7 +73,7 @@ const FlowLastRun = (flow: any) => {
   );
 };
 
-const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
+export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
   const [rows, setRows] = useState<Array<Array<any>>>([]);
   const [showFlowRunHistory, setShowFlowRunHistory] = useState<boolean>(false);
   const [flowRunHistoryDeploymentId, setFlowRunHistoryDeploymentId] =
@@ -81,13 +83,14 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
 
   useEffect(() => {
     if (flows && flows.length > 0) {
-      const rows = flows.map((flow: any, idx: number) => [
+      const rows = flows.map((flow: FlowInterface, idx: number) => [
         `${flow.name} | ${flow.cron}`,
         FlowState(flow),
         FlowLastRun(flow),
         [
           <Box key={idx}>
             <Button
+              data-testid={'btn-openhistory-' + flow.name}
               sx={{
                 marginRight: '5px',
                 backgroundColor: 'background.default',
@@ -97,12 +100,16 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
               last logs
             </Button>
             <Button
+              data-testid={'btn-quickrundeployment-' + flow.name}
               variant="contained"
               onClick={() => handleQuickRunDeployment(flow?.deploymentId)}
             >
               Run
             </Button>
-            <IconButton onClick={() => handleDeleteFlow(flow.deploymentId)}>
+            <IconButton
+              data-testid={'btn-deleteflow-' + flow.name}
+              onClick={() => handleDeleteFlow(flow.deploymentId)}
+            >
               <Delete />
             </IconButton>
           </Box>,
@@ -178,5 +185,3 @@ const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
     </>
   );
 };
-
-export default Flows;
