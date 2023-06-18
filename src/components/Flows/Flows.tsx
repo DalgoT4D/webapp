@@ -28,7 +28,7 @@ export interface FlowsInterface {
 const FlowState = (flow: FlowInterface) => {
   return (
     <>
-      {!flow?.lastRun || flow?.lastRun?.status === 'COMPLETED' ? (
+      {!flow.lastRun || flow.lastRun?.status === 'COMPLETED' ? (
         <Box
           data-testid={'flowstate-' + flow.name}
           sx={{
