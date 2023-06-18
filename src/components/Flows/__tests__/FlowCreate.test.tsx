@@ -102,7 +102,7 @@ describe('Flow Creation', () => {
   });
 
   // ================================================================================
-  it('checks connection autocomplete list', async () => {
+  it('checks connection autocomplete list and adding a connection', async () => {
     const fetchMock = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest
@@ -153,6 +153,66 @@ describe('Flow Creation', () => {
     expect(
       selectedConnectionsAfter.firstElementChild.firstElementChild.value
     ).toBe('conn-1');
+  });
+
+  // ================================================================================
+  it('checks removing a connection', async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest
+        .fn()
+        .mockResolvedValueOnce([{ name: 'conn-1', blockName: 'conn-1-block' }]),
+    });
+    (global as any).fetch = fetchMock;
+
+    const updateCrudValMock = jest.fn();
+
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <FlowCreate
+            updateCrudVal={(param) => updateCrudValMock(param)}
+            mutate={() => {}}
+          />
+        </SessionProvider>
+      );
+    });
+
+    // fetch connections
+    expect(fetchMock).toHaveBeenCalled();
+
+    // no connections selected yet
+    const selectedConnections = await screen.queryByTestId('selectedconn-0');
+    expect(selectedConnections).toBeNull();
+
+    // type name of connection into the autocomplete
+    const connOption = screen.getByRole('combobox', {
+      name: 'add connection',
+    });
+    expect(connOption).toBeInTheDocument();
+    fireEvent.change(connOption, { target: { value: 'conn-1' } });
+
+    // keyboard magic to trigger the connection selections
+    const autocomplete = screen.getByTestId('connectionautocomplete');
+    fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(autocomplete, { key: 'Enter' });
+
+    // look for the element in the list of selected connections
+    const selectedConnectionsAfter = screen.getByTestId('selectedconn-0');
+    expect(selectedConnectionsAfter).toBeInTheDocument();
+    expect(selectedConnectionsAfter.firstElementChild).not.toBeNull();
+    expect(
+      selectedConnectionsAfter.firstElementChild.firstElementChild
+    ).not.toBeNull();
+    expect(
+      selectedConnectionsAfter.firstElementChild.firstElementChild.value
+    ).toBe('conn-1');
+
+    const deleteButton = screen.getByTestId('deleteconn-0');
+    expect(deleteButton).toBeInTheDocument();
+    await userEvent.click(deleteButton);
+    const newSelectedConnections = await screen.queryByTestId('selectedconn-0');
+    expect(newSelectedConnections).toBeNull();
   });
 
   // ================================================================================
