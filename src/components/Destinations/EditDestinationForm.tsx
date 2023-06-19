@@ -7,6 +7,7 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { DestinationConfigInput } from './DestinationConfigInput';
+import Input from '../UI/Input/Input';
 
 interface EditDestinationFormProps {
   showForm: boolean;
@@ -305,12 +306,14 @@ const EditDestinationForm = ({
   const EditDestinationForm = () => {
     return (
       <Box sx={{ pt: 2, pb: 4 }}>
-        <TextField
+        <Input
           sx={{ width: '100%' }}
           label="Name"
           variant="outlined"
-          {...register('name', { required: true })}
-        ></TextField>
+          register={register}
+          name="name"
+          required
+        ></Input>
         <Box sx={{ m: 2 }} />
         <Controller
           name="destinationDef"
@@ -318,11 +321,13 @@ const EditDestinationForm = ({
           rules={{ required: true }}
           render={({ field }) => (
             <Autocomplete
+              id="destinationDef"
               options={destinationDefs}
               value={field.value}
               onChange={(e, data) => field.onChange(data)}
               renderInput={(params) => (
-                <TextField
+                <Input
+                  name="destinationDef"
                   {...params}
                   label="Select destination type"
                   variant="outlined"
@@ -365,7 +370,7 @@ const EditDestinationForm = ({
             >
               Cancel
             </Button>
-            {setupLogs && (
+            {setupLogs.length > 0 && (
               <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
                 {setupLogs.map((logmessage, idx) => (
                   <Box key={idx}>{logmessage}</Box>

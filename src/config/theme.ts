@@ -80,6 +80,10 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
+          '&.MuiButton-contained.Mui-disabled': {
+            backgroundColor: 'rgba(0, 137, 123, 0.33)',
+            color: '#fff',
+          },
           boxShadow: 'unset',
           fontWeight: 700,
           textTransform: 'none',

@@ -12,6 +12,7 @@ import MultiTagInput from '../MultiTagInput';
 import { Controller } from 'react-hook-form';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import Input from '../UI/Input/Input';
 
 export interface DestinationConfigInputprops {
   specs: Array<any>;
@@ -113,27 +114,27 @@ export const DestinationConfigInput = ({
           spec?.type === 'string' ? (
             spec?.const ? ( // type == string and a const selected value
               <React.Fragment key={idx}>
-                <TextField
+                <Input
                   sx={{ width: '100%' }}
                   label={spec.const}
                   variant="outlined"
                   value={spec?.const}
-                  {...registerFormFieldValue(spec.field, {
-                    required: spec.required,
-                  })}
-                ></TextField>
+                  register={registerFormFieldValue}
+                  name={spec.field}
+                  required={spec.required}
+                ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             ) : spec.airbyte_secret ? ( // type == string and a password/secret field
               <React.Fragment key={idx}>
-                <TextField
+                <Input
                   sx={{ width: '100%' }}
                   label={spec?.title}
                   variant="outlined"
                   type={showPasswords[spec.field] ? 'text' : 'password'}
-                  {...registerFormFieldValue(spec.field, {
-                    required: spec.required,
-                  })}
+                  register={registerFormFieldValue}
+                  name={spec.field}
+                  required={spec.required}
                   defaultValue={spec?.default}
                   InputProps={{
                     endAdornment: (
@@ -153,7 +154,7 @@ export const DestinationConfigInput = ({
                       </InputAdornment>
                     ),
                   }}
-                ></TextField>
+                ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             ) : spec?.enum?.length > 0 ? ( // type == string and a dropdown select
@@ -183,15 +184,15 @@ export const DestinationConfigInput = ({
             ) : (
               // type == string , default
               <React.Fragment key={idx}>
-                <TextField
+                <Input
                   sx={{ width: '100%' }}
                   label={spec?.title}
                   variant="outlined"
-                  {...registerFormFieldValue(spec.field, {
-                    required: spec.required,
-                  })}
+                  register={registerFormFieldValue}
+                  name={spec.field}
+                  required={spec.required}
                   defaultValue={spec?.default}
-                ></TextField>
+                ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             )
@@ -235,17 +236,16 @@ export const DestinationConfigInput = ({
             </React.Fragment>
           ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
-              <TextField
+              <Input
                 sx={{ width: '100%' }}
                 label={spec?.title}
                 variant="outlined"
-                {...registerFormFieldValue(spec.field, {
-                  required: spec.required,
-                  valueAsNumber: true,
-                })}
+                register={registerFormFieldValue}
+                name={spec.field}
+                required={spec.required}
                 defaultValue={spec?.default}
                 type="number"
-              ></TextField>
+              ></Input>
               <Box sx={{ m: 2 }} />
             </React.Fragment>
           ) : spec?.type === 'object' ? (
@@ -256,13 +256,15 @@ export const DestinationConfigInput = ({
                 rules={{ required: spec?.required }}
                 render={({ field }) => (
                   <Autocomplete
+                    id={spec.field}
                     value={field.value}
                     options={spec?.enum}
                     onChange={(e, data: any) => {
                       handleObjectFieldOnChange(data, spec.field, field);
                     }}
                     renderInput={(params) => (
-                      <TextField
+                      <Input
+                        name={spec.field}
                         {...params}
                         variant="outlined"
                         label={spec.title}

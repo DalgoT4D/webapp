@@ -1,17 +1,9 @@
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
-import {
-  CircularProgress,
-  Box,
-  Menu,
-  MenuItem,
-  Divider,
-  ListItemIcon,
-} from '@mui/material';
+import { CircularProgress, Box } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
-import EditIcon from '@/assets/icons/edit.svg';
-import DeleteIcon from '@/assets/icons/delete.svg';
+
 import SyncIcon from '@/assets/icons/sync.svg';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
@@ -29,6 +21,7 @@ import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import Image from 'next/image';
 import styles from './Connections.module.css';
 import { lastRunTime } from '@/utils/common';
+import { ActionsMenu } from '../UI/Menu/Menu';
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 const getSourceDest = (connection: any) =>
@@ -56,7 +49,6 @@ export const Connections = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
-  const [connectionToBeDeleted, setConnectionToBeDeleted] = useState<any>(null);
 
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/connections`
@@ -173,14 +165,12 @@ export const Connections = () => {
     setShowDialog(true);
   };
 
-  const handleDeleteConnection = (id: any) => {
+  const handleDeleteConnection = () => {
     handleClose();
-    setConnectionToBeDeleted(id);
     setShowConfirmDeleteDialog(true);
   };
 
   const handleCancelDeleteConnection = () => {
-    setConnectionToBeDeleted(null);
     setShowConfirmDeleteDialog(false);
   };
 
@@ -189,45 +179,15 @@ export const Connections = () => {
     return <CircularProgress />;
   }
 
-  const actionsMenu = (
-    <Menu
-      id="basic-menu"
-      anchorEl={anchorEl}
-      open={open}
-      sx={{ marginTop: 2, py: 0 }}
-      onClose={handleClose}
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'right',
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      MenuListProps={{
-        sx: { p: 0 },
-        'aria-labelledby': 'basic-button',
-      }}
-    >
-      <MenuItem sx={{ my: 0 }} onClick={handleClose}>
-        <ListItemIcon style={{ minWidth: 28 }}>
-          <Image src={EditIcon} alt="edit icon" />
-        </ListItemIcon>
-        Edit
-      </MenuItem>
-      <Divider style={{ margin: 0 }} />
-      <MenuItem onClick={() => handleDeleteConnection(blockId)}>
-        <ListItemIcon style={{ minWidth: 28 }}>
-          <Image src={DeleteIcon} alt="delete icon" />
-        </ListItemIcon>
-        Delete
-      </MenuItem>
-    </Menu>
-  );
-
   return (
     <>
-      {actionsMenu}
+      <ActionsMenu
+        anchorEl={anchorEl}
+        open={open}
+        handleClose={handleClose}
+        elementId={blockId}
+        handleDeleteConnection={handleDeleteConnection}
+      />
       <CreateConnectionForm
         mutate={mutate}
         showForm={showDialog}
@@ -242,7 +202,7 @@ export const Connections = () => {
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
         handleClose={() => handleCancelDeleteConnection()}
-        handleConfirm={() => deleteConnection(connectionToBeDeleted)}
+        handleConfirm={() => deleteConnection(blockId)}
         message="This will delete the connection permanently and all the flows built on top of this."
       />
     </>
