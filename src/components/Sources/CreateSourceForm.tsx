@@ -15,13 +15,18 @@ interface CreateSourceFormProps {
   setShowForm: (...args: any) => any;
 }
 
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+};
+
 const CreateSourceForm = ({
   mutate,
   showForm,
   setShowForm,
 }: CreateSourceFormProps) => {
   const { data: session }: any = useSession();
-  const [sourceDefs, setSourceDefs] = useState([]);
+  const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
   const [checking, setChecking] = useState<boolean>(false);
@@ -30,7 +35,7 @@ const CreateSourceForm = ({
   const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
       name: '',
-      sourceDef: { id: '', label: '' },
+      sourceDef: { id: '', label: '' } as AutoCompleteOption,
       config: {},
     },
   });
@@ -42,10 +47,13 @@ const CreateSourceForm = ({
       (async () => {
         try {
           const data = await httpGet(session, 'airbyte/source_definitions');
-          const sourceDefRows = data?.map((element: any) => ({
-            label: element.name,
-            id: element.sourceDefinitionId,
-          }));
+          const sourceDefRows: Array<AutoCompleteOption> = data?.map(
+            (element: any) =>
+              ({
+                label: element.name,
+                id: element.sourceDefinitionId,
+              } as AutoCompleteOption)
+          );
           setSourceDefs(sourceDefRows);
         } catch (err: any) {
           console.error(err);
@@ -57,7 +65,6 @@ const CreateSourceForm = ({
 
   useEffect(() => {
     if (watchSelectedSourceDef?.id) {
-      console.log('here');
       (async () => {
         try {
           const data: any = await httpGet(
@@ -69,6 +76,7 @@ const CreateSourceForm = ({
           const dataProperties: any = data?.properties || {};
           let maxOrder = -1;
 
+          // console.log(data.properties);
           for (const [key, value] of Object.entries(dataProperties)) {
             const order: any =
               (value as any)?.order >= 0 ? (value as any)?.order : -1;
@@ -88,6 +96,8 @@ const CreateSourceForm = ({
               spec.order = ++maxOrder;
             }
           }
+          // console.log('setting source def specs');
+          // console.log(specsConfigFields);
           setSourceDefSpecs(specsConfigFields);
         } catch (err: any) {
           console.error(err);
@@ -154,7 +164,7 @@ const CreateSourceForm = ({
   const FormContent = () => {
     return (
       <>
-        <Box sx={{ pt: 2, pb: 4 }} data-testid="temp__1">
+        <Box sx={{ pt: 2, pb: 4 }}>
           <Input
             sx={{ width: '100%' }}
             label="Name"
@@ -170,8 +180,15 @@ const CreateSourceForm = ({
             rules={{ required: true }}
             render={({ field }) => (
               <Autocomplete
+                data-testid="autocomplete"
                 value={field.value}
                 options={sourceDefs}
+                isOptionEqualToValue={(
+                  option: AutoCompleteOption,
+                  value: AutoCompleteOption
+                ) => {
+                  return value.id === '' || option.id === value.id;
+                }}
                 onChange={(e, data) => field.onChange(data)}
                 renderInput={(params) => {
                   return (
@@ -187,7 +204,6 @@ const CreateSourceForm = ({
           />
           <Box sx={{ m: 2 }} />
           <SourceConfigInput
-            data-testid="sourceconfiginput"
             specs={sourceDefSpecs}
             registerFormFieldValue={register}
             control={control}

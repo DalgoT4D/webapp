@@ -221,7 +221,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                     />
 
                     <IconButton onClick={() => handleDeleteConnection(idx)}>
-                      <Delete />
+                      <Delete data-testid={'deleteconn-' + idx} />
                     </IconButton>
                   </Box>
                 ))}
