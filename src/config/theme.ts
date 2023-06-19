@@ -29,6 +29,32 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          fontSize: '12px',
+          fontWeight: 700,
+          color: '#0F244054',
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          fontWeight: 600,
+          marginBottom: 10,
+          color: '#758397',
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          width: '100%',
+        },
+      },
+    },
+
     MuiListItemButton: {
       styleOverrides: {
         root: {
@@ -61,12 +87,9 @@ const theme = createTheme({
         },
       },
     },
-    MuiBackdrop: {
+    MuiDialog: {
       styleOverrides: {
-        root: ({ ownerState }) => {
-          if (ownerState.className?.endsWith('MuiDialog-backdrop'))
-            return { backgroundColor: '#0F2440DE' };
-        },
+        root: { backgroundColor: '#0F2440DE' },
       },
     },
     MuiDialogContent: {

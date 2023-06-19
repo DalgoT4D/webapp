@@ -5,7 +5,6 @@ import {
   Autocomplete,
   Box,
   Button,
-  TextField,
   Switch,
   Select,
   MenuItem,
@@ -24,6 +23,7 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import { backendUrl } from '@/config/constant';
+import Input from '../UI/Input/Input';
 
 interface CreateConnectionFormProps {
   mutate: (...args: any) => any;
@@ -234,23 +234,26 @@ const CreateConnectionForm = ({
     return (
       <>
         <Box sx={{ pt: 2, pb: 4 }}>
-          <TextField
+          <Input
             data-testid="connectionName"
             sx={{ width: '100%' }}
             label="Name"
             variant="outlined"
-            {...register('name', { required: true })}
-          ></TextField>
+            register={register}
+            required
+            name="name"
+          ></Input>
 
           <Box sx={{ m: 2 }} />
 
-          <TextField
+          <Input
             data-testid="schemaName"
             sx={{ width: '100%' }}
             label="Destination Schema"
             variant="outlined"
-            {...register('destinationSchema')}
-          ></TextField>
+            register={register}
+            name="destinationSchema"
+          ></Input>
 
           <Box sx={{ m: 2 }} />
 
@@ -265,11 +268,7 @@ const CreateConnectionForm = ({
                 value={field.value}
                 onChange={(e, data) => field.onChange(data)}
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select source"
-                    variant="outlined"
-                  />
+                  <Input {...params} label="Select source" variant="outlined" />
                 )}
               />
             )}
