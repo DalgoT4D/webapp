@@ -25,4 +25,4 @@ jobs:
         run: |
           eval `ssh-agent -s`
           ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd /home/ddp/webapp && git pull && pm2 stop prefect-agent && yarn build && pm2 start prefect-agent && pm2 restart ddp-webapp"
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "source ~/.nvm/nvm.sh && cd /home/ddp/webapp && git pull && pm2 stop prefect-agent && yarn build && pm2 start prefect-agent && pm2 restart ddp-webapp"
