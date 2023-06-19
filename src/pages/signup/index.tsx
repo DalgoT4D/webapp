@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Link, Divider } from '@mui/material';
+import { Box, Button, Link, Divider } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
@@ -9,6 +9,7 @@ import { useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
+import Input from '@/components/UI/Input/Input';
 
 export const SignUp = () => {
   const { data: session }: any = useSession();
@@ -45,34 +46,43 @@ export const SignUp = () => {
     >
       <form onSubmit={handleSubmit(onSubmit)} data-testid="signup-form">
         <Box className={styles.Container}>
-          <TextField
+          <Input
             sx={{ width: '100%', pb: 3, mt: 2 }}
             id="outlined-basic"
             data-testid="username"
             label="Business email"
             variant="outlined"
-            {...register('username', { required: true })}
+            placeholder="eg. user@domain.com"
+            register={register}
+            name="username"
+            required
           />
 
-          <TextField
+          <Input
             sx={{ width: '100%', pb: 3 }}
             id="outlined-password-input"
             data-testid="password"
             label="Password"
             type="password"
+            placeholder="Enter your password"
             autoComplete="current-password"
-            {...register('password', { required: true })}
+            register={register}
+            required
+            name="password"
           />
 
-          <TextField
+          <Input
             sx={{ width: '100%', pb: 3 }}
             id="outlined-basic"
             label="Signup code"
             variant="outlined"
-            {...register('signupcode', { required: true })}
+            register={register}
+            placeholder="Enter code"
+            name="signupcode"
+            required
           />
           <Button
-            sx={{ width: '100%', mb: 3 }}
+            sx={{ width: '100%', mb: 3, minHeight: '50px' }}
             variant="contained"
             type="submit"
             data-testid="submit"

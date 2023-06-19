@@ -1,7 +1,7 @@
 import styles from '@/styles/Home.module.css';
 import useSWR from 'swr';
 import { PageHead } from '@/components/PageHead';
-import Flows from '@/components/Flows/Flows';
+import { Flows } from '@/components/Flows/Flows';
 import { useEffect, useState } from 'react';
 import FlowCreate from '@/components/Flows/FlowCreate';
 import { backendUrl } from '@/config/constant';
