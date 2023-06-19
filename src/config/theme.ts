@@ -87,12 +87,9 @@ const theme = createTheme({
         },
       },
     },
-    MuiBackdrop: {
+    MuiDialog: {
       styleOverrides: {
-        root: ({ ownerState }) => {
-          if (ownerState.className?.endsWith('MuiDialog-backdrop'))
-            return { backgroundColor: '#0F2440DE' };
-        },
+        root: { backgroundColor: '#0F2440DE' },
       },
     },
     MuiDialogContent: {
