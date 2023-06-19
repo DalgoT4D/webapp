@@ -13,8 +13,22 @@ import { Controller } from 'react-hook-form';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 
+export type DestinationSpec = {
+  type: string;
+  const?: unknown;
+  field: string;
+  title: string;
+  default: unknown;
+  airbyte_secret: boolean;
+  required: boolean;
+  enum?: Array<unknown>;
+  parent?: string;
+  specs?: Array<DestinationSpec>;
+  order: number;
+};
+
 export interface DestinationConfigInputprops {
-  specs: Array<any>;
+  specs: Array<DestinationSpec>;
   registerFormFieldValue: (...args: any) => any;
   control: any;
   setFormValue: (...args: any) => any;
@@ -28,7 +42,9 @@ export const DestinationConfigInput = ({
   setFormValue,
   unregisterFormField,
 }: DestinationConfigInputprops) => {
-  const [connectorSpecs, setConnectorSpecs] = useState<any>([]);
+  const [connectorSpecs, setConnectorSpecs] = useState<Array<DestinationSpec>>(
+    []
+  );
   const [showPasswords, setShowPasswords] = useState<any>({});
 
   const handleClickShowPassword = (field: string) => {
@@ -38,51 +54,58 @@ export const DestinationConfigInput = ({
   };
 
   const handleObjectFieldOnChange = (
-    dropDownVal: any,
+    dropDownVal: string,
     field: string,
     fieldOnChangeFunc: any
   ) => {
     fieldOnChangeFunc.onChange(dropDownVal);
 
     // Fetch the current selected spec of type object based on selection
-    const selectedSpec: any = connectorSpecs.find(
-      (ele: any) => ele.field === field
+    const selectedSpec = connectorSpecs.find(
+      (ele: DestinationSpec) => ele.field === field
     );
 
     // Filter all specs that are under selectedSpec and have parent as selectedSpec
     // Check if any child specs has type object
-    const filteredChildSpecs: any = [];
-    selectedSpec?.specs.forEach((ele: any) => {
-      if (ele?.parent === dropDownVal) {
-        // Check if the child has another level or not
-        if (ele?.specs && ele?.enum.length === 0) {
-          ele.specs.forEach((childEle: any) => {
-            filteredChildSpecs.push({ ...childEle, order: ele.order });
-          });
-        } else {
-          filteredChildSpecs.push(ele);
+    const filteredChildSpecs: Array<DestinationSpec> = [];
+    if (selectedSpec && selectedSpec.specs) {
+      selectedSpec.specs.forEach((ele: DestinationSpec) => {
+        if (ele.parent === dropDownVal) {
+          // Check if the child has another level or not
+          if (ele.specs && ele.enum && ele.enum.length === 0) {
+            ele.specs.forEach((childEle: DestinationSpec) => {
+              filteredChildSpecs.push({ ...childEle, order: ele.order });
+            });
+          } else {
+            filteredChildSpecs.push(ele);
+          }
         }
-      }
-    });
+      });
+    }
 
     // Set the order of child specs to be displayed at correct position
-    filteredChildSpecs.forEach((ele: any) => {
-      ele.order = selectedSpec.order;
+    filteredChildSpecs.forEach((ele: DestinationSpec) => {
+      ele.order = selectedSpec?.order || -1;
     });
     // Update the specs state
 
     // Find the specs that will have parent in the following enum array
-    const enumsToRemove: string[] = selectedSpec?.enum.filter(
-      (ele: any) => ele !== dropDownVal
-    );
+    const enumsToRemove =
+      (selectedSpec &&
+        selectedSpec.enum &&
+        selectedSpec.enum.filter((ele) => ele !== dropDownVal)) ||
+      [];
 
     const tempSpecs = connectorSpecs
-      .filter((sp: any) => !enumsToRemove.includes(sp?.parent))
+      .filter(
+        (sp: DestinationSpec) => sp.parent && !enumsToRemove.includes(sp.parent)
+      )
       .concat(filteredChildSpecs);
 
     // Unregister the form fields that have parent in enumsToRemove
-    connectorSpecs.forEach((sp: any) => {
-      if (enumsToRemove.includes(sp?.parent)) unregisterFormField(sp?.field);
+    connectorSpecs.forEach((sp: DestinationSpec) => {
+      if (sp.parent && enumsToRemove.includes(sp.parent))
+        unregisterFormField(sp.field);
     });
 
     setConnectorSpecs(tempSpecs);
@@ -95,12 +118,13 @@ export const DestinationConfigInput = ({
   useEffect(() => {
     const tempShowPasswords: any = {};
     specs.forEach((element) => {
-      if (element?.airbyte_secret) {
+      if (element.airbyte_secret) {
         tempShowPasswords[element.field] = false;
       }
     });
     setShowPasswords(tempShowPasswords);
   }, [specs]);
+
   return (
     <>
       {connectorSpecs
@@ -109,15 +133,15 @@ export const DestinationConfigInput = ({
           if (!input1.order) return -1;
           return input1.order - input2.order;
         })
-        ?.map((spec: any, idx: number) =>
-          spec?.type === 'string' ? (
-            spec?.const ? ( // type == string and a const selected value
+        ?.map((spec: DestinationSpec, idx: number) =>
+          spec.type === 'string' ? (
+            spec.const ? ( // type == string and a const selected value
               <React.Fragment key={idx}>
                 <TextField
                   sx={{ width: '100%' }}
                   label={spec.const}
                   variant="outlined"
-                  value={spec?.const}
+                  value={spec.const}
                   {...registerFormFieldValue(spec.field, {
                     required: spec.required,
                   })}
@@ -128,13 +152,13 @@ export const DestinationConfigInput = ({
               <React.Fragment key={idx}>
                 <TextField
                   sx={{ width: '100%' }}
-                  label={spec?.title}
+                  label={spec.title}
                   variant="outlined"
                   type={showPasswords[spec.field] ? 'text' : 'password'}
                   {...registerFormFieldValue(spec.field, {
                     required: spec.required,
                   })}
-                  defaultValue={spec?.default}
+                  defaultValue={spec.default}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -156,15 +180,15 @@ export const DestinationConfigInput = ({
                 ></TextField>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
-            ) : spec?.enum?.length > 0 ? ( // type == string and a dropdown select
+            ) : spec.enum && spec.enum.length > 0 ? ( // type == string and a dropdown select
               <React.Fragment key={idx}>
                 <Controller
                   name={spec.field}
                   control={control}
-                  rules={{ required: spec?.required }}
+                  rules={{ required: spec.required }}
                   render={({ field }) => (
                     <Autocomplete
-                      options={spec?.enum}
+                      options={spec.enum as unknown[]}
                       onChange={(e, data: any) => {
                         field.onChange(data);
                       }}
@@ -185,23 +209,23 @@ export const DestinationConfigInput = ({
               <React.Fragment key={idx}>
                 <TextField
                   sx={{ width: '100%' }}
-                  label={spec?.title}
+                  label={spec.title}
                   variant="outlined"
                   {...registerFormFieldValue(spec.field, {
                     required: spec.required,
                   })}
-                  defaultValue={spec?.default}
+                  defaultValue={spec.default}
                 ></TextField>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             )
-          ) : spec?.type === 'boolean' ? (
+          ) : spec.type === 'boolean' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={spec.field}
                 control={control}
                 rules={{ required: spec.required }}
-                defaultValue={spec?.default}
+                defaultValue={spec.default}
                 render={({ field: { value } }) => (
                   <Stack direction={'row'} alignItems="center" gap={'10%'}>
                     <Box>{spec.title}</Box>
@@ -216,7 +240,7 @@ export const DestinationConfigInput = ({
               />
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec?.type === 'array' ? (
+          ) : spec.type === 'array' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={spec.field}
@@ -233,31 +257,31 @@ export const DestinationConfigInput = ({
               />
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec?.type === 'integer' ? (
+          ) : spec.type === 'integer' ? (
             <React.Fragment key={idx}>
               <TextField
                 sx={{ width: '100%' }}
-                label={spec?.title}
+                label={spec.title}
                 variant="outlined"
                 {...registerFormFieldValue(spec.field, {
                   required: spec.required,
                   valueAsNumber: true,
                 })}
-                defaultValue={spec?.default}
+                defaultValue={spec.default}
                 type="number"
               ></TextField>
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec?.type === 'object' ? (
+          ) : spec.type === 'object' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={spec.field}
                 control={control}
-                rules={{ required: spec?.required }}
+                rules={{ required: spec.required }}
                 render={({ field }) => (
                   <Autocomplete
                     value={field.value}
-                    options={spec?.enum}
+                    options={spec.enum as any[]}
                     onChange={(e, data: any) => {
                       handleObjectFieldOnChange(data, spec.field, field);
                     }}
