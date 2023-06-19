@@ -29,6 +29,32 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          fontSize: '12px',
+          fontWeight: 700,
+          color: '#0F244054',
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          fontWeight: 600,
+          marginBottom: 10,
+          color: '#758397',
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          width: '100%',
+        },
+      },
+    },
+
     MuiListItemButton: {
       styleOverrides: {
         root: {

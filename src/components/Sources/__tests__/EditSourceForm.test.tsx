@@ -101,7 +101,7 @@ describe('Connections Setup', () => {
   });
 
   // ============================================================
-  it.only('renders the form and updates a value', async () => {
+  it('renders the form and updates a value', async () => {
     (global as any).fetch = jest
       .fn()
       // airbyte/source_definitions
