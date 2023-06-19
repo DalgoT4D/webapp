@@ -7,7 +7,7 @@ import {
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import { useForm } from 'react-hook-form';
-import userEvent from '@testing-library/user-event';
+// import userEvent from '@testing-library/user-event';
 
 const FormContainer = ({ mockSession, specs }: any) => {
   const { control } = useForm({
