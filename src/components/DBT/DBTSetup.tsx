@@ -6,6 +6,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpGet, httpPost } from '@/helpers/http';
 import CustomDialog from '../Dialog/CustomDialog';
+import Input from '../UI/Input/Input';
 
 interface DBTSetupProps {
   onCreateWorkspace: (...args: any) => any;
@@ -120,32 +121,37 @@ export const DBTSetup = ({
     return (
       <>
         <Box>
-          <TextField
+          <Input
             sx={{ width: '100%' }}
             data-testid="github-url"
             label="GitHub repo URL"
             variant="outlined"
-            {...register('gitrepoUrl', { required: true })}
+            register={register}
+            name="gitrepoUrl"
+            required
           />
         </Box>
         <Box sx={{ m: 2 }} />
         <Box>
-          <TextField
+          <Input
             sx={{ width: '100%' }}
             data-testid="github-pat"
             label="Personal access token"
             variant="outlined"
-            {...register('gitrepoAccessToken', { required: false })}
+            register={register}
+            name="gitrepoAccessToken"
           />
         </Box>
         <Box sx={{ m: 2 }} />
         <Box>
-          <TextField
+          <Input
             sx={{ width: '100%' }}
             data-testid="dbt-target-schema"
             label="dbt target schema"
             variant="outlined"
-            {...register('schema', { required: true })}
+            register={register}
+            name="schema"
+            required
           />
         </Box>
         <Box sx={{ m: 2 }} />
