@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Link, Divider } from '@mui/material';
+import { Box, Button, Link, Divider } from '@mui/material';
 import { signIn, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 
@@ -11,6 +11,7 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
+import Input from '@/components/UI/Input/Input';
 
 export const Login = () => {
   const { register, handleSubmit } = useForm();
@@ -45,28 +46,33 @@ export const Login = () => {
       >
         <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
           <Box className={styles.Container}>
-            <TextField
-              sx={{ width: '100%', pb: 4, mt: 2 }}
+            <Input
+              sx={{ width: '100%', pb: 2 }}
               id="outlined-basic"
               data-testid="username"
               label="Business email"
+              placeholder="eg. user@domain.com"
               variant="outlined"
-              {...register('username', { required: true })}
+              required
+              register={register}
+              name="username"
             />
-
-            <TextField
+            <Input
+              required
               sx={{ width: '100%', pb: 4 }}
               id="outlined-password-input"
               data-testid="password"
               label="Password"
               type="password"
+              placeholder="Enter your password"
               autoComplete="current-password"
-              {...register('password', { required: true })}
+              register={register}
+              name="password"
             />
 
             <Button
               variant="contained"
-              sx={{ width: '100%', mb: 3 }}
+              sx={{ width: '100%', mb: 3, minHeight: '50px' }}
               type="submit"
               data-testid="submit"
             >

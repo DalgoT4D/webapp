@@ -1,12 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
-import { Autocomplete, Box, Button, TextField } from '@mui/material';
+import { Autocomplete, Box, Button } from '@mui/material';
 import { httpGet, httpPost } from '@/helpers/http';
 import { Controller, useForm } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import { SourceConfigInput } from './SourceConfigInput';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import Input from '../UI/Input/Input';
 
 interface CreateSourceFormProps {
   mutate: (...args: any) => any;
@@ -164,12 +165,14 @@ const CreateSourceForm = ({
     return (
       <>
         <Box sx={{ pt: 2, pb: 4 }}>
-          <TextField
+          <Input
             sx={{ width: '100%' }}
             label="Name"
             variant="outlined"
-            {...register('name', { required: true })}
-          ></TextField>
+            required
+            register={register}
+            name="name"
+          ></Input>
           <Box sx={{ m: 2 }} />
           <Controller
             name="sourceDef"
@@ -177,6 +180,7 @@ const CreateSourceForm = ({
             rules={{ required: true }}
             render={({ field }) => (
               <Autocomplete
+                id="sourceDef"
                 data-testid="autocomplete"
                 value={field.value}
                 options={sourceDefs}
@@ -189,7 +193,8 @@ const CreateSourceForm = ({
                 onChange={(e, data) => field.onChange(data)}
                 renderInput={(params) => {
                   return (
-                    <TextField
+                    <Input
+                      name="sourceDef"
                       {...params}
                       label="Select source type"
                       variant="outlined"
