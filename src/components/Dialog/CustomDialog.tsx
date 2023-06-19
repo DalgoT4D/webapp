@@ -30,7 +30,13 @@ const CustomDialog = ({
   loading,
 }: CustomDialogProps) => {
   return (
-    <Dialog open={show} onClose={handleClose}>
+    <Dialog
+      open={show}
+      onClose={handleClose}
+      PaperProps={{
+        sx: { borderRadius: "8px" },
+      }}
+    >
       <DialogTitle variant="h5" fontWeight={600} sx={{ pb: 1, pt: 4, pr: 2 }}>
         <Box display="flex" alignItems="center">
           <Box flexGrow={1}>{title}</Box>
