@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import {
   DestinationConfigInput,
@@ -7,7 +7,7 @@ import {
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import { useForm } from 'react-hook-form';
-// import userEvent from '@testing-library/user-event';
+import userEvent from '@testing-library/user-event';
 
 const FormContainer = ({ mockSession, specs }: any) => {
   const { control } = useForm({
@@ -154,5 +154,62 @@ describe('DestinationConfigInput', () => {
     expect(spec7).toBeInTheDocument();
     const spec8 = screen.getByLabelText('ObjectField');
     expect(spec8).toBeInTheDocument();
+  });
+
+  it('modifies a field', async () => {
+    const specs: Array<DestinationSpec> = [
+      {
+        type: 'object',
+        field: 'parentfield',
+        title: 'ParentField',
+        enum: ['option1', 'option2'],
+        airbyte_secret: false,
+        required: true,
+        order: 1,
+        specs: [
+          {
+            type: 'string',
+            field: 'child1',
+            title: 'Child1',
+            airbyte_secret: false,
+            required: true,
+            order: 2,
+            parent: 'option1',
+          } as DestinationSpec,
+          {
+            type: 'string',
+            field: 'child2',
+            title: 'Child2',
+            airbyte_secret: false,
+            required: true,
+            order: 2,
+            parent: 'option2',
+          } as DestinationSpec,
+        ],
+      } as DestinationSpec,
+    ];
+
+    // need a form container because we need a real "control" prop
+    render(<FormContainer mockSession={mockSession} specs={specs} />);
+    const parent = screen.getByLabelText('ParentField');
+    expect(parent).toBeInTheDocument();
+
+    const child1 = screen.queryByLabelText('Child1');
+    expect(child1).toBeNull();
+    const child2 = screen.queryByLabelText('Child2');
+    expect(child2).toBeNull();
+
+    const autocomplete = screen.getByTestId('autocomplete');
+    await fireEvent.change(parent, {
+      target: { value: 'option1' },
+    });
+    fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
+    await act(() => fireEvent.keyDown(autocomplete, { key: 'Enter' }));
+
+    const child1after = screen.queryByLabelText('Child1');
+    // now Child1 is visible
+    expect(child1after).not.toBeNull();
+    const child2after = screen.queryByLabelText('Child2');
+    expect(child2after).toBeNull();
   });
 });
