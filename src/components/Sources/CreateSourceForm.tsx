@@ -180,6 +180,7 @@ const CreateSourceForm = ({
             rules={{ required: true }}
             render={({ field }) => (
               <Autocomplete
+                id="sourceDef"
                 data-testid="autocomplete"
                 value={field.value}
                 options={sourceDefs}
@@ -193,6 +194,7 @@ const CreateSourceForm = ({
                 renderInput={(params) => {
                   return (
                     <Input
+                      name="sourceDef"
                       {...params}
                       label="Select source type"
                       variant="outlined"

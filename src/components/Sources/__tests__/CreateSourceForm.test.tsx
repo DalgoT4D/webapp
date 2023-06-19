@@ -68,7 +68,7 @@ describe('Connections Setup', () => {
     const cancelbutton = screen.getByTestId('cancelbutton');
     expect(cancelbutton).toBeInTheDocument();
 
-    const sourceName = screen.getByLabelText('Name');
+    const sourceName = screen.getByLabelText('Name*');
     expect(sourceName).toBeInTheDocument();
 
     await userEvent.click(cancelbutton);
@@ -148,7 +148,7 @@ describe('Connections Setup', () => {
     expect(createSourceSubmit).not.toHaveBeenCalled();
 
     // now put in the required field
-    const sourceName = screen.getByLabelText('Name');
+    const sourceName = screen.getByLabelText('Name*');
     await userEvent.type(sourceName, 'MYSOURCENAME');
     await userEvent.click(savebutton);
 
@@ -226,7 +226,7 @@ describe('Connections Setup', () => {
     const savebutton = screen.getByTestId('savebutton');
 
     // put in the name
-    const sourceName = screen.getByLabelText('Name');
+    const sourceName = screen.getByLabelText('Name*');
     await userEvent.type(sourceName, 'MYSOURCENAME');
 
     // but the "host" field is missing & required

@@ -17,14 +17,14 @@ export const Input: React.FC<InputProps> = ({
 }) => {
   return (
     <Box sx={sx}>
-      <InputLabel>
+      <InputLabel htmlFor={name}>
         {label}
         {required && '*'}
       </InputLabel>
       {register && name ? (
-        <TextField {...register(name, { required })} {...rest} />
+        <TextField {...register(name, { required })} {...rest} id={name} />
       ) : (
-        <TextField {...rest} />
+        <TextField {...rest} id={name} />
       )}
     </Box>
   );
