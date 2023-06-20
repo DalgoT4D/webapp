@@ -16,7 +16,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   anchorEl,
   open,
   handleClose,
-  handleEdit,
+  handleEdit = () => {},
   handleDeleteConnection,
 }) => (
   <Menu
