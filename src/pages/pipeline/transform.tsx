@@ -11,12 +11,14 @@ import {
   Card,
   CardActions,
   CardContent,
+  CircularProgress,
   Collapse,
   IconButton,
   Link,
   Typography,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import React, { useContext, useEffect, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Dbt from '@/assets/images/dbt.png';
@@ -45,6 +47,7 @@ const Transform = () => {
   const [dbtBlocks, setDbtBlocks] = useState<TargetBlocks>({});
   const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, create-profile, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
+  const [running, setRunning] = useState<boolean>(false);
   const [showConnectRepoDialog, setShowConnectRepoDialog] =
     useState<boolean>(false);
   const [showAddProfileDialog, setShowAddProfileDialog] =
@@ -212,21 +215,35 @@ const Transform = () => {
               >
                 Add Profile
               </Button>
+            ) : dbtSetupStage === 'complete' ? (
+              <>
+                {Object.keys(dbtBlocks).map((target) => (
+                  <DBTTarget
+                    key={target}
+                    setExpandLogs={setExpandLogs}
+                    setRunning={setRunning}
+                    setDbtRunLogs={setDbtSetupLogs}
+                    blocks={dbtBlocks[target]}
+                  />
+                ))}
+                <Button
+                  onClick={(event) => {
+                    console.log(event);
+                  }}
+                  variant="contained"
+                  color="info"
+                  sx={{ ml: 2, px: 0, minWidth: 32 }}
+                >
+                  <MoreHorizIcon />
+                </Button>
+              </>
             ) : (
               ''
             )}
           </Box>
         </Card>
         <Box>
-          {dbtSetupStage === 'complete' ? ( // show blocks list
-            Object.keys(dbtBlocks).map((target) => (
-              <DBTTarget
-                key={target}
-                target={target}
-                blocks={dbtBlocks[target]}
-              />
-            ))
-          ) : dbtSetupStage === 'create-profile' ? (
+          {dbtSetupStage === 'create-profile' ? (
             <DBTCreateProfile
               createdProfile={() => {
                 setDbtSetupStage('complete');
@@ -272,6 +289,7 @@ const Transform = () => {
             <Collapse in={expandLogs} unmountOnExit>
               {
                 <CardContent>
+                  {running && <CircularProgress />}
                   {dbtSetupLogs?.map((logMessage, idx) => (
                     <Box key={idx}>{logMessage}</Box>
                   ))}

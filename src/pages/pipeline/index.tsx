@@ -134,7 +134,7 @@ export default function Home() {
             Overview
           </Typography>
         </Box>
-        <Box sx={{ mt: 4, mx: 8 }}>
+        <Box sx={{ mt: 3, mx: 12 }}>
           <Typography
             variant="h6"
             sx={{
