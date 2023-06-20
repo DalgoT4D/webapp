@@ -98,7 +98,8 @@ export const DestinationConfigInput = ({
 
     const tempSpecs = connectorSpecs
       .filter(
-        (sp: DestinationSpec) => sp.parent && !enumsToRemove.includes(sp.parent)
+        (sp: DestinationSpec) =>
+          !sp.parent || !enumsToRemove.includes(sp.parent)
       )
       .concat(filteredChildSpecs);
 
