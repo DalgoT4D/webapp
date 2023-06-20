@@ -199,7 +199,6 @@ const CreateDestinationForm = ({
   }, [watchSelectedDestinationDef]);
 
   const handleClose = () => {
-    console.log('here in close form');
     reset();
     setDestinationDefSpecs([]);
     setShowForm(false);
