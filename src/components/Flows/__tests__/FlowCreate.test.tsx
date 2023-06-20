@@ -132,9 +132,7 @@ describe('Flow Creation', () => {
     expect(selectedConnections).toBeNull();
 
     // type name of connection into the autocomplete
-    const connOption = screen.getByRole('combobox', {
-      name: 'add connection',
-    });
+    const connOption = screen.getByLabelText('Connections*');
     expect(connOption).toBeInTheDocument();
     fireEvent.change(connOption, { target: { value: 'conn-1' } });
 
@@ -186,9 +184,7 @@ describe('Flow Creation', () => {
     expect(selectedConnections).toBeNull();
 
     // type name of connection into the autocomplete
-    const connOption = screen.getByRole('combobox', {
-      name: 'add connection',
-    });
+    const connOption = screen.getByLabelText('Connections*');
     expect(connOption).toBeInTheDocument();
     fireEvent.change(connOption, { target: { value: 'conn-1' } });
 
@@ -297,9 +293,7 @@ describe('Flow Creation', () => {
     expect(cronOption.value).not.toBe('foo');
 
     // type name of connection into the autocomplete
-    const connOption = screen.getByRole('combobox', {
-      name: 'add connection',
-    });
+    const connOption = screen.getByLabelText('Connections*');
     expect(connOption).toBeInTheDocument();
     fireEvent.change(connOption, { target: { value: 'conn-1' } });
 
@@ -389,9 +383,7 @@ describe('Flow Creation', () => {
     expect(cronOption.value).toBe('daily');
 
     // type name of connection into the autocomplete
-    const connOption = screen.getByRole('combobox', {
-      name: 'add connection',
-    });
+    const connOption = screen.getByLabelText('Connections*');
     expect(connOption).toBeInTheDocument();
     fireEvent.change(connOption, { target: { value: 'conn-1' } });
 
@@ -474,9 +466,7 @@ describe('Flow Creation', () => {
     expect(cronOption.value).toBe('weekly');
 
     // type name of connection into the autocomplete
-    const connOption = screen.getByRole('combobox', {
-      name: 'add connection',
-    });
+    const connOption = screen.getByLabelText('Connections*');
     expect(connOption).toBeInTheDocument();
     fireEvent.change(connOption, { target: { value: 'conn-1' } });
 

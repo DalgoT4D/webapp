@@ -41,11 +41,11 @@ describe('dbt Setup', () => {
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => { }}
-          setLogs={() => { }}
-          setExpandLogs={() => { }}
+          onCreateWorkspace={() => {}}
+          setLogs={() => {}}
+          setExpandLogs={() => {}}
           showDialog={true}
-          setShowDialog={() => { }}
+          setShowDialog={() => {}}
         />
       </SessionProvider>
     );
@@ -66,38 +66,36 @@ describe('dbt Setup', () => {
   });
 
   it('submits the form', async () => {
-
     const mockedFetch = jest.fn().mockResolvedValueOnce({
       ok: true,
-      json: jest.fn().mockResolvedValueOnce(
-        {
-          task_id: 'fake-task-id',
-        }
-      )
+      json: jest.fn().mockResolvedValueOnce({
+        task_id: 'fake-task-id',
+      }),
     });
     (global as any).fetch = mockedFetch;
 
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => { }}
-          setLogs={() => { }}
-          setExpandLogs={() => { }}
+          onCreateWorkspace={() => {}}
+          setLogs={() => {}}
+          setExpandLogs={() => {}}
           showDialog={true}
-          setShowDialog={() => { }}
+          setShowDialog={() => {}}
         />
       </SessionProvider>
     );
-    const urlinputfield = screen.getByLabelText('GitHub repo URL');
-    await userEvent.type(urlinputfield, "some url");
+    const urlinputfield = screen.getByLabelText('GitHub repo URL*');
 
-    const dbttaregtschema = screen.getByLabelText('dbt target schema');
-    await userEvent.type(dbttaregtschema, "some schema");
+    await userEvent.type(urlinputfield, 'some url');
+
+    const dbttaregtschema = screen.getByLabelText('dbt target schema*');
+
+    await userEvent.type(dbttaregtschema, 'some schema');
 
     const savebutton = screen.getByTestId('save-github-url');
     await userEvent.click(savebutton);
 
     expect(mockedFetch).toHaveBeenCalled();
-
   });
 });
