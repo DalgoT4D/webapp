@@ -1,4 +1,4 @@
-import { Autocomplete, Box, Button, TextField } from '@mui/material';
+import { Autocomplete, Box, Button } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { Controller, useForm } from 'react-hook-form';
@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { SourceConfigInput } from './SourceConfigInput';
+import Input from '../UI/Input/Input';
 
 interface EditSourceFormProps {
   showForm: boolean;
@@ -224,12 +225,14 @@ const EditSourceForm = ({
     return (
       <>
         <Box sx={{ pt: 2, pb: 4 }}>
-          <TextField
+          <Input
             sx={{ width: '100%' }}
             label="Name"
             variant="outlined"
-            {...register('name', { required: true })}
-          ></TextField>
+            register={register}
+            name="name"
+            required
+          ></Input>
           <Box sx={{ m: 2 }} />
           <>
             <Controller
@@ -238,12 +241,14 @@ const EditSourceForm = ({
               rules={{ required: true }}
               render={({ field }) => (
                 <Autocomplete
+                  id="sourceDef"
                   value={field.value}
                   options={sourceDefs}
                   onChange={(e, data) => field.onChange(data)}
                   renderInput={(params) => {
                     return (
-                      <TextField
+                      <Input
+                        name="sourceDef"
                         {...params}
                         label="Select source type"
                         variant="outlined"

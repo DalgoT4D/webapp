@@ -5,7 +5,6 @@ import {
   InputAdornment,
   Stack,
   Switch,
-  TextField,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import MultiTagInput from '../MultiTagInput';
@@ -165,12 +164,14 @@ export const DestinationConfigInput = ({
                   rules={{ required: spec?.required }}
                   render={({ field }) => (
                     <Autocomplete
+                      id={spec.field}
                       options={spec?.enum}
                       onChange={(e, data: any) => {
                         field.onChange(data);
                       }}
                       renderInput={(params) => (
-                        <TextField
+                        <Input
+                          name={spec.field}
                           {...params}
                           variant="outlined"
                           label={spec.title}
@@ -258,7 +259,7 @@ export const DestinationConfigInput = ({
                   <Autocomplete
                     id={spec.field}
                     value={field.value}
-                    options={spec?.enum}
+                    options={spec.enum}
                     onChange={(e, data: any) => {
                       handleObjectFieldOnChange(data, spec.field, field);
                     }}

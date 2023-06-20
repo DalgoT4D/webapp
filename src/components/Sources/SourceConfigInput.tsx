@@ -1,9 +1,10 @@
-import { Box, IconButton, InputAdornment, TextField } from '@mui/material';
+import { Box, IconButton, InputAdornment } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import MultiTagInput from '../MultiTagInput';
 import { Controller } from 'react-hook-form';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import Input from '../UI/Input/Input';
 
 export interface SourceConfigInputprops {
   specs: Array<any>;
@@ -45,14 +46,14 @@ export const SourceConfigInput = ({
           spec?.type === 'string' ? (
             spec.airbyte_secret ? (
               <React.Fragment key={idx}>
-                <TextField
+                <Input
                   sx={{ width: '100%' }}
                   label={spec?.title}
+                  register={registerFormFieldValue}
+                  name={`config.${spec.field}`}
                   variant="outlined"
                   type={showPasswords[`${spec.field}`] ? 'text' : 'password'}
-                  {...registerFormFieldValue(`config.${spec.field}`, {
-                    required: spec.required,
-                  })}
+                  required={spec.required}
                   value={spec?.default}
                   InputProps={{
                     endAdornment: (
@@ -74,20 +75,20 @@ export const SourceConfigInput = ({
                       </InputAdornment>
                     ),
                   }}
-                ></TextField>
+                ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             ) : (
               <React.Fragment key={idx}>
-                <TextField
+                <Input
                   sx={{ width: '100%' }}
                   label={spec?.title}
                   variant="outlined"
-                  {...registerFormFieldValue(`config.${spec.field}`, {
-                    required: spec.required,
-                  })}
+                  register={registerFormFieldValue}
+                  name={`config.${spec.field}`}
+                  required={spec.required}
                   value={spec?.default}
-                ></TextField>
+                ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             )
@@ -110,17 +111,16 @@ export const SourceConfigInput = ({
             </React.Fragment>
           ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
-              <TextField
+              <Input
                 sx={{ width: '100%' }}
                 label={spec?.title}
                 variant="outlined"
-                {...registerFormFieldValue(`config.${spec.field}`, {
-                  required: spec.required,
-                  valueAsNumber: true,
-                })}
+                register={registerFormFieldValue}
+                name={`config.${spec.field}`}
+                required={spec.required}
                 value={spec?.default}
                 type="number"
-              ></TextField>
+              ></Input>
               <Box sx={{ m: 2 }} />
             </React.Fragment>
           ) : (
