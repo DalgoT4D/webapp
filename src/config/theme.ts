@@ -77,6 +77,20 @@ const theme = createTheme({
         },
       },
     },
+    MuiSelect: {
+      styleOverrides: {
+        select: {
+          padding: '8px 14px',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0px 4px 8px rgba(9, 37, 64, 0.08);',
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
