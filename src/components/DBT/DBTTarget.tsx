@@ -59,6 +59,7 @@ export const DBTTarget = ({
     <>
       {runBlock.map((run) => (
         <Button
+          data-testid="runJob"
           key={run.blockName}
           variant="contained"
           sx={{ mr: 2 }}
