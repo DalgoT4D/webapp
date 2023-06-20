@@ -35,20 +35,6 @@ describe('DestinationConfigInput', () => {
     user: { email: 'a', name: 'Delta', image: 'c' },
   };
 
-  // Mock fetch to handle useEffect in components
-  beforeEach(() => {
-    const fakeResponse = {};
-    const mRes = { json: jest.fn().mockResolvedValueOnce(fakeResponse) };
-    const mockedFetch = jest.fn().mockResolvedValueOnce(mRes as any);
-    (global as any).fetch = mockedFetch;
-  });
-  afterEach(() => {
-    const fakeResponse = {};
-    const mRes = { json: jest.fn().mockResolvedValueOnce(fakeResponse) };
-    const mockedFetch = jest.fn().mockResolvedValueOnce(mRes as any);
-    (global as any).fetch = mockedFetch;
-  });
-
   // Tests
   it('renders the form', async () => {
     const specs: Array<DestinationSpec> = [
@@ -103,16 +89,16 @@ describe('DestinationConfigInput', () => {
         required: true,
         order: 5,
       } as DestinationSpec,
-      // {
-      //   type: 'array',
-      //   const: undefined,
-      //   field: 'arrayfield',
-      //   title: 'ArrayField',
-      //   default: undefined,
-      //   airbyte_secret: false,
-      //   required: true,
-      //   order: 6,
-      // } as DestinationSpec,
+      {
+        type: 'array',
+        const: undefined,
+        field: 'arrayfield',
+        title: 'ArrayField',
+        default: undefined,
+        airbyte_secret: false,
+        required: true,
+        order: 6,
+      } as DestinationSpec,
       {
         type: 'integer',
         const: undefined,
@@ -149,7 +135,8 @@ describe('DestinationConfigInput', () => {
     expect(spec4).toBeInTheDocument();
     const spec5 = screen.getByText('BooleanField');
     expect(spec5).toBeInTheDocument();
-    // TODO spec6
+    const spec6 = screen.getByTestId('arrayfield-multi-tag');
+    expect(spec6).toBeInTheDocument();
     const spec7 = screen.getByLabelText('IntegerField');
     expect(spec7).toBeInTheDocument();
     const spec8 = screen.getByLabelText('ObjectField');
