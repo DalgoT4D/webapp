@@ -55,8 +55,8 @@ const BarChart = ({ runs }: any) => {
       .attr('y', height)
       .attr('width', barWidth)
       .attr('height', 0) // Initially set the height to 0
-      .attr('fill', (d) => d.color)
-      .on('mouseover', (event, d) => {
+      .attr('fill', (d: any) => d.color)
+      .on('mouseover', (event, d: any) => {
         // Show tooltip on mouseover
         tooltip
           .style('visibility', 'visible')
