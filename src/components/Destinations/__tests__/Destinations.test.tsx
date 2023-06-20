@@ -3,8 +3,39 @@ import { SessionProvider } from 'next-auth/react';
 import { Destinations } from '../Destinations';
 import { Session } from 'next-auth';
 import { SWRConfig } from 'swr';
+import { Dialog } from '@mui/material';
 import '@testing-library/jest-dom';
-// import userEvent from '@testing-library/user-event';
+import userEvent from '@testing-library/user-event';
+
+// Mock create destination form component
+jest.mock('./../CreateDestinationForm', () => {
+  const MockCreateDestination = ({ showForm }: any) => {
+    return (
+      <Dialog open={true} data-testid="test-create-dest-form">
+        create-form-dialog-component
+      </Dialog>
+    );
+  };
+
+  MockCreateDestination.displayName = 'MockCreateDestination';
+
+  return MockCreateDestination;
+});
+
+// Mock edit destination form component
+jest.mock('./../EditDestinationForm', () => {
+  const MockEditDestination = ({ showForm }: any) => {
+    return (
+      <Dialog open={showForm} data-testid="test-edit-dest-form">
+        edit-form-dialog-component
+      </Dialog>
+    );
+  };
+
+  MockEditDestination.displayName = 'MockEditDestination';
+
+  return MockEditDestination;
+});
 
 describe('Destinations', () => {
   const mockSession: Session = {
@@ -99,6 +130,12 @@ describe('Destinations', () => {
     expect(database).toHaveTextContent('MYDATABASE');
     const username = screen.getByTestId('username');
     expect(username).toHaveTextContent('MYUSERNAME');
+
+    // Check if edit button renders the mocked component
+    const editWarehouseButton = screen.getByTestId('edit-destination');
+    await act(async () => await userEvent.click(editWarehouseButton));
+    const mockEditDestinationForm = screen.getByTestId('test-edit-dest-form');
+    expect(mockEditDestinationForm).toBeInTheDocument();
   });
 
   it('fetches a bigquery warehouse', async () => {
@@ -137,5 +174,47 @@ describe('Destinations', () => {
     expect(edit_button).toBeInTheDocument();
     const delete_button = screen.getByTestId('delete-destination');
     expect(delete_button).toBeInTheDocument();
+
+    // Check if edit button renders the mocked component
+    const editWarehouseButton = screen.getByTestId('edit-destination');
+    await act(async () => await userEvent.click(editWarehouseButton));
+    const mockEditDestinationForm = screen.getByTestId('test-edit-dest-form');
+    expect(mockEditDestinationForm).toBeInTheDocument();
+  });
+
+  it('warehouse not created', async () => {
+    const mockSWR_nowarehouse = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({
+        warehouses: [],
+      }),
+    });
+
+    await act(() => {
+      render(
+        <SWRConfig
+          value={{
+            dedupingInterval: 0,
+            fetcher: (resource) =>
+              mockSWR_nowarehouse().then((res: any) => res.json()),
+            provider: () => new Map(),
+          }}
+        >
+          <SessionProvider session={mockSession}>
+            <Destinations />
+          </SessionProvider>
+        </SWRConfig>
+      );
+    });
+
+    const addNewWarehouseButton = screen.getByTestId('add-new-destination');
+    expect(addNewWarehouseButton).toBeInTheDocument();
+
+    // Open create destination form
+    await act(async () => userEvent.click(addNewWarehouseButton));
+    const mockCreateDestinationForm = screen.getByTestId(
+      'test-create-dest-form'
+    );
+    expect(mockCreateDestinationForm).toBeInTheDocument();
   });
 });
