@@ -199,6 +199,7 @@ const CreateDestinationForm = ({
   }, [watchSelectedDestinationDef]);
 
   const handleClose = () => {
+    console.log('here in close form');
     reset();
     setDestinationDefSpecs([]);
     setShowForm(false);
@@ -248,6 +249,7 @@ const CreateDestinationForm = ({
           label="Name"
           variant="outlined"
           {...register('name', { required: true })}
+          data-testid="dest-name"
         ></TextField>
         <Box sx={{ m: 2 }} />
         <Controller
@@ -257,6 +259,7 @@ const CreateDestinationForm = ({
           render={({ field }) => (
             <Autocomplete
               options={destinationDefs}
+              data-testid="dest-type-autocomplete"
               value={field.value}
               onChange={(e, data) => field.onChange(data)}
               renderInput={(params) => (
@@ -291,14 +294,14 @@ const CreateDestinationForm = ({
         formContent={<CreateDestinationForm />}
         formActions={
           <Box>
-            <Button variant="contained" type="submit">
+            <Button variant="contained" type="submit" data-testid="save-button">
               Save changes and test
             </Button>
             <Button
               color="secondary"
               variant="outlined"
               onClick={handleClose}
-              data-testid="cancel"
+              data-testid="cancel-button"
               sx={{ marginLeft: '5px' }}
             >
               Cancel
