@@ -25,8 +25,10 @@ describe('Sources', () => {
         </SessionProvider>
       );
     });
-    const columns = screen.getAllByRole('columnheader');
-    expect(columns.length).toBe(3);
+
+    expect(
+      screen.getByText('No source found. Please create one')
+    ).toBeInTheDocument();
   });
 
   it('new source button renders', async () => {

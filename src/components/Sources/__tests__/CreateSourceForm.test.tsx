@@ -130,7 +130,7 @@ describe('Connections Setup', () => {
       await fireEvent.keyDown(autocomplete, { key: 'Enter' });
     });
 
-    const inputField = screen.getByLabelText('Host');
+    const inputField = screen.getByLabelText('Host*');
     expect(inputField).toBeInTheDocument();
     expect(inputField.value).toBe('localhost');
     expect(inputField.type).toBe('text');
@@ -212,7 +212,7 @@ describe('Connections Setup', () => {
       await fireEvent.keyDown(autocomplete, { key: 'Enter' });
     });
 
-    const inputField = screen.getByLabelText('Host');
+    const inputField = screen.getByLabelText('Host*');
     expect(inputField).toBeInTheDocument();
     expect(inputField.value).toBe('');
     expect(inputField.type).toBe('text');
