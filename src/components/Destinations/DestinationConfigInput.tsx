@@ -165,7 +165,7 @@ export const DestinationConfigInput = ({
                   render={({ field }) => (
                     <Autocomplete
                       id={spec.field}
-                      options={spec?.enum}
+                      options={spec.enum}
                       onChange={(e, data: any) => {
                         field.onChange(data);
                       }}
