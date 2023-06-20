@@ -89,7 +89,7 @@ describe('Connections Setup', () => {
     const cancelbutton = screen.getByTestId('cancelbutton');
     expect(cancelbutton).toBeInTheDocument();
 
-    const sourceName = screen.getByLabelText('Name') as HTMLInputElement;
+    const sourceName = screen.getByLabelText('Name*') as HTMLInputElement;
     expect(sourceName).toBeInTheDocument();
     expect(sourceName.value).toBe('MYSOURCENAME');
 
@@ -186,7 +186,7 @@ describe('Connections Setup', () => {
     const cancelbutton = screen.getByTestId('cancelbutton');
     expect(cancelbutton).toBeInTheDocument();
 
-    const sourceName = screen.getByLabelText('Name') as HTMLInputElement;
+    const sourceName = screen.getByLabelText('Name*') as HTMLInputElement;
     expect(sourceName).toBeInTheDocument();
     expect(sourceName.value).toBe('MYSOURCENAME');
 

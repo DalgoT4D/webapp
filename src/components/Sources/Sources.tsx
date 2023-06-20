@@ -1,7 +1,8 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext, useMemo } from 'react';
 import useSWR from 'swr';
 import { CircularProgress, Box, Button } from '@mui/material';
 import { List } from '../List/List';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { httpDelete } from '@/helpers/http';
@@ -12,13 +13,14 @@ import connectionIcon from '@/assets/icons/connection.svg';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Image from 'next/image';
+import { ActionsMenu } from '../UI/Menu/Menu';
 
 const headers = ['Source details', 'Type'];
 
 export const Sources = () => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const [rows, setRows] = useState<Array<Array<string>>>([]);
+
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/sources`
   );
@@ -30,15 +32,27 @@ export const Sources = () => {
     useState<boolean>(false);
   const [sourceIdToEdit, setSourceIdToEdit] = useState<string>('');
   const [sourceToBeDeleted, setSourceToBeDeleted] = useState<any>(null);
-
-  const handleEditSource = (sourceId: string) => {
-    setSourceIdToEdit(sourceId);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const handleEditSource = () => {
+    handleClose();
     setShowEditSourceDialog(true);
   };
 
-  useEffect(() => {
+  const open = Boolean(anchorEl);
+  const handleClick = (sourceId: string, event: HTMLElement | null) => {
+    setSourceIdToEdit(sourceId);
+    setSourceToBeDeleted(sourceId);
+    setAnchorEl(event);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  let rows = [];
+
+  rows = useMemo(() => {
     if (data && data.length >= 0) {
-      const rows = data.map((source: any, idx: number) => [
+      return data.map((source: any, idx: number) => [
         <Box key={idx} sx={{ display: 'flex', alignItems: 'center' }}>
           <Image
             style={{ marginRight: 10 }}
@@ -49,37 +63,33 @@ export const Sources = () => {
         </Box>,
         source.sourceName,
 
-        <Box
-          sx={{ justifyContent: 'end', display: 'flex', gap: '5px' }}
-          key={'box-' + idx}
-        >
+        <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
           <Button
+            aria-controls={open ? 'basic-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? 'true' : undefined}
+            onClick={(event) =>
+              handleClick(source.sourceId, event.currentTarget)
+            }
             variant="contained"
-            onClick={() => handleEditSource(source?.sourceId)}
-            key={'edit-' + idx}
+            key={'menu-' + idx}
+            color="info"
+            sx={{ px: 0, minWidth: 32 }}
           >
-            Edit
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => handleDeleteSource(source)}
-            key={'del-' + idx}
-            sx={{ backgroundColor: '#d84141' }}
-          >
-            Delete
+            <MoreHorizIcon />
           </Button>
         </Box>,
       ]);
-      setRows(rows);
     }
+    return [];
   }, [data]);
 
   const handleClickOpen = () => {
     setShowCreateSourceDialog(true);
   };
 
-  const handleDeleteSource = (source: any) => {
-    setSourceToBeDeleted(source);
+  const handleDeleteSource = () => {
+    handleClose();
     setShowConfirmDeleteDialog(true);
   };
 
@@ -88,12 +98,9 @@ export const Sources = () => {
     setShowConfirmDeleteDialog(false);
   };
 
-  const deleteSource = async (source: any) => {
+  const deleteSource = async (sourceId: any) => {
     try {
-      const response = await httpDelete(
-        session,
-        `airbyte/sources/${source.sourceId}`
-      );
+      const response = await httpDelete(session, `airbyte/sources/${sourceId}`);
       if (response.success) {
         successToast('Source deleted', [], globalContext);
         mutate();
@@ -113,6 +120,14 @@ export const Sources = () => {
 
   return (
     <>
+      <ActionsMenu
+        anchorEl={anchorEl}
+        open={open}
+        handleClose={handleClose}
+        elementId={sourceToBeDeleted}
+        handleEdit={handleEditSource}
+        handleDeleteConnection={handleDeleteSource}
+      />
       <CreateSourceForm
         mutate={mutate}
         showForm={showCreateSourceDialog}

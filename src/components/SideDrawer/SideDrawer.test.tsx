@@ -17,7 +17,7 @@ describe('Side drawer', () => {
   it('renders ', () => {
     render(<SideDrawer />);
     expect(screen.getAllByTestId('listButton').at(0)).toHaveTextContent(
-      'Data pipeline'
+      'Pipeline overview'
     );
   });
 

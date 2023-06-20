@@ -80,26 +80,16 @@ describe('Connections Setup', () => {
     expect(addNewConnectionButton).toBeInTheDocument();
   });
 
-  it('check connection list headers', () => {
+  it('check empty list', () => {
     render(
       <SessionProvider session={mockSession}>
         <Connections />
       </SessionProvider>
     );
 
-    const connectionsTable = screen.getByRole('table');
-    const connectionsTableRows = within(connectionsTable).getAllByRole('row');
-    expect(connectionsTableRows.length).toBeGreaterThanOrEqual(1);
-
-    // List headers
-    const headerCells = within(connectionsTableRows[0]).getAllByRole(
-      'columnheader'
-    );
-    expect(headerCells.length).toBe(4);
-    expect(headerCells[0].textContent).toBe('Connection details');
-    expect(headerCells[1].textContent).toBe('Source → Destination');
-    expect(headerCells[2].textContent).toBe('Last sync');
-    expect(headerCells[3].textContent).toBe('Actions');
+    expect(
+      screen.getByText('No connection found. Please create one')
+    ).toBeInTheDocument();
   });
 
   it('check connections list', async () => {

@@ -1,4 +1,4 @@
-import { Autocomplete, Box, Button, TextField } from '@mui/material';
+import { Autocomplete, Box, Button } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { DestinationConfigInput } from './DestinationConfigInput';
@@ -7,6 +7,7 @@ import { httpGet, httpPost } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
+import Input from '../UI/Input/Input';
 
 interface CreateDestinationFormProps {
   mutate: (...args: any) => any;
@@ -233,12 +234,14 @@ const CreateDestinationForm = ({
   const CreateDestinationForm = () => {
     return (
       <Box sx={{ pt: 2, pb: 4 }}>
-        <TextField
+        <Input
           sx={{ width: '100%' }}
           label="Name"
           variant="outlined"
-          {...register('name', { required: true })}
-        ></TextField>
+          register={register}
+          name="name"
+          required
+        ></Input>
         <Box sx={{ m: 2 }} />
         <Controller
           name="destinationDef"
@@ -246,11 +249,13 @@ const CreateDestinationForm = ({
           rules={{ required: true }}
           render={({ field }) => (
             <Autocomplete
+              id="destinationDef"
               options={destinationDefs}
               value={field.value}
               onChange={(e, data) => field.onChange(data)}
               renderInput={(params) => (
-                <TextField
+                <Input
+                  name="destinationDef"
                   {...params}
                   label="Select destination type"
                   variant="outlined"
@@ -293,7 +298,7 @@ const CreateDestinationForm = ({
             >
               Cancel
             </Button>
-            {setupLogs && (
+            {setupLogs.length > 0 && (
               <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
                 {setupLogs.map((logmessage, idx) => (
                   <Box key={idx}>{logmessage}</Box>
