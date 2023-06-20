@@ -38,7 +38,7 @@ jest.mock('./CreateConnectionForm', () => {
 jest.mock('./../Dialog/ConfirmationDialog', () => {
   const MockConfirmationDialog = ({ show }: any) => {
     return (
-      <Dialog open={show} data-testid="test-create-conn-form">
+      <Dialog open={show} data-testid="test-confirm-dialog">
         confirmation-dialog-component
       </Dialog>
     );
