@@ -14,13 +14,20 @@ interface CreateDestinationFormProps {
   setShowForm: (...args: any) => any;
 }
 
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+};
+
 const CreateDestinationForm = ({
   showForm,
   setShowForm,
   mutate,
 }: CreateDestinationFormProps) => {
   const { data: session }: any = useSession();
-  const [destinationDefs, setDestinationDefs] = useState([]);
+  const [destinationDefs, setDestinationDefs] = useState<
+    Array<AutoCompleteOption>
+  >([]);
   const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>(
     []
   );
@@ -39,7 +46,7 @@ const CreateDestinationForm = ({
   } = useForm({
     defaultValues: {
       name: '',
-      destinationDef: { id: '', label: '' },
+      destinationDef: { id: '', label: '' } as AutoCompleteOption,
       config: {},
     },
   });
@@ -54,10 +61,13 @@ const CreateDestinationForm = ({
             session,
             'airbyte/destination_definitions'
           );
-          const destinationDefRows = data?.map((element: any) => ({
-            label: element.name,
-            id: element.destinationDefinitionId,
-          }));
+          const destinationDefRows: Array<AutoCompleteOption> = data?.map(
+            (element: any) =>
+              ({
+                label: element.name,
+                id: element.destinationDefinitionId,
+              } as AutoCompleteOption)
+          );
           setDestinationDefs(destinationDefRows);
         } catch (err: any) {
           console.error(err);
