@@ -122,6 +122,46 @@ describe('destination create form', () => {
               description: 'Password associated with the username.',
               airbyte_secret: true,
             },
+            ssl_mode: {
+              type: 'object',
+              oneOf: [
+                {
+                  title: 'verify-ca',
+                  required: ['mode', 'ca_certificate'],
+                  properties: {
+                    mode: {
+                      enum: ['verify-ca'],
+                      type: 'string',
+                      const: 'verify-ca',
+                      order: 0,
+                      default: 'verify-ca',
+                    },
+                    ca_certificate: {
+                      type: 'string',
+                      order: 1,
+                      title: 'CA certificate',
+                      multiline: true,
+                      description: 'CA certificate',
+                      airbyte_secret: true,
+                    },
+                    client_key_password: {
+                      type: 'string',
+                      order: 4,
+                      title: 'Client key password',
+                      description:
+                        'Password for keystorage. This field is optional. If you do not add it - the password will be generated automatically.',
+                      airbyte_secret: true,
+                    },
+                  },
+                  description: 'Verify-ca SSL mode.',
+                  additionalProperties: false,
+                },
+              ],
+              order: 7,
+              title: 'SSL modes',
+              description:
+                'SSL connection modes. \n <b>disable</b> - Chose this mode to disable encryption of communication between Airbyte and destination database\n <b>allow</b> - Chose this mode to enable encryption only when required by the source database\n <b>prefer</b> - Chose this mode to allow unencrypted connection only if the source database does not support encryption\n <b>require</b> - Chose this mode to always require encryption. If the source database server does not support encryption, connection will fail\n  <b>verify-ca</b> - Chose this mode to always require encryption and to verify that the source database server has a valid SSL certificate\n  <b>verify-full</b> - This is the most secure mode. Chose this mode to always require encryption and to verify the identity of the source database server\n See more information - <a href="https://jdbc.postgresql.org/documentation/head/ssl-client.html"> in the docs</a>.',
+            },
           },
           required: ['host'],
         }),
@@ -213,5 +253,17 @@ describe('destination create form', () => {
     expect(logLine1).toBeInTheDocument();
     const logLine2 = screen.getByText('log-message-line-1');
     expect(logLine2).toBeInTheDocument();
+
+    // Mock the api call in submit function, a success call and submit again
+    const createDestinationOnSubmitSuccess = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({
+        status: 'successs',
+      }),
+    });
+
+    (global as any).fetch = createDestinationOnSubmitSuccess;
+    await userEvent.click(saveButton);
+    expect(createDestinationOnSubmitSuccess).toHaveBeenCalled();
   });
 });

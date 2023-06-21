@@ -310,7 +310,7 @@ const CreateDestinationForm = ({
             >
               Cancel
             </Button>
-            {setupLogs.length > 0 && (
+            {setupLogs && setupLogs.length > 0 && (
               <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
                 {setupLogs.map((logmessage, idx) => (
                   <Box key={idx}>{logmessage}</Box>
