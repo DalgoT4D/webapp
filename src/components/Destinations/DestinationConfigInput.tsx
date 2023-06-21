@@ -159,7 +159,7 @@ export const DestinationConfigInput = ({
                   register={registerFormFieldValue}
                   name={spec.field}
                   required={spec.required}
-                  defaultValue={spec?.default}
+                  defaultValue={spec.default}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -217,7 +217,7 @@ export const DestinationConfigInput = ({
                   register={registerFormFieldValue}
                   name={spec.field}
                   required={spec.required}
-                  defaultValue={spec?.default}
+                  defaultValue={spec.default}
                 ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
@@ -269,7 +269,7 @@ export const DestinationConfigInput = ({
                 register={registerFormFieldValue}
                 name={spec.field}
                 required={spec.required}
-                defaultValue={spec?.default}
+                defaultValue={spec.default}
                 type="number"
               ></Input>
               <Box sx={{ m: 2 }} />
