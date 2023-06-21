@@ -15,7 +15,7 @@ jest.mock('next/router', () => ({
   },
 }));
 
-describe('destination create form', () => {
+describe('destination create form - fetch definitions', () => {
   const mockSession: Session = {
     expires: 'false',
     user: { email: 'a' },
@@ -23,21 +23,17 @@ describe('destination create form', () => {
 
   const setShowForm = jest.fn();
 
-  it('initial render of the form', async () => {
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce([
-        {
-          name: 'destination-def-name-1',
-          destinationDefinitionId: 'destination-def-id-1',
-        },
-        {
-          name: 'destination-def-name-2',
-          destinationDefinitionId: 'destination-def-id-2',
-        },
-      ]),
-    });
+  (global as any).fetch = jest.fn().mockResolvedValueOnce({
+    ok: true,
+    json: jest.fn().mockResolvedValueOnce([
+      {
+        name: 'destination-def-name-1',
+        destinationDefinitionId: 'destination-def-id-1',
+      },
+    ]),
+  });
 
+  it('initial render of the form', async () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
@@ -59,9 +55,29 @@ describe('destination create form', () => {
     const saveButton = screen.getByTestId('save-button');
     expect(saveButton).toBeInTheDocument();
 
-    // Form shouldn't submit if nothing is entered
+    // Form shouldn't submit if nothing is entered. Name is required
     userEvent.click(saveButton);
     expect(destinationName).toBeInTheDocument();
+    expect(destinationType).toBeInTheDocument();
+  });
+
+  it('cancel button closes the form', async () => {
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <CreateDestinationForm
+            mutate={() => {}}
+            showForm={true}
+            setShowForm={setShowForm}
+          />
+        </SessionProvider>
+      );
+    });
+
+    const destinationName = screen.getByTestId('dest-name');
+    expect(destinationName).toBeInTheDocument();
+
+    const destinationType = screen.getByTestId('dest-type-autocomplete');
     expect(destinationType).toBeInTheDocument();
 
     // Cancel button should close the form
@@ -70,8 +86,17 @@ describe('destination create form', () => {
     expect(destinationName).not.toBeInTheDocument();
     expect(destinationType).not.toBeInTheDocument();
   });
+});
 
-  it('renders destination config input & submit', async () => {
+describe('destination create form - definitions + specifications', () => {
+  const mockSession: Session = {
+    expires: 'false',
+    user: { email: 'a' },
+  };
+
+  const setShowForm = jest.fn();
+
+  beforeEach(() => {
     (global as any).fetch = jest
       .fn()
       .mockResolvedValueOnce({
@@ -102,25 +127,6 @@ describe('destination create form', () => {
               order: 0,
               title: 'Host',
               description: 'Hostname of the database.',
-            },
-            port: {
-              type: 'integer',
-              order: 1,
-              title: 'Port',
-              description: 'Port of the database.',
-            },
-            username: {
-              type: 'string',
-              order: 4,
-              title: 'User',
-              description: 'Username to use to access the database.',
-            },
-            password: {
-              type: 'string',
-              order: 5,
-              title: 'Password',
-              description: 'Password associated with the username.',
-              airbyte_secret: true,
             },
             ssl_mode: {
               type: 'object',
@@ -218,7 +224,9 @@ describe('destination create form', () => {
           required: ['host'],
         }),
       });
+  });
 
+  it('select destination definition to load specs', async () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
@@ -238,7 +246,8 @@ describe('destination create form', () => {
     let destinationDefInput: HTMLInputElement = within(
       destinationDefAutocomplete
     ).getByRole('combobox');
-    act(() => {
+
+    await act(() => {
       fireEvent.change(destinationDefInput, {
         target: {
           value: 'destination-def-name-2',
@@ -260,12 +269,8 @@ describe('destination create form', () => {
     expect(hostSpec).toBeInTheDocument();
     const dbNameSpec = screen.getByLabelText('DB Name');
     expect(dbNameSpec).toBeInTheDocument();
-    const portSpec = screen.getByLabelText('Port');
+    const portSpec = screen.getByLabelText('SSL modes');
     expect(portSpec).toBeInTheDocument();
-    const userNameSpec = screen.getByLabelText('User');
-    expect(userNameSpec).toBeInTheDocument();
-    const passwordSpec = screen.getByLabelText('Password');
-    expect(passwordSpec).toBeInTheDocument();
 
     // Mock the api call in submit function, a failed call
     const createDestinationOnSubmit = jest.fn().mockResolvedValueOnce({
@@ -293,6 +298,60 @@ describe('destination create form', () => {
     await userEvent.click(saveButton);
     expect(createDestinationOnSubmit).toHaveBeenCalled();
 
+    // Mock the api call in submit function, a success call and submit again
+  });
+
+  it('submit the form with check connection failure & show logs', async () => {
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <CreateDestinationForm
+            mutate={() => {}}
+            showForm={true}
+            setShowForm={setShowForm}
+          />
+        </SessionProvider>
+      );
+    });
+
+    // select destination definition
+    let destinationDefAutocomplete = screen.getByTestId(
+      'dest-type-autocomplete'
+    );
+    let destinationDefInput: HTMLInputElement = within(
+      destinationDefAutocomplete
+    ).getByRole('combobox');
+
+    await act(() => {
+      fireEvent.change(destinationDefInput, {
+        target: {
+          value: 'destination-def-name-2',
+        },
+      });
+    });
+
+    const selectDef2 = screen.getByText('destination-def-name-2'); // Replace 'Option 2' with the actual text of the second option
+    await act(async () => await fireEvent.click(selectDef2));
+
+    // Mock the check connectivity call in submit function, a failed call
+    const createDestinationOnSubmit = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({
+        status: 'failed',
+        logs: ['log-message-line-1', 'log-message-line-2'],
+      }),
+    });
+
+    (global as any).fetch = createDestinationOnSubmit;
+
+    const saveButton = screen.getByTestId('save-button');
+    // Enter required fields
+    const destNameInput = screen.getByLabelText('Name*');
+    const hostSpec = screen.getByLabelText('Host*');
+    await userEvent.type(destNameInput, 'test-dest');
+    await userEvent.type(hostSpec, 'test-host-sever-name');
+    await userEvent.click(saveButton);
+
     const request = createDestinationOnSubmit.mock.calls[0][1];
     const requestBody = JSON.parse(request.body);
 
@@ -305,17 +364,66 @@ describe('destination create form', () => {
     expect(logLine1).toBeInTheDocument();
     const logLine2 = screen.getByText('log-message-line-1');
     expect(logLine2).toBeInTheDocument();
+  });
 
-    // Mock the api call in submit function, a success call and submit again
-    const createDestinationOnSubmitSuccess = jest.fn().mockResolvedValueOnce({
+  it('submit the form with check connection success', async () => {
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <CreateDestinationForm
+            mutate={() => {}}
+            showForm={true}
+            setShowForm={setShowForm}
+          />
+        </SessionProvider>
+      );
+    });
+
+    // select destination definition
+    let destinationDefAutocomplete = screen.getByTestId(
+      'dest-type-autocomplete'
+    );
+    let destinationDefInput: HTMLInputElement = within(
+      destinationDefAutocomplete
+    ).getByRole('combobox');
+
+    await act(() => {
+      fireEvent.change(destinationDefInput, {
+        target: {
+          value: 'destination-def-name-2',
+        },
+      });
+    });
+
+    const selectDef2 = screen.getByText('destination-def-name-2'); // Replace 'Option 2' with the actual text of the second option
+    await act(async () => await fireEvent.click(selectDef2));
+
+    // Mock the check connectivity call in submit function, a failed call
+    const createDestinationOnSubmit = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce({
         status: 'successs',
       }),
     });
 
-    (global as any).fetch = createDestinationOnSubmitSuccess;
+    (global as any).fetch = createDestinationOnSubmit;
+
+    const saveButton = screen.getByTestId('save-button');
+    // Enter required fields
+    const destNameInput = screen.getByLabelText('Name*');
+    const hostSpec = screen.getByLabelText('Host*');
+    await userEvent.type(destNameInput, 'test-dest');
+    await userEvent.type(hostSpec, 'test-host-sever-name');
     await userEvent.click(saveButton);
-    expect(createDestinationOnSubmitSuccess).toHaveBeenCalled();
+
+    const request = createDestinationOnSubmit.mock.calls[0][1];
+    const requestBody = JSON.parse(request.body);
+
+    expect(requestBody.name).toBe('test-dest');
+    expect(requestBody.destinationDefId).toBe('destination-def-id-2');
+    expect(requestBody.config.host).toBe('test-host-sever-name');
+
+    await userEvent.click(saveButton);
+    expect(createDestinationOnSubmit).toHaveBeenCalled();
   });
 });
