@@ -795,20 +795,29 @@ describe('destination edit form - connectivity', () => {
     });
 
     // Mock check connectivity api
-    const checkConnectivityMock = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce({
-        status: 'succeeded',
-      }),
-    });
-    (global as any).fetch = checkConnectivityMock;
+    const checkConnectivityEditConnectionMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          status: 'succeeded',
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          success: 1,
+        }),
+      });
+
+    (global as any).fetch = checkConnectivityEditConnectionMock;
 
     // Hit save
     const saveButton = screen.getByTestId('save-button');
     await userEvent.click(saveButton);
 
     // Check request body
-    const request = checkConnectivityMock.mock.calls[0][1];
+    const request = checkConnectivityEditConnectionMock.mock.calls[0][1];
     const requestBody = JSON.parse(request.body);
 
     // Destination definition is not editable
@@ -817,7 +826,7 @@ describe('destination edit form - connectivity', () => {
     expect(requestBody.config.database).toBe('test-db');
     expect(requestBody.config.ssl_mode.mode).toBe('disable');
 
-    expect(checkConnectivityMock).toHaveBeenCalled();
+    expect(checkConnectivityEditConnectionMock).toHaveBeenCalledTimes(2);
   });
 
   it('submit the form with check connection failed & show logs', async () => {
@@ -865,6 +874,4 @@ describe('destination edit form - connectivity', () => {
     const logLine2 = screen.getByText('log-message-line-2');
     expect(logLine2).toBeInTheDocument();
   });
-
-  it('submit the form with check connection success', async () => {});
 });
