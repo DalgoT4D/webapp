@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import {
   DestinationConfigInput,
@@ -123,21 +123,23 @@ describe('DestinationConfigInput', () => {
     ];
 
     // need a form container because we need a real "control" prop
-    render(<FormContainer mockSession={mockSession} specs={specs} />);
+    act(() =>
+      render(<FormContainer mockSession={mockSession} specs={specs} />)
+    );
 
-    const spec1 = screen.getByLabelText('constvalue');
+    const spec1 = screen.getByLabelText('constvalue*');
     expect(spec1).toBeInTheDocument();
-    const spec2 = screen.getByLabelText('Password');
+    const spec2 = screen.getByLabelText('Password*');
     expect(spec2).toBeInTheDocument();
     const spec3 = screen.getByLabelText('MultipleHosts');
     expect(spec3).toBeInTheDocument();
-    const spec4 = screen.getByLabelText('StringField');
+    const spec4 = screen.getByLabelText('StringField*');
     expect(spec4).toBeInTheDocument();
     const spec5 = screen.getByText('BooleanField');
     expect(spec5).toBeInTheDocument();
     const spec6 = screen.getByTestId('arrayfield-multi-tag');
     expect(spec6).toBeInTheDocument();
-    const spec7 = screen.getByLabelText('IntegerField');
+    const spec7 = screen.getByLabelText('IntegerField*');
     expect(spec7).toBeInTheDocument();
     const spec8 = screen.getByLabelText('ObjectField');
     expect(spec8).toBeInTheDocument();
@@ -186,17 +188,46 @@ describe('DestinationConfigInput', () => {
     const child2 = screen.queryByLabelText('Child2');
     expect(child2).toBeNull();
 
-    const autocomplete = screen.getByTestId('autocomplete');
-    await fireEvent.change(parent, {
-      target: { value: 'option1' },
-    });
-    fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
-    await act(() => fireEvent.keyDown(autocomplete, { key: 'Enter' }));
+    const objectTypeAutocomplete = screen.getByTestId('autocomplete');
+    const objectTypeInput: HTMLInputElement = within(
+      objectTypeAutocomplete
+    ).getByRole('combobox');
 
-    const child1after = screen.queryByLabelText('Child1');
-    // now Child1 is visible
+    act(() => {
+      fireEvent.change(objectTypeInput, {
+        target: {
+          value: 'option1',
+        },
+      });
+    });
+
+    let selectOption = screen.getByText('option1'); // Replace 'Option 2' with the actual text of the second option
+    await act(async () => await fireEvent.click(selectOption));
+
+    let child1after = screen.getByText('Child1*');
+    // Child1 is visible
     expect(child1after).not.toBeNull();
-    const child2after = screen.queryByLabelText('Child2');
+    // Child2 should not be visible
+    let child2after = screen.queryByLabelText('Child2*');
+    expect(child2after).toBeNull();
+
+    // change option to option2
+    act(() => {
+      fireEvent.change(objectTypeInput, {
+        target: {
+          value: 'option2',
+        },
+      });
+    });
+
+    selectOption = screen.getByText('option2'); // Replace 'Option 2' with the actual text of the second option
+    await act(async () => await fireEvent.click(selectOption));
+
+    child1after = screen.getByText('Child2*');
+    // Child1 is visible
+    expect(child1after).not.toBeNull();
+    // Child2 should not be visible
+    child2after = screen.queryByLabelText('Child1*');
     expect(child2after).toBeNull();
   });
 });
