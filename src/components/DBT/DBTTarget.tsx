@@ -1,14 +1,10 @@
-import { DBTBlock } from '@/components/DBT/DBTBlock';
-import {
-  Box,
-  Card,
-  CardActions,
-  Collapse,
-  IconButton,
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Button, MenuItem, Select } from '@mui/material';
 
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { httpPost } from '@/helpers/http';
+import { useSession } from 'next-auth/react';
 
 export type DbtBlock = {
   blockName: string;
@@ -18,47 +14,77 @@ export type DbtBlock = {
 };
 
 type params = {
-  target: string;
   blocks: DbtBlock[];
+  setRunning: any;
+  setDbtRunLogs: any;
+  setExpandLogs: any;
 };
 
-export const DBTTarget = ({ target, blocks }: params) => {
+export const DBTTarget = ({
+  blocks,
+  setDbtRunLogs,
+  setRunning,
+  setExpandLogs,
+}: params) => {
+  const [selectedBlock, setSelectedBlock] = useState<string>('Select block');
+  const toastContext = useContext(GlobalContext);
+  const { data: session }: any = useSession();
+  const runBlock = blocks.filter((block) => block.action === 'run');
+  const otherBlocks = blocks.filter((block) => block.action !== 'run');
 
-  const [expandTarget, setExpandTarget] = useState<boolean>(false);
+  const runDbtJob = async function (selectedBlock: string) {
+    setRunning(true);
+    setExpandLogs(true);
+    setDbtRunLogs([]);
+
+    try {
+      const message = await httpPost(session, 'prefect/flows/dbt_run/', {
+        blockName: selectedBlock,
+      });
+      if (message?.status === 'success') {
+        successToast('Job ran successfully', [], toastContext);
+      } else {
+        errorToast('Job failed', [], toastContext);
+      }
+      setDbtRunLogs(message?.result);
+    } catch (err: any) {
+      console.error(err.cause);
+      errorToast(err.message, [], toastContext);
+    }
+
+    setRunning(false);
+  };
 
   return (
     <>
-      <Card sx={{
-        marginTop: '10px',
-        padding: '10px',
-        borderRadius: '8px',
-        color: '#092540',
-      }}>
-        <CardActions
-          sx={{ display: 'flex', justifyContent: 'space-between' }}
+      {runBlock.map((run) => (
+        <Button
+          data-testid="runJob"
+          key={run.blockName}
+          variant="contained"
+          sx={{ mr: 2 }}
+          onClick={() => runDbtJob(run.blockName)}
         >
-          <Box data-testid="title">{target}</Box>
-          <IconButton onClick={() => setExpandTarget(!expandTarget)} data-testid={'expand-' + target}>
-            <ExpandMoreIcon
-              sx={{
-                transform: !expandTarget ? 'rotate(0deg)' : 'rotate(180deg)',
-              }}
-            />
-          </IconButton>
-        </CardActions>
-        <Collapse in={expandTarget} unmountOnExit>
-          {
-            blocks.map((block: DbtBlock) => (
-              <DBTBlock
-                data-testid={'dbtblock-' + block.blockName}
-                key={block.blockName}
-                blockName={block.blockName}
-                action={block.action} />
-            ))
-          }
-        </Collapse>
-      </Card>
+          Run{' '}
+        </Button>
+      ))}
+      <Select
+        value={selectedBlock}
+        onChange={(event) => {
+          runDbtJob(event.target.value);
+          setSelectedBlock(event.target.value);
+        }}
+      >
+        <MenuItem value="Select block" disabled>
+          Select block
+        </MenuItem>
+        {otherBlocks.map((block) => (
+          <MenuItem
+            key={block.blockName}
+            value={block.blockName}
+          >{`DBT ${block.action}`}</MenuItem>
+        ))}
+      </Select>
     </>
-
-  )
-}
+  );
+};

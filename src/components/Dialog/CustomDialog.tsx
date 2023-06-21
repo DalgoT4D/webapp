@@ -30,8 +30,14 @@ const CustomDialog = ({
   loading,
 }: CustomDialogProps) => {
   return (
-    <Dialog open={show} onClose={handleClose}>
-      <DialogTitle>
+    <Dialog
+      open={show}
+      onClose={handleClose}
+      PaperProps={{
+        sx: { borderRadius: "8px" },
+      }}
+    >
+      <DialogTitle variant="h5" fontWeight={600} sx={{ pb: 1, pt: 4, pr: 2 }}>
         <Box display="flex" alignItems="center">
           <Box flexGrow={1}>{title}</Box>
           <Box>
@@ -42,20 +48,21 @@ const CustomDialog = ({
         </Box>
       </DialogTitle>
       <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ minWidth: '400px' }}>{formContent}</DialogContent>
+        <DialogContent sx={{ minWidth: '400px', py: 0 }}>
+          {formContent}
+        </DialogContent>
         {loading ? (
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'center',
-              padding: '1.5rem',
             }}
           >
             <CircularProgress data-testid="circularprogress" />
           </Box>
         ) : (
           <DialogActions
-            sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}
+            sx={{ justifyContent: 'flex-start', padding: 4, pt: 0 }}
           >
             {formActions}
           </DialogActions>

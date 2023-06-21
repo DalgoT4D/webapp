@@ -1,4 +1,4 @@
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { useContext, useState } from 'react';
@@ -9,6 +9,7 @@ import {
 } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 import CustomDialog from '../Dialog/CustomDialog';
+import Input from '../UI/Input/Input';
 
 interface DBTCreateProfileProps {
   createdProfile: (...args: any) => any;
@@ -61,22 +62,25 @@ export const DBTCreateProfile = ({
     return (
       <>
         <Box>
-          <TextField
+          <Input
             sx={{ width: '100%' }}
             data-testid="profilename"
             label="Profile name from dbt_project.yml"
             variant="outlined"
-            {...register('name', { required: true })}
+            register={register}
+            name="name"
+            required
           />
         </Box>
         <Box sx={{ m: 2 }} />
         <Box>
-          <TextField
+          <Input
             sx={{ width: '100%' }}
             data-testid="targetschema"
             label="Target schema in warehouse"
             variant="outlined"
-            {...register('target_configs_schema')}
+            register={register}
+            name="target_configs_schema"
           />
         </Box>
       </>
@@ -94,11 +98,7 @@ export const DBTCreateProfile = ({
         formContent={<AddDbtProfileForm />}
         formActions={
           <>
-            <Button
-              variant="contained"
-              type="submit"
-              data-testid="savebutton"
-            >
+            <Button variant="contained" type="submit" data-testid="savebutton">
               Save
             </Button>
             <Button

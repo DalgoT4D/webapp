@@ -10,7 +10,6 @@ import {
   Link,
   Stack,
   Switch,
-  TextField,
   Typography,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
@@ -18,6 +17,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpGet, httpPost } from '@/helpers/http';
+import Input from '../UI/Input/Input';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -191,19 +191,36 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
             </Typography>
             <Stack gap="12px">
               <Box>
-                <InputLabel sx={{ marginBottom: '5px' }} required={true}>
-                  Flow Name
-                </InputLabel>
-                <TextField
-                  sx={{ width: '100%' }}
+                <Input
+                  sx={{ width: '90%' }}
                   variant="outlined"
-                  {...register('name', { required: true })}
-                ></TextField>
+                  register={register}
+                  name="name"
+                  label="Flow name"
+                  required
+                ></Input>
               </Box>
               <Box>
-                <InputLabel sx={{ marginBottom: '5px' }}>
-                  Connections
-                </InputLabel>
+                <Autocomplete
+                  id="connections"
+                  data-testid="connectionautocomplete"
+                  value={currentSelectedConn}
+                  sx={{ marginBottom: '10px', width: '90%' }}
+                  options={connections}
+                  isOptionEqualToValue={(option: any, val: any) =>
+                    val && option?.id === val?.id
+                  }
+                  onChange={handleAddConnectionSelectChange}
+                  renderInput={(params) => (
+                    <Input
+                      {...params}
+                      name="connections"
+                      variant="outlined"
+                      label="Connections"
+                      required
+                    />
+                  )}
+                />
                 {fields.map((conn: FieldListElement, idx: number) => (
                   <Box
                     key={idx}
@@ -213,7 +230,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                       justifyContent: 'space-between',
                     }}
                   >
-                    <TextField
+                    <Input
                       data-testid={'selectedconn-' + idx}
                       sx={{ marginBottom: '10px', width: '90%' }}
                       value={conn.name}
@@ -225,23 +242,6 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                     </IconButton>
                   </Box>
                 ))}
-                <Autocomplete
-                  data-testid="connectionautocomplete"
-                  value={currentSelectedConn}
-                  sx={{ marginBottom: '10px', width: '90%' }}
-                  options={connections}
-                  isOptionEqualToValue={(option: any, val: any) =>
-                    val && option?.id === val?.id
-                  }
-                  onChange={handleAddConnectionSelectChange}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      variant="outlined"
-                      label="add connection"
-                    />
-                  )}
-                />
               </Box>
               <Box>
                 <InputLabel sx={{ marginBottom: '5px' }}>
@@ -276,6 +276,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                 rules={{ required: true }}
                 render={({ field }) => (
                   <Autocomplete
+                    id="cron"
                     data-testid="cronautocomplete"
                     options={[
                       { id: 'daily', label: 'daily' },
@@ -286,7 +287,8 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                       val && option?.id === val?.id
                     }
                     renderInput={(params) => (
-                      <TextField
+                      <Input
+                        name="cron"
                         {...params}
                         label="Select source type"
                         variant="outlined"
