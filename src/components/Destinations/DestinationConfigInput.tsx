@@ -140,7 +140,7 @@ export const DestinationConfigInput = ({
               <React.Fragment key={idx}>
                 <Input
                   sx={{ width: '100%' }}
-                  label={spec.const}
+                  label={spec.const as any}
                   variant="outlined"
                   value={spec.const}
                   register={registerFormFieldValue}
@@ -285,7 +285,7 @@ export const DestinationConfigInput = ({
                     data-testid="autocomplete"
                     id={spec.field}
                     value={field.value}
-                    options={spec.enum}
+                    options={spec.enum as any}
                     onChange={(e, data: any) => {
                       handleObjectFieldOnChange(data, spec.field, field);
                     }}

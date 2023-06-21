@@ -130,7 +130,7 @@ describe('Connections Setup', () => {
       await fireEvent.keyDown(autocomplete, { key: 'Enter' });
     });
 
-    const inputField: HTMLInputElement = screen.getByLabelText('Host');
+    const inputField: HTMLInputElement = screen.getByLabelText('Host*');
     expect(inputField).toBeInTheDocument();
     expect(inputField.value).toBe('localhost');
     expect(inputField.type).toBe('text');
