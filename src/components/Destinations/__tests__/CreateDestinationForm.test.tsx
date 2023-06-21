@@ -23,14 +23,16 @@ describe('destination create form - fetch definitions success', () => {
 
   const setShowForm = jest.fn();
 
-  (global as any).fetch = jest.fn().mockResolvedValueOnce({
-    ok: true,
-    json: jest.fn().mockResolvedValueOnce([
-      {
-        name: 'destination-def-name-1',
-        destinationDefinitionId: 'destination-def-id-1',
-      },
-    ]),
+  beforeEach(() => {
+    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce([
+        {
+          name: 'destination-def-name-1',
+          destinationDefinitionId: 'destination-def-id-1',
+        },
+      ]),
+    });
   });
 
   it('initial render of the form', async () => {
