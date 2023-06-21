@@ -1,8 +1,8 @@
-import { act, render, screen, within, fireEvent } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
-import userEvent from '@testing-library/user-event';
+// import userEvent from '@testing-library/user-event';
 import EditDestinationForm from '../EditDestinationForm';
 
 const pushMock = jest.fn();
