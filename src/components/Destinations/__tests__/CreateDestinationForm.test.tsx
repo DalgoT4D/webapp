@@ -90,6 +90,47 @@ describe('destination create form - fetch definitions success', () => {
   });
 });
 
+describe('destination create form - fetch definitions failure', () => {
+  const mockSession: Session = {
+    expires: 'false',
+    user: { email: 'a' },
+  };
+
+  const setShowForm = jest.fn();
+
+  beforeEach(() => {
+    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      ok: false,
+      json: jest.fn().mockResolvedValueOnce([
+        {
+          name: 'destination-def-name-1',
+          destinationDefinitionId: 'destination-def-id-1',
+        },
+      ]),
+    });
+  });
+
+  it('renders form without destination definitions', async () => {
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <CreateDestinationForm
+            mutate={() => {}}
+            showForm={true}
+            setShowForm={setShowForm}
+          />
+        </SessionProvider>
+      );
+    });
+
+    const destinationName = screen.getByTestId('dest-name');
+    expect(destinationName).toBeInTheDocument();
+
+    const destinationType = screen.getByTestId('dest-type-autocomplete');
+    expect(destinationType).toBeInTheDocument();
+  });
+});
+
 describe('destination create form - definitions + specifications', () => {
   const mockSession: Session = {
     expires: 'false',
@@ -366,6 +407,17 @@ describe('destination create form - definitions + specifications', () => {
     expect(logLine1).toBeInTheDocument();
     const logLine2 = screen.getByText('log-message-line-1');
     expect(logLine2).toBeInTheDocument();
+
+    // Mock the api call with response with ok: false
+    const createDestinationOnSubmitFail = jest.fn().mockResolvedValueOnce({
+      ok: false,
+      json: jest.fn().mockResolvedValueOnce({
+        status: 'failed',
+        logs: ['log-message-line-1', 'log-message-line-2'],
+      }),
+    });
+    (global as any).fetch = createDestinationOnSubmitFail;
+    await userEvent.click(saveButton);
   });
 
   it('submit the form with check connection success', async () => {
