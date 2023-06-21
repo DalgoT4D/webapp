@@ -28,7 +28,7 @@ export const sideMenu: MenuOption[] = [
   // },
   {
     index: 2,
-    title: 'Data pipeline',
+    title: 'Pipeline overview',
     path: '/pipeline',
     icon: (selected: boolean) => <PipelineIcon fill={getColor(selected)} />,
   },

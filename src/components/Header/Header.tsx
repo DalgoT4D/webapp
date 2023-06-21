@@ -1,4 +1,4 @@
-import { Box, Divider, Menu, MenuItem, Paper } from '@mui/material';
+import { Box, Menu, MenuItem, Paper, Typography } from '@mui/material';
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
 import LogoutIcon from '@/assets/icons/logout.svg';
@@ -59,9 +59,17 @@ export const Header = () => {
         }}
       >
         <Box sx={{ my: 0, py: 1, px: 2 }} onClick={handleClose}>
-          {session?.user?.email || 'no user'}
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
+              borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
+            }}
+          >
+            {session?.user?.email || 'no user'}
+          </Typography>
         </Box>
-        <Divider style={{ margin: 0 }} />
+
         <MenuItem onClick={() => handleSignout()}>
           <Image
             style={{ marginRight: 8 }}

@@ -77,9 +77,27 @@ const theme = createTheme({
         },
       },
     },
+    MuiSelect: {
+      styleOverrides: {
+        select: {
+          padding: '8px 14px',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0px 4px 8px rgba(9, 37, 64, 0.08);',
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
+          '&.MuiButton-contained.Mui-disabled': {
+            backgroundColor: 'rgba(0, 137, 123, 0.33)',
+            color: '#fff',
+          },
           boxShadow: 'unset',
           fontWeight: 700,
           textTransform: 'none',
