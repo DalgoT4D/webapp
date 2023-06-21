@@ -15,7 +15,7 @@ jest.mock('next/router', () => ({
   },
 }));
 
-describe('destination create form - fetch definitions', () => {
+describe('destination create form - fetch definitions success', () => {
   const mockSession: Session = {
     expires: 'false',
     user: { email: 'a' },
@@ -398,13 +398,20 @@ describe('destination create form - definitions + specifications', () => {
     const selectDef2 = screen.getByText('destination-def-name-2'); // Replace 'Option 2' with the actual text of the second option
     await act(async () => await fireEvent.click(selectDef2));
 
-    // Mock the check connectivity call in submit function, a failed call
-    const createDestinationOnSubmit = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce({
-        status: 'successs',
-      }),
-    });
+    // Mock the check connectivity call in submit function, a success call
+    // Also mock successfull create warehouse api call
+    const createDestinationOnSubmit = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          status: 'successs',
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({ success: 1 }),
+      });
 
     (global as any).fetch = createDestinationOnSubmit;
 
