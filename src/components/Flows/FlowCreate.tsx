@@ -184,6 +184,11 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                     <Autocomplete
                       id="connectionBlocks"
                       multiple
+                      ChipProps={{
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
+                        'data-testid': 'connectionchip',
+                      }}
                       data-testid="connectionautocomplete"
                       value={field.value}
                       sx={{ marginBottom: '10px', width: '90%' }}
