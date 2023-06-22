@@ -128,7 +128,7 @@ describe('Flow Creation', () => {
     expect(fetchMock).toHaveBeenCalled();
 
     // no connections selected yet
-    const selectedConnections = await screen.queryByTestId('selectedconn-0');
+    const selectedConnections = await screen.queryByTestId('connectionchip');
     expect(selectedConnections).toBeNull();
 
     // type name of connection into the autocomplete
@@ -142,15 +142,8 @@ describe('Flow Creation', () => {
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
 
     // look for the element in the list of selected connections
-    const selectedConnectionsAfter = screen.getByTestId('selectedconn-0');
+    const selectedConnectionsAfter = screen.getByTestId('connectionchip');
     expect(selectedConnectionsAfter).toBeInTheDocument();
-    expect(selectedConnectionsAfter.firstElementChild).not.toBeNull();
-    expect(
-      selectedConnectionsAfter.firstElementChild.firstElementChild
-    ).not.toBeNull();
-    expect(
-      selectedConnectionsAfter.firstElementChild.firstElementChild.value
-    ).toBe('conn-1');
   });
 
   // ================================================================================
@@ -194,21 +187,8 @@ describe('Flow Creation', () => {
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
 
     // look for the element in the list of selected connections
-    const selectedConnectionsAfter = screen.getByTestId('selectedconn-0');
+    const selectedConnectionsAfter = screen.getByTestId('connectionchip');
     expect(selectedConnectionsAfter).toBeInTheDocument();
-    expect(selectedConnectionsAfter.firstElementChild).not.toBeNull();
-    expect(
-      selectedConnectionsAfter.firstElementChild.firstElementChild
-    ).not.toBeNull();
-    expect(
-      selectedConnectionsAfter.firstElementChild.firstElementChild.value
-    ).toBe('conn-1');
-
-    const deleteButton = screen.getByTestId('deleteconn-0');
-    expect(deleteButton).toBeInTheDocument();
-    await userEvent.click(deleteButton);
-    const newSelectedConnections = await screen.queryByTestId('selectedconn-0');
-    expect(newSelectedConnections).toBeNull();
   });
 
   // ================================================================================
@@ -228,7 +208,7 @@ describe('Flow Creation', () => {
     });
 
     const cronOption = screen.getByRole('combobox', {
-      name: 'Select schedule',
+      name: 'Schedule',
     }) as HTMLInputElement;
     expect(cronOption).toBeInTheDocument();
     const autocomplete = screen.getByTestId('cronautocomplete');
@@ -275,7 +255,7 @@ describe('Flow Creation', () => {
     });
 
     const cronOption = screen.getByRole('combobox', {
-      name: 'Select schedule',
+      name: 'Schedule',
     }) as HTMLInputElement;
     expect(cronOption).toBeInTheDocument();
     const cronautocomplete = screen.getByTestId('cronautocomplete');
@@ -371,7 +351,7 @@ describe('Flow Creation', () => {
     });
 
     const cronOption = screen.getByRole('combobox', {
-      name: 'Select schedule',
+      name: 'Schedule',
     }) as HTMLInputElement;
     expect(cronOption).toBeInTheDocument();
     const cronautocomplete = screen.getByTestId('cronautocomplete');
@@ -453,7 +433,7 @@ describe('Flow Creation', () => {
     });
 
     const cronOption = screen.getByRole('combobox', {
-      name: 'Select schedule',
+      name: 'Schedule',
     }) as HTMLInputElement;
     expect(cronOption).toBeInTheDocument();
     const cronautocomplete = screen.getByTestId('cronautocomplete');

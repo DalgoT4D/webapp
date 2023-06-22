@@ -134,8 +134,12 @@ describe('Flow Creation', () => {
       ]),
     });
     (global as any).fetch = deleteFlowMock;
-    const deleteFlowButton = screen.getByTestId('btn-deleteflow-flow-0');
-    await userEvent.click(deleteFlowButton);
+    const optionsButton = screen.getAllByTestId('MoreHorizIcon')[0];
+    await userEvent.click(optionsButton);
+    const deleteButton = screen.getAllByRole('menuitem')[1];
+    await userEvent.click(deleteButton);
+    const confirmButton = screen.getByTestId('confirmbutton');
+    await userEvent.click(confirmButton);
     expect(deleteFlowMock).toHaveBeenCalled();
   });
 });
