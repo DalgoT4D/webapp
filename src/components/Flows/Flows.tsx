@@ -129,7 +129,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
         >
           <Image style={{ marginRight: 10 }} src={FlowIcon} alt="flow icon" />
           <Typography variant="h6" fontWeight={700}>
-            {`${flow?.name} | `}
+            {`${flow.name} | `}
           </Typography>
           <Typography
             variant="subtitle2"
@@ -152,7 +152,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
               fontWeight: 600,
               marginRight: '5px',
             }}
-            onClick={() => handleOpenFlowRunHistory(flow?.deploymentId)}
+            onClick={() => handleOpenFlowRunHistory(flow.deploymentId)}
           >
             last logs
           </Button>
@@ -160,13 +160,13 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
             sx={{ mr: 1 }}
             data-testid={'btn-quickrundeployment-' + flow.name}
             variant="contained"
-            disabled={runningDeploymentId === flow?.deploymentId}
+            disabled={runningDeploymentId === flow.deploymentId}
             onClick={() => {
-              setRunningDeploymentId(flow?.deploymentId);
-              handleQuickRunDeployment(flow?.deploymentId);
+              setRunningDeploymentId(flow.deploymentId);
+              handleQuickRunDeployment(flow.deploymentId);
             }}
           >
-            {runningDeploymentId === flow?.deploymentId ? (
+            {runningDeploymentId === flow.deploymentId ? (
               <Image
                 src={SyncIcon}
                 className={styles.SyncIcon}
@@ -181,7 +181,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
             onClick={(event) =>
-              handleClick(flow?.deploymentId, event.currentTarget)
+              handleClick(flow.deploymentId, event.currentTarget)
             }
             variant="contained"
             key={'menu-' + idx}
