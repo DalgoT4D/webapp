@@ -129,7 +129,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
         >
           <Image style={{ marginRight: 10 }} src={FlowIcon} alt="flow icon" />
           <Typography variant="h6" fontWeight={700}>
-            {`${flow.name} | `}
+            {`${flow?.name} | `}
           </Typography>
           <Typography
             variant="subtitle2"
