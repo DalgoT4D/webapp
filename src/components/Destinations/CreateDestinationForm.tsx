@@ -15,13 +15,20 @@ interface CreateDestinationFormProps {
   setShowForm: (...args: any) => any;
 }
 
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+};
+
 const CreateDestinationForm = ({
   showForm,
   setShowForm,
   mutate,
 }: CreateDestinationFormProps) => {
   const { data: session }: any = useSession();
-  const [destinationDefs, setDestinationDefs] = useState([]);
+  const [destinationDefs, setDestinationDefs] = useState<
+    Array<AutoCompleteOption>
+  >([]);
   const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>(
     []
   );
@@ -40,7 +47,7 @@ const CreateDestinationForm = ({
   } = useForm({
     defaultValues: {
       name: '',
-      destinationDef: { id: '', label: '' },
+      destinationDef: { id: '', label: '' } as AutoCompleteOption,
       config: {},
     },
   });
@@ -55,10 +62,13 @@ const CreateDestinationForm = ({
             session,
             'airbyte/destination_definitions'
           );
-          const destinationDefRows = data?.map((element: any) => ({
-            label: element.name,
-            id: element.destinationDefinitionId,
-          }));
+          const destinationDefRows: Array<AutoCompleteOption> = data?.map(
+            (element: any) =>
+              ({
+                label: element.name,
+                id: element.destinationDefinitionId,
+              } as AutoCompleteOption)
+          );
           setDestinationDefs(destinationDefRows);
         } catch (err: any) {
           console.error(err);
@@ -241,6 +251,7 @@ const CreateDestinationForm = ({
           register={register}
           name="name"
           required
+          data-testid="dest-name"
         ></Input>
         <Box sx={{ m: 2 }} />
         <Controller
@@ -251,6 +262,7 @@ const CreateDestinationForm = ({
             <Autocomplete
               id="destinationDef"
               options={destinationDefs}
+              data-testid="dest-type-autocomplete"
               value={field.value}
               onChange={(e, data) => field.onChange(data)}
               renderInput={(params) => (
@@ -286,19 +298,19 @@ const CreateDestinationForm = ({
         formContent={<CreateDestinationForm />}
         formActions={
           <Box>
-            <Button variant="contained" type="submit">
+            <Button variant="contained" type="submit" data-testid="save-button">
               Save changes and test
             </Button>
             <Button
               color="secondary"
               variant="outlined"
               onClick={handleClose}
-              data-testid="cancel"
+              data-testid="cancel-button"
               sx={{ marginLeft: '5px' }}
             >
               Cancel
             </Button>
-            {setupLogs.length > 0 && (
+            {setupLogs && setupLogs.length > 0 && (
               <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
                 {setupLogs.map((logmessage, idx) => (
                   <Box key={idx}>{logmessage}</Box>

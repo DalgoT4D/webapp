@@ -210,6 +210,7 @@ const EditDestinationForm = ({
             [],
             []
           );
+
           setDestinationDefSpecs(specsConfigFields);
 
           // Prefill the warehouse name
@@ -313,6 +314,7 @@ const EditDestinationForm = ({
           register={register}
           name="name"
           required
+          data-testid="dest-name"
         ></Input>
         <Box sx={{ m: 2 }} />
         <Controller
@@ -323,6 +325,7 @@ const EditDestinationForm = ({
             <Autocomplete
               id="destinationDef"
               options={destinationDefs}
+              data-testid="dest-type-autocomplete"
               value={field.value}
               onChange={(e, data) => field.onChange(data)}
               renderInput={(params) => (
@@ -358,7 +361,7 @@ const EditDestinationForm = ({
         formContent={<EditDestinationForm />}
         formActions={
           <Box>
-            <Button variant="contained" type="submit">
+            <Button variant="contained" type="submit" data-testid="save-button">
               Save changes and test
             </Button>
             <Button

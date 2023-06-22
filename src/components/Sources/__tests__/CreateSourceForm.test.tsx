@@ -130,7 +130,7 @@ describe('Connections Setup', () => {
       await fireEvent.keyDown(autocomplete, { key: 'Enter' });
     });
 
-    const inputField = screen.getByLabelText('Host*');
+    const inputField: HTMLInputElement = screen.getByLabelText('Host*');
     expect(inputField).toBeInTheDocument();
     expect(inputField.value).toBe('localhost');
     expect(inputField.type).toBe('text');
@@ -212,14 +212,17 @@ describe('Connections Setup', () => {
       await fireEvent.keyDown(autocomplete, { key: 'Enter' });
     });
 
-    const inputField = screen.getByLabelText('Host*');
+    const inputField: HTMLInputElement = screen.getByLabelText('Host*');
     expect(inputField).toBeInTheDocument();
     expect(inputField.value).toBe('');
     expect(inputField.type).toBe('text');
 
     const createSourceSubmit = jest.fn().mockResolvedValueOnce({
       ok: true,
-      json: jest.fn().mockResolvedValueOnce({}),
+      json: jest.fn().mockResolvedValueOnce({
+        status: 'failed',
+        logs: ['log-message-line-1', 'log-message-line-2'],
+      }),
     });
     (global as any).fetch = createSourceSubmit;
 
@@ -244,5 +247,11 @@ describe('Connections Setup', () => {
     expect(requestBody.name).toBe('MYSOURCENAME');
     expect(requestBody.sourceDefId).toBe('MYSOURCEDEFID');
     expect(requestBody.config.host).toBe('SOMEHOST');
+
+    // Logs message lines should appear
+    const logLine1 = screen.getByText('log-message-line-1');
+    expect(logLine1).toBeInTheDocument();
+    const logLine2 = screen.getByText('log-message-line-1');
+    expect(logLine2).toBeInTheDocument();
   });
 });
