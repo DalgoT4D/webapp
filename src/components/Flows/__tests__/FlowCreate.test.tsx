@@ -228,7 +228,7 @@ describe('Flow Creation', () => {
     });
 
     const cronOption = screen.getByRole('combobox', {
-      name: 'Select source type',
+      name: 'Select schedule',
     }) as HTMLInputElement;
     expect(cronOption).toBeInTheDocument();
     const autocomplete = screen.getByTestId('cronautocomplete');
@@ -275,7 +275,7 @@ describe('Flow Creation', () => {
     });
 
     const cronOption = screen.getByRole('combobox', {
-      name: 'Select source type',
+      name: 'Select schedule',
     }) as HTMLInputElement;
     expect(cronOption).toBeInTheDocument();
     const cronautocomplete = screen.getByTestId('cronautocomplete');
@@ -371,7 +371,7 @@ describe('Flow Creation', () => {
     });
 
     const cronOption = screen.getByRole('combobox', {
-      name: 'Select source type',
+      name: 'Select schedule',
     }) as HTMLInputElement;
     expect(cronOption).toBeInTheDocument();
     const cronautocomplete = screen.getByTestId('cronautocomplete');
@@ -453,7 +453,7 @@ describe('Flow Creation', () => {
     });
 
     const cronOption = screen.getByRole('combobox', {
-      name: 'Select source type',
+      name: 'Select schedule',
     }) as HTMLInputElement;
     expect(cronOption).toBeInTheDocument();
     const cronautocomplete = screen.getByTestId('cronautocomplete');
