@@ -124,7 +124,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
     if (flows && flows.length >= 0) {
       return flows.map((flow: FlowInterface, idx: number) => [
         <Box
-          key={`name-${flow?.deploymentId}`}
+          key={`name-${flow.deploymentId}`}
           sx={{ display: 'flex', alignItems: 'center', alignContent: 'center' }}
         >
           <Image style={{ marginRight: 10 }} src={FlowIcon} alt="flow icon" />
