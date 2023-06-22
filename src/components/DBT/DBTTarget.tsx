@@ -26,7 +26,7 @@ export const DBTTarget = ({
   setRunning,
   setExpandLogs,
 }: params) => {
-  const [selectedBlock, setSelectedBlock] = useState<string>('Select block');
+  const [selectedBlock, setSelectedBlock] = useState<string>('Select functions');
   const toastContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const runBlock = blocks.filter((block) => block.action === 'run');
@@ -75,8 +75,8 @@ export const DBTTarget = ({
           setSelectedBlock(event.target.value);
         }}
       >
-        <MenuItem value="Select block" disabled>
-          Select block
+        <MenuItem value="Select functions" disabled>
+          Select functions
         </MenuItem>
         {otherBlocks.map((block) => (
           <MenuItem

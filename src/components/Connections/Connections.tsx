@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { CircularProgress, Box } from '@mui/material';
+import { CircularProgress, Box, Typography } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
@@ -24,11 +24,17 @@ import { lastRunTime } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
-const getSourceDest = (connection: any) =>
-  `${connection.source.name} → ${connection.destination.name}`;
+const getSourceDest = (connection: any) => (
+  <Typography variant="subtitle2" fontWeight={600}>
+    {`${connection.source.name} → ${connection.destination.name}`}
+  </Typography>
+);
 
-const getLastSync = (connection: any) =>
-  lastRunTime(connection?.lastRun?.startTime);
+const getLastSync = (connection: any) => (
+  <Typography variant="subtitle2" fontWeight={600}>
+    {lastRunTime(connection?.lastRun?.startTime)}
+  </Typography>
+);
 
 export const Connections = () => {
   const { data: session }: any = useSession();
@@ -146,7 +152,9 @@ export const Connections = () => {
             src={connectionIcon}
             alt="connection icon"
           />
-          {connection.name}
+          <Typography variant="body1" fontWeight={600}>
+            {connection.name}
+          </Typography>
         </Box>,
         getSourceDest(connection),
         getLastSync(connection),

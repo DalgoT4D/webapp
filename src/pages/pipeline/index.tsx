@@ -5,6 +5,7 @@ import CheckLargeIcon from '@/assets/icons/check-large.svg';
 import { Box, CircularProgress, Paper, Typography } from '@mui/material';
 import Pattern from '@/assets/images/pattern.png';
 import { PageHead } from '@/components/PageHead';
+import moment from 'moment';
 
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
@@ -18,12 +19,15 @@ const BarChart = ({ runs }: any) => {
   useEffect(() => {
     const svg = d3.select(svgRef.current);
 
-    const data = runs.map((run: any) => {
-      const status = run.status;
-      const color = status === 'FAILED' ? '#C15E5E' : '#00897B';
-      const lastRun = lastRunTime(run.startTime);
-      return { color, status, lastRun };
-    });
+    const data = runs
+      .map((run: any) => {
+        const status = run.status;
+        const color = status === 'FAILED' ? '#C15E5E' : '#00897B';
+        const lastRun = moment(new Date(run.startTime)).calendar();
+        const totalRunTime = run.totalRunTime;
+        return { color, status, lastRun, totalRunTime };
+      })
+      .reverse();
 
     // Generate random data for bar colors
 
@@ -36,14 +40,22 @@ const BarChart = ({ runs }: any) => {
     const tooltip = d3
       .select('body')
       .append('div')
+      .style('z-index', '9999')
       .style('position', 'absolute')
-      .style('visibility', 'hidden')
+      .style('opacity', '0')
       .style('background-color', 'white')
       .style('border', '1px solid black')
       .style('border-radius', '10px')
       .style('padding', '8px')
       .style('font-family', 'Arial')
-      .style('font-size', '12px');
+      .style('font-size', '12px')
+      .on('mouseout', (d3) => {
+        if (tooltip && !tooltip?.node()?.contains(d3.relatedTarget)) {
+          tooltip.style('opacity', '0');
+        }
+
+        // Hide tooltip on mouseout
+      });
 
     // Create the bars
     svg
@@ -56,22 +68,34 @@ const BarChart = ({ runs }: any) => {
       .attr('width', barWidth)
       .attr('height', 0) // Initially set the height to 0
       .attr('fill', (d: any) => d.color)
+
       .on('mouseover', (event, d: any) => {
+        const [x, y] = d3.pointer(event, d);
         // Show tooltip on mouseover
         tooltip
-          .style('visibility', 'visible')
-          .html(`Run date: ${d.lastRun}<br>Status: ${d.status}`)
-          .style('left', `${event.pageX + 2}px`)
-          .style('top', `${event.pageY - 28}px`);
+          .style('opacity', '1')
+          .html(
+            `<strong>Start time:</strong> ${d.lastRun}
+            <br><strong>Run time:</strong> ${d.totalRunTime}s
+            <br> <strong>Status:</strong> ${d.status}
+            <br><a class="log-link" href="/pipeline/orchestrate">Check logs</a>
+            `
+          )
+          .style('transition', `opacity 0.2s ease-in`)
+          .style('left', `${x - 5}px`)
+          .style('top', `${y - 95}px`);
       })
-      .on('mouseout', () => {
+      .on('mouseout', (d3) => {
+        if (tooltip && !tooltip?.node()?.contains(d3.relatedTarget)) {
+          tooltip.style('opacity', '0');
+        }
         // Hide tooltip on mouseout
-        tooltip.style('visibility', 'hidden');
       })
       .transition() // Apply transition animation
       .duration(1000) // Set the duration for the animation in milliseconds
       .attr('y', () => height - barHeight) // Move the bars to their final y position
-      .attr('height', barHeight); // Set the
+      .attr('height', barHeight)
+      .style('position', 'relative');
 
     svg
       .append('line')
@@ -174,7 +198,7 @@ export default function Home() {
                       borderRadius: '12px',
                     }}
                   >
-                    {run.runs && run.runs.length > 0 && (
+                    {run.runs && run.runs.length > 0 ? (
                       <>
                         <Box display="flex">
                           <Typography
@@ -211,6 +235,8 @@ export default function Home() {
                           Last {run.runs.length} runs
                         </Typography>
                       </>
+                    ) : (
+                      'No runs found for this flow'
                     )}
                   </Paper>
                 </React.Fragment>
