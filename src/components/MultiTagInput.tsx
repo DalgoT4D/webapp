@@ -49,6 +49,7 @@ const MultiTagInput = ({
       <TextField
         multiline
         variant="outlined"
+        data-testid={`${field}-multi-tag`}
         id={'0'}
         defaultValue={''}
         name={field}
@@ -59,7 +60,12 @@ const MultiTagInput = ({
         onKeyDown={handleKeyDown}
         InputProps={{
           startAdornment: (
-            <Stack direction="row" gap="5px" flexWrap="wrap">
+            <Stack
+              direction="row"
+              gap="5px"
+              flexWrap="wrap"
+              data-testid={`${field}-multi-tag-stack`}
+            >
               {fieldValueArr &&
                 fieldValueArr.map((ele, idx) => (
                   <Chip
