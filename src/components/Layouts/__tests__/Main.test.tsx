@@ -50,7 +50,9 @@ describe('no token', () => {
   it('renders the component', () => {
     render(
       <SessionProvider session={mockSession}>
-        <Main children={[<div key="1" data-testid="not-logged-in" />]} />
+        <Main>
+          <div key="1" data-testid="not-logged-in" />
+        </Main>
       </SessionProvider>
     );
 
@@ -71,7 +73,7 @@ describe('token but no org', () => {
   it('renders the component', () => {
     render(
       <SessionProvider session={mockSession}>
-        <Main children={[]} />
+        <Main />
       </SessionProvider>
     );
 
@@ -90,7 +92,9 @@ describe('token but no org, creating org', () => {
   it('renders the component', () => {
     render(
       <SessionProvider session={mockSession}>
-        <Main children={[<div key="1" data-testid="creating-org-page" />]} />
+        <Main>
+          <div key="1" data-testid="creating-org-page" />
+        </Main>
       </SessionProvider>
     );
 
@@ -111,7 +115,9 @@ describe('token and org, on creating-org page', () => {
   it('renders the component', () => {
     render(
       <SessionProvider session={mockSession}>
-        <Main children={[<div key="1" data-testid="creating-org-page" />]} />
+        <Main>
+          <div key="1" data-testid="creating-org-page" />
+        </Main>
       </SessionProvider>
     );
 
@@ -150,7 +156,9 @@ describe('token and org, normal flow', () => {
 
     render(
       <SessionProvider session={mockSession}>
-        <Main children={[<div key="1" data-testid="normal-flow" />]} />
+        <Main>
+          <div key="1" data-testid="normal-flow" />
+        </Main>
       </SessionProvider>
     );
 
