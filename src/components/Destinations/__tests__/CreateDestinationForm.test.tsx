@@ -358,10 +358,10 @@ describe('destination create form - definitions + specifications', () => {
     });
 
     // select destination definition
-    let destinationDefAutocomplete = screen.getByTestId(
+    const destinationDefAutocomplete = screen.getByTestId(
       'dest-type-autocomplete'
     );
-    let destinationDefInput: HTMLInputElement = within(
+    const destinationDefInput: HTMLInputElement = within(
       destinationDefAutocomplete
     ).getByRole('combobox');
 
@@ -434,10 +434,10 @@ describe('destination create form - definitions + specifications', () => {
     });
 
     // select destination definition
-    let destinationDefAutocomplete = screen.getByTestId(
+    const destinationDefAutocomplete = screen.getByTestId(
       'dest-type-autocomplete'
     );
-    let destinationDefInput: HTMLInputElement = within(
+    const destinationDefInput: HTMLInputElement = within(
       destinationDefAutocomplete
     ).getByRole('combobox');
 

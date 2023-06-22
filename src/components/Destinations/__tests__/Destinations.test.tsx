@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 
 // Mock create destination form component
 jest.mock('./../CreateDestinationForm', () => {
-  const MockCreateDestination = ({ showForm }: any) => {
+  const MockCreateDestination = ({}: any) => {
     return (
       <Dialog open={true} data-testid="test-create-dest-form">
         create-form-dialog-component
@@ -195,8 +195,7 @@ describe('Destinations', () => {
         <SWRConfig
           value={{
             dedupingInterval: 0,
-            fetcher: (resource) =>
-              mockSWR_nowarehouse().then((res: any) => res.json()),
+            fetcher: () => mockSWR_nowarehouse().then((res: any) => res.json()),
             provider: () => new Map(),
           }}
         >
