@@ -79,7 +79,7 @@ const EditSourceForm = ({
   }, [showForm]);
 
   useEffect(() => {
-    if (showForm && sourceId && sourceDefs.length === 0) {
+    if (showForm && sourceId && sourceDefs.length > 0) {
       setLoading(true);
       (async () => {
         try {
@@ -91,7 +91,7 @@ const EditSourceForm = ({
           setSource(data);
 
           for (let idx = 0; idx < sourceDefs.length; idx++) {
-            if (sourceDefs[idx].id === source.sourceDefinitionId) {
+            if (sourceDefs[idx].id === data.sourceDefinitionId) {
               setValue('sourceDef', sourceDefs[idx]);
               break;
             }

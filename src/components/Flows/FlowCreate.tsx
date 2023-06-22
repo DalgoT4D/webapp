@@ -1,13 +1,10 @@
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { Delete } from '@mui/icons-material';
 import {
   Autocomplete,
   Box,
   Button,
   Divider,
-  IconButton,
   InputLabel,
-  Link,
   Stack,
   Switch,
   Typography,
@@ -18,6 +15,7 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpGet, httpPost } from '@/helpers/http';
 import Input from '../UI/Input/Input';
+import Image from 'next/image';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -33,12 +31,7 @@ type DispConnection = {
   id: string;
   label: string;
 };
-type FieldListElement = {
-  id: string; // set by the field-array
-  blockName: string;
-  name: string;
-  seq: number;
-};
+
 type DeploymentDef = {
   name: string;
   dbtTransform: string;
@@ -49,8 +42,6 @@ type DeploymentDef = {
 const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
-  const [currentSelectedConn, setCurrentSelectedConn] =
-    useState<DispConnection | null>(null);
 
   const [connections, setConnections] = useState<DispConnection[]>([]);
   const { register, handleSubmit, control } = useForm<DeploymentDef>({
@@ -62,38 +53,8 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
     },
   });
 
-  const { append, remove, fields } = useFieldArray({
-    control,
-    name: 'connectionBlocks',
-  });
-
   const handleClickCancel = () => {
     updateCrudVal('index');
-  };
-
-  const handleAddConnectionSelectChange = (
-    e: any,
-    data: DispConnection | null
-  ) => {
-    setCurrentSelectedConn(null);
-    if (data) {
-      append({ seq: fields.length + 1, blockName: data.id, name: data.label });
-      // remove from the select dropdown to add new connection
-      const tempConns = connections?.filter(
-        (conn: DispConnection) => conn.id != data.id
-      );
-      setConnections(tempConns);
-    }
-  };
-
-  const handleDeleteConnection = (idx: number) => {
-    remove(idx);
-    const tempConns: Array<DispConnection> = connections ? connections : [];
-    tempConns.push({
-      id: fields[idx].blockName,
-      label: fields[idx].name,
-    });
-    setConnections(tempConns);
   };
 
   const processCronExpression = (cron: string) => {
@@ -113,7 +74,12 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
         const data = await httpGet(session, 'airbyte/connections');
         const tempConns: Array<DispConnection> = data.map(
           (conn: ApiResponseConnection) => {
-            return { id: conn.blockName, label: conn.name };
+            return {
+              id: conn.blockName,
+              label: conn.name,
+              name: conn.name,
+              blockName: conn.blockName,
+            };
           }
         );
         setConnections(tempConns);
@@ -127,9 +93,13 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
   const onSubmit = async (data: any) => {
     console.log(data);
     try {
+      const blocks = data.connectionBlocks.map((block: any, index: number) => ({
+        ...block,
+        seq: index + 1,
+      }));
       const response = await httpPost(session, 'prefect/flows/', {
         name: data.name,
-        connectionBlocks: data.connectionBlocks,
+        connectionBlocks: blocks,
         dbtTransform: data.dbtTransform,
         cron: processCronExpression(data.cron.id),
       });
@@ -157,14 +127,15 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
           >
             Create a new Flow
           </Typography>
-          <Box>
-            <Link
+          <Box display="flex" alignItems="center">
+            <Typography
               data-testid="cancellink"
               onClick={handleClickCancel}
+              fontWeight={600}
               sx={{ m: 1, ':hover': { cursor: 'pointer' } }}
             >
               Cancel
-            </Link>
+            </Typography>
             <Button
               variant="contained"
               sx={{ m: 1 }}
@@ -186,7 +157,11 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
           }}
         >
           <Box sx={{ width: '60%' }}>
-            <Typography variant="h5" sx={{ marginBottom: '30px' }}>
+            <Typography
+              variant="h5"
+              sx={{ marginBottom: '30px' }}
+              fontWeight={600}
+            >
               Flow details
             </Typography>
             <Stack gap="12px">
@@ -197,51 +172,40 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                   register={register}
                   name="name"
                   label="Flow name"
+                  placeholder="Enter the flow name"
                   required
                 ></Input>
               </Box>
               <Box>
-                <Autocomplete
-                  id="connections"
-                  data-testid="connectionautocomplete"
-                  value={currentSelectedConn}
-                  sx={{ marginBottom: '10px', width: '90%' }}
-                  options={connections}
-                  isOptionEqualToValue={(option: any, val: any) =>
-                    val && option?.id === val?.id
-                  }
-                  onChange={handleAddConnectionSelectChange}
-                  renderInput={(params) => (
-                    <Input
-                      {...params}
-                      name="connections"
-                      variant="outlined"
-                      label="Connections"
-                      required
+                <Controller
+                  name="connectionBlocks"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }: any) => (
+                    <Autocomplete
+                      id="connectionBlocks"
+                      multiple
+                      data-testid="connectionautocomplete"
+                      value={field.value}
+                      sx={{ marginBottom: '10px', width: '90%' }}
+                      options={connections}
+                      isOptionEqualToValue={(option: any, val: any) =>
+                        val && option?.id === val?.id
+                      }
+                      onChange={(e, data) => field.onChange(data)}
+                      renderInput={(params) => (
+                        <Input
+                          {...params}
+                          placeholder="Select your connection"
+                          name="connectionBlocks"
+                          variant="outlined"
+                          label="Connections"
+                          required
+                        />
+                      )}
                     />
                   )}
                 />
-                {fields.map((conn: FieldListElement, idx: number) => (
-                  <Box
-                    key={idx}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <Input
-                      data-testid={'selectedconn-' + idx}
-                      sx={{ marginBottom: '10px', width: '90%' }}
-                      value={conn.name}
-                      aria-readonly
-                    />
-
-                    <IconButton onClick={() => handleDeleteConnection(idx)}>
-                      <Delete data-testid={'deleteconn-' + idx} />
-                    </IconButton>
-                  </Box>
-                ))}
               </Box>
               <Box>
                 <InputLabel sx={{ marginBottom: '5px' }}>
@@ -290,7 +254,8 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                       <Input
                         name="cron"
                         {...params}
-                        label="Select source type"
+                        placeholder="Select schedule"
+                        label="Schedule"
                         variant="outlined"
                       />
                     )}

@@ -42,11 +42,17 @@ export const List = ({
             <TableHead sx={{ display: 'table-header-group' }}>
               <TableRow>
                 {headers.map((header) => (
-                  <TableCell sx={{ px: 2, py: 1 }} key={header}>
+                  <TableCell
+                    sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }}
+                    key={header}
+                  >
                     {header}
                   </TableCell>
                 ))}
-                <TableCell sx={{ px: 2, py: 1 }} align="right">
+                <TableCell
+                  sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }}
+                  align="right"
+                >
                   Actions
                 </TableCell>
               </TableRow>

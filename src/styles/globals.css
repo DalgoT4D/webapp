@@ -1,0 +1,9 @@
+.log-link {
+  text-decoration: none;
+  font-weight: bold;
+  background-color: #00897b;
+  color: white;
+  padding: 4px;
+  border-radius: 4px;
+  line-height: 2;
+}

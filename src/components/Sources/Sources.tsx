@@ -1,6 +1,6 @@
 import { useState, useContext, useMemo } from 'react';
 import useSWR from 'swr';
-import { CircularProgress, Box, Button } from '@mui/material';
+import { CircularProgress, Box, Button, Typography } from '@mui/material';
 import { List } from '../List/List';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { backendUrl } from '@/config/constant';
@@ -59,10 +59,17 @@ export const Sources = () => {
             src={connectionIcon}
             alt="connection icon"
           />
-          {source.name}
+          <Typography variant="body1" fontWeight={600}>
+            {source.name}
+          </Typography>
         </Box>,
-        source.sourceName,
-
+        <Typography
+          key={source.sourceName}
+          variant="subtitle2"
+          fontWeight={600}
+        >
+          {source.sourceName}
+        </Typography>,
         <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
           <Button
             aria-controls={open ? 'basic-menu' : undefined}
