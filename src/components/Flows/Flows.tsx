@@ -23,6 +23,7 @@ export interface FlowInterface {
   deploymentName: string;
   deploymentId: string;
   lastRun?: FlowRun;
+  status: boolean;
 }
 
 export interface FlowsInterface {
@@ -31,7 +32,7 @@ export interface FlowsInterface {
   mutate: (...args: any) => any;
 }
 
-const FlowState = (flow: FlowInterface) => {
+const flowState = (flow: FlowInterface) => {
   return (
     <>
       {!flow.lastRun || flow.lastRun?.status === 'COMPLETED' ? (
@@ -73,7 +74,13 @@ const FlowState = (flow: FlowInterface) => {
   );
 };
 
-const FlowLastRun = (flow: FlowInterface) => {
+const flowStatus = (status: boolean) => (
+  <Typography component="p" fontWeight={600}>
+    {status ? 'Active' : 'Inactive'}
+  </Typography>
+);
+
+const flowLastRun = (flow: FlowInterface) => {
   return (
     <>
       {flow?.lastRun ? (
@@ -139,9 +146,10 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
             &nbsp; by 12pm time every day
           </Typography>
         </Box>,
+        flowStatus(flow.status),
 
-        FlowState(flow),
-        FlowLastRun(flow),
+        flowLastRun(flow),
+        flowState(flow),
 
         <Box key={idx}>
           <Button
@@ -262,7 +270,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
       <List
         rows={rows}
         openDialog={handleClickCreateFlow}
-        headers={['Flow', 'Status', 'Last Run']}
+        headers={['Flow', 'Status', 'Last Run', 'Last run status']}
         title={'Flow'}
       />
 
