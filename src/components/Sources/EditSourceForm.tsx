@@ -292,7 +292,7 @@ const EditSourceForm = ({
           >
             Cancel
           </Button>
-          {logs && (
+          {logs && logs.length > 0 && (
             <Box sx={{ pt: 2, pb: 4, maxWidth: '100%' }}>
               {logs.map((logmessage, idx) => (
                 <Box key={idx}>{logmessage}</Box>
