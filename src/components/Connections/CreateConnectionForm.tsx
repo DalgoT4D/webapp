@@ -18,7 +18,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
@@ -26,9 +26,11 @@ import { backendUrl } from '@/config/constant';
 import Input from '../UI/Input/Input';
 
 interface CreateConnectionFormProps {
+  blockId: string;
   mutate: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
+  setBlockId: (...args: any) => any;
 }
 
 interface SourceStream {
@@ -40,12 +42,14 @@ interface SourceStream {
 }
 
 const CreateConnectionForm = ({
+  setBlockId,
+  blockId,
   mutate,
   showForm,
   setShowForm,
 }: CreateConnectionFormProps) => {
   const { data: session }: any = useSession();
-  const { register, handleSubmit, control, watch, reset } = useForm({
+  const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
       name: '',
       sources: { label: '', id: '' },
@@ -65,6 +69,39 @@ const CreateConnectionForm = ({
 
   const globalContext = useContext(GlobalContext);
 
+  useEffect(() => {
+    if (blockId) {
+      setLoading(true);
+      (async () => {
+        try {
+          const data: any = await httpGet(
+            session,
+            `airbyte/connections/${blockId}`
+          );
+          setValue('name', data?.name);
+          setValue('sources', {
+            label: data?.source.name,
+            id: data?.source.id,
+          });
+          setSourceStreams(
+            data?.syncCatalog.streams.map((el: any) => ({
+              name: el.stream.name,
+              supportsIncremental:
+                el.stream.supportedSyncModes.indexOf('incremental') > -1,
+              selected: true,
+              syncMode: el.config.syncMode,
+              destinationSyncMode: el.config.destinationSyncMode,
+            }))
+          );
+        } catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], globalContext);
+        }
+      })();
+      setLoading(false);
+    }
+  }, [blockId]);
+
   // when the source list changes
   useEffect(() => {
     if (sourcesData && sourcesData.length > 0) {
@@ -78,8 +115,7 @@ const CreateConnectionForm = ({
 
   // source selection changes
   useEffect(() => {
-    if (watchSourceSelection?.id) {
-      // console.log(watchSourceSelection);
+    if (watchSourceSelection?.id && !blockId) {
       setLoading(true);
 
       (async () => {
@@ -108,64 +144,18 @@ const CreateConnectionForm = ({
           }
         }
         setLoading(false);
-        // message looks like {
-        //     "catalog": {
-        //         "streams": [
-        //             {
-        //                 "stream": {
-        //                     "name": "ngo1_visits_per_day",
-        //                     "jsonSchema": {
-        //                         "type": "object",
-        //                         "properties": {
-        //                             "date": { "format": "date", "type": "string"},
-        //                             "gender": { "type": "string"},
-        //                             "count": {"airbyte_type": "integer","type": "number"}
-        //                         }
-        //                     },
-        //                     "supportedSyncModes": ["full_refresh","incremental"],
-        //                     "defaultCursorField": [],
-        //                     "sourceDefinedPrimaryKey": [],
-        //                     "namespace": "public"
-        //                 },
-        //                 "config": {
-        //                     "syncMode": "full_refresh",
-        //                     "cursorField": [],
-        //                     "destinationSyncMode": "append",
-        //                     "primaryKey": [],
-        //                     "aliasName": "ngo1_visits_per_day",
-        //                     "selected": true,
-        //                     "suggested": true
-        //                 }
-        //             }
-        //         ]
-        //     },
-        //     "jobInfo": {
-        //         "id": "8004c637-eb94-4d9b-a12a-aa4ca3493534",
-        //         "configType": "discover_schema",
-        //         "configId": "NoConfiguration",
-        //         "createdAt": 0,
-        //         "endedAt": 0,
-        //         "succeeded": true,
-        //         "connectorConfigurationUpdated": false,
-        //         "logs": {
-        //             "logLines": []
-        //         }
-        //     },
-        //     "catalogId": "f1b42ce1-dc1f-4633-963c-dd28aff0aef9"
-        // }
       })();
-    } else {
-      setSourceStreams([]);
     }
   }, [watchSourceSelection]);
 
   const handleClose = () => {
     reset();
+    setBlockId('');
     setSourceStreams([]);
     setShowForm(false);
   };
 
-  // create a new connection
+  // create/update a connection
   const onSubmit = async (data: any) => {
     const payload: any = {
       name: data.name,
@@ -177,10 +167,16 @@ const CreateConnectionForm = ({
       payload.destinationSchema = data.destinationSchema;
     }
     try {
-      await httpPost(session, 'airbyte/connections/', payload);
+      if (blockId) {
+        payload.id = blockId;
+        await httpPut(session, 'airbyte/connections/', payload);
+        successToast('Connection updated', [], globalContext);
+      } else {
+        await httpPost(session, 'airbyte/connections/', payload);
+        successToast('Connection created', [], globalContext);
+      }
       mutate();
       handleClose();
-      successToast('created connection', [], globalContext);
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
@@ -297,7 +293,7 @@ const CreateConnectionForm = ({
 
           {sourceStreams.length > 0 && (
             <>
-              <Table sx={{ minWidth: '600px' }} data-testid="sourceStreamTable">
+              <Table data-testid="sourceStreamTable">
                 <TableHead>
                   <TableRow>
                     <TableCell key="streamname" align="center">

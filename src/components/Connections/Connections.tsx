@@ -182,6 +182,11 @@ export const Connections = () => {
     setShowConfirmDeleteDialog(false);
   };
 
+  const handleEditConnection = () => {
+    handleClose();
+    setShowDialog(true);
+  };
+
   // show load progress indicator
   if (isLoading) {
     return <CircularProgress />;
@@ -194,9 +199,12 @@ export const Connections = () => {
         open={open}
         handleClose={handleClose}
         elementId={blockId}
+        handleEdit={handleEditConnection}
         handleDeleteConnection={handleDeleteConnection}
       />
       <CreateConnectionForm
+        setBlockId={setBlockId}
+        blockId={blockId}
         mutate={mutate}
         showForm={showDialog}
         setShowForm={setShowDialog}

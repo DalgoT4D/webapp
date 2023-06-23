@@ -40,9 +40,8 @@ const BarChart = ({ runs }: any) => {
     const tooltip = d3
       .select('body')
       .append('div')
-      .style('z-index', '9999')
       .style('position', 'absolute')
-      .style('opacity', '0')
+      .style('visibility', 'hidden')
       .style('background-color', 'white')
       .style('border', '1px solid black')
       .style('border-radius', '10px')
@@ -51,7 +50,7 @@ const BarChart = ({ runs }: any) => {
       .style('font-size', '12px')
       .on('mouseout', (d3) => {
         if (tooltip && !tooltip?.node()?.contains(d3.relatedTarget)) {
-          tooltip.style('opacity', '0');
+          tooltip.style('visibility', 'hidden');
         }
 
         // Hide tooltip on mouseout
@@ -73,7 +72,7 @@ const BarChart = ({ runs }: any) => {
         const [x, y] = d3.pointer(event, d);
         // Show tooltip on mouseover
         tooltip
-          .style('opacity', '1')
+          .style('visibility', 'visible')
           .html(
             `<strong>Start time:</strong> ${d.lastRun}
             <br><strong>Run time:</strong> ${d.totalRunTime}s
@@ -81,13 +80,12 @@ const BarChart = ({ runs }: any) => {
             <br><a class="log-link" href="/pipeline/orchestrate">Check logs</a>
             `
           )
-          .style('transition', `opacity 0.2s ease-in`)
           .style('left', `${x - 5}px`)
           .style('top', `${y - 95}px`);
       })
       .on('mouseout', (d3) => {
         if (tooltip && !tooltip?.node()?.contains(d3.relatedTarget)) {
-          tooltip.style('opacity', '0');
+          tooltip.style('visibility', 'hidden');
         }
         // Hide tooltip on mouseout
       })
