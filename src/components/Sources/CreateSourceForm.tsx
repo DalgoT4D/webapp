@@ -190,7 +190,7 @@ const CreateSourceForm = ({
                   option: AutoCompleteOption,
                   value: AutoCompleteOption
                 ) => {
-                  return value.id === '' || option.id === value.id;
+                  return value?.id === '' || option?.id === value?.id;
                 }}
                 onChange={(e, data) => field.onChange(data)}
                 renderInput={(params) => {
