@@ -12,9 +12,14 @@ export const Input: React.FC<InputProps> = ({
   register,
   name,
   sx,
-  required,
+  required = false,
   ...rest
 }) => {
+  const registerValues: any = { required };
+
+  if (rest.type === 'number') {
+    registerValues.valueAsNumber = true;
+  }
   return (
     <Box sx={sx}>
       <InputLabel htmlFor={name}>
@@ -22,7 +27,13 @@ export const Input: React.FC<InputProps> = ({
         {required && '*'}
       </InputLabel>
       {register && name ? (
-        <TextField {...register(name, { required })} {...rest} id={name} />
+        <TextField
+          {...register(name, {
+            ...registerValues,
+          })}
+          {...rest}
+          id={name}
+        />
       ) : (
         <TextField {...rest} id={name} />
       )}
