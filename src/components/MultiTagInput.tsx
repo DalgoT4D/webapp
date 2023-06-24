@@ -1,6 +1,7 @@
-import { Box, Chip, Stack, TextField } from '@mui/material';
+import { Box, Chip, Stack } from '@mui/material';
 import React, { useState } from 'react';
 import { Close } from '@mui/icons-material';
+import Input from './UI/Input/Input';
 
 export interface MultiTagInput {
   field: string;
@@ -46,7 +47,8 @@ const MultiTagInput = ({
 
   return (
     <Box>
-      <TextField
+      <Input
+        label={label}
         multiline
         variant="outlined"
         data-testid={`${field}-multi-tag`}
