@@ -22,7 +22,14 @@ export const Input: React.FC<InputProps> = ({
         {required && '*'}
       </InputLabel>
       {register && name ? (
-        <TextField {...register(name, { required })} {...rest} id={name} />
+        <TextField
+          {...register(name, {
+            required,
+            valueAsNumber: rest.type === 'number',
+          })}
+          {...rest}
+          id={name}
+        />
       ) : (
         <TextField {...rest} id={name} />
       )}
