@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  act,
+  waitFor,
+} from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import CreateSourceForm from '../CreateSourceForm';
@@ -120,20 +126,24 @@ describe('Connections Setup', () => {
       );
     });
 
-    const sourceTypeInput = screen.getByRole('combobox');
-    act(() => {
-      fireEvent.change(sourceTypeInput, { value: 'sourceDefElementName' });
-    });
     const autocomplete = screen.getByTestId('autocomplete');
-    fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
-    await act(async () => {
-      await fireEvent.keyDown(autocomplete, { key: 'Enter' });
+    const sourceTypeInput = screen.getByRole('combobox');
+
+    await waitFor(() => {
+      autocomplete.focus();
+      userEvent.click(sourceTypeInput);
+      fireEvent.change(sourceTypeInput, { value: 's' });
+      expect(screen.getAllByRole('presentation').length).toBe(3);
     });
 
-    const inputField: HTMLInputElement = screen.getByLabelText('Host*');
-    expect(inputField).toBeInTheDocument();
-    expect(inputField.value).toBe('localhost');
-    expect(inputField.type).toBe('text');
+    fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(autocomplete, { key: 'Enter' });
+    await waitFor(() => {
+      const inputField: HTMLInputElement = screen.getByLabelText('Host*');
+      expect(inputField).toBeInTheDocument();
+      expect(inputField.value).toBe('localhost');
+      expect(inputField.type).toBe('text');
+    });
 
     const createSourceSubmit = jest.fn().mockResolvedValueOnce({
       ok: true,
@@ -201,21 +211,25 @@ describe('Connections Setup', () => {
         </SessionProvider>
       );
     });
-
-    const sourceTypeInput = screen.getByRole('combobox');
-    act(() => {
-      fireEvent.change(sourceTypeInput, { value: 'sourceDefElementName' });
-    });
     const autocomplete = screen.getByTestId('autocomplete');
-    fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
-    await act(async () => {
-      await fireEvent.keyDown(autocomplete, { key: 'Enter' });
+    const sourceTypeInput = screen.getByRole('combobox');
+
+    await waitFor(() => {
+      autocomplete.focus();
+      userEvent.click(sourceTypeInput);
+      fireEvent.change(sourceTypeInput, { value: 's' });
+      expect(screen.getAllByRole('presentation').length).toBe(3);
     });
 
-    const inputField: HTMLInputElement = screen.getByLabelText('Host*');
-    expect(inputField).toBeInTheDocument();
-    expect(inputField.value).toBe('');
-    expect(inputField.type).toBe('text');
+    fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(autocomplete, { key: 'Enter' });
+
+    await waitFor(() => {
+      const inputField: HTMLInputElement = screen.getByLabelText('Host*');
+      expect(inputField).toBeInTheDocument();
+      expect(inputField.value).toBe('');
+      expect(inputField.type).toBe('text');
+    });
 
     const createSourceSubmit = jest.fn().mockResolvedValueOnce({
       ok: true,
@@ -235,7 +249,7 @@ describe('Connections Setup', () => {
     // but the "host" field is missing & required
     await userEvent.click(savebutton);
     expect(createSourceSubmit).not.toHaveBeenCalled();
-
+    const inputField: HTMLInputElement = screen.getByLabelText('Host*');
     // now put in the required field
     await userEvent.type(inputField, 'SOMEHOST');
     await userEvent.click(savebutton);

@@ -136,6 +136,7 @@ describe('Connections Setup', () => {
       'config.specfield',
       {
         required: false,
+        valueAsNumber: true,
       }
     );
   });

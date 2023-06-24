@@ -15,10 +15,12 @@ interface CreateSourceFormProps {
   setShowForm: (...args: any) => any;
 }
 
-type AutoCompleteOption = {
-  id: string;
-  label: string;
-};
+type AutoCompleteOption =
+  | {
+      id: string;
+      label: string;
+    }
+  | undefined;
 
 const CreateSourceForm = ({
   mutate,
@@ -35,7 +37,7 @@ const CreateSourceForm = ({
   const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
       name: '',
-      sourceDef: { id: '', label: '' } as AutoCompleteOption,
+      sourceDef: undefined as AutoCompleteOption,
       config: {},
     },
   });
@@ -188,7 +190,7 @@ const CreateSourceForm = ({
                   option: AutoCompleteOption,
                   value: AutoCompleteOption
                 ) => {
-                  return value.id === '' || option.id === value.id;
+                  return value?.id === '' || option?.id === value?.id;
                 }}
                 onChange={(e, data) => field.onChange(data)}
                 renderInput={(params) => {
