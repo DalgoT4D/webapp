@@ -83,6 +83,7 @@ const CreateConnectionForm = ({
             label: data?.source.name,
             id: data?.source.id,
           });
+          setValue('destinationSchema', data?.destinationSchema);
           setSourceStreams(
             data?.syncCatalog.streams.map((el: any) => ({
               name: el.stream.name,
@@ -168,8 +169,11 @@ const CreateConnectionForm = ({
     }
     try {
       if (blockId) {
-        payload.id = blockId;
-        await httpPut(session, 'airbyte/connections/', payload);
+        await httpPut(
+          session,
+          `airbyte/connections/${blockId}/update`,
+          payload
+        );
         successToast('Connection updated', [], globalContext);
       } else {
         await httpPost(session, 'airbyte/connections/', payload);
