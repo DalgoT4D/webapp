@@ -6,18 +6,22 @@ import DeleteIcon from '@/assets/icons/delete.svg';
 interface MenuProps {
   anchorEl: null | HTMLElement;
   open: boolean;
+  eleType: 'flow' | 'source' | 'connection';
   handleClose: () => void;
   handleEdit?: () => void;
   elementId: string;
   handleDeleteConnection: () => void;
+  handleResetConnection?: () => void;
 }
 
 export const ActionsMenu: React.FC<MenuProps> = ({
   anchorEl,
   open,
+  eleType,
   handleClose,
   handleEdit = () => {},
   handleDeleteConnection,
+  handleResetConnection,
 }) => (
   <Menu
     id="basic-menu"
@@ -51,5 +55,14 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </ListItemIcon>
       Delete
     </MenuItem>
+    <Divider style={{ margin: 0 }} />
+    {eleType === 'connection' && handleResetConnection && (
+      <MenuItem onClick={() => handleResetConnection()}>
+        <ListItemIcon style={{ minWidth: 28 }}>
+          <Image src={DeleteIcon} alt="reset icon" />
+        </ListItemIcon>
+        Reset
+      </MenuItem>
+    )}
   </Menu>
 );
