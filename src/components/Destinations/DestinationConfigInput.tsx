@@ -33,6 +33,7 @@ export interface DestinationConfigInputprops {
   control: any;
   setFormValue: (...args: any) => any;
   unregisterFormField: (...args: any) => any;
+  destination?: any;
 }
 
 export const DestinationConfigInput = ({
@@ -41,6 +42,7 @@ export const DestinationConfigInput = ({
   control,
   setFormValue,
   unregisterFormField,
+  destination,
 }: DestinationConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<DestinationSpec>>(
     []
@@ -146,6 +148,7 @@ export const DestinationConfigInput = ({
                   register={registerFormFieldValue}
                   name={spec.field}
                   required={spec.required}
+                  disabled={destination && !spec.airbyte_secret ? true : false}
                 ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
@@ -189,6 +192,9 @@ export const DestinationConfigInput = ({
                   rules={{ required: spec.required }}
                   render={({ field }) => (
                     <Autocomplete
+                      disabled={
+                        destination && !spec.airbyte_secret ? true : false
+                      }
                       id={spec.field}
                       options={spec.enum as unknown[]}
                       onChange={(e, data: any) => {
@@ -211,6 +217,7 @@ export const DestinationConfigInput = ({
               // type == string , default
               <React.Fragment key={idx}>
                 <Input
+                  disabled={destination ? true : false}
                   sx={{ width: '100%' }}
                   label={spec.title}
                   variant="outlined"
@@ -233,6 +240,9 @@ export const DestinationConfigInput = ({
                   <Stack direction={'row'} alignItems="center" gap={'10%'}>
                     <Box>{spec.title}</Box>
                     <Switch
+                      disabled={
+                        destination && !spec.airbyte_secret ? true : false
+                      }
                       value={value}
                       onChange={(event, value) => {
                         setFormValue(spec.field, value);
@@ -251,6 +261,9 @@ export const DestinationConfigInput = ({
                 rules={{ required: spec.required }}
                 render={({ field: { value } }) => (
                   <MultiTagInput
+                    disabled={
+                      destination && !spec.airbyte_secret ? true : false
+                    }
                     field={spec.field}
                     label={spec.title}
                     fieldValueArr={value}
@@ -263,6 +276,7 @@ export const DestinationConfigInput = ({
           ) : spec.type === 'integer' ? (
             <React.Fragment key={idx}>
               <Input
+                disabled={destination && !spec.airbyte_secret ? true : false}
                 sx={{ width: '100%' }}
                 label={spec.title}
                 variant="outlined"
@@ -282,6 +296,9 @@ export const DestinationConfigInput = ({
                 rules={{ required: spec.required }}
                 render={({ field }) => (
                   <Autocomplete
+                    disabled={
+                      destination && !spec.airbyte_secret ? true : false
+                    }
                     data-testid="autocomplete"
                     id={spec.field}
                     value={field.value}

@@ -19,6 +19,7 @@ export const SourceConfigInput = ({
   registerFormFieldValue,
   control,
   setFormValue,
+  source,
 }: SourceConfigInputprops) => {
   const [showPasswords, setShowPasswords] = useState<any>({});
 
@@ -88,6 +89,7 @@ export const SourceConfigInput = ({
                   name={`config.${spec.field}`}
                   required={spec.required}
                   value={spec?.default}
+                  disabled={source ? true : false}
                 ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
@@ -100,6 +102,7 @@ export const SourceConfigInput = ({
                 rules={{ required: spec.required }}
                 render={({ field: { value } }) => (
                   <MultiTagInput
+                    disabled={source && !spec.airbyte_secret ? true : false}
                     field={`config.${spec.field}`}
                     label={spec.title}
                     fieldValueArr={value}
@@ -112,6 +115,7 @@ export const SourceConfigInput = ({
           ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
               <Input
+                disabled={source && !spec.airbyte_secret ? true : false}
                 sx={{ width: '100%' }}
                 label={spec?.title}
                 variant="outlined"
