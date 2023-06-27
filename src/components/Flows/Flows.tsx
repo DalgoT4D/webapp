@@ -250,6 +250,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
   return (
     <>
       <ActionsMenu
+        eleType="flow"
         anchorEl={anchorEl}
         open={open}
         handleClose={handleClose}
