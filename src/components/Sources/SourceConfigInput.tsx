@@ -115,7 +115,7 @@ export const SourceConfigInput = ({
           ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
               <Input
-                disabled={source && !spec.airbyte_secret ? true : false}
+                disabled={source ? true : false}
                 sx={{ width: '100%' }}
                 label={spec?.title}
                 variant="outlined"

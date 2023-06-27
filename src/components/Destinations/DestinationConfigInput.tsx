@@ -217,7 +217,7 @@ export const DestinationConfigInput = ({
               // type == string , default
               <React.Fragment key={idx}>
                 <Input
-                  disabled={destination && !spec.airbyte_secret ? true : false}
+                  disabled={destination ? true : false}
                   sx={{ width: '100%' }}
                   label={spec.title}
                   variant="outlined"
