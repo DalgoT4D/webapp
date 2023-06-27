@@ -87,7 +87,7 @@ export const Login = () => {
             </Box>
             <Box sx={{ textAlign: 'center' }}>
               Forgot password?{' '}
-              <Link href="/resetpassword" sx={{ textDecoration: 'none' }}>
+              <Link href="/forgotpassword" sx={{ textDecoration: 'none' }}>
                 Reset
               </Link>
             </Box>
