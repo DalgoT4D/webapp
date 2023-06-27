@@ -85,6 +85,12 @@ export const Login = () => {
                 Sign Up
               </Link>
             </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              Forgot password?{' '}
+              <Link href="/forgotpassword" sx={{ textDecoration: 'none' }}>
+                Reset
+              </Link>
+            </Box>
           </Box>
         </form>
       </Auth>
