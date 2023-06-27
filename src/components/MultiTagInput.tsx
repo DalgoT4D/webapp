@@ -8,6 +8,7 @@ export interface MultiTagInput {
   label: string;
   fieldValueArr: Array<string>;
   setFormValue: (...args: any) => any;
+  disabled: boolean;
 }
 
 const MultiTagInput = ({
@@ -15,6 +16,7 @@ const MultiTagInput = ({
   label,
   fieldValueArr,
   setFormValue,
+  disabled,
 }: MultiTagInput) => {
   const [currentValue, setCurrentValue] = useState<string>('');
 
@@ -60,6 +62,7 @@ const MultiTagInput = ({
         value={currentValue}
         onChange={(e) => setCurrentValue(e.target.value)}
         onKeyDown={handleKeyDown}
+        disabled={disabled}
         InputProps={{
           startAdornment: (
             <Stack
@@ -71,6 +74,7 @@ const MultiTagInput = ({
               {fieldValueArr &&
                 fieldValueArr.map((ele, idx) => (
                   <Chip
+                    disabled={disabled}
                     id={String(idx)}
                     key={idx}
                     label={ele}
