@@ -17,7 +17,7 @@ export const ForgotPassword = () => {
   const { register, handleSubmit } = useForm();
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
-  const [emailSent, setEmailSent] = useState<Boolean>(false);
+  const [emailSent, setEmailSent] = useState<boolean>(false);
 
   const onSubmit = async (reqData: any) => {
     try {
