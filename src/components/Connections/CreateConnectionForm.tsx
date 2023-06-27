@@ -263,6 +263,7 @@ const CreateConnectionForm = ({
             rules={{ required: true }}
             render={({ field }: any) => (
               <Autocomplete
+                readOnly={blockId ? true : false}
                 data-testid="sourceList"
                 options={sources}
                 value={field.value}
@@ -281,6 +282,7 @@ const CreateConnectionForm = ({
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              ...(blockId && { pointerEvents: 'none' }),
             }}
           >
             <FormControlLabel
