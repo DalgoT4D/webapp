@@ -55,6 +55,8 @@ export const Connections = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
+  const [showConfirmResetDialog, setShowConfirmResetDialog] =
+    useState<boolean>(false);
 
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/connections`
@@ -100,6 +102,29 @@ export const Connections = () => {
       }
     })();
     handleCancelDeleteConnection();
+  };
+
+  const resetConnection = (blockId: string) => {
+    (async () => {
+      try {
+        const message = await httpPost(
+          session,
+          `airbyte/connections/${blockId}/reset`,
+          {}
+        );
+        if (message.success) {
+          successToast(
+            'Reset connection initiated successfully',
+            [],
+            toastContext
+          );
+        }
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+      }
+    })();
+    handleCancelResetConnection();
   };
 
   const Actions = ({ connection: { blockId, deploymentId }, idx }: any) => (
@@ -182,6 +207,15 @@ export const Connections = () => {
     setShowConfirmDeleteDialog(false);
   };
 
+  const handleCancelResetConnection = () => {
+    setShowConfirmResetDialog(false);
+  };
+
+  const handleResetConnection = () => {
+    handleClose();
+    setShowConfirmResetDialog(true);
+  };
+
   const handleEditConnection = () => {
     handleClose();
     setShowDialog(true);
@@ -195,12 +229,14 @@ export const Connections = () => {
   return (
     <>
       <ActionsMenu
+        eleType="connection"
         anchorEl={anchorEl}
         open={open}
         handleClose={handleClose}
         elementId={blockId}
         handleEdit={handleEditConnection}
         handleDeleteConnection={handleDeleteConnection}
+        handleResetConnection={handleResetConnection}
       />
       <CreateConnectionForm
         setBlockId={setBlockId}
@@ -220,6 +256,12 @@ export const Connections = () => {
         handleClose={() => handleCancelDeleteConnection()}
         handleConfirm={() => deleteConnection(blockId)}
         message="This will delete the connection permanently and all the flows built on top of this."
+      />
+      <ConfirmationDialog
+        show={showConfirmResetDialog}
+        handleClose={() => handleCancelResetConnection()}
+        handleConfirm={() => resetConnection(blockId)}
+        message="Resetting the connection will clear all data at the warehouse."
       />
     </>
   );
