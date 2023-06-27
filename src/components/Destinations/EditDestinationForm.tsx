@@ -323,6 +323,7 @@ const EditDestinationForm = ({
           rules={{ required: true }}
           render={({ field }) => (
             <Autocomplete
+              disabled={true}
               id="destinationDef"
               options={destinationDefs}
               data-testid="dest-type-autocomplete"
@@ -346,6 +347,7 @@ const EditDestinationForm = ({
           control={control}
           setFormValue={setValue}
           unregisterFormField={unregister}
+          destination={warehouse}
         />
       </Box>
     );
