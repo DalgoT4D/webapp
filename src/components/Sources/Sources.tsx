@@ -128,6 +128,7 @@ export const Sources = () => {
   return (
     <>
       <ActionsMenu
+        eleType="source"
         anchorEl={anchorEl}
         open={open}
         handleClose={handleClose}
