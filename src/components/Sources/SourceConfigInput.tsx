@@ -89,7 +89,7 @@ export const SourceConfigInput = ({
                   name={`config.${spec.field}`}
                   required={spec.required}
                   value={spec?.default}
-                  disabled={source && !spec.airbyte_secret ? true : false}
+                  disabled={source ? true : false}
                 ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
@@ -115,7 +115,7 @@ export const SourceConfigInput = ({
           ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
               <Input
-                disabled={source ? true : false}
+                disabled={source && !spec.airbyte_secret ? true : false}
                 sx={{ width: '100%' }}
                 label={spec?.title}
                 variant="outlined"
