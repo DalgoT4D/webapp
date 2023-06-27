@@ -241,6 +241,7 @@ const EditSourceForm = ({
               rules={{ required: true }}
               render={({ field }) => (
                 <Autocomplete
+                  disabled={true}
                   id="sourceDef"
                   value={field.value}
                   options={sourceDefs}
