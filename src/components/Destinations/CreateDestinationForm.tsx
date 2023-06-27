@@ -216,7 +216,10 @@ const CreateDestinationForm = ({
         {
           name: data.name,
           destinationDefId: data.destinationDef.id,
-          config: data.config,
+          config: {
+            ...data.config,
+            port: Number(data.config.port),
+          },
         }
       );
       if (connectivityCheck.status === 'succeeded') {
@@ -224,7 +227,10 @@ const CreateDestinationForm = ({
           wtype: data.destinationDef.label.toLowerCase(),
           name: data.name,
           destinationDefId: data.destinationDef.id,
-          airbyteConfig: data.config,
+          airbyteConfig: {
+            ...data.config,
+            port: Number(data.config.port),
+          },
         });
         mutate();
         handleClose();
