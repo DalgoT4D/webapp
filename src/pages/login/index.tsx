@@ -59,7 +59,7 @@ export const Login = () => {
             />
             <Input
               required
-              sx={{ width: '100%', pb: 4 }}
+              sx={{ width: '100%' }}
               id="outlined-password-input"
               data-testid="password"
               label="Password"
@@ -69,6 +69,18 @@ export const Login = () => {
               register={register}
               name="password"
             />
+            <Box sx={{ textAlign: 'right', pb: 4 }}>
+              <Link
+                href="/forgotpassword"
+                sx={{
+                  textDecoration: 'none',
+                  color: '#c0c2c3',
+                  fontWeight: '600',
+                }}
+              >
+                Forgot password?
+              </Link>
+            </Box>
 
             <Button
               variant="contained"
@@ -83,12 +95,6 @@ export const Login = () => {
               Not a member?{' '}
               <Link href="/signup" sx={{ textDecoration: 'none' }}>
                 Sign Up
-              </Link>
-            </Box>
-            <Box sx={{ textAlign: 'center' }}>
-              Forgot password?{' '}
-              <Link href="/forgotpassword" sx={{ textDecoration: 'none' }}>
-                Reset
               </Link>
             </Box>
           </Box>

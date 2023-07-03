@@ -33,7 +33,7 @@ export const ForgotPassword = () => {
 
   if (emailSent) {
     return (
-      <Auth heading="Reset password" subHeading="">
+      <Auth heading="Forgot password" subHeading="">
         <Box className={styles.Container}>
           <Typography variant="h6" style={{ textAlign: 'center' }}>
             Please check your mailbox for a reset link
@@ -43,17 +43,14 @@ export const ForgotPassword = () => {
     );
   } else {
     return (
-      <Auth
-        heading="Reset password"
-        subHeading="Please provide the email address for your account"
-      >
+      <Auth heading="Forgot password" subHeading="">
         <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
           <Box className={styles.Container}>
             <Input
               sx={{ width: '100%', pb: 2 }}
               id="outlined-basic"
               data-testid="email"
-              label="Your email address"
+              label="Enter your registered email"
               variant="outlined"
               required
               register={register}
@@ -66,7 +63,7 @@ export const ForgotPassword = () => {
               type="submit"
               data-testid="submit"
             >
-              Send Password-Reset Email
+              Continue
             </Button>
           </Box>
         </form>
