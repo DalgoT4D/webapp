@@ -1,15 +1,24 @@
-import { Box, Button, Link, Divider } from '@mui/material';
+import {
+  Box,
+  Button,
+  Link,
+  Divider,
+  IconButton,
+  InputAdornment,
+} from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import Auth from '@/components/Layouts/Auth';
 import { signIn } from 'next-auth/react';
 import styles from '@/styles/Login.module.css';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 import Input from '@/components/UI/Input/Input';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 
 export const SignUp = () => {
   const { data: session }: any = useSession();
@@ -19,6 +28,7 @@ export const SignUp = () => {
   }
   const { register, handleSubmit } = useForm();
   const toastContext = useContext(GlobalContext);
+  const [showPassword, setShowPassword] = useState<Boolean>(false);
 
   const onSubmit = async (data: any) => {
     try {
@@ -63,12 +73,32 @@ export const SignUp = () => {
             id="outlined-password-input"
             data-testid="password"
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             placeholder="Enter your password"
             autoComplete="current-password"
             register={register}
             required
             name="password"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Box>
+                    <IconButton
+                      onClick={() => {
+                        setShowPassword(!showPassword);
+                      }}
+                      edge="end"
+                    >
+                      {showPassword ? (
+                        <VisibilityOutlinedIcon />
+                      ) : (
+                        <VisibilityOffOutlinedIcon />
+                      )}
+                    </IconButton>
+                  </Box>
+                </InputAdornment>
+              ),
+            }}
           />
 
           <Input
