@@ -48,89 +48,91 @@ export const Login = () => {
     }
   };
 
-  return (
-    !session?.user?.token && (
-      <Auth
-        heading="Log In"
-        subHeading="Please enter correct login details below"
-      >
-        <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
-          <Box className={styles.Container}>
-            <Input
-              sx={{ width: '100%', pb: 2 }}
-              id="outlined-basic"
-              data-testid="username"
-              label="Business email"
-              placeholder="eg. user@domain.com"
-              variant="outlined"
-              required
-              register={register}
-              name="username"
-            />
-            <Input
-              required
-              sx={{ width: '100%' }}
-              id="outlined-password-input"
-              data-testid="password"
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              register={register}
-              name="password"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Box>
-                      <IconButton
-                        onClick={() => {
-                          setShowPassword(!showPassword);
-                        }}
-                        edge="end"
-                      >
-                        {showPassword ? (
-                          <VisibilityOutlinedIcon />
-                        ) : (
-                          <VisibilityOffOutlinedIcon />
-                        )}
-                      </IconButton>
-                    </Box>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Box sx={{ textAlign: 'right', pb: 4 }}>
-              <Link
-                href="/forgotpassword"
-                sx={{
-                  textDecoration: 'none',
-                  color: '#c0c2c3',
-                  fontWeight: '600',
-                }}
-              >
-                Forgot password?
-              </Link>
-            </Box>
+  if (session?.user?.token) {
+    router.push('/');
+  }
 
-            <Button
-              variant="contained"
-              sx={{ width: '100%', mb: 3, minHeight: '50px' }}
-              type="submit"
-              data-testid="submit"
+  return (
+    <Auth
+      heading="Log In"
+      subHeading="Please enter correct login details below"
+    >
+      <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
+        <Box className={styles.Container}>
+          <Input
+            sx={{ width: '100%', pb: 2 }}
+            id="outlined-basic"
+            data-testid="username"
+            label="Business email"
+            placeholder="eg. user@domain.com"
+            variant="outlined"
+            required
+            register={register}
+            name="username"
+          />
+          <Input
+            required
+            sx={{ width: '100%' }}
+            id="outlined-password-input"
+            data-testid="password"
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            register={register}
+            name="password"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Box>
+                    <IconButton
+                      onClick={() => {
+                        setShowPassword(!showPassword);
+                      }}
+                      edge="end"
+                    >
+                      {showPassword ? (
+                        <VisibilityOutlinedIcon />
+                      ) : (
+                        <VisibilityOffOutlinedIcon />
+                      )}
+                    </IconButton>
+                  </Box>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Box sx={{ textAlign: 'right', pb: 4 }}>
+            <Link
+              href="/forgotpassword"
+              sx={{
+                textDecoration: 'none',
+                color: '#c0c2c3',
+                fontWeight: '600',
+              }}
             >
-              Login
-            </Button>
-            <Divider>OR</Divider>
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
-              Not a member?{' '}
-              <Link href="/signup" sx={{ textDecoration: 'none' }}>
-                Sign Up
-              </Link>
-            </Box>
+              Forgot password?
+            </Link>
           </Box>
-        </form>
-      </Auth>
-    )
+
+          <Button
+            variant="contained"
+            sx={{ width: '100%', mb: 3, minHeight: '50px' }}
+            type="submit"
+            data-testid="submitbutton"
+          >
+            Login
+          </Button>
+          <Divider>OR</Divider>
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            Not a member?{' '}
+            <Link href="/signup" sx={{ textDecoration: 'none' }}>
+              Sign Up
+            </Link>
+          </Box>
+        </Box>
+      </form>
+    </Auth>
   );
 };
 
