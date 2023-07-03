@@ -7,7 +7,6 @@ import { useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSearchParams } from 'next/navigation';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
-import Input from '@/components/UI/Input/Input';
 import Auth from '@/components/Layouts/Auth';
 import { httpPost } from '../../helpers/http';
 
