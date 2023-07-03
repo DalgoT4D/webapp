@@ -162,7 +162,7 @@ export const DBTSetup = ({
   return (
     <>
       <CustomDialog
-        title={'Connect Repo'}
+        title={'Connect to DBT repository'}
         show={showDialog}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
