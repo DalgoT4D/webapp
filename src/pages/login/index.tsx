@@ -27,7 +27,7 @@ export const Login = () => {
   const router = useRouter();
   const { data: session }: any = useSession();
   const context = useContext(GlobalContext);
-  const [showPassword, setShowPassword] = useState<Boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const onSubmit = async (reqData: any) => {
     const res: any = await signIn('credentials', {

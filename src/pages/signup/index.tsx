@@ -29,8 +29,8 @@ export const SignUp = () => {
   }
   const { register, handleSubmit } = useForm();
   const toastContext = useContext(GlobalContext);
-  const [showPassword, setShowPassword] = useState<Boolean>(false);
-  const [passwordMismatch, setPasswordMismatch] = useState<Boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [passwordMismatch, setPasswordMismatch] = useState<boolean>(false);
 
   const onSubmit = async (data: any) => {
     console.log('onSubmit');
