@@ -5,6 +5,7 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  Typography,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -28,9 +29,16 @@ export const SignUp = () => {
   }
   const { register, handleSubmit } = useForm();
   const toastContext = useContext(GlobalContext);
-  const [showPassword, setShowPassword] = useState<Boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [passwordMismatch, setPasswordMismatch] = useState<boolean>(false);
 
   const onSubmit = async (data: any) => {
+    console.log('onSubmit');
+    if (data.password !== data.confirmpassword) {
+      setPasswordMismatch(true);
+      return;
+    }
+    setPasswordMismatch(false);
     try {
       await httpPost(session, 'organizations/users/', {
         email: data.username,
@@ -103,8 +111,46 @@ export const SignUp = () => {
 
           <Input
             sx={{ width: '100%', pb: 3 }}
+            id="outlined-confirm-password-input"
+            data-testid="confirmpassword"
+            label="Confirm Password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Confirm password"
+            register={register}
+            required
+            name="confirmpassword"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Box>
+                    <IconButton
+                      onClick={() => {
+                        setShowPassword(!showPassword);
+                      }}
+                      edge="end"
+                    >
+                      {showPassword ? (
+                        <VisibilityOutlinedIcon />
+                      ) : (
+                        <VisibilityOffOutlinedIcon />
+                      )}
+                    </IconButton>
+                  </Box>
+                </InputAdornment>
+              ),
+            }}
+          />
+          {passwordMismatch && (
+            <Typography sx={{ textAlign: 'center', color: '#e92d2d', pb: 2 }}>
+              Passwords do not match
+            </Typography>
+          )}
+
+          <Input
+            sx={{ width: '100%', pb: 3 }}
             id="outlined-basic"
             label="Signup code"
+            data-testid="signupcode"
             variant="outlined"
             register={register}
             placeholder="Enter code"
@@ -115,7 +161,7 @@ export const SignUp = () => {
             sx={{ width: '100%', mb: 3, minHeight: '50px' }}
             variant="contained"
             type="submit"
-            data-testid="submit"
+            data-testid="submitbutton"
           >
             Sign Up
           </Button>
