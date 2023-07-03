@@ -18,7 +18,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import React, { useContext, useEffect, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Dbt from '@/assets/images/dbt.png';
@@ -226,16 +225,6 @@ const Transform = () => {
                     blocks={dbtBlocks[target]}
                   />
                 ))}
-                <Button
-                  onClick={(event) => {
-                    console.log(event);
-                  }}
-                  variant="contained"
-                  color="info"
-                  sx={{ ml: 2, px: 0, minWidth: 32 }}
-                >
-                  <MoreHorizIcon />
-                </Button>
               </>
             ) : (
               ''
