@@ -226,16 +226,6 @@ const Transform = () => {
                     blocks={dbtBlocks[target]}
                   />
                 ))}
-                <Button
-                  onClick={(event) => {
-                    console.log(event);
-                  }}
-                  variant="contained"
-                  color="info"
-                  sx={{ ml: 2, px: 0, minWidth: 32 }}
-                >
-                  <MoreHorizIcon />
-                </Button>
               </>
             ) : (
               ''
