@@ -15,7 +15,7 @@ export const Auth: React.FC<AuthProps> = ({
   children,
 }) => {
   return (
-    <Box>
+    <Box sx={{ width: '100%' }}>
       <Grid container columns={16}>
         <Grid
           item
