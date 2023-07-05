@@ -3,7 +3,7 @@ import { DBTSetup } from '@/components/DBT/DBTSetup';
 import { PageHead } from '@/components/PageHead';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpGet } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
 import {
   Box,
@@ -23,6 +23,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Dbt from '@/assets/images/dbt.png';
 import Image from 'next/image';
 import { DBTTarget } from '@/components/DBT/DBTTarget';
+import { backendUrl } from '@/config/constant';
 
 type DbtBlock = {
   blockName: string;
@@ -53,6 +54,7 @@ const Transform = () => {
     useState<boolean>(false);
   const [rerender, setRerender] = useState<boolean>(false);
   const [dbtSetupLogs, setDbtSetupLogs] = useState<string[]>([]);
+  const [dbtDocsToken, setDbtDocsToken] = useState<string>('');
 
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
@@ -104,10 +106,24 @@ const Transform = () => {
 
       if (response && response?.length > 0) {
         setDbtSetupStage('complete');
+        fetchDbtDocsToken();
       }
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
+    }
+  };
+
+  const fetchDbtDocsToken = async () => {
+    if (!session) return;
+    try {
+      const response = await httpPost(session, 'dbt/makedocs/', {});
+      if (response.token) {
+        setDbtDocsToken(response.token);
+      }
+    } catch (err: any) {
+      console.error(err);
+      // don't show errorToast
     }
   };
 
@@ -221,7 +237,10 @@ const Transform = () => {
                     key={target}
                     setExpandLogs={setExpandLogs}
                     setRunning={setRunning}
-                    setDbtRunLogs={setDbtSetupLogs}
+                    setDbtRunLogs={(logs: string[]) => {
+                      setDbtSetupLogs(logs);
+                      fetchDbtDocsToken();
+                    }}
                     blocks={dbtBlocks[target]}
                   />
                 ))}
@@ -236,6 +255,7 @@ const Transform = () => {
             <DBTCreateProfile
               createdProfile={() => {
                 setDbtSetupStage('complete');
+                fetchDbtDocsToken();
                 setRerender(!rerender);
               }}
               showDialog={showAddProfileDialog}
@@ -286,6 +306,16 @@ const Transform = () => {
               }
             </Collapse>
           </Card>
+          {dbtDocsToken && (
+            <Card sx={{ mt: 2 }}>
+              <iframe
+                src={backendUrl + `/docs/${dbtDocsToken}`}
+                width={'100%'}
+                height={'600px'}
+                style={{ border: 0 }}
+              ></iframe>
+            </Card>
+          )}
         </Box>
       </main>
     </>
