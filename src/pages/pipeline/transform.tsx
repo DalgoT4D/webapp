@@ -255,7 +255,6 @@ const Transform = () => {
             <DBTCreateProfile
               createdProfile={() => {
                 setDbtSetupStage('complete');
-                fetchDbtDocsToken();
                 setRerender(!rerender);
               }}
               showDialog={showAddProfileDialog}
