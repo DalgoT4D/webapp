@@ -55,7 +55,7 @@ export const SourceConfigInput = ({
                   variant="outlined"
                   type={showPasswords[`${spec.field}`] ? 'text' : 'password'}
                   required={spec.required}
-                  value={spec?.default}
+                  defaultValue={spec?.default}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -88,8 +88,9 @@ export const SourceConfigInput = ({
                   register={registerFormFieldValue}
                   name={`config.${spec.field}`}
                   required={spec.required}
-                  value={spec?.default}
+                  defaultValue={spec?.default}
                   disabled={source ? true : false}
+                  inputProps={{ pattern: spec?.pattern }}
                 ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
@@ -122,7 +123,7 @@ export const SourceConfigInput = ({
                 register={registerFormFieldValue}
                 name={`config.${spec.field}`}
                 required={spec.required}
-                value={spec?.default}
+                defaultValue={spec?.default}
                 type="number"
               ></Input>
               <Box sx={{ m: 2 }} />
