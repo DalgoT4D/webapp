@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import useSWR from 'swr';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { Table, TableBody, TableCell, TableRow } from '@mui/material';
 import { backendUrl } from '@/config/constant';
 import CreateDestinationForm from './CreateDestinationForm';
 import EditDestinationForm from './EditDestinationForm';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { httpDelete } from '@/helpers/http';
+import { useSession } from 'next-auth/react';
+import { errorToast } from '../ToastMessage/ToastHelper';
+import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 
 interface ConnectionConfiguration {
   host?: string;
@@ -32,10 +37,15 @@ export const Destinations = () => {
     `${backendUrl}/api/organizations/warehouses`,
     { revalidateOnFocus: false }
   );
+  const { data: session }: any = useSession();
   const [warehouse, setWarehouse] = useState<Warehouse>();
+  const globalContext = useContext(GlobalContext);
   const [showCreateWarehouseDialog, setShowCreateWarehouseDialog] =
     useState(false);
   const [showEditWarehouseDialog, setShowEditWarehouseDialog] = useState(false);
+  const [showDeleteWarehouseDialog, setShowDeleteWarehouseDialog] =
+    useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     if (data && data.warehouses && data.warehouses.length > 0) {
@@ -58,7 +68,19 @@ export const Destinations = () => {
   }
 
   const deleteDestination = async () => {
-    // TODO
+    setDeleteLoading(true);
+    (async () => {
+      try {
+        await httpDelete(session, 'organizations/warehouses/');
+        setWarehouse(undefined);
+        mutate();
+        setShowDeleteWarehouseDialog(false);
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], globalContext);
+      }
+    })();
+    setDeleteLoading(false);
   };
 
   return (
@@ -180,10 +202,10 @@ export const Destinations = () => {
           <Button
             variant="contained"
             sx={{ backgroundColor: '#d84141' }}
-            onClick={() => deleteDestination()}
+            onClick={() => setShowDeleteWarehouseDialog(true)}
             data-testid="delete-destination"
           >
-            Delete connection to warehouse (TODO)
+            Delete warehouse
           </Button>
         </Box>
       )}
@@ -208,6 +230,13 @@ export const Destinations = () => {
         showForm={showEditWarehouseDialog}
         setShowForm={setShowEditWarehouseDialog}
         warehouse={warehouse}
+      />
+      <ConfirmationDialog
+        show={showDeleteWarehouseDialog}
+        handleClose={() => setShowDeleteWarehouseDialog(false)}
+        handleConfirm={() => deleteDestination()}
+        message="Deleting the warehouse will also delete all the connnections, flows and the dbt repo."
+        loading={deleteLoading}
       />
     </>
   );
