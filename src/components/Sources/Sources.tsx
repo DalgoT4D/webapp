@@ -142,6 +142,7 @@ export const Sources = () => {
         setShowForm={setShowCreateSourceDialog}
       />
       <EditSourceForm
+        mutate={mutate}
         showForm={showEditSourceDialog}
         setShowForm={setShowEditSourceDialog}
         sourceId={sourceIdToEdit}
