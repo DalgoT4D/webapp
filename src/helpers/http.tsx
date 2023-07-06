@@ -14,7 +14,7 @@ export async function httpGet(session: any, path: string) {
     return message;
   } else {
     const error = await response.json();
-    throw new Error('error', { cause: error });
+    throw new Error(error?.detail ? error.detail : 'error', { cause: error });
   }
 }
 
@@ -32,7 +32,7 @@ export async function httpPost(session: any, path: string, payload: object) {
     return message;
   } else {
     const error = await response.json();
-    throw new Error('error', { cause: error });
+    throw new Error(error?.detail ? error.detail : 'error', { cause: error });
   }
 }
 
@@ -50,7 +50,7 @@ export async function httPut(session: any, path: string, payload: object) {
     return message;
   } else {
     const error = await response.json();
-    throw new Error('error', { cause: error });
+    throw new Error(error?.detail ? error.detail : 'error', { cause: error });
   }
 }
 
@@ -68,7 +68,7 @@ export async function httpPut(session: any, path: string, payload: object) {
     return message;
   } else {
     const error = await response.json();
-    throw new Error('error', { cause: error });
+    throw new Error(error?.detail ? error.detail : 'error', { cause: error });
   }
 }
 
@@ -85,6 +85,6 @@ export async function httpDelete(session: any, path: string) {
     return message;
   } else {
     const error = await response.json();
-    throw new Error('error', { cause: error });
+    throw new Error(error?.detail ? error.detail : 'error', { cause: error });
   }
 }
