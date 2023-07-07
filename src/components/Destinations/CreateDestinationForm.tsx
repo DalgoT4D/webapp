@@ -156,7 +156,7 @@ const CreateDestinationForm = ({
 
     // Todo: need to find a better way to do this
     result = result.map((res: any) => ({ ...res, order: res.order + 1 }));
-    result.sort((a: any, b: any) => a.order + 1 - b.order);
+    result.sort((a: any, b: any) => a.order - b.order);
 
     return result;
   };
