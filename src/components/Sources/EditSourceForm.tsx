@@ -10,6 +10,7 @@ import { SourceConfigInput } from './SourceConfigInput';
 import Input from '../UI/Input/Input';
 
 interface EditSourceFormProps {
+  mutate: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
   sourceId: string;
@@ -43,6 +44,7 @@ type AutoCompleteOption = {
 };
 
 const EditSourceForm = ({
+  mutate,
   showForm,
   setShowForm,
   sourceId,
@@ -185,6 +187,7 @@ const EditSourceForm = ({
       });
       handleClose();
       successToast('Source update', [], globalContext);
+      mutate();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
