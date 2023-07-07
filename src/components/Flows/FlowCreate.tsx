@@ -105,10 +105,9 @@ const FlowCreate = ({
           });
         } catch (err: any) {
           console.error(err);
-          // errorToast(err.message, [], globalContext);
+          errorToast(err.message, [], toastContext);
         }
       })();
-      // setLoading(false);
     }
   }, [flowId]);
 
