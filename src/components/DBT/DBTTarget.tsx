@@ -124,7 +124,7 @@ export const DBTTarget = ({
         );
 
         // if flow run id is not present, something went wrong
-        if (!response?.flow_run_id)
+        if (!response.flow_run_id)
           errorToast('Something went wrong', [], toastContext);
 
         // Poll and show logs till flow run is either completed or failed
