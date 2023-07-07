@@ -12,8 +12,7 @@ export const Header = () => {
   const router = useRouter();
   const handleSignout = () => {
     // Hit backend api to invalidate the token
-    router.push('/login');
-    signOut({ redirect: false });
+    signOut({ callbackUrl: `${window.location.origin}` });
   };
   const { data: session }: any = useSession();
 
