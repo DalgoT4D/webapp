@@ -60,7 +60,7 @@ const MultiTagInput = ({
         placeholder={label}
         sx={{ width: '100%' }}
         value={currentValue}
-        onChange={(e) => setCurrentValue(e.target.value)}
+        onChange={(e) => setCurrentValue(e.target.value.replace('\n', ''))}
         onKeyDown={handleKeyDown}
         disabled={disabled}
         InputProps={{
