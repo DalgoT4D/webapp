@@ -1,6 +1,7 @@
 import { Divider, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import Image from 'next/image';
 import EditIcon from '@/assets/icons/edit.svg';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteIcon from '@/assets/icons/delete.svg';
 
 interface MenuProps {
@@ -59,7 +60,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
     {eleType === 'connection' && handleResetConnection && (
       <MenuItem onClick={() => handleResetConnection()}>
         <ListItemIcon style={{ minWidth: 28 }}>
-          <Image src={DeleteIcon} alt="reset icon" />
+          <RestartAltIcon sx={{ width: 16 }} />
         </ListItemIcon>
         Reset
       </MenuItem>
