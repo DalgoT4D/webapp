@@ -19,6 +19,8 @@ import Input from '../UI/Input/Input';
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
+  flowId?: string;
+  setSelectedFlow?: (args: string) => any;
 }
 
 type ApiResponseConnection = {
@@ -32,19 +34,27 @@ type DispConnection = {
 };
 
 type DeploymentDef = {
+  active: boolean;
   name: string;
   dbtTransform: string;
   connectionBlocks: Array<any>;
-  cron: string;
+  cron: string | object;
 };
 
-const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
+const FlowCreate = ({
+  flowId,
+  updateCrudVal,
+  mutate,
+  setSelectedFlow = () => {},
+}: FlowCreateInterface) => {
+  const isEditPage = flowId !== '' && flowId !== undefined;
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
 
   const [connections, setConnections] = useState<DispConnection[]>([]);
-  const { register, handleSubmit, control } = useForm<DeploymentDef>({
+  const { register, handleSubmit, control, setValue } = useForm<DeploymentDef>({
     defaultValues: {
+      active: true,
       name: '',
       dbtTransform: 'no',
       connectionBlocks: [],
@@ -53,19 +63,54 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
   });
 
   const handleClickCancel = () => {
+    setSelectedFlow('');
     updateCrudVal('index');
   };
 
-  const processCronExpression = (cron: string) => {
-    switch (cron) {
-      case 'daily':
-        return '0 1 * * *';
-      case 'weekly':
-        return '0 1 * * 1';
-      default: // daily is the default
-        return '0 1 * * *';
+  const convertCronExpression = (input: string) => {
+    const cronMappings: any = {
+      daily: '0 1 * * *',
+      weekly: '0 1 * * 1',
+    };
+
+    if (input in cronMappings) {
+      return cronMappings[input];
     }
+
+    const reverseCronMappings = Object.fromEntries(
+      Object.entries(cronMappings).map(([key, value]) => [value, key])
+    );
+
+    return reverseCronMappings[input] || '0 1 * * *';
   };
+
+  useEffect(() => {
+    if (flowId) {
+      (async () => {
+        try {
+          const data: any = await httpGet(session, `prefect/flows/${flowId}`);
+          setValue('name', data.name);
+          setValue('active', data.isScheduleActive);
+          setValue(
+            'connectionBlocks',
+            data.parameters.airbyte_blocks.map((data: any) => data.name)
+          );
+          setValue(
+            'dbtTransform',
+            data.parameters.dbt_blocks.length > 0 ? 'yes' : 'no'
+          );
+          setValue('cron', {
+            id: convertCronExpression(data.cron),
+            label: convertCronExpression(data.cron),
+          });
+        } catch (err: any) {
+          console.error(err);
+          // errorToast(err.message, [], globalContext);
+        }
+      })();
+      // setLoading(false);
+    }
+  }, [flowId]);
 
   useEffect(() => {
     (async () => {
@@ -90,25 +135,43 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
   }, []);
 
   const onSubmit = async (data: any) => {
-    console.log(data);
     try {
-      const blocks = data.connectionBlocks.map((block: any, index: number) => ({
-        ...block,
-        seq: index + 1,
-      }));
-      const response = await httpPost(session, 'prefect/flows/', {
-        name: data.name,
-        connectionBlocks: blocks,
-        dbtTransform: data.dbtTransform,
-        cron: processCronExpression(data.cron.id),
-      });
-      mutate();
-      updateCrudVal('index');
-      successToast(
-        `Flow ${response.name} created successfully`,
-        [],
-        toastContext
-      );
+      if (isEditPage) {
+        await httpPost(
+          session,
+          `prefect/flows/${flowId}/set_schedule/${
+            data.active ? 'active' : 'inactive'
+          }`,
+          {}
+        );
+        successToast(
+          `Flow ${data.name} updated successfully`,
+          [],
+          toastContext
+        );
+        setSelectedFlow('');
+        updateCrudVal('index');
+      } else {
+        const blocks = data.connectionBlocks.map(
+          (block: any, index: number) => ({
+            ...block,
+            seq: index + 1,
+          })
+        );
+        const response = await httpPost(session, 'prefect/flows/', {
+          name: data.name,
+          connectionBlocks: blocks,
+          dbtTransform: data.dbtTransform,
+          cron: convertCronExpression(data.cron.id),
+        });
+        mutate();
+        updateCrudVal('index');
+        successToast(
+          `Flow ${response.name} created successfully`,
+          [],
+          toastContext
+        );
+      }
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
@@ -124,7 +187,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
             gutterBottom
             color="#000"
           >
-            Create a new Flow
+            {flowId ? 'Update flow' : 'Create a new Flow'}
           </Typography>
           <Box display="flex" alignItems="center">
             <Typography
@@ -164,11 +227,34 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
               Flow details
             </Typography>
             <Stack gap="12px">
+              {isEditPage && (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Controller
+                    name="active"
+                    control={control}
+                    render={({ field: { value, onChange } }) => (
+                      <Stack direction={'row'} alignItems="center" gap={'10%'}>
+                        <Switch
+                          checked={value}
+                          value={value}
+                          onChange={(event, value) => {
+                            onChange(value);
+                          }}
+                        />
+                      </Stack>
+                    )}
+                  />
+                  <InputLabel sx={{ marginBottom: '5px' }}>
+                    Is Active ?
+                  </InputLabel>
+                </Box>
+              )}
               <Box>
                 <Input
                   sx={{ width: '90%' }}
                   variant="outlined"
                   register={register}
+                  disabled={isEditPage}
                   name="name"
                   label="Flow name"
                   placeholder="Enter the flow name"
@@ -183,6 +269,7 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                   render={({ field }: any) => (
                     <Autocomplete
                       id="connectionBlocks"
+                      disabled={isEditPage}
                       multiple
                       ChipProps={{
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -221,6 +308,8 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                   render={({ field: { value, onChange } }) => (
                     <Stack direction={'row'} alignItems="center" gap={'10%'}>
                       <Switch
+                        checked={value === 'yes'}
+                        disabled={isEditPage}
                         value={value}
                         onChange={(event, value) => {
                           onChange(value ? 'yes' : 'no');
@@ -245,6 +334,8 @@ const FlowCreate = ({ updateCrudVal, mutate }: FlowCreateInterface) => {
                 render={({ field }) => (
                   <Autocomplete
                     id="cron"
+                    value={field.value}
+                    disabled={isEditPage}
                     data-testid="cronautocomplete"
                     options={[
                       { id: 'daily', label: 'daily' },
