@@ -310,6 +310,7 @@ const CreateConnectionForm = ({
                     }}
                   >
                     <FormControlLabel
+                      data-testid="normalizationCheckbox"
                       value="normalized"
                       control={<Radio />}
                       label="Normalized"

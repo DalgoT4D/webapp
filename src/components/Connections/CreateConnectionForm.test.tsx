@@ -210,7 +210,8 @@ describe('Connections Setup', () => {
 
     // check normalization after sync checkbox
     const normalizationCheckbox = screen.getByTestId('normalizationCheckbox')
-      .firstChild?.firstChild?.firstChild;
+      .firstChild?.firstChild;
+
     expect(normalizationCheckbox).not.toBeChecked();
     await act(() => userEvent.click(normalizationCheckbox));
     expect(normalizationCheckbox).toBeChecked();
