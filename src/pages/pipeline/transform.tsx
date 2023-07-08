@@ -27,9 +27,11 @@ import { backendUrl } from '@/config/constant';
 
 type DbtBlock = {
   blockName: string;
-  displayName: string;
+  blockId: string;
+  blockType: string;
   target: string;
   action: string;
+  deploymentId: string;
 };
 type TargetBlocks = {
   [id: string]: DbtBlock[];

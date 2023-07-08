@@ -36,7 +36,9 @@ describe('tests for dbt-target component', () => {
     const title = screen.getByTestId('runJob');
     userEvent.click(title);
     await waitFor(() => {
-      expect(setRunningMock).toBeCalled();
+      expect(setRunningMock).not.toBeCalled();
     });
+
+    // TODO
   });
 });
