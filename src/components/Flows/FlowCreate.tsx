@@ -149,6 +149,7 @@ const FlowCreate = ({
           toastContext
         );
         setSelectedFlow('');
+        mutate();
         updateCrudVal('index');
       } else {
         const blocks = data.connectionBlocks.map(
