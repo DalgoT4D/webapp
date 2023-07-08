@@ -9,6 +9,7 @@ import { backendUrl } from '@/config/constant';
 export default function Orchestrate() {
   const [crudVal, setCrudVal] = useState<string>('index'); // can be index or create
   const [flows, setFlows] = useState<Array<any>>([]);
+  const [selectedFlow, setSelectedFlow] = useState('');
 
   const updateCrudVal = (crudState: string) => {
     setCrudVal(crudState);
@@ -27,10 +28,24 @@ export default function Orchestrate() {
     <>
       <PageHead title="Orchestrate" />
       <main className={styles.main}>
-        {crudVal === 'index' ? (
-          <Flows flows={flows} updateCrudVal={updateCrudVal} mutate={mutate} />
-        ) : (
+        {crudVal === 'index' && (
+          <Flows
+            flows={flows}
+            updateCrudVal={updateCrudVal}
+            mutate={mutate}
+            setSelectedFlow={setSelectedFlow}
+          />
+        )}
+        {crudVal === 'create' && (
           <FlowCreate updateCrudVal={updateCrudVal} mutate={mutate} />
+        )}
+        {crudVal === 'update' && (
+          <FlowCreate
+            setSelectedFlow={setSelectedFlow}
+            flowId={selectedFlow}
+            updateCrudVal={updateCrudVal}
+            mutate={mutate}
+          />
         )}
       </main>
     </>
