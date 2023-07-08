@@ -101,6 +101,7 @@ export const DBTTarget = ({
       );
       if (response?.logs?.logs && response.logs.logs.length > 0) {
         const logsArray = response.logs.logs.map(
+          // eslint-disable-next-line
           (logObject: PrefectFlowRunLog, idx: number) =>
             `- ${logObject.message} '\n'`
         );
