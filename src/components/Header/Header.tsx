@@ -4,16 +4,13 @@ import ProfileIcon from '@/assets/icons/profile.svg';
 import LogoutIcon from '@/assets/icons/logout.svg';
 import { signOut, useSession } from 'next-auth/react';
 import Logo from '@/assets/images/logo.svg';
-import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { useState } from 'react';
 
 export const Header = () => {
-  const router = useRouter();
   const handleSignout = () => {
     // Hit backend api to invalidate the token
-    router.push('/login');
-    signOut({ redirect: false });
+    signOut({ callbackUrl: `${window.location.origin}` });
   };
   const { data: session }: any = useSession();
 
