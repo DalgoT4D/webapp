@@ -148,7 +148,7 @@ const EditSourceForm = ({
     dropdownEnums: any[] = [],
     formValues: any = {},
     childSpecsBeingEdited: any[] = [],
-    parentOrder: number = 0
+    parentOrder = 0
   ) => {
     // Push the parent enum in the array
     if (exclude.length > 0) {
@@ -212,9 +212,9 @@ const EditSourceForm = ({
       }
 
       // Check if the field is being edited for not; only for nested creds
-      let levels = objParentKey.split('.');
+      const levels = objParentKey.split('.');
       if (levels.length > 2) {
-        let prefilled: boolean = false;
+        let prefilled = false;
         let levelData = formValues;
         for (const level of levels) {
           if (level in levelData) {
@@ -289,7 +289,7 @@ const EditSourceForm = ({
           // Prepare the specs config before rendering it
           const childSpecsBeingEdited: any = [];
 
-          let specsConfigFields = prePrepareConfigSpecs(
+          const specsConfigFields = prePrepareConfigSpecs(
             [],
             data,
             'config',
