@@ -1,4 +1,4 @@
-import { Box, IconButton, InputAdornment } from '@mui/material';
+import { Autocomplete, Box, IconButton, InputAdornment } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import MultiTagInput from '../MultiTagInput';
 import { Controller } from 'react-hook-form';
@@ -11,16 +11,35 @@ export interface SourceConfigInputprops {
   registerFormFieldValue: (...args: any) => any;
   control: any;
   setFormValue: (...args: any) => any;
+  unregisterFormField: (...args: any) => any;
   source?: any;
 }
+
+export type SourceSpec = {
+  type: string;
+  const?: unknown;
+  field: string;
+  title: string;
+  default: unknown;
+  airbyte_secret: boolean;
+  required: boolean;
+  enum?: Array<unknown>;
+  parent?: string;
+  specs?: Array<SourceSpec>;
+  order: number;
+  pattern?: string;
+};
 
 export const SourceConfigInput = ({
   specs,
   registerFormFieldValue,
   control,
   setFormValue,
+  unregisterFormField,
   source,
 }: SourceConfigInputprops) => {
+  const [connectorSpecs, setConnectorSpecs] = useState<Array<SourceSpec>>([]);
+
   const [showPasswords, setShowPasswords] = useState<any>({});
 
   const handleClickShowPassword = (field: string) => {
@@ -28,6 +47,67 @@ export const SourceConfigInput = ({
     tempShowPasswords[field] = !showPasswords[field];
     setShowPasswords(tempShowPasswords);
   };
+
+  const handleObjectFieldOnChange = (
+    dropDownVal: string,
+    field: string,
+    fieldOnChangeFunc: any
+  ) => {
+    fieldOnChangeFunc.onChange(dropDownVal);
+
+    // Fetch the current selected spec of type object based on selection
+    const selectedSpec: SourceSpec | undefined = connectorSpecs.find(
+      (ele: SourceSpec) => ele.field === field
+    );
+
+    // Filter all specs that are under selectedSpec and have parent as selectedSpec
+    // Check if any child specs has type object
+    const filteredChildSpecs: Array<SourceSpec> = [];
+    if (selectedSpec && selectedSpec.specs) {
+      selectedSpec.specs.forEach((ele: SourceSpec) => {
+        if (ele.parent === dropDownVal) {
+          // Check if the child has another level or not
+          if (ele.specs && ele.enum && ele.enum.length === 0) {
+            ele.specs.forEach((childEle: SourceSpec) => {
+              filteredChildSpecs.push({ ...childEle, order: ele.order });
+            });
+          } else {
+            filteredChildSpecs.push(ele);
+          }
+        }
+      });
+    }
+
+    // Set the order of child specs to be displayed at correct position
+    filteredChildSpecs.forEach((ele: SourceSpec) => {
+      ele.order = selectedSpec?.order || -1;
+    });
+
+    // Find the specs that will have parent in the following enum array
+    const enumsToRemove =
+      (selectedSpec &&
+        selectedSpec.enum &&
+        selectedSpec.enum.filter((ele) => ele !== dropDownVal)) ||
+      [];
+
+    const tempSpecs = connectorSpecs
+      .filter(
+        (sp: SourceSpec) => !sp.parent || !enumsToRemove.includes(sp.parent)
+      )
+      .concat(filteredChildSpecs);
+
+    // Unregister the form fields that have parent in enumsToRemove
+    connectorSpecs.forEach((sp: SourceSpec) => {
+      if (sp.parent && enumsToRemove.includes(sp.parent))
+        unregisterFormField(sp.field);
+    });
+
+    setConnectorSpecs(tempSpecs);
+  };
+
+  useEffect(() => {
+    setConnectorSpecs(specs);
+  }, [specs]);
 
   useEffect(() => {
     const tempShowPasswords: any = {};
@@ -41,9 +121,9 @@ export const SourceConfigInput = ({
 
   return (
     <>
-      {specs
+      {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
-        .map((spec: any, idx: number) =>
+        .map((spec: SourceSpec, idx: number) =>
           spec?.type === 'string' ? (
             spec.airbyte_secret ? (
               <React.Fragment key={idx}>
@@ -51,7 +131,7 @@ export const SourceConfigInput = ({
                   sx={{ width: '100%' }}
                   label={spec?.title}
                   register={registerFormFieldValue}
-                  name={`config.${spec.field}`}
+                  name={spec.field}
                   variant="outlined"
                   type={showPasswords[`${spec.field}`] ? 'text' : 'password'}
                   required={spec.required}
@@ -86,7 +166,7 @@ export const SourceConfigInput = ({
                   label={spec?.title}
                   variant="outlined"
                   register={registerFormFieldValue}
-                  name={`config.${spec.field}`}
+                  name={spec.field}
                   required={spec.required}
                   defaultValue={spec?.default}
                   disabled={source ? true : false}
@@ -98,7 +178,7 @@ export const SourceConfigInput = ({
           ) : spec?.type === 'array' ? (
             <React.Fragment key={idx}>
               <Controller
-                name={`config.${spec.field}`}
+                name={spec.field}
                 control={control}
                 rules={{ required: spec.required }}
                 render={({ field: { value } }) => (
@@ -121,11 +201,40 @@ export const SourceConfigInput = ({
                 label={spec?.title}
                 variant="outlined"
                 register={registerFormFieldValue}
-                name={`config.${spec.field}`}
+                name={spec.field}
                 required={spec.required}
                 defaultValue={spec?.default}
                 type="number"
               ></Input>
+              <Box sx={{ m: 2 }} />
+            </React.Fragment>
+          ) : spec?.type === 'object' ? (
+            <React.Fragment key={idx}>
+              <Controller
+                name={spec.field}
+                control={control}
+                rules={{ required: spec.required }}
+                render={({ field }) => (
+                  <Autocomplete
+                    disabled={source ? true : false}
+                    data-testid="autocomplete"
+                    id={spec.field}
+                    value={field.value}
+                    options={spec.enum as any}
+                    onChange={(e, data: any) => {
+                      handleObjectFieldOnChange(data, spec.field, field);
+                    }}
+                    renderInput={(params) => (
+                      <Input
+                        name={spec.field}
+                        {...params}
+                        variant="outlined"
+                        label={spec.title}
+                      />
+                    )}
+                  />
+                )}
+              />
               <Box sx={{ m: 2 }} />
             </React.Fragment>
           ) : (
