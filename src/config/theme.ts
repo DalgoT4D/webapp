@@ -47,6 +47,22 @@ const theme = createTheme({
         },
       },
     },
+    MuiFormLabel: {
+      styleOverrides: {
+        root: {
+          fontWeight: 600,
+          marginBottom: 10,
+          color: '#758397',
+        },
+      },
+    },
+    MuiFormControlLabel: {
+      styleOverrides: {
+        root: {
+          color: '#758397',
+        },
+      },
+    },
     MuiTextField: {
       styleOverrides: {
         root: {

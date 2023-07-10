@@ -30,6 +30,7 @@ export interface FlowsInterface {
   flows: Array<FlowInterface>;
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
+  setSelectedFlow: (arg: string) => any;
 }
 
 const flowState = (flow: FlowInterface) => {
@@ -98,7 +99,12 @@ const flowLastRun = (flow: FlowInterface) => {
   );
 };
 
-export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
+export const Flows = ({
+  flows,
+  updateCrudVal,
+  mutate,
+  setSelectedFlow,
+}: FlowsInterface) => {
   const [showFlowRunHistory, setShowFlowRunHistory] = useState<boolean>(false);
   const [flowRunHistoryDeploymentId, setFlowRunHistoryDeploymentId] =
     useState<string>('');
@@ -118,6 +124,12 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
   const handleDeleteConnection = () => {
     handleClose();
     setShowConfirmDeleteDialog(true);
+  };
+
+  const handleEditConnection = () => {
+    handleClose();
+    setSelectedFlow(deploymentId);
+    updateCrudVal('update');
   };
 
   const handleClick = (blockId: string, event: HTMLElement | null) => {
@@ -143,7 +155,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
             color="rgba(9, 37, 64, 0.87)"
             fontWeight={700}
           >
-            &nbsp; by 12pm time every day
+            &nbsp; by 12pm every day
           </Typography>
         </Box>,
         flowStatus(flow.status),
@@ -253,6 +265,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
         eleType="flow"
         anchorEl={anchorEl}
         open={open}
+        handleEdit={handleEditConnection}
         handleClose={handleClose}
         elementId={deploymentId}
         handleDeleteConnection={handleDeleteConnection}
