@@ -1,9 +1,8 @@
-import { DBTCreateProfile } from '@/components/DBT/DBTCreateProfile';
 import { DBTSetup } from '@/components/DBT/DBTSetup';
 import { PageHead } from '@/components/PageHead';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpGet } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
 import {
   Box,
@@ -46,12 +45,10 @@ const Transform = () => {
     default_schema: '',
   });
   const [dbtBlocks, setDbtBlocks] = useState<TargetBlocks>({});
-  const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, create-profile, complete
+  const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
   const [running, setRunning] = useState<boolean>(false);
   const [showConnectRepoDialog, setShowConnectRepoDialog] =
-    useState<boolean>(false);
-  const [showAddProfileDialog, setShowAddProfileDialog] =
     useState<boolean>(false);
   const [rerender, setRerender] = useState<boolean>(false);
   const [dbtSetupLogs, setDbtSetupLogs] = useState<string[]>([]);
@@ -73,7 +70,6 @@ const Transform = () => {
       } else {
         response.status = 'fetched';
         setWorkspace(response);
-        setDbtSetupStage('create-profile');
         fetchDbtBlocks();
       }
     } catch (err: any) {
@@ -107,6 +103,16 @@ const Transform = () => {
       if (response && response?.length > 0) {
         setDbtSetupStage('complete');
       }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
+  };
+
+  const createProfile = async () => {
+    try {
+      await httpPost(session, `prefect/blocks/dbt/`, {});
+      setDbtSetupStage('complete');
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
@@ -209,13 +215,6 @@ const Transform = () => {
               >
                 Connect & Setup Repo{' '}
               </Button>
-            ) : dbtSetupStage === 'create-profile' ? (
-              <Button
-                variant="contained"
-                onClick={() => setShowAddProfileDialog(true)}
-              >
-                Add Profile
-              </Button>
             ) : dbtSetupStage === 'complete' ? (
               <>
                 {Object.keys(dbtBlocks).map((target) => (
@@ -234,21 +233,12 @@ const Transform = () => {
           </Box>
         </Card>
         <Box>
-          {dbtSetupStage === 'create-profile' ? (
-            <DBTCreateProfile
-              createdProfile={() => {
-                setDbtSetupStage('complete');
-                setRerender(!rerender);
-              }}
-              showDialog={showAddProfileDialog}
-              setShowDialog={setShowAddProfileDialog}
-            />
-          ) : dbtSetupStage === 'create-workspace' ? (
+          {dbtSetupStage === 'create-workspace' ? (
             <DBTSetup
               setLogs={setDbtSetupLogs}
               setExpandLogs={setExpandLogs}
               onCreateWorkspace={() => {
-                setDbtSetupStage('create-profile');
+                createProfile();
                 setRerender(!rerender);
               }}
               showDialog={showConnectRepoDialog}
