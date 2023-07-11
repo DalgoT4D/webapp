@@ -162,7 +162,6 @@ export const Connections = () => {
       } finally {
         setSyncingBlockId('');
       }
-      setExpandSyncLogs(false);
     })();
   };
 
