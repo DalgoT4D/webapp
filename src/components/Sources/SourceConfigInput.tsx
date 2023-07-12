@@ -184,7 +184,7 @@ export const SourceConfigInput = ({
                 render={({ field: { value } }) => (
                   <MultiTagInput
                     disabled={source && !spec.airbyte_secret ? true : false}
-                    field={`config.${spec.field}`}
+                    field={spec.field}
                     label={spec.title}
                     fieldValueArr={value}
                     setFormValue={setFormValue}
