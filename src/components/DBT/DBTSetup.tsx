@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useState, useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import CustomDialog from '../Dialog/CustomDialog';
 import Input from '../UI/Input/Input';
 
@@ -14,6 +14,15 @@ interface DBTSetupProps {
   setExpandLogs: (...args: any) => any;
   showDialog: boolean;
   setShowDialog: (...args: any) => any;
+  gitrepoUrl: string;
+  schema: string;
+  mode: string;
+}
+
+interface DBTCreateWorkspaceParams {
+  gitrepoUrl: string;
+  gitrepoAccessToken: string;
+  schema: string;
 }
 
 export const DBTSetup = ({
@@ -22,10 +31,11 @@ export const DBTSetup = ({
   setExpandLogs,
   showDialog,
   setShowDialog,
+  gitrepoUrl,
+  schema,
+  mode,
 }: DBTSetupProps) => {
-  const { register, handleSubmit, reset } = useForm({
-    defaultValues: { gitrepoUrl: '', gitrepoAccessToken: '', schema: '' },
-  });
+  const { register, handleSubmit, reset } = useForm<DBTCreateWorkspaceParams>();
   const { data: session }: any = useSession();
   const [progressMessages, setProgressMessages] = useState<any[]>([]);
   const [setupStatus, setSetupStatus] = useState('not-started');
@@ -82,23 +92,32 @@ export const DBTSetup = ({
     setProgressMessages(progressMessages.concat(progressMsgs));
   }, [setupStatus]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: DBTCreateWorkspaceParams) => {
     setSetupStatus('started');
     handleClose();
-    setExpandLogs(true);
 
+    if (mode === 'create') {
+      createWorkspace(data);
+    } else {
+      editWorkspace(data);
+    }
+  };
+
+  const createWorkspace = async (data: DBTCreateWorkspaceParams) => {
     const payload = {
       gitrepoUrl: data.gitrepoUrl,
       dbtVersion: '1.4.5',
       profile: {
         name: 'dbt',
-        target: 'dev',
         target_configs_schema: data.schema,
       },
     } as any;
+
     if (data.gitrepoAccessToken) {
       payload.gitrepoAccessToken = data.gitrepoAccessToken;
     }
+
+    setExpandLogs(true);
 
     try {
       const message = await httpPost(session, 'dbt/workspace/', payload);
@@ -109,6 +128,44 @@ export const DBTSetup = ({
       console.error(err);
       errorToast(err.message, [], toastContext);
       setSetupStatus('failed');
+    }
+  };
+
+  const editWorkspace = async (data: DBTCreateWorkspaceParams) => {
+    if (data.schema && data.schema !== schema) {
+      const updateSchemaPayload = {
+        target_configs_schema: data.schema,
+      };
+      try {
+        await httpPut(session, 'dbt/schema/', updateSchemaPayload);
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+        setSetupStatus('failed');
+        return;
+      }
+    }
+    if (data.gitrepoUrl) {
+      if (data.gitrepoUrl === gitrepoUrl && !data.gitrepoAccessToken) {
+        return;
+      }
+      const updateGitPayload = {
+        gitrepoUrl: data.gitrepoUrl,
+        gitrepoAccessToken: data.gitrepoAccessToken,
+      };
+      setExpandLogs(true);
+      try {
+        const message = await httpPut(session, 'dbt/github/', updateGitPayload);
+        setTimeout(() => {
+          checkProgress(message.task_id);
+        }, 1000);
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], toastContext);
+        setSetupStatus('failed');
+      }
+    } else {
+      setSetupStatus('completed');
     }
   };
 
@@ -126,6 +183,7 @@ export const DBTSetup = ({
             data-testid="github-url"
             label="GitHub repo URL"
             variant="outlined"
+            defaultValue={gitrepoUrl}
             register={register}
             name="gitrepoUrl"
             required
@@ -149,6 +207,7 @@ export const DBTSetup = ({
             data-testid="dbt-target-schema"
             label="dbt target schema"
             variant="outlined"
+            defaultValue={schema}
             register={register}
             name="schema"
             required
