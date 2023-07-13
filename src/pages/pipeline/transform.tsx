@@ -4,6 +4,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import {
   Box,
   Button,
@@ -21,6 +22,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Dbt from '@/assets/images/dbt.png';
 import Image from 'next/image';
+import { ActionsMenu } from '../../components/UI/Menu/Menu';
 import { DBTTarget } from '@/components/DBT/DBTTarget';
 
 type DbtBlock = {
@@ -55,6 +57,19 @@ const Transform = () => {
 
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  const handleClick = (event: HTMLElement | null) => {
+    setAnchorEl(event);
+  };
+  const handleEdit = () => {
+    setShowConnectRepoDialog(true);
+    handleClose();
+  };
 
   const fetchDbtWorkspace = async () => {
     if (!session) return;
@@ -125,6 +140,14 @@ const Transform = () => {
 
   return (
     <>
+      <ActionsMenu
+        eleType="dbtworkspace"
+        anchorEl={anchorEl}
+        open={open}
+        handleClose={handleClose}
+        handleEdit={handleEdit}
+        handleDeleteConnection={() => {}}
+      />
       <PageHead title="DDP: Transform" />
       <main className={styles.main}>
         <Typography
@@ -230,6 +253,17 @@ const Transform = () => {
             ) : (
               ''
             )}
+            <Button
+              aria-controls={open ? 'basic-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? 'true' : undefined}
+              onClick={(event) => handleClick(event.currentTarget)}
+              variant="contained"
+              color="info"
+              sx={{ p: 0, minWidth: 32, ml: 2 }}
+            >
+              <MoreHorizIcon />
+            </Button>
           </Box>
         </Card>
         <Box>
@@ -243,6 +277,22 @@ const Transform = () => {
               }}
               showDialog={showConnectRepoDialog}
               setShowDialog={setShowConnectRepoDialog}
+              gitrepoUrl=""
+              schema=""
+              mode="create"
+            />
+          ) : dbtSetupStage === 'complete' && workspace ? (
+            <DBTSetup
+              setLogs={setDbtSetupLogs}
+              setExpandLogs={setExpandLogs}
+              onCreateWorkspace={async () => {
+                await fetchDbtWorkspace();
+              }}
+              showDialog={showConnectRepoDialog}
+              setShowDialog={setShowConnectRepoDialog}
+              gitrepoUrl={workspace?.gitrepo_url}
+              schema={workspace?.default_schema}
+              mode="edit"
             />
           ) : (
             ''
