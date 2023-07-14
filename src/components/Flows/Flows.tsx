@@ -267,7 +267,6 @@ export const Flows = ({
         open={open}
         handleEdit={handleEditConnection}
         handleClose={handleClose}
-        elementId={deploymentId}
         handleDeleteConnection={handleDeleteConnection}
       />
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

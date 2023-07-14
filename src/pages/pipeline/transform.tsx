@@ -1,10 +1,10 @@
-import { DBTCreateProfile } from '@/components/DBT/DBTCreateProfile';
 import { DBTSetup } from '@/components/DBT/DBTSetup';
 import { PageHead } from '@/components/PageHead';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpGet } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import {
   Box,
   Button,
@@ -22,6 +22,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Dbt from '@/assets/images/dbt.png';
 import Image from 'next/image';
+import { ActionsMenu } from '../../components/UI/Menu/Menu';
 import { DBTTarget } from '@/components/DBT/DBTTarget';
 
 type DbtBlock = {
@@ -46,18 +47,29 @@ const Transform = () => {
     default_schema: '',
   });
   const [dbtBlocks, setDbtBlocks] = useState<TargetBlocks>({});
-  const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, create-profile, complete
+  const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
   const [running, setRunning] = useState<boolean>(false);
   const [showConnectRepoDialog, setShowConnectRepoDialog] =
-    useState<boolean>(false);
-  const [showAddProfileDialog, setShowAddProfileDialog] =
     useState<boolean>(false);
   const [rerender, setRerender] = useState<boolean>(false);
   const [dbtSetupLogs, setDbtSetupLogs] = useState<string[]>([]);
 
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  const handleClick = (event: HTMLElement | null) => {
+    setAnchorEl(event);
+  };
+  const handleEdit = () => {
+    setShowConnectRepoDialog(true);
+    handleClose();
+  };
 
   const fetchDbtWorkspace = async () => {
     if (!session) return;
@@ -73,7 +85,6 @@ const Transform = () => {
       } else {
         response.status = 'fetched';
         setWorkspace(response);
-        setDbtSetupStage('create-profile');
         fetchDbtBlocks();
       }
     } catch (err: any) {
@@ -113,12 +124,30 @@ const Transform = () => {
     }
   };
 
+  const createProfile = async () => {
+    try {
+      await httpPost(session, `prefect/blocks/dbt/`, {});
+      setDbtSetupStage('complete');
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    }
+  };
+
   useEffect(() => {
     fetchDbtWorkspace();
   }, [session, rerender]);
 
   return (
     <>
+      <ActionsMenu
+        eleType="dbtworkspace"
+        anchorEl={anchorEl}
+        open={open}
+        handleClose={handleClose}
+        handleEdit={handleEdit}
+        handleDeleteConnection={() => {}}
+      />
       <PageHead title="DDP: Transform" />
       <main className={styles.main}>
         <Typography
@@ -209,13 +238,6 @@ const Transform = () => {
               >
                 Connect & Setup Repo{' '}
               </Button>
-            ) : dbtSetupStage === 'create-profile' ? (
-              <Button
-                variant="contained"
-                onClick={() => setShowAddProfileDialog(true)}
-              >
-                Add Profile
-              </Button>
             ) : dbtSetupStage === 'complete' ? (
               <>
                 {Object.keys(dbtBlocks).map((target) => (
@@ -231,28 +253,46 @@ const Transform = () => {
             ) : (
               ''
             )}
+            <Button
+              aria-controls={open ? 'basic-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? 'true' : undefined}
+              onClick={(event) => handleClick(event.currentTarget)}
+              variant="contained"
+              color="info"
+              sx={{ p: 0, minWidth: 32, ml: 2 }}
+            >
+              <MoreHorizIcon />
+            </Button>
           </Box>
         </Card>
         <Box>
-          {dbtSetupStage === 'create-profile' ? (
-            <DBTCreateProfile
-              createdProfile={() => {
-                setDbtSetupStage('complete');
-                setRerender(!rerender);
-              }}
-              showDialog={showAddProfileDialog}
-              setShowDialog={setShowAddProfileDialog}
-            />
-          ) : dbtSetupStage === 'create-workspace' ? (
+          {dbtSetupStage === 'create-workspace' ? (
             <DBTSetup
               setLogs={setDbtSetupLogs}
               setExpandLogs={setExpandLogs}
               onCreateWorkspace={() => {
-                setDbtSetupStage('create-profile');
+                createProfile();
                 setRerender(!rerender);
               }}
               showDialog={showConnectRepoDialog}
               setShowDialog={setShowConnectRepoDialog}
+              gitrepoUrl=""
+              schema=""
+              mode="create"
+            />
+          ) : dbtSetupStage === 'complete' && workspace ? (
+            <DBTSetup
+              setLogs={setDbtSetupLogs}
+              setExpandLogs={setExpandLogs}
+              onCreateWorkspace={async () => {
+                await fetchDbtWorkspace();
+              }}
+              showDialog={showConnectRepoDialog}
+              setShowDialog={setShowConnectRepoDialog}
+              gitrepoUrl={workspace?.gitrepo_url}
+              schema={workspace?.default_schema}
+              mode="edit"
             />
           ) : (
             ''

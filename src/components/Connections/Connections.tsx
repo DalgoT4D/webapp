@@ -313,7 +313,6 @@ export const Connections = () => {
         anchorEl={anchorEl}
         open={open}
         handleClose={handleClose}
-        elementId={blockId}
         handleEdit={handleEditConnection}
         handleDeleteConnection={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
