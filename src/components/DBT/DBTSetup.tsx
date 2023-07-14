@@ -17,7 +17,6 @@ interface DBTSetupProps {
   gitrepoUrl: string;
   schema: string;
   mode: string;
-  fetchUpdatedWorkspace: (...args: any) => any;
 }
 
 interface DBTCreateWorkspaceParams {
@@ -35,7 +34,6 @@ export const DBTSetup = ({
   gitrepoUrl,
   schema,
   mode,
-  fetchUpdatedWorkspace,
 }: DBTSetupProps) => {
   const { register, handleSubmit, reset } = useForm<DBTCreateWorkspaceParams>();
   const { data: session }: any = useSession();
@@ -140,7 +138,6 @@ export const DBTSetup = ({
       };
       try {
         await httpPut(session, 'dbt/schema/', updateSchemaPayload);
-        fetchUpdatedWorkspace();
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
@@ -162,7 +159,6 @@ export const DBTSetup = ({
         setTimeout(() => {
           checkProgress(message.task_id);
         }, 1000);
-        fetchUpdatedWorkspace();
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
