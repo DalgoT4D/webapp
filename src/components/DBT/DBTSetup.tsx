@@ -93,10 +93,10 @@ export const DBTSetup = ({
   }, [setupStatus]);
 
   const onSubmit = async (data: DBTCreateWorkspaceParams) => {
-    setSetupStatus('started');
     handleClose();
 
     if (mode === 'create') {
+      setSetupStatus('started');
       createWorkspace(data);
     } else {
       editWorkspace(data);
