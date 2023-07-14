@@ -166,7 +166,6 @@ export const DBTTarget = ({
           )}
         </Button>
       ))}
-      <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
       <Select
         value={selectedBlock}
         onChange={(event) => {
