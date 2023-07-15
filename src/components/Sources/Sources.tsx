@@ -132,7 +132,6 @@ export const Sources = () => {
         anchorEl={anchorEl}
         open={open}
         handleClose={handleClose}
-        elementId={sourceToBeDeleted}
         handleEdit={handleEditSource}
         handleDeleteConnection={handleDeleteSource}
       />
