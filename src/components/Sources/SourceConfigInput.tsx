@@ -36,7 +36,6 @@ export const SourceConfigInput = ({
   control,
   setFormValue,
   unregisterFormField,
-  source,
 }: SourceConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<SourceSpec>>([]);
 
