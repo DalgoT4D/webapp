@@ -328,7 +328,7 @@ const EditDestinationForm = ({
               options={destinationDefs}
               data-testid="dest-type-autocomplete"
               value={field.value}
-              onChange={(e, data) => field.onChange(data)}
+              onChange={(e, data) => data && field.onChange(data)}
               renderInput={(params) => (
                 <Input
                   name="destinationDef"

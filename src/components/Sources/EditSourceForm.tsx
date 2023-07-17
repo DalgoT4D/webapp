@@ -397,7 +397,7 @@ const EditSourceForm = ({
                   id="sourceDef"
                   value={field.value}
                   options={sourceDefs}
-                  onChange={(e, data) => field.onChange(data)}
+                  onChange={(e, data) => data && field.onChange(data)}
                   renderInput={(params) => {
                     return (
                       <Input
