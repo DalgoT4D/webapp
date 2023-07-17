@@ -8,6 +8,7 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { DestinationConfigInput } from './DestinationConfigInput';
 import Input from '../UI/Input/Input';
+import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 interface EditDestinationFormProps {
   showForm: boolean;
@@ -186,26 +187,16 @@ const EditDestinationForm = ({
             `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`
           );
 
-          const dataProperties: any = data?.properties || {};
-          let maxOrder = -1;
+          let connectorConfigInput = new ConnectorConfigInput('source', data);
 
-          for (const [key, value] of Object.entries(dataProperties)) {
-            const order: any =
-              (value as any)?.order >= 0 ? (value as any)?.order : -1;
-            data.properties[key]['order'] = order;
-            maxOrder = order > maxOrder ? order : maxOrder;
-          }
+          connectorConfigInput.setValidOrderToAllProperties();
 
-          // Attach order to all specs
-          for (const key in dataProperties) {
-            if (data.properties[key]['order'] === -1)
-              data.properties[key]['order'] = ++maxOrder;
-          }
+          connectorConfigInput.setOrderToChildProperties();
 
           // Prepare the specs config before setting it
           const specsConfigFields = prePrepareConfigSpecs(
             [],
-            data,
+            connectorConfigInput.specsData,
             'config',
             [],
             []
@@ -217,9 +208,10 @@ const EditDestinationForm = ({
           setValue('name', warehouse.name);
 
           // Prefill the warehouse config
-          setPrefilledFormFieldsForWarehouse(
+          ConnectorConfigInput.prefillFormFields(
             warehouse.connectionConfiguration,
-            'config'
+            'config',
+            setValue
           );
         } catch (err: any) {
           console.error(err);
@@ -228,24 +220,6 @@ const EditDestinationForm = ({
       })();
     }
   }, [watchSelectedDestinationDef]);
-
-  const setPrefilledFormFieldsForWarehouse = (
-    connectionConfiguration: any,
-    parent = 'config'
-  ) => {
-    for (const [key, value] of Object.entries(connectionConfiguration)) {
-      const field: any = `${parent}.${key}`;
-
-      const valIsObject =
-        typeof value === 'object' && value !== null && !Array.isArray(value);
-
-      if (valIsObject) {
-        setPrefilledFormFieldsForWarehouse(value, field);
-      } else {
-        setValue(field, value);
-      }
-    }
-  };
 
   const handleClose = () => {
     reset();

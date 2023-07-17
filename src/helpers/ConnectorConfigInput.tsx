@@ -159,6 +159,30 @@ class ConnectorConfigInput {
 
     return result;
   }
+
+  // Set values in form from connection configuration of a connector
+  static prefillFormFields(
+    connectionConfiguration: any,
+    parent = 'config',
+    setFormValueCallback: (...args: any) => any
+  ) {
+    for (const [key, value] of Object.entries(connectionConfiguration)) {
+      const field: any = `${parent}.${key}`;
+
+      const valIsObject =
+        typeof value === 'object' && value !== null && !Array.isArray(value);
+
+      if (valIsObject) {
+        ConnectorConfigInput.prefillFormFields(
+          value,
+          field,
+          setFormValueCallback
+        );
+      } else {
+        setFormValueCallback(field, value);
+      }
+    }
+  }
 }
 
 export default ConnectorConfigInput;
