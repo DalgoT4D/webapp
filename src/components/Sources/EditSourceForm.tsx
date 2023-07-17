@@ -8,6 +8,7 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { SourceConfigInput } from './SourceConfigInput';
 import Input from '../UI/Input/Input';
+import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 interface EditSourceFormProps {
   mutate: (...args: any) => any;
@@ -264,26 +265,17 @@ const EditSourceForm = ({
             `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`
           );
 
-          const dataProperties: any = data?.properties || {};
-          let maxOrder = -1;
+          let connectorConfigInput = new ConnectorConfigInput('source', data);
 
-          for (const [key, value] of Object.entries(dataProperties)) {
-            const order: any =
-              (value as any)?.order >= 0 ? (value as any)?.order : -1;
-            data.properties[key]['order'] = order;
-            maxOrder = order > maxOrder ? order : maxOrder;
-          }
+          connectorConfigInput.setValidOrderToAllProperties();
 
-          // Attach order to all specs
-          for (const key in dataProperties) {
-            if (data.properties[key]['order'] === -1)
-              data.properties[key]['order'] = ++maxOrder;
-          }
+          connectorConfigInput.setOrderToChildProperties();
 
           // Prefill the source config
-          setPrefilledFormFieldsForSource(
+          ConnectorConfigInput.prefillFormFields(
             source.connectionConfiguration,
-            'config'
+            'config',
+            setValue
           );
 
           // Prepare the specs config before rendering it
@@ -291,7 +283,7 @@ const EditSourceForm = ({
 
           const specsConfigFields = prePrepareConfigSpecs(
             [],
-            data,
+            connectorConfigInput.specsData,
             'config',
             [],
             [],
@@ -307,24 +299,6 @@ const EditSourceForm = ({
       })();
     }
   }, [watchSelectedSourceDef]);
-
-  const setPrefilledFormFieldsForSource = (
-    connectionConfiguration: any,
-    parent = 'config'
-  ) => {
-    for (const [key, value] of Object.entries(connectionConfiguration)) {
-      const field: any = `${parent}.${key}`;
-
-      const valIsObject =
-        typeof value === 'object' && value !== null && !Array.isArray(value);
-
-      if (valIsObject) {
-        setPrefilledFormFieldsForSource(value, field);
-      } else {
-        setValue(field, value);
-      }
-    }
-  };
 
   const editSource = async (data: any) => {
     try {
