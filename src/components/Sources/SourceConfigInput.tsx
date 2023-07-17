@@ -36,7 +36,6 @@ export const SourceConfigInput = ({
   control,
   setFormValue,
   unregisterFormField,
-  source,
 }: SourceConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<SourceSpec>>([]);
 
@@ -169,7 +168,7 @@ export const SourceConfigInput = ({
                   name={spec.field}
                   required={spec.required}
                   defaultValue={spec?.default}
-                  disabled={source ? true : false}
+                  disabled={false}
                   inputProps={{ pattern: spec?.pattern }}
                 ></Input>
                 <Box sx={{ m: 2 }} />
@@ -183,7 +182,7 @@ export const SourceConfigInput = ({
                 rules={{ required: spec.required }}
                 render={({ field: { value } }) => (
                   <MultiTagInput
-                    disabled={source && !spec.airbyte_secret ? true : false}
+                    disabled={false}
                     field={spec.field}
                     label={spec.title}
                     fieldValueArr={value}
@@ -196,7 +195,7 @@ export const SourceConfigInput = ({
           ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
               <Input
-                disabled={source && !spec.airbyte_secret ? true : false}
+                disabled={false}
                 sx={{ width: '100%' }}
                 label={spec?.title}
                 variant="outlined"
@@ -216,7 +215,7 @@ export const SourceConfigInput = ({
                 rules={{ required: spec.required }}
                 render={({ field }) => (
                   <Autocomplete
-                    disabled={source ? true : false}
+                    disabled={false}
                     data-testid="autocomplete"
                     id={spec.field}
                     value={field.value}
