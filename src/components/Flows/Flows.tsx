@@ -11,7 +11,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { List } from '../List/List';
 import { FlowRunHistory, FlowRun } from './FlowRunHistory';
-import { lastRunTime } from '@/utils/common';
+import { lastRunTime, cronToString } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import styles from './Flows.module.css';
 import Image from 'next/image';
@@ -155,7 +155,7 @@ export const Flows = ({
             color="rgba(9, 37, 64, 0.87)"
             fontWeight={700}
           >
-            &nbsp; by 12pm every day
+            &nbsp; {cronToString(flow.cron)}
           </Typography>
         </Box>,
         flowStatus(flow.status),
