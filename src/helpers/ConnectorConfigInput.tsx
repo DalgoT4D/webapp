@@ -1,4 +1,4 @@
-interface ConnectorSpecifications {
+interface ConnectorSpecificationsObject {
   type: string;
   title: string;
   $schema: string;
@@ -6,12 +6,30 @@ interface ConnectorSpecifications {
   properties: Object;
 }
 
+export type ConnectorSpec = {
+  type: string;
+  const?: unknown;
+  field: string;
+  title: string;
+  default: unknown;
+  airbyte_secret: boolean;
+  required: boolean;
+  enum?: Array<unknown>;
+  parent?: string;
+  specs?: Array<ConnectorSpec>;
+  order: number;
+  pattern?: string;
+};
+
 class ConnectorConfigInput {
   type: string;
-  specsData: ConnectorSpecifications;
-  constructor(type: string, data: ConnectorSpecifications) {
+  specsData: ConnectorSpecificationsObject;
+  specsToRender: Array<ConnectorSpec>;
+
+  constructor(type: string, data: ConnectorSpecificationsObject) {
     this.type = type;
     this.specsData = { ...data };
+    this.specsToRender = [];
   }
 
   setValidOrderToAllProperties() {
@@ -22,10 +40,14 @@ class ConnectorConfigInput {
     // specs get jumbled when we render them by order and the order starts with 0. So we increment by 1 to start ordering from 1
     for (const key of Object.keys(dataProperties)) {
       let value: any = dataProperties[key];
-      dataProperties[key]['order'] = value?.order >= 0 ? value.order + 1 : -1;
+      dataProperties[key]['order'] =
+        dataProperties[key]?.order >= 0 ? dataProperties[key].order + 1 : -1;
       if (dataProperties[key]['order'] > maxOrder)
         maxOrder = dataProperties[key]['order'];
     }
+
+    // the specs don't have an order attributes
+    if (maxOrder === -1) maxOrder = 0;
 
     // Attach order to all specs
     for (const key in dataProperties) {
@@ -45,13 +67,26 @@ class ConnectorConfigInput {
   }
 
   prepareSpecsToRender() {
-    return ConnectorConfigInput.traverseSpecs(
+    this.specsToRender = ConnectorConfigInput.traverseSpecs(
       [],
       this.specsData,
       'config',
       [],
       []
     );
+    return this.specsToRender;
+  }
+
+  updateSpecsToRender(connectionConfiguration: any) {
+    let childSpecs: Array<ConnectorSpec> =
+      ConnectorConfigInput.appendChildSpecsForEdit(
+        this.specsToRender,
+        connectionConfiguration,
+        'config',
+        []
+      );
+
+    return this.specsToRender.concat(childSpecs);
   }
 
   static traverseSpecsToSetOrder(
@@ -182,6 +217,113 @@ class ConnectorConfigInput {
         setFormValueCallback(field, value);
       }
     }
+  }
+
+  // update specs to render by appending child specs that have been filled/selected/edited
+  static appendChildSpecsForEdit(
+    specs: Array<ConnectorSpec>,
+    connectionConfiguration: any,
+    parent = 'config',
+    childSpecs: Array<ConnectorSpec> = []
+  ) {
+    for (const [key, value] of Object.entries(connectionConfiguration)) {
+      const field: any = `${parent}.${key}`;
+
+      let childSpec: ConnectorSpec | undefined = specs.find(
+        (sp: ConnectorSpec) => sp.field === field
+      );
+
+      // if the spec if not present in specs, then the connection configuration must be an object type
+      // so we need to traverse inside it
+      const valIsObject =
+        typeof value === 'object' && value !== null && !Array.isArray(value);
+
+      if (!childSpec && valIsObject) {
+        if (Object.keys(value).length > 1) {
+          ConnectorConfigInput.appendChildSpecsForEdit(
+            specs,
+            value,
+            field,
+            childSpecs
+          );
+        }
+      } else if (!childSpec) {
+        const regexp = new RegExp(`^${field.split('.', 2).join('.')}`);
+
+        let specsToFindFrom: Array<ConnectorSpec> | undefined = specs.find(
+          (sp: ConnectorSpec) => regexp.test(sp.field)
+        )?.specs;
+
+        if (specsToFindFrom) {
+          let checkSpec: ConnectorSpec | undefined = specsToFindFrom.find(
+            (sp: ConnectorSpec) => sp.field === field
+          );
+
+          if (checkSpec) childSpecs.push(checkSpec);
+        }
+      }
+    }
+    return childSpecs;
+  }
+
+  // handle the on change of object type field in the connectors
+  static fetchUpdatedSpecsOnObjectFieldChange(
+    dropDownVal: string,
+    field: string,
+    currenRenderedSpecs: Array<ConnectorSpec>,
+    unregisterFormFieldCallback: (...args: any) => any,
+    registerFormFieldCallback: (...args: any) => any
+  ) {
+    // Fetch the current selected spec of type object based on selection
+    const selectedSpec: ConnectorSpec | undefined = currenRenderedSpecs.find(
+      (ele: ConnectorSpec) => ele.field === field
+    );
+
+    // Filter all specs that are under selectedSpec and have parent as selectedSpec
+    // Check if any child specs has type object
+    const filteredChildSpecs: Array<ConnectorSpec> = [];
+    if (selectedSpec && selectedSpec.specs) {
+      selectedSpec.specs.forEach((ele: ConnectorSpec) => {
+        if (ele.parent === dropDownVal) {
+          // Check if the child has another level or not
+          if (ele.specs && ele.enum && ele.enum.length === 0) {
+            ele.specs.forEach((childEle: ConnectorSpec) => {
+              filteredChildSpecs.push({ ...childEle, order: ele.order });
+            });
+          } else {
+            filteredChildSpecs.push(ele);
+          }
+        }
+      });
+    }
+
+    // Set the order of child specs to be displayed at correct position
+    // filteredChildSpecs.forEach((ele: ConnectorSpec) => {
+    //   ele.order = selectedSpec?.order || -1;
+    // });
+
+    // Find the specs that will have parent in the following enum array
+    const enumsToRemove =
+      (selectedSpec &&
+        selectedSpec.enum &&
+        selectedSpec.enum.filter((ele) => ele !== dropDownVal)) ||
+      [];
+
+    const tempSpecs = currenRenderedSpecs
+      .filter(
+        (sp: ConnectorSpec) => !sp.parent || !enumsToRemove.includes(sp.parent)
+      )
+      .concat(filteredChildSpecs);
+
+    // Unregister the form fields that have parent in enumsToRemove
+    currenRenderedSpecs.forEach((sp: ConnectorSpec) => {
+      if (sp.parent && enumsToRemove.includes(sp.parent)) {
+        console.log('unregisterin', sp);
+        unregisterFormFieldCallback(sp.field);
+      }
+    });
+
+    return tempSpecs;
   }
 }
 
