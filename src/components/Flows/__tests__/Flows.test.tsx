@@ -33,7 +33,7 @@ describe('Flow Creation', () => {
             flows={[
               {
                 name: 'flow-0',
-                cron: '0 0 0 0 0',
+                cron: '0 0 * * 1',
                 deploymentName: 'deployment-name',
                 deploymentId: 'deployment-id-0',
                 lastRun: {
@@ -46,7 +46,7 @@ describe('Flow Creation', () => {
               } as FlowInterface,
               {
                 name: 'flow-1',
-                cron: '0 0 0 0 0',
+                cron: '0 0 * * 1',
                 deploymentName: 'deployment-name',
                 deploymentId: 'deployment-id-1',
                 lastRun: {
@@ -59,7 +59,7 @@ describe('Flow Creation', () => {
               } as FlowInterface,
               {
                 name: 'flow-2',
-                cron: '0 0 0 0 0',
+                cron: '0 0 * * 1',
                 deploymentName: 'deployment-name',
                 deploymentId: 'deployment-id-2',
                 lastRun: undefined,
@@ -67,6 +67,7 @@ describe('Flow Creation', () => {
             ]}
             updateCrudVal={updateCrudValMock}
             mutate={() => {}}
+            setSelectedFlow={() => {}}
           />
         </SessionProvider>
       );

@@ -13,7 +13,7 @@ import { useSession } from 'next-auth/react';
 import React, { useContext, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import Input from '../UI/Input/Input';
 
 interface FlowCreateInterface {
@@ -52,7 +52,13 @@ const FlowCreate = ({
   const toastContext = useContext(GlobalContext);
 
   const [connections, setConnections] = useState<DispConnection[]>([]);
-  const { register, handleSubmit, control, setValue } = useForm<DeploymentDef>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { dirtyFields },
+    reset,
+  } = useForm<DeploymentDef>({
     defaultValues: {
       active: true,
       name: '',
@@ -89,19 +95,17 @@ const FlowCreate = ({
       (async () => {
         try {
           const data: any = await httpGet(session, `prefect/flows/${flowId}`);
-          setValue('name', data.name);
-          setValue('active', data.isScheduleActive);
-          setValue(
-            'connectionBlocks',
-            data.parameters.airbyte_blocks.map((data: any) => data.name)
-          );
-          setValue(
-            'dbtTransform',
-            data.parameters.dbt_blocks.length > 0 ? 'yes' : 'no'
-          );
-          setValue('cron', {
-            id: convertCronExpression(data.cron),
-            label: convertCronExpression(data.cron),
+          reset({
+            cron: {
+              id: convertCronExpression(data.cron),
+              label: convertCronExpression(data.cron),
+            },
+            dbtTransform: data.parameters.dbt_blocks.length > 0 ? 'yes' : 'no',
+            connectionBlocks: data.parameters.airbyte_blocks.map(
+              (data: any) => data.name
+            ),
+            active: data.isScheduleActive,
+            name: data.name,
           });
         } catch (err: any) {
           console.error(err);
@@ -134,15 +138,26 @@ const FlowCreate = ({
   }, []);
 
   const onSubmit = async (data: any) => {
+    console.log(dirtyFields);
     try {
       if (isEditPage) {
-        await httpPost(
-          session,
-          `prefect/flows/${flowId}/set_schedule/${
-            data.active ? 'active' : 'inactive'
-          }`,
-          {}
-        );
+        // hit the set schedule api if the value is updated
+        if (dirtyFields?.active) {
+          await httpPost(
+            session,
+            `prefect/flows/${flowId}/set_schedule/${
+              data.active ? 'active' : 'inactive'
+            }`,
+            {}
+          );
+        }
+
+        // hit the update deplyment api if the cron is updated
+        if (dirtyFields?.cron) {
+          await httpPut(session, `prefect/flows/${flowId}`, {
+            cron: convertCronExpression(data.cron.id),
+          });
+        }
         successToast(
           `Flow ${data.name} updated successfully`,
           [],
@@ -335,7 +350,7 @@ const FlowCreate = ({
                   <Autocomplete
                     id="cron"
                     value={field.value}
-                    disabled={isEditPage}
+                    // disabled={isEditPage}
                     data-testid="cronautocomplete"
                     options={[
                       { id: 'daily', label: 'daily' },
