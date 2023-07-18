@@ -83,7 +83,7 @@ const CreateSourceForm = ({
             `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`
           );
 
-          let connectorConfigInput = new ConnectorConfigInput(
+          const connectorConfigInput = new ConnectorConfigInput(
             'destination',
             data
           );
@@ -92,7 +92,7 @@ const CreateSourceForm = ({
 
           connectorConfigInput.setOrderToChildProperties();
 
-          let specs = connectorConfigInput.prepareSpecsToRender();
+          const specs = connectorConfigInput.prepareSpecsToRender();
 
           console.log('set these speecs before anything', specs);
           setSourceDefSpecs(specs);

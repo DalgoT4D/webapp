@@ -3,7 +3,7 @@ interface ConnectorSpecificationsObject {
   title: string;
   $schema: string;
   required: Array<string>;
-  properties: Object;
+  properties: object;
 }
 
 export type ConnectorSpec = {
@@ -34,12 +34,12 @@ class ConnectorConfigInput {
 
   setValidOrderToAllProperties() {
     // set order to all properties if not present
-    let dataProperties: any = this.specsData['properties'];
+    const dataProperties: any = this.specsData['properties'];
     let maxOrder = -1;
 
     // specs get jumbled when we render them by order and the order starts with 0. So we increment by 1 to start ordering from 1
     for (const key of Object.keys(dataProperties)) {
-      let value: any = dataProperties[key];
+      const value: any = dataProperties[key];
       dataProperties[key]['order'] = value?.order >= 0 ? value.order + 1 : -1;
       if (dataProperties[key]['order'] > maxOrder)
         maxOrder = dataProperties[key]['order'];
@@ -75,7 +75,7 @@ class ConnectorConfigInput {
   }
 
   updateSpecsToRender(connectionConfiguration: any) {
-    let childSpecs: Array<ConnectorSpec> =
+    const childSpecs: Array<ConnectorSpec> =
       ConnectorConfigInput.appendChildSpecsForEdit(
         this.specsToRender,
         connectionConfiguration,
@@ -89,11 +89,11 @@ class ConnectorConfigInput {
   static traverseSpecsToSetOrder(
     data: any,
     parentOrder: number | null = null,
-    ordCounter: number = 0
+    ordCounter = 0
   ) {
     const dataProperties: any = data.properties;
     for (const key of Object.keys(dataProperties)) {
-      let parent: any = dataProperties[key];
+      const parent: any = dataProperties[key];
       if (parentOrder) parent['order'] = parentOrder + ordCounter;
 
       // check for which property we have the 'oneOf' key i.e. nested level
@@ -226,7 +226,7 @@ class ConnectorConfigInput {
     for (const [key, value] of Object.entries(connectionConfiguration)) {
       const field: any = `${parent}.${key}`;
 
-      let childSpec: ConnectorSpec | undefined = specs.find(
+      const childSpec: ConnectorSpec | undefined = specs.find(
         (sp: ConnectorSpec) => sp.field === field
       );
 
@@ -247,12 +247,12 @@ class ConnectorConfigInput {
       } else if (!childSpec) {
         const regexp = new RegExp(`^${field.split('.', 2).join('.')}`);
 
-        let specsToFindFrom: Array<ConnectorSpec> | undefined = specs.find(
+        const specsToFindFrom: Array<ConnectorSpec> | undefined = specs.find(
           (sp: ConnectorSpec) => regexp.test(sp.field)
         )?.specs;
 
         if (specsToFindFrom) {
-          let checkSpec: ConnectorSpec | undefined = specsToFindFrom.find(
+          const checkSpec: ConnectorSpec | undefined = specsToFindFrom.find(
             (sp: ConnectorSpec) => sp.field === field
           );
 
@@ -268,8 +268,8 @@ class ConnectorConfigInput {
     dropDownVal: string,
     field: string,
     currenRenderedSpecs: Array<ConnectorSpec>,
-    unregisterFormFieldCallback: (...args: any) => any,
-    registerFormFieldCallback: (...args: any) => any
+    unregisterFormFieldCallback: (...args: any) => any
+    // registerFormFieldCallback: (...args: any) => any
   ) {
     // Fetch the current selected spec of type object based on selection
     const selectedSpec: ConnectorSpec | undefined = currenRenderedSpecs.find(

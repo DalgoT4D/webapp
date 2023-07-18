@@ -60,8 +60,8 @@ export const SourceConfigInput = ({
       dropDownVal,
       field,
       connectorSpecs,
-      unregisterFormField,
-      registerFormFieldValue
+      unregisterFormField
+      // registerFormFieldValue
     );
 
     setConnectorSpecs(tempSpecs);

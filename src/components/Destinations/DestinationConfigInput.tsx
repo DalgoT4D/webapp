@@ -67,8 +67,8 @@ export const DestinationConfigInput = ({
       dropDownVal,
       field,
       connectorSpecs,
-      unregisterFormField,
-      registerFormFieldValue
+      unregisterFormField
+      // registerFormFieldValue
     );
 
     setConnectorSpecs(tempSpecs);

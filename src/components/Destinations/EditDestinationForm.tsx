@@ -108,7 +108,7 @@ const EditDestinationForm = ({
             `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`
           );
 
-          let connectorConfigInput = new ConnectorConfigInput(
+          const connectorConfigInput = new ConnectorConfigInput(
             'destination',
             data
           );

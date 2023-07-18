@@ -88,7 +88,7 @@ const CreateDestinationForm = ({
             `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`
           );
 
-          let connectorConfigInput = new ConnectorConfigInput(
+          const connectorConfigInput = new ConnectorConfigInput(
             'destination',
             data
           );
@@ -97,7 +97,7 @@ const CreateDestinationForm = ({
 
           connectorConfigInput.setOrderToChildProperties();
 
-          let specs = connectorConfigInput.prepareSpecsToRender();
+          const specs = connectorConfigInput.prepareSpecsToRender();
 
           console.log('setting these specs', specs);
           setDestinationDefSpecs(specs);
