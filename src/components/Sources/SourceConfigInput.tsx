@@ -5,6 +5,7 @@ import { Controller } from 'react-hook-form';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import Input from '../UI/Input/Input';
+import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 export interface SourceConfigInputprops {
   specs: Array<any>;
@@ -36,6 +37,7 @@ export const SourceConfigInput = ({
   control,
   setFormValue,
   unregisterFormField,
+  source,
 }: SourceConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<SourceSpec>>([]);
 
@@ -54,52 +56,13 @@ export const SourceConfigInput = ({
   ) => {
     fieldOnChangeFunc.onChange(dropDownVal);
 
-    // Fetch the current selected spec of type object based on selection
-    const selectedSpec: SourceSpec | undefined = connectorSpecs.find(
-      (ele: SourceSpec) => ele.field === field
+    const tempSpecs = ConnectorConfigInput.fetchUpdatedSpecsOnObjectFieldChange(
+      dropDownVal,
+      field,
+      connectorSpecs,
+      unregisterFormField
+      // registerFormFieldValue
     );
-
-    // Filter all specs that are under selectedSpec and have parent as selectedSpec
-    // Check if any child specs has type object
-    const filteredChildSpecs: Array<SourceSpec> = [];
-    if (selectedSpec && selectedSpec.specs) {
-      selectedSpec.specs.forEach((ele: SourceSpec) => {
-        if (ele.parent === dropDownVal) {
-          // Check if the child has another level or not
-          if (ele.specs && ele.enum && ele.enum.length === 0) {
-            ele.specs.forEach((childEle: SourceSpec) => {
-              filteredChildSpecs.push({ ...childEle, order: ele.order });
-            });
-          } else {
-            filteredChildSpecs.push(ele);
-          }
-        }
-      });
-    }
-
-    // Set the order of child specs to be displayed at correct position
-    filteredChildSpecs.forEach((ele: SourceSpec) => {
-      ele.order = selectedSpec?.order || -1;
-    });
-
-    // Find the specs that will have parent in the following enum array
-    const enumsToRemove =
-      (selectedSpec &&
-        selectedSpec.enum &&
-        selectedSpec.enum.filter((ele) => ele !== dropDownVal)) ||
-      [];
-
-    const tempSpecs = connectorSpecs
-      .filter(
-        (sp: SourceSpec) => !sp.parent || !enumsToRemove.includes(sp.parent)
-      )
-      .concat(filteredChildSpecs);
-
-    // Unregister the form fields that have parent in enumsToRemove
-    connectorSpecs.forEach((sp: SourceSpec) => {
-      if (sp.parent && enumsToRemove.includes(sp.parent))
-        unregisterFormField(sp.field);
-    });
 
     setConnectorSpecs(tempSpecs);
   };
@@ -215,7 +178,7 @@ export const SourceConfigInput = ({
                 rules={{ required: spec.required }}
                 render={({ field }) => (
                   <Autocomplete
-                    disabled={false}
+                    disabled={source ? true : false}
                     data-testid="autocomplete"
                     id={spec.field}
                     value={field.value}

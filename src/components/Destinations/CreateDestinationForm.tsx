@@ -8,6 +8,7 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import Input from '../UI/Input/Input';
+import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 interface CreateDestinationFormProps {
   mutate: (...args: any) => any;
@@ -78,89 +79,6 @@ const CreateDestinationForm = ({
     }
   }, [showForm]);
 
-  const prePrepareConfigSpecs = (
-    result: any,
-    data: any,
-    parent = 'parent',
-    exclude: any[] = [],
-    dropdownEnums: any[] = []
-  ) => {
-    // Push the parent enum in the array
-    if (exclude.length > 0) {
-      if (exclude[0] in data?.properties) {
-        dropdownEnums.push(data?.properties[exclude[0]]?.const);
-      }
-    }
-
-    for (const [key, value] of Object.entries<any>(data?.properties || {})) {
-      // The parent oneOf key has already been added to the array
-      if (exclude.includes(key)) continue;
-
-      const objParentKey = `${parent}.${key}`;
-
-      if (value?.type === 'object') {
-        let commonField: string[] = [];
-
-        // Find common property among all array elements of 'oneOf' array
-        if (value['oneOf'] && value['oneOf'].length > 1) {
-          value['oneOf']?.forEach((ele: any) => {
-            if (commonField.length > 0) {
-              commonField = ele?.required.filter((value: any) =>
-                commonField.includes(value)
-              );
-            } else {
-              commonField = ele?.required;
-            }
-          });
-        }
-
-        const objResult = {
-          field: `${objParentKey}.${commonField}`,
-          type: value?.type,
-          order: value?.order,
-          title: value?.title,
-          description: value?.description,
-          parent:
-            dropdownEnums.length > 0
-              ? dropdownEnums[dropdownEnums.length - 1]
-              : '',
-          enum: [],
-          specs: [],
-        };
-
-        result.push(objResult);
-
-        value?.oneOf.forEach((eachEnum: any) => {
-          prePrepareConfigSpecs(
-            objResult.specs,
-            eachEnum,
-            objParentKey,
-            commonField,
-            objResult.enum
-          );
-        });
-
-        continue;
-      }
-
-      result.push({
-        ...value,
-        field: objParentKey,
-        parent:
-          dropdownEnums.length > 0
-            ? dropdownEnums[dropdownEnums.length - 1]
-            : '',
-        required: data?.required.includes(key),
-      });
-    }
-
-    // Todo: need to find a better way to do this
-    result = result.map((res: any) => ({ ...res, order: res.order + 1 }));
-    result.sort((a: any, b: any) => a.order - b.order);
-
-    return result;
-  };
-
   useEffect(() => {
     if (watchSelectedDestinationDef?.id) {
       (async () => {
@@ -170,31 +88,19 @@ const CreateDestinationForm = ({
             `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`
           );
 
-          const dataProperties: any = data?.properties || {};
-          let maxOrder = -1;
-
-          for (const [key, value] of Object.entries(dataProperties)) {
-            const order: any =
-              (value as any)?.order >= 0 ? (value as any)?.order : -1;
-            data.properties[key]['order'] = order;
-            maxOrder = order > maxOrder ? order : maxOrder;
-          }
-
-          // Attach order to all specs
-          for (const key in dataProperties) {
-            if (data.properties[key]['order'] === -1)
-              data.properties[key]['order'] = ++maxOrder;
-          }
-
-          // Prepare the specs config before setting it
-          const specsConfigFields = prePrepareConfigSpecs(
-            [],
-            data,
-            'config',
-            [],
-            []
+          const connectorConfigInput = new ConnectorConfigInput(
+            'destination',
+            data
           );
-          setDestinationDefSpecs(specsConfigFields);
+
+          connectorConfigInput.setValidOrderToAllProperties();
+
+          connectorConfigInput.setOrderToChildProperties();
+
+          const specs = connectorConfigInput.prepareSpecsToRender();
+
+          console.log('setting these specs', specs);
+          setDestinationDefSpecs(specs);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
