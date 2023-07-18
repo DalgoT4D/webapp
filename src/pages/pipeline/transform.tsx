@@ -60,7 +60,6 @@ const Transform = () => {
   const [activeTab, setActiveTab] = useState<string>('setup');
   const handleChangeTab = (event: React.SyntheticEvent, newTab: string) => {
     setActiveTab(newTab);
-    console.log(newTab);
   };
 
   const { data: session }: any = useSession();
