@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { backendUrl } from '@/config/constant';
 import { Card, Typography } from '@mui/material';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpPost } from '@/helpers/http';
 
 export const DBTDocs = () => {
   const [dbtDocsToken, setDbtDocsToken] = useState<string>('');
