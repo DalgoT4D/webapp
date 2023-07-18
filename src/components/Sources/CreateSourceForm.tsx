@@ -187,7 +187,7 @@ const CreateSourceForm = ({
                 ) => {
                   return value?.id === '' || option?.id === value?.id;
                 }}
-                onChange={(e, data) => field.onChange(data)}
+                onChange={(e, data) => data && field.onChange(data)}
                 renderInput={(params) => {
                   return (
                     <Input
