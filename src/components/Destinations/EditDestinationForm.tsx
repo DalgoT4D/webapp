@@ -113,21 +113,17 @@ const EditDestinationForm = ({
             data
           );
 
-          console.log(
-            'warehouse connection config',
-            warehouse.connectionConfiguration
-          );
-
-          console.log();
-
           connectorConfigInput.setValidOrderToAllProperties();
 
           connectorConfigInput.setOrderToChildProperties();
 
           // Prepare the specs config before setting it
-          const specsConfigFields = connectorConfigInput.prepareSpecsToRender();
+          connectorConfigInput.prepareSpecsToRender();
 
-          setDestinationDefSpecs(specsConfigFields);
+          const specsConfigFields: any =
+            connectorConfigInput.updateSpecsToRender(
+              warehouse.connectionConfiguration
+            );
 
           // Prefill the warehouse name
           setValue('name', warehouse.name);
@@ -138,6 +134,8 @@ const EditDestinationForm = ({
             'config',
             setValue
           );
+
+          setDestinationDefSpecs(specsConfigFields);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);

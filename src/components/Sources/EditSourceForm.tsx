@@ -141,120 +141,120 @@ const EditSourceForm = ({
     setLoading(false);
   };
 
-  const prePrepareConfigSpecs = (
-    result: any,
-    data: any,
-    parent = 'parent',
-    exclude: any[] = [],
-    dropdownEnums: any[] = [],
-    formValues: any = {},
-    childSpecsBeingEdited: any[] = [],
-    parentOrder = 0
-  ) => {
-    // Push the parent enum in the array
-    if (exclude.length > 0) {
-      if (exclude[0] in data?.properties) {
-        dropdownEnums.push(data?.properties[exclude[0]]?.const);
-      }
-    }
+  // const prePrepareConfigSpecs = (
+  //   result: any,
+  //   data: any,
+  //   parent = 'parent',
+  //   exclude: any[] = [],
+  //   dropdownEnums: any[] = [],
+  //   formValues: any = {},
+  //   childSpecsBeingEdited: any[] = [],
+  //   parentOrder = 0
+  // ) => {
+  //   // Push the parent enum in the array
+  //   if (exclude.length > 0) {
+  //     if (exclude[0] in data?.properties) {
+  //       dropdownEnums.push(data?.properties[exclude[0]]?.const);
+  //     }
+  //   }
 
-    for (const [key, value] of Object.entries<any>(data?.properties || {})) {
-      // The parent oneOf key has already been added to the array
-      if (exclude.includes(key)) continue;
+  //   for (const [key, value] of Object.entries<any>(data?.properties || {})) {
+  //     // The parent oneOf key has already been added to the array
+  //     if (exclude.includes(key)) continue;
 
-      const objParentKey = `${parent}.${key}`;
+  //     const objParentKey = `${parent}.${key}`;
 
-      if (value?.type === 'object') {
-        let commonField: string[] = [];
+  //     if (value?.type === 'object') {
+  //       let commonField: string[] = [];
 
-        // Find common property among all array elements of 'oneOf' array
-        if (value['oneOf'] && value['oneOf'].length > 1) {
-          value['oneOf'].forEach((ele: any) => {
-            if (commonField.length > 0) {
-              commonField = ele?.required.filter((value: any) =>
-                commonField.includes(value)
-              );
-            } else {
-              commonField = ele?.required;
-            }
-          });
-        }
+  //       // Find common property among all array elements of 'oneOf' array
+  //       if (value['oneOf'] && value['oneOf'].length > 1) {
+  //         value['oneOf'].forEach((ele: any) => {
+  //           if (commonField.length > 0) {
+  //             commonField = ele?.required.filter((value: any) =>
+  //               commonField.includes(value)
+  //             );
+  //           } else {
+  //             commonField = ele?.required;
+  //           }
+  //         });
+  //       }
 
-        const objResult = {
-          field: `${objParentKey}.${commonField}`,
-          type: value?.type,
-          order: value?.order,
-          title: value?.title,
-          description: value?.description,
-          parent:
-            dropdownEnums.length > 0
-              ? dropdownEnums[dropdownEnums.length - 1]
-              : '',
-          enum: [],
-          specs: [],
-        };
+  //       const objResult = {
+  //         field: `${objParentKey}.${commonField}`,
+  //         type: value?.type,
+  //         order: value?.order,
+  //         title: value?.title,
+  //         description: value?.description,
+  //         parent:
+  //           dropdownEnums.length > 0
+  //             ? dropdownEnums[dropdownEnums.length - 1]
+  //             : '',
+  //         enum: [],
+  //         specs: [],
+  //       };
 
-        result.push(objResult);
+  //       result.push(objResult);
 
-        value?.oneOf.forEach((eachEnum: any) => {
-          prePrepareConfigSpecs(
-            objResult.specs,
-            eachEnum,
-            objParentKey,
-            commonField,
-            objResult.enum,
-            formValues,
-            childSpecsBeingEdited,
-            value?.order
-          );
-        });
+  //       value?.oneOf.forEach((eachEnum: any) => {
+  //         prePrepareConfigSpecs(
+  //           objResult.specs,
+  //           eachEnum,
+  //           objParentKey,
+  //           commonField,
+  //           objResult.enum,
+  //           formValues,
+  //           childSpecsBeingEdited,
+  //           value?.order
+  //         );
+  //       });
 
-        continue;
-      }
+  //       continue;
+  //     }
 
-      // Check if the field is being edited for not; only for nested creds
-      const levels = objParentKey.split('.');
-      if (levels.length > 2) {
-        let prefilled = false;
-        let levelData = formValues;
-        for (const level of levels) {
-          if (level in levelData) {
-            prefilled = true;
-            levelData = levelData[level];
-          } else {
-            prefilled = false;
-            break;
-          }
-        }
-        if (prefilled) {
-          childSpecsBeingEdited.push({
-            ...value,
-            order: value?.order >= 0 ? value?.order : parentOrder,
-            field: objParentKey,
-            parent:
-              dropdownEnums.length > 0
-                ? dropdownEnums[dropdownEnums.length - 1]
-                : '',
-            required: data?.required.includes(key),
-          });
-        }
-      }
+  //     // Check if the field is being edited for not; only for nested creds
+  //     const levels = objParentKey.split('.');
+  //     if (levels.length > 2) {
+  //       let prefilled = false;
+  //       let levelData = formValues;
+  //       for (const level of levels) {
+  //         if (level in levelData) {
+  //           prefilled = true;
+  //           levelData = levelData[level];
+  //         } else {
+  //           prefilled = false;
+  //           break;
+  //         }
+  //       }
+  //       if (prefilled) {
+  //         childSpecsBeingEdited.push({
+  //           ...value,
+  //           order: value?.order >= 0 ? value?.order : parentOrder,
+  //           field: objParentKey,
+  //           parent:
+  //             dropdownEnums.length > 0
+  //               ? dropdownEnums[dropdownEnums.length - 1]
+  //               : '',
+  //           required: data?.required.includes(key),
+  //         });
+  //       }
+  //     }
 
-      // Populate the main specs array
-      result.push({
-        ...value,
-        order: value?.order >= 0 ? value?.order : parentOrder,
-        field: objParentKey,
-        parent:
-          dropdownEnums.length > 0
-            ? dropdownEnums[dropdownEnums.length - 1]
-            : '',
-        required: data?.required.includes(key),
-      });
-    }
+  //     // Populate the main specs array
+  //     result.push({
+  //       ...value,
+  //       order: value?.order >= 0 ? value?.order : parentOrder,
+  //       field: objParentKey,
+  //       parent:
+  //         dropdownEnums.length > 0
+  //           ? dropdownEnums[dropdownEnums.length - 1]
+  //           : '',
+  //       required: data?.required.includes(key),
+  //     });
+  //   }
 
-    return result;
-  };
+  //   return result;
+  // };
 
   useEffect(() => {
     if (watchSelectedSourceDef?.id) {
@@ -278,20 +278,15 @@ const EditSourceForm = ({
             setValue
           );
 
-          // Prepare the specs config before rendering it
-          const childSpecsBeingEdited: any = [];
+          // Prepare the specs config before setting it
+          connectorConfigInput.prepareSpecsToRender();
 
-          const specsConfigFields = prePrepareConfigSpecs(
-            [],
-            connectorConfigInput.specsData,
-            'config',
-            [],
-            [],
-            getValues(),
-            childSpecsBeingEdited
-          );
+          const specsConfigFields: any =
+            connectorConfigInput.updateSpecsToRender(
+              source.connectionConfiguration
+            );
 
-          setSourceDefSpecs(specsConfigFields.concat(childSpecsBeingEdited));
+          setSourceDefSpecs(specsConfigFields);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
