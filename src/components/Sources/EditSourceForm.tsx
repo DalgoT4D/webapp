@@ -60,7 +60,6 @@ const EditSourceForm = ({
     reset,
     setValue,
     unregister,
-    getValues,
   } = useForm({
     defaultValues: {
       name: '',

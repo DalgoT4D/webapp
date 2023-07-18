@@ -40,8 +40,7 @@ class ConnectorConfigInput {
     // specs get jumbled when we render them by order and the order starts with 0. So we increment by 1 to start ordering from 1
     for (const key of Object.keys(dataProperties)) {
       let value: any = dataProperties[key];
-      dataProperties[key]['order'] =
-        dataProperties[key]?.order >= 0 ? dataProperties[key].order + 1 : -1;
+      dataProperties[key]['order'] = value?.order >= 0 ? value.order + 1 : -1;
       if (dataProperties[key]['order'] > maxOrder)
         maxOrder = dataProperties[key]['order'];
     }
@@ -54,8 +53,6 @@ class ConnectorConfigInput {
       if (dataProperties[key]['order'] === -1)
         dataProperties[key]['order'] = ++maxOrder;
     }
-
-    this.specsData['properties'] = dataProperties;
 
     return this.specsData;
   }
@@ -101,8 +98,8 @@ class ConnectorConfigInput {
 
       // check for which property we have the 'oneOf' key i.e. nested level
       // each nested property should have parentOrder + 0.1
-      if (parent?.oneOf) {
-        for (const oneOfObject of parent?.oneOf) {
+      if (parent && parent?.oneOf) {
+        for (const oneOfObject of parent.oneOf) {
           ConnectorConfigInput.traverseSpecsToSetOrder(
             oneOfObject,
             parent['order'],
