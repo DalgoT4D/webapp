@@ -264,7 +264,7 @@ const EditSourceForm = ({
             `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`
           );
 
-          let connectorConfigInput = new ConnectorConfigInput('source', data);
+          const connectorConfigInput = new ConnectorConfigInput('source', data);
 
           connectorConfigInput.setValidOrderToAllProperties();
 
