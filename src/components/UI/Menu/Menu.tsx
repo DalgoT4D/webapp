@@ -49,7 +49,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       Edit
     </MenuItem>
     {eleType !== 'dbtworkspace' && (
-      <>
+      <div key="fake-key">
         <Divider style={{ margin: 0 }} />
         <MenuItem onClick={() => handleDeleteConnection()}>
           <ListItemIcon style={{ minWidth: 28 }}>
@@ -57,7 +57,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
           </ListItemIcon>
           Delete
         </MenuItem>
-      </>
+      </div>
     )}
     <Divider style={{ margin: 0 }} />
     {eleType === 'connection' && handleResetConnection && (
