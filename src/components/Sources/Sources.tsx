@@ -132,7 +132,6 @@ export const Sources = () => {
         anchorEl={anchorEl}
         open={open}
         handleClose={handleClose}
-        elementId={sourceToBeDeleted}
         handleEdit={handleEditSource}
         handleDeleteConnection={handleDeleteSource}
       />
@@ -142,6 +141,7 @@ export const Sources = () => {
         setShowForm={setShowCreateSourceDialog}
       />
       <EditSourceForm
+        mutate={mutate}
         showForm={showEditSourceDialog}
         setShowForm={setShowEditSourceDialog}
         sourceId={sourceIdToEdit}

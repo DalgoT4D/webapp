@@ -1,13 +1,22 @@
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { CircularProgress, Box, Typography } from '@mui/material';
+import {
+  CircularProgress,
+  Box,
+  Typography,
+  Card,
+  CardActions,
+  IconButton,
+  Collapse,
+  CardContent,
+} from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
 import SyncIcon from '@/assets/icons/sync.svg';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
-import { httpDelete, httpPost } from '@/helpers/http';
+import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useContext } from 'react';
@@ -22,6 +31,22 @@ import Image from 'next/image';
 import styles from './Connections.module.css';
 import { lastRunTime } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
+type PrefectFlowRun = {
+  id: string;
+  name: string;
+  deployment_id: string;
+  flow_id: string;
+  state_type: string;
+  state_name: string;
+};
+
+type PrefectFlowRunLog = {
+  level: number;
+  timestamp: string;
+  message: string;
+};
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 const getSourceDest = (connection: any) => (
@@ -41,6 +66,8 @@ export const Connections = () => {
   const toastContext = useContext(GlobalContext);
   const [blockId, setBlockId] = useState<string>('');
   const [syncingBlockId, setSyncingBlockId] = useState<string>('');
+  const [syncLogs, setSyncLogs] = useState<Array<string>>([]);
+  const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -62,8 +89,45 @@ export const Connections = () => {
     `${backendUrl}/api/airbyte/connections`
   );
 
+  const fetchFlowRunStatus = async (flow_run_id: string) => {
+    try {
+      const flowRun: PrefectFlowRun = await httpGet(
+        session,
+        `prefect/flow_runs/${flow_run_id}`
+      );
+
+      if (!flowRun.state_type) return 'FAILED';
+
+      return flowRun.state_type;
+    } catch (err: any) {
+      console.error(err);
+      return 'FAILED';
+    }
+  };
+
+  const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
+    try {
+      const response = await httpGet(
+        session,
+        `prefect/flow_runs/${flow_run_id}/logs`
+      );
+      if (response?.logs?.logs && response.logs.logs.length > 0) {
+        const logsArray = response.logs.logs.map(
+          // eslint-disable-next-line
+          (logObject: PrefectFlowRunLog, idx: number) =>
+            `- ${logObject.message} '\n'`
+        );
+
+        setSyncLogs(logsArray);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
   const syncConnection = (deploymentId: any) => {
     (async () => {
+      setExpandSyncLogs(true);
       if (!deploymentId) {
         errorToast('Deployment not created', [], toastContext);
         return;
@@ -75,7 +139,23 @@ export const Connections = () => {
           {}
         );
         if (response?.detail) errorToast(response.detail, [], toastContext);
-        else successToast('Sync inititated successfully', [], toastContext);
+
+        // if flow run id is not present, something went wrong
+        if (!response?.flow_run_id) {
+          errorToast('Something went wrong', [], toastContext);
+          return;
+        }
+
+        // Poll and show logs till flow run is either completed or failed
+        let flowRunStatus: string = await fetchFlowRunStatus(
+          response.flow_run_id
+        );
+
+        while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
+          await new Promise((r) => setTimeout(r, 5000));
+          await fetchAndSetFlowRunLogs(response.flow_run_id);
+          flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
+        }
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
@@ -233,7 +313,6 @@ export const Connections = () => {
         anchorEl={anchorEl}
         open={open}
         handleClose={handleClose}
-        elementId={blockId}
         handleEdit={handleEditConnection}
         handleDeleteConnection={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
@@ -263,6 +342,34 @@ export const Connections = () => {
         handleConfirm={() => resetConnection(blockId)}
         message="Resetting the connection will clear all data at the warehouse."
       />
+      <Card
+        sx={{
+          marginTop: '10px',
+          padding: '4px',
+          borderRadius: '8px',
+          color: '#092540',
+        }}
+      >
+        <CardActions sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Box>Logs</Box>
+          <IconButton onClick={() => setExpandSyncLogs(!expandSyncLogs)}>
+            <ExpandMoreIcon
+              sx={{
+                transform: !expandSyncLogs ? 'rotate(0deg)' : 'rotate(180deg)',
+              }}
+            />
+          </IconButton>
+        </CardActions>
+        <Collapse in={expandSyncLogs} unmountOnExit>
+          {
+            <CardContent>
+              {syncLogs?.map((logMessage, idx) => (
+                <Box key={idx}>{logMessage}</Box>
+              ))}
+            </CardContent>
+          }
+        </Collapse>
+      </Card>
     </>
   );
 };

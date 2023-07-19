@@ -8,6 +8,11 @@ import {
   Switch,
   Select,
   MenuItem,
+  RadioGroup,
+  Radio,
+  FormControl,
+  FormLabel,
+  Grid,
 } from '@mui/material';
 import {
   Table,
@@ -156,13 +161,17 @@ const CreateConnectionForm = ({
     setShowForm(false);
   };
 
+  const handleRadioChange = (event: any) => {
+    setNormalize(event.target.value === 'normalized');
+  };
+
   // create/update a connection
   const onSubmit = async (data: any) => {
     const payload: any = {
       name: data.name,
       sourceId: data.sources.id,
       streams: sourceStreams,
-      normalize: normalize,
+      normalize,
     };
     if (data.destinationSchema) {
       payload.destinationSchema = data.destinationSchema;
@@ -279,22 +288,54 @@ const CreateConnectionForm = ({
 
           <Box
             sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
               ...(blockId && { pointerEvents: 'none' }),
             }}
           >
-            <FormControlLabel
-              data-testid="normalizationCheckbox"
-              control={
-                <Switch
-                  checked={normalize}
-                  onChange={(event) => setNormalize(event.target.checked)}
-                />
-              }
-              label="Normalize after sync?"
-            />
+            <FormControl sx={{ width: '100%' }}>
+              <FormLabel component="legend">Select type</FormLabel>
+              <RadioGroup
+                aria-label="normalize-radio-group"
+                value={normalize ? 'normalized' : 'raw'}
+                onChange={handleRadioChange}
+              >
+                <Grid container>
+                  <Grid
+                    item
+                    xs={5.8}
+                    sx={{
+                      px: 2,
+                      py: 1,
+                      background: '#f2f2eb',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <FormControlLabel
+                      data-testid="normalizationCheckbox"
+                      value="normalized"
+                      control={<Radio />}
+                      label="Normalized"
+                    />
+                  </Grid>
+                  <Grid item xs={0.4} />
+                  <Grid
+                    item
+                    xs={5.8}
+                    sx={{
+                      px: 2,
+                      py: 1,
+                      background: '#f2f2eb',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <FormControlLabel
+                      value="raw"
+                      control={<Radio />}
+                      label="Raw"
+                    />
+                  </Grid>
+                </Grid>
+              </RadioGroup>
+            </FormControl>
           </Box>
 
           {sourceStreams.length > 0 && (

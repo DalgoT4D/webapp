@@ -1,15 +1,15 @@
 import { Divider, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import Image from 'next/image';
 import EditIcon from '@/assets/icons/edit.svg';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteIcon from '@/assets/icons/delete.svg';
 
 interface MenuProps {
   anchorEl: null | HTMLElement;
   open: boolean;
-  eleType: 'flow' | 'source' | 'connection';
+  eleType: 'flow' | 'source' | 'connection' | 'dbtworkspace';
   handleClose: () => void;
   handleEdit?: () => void;
-  elementId: string;
   handleDeleteConnection: () => void;
   handleResetConnection?: () => void;
 }
@@ -48,18 +48,22 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </ListItemIcon>
       Edit
     </MenuItem>
-    <Divider style={{ margin: 0 }} />
-    <MenuItem onClick={() => handleDeleteConnection()}>
-      <ListItemIcon style={{ minWidth: 28 }}>
-        <Image src={DeleteIcon} alt="delete icon" />
-      </ListItemIcon>
-      Delete
-    </MenuItem>
+    {eleType !== 'dbtworkspace' && (
+      <div key="fake-key">
+        <Divider style={{ margin: 0 }} />
+        <MenuItem onClick={() => handleDeleteConnection()}>
+          <ListItemIcon style={{ minWidth: 28 }}>
+            <Image src={DeleteIcon} alt="delete icon" />
+          </ListItemIcon>
+          Delete
+        </MenuItem>
+      </div>
+    )}
     <Divider style={{ margin: 0 }} />
     {eleType === 'connection' && handleResetConnection && (
       <MenuItem onClick={() => handleResetConnection()}>
         <ListItemIcon style={{ minWidth: 28 }}>
-          <Image src={DeleteIcon} alt="reset icon" />
+          <RestartAltIcon sx={{ width: 16 }} />
         </ListItemIcon>
         Reset
       </MenuItem>

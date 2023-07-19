@@ -11,7 +11,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { List } from '../List/List';
 import { FlowRunHistory, FlowRun } from './FlowRunHistory';
-import { lastRunTime } from '@/utils/common';
+import { lastRunTime, cronToString } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import styles from './Flows.module.css';
 import Image from 'next/image';
@@ -30,6 +30,7 @@ export interface FlowsInterface {
   flows: Array<FlowInterface>;
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
+  setSelectedFlow: (arg: string) => any;
 }
 
 const flowState = (flow: FlowInterface) => {
@@ -98,7 +99,12 @@ const flowLastRun = (flow: FlowInterface) => {
   );
 };
 
-export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
+export const Flows = ({
+  flows,
+  updateCrudVal,
+  mutate,
+  setSelectedFlow,
+}: FlowsInterface) => {
   const [showFlowRunHistory, setShowFlowRunHistory] = useState<boolean>(false);
   const [flowRunHistoryDeploymentId, setFlowRunHistoryDeploymentId] =
     useState<string>('');
@@ -118,6 +124,12 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
   const handleDeleteConnection = () => {
     handleClose();
     setShowConfirmDeleteDialog(true);
+  };
+
+  const handleEditConnection = () => {
+    handleClose();
+    setSelectedFlow(deploymentId);
+    updateCrudVal('update');
   };
 
   const handleClick = (blockId: string, event: HTMLElement | null) => {
@@ -143,7 +155,7 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
             color="rgba(9, 37, 64, 0.87)"
             fontWeight={700}
           >
-            &nbsp; by 12pm time every day
+            &nbsp; {cronToString(flow.cron)}
           </Typography>
         </Box>,
         flowStatus(flow.status),
@@ -253,8 +265,8 @@ export const Flows = ({ flows, updateCrudVal, mutate }: FlowsInterface) => {
         eleType="flow"
         anchorEl={anchorEl}
         open={open}
+        handleEdit={handleEditConnection}
         handleClose={handleClose}
-        elementId={deploymentId}
         handleDeleteConnection={handleDeleteConnection}
       />
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

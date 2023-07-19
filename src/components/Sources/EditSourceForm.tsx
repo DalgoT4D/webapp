@@ -8,8 +8,10 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { SourceConfigInput } from './SourceConfigInput';
 import Input from '../UI/Input/Input';
+import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 interface EditSourceFormProps {
+  mutate: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
   sourceId: string;
@@ -43,13 +45,22 @@ type AutoCompleteOption = {
 };
 
 const EditSourceForm = ({
+  mutate,
   showForm,
   setShowForm,
   sourceId,
 }: EditSourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const { register, handleSubmit, control, watch, reset, setValue } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    setValue,
+    unregister,
+  } = useForm({
     defaultValues: {
       name: '',
       sourceDef: { id: '', label: '' },
@@ -129,6 +140,121 @@ const EditSourceForm = ({
     setLoading(false);
   };
 
+  // const prePrepareConfigSpecs = (
+  //   result: any,
+  //   data: any,
+  //   parent = 'parent',
+  //   exclude: any[] = [],
+  //   dropdownEnums: any[] = [],
+  //   formValues: any = {},
+  //   childSpecsBeingEdited: any[] = [],
+  //   parentOrder = 0
+  // ) => {
+  //   // Push the parent enum in the array
+  //   if (exclude.length > 0) {
+  //     if (exclude[0] in data?.properties) {
+  //       dropdownEnums.push(data?.properties[exclude[0]]?.const);
+  //     }
+  //   }
+
+  //   for (const [key, value] of Object.entries<any>(data?.properties || {})) {
+  //     // The parent oneOf key has already been added to the array
+  //     if (exclude.includes(key)) continue;
+
+  //     const objParentKey = `${parent}.${key}`;
+
+  //     if (value?.type === 'object') {
+  //       let commonField: string[] = [];
+
+  //       // Find common property among all array elements of 'oneOf' array
+  //       if (value['oneOf'] && value['oneOf'].length > 1) {
+  //         value['oneOf'].forEach((ele: any) => {
+  //           if (commonField.length > 0) {
+  //             commonField = ele?.required.filter((value: any) =>
+  //               commonField.includes(value)
+  //             );
+  //           } else {
+  //             commonField = ele?.required;
+  //           }
+  //         });
+  //       }
+
+  //       const objResult = {
+  //         field: `${objParentKey}.${commonField}`,
+  //         type: value?.type,
+  //         order: value?.order,
+  //         title: value?.title,
+  //         description: value?.description,
+  //         parent:
+  //           dropdownEnums.length > 0
+  //             ? dropdownEnums[dropdownEnums.length - 1]
+  //             : '',
+  //         enum: [],
+  //         specs: [],
+  //       };
+
+  //       result.push(objResult);
+
+  //       value?.oneOf.forEach((eachEnum: any) => {
+  //         prePrepareConfigSpecs(
+  //           objResult.specs,
+  //           eachEnum,
+  //           objParentKey,
+  //           commonField,
+  //           objResult.enum,
+  //           formValues,
+  //           childSpecsBeingEdited,
+  //           value?.order
+  //         );
+  //       });
+
+  //       continue;
+  //     }
+
+  //     // Check if the field is being edited for not; only for nested creds
+  //     const levels = objParentKey.split('.');
+  //     if (levels.length > 2) {
+  //       let prefilled = false;
+  //       let levelData = formValues;
+  //       for (const level of levels) {
+  //         if (level in levelData) {
+  //           prefilled = true;
+  //           levelData = levelData[level];
+  //         } else {
+  //           prefilled = false;
+  //           break;
+  //         }
+  //       }
+  //       if (prefilled) {
+  //         childSpecsBeingEdited.push({
+  //           ...value,
+  //           order: value?.order >= 0 ? value?.order : parentOrder,
+  //           field: objParentKey,
+  //           parent:
+  //             dropdownEnums.length > 0
+  //               ? dropdownEnums[dropdownEnums.length - 1]
+  //               : '',
+  //           required: data?.required.includes(key),
+  //         });
+  //       }
+  //     }
+
+  //     // Populate the main specs array
+  //     result.push({
+  //       ...value,
+  //       order: value?.order >= 0 ? value?.order : parentOrder,
+  //       field: objParentKey,
+  //       parent:
+  //         dropdownEnums.length > 0
+  //           ? dropdownEnums[dropdownEnums.length - 1]
+  //           : '',
+  //       required: data?.required.includes(key),
+  //     });
+  //   }
+
+  //   return result;
+  // };
+
   useEffect(() => {
     if (watchSelectedSourceDef?.id) {
       (async () => {
@@ -137,37 +263,29 @@ const EditSourceForm = ({
             session,
             `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`
           );
+
+          const connectorConfigInput = new ConnectorConfigInput('source', data);
+
+          connectorConfigInput.setValidOrderToAllProperties();
+
+          connectorConfigInput.setOrderToChildProperties();
+
+          // Prefill the source config
+          ConnectorConfigInput.prefillFormFields(
+            source.connectionConfiguration,
+            'config',
+            setValue
+          );
+
           // Prepare the specs config before setting it
-          const specsConfigFields: Array<any> = [];
-          const dataProperties: any = data?.properties || {};
-          let maxOrder = -1;
+          connectorConfigInput.prepareSpecsToRender();
 
-          for (const [key, value] of Object.entries(dataProperties)) {
-            const order: any =
-              (value as any)?.order >= 0 ? (value as any)?.order : -1;
-            specsConfigFields.push({
-              airbyte_secret: false,
-              ...(value as object),
-              field: key,
-              required: data?.required.includes(key),
-              order: order,
-            });
-            maxOrder = order > maxOrder ? order : maxOrder;
-          }
+          const specsConfigFields: any =
+            connectorConfigInput.updateSpecsToRender(
+              source.connectionConfiguration
+            );
 
-          // Attach order to all specs
-          for (const spec of specsConfigFields) {
-            if (spec.order === -1) {
-              spec.order = ++maxOrder;
-            }
-          }
           setSourceDefSpecs(specsConfigFields);
-
-          // Set the edit form prefilled values of the current source
-          for (const spec of specsConfigFields) {
-            const field: any = `config.${spec.field}`;
-            setValue(field, source?.connectionConfiguration[`${spec.field}`]);
-          }
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
@@ -185,6 +303,7 @@ const EditSourceForm = ({
       });
       handleClose();
       successToast('Source update', [], globalContext);
+      mutate();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
@@ -215,6 +334,7 @@ const EditSourceForm = ({
       console.error(err);
       errorToast(err.message, [], globalContext);
     }
+    setLoading(false);
   };
 
   const onSubmit = async (data: any) => {
@@ -245,7 +365,7 @@ const EditSourceForm = ({
                   id="sourceDef"
                   value={field.value}
                   options={sourceDefs}
-                  onChange={(e, data) => field.onChange(data)}
+                  onChange={(e, data) => data && field.onChange(data)}
                   renderInput={(params) => {
                     return (
                       <Input
@@ -266,6 +386,7 @@ const EditSourceForm = ({
               control={control}
               setFormValue={setValue}
               source={source}
+              unregisterFormField={unregister}
             />
           </>
         </Box>

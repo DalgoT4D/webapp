@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { SourceConfigInput } from './SourceConfigInput';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import Input from '../UI/Input/Input';
+import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 interface CreateSourceFormProps {
   mutate: (...args: any) => any;
@@ -34,7 +35,15 @@ const CreateSourceForm = ({
   const [checking, setChecking] = useState<boolean>(false);
   const toastContext = useContext(GlobalContext);
 
-  const { register, handleSubmit, control, watch, reset, setValue } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    setValue,
+    unregister,
+  } = useForm({
     defaultValues: {
       name: '',
       sourceDef: undefined as AutoCompleteOption,
@@ -73,34 +82,20 @@ const CreateSourceForm = ({
             session,
             `airbyte/source_definitions/${watchSelectedSourceDef.id}/specifications`
           );
-          // Prepare the specs config before setting it
-          const specsConfigFields: Array<any> = [];
-          const dataProperties: any = data?.properties || {};
-          let maxOrder = -1;
 
-          // console.log(data.properties);
-          for (const [key, value] of Object.entries(dataProperties)) {
-            const order: any =
-              (value as any)?.order >= 0 ? (value as any)?.order : -1;
-            specsConfigFields.push({
-              airbyte_secret: false,
-              ...(value as object),
-              field: key,
-              required: data?.required.includes(key),
-              order: order,
-            });
-            maxOrder = order > maxOrder ? order : maxOrder;
-          }
+          const connectorConfigInput = new ConnectorConfigInput(
+            'destination',
+            data
+          );
 
-          // Attach order to all specs
-          for (const spec of specsConfigFields) {
-            if (spec.order === -1) {
-              spec.order = ++maxOrder;
-            }
-          }
-          // console.log('setting source def specs');
-          // console.log(specsConfigFields);
-          setSourceDefSpecs(specsConfigFields);
+          connectorConfigInput.setValidOrderToAllProperties();
+
+          connectorConfigInput.setOrderToChildProperties();
+
+          const specs = connectorConfigInput.prepareSpecsToRender();
+
+          console.log('set these speecs before anything', specs);
+          setSourceDefSpecs(specs);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], toastContext);
@@ -192,7 +187,7 @@ const CreateSourceForm = ({
                 ) => {
                   return value?.id === '' || option?.id === value?.id;
                 }}
-                onChange={(e, data) => field.onChange(data)}
+                onChange={(e, data) => data && field.onChange(data)}
                 renderInput={(params) => {
                   return (
                     <Input
@@ -212,6 +207,7 @@ const CreateSourceForm = ({
             registerFormFieldValue={register}
             control={control}
             setFormValue={setValue}
+            unregisterFormField={unregister}
           />
         </Box>
       </>
