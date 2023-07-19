@@ -43,6 +43,7 @@ describe('Connections Setup', () => {
           }
           control={() => {}}
           setFormValue={() => {}}
+          unregisterFormField={() => {}}
         />
       </SessionProvider>
     );
@@ -54,12 +55,9 @@ describe('Connections Setup', () => {
 
     await userEvent.type(inputField, 'new-value');
 
-    expect(registerFormFieldValueMock).toHaveBeenCalledWith(
-      'config.specfield',
-      {
-        required: false,
-      }
-    );
+    expect(registerFormFieldValueMock).toHaveBeenCalledWith('specfield', {
+      required: false,
+    });
   });
 
   it('renders the form with a single required string field', async () => {
@@ -82,6 +80,7 @@ describe('Connections Setup', () => {
           }
           control={() => {}}
           setFormValue={() => {}}
+          unregisterFormField={() => {}}
         />
       </SessionProvider>
     );
@@ -93,12 +92,9 @@ describe('Connections Setup', () => {
 
     await userEvent.type(inputField, 'new-value');
 
-    expect(registerFormFieldValueMock).toHaveBeenCalledWith(
-      'config.specfield',
-      {
-        required: true,
-      }
-    );
+    expect(registerFormFieldValueMock).toHaveBeenCalledWith('specfield', {
+      required: true,
+    });
   });
 
   it('renders the form with a single integer field', async () => {
@@ -121,6 +117,7 @@ describe('Connections Setup', () => {
           }
           control={() => {}}
           setFormValue={() => {}}
+          unregisterFormField={() => {}}
         />
       </SessionProvider>
     );
@@ -132,12 +129,9 @@ describe('Connections Setup', () => {
 
     await userEvent.type(inputField, '20');
 
-    expect(registerFormFieldValueMock).toHaveBeenCalledWith(
-      'config.specfield',
-      {
-        required: false,
-        valueAsNumber: true,
-      }
-    );
+    expect(registerFormFieldValueMock).toHaveBeenCalledWith('specfield', {
+      required: false,
+      valueAsNumber: true,
+    });
   });
 });
