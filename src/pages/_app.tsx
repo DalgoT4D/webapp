@@ -19,7 +19,7 @@ export default function App({
         <StyledEngineProvider injectFirst>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            <SessionProvider session={session}>
+            <SessionProvider session={session} refetchOnWindowFocus={false}>
               <Main>
                 <Component {...pageProps} />
               </Main>

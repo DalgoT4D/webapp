@@ -15,7 +15,9 @@ export const Input: React.FC<InputProps> = ({
   required = false,
   ...rest
 }) => {
-  const registerValues: any = { required };
+  const registerValues: any = {
+    required: required ? `${label} is required` : false,
+  };
 
   if (rest.type === 'number') {
     registerValues.valueAsNumber = true;

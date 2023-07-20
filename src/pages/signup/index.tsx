@@ -5,7 +5,7 @@ import {
   Divider,
   IconButton,
   InputAdornment,
-  Typography,
+  CircularProgress,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -27,19 +27,25 @@ export const SignUp = () => {
   if (session?.user.token) {
     router.push('/');
   }
-  const { register, handleSubmit } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      username: '',
+      password: '',
+      confirmpassword: '',
+      signupcode: '',
+    },
+  });
   const toastContext = useContext(GlobalContext);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [passwordMismatch, setPasswordMismatch] = useState<boolean>(false);
+  const [waitForSignup, setWaitForSignup] = useState(false);
 
   const onSubmit = async (data: any) => {
-    console.log('onSubmit');
-    if (data.password !== data.confirmpassword) {
-      setPasswordMismatch(true);
-      return;
-    }
-    setPasswordMismatch(false);
     try {
+      setWaitForSignup(true);
       await httpPost(session, 'organizations/users/', {
         email: data.username,
         password: data.password,
@@ -55,6 +61,7 @@ export const SignUp = () => {
       console.error(err);
       errorToast(err.cause.detail, [], toastContext);
     }
+    setWaitForSignup(false);
   };
 
   return (
@@ -65,6 +72,8 @@ export const SignUp = () => {
       <form onSubmit={handleSubmit(onSubmit)} data-testid="signup-form">
         <Box className={styles.Container}>
           <Input
+            error={!!errors.username}
+            helperText={errors.username?.message}
             sx={{ width: '100%', pb: 3, mt: 2 }}
             id="outlined-basic"
             data-testid="username"
@@ -77,6 +86,8 @@ export const SignUp = () => {
           />
 
           <Input
+            error={!!errors.password}
+            helperText={errors.password?.message}
             sx={{ width: '100%', pb: 3 }}
             id="outlined-password-input"
             data-testid="password"
@@ -110,6 +121,8 @@ export const SignUp = () => {
           />
 
           <Input
+            error={!!errors.confirmpassword}
+            helperText={errors.confirmpassword?.message}
             sx={{ width: '100%', pb: 3 }}
             id="outlined-confirm-password-input"
             data-testid="confirmpassword"
@@ -140,13 +153,10 @@ export const SignUp = () => {
               ),
             }}
           />
-          {passwordMismatch && (
-            <Typography sx={{ textAlign: 'center', color: '#e92d2d', pb: 2 }}>
-              Passwords do not match
-            </Typography>
-          )}
 
           <Input
+            error={!!errors.signupcode}
+            helperText={errors.signupcode?.message}
             sx={{ width: '100%', pb: 3 }}
             id="outlined-basic"
             label="Signup code"
@@ -161,9 +171,11 @@ export const SignUp = () => {
             sx={{ width: '100%', mb: 3, minHeight: '50px' }}
             variant="contained"
             type="submit"
+            disabled={waitForSignup}
             data-testid="submitbutton"
           >
-            Sign Up
+            Sign Up{' '}
+            {waitForSignup && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
           </Button>
           <Divider>OR</Divider>
           <Box sx={{ mt: 3, textAlign: 'center' }}>
