@@ -43,6 +43,7 @@ const CreateSourceForm = ({
     reset,
     setValue,
     unregister,
+    formState: { errors },
   } = useForm({
     defaultValues: {
       name: '',
@@ -50,6 +51,8 @@ const CreateSourceForm = ({
       config: {},
     },
   });
+
+  console.log(errors);
 
   const watchSelectedSourceDef = watch('sourceDef');
 
@@ -163,6 +166,8 @@ const CreateSourceForm = ({
       <>
         <Box sx={{ pt: 2, pb: 4 }}>
           <Input
+            error={!!errors.name}
+            helperText={errors.name?.message}
             sx={{ width: '100%' }}
             label="Name"
             variant="outlined"
@@ -193,6 +198,8 @@ const CreateSourceForm = ({
                     <Input
                       name="sourceDef"
                       {...params}
+                      error={!!errors.sourceDef}
+                      helperText={errors.sourceDef?.message}
                       label="Select source type"
                       variant="outlined"
                     />
@@ -203,6 +210,7 @@ const CreateSourceForm = ({
           />
           <Box sx={{ m: 2 }} />
           <SourceConfigInput
+            errors={errors}
             specs={sourceDefSpecs}
             registerFormFieldValue={register}
             control={control}

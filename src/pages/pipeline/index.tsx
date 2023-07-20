@@ -115,8 +115,21 @@ const BarChart = ({ runs }: any) => {
 export default function Home() {
   const { data, isLoading } = useSWR(`${backendUrl}/api/dashboard/`);
   if (isLoading) {
-    return <CircularProgress />;
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100% ',
+          height: '90vh',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
+
   return (
     <>
       <PageHead title="Development Data Platform" />
@@ -169,7 +182,9 @@ export default function Home() {
               color: 'white',
             }}
           >
-            All flows are operational{' '}
+            {data.length > 0
+              ? 'All flows are operational'
+              : 'No flows available. Please create one'}{' '}
             <Image
               style={{ marginLeft: 'auto' }}
               src={CheckLargeIcon}

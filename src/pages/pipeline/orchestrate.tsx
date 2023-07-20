@@ -5,6 +5,7 @@ import { Flows } from '@/components/Flows/Flows';
 import { useEffect, useState } from 'react';
 import FlowCreate from '@/components/Flows/FlowCreate';
 import { backendUrl } from '@/config/constant';
+import { CircularProgress } from '@mui/material';
 
 export default function Orchestrate() {
   const [crudVal, setCrudVal] = useState<string>('index'); // can be index or create
@@ -15,7 +16,9 @@ export default function Orchestrate() {
     setCrudVal(crudState);
   };
 
-  const { data, mutate } = useSWR(`${backendUrl}/api/prefect/flows/`);
+  const { data, mutate, isLoading } = useSWR(
+    `${backendUrl}/api/prefect/flows/`
+  );
 
   // when the flows list changes
   useEffect(() => {
@@ -28,14 +31,17 @@ export default function Orchestrate() {
     <>
       <PageHead title="Orchestrate" />
       <main className={styles.main}>
-        {crudVal === 'index' && (
-          <Flows
-            flows={flows}
-            updateCrudVal={updateCrudVal}
-            mutate={mutate}
-            setSelectedFlow={setSelectedFlow}
-          />
-        )}
+        {crudVal === 'index' &&
+          (isLoading ? (
+            <CircularProgress />
+          ) : (
+            <Flows
+              flows={flows}
+              updateCrudVal={updateCrudVal}
+              mutate={mutate}
+              setSelectedFlow={setSelectedFlow}
+            />
+          ))}
         {crudVal === 'create' && (
           <FlowCreate updateCrudVal={updateCrudVal} mutate={mutate} />
         )}

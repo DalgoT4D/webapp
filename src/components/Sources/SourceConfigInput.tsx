@@ -8,6 +8,7 @@ import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 export interface SourceConfigInputprops {
+  errors: any;
   specs: Array<any>;
   registerFormFieldValue: (...args: any) => any;
   control: any;
@@ -32,6 +33,7 @@ export type SourceSpec = {
 };
 
 export const SourceConfigInput = ({
+  errors,
   specs,
   registerFormFieldValue,
   control,
@@ -85,11 +87,19 @@ export const SourceConfigInput = ({
     <>
       {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
-        .map((spec: SourceSpec, idx: number) =>
-          spec?.type === 'string' ? (
+        .map((spec: SourceSpec, idx: number) => {
+          const [parent, field] = spec.field.split('.');
+          const hasError = errors && errors.config && errors[parent][field];
+          const errorMessge =
+            errors &&
+            errors.config &&
+            (errors[parent][field]?.message as string);
+          return spec?.type === 'string' ? (
             spec.airbyte_secret ? (
               <React.Fragment key={idx}>
                 <Input
+                  error={hasError}
+                  helperText={errorMessge}
                   sx={{ width: '100%' }}
                   label={spec?.title}
                   register={registerFormFieldValue}
@@ -124,6 +134,8 @@ export const SourceConfigInput = ({
             ) : (
               <React.Fragment key={idx}>
                 <Input
+                  error={hasError}
+                  helperText={errorMessge}
                   sx={{ width: '100%' }}
                   label={spec?.title}
                   variant="outlined"
@@ -158,6 +170,8 @@ export const SourceConfigInput = ({
           ) : spec?.type === 'integer' ? (
             <React.Fragment key={idx}>
               <Input
+                error={hasError}
+                helperText={errorMessge}
                 disabled={false}
                 sx={{ width: '100%' }}
                 label={spec?.title}
@@ -189,6 +203,8 @@ export const SourceConfigInput = ({
                     renderInput={(params) => (
                       <Input
                         name={spec.field}
+                        error={hasError}
+                        helperText={errorMessge}
                         {...params}
                         variant="outlined"
                         label={spec.title}
@@ -201,8 +217,8 @@ export const SourceConfigInput = ({
             </React.Fragment>
           ) : (
             ''
-          )
-        )}
+          );
+        })}
     </>
   );
 };
