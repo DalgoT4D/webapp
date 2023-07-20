@@ -93,7 +93,7 @@ describe('Connections Setup', () => {
     await userEvent.type(inputField, 'new-value');
 
     expect(registerFormFieldValueMock).toHaveBeenCalledWith('specfield', {
-      required: true,
+      required: 'spec-title is required',
     });
   });
 

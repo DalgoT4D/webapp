@@ -182,7 +182,7 @@ export default function Home() {
               color: 'white',
             }}
           >
-            {data.length > 0
+            {data && data.length > 0
               ? 'All flows are operational'
               : 'No flows available. Please create one'}{' '}
             <Image

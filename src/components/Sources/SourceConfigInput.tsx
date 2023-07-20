@@ -88,7 +88,7 @@ export const SourceConfigInput = ({
       {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
         .map((spec: SourceSpec, idx: number) => {
-          const [parent, field] = spec.field.split('.');
+          const [parent, field] = spec?.field.split('.');
           const hasError = errors && errors.config && errors[parent][field];
           const errorMessge =
             errors &&
