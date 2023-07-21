@@ -89,11 +89,15 @@ export const SourceConfigInput = ({
         ?.sort((input1, input2) => input1.order - input2.order)
         .map((spec: SourceSpec, idx: number) => {
           const [parent, field] = spec?.field.split('.');
-          const hasError = errors && errors.config && errors[parent][field];
-          const errorMessge =
-            errors &&
-            errors.config &&
-            (errors[parent][field]?.message as string);
+          let hasError = false;
+          let errorMessge = '';
+          if (parent && field) {
+            hasError = errors && errors.config && errors[parent][field];
+            errorMessge =
+              errors &&
+              errors.config &&
+              (errors[parent][field]?.message as string);
+          }
           return spec?.type === 'string' ? (
             spec.airbyte_secret ? (
               <React.Fragment key={idx}>
