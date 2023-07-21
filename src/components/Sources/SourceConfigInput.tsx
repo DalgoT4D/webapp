@@ -6,7 +6,6 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
-import { type } from 'os';
 
 export interface SourceConfigInputprops {
   errors: any;
