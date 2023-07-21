@@ -6,6 +6,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
+import { type } from 'os';
 
 export interface SourceConfigInputprops {
   errors: any;
@@ -88,7 +89,7 @@ export const SourceConfigInput = ({
       {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
         .map((spec: SourceSpec, idx: number) => {
-          const [parent, field] = spec?.field.split('.');
+          const [parent, field] = spec.field.split('.');
           let hasError = false;
           let errorMessge = '';
           if (parent && field) {
@@ -98,20 +99,20 @@ export const SourceConfigInput = ({
               errors.config &&
               (errors[parent][field]?.message as string);
           }
-          return spec?.type === 'string' ? (
+          return spec.type === 'string' ? (
             spec.airbyte_secret ? (
               <React.Fragment key={idx}>
                 <Input
                   error={hasError}
                   helperText={errorMessge}
                   sx={{ width: '100%' }}
-                  label={spec?.title}
+                  label={spec.title}
                   register={registerFormFieldValue}
                   name={spec.field}
                   variant="outlined"
                   type={showPasswords[`${spec.field}`] ? 'text' : 'password'}
                   required={spec.required}
-                  defaultValue={spec?.default}
+                  defaultValue={spec.default}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -141,19 +142,19 @@ export const SourceConfigInput = ({
                   error={hasError}
                   helperText={errorMessge}
                   sx={{ width: '100%' }}
-                  label={spec?.title}
+                  label={spec.title}
                   variant="outlined"
                   register={registerFormFieldValue}
                   name={spec.field}
                   required={spec.required}
-                  defaultValue={spec?.default}
+                  defaultValue={spec.default}
                   disabled={false}
-                  inputProps={{ pattern: spec?.pattern }}
+                  inputProps={{ pattern: spec.pattern }}
                 ></Input>
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             )
-          ) : spec?.type === 'array' ? (
+          ) : spec.type === 'array' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={spec.field}
@@ -171,24 +172,24 @@ export const SourceConfigInput = ({
               />
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec?.type === 'integer' ? (
+          ) : spec.type === 'integer' ? (
             <React.Fragment key={idx}>
               <Input
                 error={hasError}
                 helperText={errorMessge}
                 disabled={false}
                 sx={{ width: '100%' }}
-                label={spec?.title}
+                label={spec.title}
                 variant="outlined"
                 register={registerFormFieldValue}
                 name={spec.field}
                 required={spec.required}
-                defaultValue={spec?.default}
+                defaultValue={spec.default}
                 type="number"
               ></Input>
               <Box sx={{ m: 2 }} />
             </React.Fragment>
-          ) : spec?.type === 'object' ? (
+          ) : spec.type === 'object' ? (
             <React.Fragment key={idx}>
               <Controller
                 name={spec.field}
