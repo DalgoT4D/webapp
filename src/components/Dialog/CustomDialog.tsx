@@ -34,7 +34,7 @@ const CustomDialog = ({
       open={show}
       onClose={handleClose}
       PaperProps={{
-        sx: { borderRadius: "8px" },
+        sx: { borderRadius: '8px' },
       }}
     >
       <DialogTitle variant="h5" fontWeight={600} sx={{ pb: 1, pt: 4, pr: 2 }}>

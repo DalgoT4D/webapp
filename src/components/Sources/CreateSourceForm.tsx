@@ -52,8 +52,6 @@ const CreateSourceForm = ({
     },
   });
 
-  console.log(errors);
-
   const watchSelectedSourceDef = watch('sourceDef');
 
   useEffect(() => {
@@ -161,66 +159,64 @@ const CreateSourceForm = ({
     await checkSourceConnectivity(data);
   };
 
-  const FormContent = () => {
-    return (
-      <>
-        <Box sx={{ pt: 2, pb: 4 }}>
-          <Input
-            error={!!errors.name}
-            helperText={errors.name?.message}
-            sx={{ width: '100%' }}
-            label="Name"
-            variant="outlined"
-            required
-            register={register}
-            name="name"
-          ></Input>
-          <Box sx={{ m: 2 }} />
-          <Controller
-            name="sourceDef"
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <Autocomplete
-                id="sourceDef"
-                data-testid="autocomplete"
-                value={field.value}
-                options={sourceDefs}
-                isOptionEqualToValue={(
-                  option: AutoCompleteOption,
-                  value: AutoCompleteOption
-                ) => {
-                  return value?.id === '' || option?.id === value?.id;
-                }}
-                onChange={(e, data) => data && field.onChange(data)}
-                renderInput={(params) => {
-                  return (
-                    <Input
-                      name="sourceDef"
-                      {...params}
-                      error={!!errors.sourceDef}
-                      helperText={errors.sourceDef?.message}
-                      label="Select source type"
-                      variant="outlined"
-                    />
-                  );
-                }}
-              />
-            )}
-          />
-          <Box sx={{ m: 2 }} />
-          <SourceConfigInput
-            errors={errors}
-            specs={sourceDefSpecs}
-            registerFormFieldValue={register}
-            control={control}
-            setFormValue={setValue}
-            unregisterFormField={unregister}
-          />
-        </Box>
-      </>
-    );
-  };
+  const formContent = (
+    <>
+      <Box sx={{ pt: 2, pb: 4 }}>
+        <Input
+          error={!!errors.name}
+          helperText={errors.name?.message}
+          sx={{ width: '100%' }}
+          label="Name"
+          variant="outlined"
+          required
+          register={register}
+          name="name"
+        ></Input>
+        <Box sx={{ m: 2 }} />
+        <Controller
+          name="sourceDef"
+          control={control}
+          rules={{ required: true }}
+          render={({ field }) => (
+            <Autocomplete
+              id="sourceDef"
+              data-testid="autocomplete"
+              value={field.value}
+              options={sourceDefs}
+              isOptionEqualToValue={(
+                option: AutoCompleteOption,
+                value: AutoCompleteOption
+              ) => {
+                return value?.id === '' || option?.id === value?.id;
+              }}
+              onChange={(e, data) => data && field.onChange(data)}
+              renderInput={(params) => {
+                return (
+                  <Input
+                    name="sourceDef"
+                    {...params}
+                    error={!!errors.sourceDef}
+                    helperText={errors.sourceDef?.message}
+                    label="Select source type"
+                    variant="outlined"
+                  />
+                );
+              }}
+            />
+          )}
+        />
+        <Box sx={{ m: 2 }} />
+        <SourceConfigInput
+          errors={errors}
+          specs={sourceDefSpecs}
+          registerFormFieldValue={register}
+          control={control}
+          setFormValue={setValue}
+          unregisterFormField={unregister}
+        />
+      </Box>
+    </>
+  );
 
   return (
     <>
@@ -229,7 +225,7 @@ const CreateSourceForm = ({
         show={showForm}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
-        formContent={<FormContent />}
+        formContent={formContent}
         formActions={
           <Box>
             <Button variant="contained" type="submit" data-testid="savebutton">
