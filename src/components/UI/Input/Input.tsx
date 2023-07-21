@@ -5,6 +5,7 @@ interface InputProps extends Omit<TextFieldProps, 'variant'> {
   register?: UseFormRegister<any>;
   name?: string;
   variant?: 'standard' | 'outlined' | 'filled';
+  hookFormValidations?: any;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -13,9 +14,12 @@ export const Input: React.FC<InputProps> = ({
   name,
   sx,
   required = false,
+  hookFormValidations = {},
   ...rest
 }) => {
-  const registerValues: any = { required };
+  const registerValues: any = {
+    required: required ? `${label} is required` : false,
+  };
 
   if (rest.type === 'number') {
     registerValues.valueAsNumber = true;
@@ -30,6 +34,7 @@ export const Input: React.FC<InputProps> = ({
         <TextField
           {...register(name, {
             ...registerValues,
+            ...hookFormValidations,
           })}
           {...rest}
           id={name}

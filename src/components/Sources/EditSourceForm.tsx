@@ -381,6 +381,7 @@ const EditSourceForm = ({
             />
             <Box sx={{ m: 2 }} />
             <SourceConfigInput
+              errors={{}}
               specs={sourceDefSpecs}
               registerFormFieldValue={register}
               control={control}
