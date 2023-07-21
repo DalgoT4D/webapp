@@ -145,6 +145,8 @@ export const DBTTarget = ({
         setDeploymentRunning(false);
       }
       setDeploymentRunning(false);
+    } else {
+      errorToast('No deployment found for this DBT block', [], toastContext);
     }
   };
 

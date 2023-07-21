@@ -30,6 +30,7 @@ export const SignUp = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -39,6 +40,7 @@ export const SignUp = () => {
       signupcode: '',
     },
   });
+  const password = watch('password');
   const toastContext = useContext(GlobalContext);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [waitForSignup, setWaitForSignup] = useState(false);
@@ -123,6 +125,10 @@ export const SignUp = () => {
           <Input
             error={!!errors.confirmpassword}
             helperText={errors.confirmpassword?.message}
+            hookFormValidations={{
+              validate: (value: string) =>
+                value === password || 'Passwords do not match',
+            }}
             sx={{ width: '100%', pb: 3 }}
             id="outlined-confirm-password-input"
             data-testid="confirmpassword"
