@@ -6,8 +6,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { httpDelete } from '@/helpers/http';
-import CreateSourceForm from './CreateSourceForm';
-import EditSourceForm from './EditSourceForm';
+import SourceForm from './SourceForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import connectionIcon from '@/assets/icons/connection.svg';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -24,10 +23,8 @@ export const Sources = () => {
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/airbyte/sources`
   );
-  const [showCreateSourceDialog, setShowCreateSourceDialog] =
-    useState<boolean>(false);
-  const [showEditSourceDialog, setShowEditSourceDialog] =
-    useState<boolean>(false);
+  const [showSourceDialog, setShowSourceDialog] = useState<boolean>(false);
+
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [sourceIdToEdit, setSourceIdToEdit] = useState<string>('');
@@ -35,7 +32,7 @@ export const Sources = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const handleEditSource = () => {
     handleClose();
-    setShowEditSourceDialog(true);
+    setShowSourceDialog(true);
   };
 
   const open = Boolean(anchorEl);
@@ -92,7 +89,8 @@ export const Sources = () => {
   }, [data]);
 
   const handleClickOpen = () => {
-    setShowCreateSourceDialog(true);
+    setSourceIdToEdit('');
+    setShowSourceDialog(true);
   };
 
   const handleDeleteSource = () => {
@@ -135,17 +133,14 @@ export const Sources = () => {
         handleEdit={handleEditSource}
         handleDeleteConnection={handleDeleteSource}
       />
-      <CreateSourceForm
-        mutate={mutate}
-        showForm={showCreateSourceDialog}
-        setShowForm={setShowCreateSourceDialog}
-      />
-      <EditSourceForm
-        mutate={mutate}
-        showForm={showEditSourceDialog}
-        setShowForm={setShowEditSourceDialog}
-        sourceId={sourceIdToEdit}
-      />
+      {showSourceDialog && (
+        <SourceForm
+          sourceId={sourceIdToEdit}
+          mutate={mutate}
+          setShowForm={setShowSourceDialog}
+        />
+      )}
+
       <List
         openDialog={handleClickOpen}
         title="Source"

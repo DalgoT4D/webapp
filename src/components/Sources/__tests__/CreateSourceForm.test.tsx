@@ -7,7 +7,7 @@ import {
 } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import CreateSourceForm from '../CreateSourceForm';
+import SourceForm from '../SourceForm';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -60,9 +60,8 @@ describe('Connections Setup', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <CreateSourceForm
+          <SourceForm
             mutate={() => {}}
-            showForm={true}
             setShowForm={(x) => setShowFormMock(x)}
           />
         </SessionProvider>
@@ -117,9 +116,8 @@ describe('Connections Setup', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <CreateSourceForm
+          <SourceForm
             mutate={() => {}}
-            showForm={true}
             setShowForm={(x) => setShowFormMock(x)}
           />
         </SessionProvider>
@@ -203,9 +201,8 @@ describe('Connections Setup', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <CreateSourceForm
+          <SourceForm
             mutate={() => {}}
-            showForm={true}
             setShowForm={(x) => setShowFormMock(x)}
           />
         </SessionProvider>

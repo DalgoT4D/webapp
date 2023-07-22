@@ -21,6 +21,7 @@ export const Main = ({ children }: any) => {
       return (
         <SWRConfig
           value={{
+            revalidateOnFocus: false,
             fetcher: (resource) =>
               fetch(resource, {
                 headers: {
