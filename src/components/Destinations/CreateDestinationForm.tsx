@@ -52,7 +52,6 @@ const CreateDestinationForm = ({
     setValue,
     unregister,
     formState: { errors },
-    getValues,
   } = useForm<CreateDestinatinFormInput>({
     defaultValues: {
       name: '',
