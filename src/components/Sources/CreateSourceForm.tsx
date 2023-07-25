@@ -16,12 +16,16 @@ interface CreateSourceFormProps {
   setShowForm: (...args: any) => any;
 }
 
-type AutoCompleteOption =
-  | {
-      id: string;
-      label: string;
-    }
-  | undefined;
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+};
+
+type CreateSourceFormInput = {
+  name: string;
+  sourceDef: null | AutoCompleteOption;
+  config: object;
+};
 
 const CreateSourceForm = ({
   mutate,
@@ -44,10 +48,10 @@ const CreateSourceForm = ({
     setValue,
     unregister,
     formState: { errors },
-  } = useForm({
+  } = useForm<CreateSourceFormInput>({
     defaultValues: {
       name: '',
-      sourceDef: undefined as AutoCompleteOption,
+      sourceDef: null,
       config: {},
     },
   });
@@ -176,7 +180,7 @@ const CreateSourceForm = ({
         <Controller
           name="sourceDef"
           control={control}
-          rules={{ required: true }}
+          rules={{ required: 'Source type is required' }}
           render={({ field }) => (
             <Autocomplete
               id="sourceDef"
