@@ -21,6 +21,12 @@ type AutoCompleteOption = {
   label: string;
 };
 
+type CreateDestinatinFormInput = {
+  name: string;
+  destinationDef: null | AutoCompleteOption;
+  config: object;
+};
+
 const CreateDestinationForm = ({
   showForm,
   setShowForm,
@@ -45,10 +51,11 @@ const CreateDestinationForm = ({
     reset,
     setValue,
     unregister,
-  } = useForm({
+    formState: { errors },
+  } = useForm<CreateDestinatinFormInput>({
     defaultValues: {
       name: '',
-      destinationDef: { id: '', label: '' } as AutoCompleteOption,
+      destinationDef: null,
       config: {},
     },
   });
@@ -161,6 +168,8 @@ const CreateDestinationForm = ({
     return (
       <Box sx={{ pt: 2, pb: 4 }}>
         <Input
+          error={!!errors.name}
+          helperText={errors.name?.message}
           sx={{ width: '100%' }}
           label="Name"
           variant="outlined"
@@ -173,7 +182,7 @@ const CreateDestinationForm = ({
         <Controller
           name="destinationDef"
           control={control}
-          rules={{ required: true }}
+          rules={{ required: 'Destination type is required' }}
           render={({ field }) => (
             <Autocomplete
               id="destinationDef"
@@ -185,6 +194,8 @@ const CreateDestinationForm = ({
                 <Input
                   name="destinationDef"
                   {...params}
+                  error={!!errors.destinationDef}
+                  helperText={errors.destinationDef?.message}
                   label="Select destination type"
                   variant="outlined"
                 />
@@ -194,6 +205,7 @@ const CreateDestinationForm = ({
         />
         <Box sx={{ m: 2 }} />
         <DestinationConfigInput
+          errors={errors}
           specs={destinationDefSpecs}
           registerFormFieldValue={register}
           control={control}

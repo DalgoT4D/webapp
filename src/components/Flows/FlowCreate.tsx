@@ -56,7 +56,7 @@ const FlowCreate = ({
     register,
     handleSubmit,
     control,
-    formState: { dirtyFields },
+    formState: { dirtyFields, errors },
     reset,
   } = useForm<DeploymentDef>({
     defaultValues: {
@@ -192,6 +192,7 @@ const FlowCreate = ({
       errorToast(err.message, [], toastContext);
     }
   };
+  console.log(errors);
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} data-testid="form">
@@ -274,13 +275,15 @@ const FlowCreate = ({
                   label="Flow name"
                   placeholder="Enter the flow name"
                   required
+                  error={!!errors.name}
+                  helperText={errors.name?.message}
                 ></Input>
               </Box>
               <Box>
                 <Controller
                   name="connectionBlocks"
                   control={control}
-                  rules={{ required: true }}
+                  rules={{ required: 'Atleast one connection is required' }}
                   render={({ field }: any) => (
                     <Autocomplete
                       id="connectionBlocks"
@@ -307,6 +310,8 @@ const FlowCreate = ({
                           variant="outlined"
                           label="Connections"
                           required
+                          error={!!errors.connectionBlocks}
+                          helperText={errors.connectionBlocks?.message}
                         />
                       )}
                     />
@@ -345,7 +350,7 @@ const FlowCreate = ({
               <Controller
                 name="cron"
                 control={control}
-                rules={{ required: true }}
+                rules={{ required: 'Schedule is required' }}
                 render={({ field }) => (
                   <Autocomplete
                     id="cron"
@@ -365,8 +370,10 @@ const FlowCreate = ({
                         name="cron"
                         {...params}
                         placeholder="Select schedule"
-                        label="Schedule"
+                        label="Daily/Weekly"
                         variant="outlined"
+                        error={!!errors.cron}
+                        helperText={errors.cron?.message}
                       />
                     )}
                   />
