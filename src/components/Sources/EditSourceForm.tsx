@@ -60,6 +60,7 @@ const EditSourceForm = ({
     reset,
     setValue,
     unregister,
+    formState: { errors },
   } = useForm({
     defaultValues: {
       name: '',
@@ -381,7 +382,7 @@ const EditSourceForm = ({
             />
             <Box sx={{ m: 2 }} />
             <SourceConfigInput
-              errors={{}}
+              errors={errors}
               specs={sourceDefSpecs}
               registerFormFieldValue={register}
               control={control}
