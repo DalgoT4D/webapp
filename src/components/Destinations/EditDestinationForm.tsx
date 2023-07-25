@@ -64,7 +64,6 @@ const EditDestinationForm = ({
     reset,
     setValue,
     unregister,
-    getValues,
     formState: { errors },
   } = useForm<EditDestinatinFormInput>({
     defaultValues: {
