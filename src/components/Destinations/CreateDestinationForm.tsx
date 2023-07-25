@@ -21,6 +21,12 @@ type AutoCompleteOption = {
   label: string;
 };
 
+type CreateDestinatinFormInput = {
+  name: string;
+  destinationDef: null | AutoCompleteOption;
+  config: object;
+};
+
 const CreateDestinationForm = ({
   showForm,
   setShowForm,
@@ -47,10 +53,10 @@ const CreateDestinationForm = ({
     unregister,
     formState: { errors },
     getValues,
-  } = useForm({
+  } = useForm<CreateDestinatinFormInput>({
     defaultValues: {
       name: '',
-      destinationDef: { id: '', label: '' } as AutoCompleteOption,
+      destinationDef: null,
       config: {},
     },
   });
@@ -118,9 +124,6 @@ const CreateDestinationForm = ({
     setSetupLogs([]);
   };
 
-  console.log('destination', errors);
-  console.log('form values', getValues());
-
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
@@ -180,7 +183,7 @@ const CreateDestinationForm = ({
         <Controller
           name="destinationDef"
           control={control}
-          rules={{ required: true }}
+          rules={{ required: 'Destination type is required' }}
           render={({ field }) => (
             <Autocomplete
               id="destinationDef"
@@ -192,12 +195,8 @@ const CreateDestinationForm = ({
                 <Input
                   name="destinationDef"
                   {...params}
-                  error={field?.value && field.value.id ? false : true}
-                  helperText={
-                    field?.value && field.value.id
-                      ? ''
-                      : 'Destination type is required'
-                  }
+                  error={!!errors.destinationDef}
+                  helperText={errors.destinationDef?.message}
                   label="Select destination type"
                   variant="outlined"
                 />
