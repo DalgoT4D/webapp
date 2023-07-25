@@ -12,7 +12,7 @@ const cronToLocalTZ = (expression: string) => {
   const fields = expression.split(' ');
 
   if (fields.length === 6) {
-    fields.unshift();
+    fields.shift();
   }
 
   if (fields.length !== 5) {
