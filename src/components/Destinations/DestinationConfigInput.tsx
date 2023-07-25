@@ -29,6 +29,7 @@ export type DestinationSpec = {
 };
 
 export interface DestinationConfigInputprops {
+  errors: any;
   specs: Array<DestinationSpec>;
   registerFormFieldValue: (...args: any) => any;
   control: any;
@@ -38,6 +39,7 @@ export interface DestinationConfigInputprops {
 }
 
 export const DestinationConfigInput = ({
+  errors,
   specs,
   registerFormFieldValue,
   control,
@@ -91,16 +93,24 @@ export const DestinationConfigInput = ({
   return (
     <>
       {connectorSpecs
-        .sort((input1: any, input2: any) => {
-          if (!input2.order) return -1;
-          if (!input1.order) return -1;
-          return input1.order - input2.order;
-        })
-        ?.map((spec: DestinationSpec, idx: number) =>
-          spec.type === 'string' ? (
+        ?.sort((input1, input2) => input1.order - input2.order)
+        ?.map((spec: DestinationSpec, idx: number) => {
+          const [parent, field] = spec.field.split('.');
+          let hasError = false;
+          let errorMessge = '';
+          if (parent && field) {
+            hasError = errors && errors.config && errors[parent][field];
+            errorMessge =
+              errors &&
+              errors.config &&
+              (errors[parent][field]?.message as string);
+          }
+          return spec.type === 'string' ? (
             spec.const ? ( // type == string and a const selected value
               <React.Fragment key={idx}>
                 <Input
+                  error={hasError}
+                  helperText={errorMessge}
                   sx={{ width: '100%' }}
                   label={spec.const as any}
                   variant="outlined"
@@ -115,6 +125,8 @@ export const DestinationConfigInput = ({
             ) : spec.airbyte_secret ? ( // type == string and a password/secret field
               <React.Fragment key={idx}>
                 <Input
+                  error={hasError}
+                  helperText={errorMessge}
                   sx={{ width: '100%' }}
                   label={spec.title}
                   variant="outlined"
@@ -177,6 +189,8 @@ export const DestinationConfigInput = ({
               // type == string , default
               <React.Fragment key={idx}>
                 <Input
+                  error={hasError}
+                  helperText={errorMessge}
                   disabled={destination ? true : false}
                   sx={{ width: '100%' }}
                   label={spec.title}
@@ -236,6 +250,8 @@ export const DestinationConfigInput = ({
           ) : spec.type === 'integer' ? (
             <React.Fragment key={idx}>
               <Input
+                error={hasError}
+                helperText={errorMessge}
                 disabled={destination && !spec.airbyte_secret ? true : false}
                 sx={{ width: '100%' }}
                 label={spec.title}
@@ -281,8 +297,8 @@ export const DestinationConfigInput = ({
             </React.Fragment>
           ) : (
             ''
-          )
-        )}
+          );
+        })}
     </>
   );
 };
