@@ -45,6 +45,8 @@ const CreateDestinationForm = ({
     reset,
     setValue,
     unregister,
+    formState: { errors },
+    getValues,
   } = useForm({
     defaultValues: {
       name: '',
@@ -116,6 +118,9 @@ const CreateDestinationForm = ({
     setSetupLogs([]);
   };
 
+  console.log('destination', errors);
+  console.log('form values', getValues());
+
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
@@ -161,6 +166,8 @@ const CreateDestinationForm = ({
     return (
       <Box sx={{ pt: 2, pb: 4 }}>
         <Input
+          error={!!errors.name}
+          helperText={errors.name?.message}
           sx={{ width: '100%' }}
           label="Name"
           variant="outlined"
@@ -185,6 +192,12 @@ const CreateDestinationForm = ({
                 <Input
                   name="destinationDef"
                   {...params}
+                  error={field?.value && field.value.id ? false : true}
+                  helperText={
+                    field?.value && field.value.id
+                      ? ''
+                      : 'Destination type is required'
+                  }
                   label="Select destination type"
                   variant="outlined"
                 />
@@ -194,6 +207,7 @@ const CreateDestinationForm = ({
         />
         <Box sx={{ m: 2 }} />
         <DestinationConfigInput
+          errors={errors}
           specs={destinationDefSpecs}
           registerFormFieldValue={register}
           control={control}

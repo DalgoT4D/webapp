@@ -53,6 +53,7 @@ const EditDestinationForm = ({
     reset,
     setValue,
     unregister,
+    formState: { errors },
   } = useForm({
     defaultValues: {
       name: '',
@@ -205,6 +206,8 @@ const EditDestinationForm = ({
     return (
       <Box sx={{ pt: 2, pb: 4 }}>
         <Input
+          error={!!errors.name}
+          helperText={errors.name?.message}
           sx={{ width: '100%' }}
           label="Name"
           variant="outlined"
@@ -230,6 +233,12 @@ const EditDestinationForm = ({
                 <Input
                   name="destinationDef"
                   {...params}
+                  error={field?.value && field.value.id ? false : true}
+                  helperText={
+                    field?.value && field.value.id
+                      ? ''
+                      : 'Destination type is required'
+                  }
                   label="Select destination type"
                   variant="outlined"
                 />
@@ -239,6 +248,7 @@ const EditDestinationForm = ({
         />
         <Box sx={{ m: 2 }} />
         <DestinationConfigInput
+          errors={errors}
           specs={destinationDefSpecs}
           registerFormFieldValue={register}
           control={control}
