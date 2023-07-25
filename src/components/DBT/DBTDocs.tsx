@@ -49,7 +49,7 @@ export const DBTDocs = () => {
           }}
         >
           <Typography variant="h6">
-            dbt Docs have not been generated yet
+            Please go to the setup tab and select the function DBT docs-generate
           </Typography>
         </Card>
       )}
