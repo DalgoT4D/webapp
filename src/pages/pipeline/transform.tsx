@@ -270,21 +270,21 @@ const Transform = () => {
                         blocks={dbtBlocks[target]}
                       />
                     ))}
+                    <Button
+                      aria-controls={open ? 'basic-menu' : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={open ? 'true' : undefined}
+                      onClick={(event) => handleClick(event.currentTarget)}
+                      variant="contained"
+                      color="info"
+                      sx={{ p: 0, minWidth: 32, ml: 2 }}
+                    >
+                      <MoreHorizIcon />
+                    </Button>
                   </>
                 ) : (
                   ''
                 )}
-                <Button
-                  aria-controls={open ? 'basic-menu' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={open ? 'true' : undefined}
-                  onClick={(event) => handleClick(event.currentTarget)}
-                  variant="contained"
-                  color="info"
-                  sx={{ p: 0, minWidth: 32, ml: 2 }}
-                >
-                  <MoreHorizIcon />
-                </Button>
               </Box>
             </Card>
             <Box>
