@@ -44,6 +44,12 @@ type AutoCompleteOption = {
   label: string;
 };
 
+type EditSourceFormInput = {
+  name: string;
+  sourceDef: null | AutoCompleteOption;
+  config: object;
+};
+
 const EditSourceForm = ({
   mutate,
   showForm,
@@ -60,10 +66,11 @@ const EditSourceForm = ({
     reset,
     setValue,
     unregister,
-  } = useForm({
+    formState: { errors },
+  } = useForm<EditSourceFormInput>({
     defaultValues: {
       name: '',
-      sourceDef: { id: '', label: '' },
+      sourceDef: null,
       config: {},
     },
   });
@@ -358,7 +365,7 @@ const EditSourceForm = ({
             <Controller
               name="sourceDef"
               control={control}
-              rules={{ required: true }}
+              rules={{ required: 'Source type is required' }}
               render={({ field }) => (
                 <Autocomplete
                   disabled={true}
@@ -371,6 +378,8 @@ const EditSourceForm = ({
                       <Input
                         name="sourceDef"
                         {...params}
+                        error={!!errors.sourceDef}
+                        helperText={errors.sourceDef?.message}
                         label="Select source type"
                         variant="outlined"
                       />
@@ -381,7 +390,7 @@ const EditSourceForm = ({
             />
             <Box sx={{ m: 2 }} />
             <SourceConfigInput
-              errors={{}}
+              errors={errors}
               specs={sourceDefSpecs}
               registerFormFieldValue={register}
               control={control}
