@@ -35,7 +35,12 @@ export const DBTSetup = ({
   schema,
   mode,
 }: DBTSetupProps) => {
-  const { register, handleSubmit, reset } = useForm<DBTCreateWorkspaceParams>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<DBTCreateWorkspaceParams>();
   const { data: session }: any = useSession();
   const [progressMessages, setProgressMessages] = useState<any[]>([]);
   const [setupStatus, setSetupStatus] = useState('not-started');
@@ -187,6 +192,8 @@ export const DBTSetup = ({
             register={register}
             name="gitrepoUrl"
             required
+            error={!!errors.gitrepoUrl}
+            helperText={errors.gitrepoUrl?.message}
           />
         </Box>
         <Box sx={{ m: 2 }} />
@@ -198,6 +205,8 @@ export const DBTSetup = ({
             variant="outlined"
             register={register}
             name="gitrepoAccessToken"
+            error={!!errors.gitrepoAccessToken}
+            helperText={errors.gitrepoAccessToken?.message}
           />
         </Box>
         <Box sx={{ m: 2 }} />
@@ -211,6 +220,8 @@ export const DBTSetup = ({
             register={register}
             name="schema"
             required
+            error={!!errors.schema}
+            helperText={errors.schema?.message}
           />
         </Box>
         <Box sx={{ m: 2 }} />
