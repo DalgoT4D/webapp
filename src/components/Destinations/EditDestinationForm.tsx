@@ -29,6 +29,17 @@ interface DestinationDefinitionsApiResponse {
   normalizationConfig: any;
 }
 
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+};
+
+type EditDestinatinFormInput = {
+  name: string;
+  destinationDef: null | AutoCompleteOption;
+  config: object;
+};
+
 const EditDestinationForm = ({
   showForm,
   setShowForm,
@@ -53,11 +64,12 @@ const EditDestinationForm = ({
     reset,
     setValue,
     unregister,
+    getValues,
     formState: { errors },
-  } = useForm({
+  } = useForm<EditDestinatinFormInput>({
     defaultValues: {
       name: '',
-      destinationDef: { id: '', label: '' },
+      destinationDef: null,
       config: {},
     },
   });
@@ -220,7 +232,7 @@ const EditDestinationForm = ({
         <Controller
           name="destinationDef"
           control={control}
-          rules={{ required: true }}
+          rules={{ required: 'Destination type is required' }}
           render={({ field }) => (
             <Autocomplete
               disabled={true}
@@ -233,12 +245,8 @@ const EditDestinationForm = ({
                 <Input
                   name="destinationDef"
                   {...params}
-                  error={field?.value && field.value.id ? false : true}
-                  helperText={
-                    field?.value && field.value.id
-                      ? ''
-                      : 'Destination type is required'
-                  }
+                  error={!!errors.destinationDef}
+                  helperText={errors.destinationDef?.message}
                   label="Select destination type"
                   variant="outlined"
                 />
