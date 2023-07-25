@@ -365,7 +365,7 @@ const FlowCreate = ({
                         name="cron"
                         {...params}
                         placeholder="Select schedule"
-                        label="Schedule"
+                        label="Daily/Weekly"
                         variant="outlined"
                       />
                     )}
