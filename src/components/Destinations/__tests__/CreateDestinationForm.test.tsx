@@ -1,11 +1,4 @@
-import {
-  act,
-  render,
-  screen,
-  within,
-  fireEvent,
-  waitFor,
-} from '@testing-library/react';
+import { act, render, screen, within, fireEvent } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
