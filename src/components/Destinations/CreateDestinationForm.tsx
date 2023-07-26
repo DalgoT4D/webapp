@@ -8,9 +8,7 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import Input from '../UI/Input/Input';
-import ConnectorConfigInput, {
-  ConnectorSpec,
-} from '@/helpers/ConnectorConfigInput';
+import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 interface CreateDestinationFormProps {
   mutate: (...args: any) => any;
@@ -43,11 +41,8 @@ const CreateDestinationForm = ({
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
-  const [lastRenderedSpecs, setLastRenderedSpecs] = useState<
-    Array<ConnectorSpec>
-  >([]);
   const globalContext = useContext(GlobalContext);
-  const lastRenderedSpecRef = useRef(new Array());
+  const lastRenderedSpecRef = useRef([]);
 
   const {
     register,

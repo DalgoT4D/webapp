@@ -19,16 +19,16 @@ const cronToLocalTZ = (expression: string) => {
     return '';
   }
 
-  var timezoneOffset = new Date().getTimezoneOffset();
+  let timezoneOffset = new Date().getTimezoneOffset();
   timezoneOffset = -timezoneOffset;
 
-  var hours = Math.round(timezoneOffset / 60 - 0.5);
-  var minutes = timezoneOffset - 60 * hours;
+  const hours = Math.round(timezoneOffset / 60 - 0.5);
+  const minutes = timezoneOffset - 60 * hours;
 
-  var newFields = [];
-  var newHours = parseInt(fields[1], 10) + hours;
-  var newMinutes = parseInt(fields[0], 10) + minutes;
-  var newDoW = fields[4];
+  const newFields = [];
+  let newHours = parseInt(fields[1], 10) + hours;
+  let newMinutes = parseInt(fields[0], 10) + minutes;
+  let newDoW = fields[4];
 
   if (newMinutes > 60) {
     newMinutes -= 60;
@@ -38,7 +38,7 @@ const cronToLocalTZ = (expression: string) => {
   if (newHours > 24) {
     newHours -= 24;
     if (newDoW !== '*') {
-      var newDoWInt = parseInt(newDoW, 10);
+      let newDoWInt = parseInt(newDoW, 10);
       if (newDoWInt >= 7) {
         newDoWInt = 0;
       }

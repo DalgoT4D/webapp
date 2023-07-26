@@ -37,7 +37,7 @@ const CreateSourceForm = ({
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
   const [checking, setChecking] = useState<boolean>(false);
-  const lastRenderedSpecRef = useRef(new Array());
+  const lastRenderedSpecRef = useRef([]);
   const toastContext = useContext(GlobalContext);
 
   const {

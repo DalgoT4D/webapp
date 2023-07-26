@@ -267,8 +267,8 @@ class ConnectorConfigInput {
   static fetchUpdatedSpecsOnObjectFieldChange(
     dropDownVal: string,
     field: string,
-    currenRenderedSpecs: Array<ConnectorSpec>,
-    unregisterFormFieldCallback: (...args: any) => any
+    currenRenderedSpecs: Array<ConnectorSpec>
+    // unregisterFormFieldCallback: (...args: any) => any
     // registerFormFieldCallback: (...args: any) => any
   ) {
     // Fetch the current selected spec of type object based on selection
@@ -329,7 +329,7 @@ class ConnectorConfigInput {
     specs: Array<ConnectorSpec>,
     formUnregsiterCallBack: (...args: any) => any
   ) {
-    let unregister: Array<string> = [];
+    const unregister: Array<string> = [];
     if (specs.length > 0 && formObj && 'config' in formObj) {
       ConnectorConfigInput.traverseFormObj(
         formObj['config'],
@@ -350,11 +350,11 @@ class ConnectorConfigInput {
     formObj: any,
     unregister: Array<string>,
     specs: Array<ConnectorSpec>,
-    parentField: string = 'config'
+    parentField = 'config'
   ) {
     try {
       for (const [key, value] of Object.entries(formObj)) {
-        let field: string = `${parentField}.${key}`;
+        const field = `${parentField}.${key}`;
 
         const valIsObject =
           typeof value === 'object' && value !== null && !Array.isArray(value);
