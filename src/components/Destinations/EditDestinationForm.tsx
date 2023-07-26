@@ -1,5 +1,5 @@
 import { Autocomplete, Box, Button } from '@mui/material';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
@@ -54,6 +54,7 @@ const EditDestinationForm = ({
   const [destinationDefs, setDestinationDefs] = useState<
     Array<{ id: string; label: string }>
   >([]);
+  const lastRenderedSpecRef = useRef(new Array());
   const globalContext = useContext(GlobalContext);
 
   const {
@@ -64,6 +65,7 @@ const EditDestinationForm = ({
     reset,
     setValue,
     unregister,
+    getValues,
     formState: { errors },
   } = useForm<EditDestinatinFormInput>({
     defaultValues: {
@@ -164,6 +166,17 @@ const EditDestinationForm = ({
   };
 
   const editWarehouse = async (data: any) => {
+    // unregister form fields
+    console.log('ref value from child', lastRenderedSpecRef);
+    ConnectorConfigInput.syncFormFieldsWithSpecs(
+      data,
+      lastRenderedSpecRef.current || [],
+      unregister
+    );
+
+    // update the data, some form fields might have been unregistered
+    data = getValues();
+
     try {
       await httpPut(
         session,
@@ -262,6 +275,7 @@ const EditDestinationForm = ({
           setFormValue={setValue}
           unregisterFormField={unregister}
           destination={warehouse}
+          lastRenderedSpecRef={lastRenderedSpecRef}
         />
       </Box>
     );

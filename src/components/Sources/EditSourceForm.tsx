@@ -1,5 +1,5 @@
 import { Autocomplete, Box, Button } from '@mui/material';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -66,6 +66,7 @@ const EditSourceForm = ({
     reset,
     setValue,
     unregister,
+    getValues,
     formState: { errors },
   } = useForm<EditSourceFormInput>({
     defaultValues: {
@@ -80,6 +81,7 @@ const EditSourceForm = ({
   const [source, setSource] = useState<any>(null);
   const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
+  const lastRenderedSpecRef = useRef(new Array());
 
   const handleClose = () => {
     reset();
@@ -146,121 +148,6 @@ const EditSourceForm = ({
     }
     setLoading(false);
   };
-
-  // const prePrepareConfigSpecs = (
-  //   result: any,
-  //   data: any,
-  //   parent = 'parent',
-  //   exclude: any[] = [],
-  //   dropdownEnums: any[] = [],
-  //   formValues: any = {},
-  //   childSpecsBeingEdited: any[] = [],
-  //   parentOrder = 0
-  // ) => {
-  //   // Push the parent enum in the array
-  //   if (exclude.length > 0) {
-  //     if (exclude[0] in data?.properties) {
-  //       dropdownEnums.push(data?.properties[exclude[0]]?.const);
-  //     }
-  //   }
-
-  //   for (const [key, value] of Object.entries<any>(data?.properties || {})) {
-  //     // The parent oneOf key has already been added to the array
-  //     if (exclude.includes(key)) continue;
-
-  //     const objParentKey = `${parent}.${key}`;
-
-  //     if (value?.type === 'object') {
-  //       let commonField: string[] = [];
-
-  //       // Find common property among all array elements of 'oneOf' array
-  //       if (value['oneOf'] && value['oneOf'].length > 1) {
-  //         value['oneOf'].forEach((ele: any) => {
-  //           if (commonField.length > 0) {
-  //             commonField = ele?.required.filter((value: any) =>
-  //               commonField.includes(value)
-  //             );
-  //           } else {
-  //             commonField = ele?.required;
-  //           }
-  //         });
-  //       }
-
-  //       const objResult = {
-  //         field: `${objParentKey}.${commonField}`,
-  //         type: value?.type,
-  //         order: value?.order,
-  //         title: value?.title,
-  //         description: value?.description,
-  //         parent:
-  //           dropdownEnums.length > 0
-  //             ? dropdownEnums[dropdownEnums.length - 1]
-  //             : '',
-  //         enum: [],
-  //         specs: [],
-  //       };
-
-  //       result.push(objResult);
-
-  //       value?.oneOf.forEach((eachEnum: any) => {
-  //         prePrepareConfigSpecs(
-  //           objResult.specs,
-  //           eachEnum,
-  //           objParentKey,
-  //           commonField,
-  //           objResult.enum,
-  //           formValues,
-  //           childSpecsBeingEdited,
-  //           value?.order
-  //         );
-  //       });
-
-  //       continue;
-  //     }
-
-  //     // Check if the field is being edited for not; only for nested creds
-  //     const levels = objParentKey.split('.');
-  //     if (levels.length > 2) {
-  //       let prefilled = false;
-  //       let levelData = formValues;
-  //       for (const level of levels) {
-  //         if (level in levelData) {
-  //           prefilled = true;
-  //           levelData = levelData[level];
-  //         } else {
-  //           prefilled = false;
-  //           break;
-  //         }
-  //       }
-  //       if (prefilled) {
-  //         childSpecsBeingEdited.push({
-  //           ...value,
-  //           order: value?.order >= 0 ? value?.order : parentOrder,
-  //           field: objParentKey,
-  //           parent:
-  //             dropdownEnums.length > 0
-  //               ? dropdownEnums[dropdownEnums.length - 1]
-  //               : '',
-  //           required: data?.required.includes(key),
-  //         });
-  //       }
-  //     }
-
-  //     // Populate the main specs array
-  //     result.push({
-  //       ...value,
-  //       order: value?.order >= 0 ? value?.order : parentOrder,
-  //       field: objParentKey,
-  //       parent:
-  //         dropdownEnums.length > 0
-  //           ? dropdownEnums[dropdownEnums.length - 1]
-  //           : '',
-  //       required: data?.required.includes(key),
-  //     });
-  //   }
-
-  //   return result;
-  // };
 
   useEffect(() => {
     if (watchSelectedSourceDef?.id) {
@@ -345,7 +232,14 @@ const EditSourceForm = ({
   };
 
   const onSubmit = async (data: any) => {
-    await checkSourceConnectivityForUpdate(data);
+    // unregister form fields
+    ConnectorConfigInput.syncFormFieldsWithSpecs(
+      data,
+      lastRenderedSpecRef.current || [],
+      unregister
+    );
+
+    await checkSourceConnectivityForUpdate(getValues());
   };
 
   const FormContent = () => {
@@ -397,6 +291,7 @@ const EditSourceForm = ({
               setFormValue={setValue}
               source={source}
               unregisterFormField={unregister}
+              lastRenderedSpecRef={lastRenderedSpecRef}
             />
           </>
         </Box>
