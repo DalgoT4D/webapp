@@ -1,5 +1,5 @@
 import { Autocomplete, Box, Button } from '@mui/material';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { DestinationConfigInput } from './DestinationConfigInput';
 import { Controller, useForm } from 'react-hook-form';
@@ -42,6 +42,7 @@ const CreateDestinationForm = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
   const globalContext = useContext(GlobalContext);
+  const lastRenderedSpecRef = useRef([]);
 
   const {
     register,
@@ -51,6 +52,7 @@ const CreateDestinationForm = ({
     reset,
     setValue,
     unregister,
+    getValues,
     formState: { errors },
   } = useForm<CreateDestinatinFormInput>({
     defaultValues: {
@@ -124,6 +126,17 @@ const CreateDestinationForm = ({
   };
 
   const onSubmit = async (data: any) => {
+    // unregister form fields
+    console.log('ref value from child', lastRenderedSpecRef);
+    ConnectorConfigInput.syncFormFieldsWithSpecs(
+      data,
+      lastRenderedSpecRef.current || [],
+      unregister
+    );
+
+    // update the data, some form fields might have been unregistered
+    data = getValues();
+
     setLoading(true);
     try {
       setSetupLogs([]);
@@ -211,6 +224,7 @@ const CreateDestinationForm = ({
           control={control}
           setFormValue={setValue}
           unregisterFormField={unregister}
+          lastRenderedSpecRef={lastRenderedSpecRef}
         />
       </Box>
     );
