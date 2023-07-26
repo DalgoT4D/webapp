@@ -5,6 +5,7 @@ import { Controller } from 'react-hook-form';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import Input from '../UI/Input/Input';
+import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 export interface SourceConfigInputprops {
   errors: any;
@@ -14,6 +15,7 @@ export interface SourceConfigInputprops {
   setFormValue: (...args: any) => any;
   unregisterFormField: (...args: any) => any;
   source?: any;
+  lastRenderedSpecRef: any;
 }
 
 export type SourceSpec = {
@@ -37,8 +39,8 @@ export const SourceConfigInput = ({
   registerFormFieldValue,
   control,
   setFormValue,
-  unregisterFormField,
   source,
+  lastRenderedSpecRef,
 }: SourceConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<SourceSpec>>([]);
 
@@ -57,56 +59,14 @@ export const SourceConfigInput = ({
   ) => {
     fieldOnChangeFunc.onChange(dropDownVal);
 
-    // Fetch the current selected spec of type object based on selection
-    const selectedSpec: SourceSpec | undefined = connectorSpecs.find(
-      (ele: SourceSpec) => ele.field === field
+    const tempSpecs = ConnectorConfigInput.fetchUpdatedSpecsOnObjectFieldChange(
+      dropDownVal,
+      field,
+      connectorSpecs
     );
 
-    // Filter all specs that are under selectedSpec and have parent as selectedSpec
-    // Check if any child specs have type object
-    const filteredChildSpecs: Array<SourceSpec> = [];
-    if (selectedSpec && selectedSpec.specs) {
-      selectedSpec.specs.forEach((ele: SourceSpec) => {
-        if (ele.parent === dropDownVal) {
-          // Check if the child has another level or not
-          if (ele.specs && ele.enum && ele.enum.length === 0) {
-            ele.specs.forEach((childEle: SourceSpec) => {
-              filteredChildSpecs.push({ ...childEle, order: ele.order });
-            });
-          } else {
-            filteredChildSpecs.push(ele);
-          }
-        }
-      });
-    }
-
-    // Find the specs that will have parent in the following enum array
-    const enumsToRemove =
-      (selectedSpec &&
-        selectedSpec.enum &&
-        selectedSpec.enum.filter((ele) => ele !== dropDownVal)) ||
-      [];
-
-    // Separate object for new connectorSpecs to avoid directly updating the state
-    const updatedConnectorSpecs: Array<SourceSpec> = [];
-
-    connectorSpecs.forEach((sp: SourceSpec) => {
-      if (!sp.parent || !enumsToRemove.includes(sp.parent)) {
-        // Keep the existing specs that are not affected by the dropdown change
-        updatedConnectorSpecs.push(sp);
-      }
-    });
-
-    // Set the order of child specs to be displayed at the correct position
-    filteredChildSpecs.forEach((ele: SourceSpec) => {
-      ele.order = selectedSpec?.order || -1;
-    });
-
-    // Add the new filteredChildSpecs to the updated connectorSpecs array
-    updatedConnectorSpecs.push(...filteredChildSpecs);
-
-    // Update the state with the new connectorSpecs array
-    setConnectorSpecs(updatedConnectorSpecs);
+    setConnectorSpecs(tempSpecs);
+    lastRenderedSpecRef.current = tempSpecs;
   };
 
   useEffect(() => {

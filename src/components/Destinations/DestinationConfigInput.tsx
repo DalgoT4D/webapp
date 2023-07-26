@@ -36,6 +36,7 @@ export interface DestinationConfigInputprops {
   setFormValue: (...args: any) => any;
   unregisterFormField: (...args: any) => any;
   destination?: any;
+  lastRenderedSpecRef: any;
 }
 
 export const DestinationConfigInput = ({
@@ -44,8 +45,9 @@ export const DestinationConfigInput = ({
   registerFormFieldValue,
   control,
   setFormValue,
-  unregisterFormField,
+  // unregisterFormField,
   destination,
+  lastRenderedSpecRef,
 }: DestinationConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<DestinationSpec>>(
     []
@@ -68,12 +70,12 @@ export const DestinationConfigInput = ({
     const tempSpecs = ConnectorConfigInput.fetchUpdatedSpecsOnObjectFieldChange(
       dropDownVal,
       field,
-      connectorSpecs,
-      unregisterFormField
-      // registerFormFieldValue
+      connectorSpecs
+      // unregisterFormField
     );
 
     setConnectorSpecs(tempSpecs);
+    lastRenderedSpecRef.current = tempSpecs;
   };
 
   useEffect(() => {

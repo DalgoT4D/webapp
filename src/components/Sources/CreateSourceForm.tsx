@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { Autocomplete, Box, Button } from '@mui/material';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -37,6 +37,7 @@ const CreateSourceForm = ({
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
   const [checking, setChecking] = useState<boolean>(false);
+  const lastRenderedSpecRef = useRef([]);
   const toastContext = useContext(GlobalContext);
 
   const {
@@ -47,6 +48,7 @@ const CreateSourceForm = ({
     reset,
     setValue,
     unregister,
+    getValues,
     formState: { errors },
   } = useForm<CreateSourceFormInput>({
     defaultValues: {
@@ -160,7 +162,14 @@ const CreateSourceForm = ({
   };
 
   const onSubmit = async (data: any) => {
-    await checkSourceConnectivity(data);
+    // unregister form fields
+    ConnectorConfigInput.syncFormFieldsWithSpecs(
+      data,
+      lastRenderedSpecRef.current || [],
+      unregister
+    );
+
+    await checkSourceConnectivity(getValues());
   };
 
   const formContent = (
@@ -217,6 +226,7 @@ const CreateSourceForm = ({
           control={control}
           setFormValue={setValue}
           unregisterFormField={unregister}
+          lastRenderedSpecRef={lastRenderedSpecRef}
         />
       </Box>
     </>

@@ -267,8 +267,8 @@ class ConnectorConfigInput {
   static fetchUpdatedSpecsOnObjectFieldChange(
     dropDownVal: string,
     field: string,
-    currenRenderedSpecs: Array<ConnectorSpec>,
-    unregisterFormFieldCallback: (...args: any) => any
+    currenRenderedSpecs: Array<ConnectorSpec>
+    // unregisterFormFieldCallback: (...args: any) => any
     // registerFormFieldCallback: (...args: any) => any
   ) {
     // Fetch the current selected spec of type object based on selection
@@ -313,14 +313,65 @@ class ConnectorConfigInput {
       .concat(filteredChildSpecs);
 
     // Unregister the form fields that have parent in enumsToRemove
-    currenRenderedSpecs.forEach((sp: ConnectorSpec) => {
-      if (sp.parent && enumsToRemove.includes(sp.parent)) {
-        console.log('unregisterin', sp);
-        unregisterFormFieldCallback(sp.field);
-      }
-    });
+    // currenRenderedSpecs.forEach((sp: ConnectorSpec) => {
+    //   if (sp.parent && enumsToRemove.includes(sp.parent)) {
+    //     console.log('unregisterin', sp);
+    //     unregisterFormFieldCallback(sp.field);
+    //   }
+    // });
 
     return tempSpecs;
+  }
+
+  // unregister the form fields based on the specs user sees/renders
+  static syncFormFieldsWithSpecs(
+    formObj: any,
+    specs: Array<ConnectorSpec>,
+    formUnregsiterCallBack: (...args: any) => any
+  ) {
+    const unregister: Array<string> = [];
+    if (specs.length > 0 && formObj && 'config' in formObj) {
+      ConnectorConfigInput.traverseFormObj(
+        formObj['config'],
+        unregister,
+        specs
+      );
+    }
+
+    // unregister in form
+    for (const field of unregister) {
+      formUnregsiterCallBack(field);
+    }
+  }
+
+  // traverse form to match current specs with form fields
+  // adds the fields to be unregistered in the unregister object
+  private static traverseFormObj(
+    formObj: any,
+    unregister: Array<string>,
+    specs: Array<ConnectorSpec>,
+    parentField = 'config'
+  ) {
+    try {
+      for (const [key, value] of Object.entries(formObj)) {
+        const field = `${parentField}.${key}`;
+
+        const valIsObject =
+          typeof value === 'object' && value !== null && !Array.isArray(value);
+
+        if (valIsObject) {
+          ConnectorConfigInput.traverseFormObj(value, unregister, specs, field);
+        } else {
+          const spec = specs.find((sp) => sp.field === field);
+          if (!spec) {
+            unregister.push(field);
+          }
+        }
+      }
+    } catch {
+      // do nothing
+      console.error('Something went wrong while finding unregistered fields');
+    }
   }
 }
 

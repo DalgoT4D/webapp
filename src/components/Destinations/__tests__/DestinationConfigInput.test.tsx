@@ -19,11 +19,13 @@ const FormContainer = ({ mockSession, specs }: any) => {
   return (
     <SessionProvider session={mockSession}>
       <DestinationConfigInput
+        errors={{}}
         specs={specs}
         registerFormFieldValue={() => {}}
         control={control}
         setFormValue={() => {}}
         unregisterFormField={() => {}}
+        lastRenderedSpecRef={{ current: [] }}
       />
     </SessionProvider>
   );
