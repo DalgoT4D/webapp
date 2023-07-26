@@ -45,7 +45,7 @@ export const DestinationConfigInput = ({
   registerFormFieldValue,
   control,
   setFormValue,
-  unregisterFormField,
+  // unregisterFormField,
   destination,
   lastRenderedSpecRef,
 }: DestinationConfigInputprops) => {
@@ -70,8 +70,8 @@ export const DestinationConfigInput = ({
     const tempSpecs = ConnectorConfigInput.fetchUpdatedSpecsOnObjectFieldChange(
       dropDownVal,
       field,
-      connectorSpecs,
-      unregisterFormField
+      connectorSpecs
+      // unregisterFormField
     );
 
     setConnectorSpecs(tempSpecs);

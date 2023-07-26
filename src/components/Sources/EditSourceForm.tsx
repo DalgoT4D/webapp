@@ -81,7 +81,7 @@ const EditSourceForm = ({
   const [source, setSource] = useState<any>(null);
   const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
-  const lastRenderedSpecRef = useRef(new Array());
+  const lastRenderedSpecRef = useRef([]);
 
   const handleClose = () => {
     reset();

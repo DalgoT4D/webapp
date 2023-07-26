@@ -54,7 +54,7 @@ const EditDestinationForm = ({
   const [destinationDefs, setDestinationDefs] = useState<
     Array<{ id: string; label: string }>
   >([]);
-  const lastRenderedSpecRef = useRef(new Array());
+  const lastRenderedSpecRef = useRef([]);
   const globalContext = useContext(GlobalContext);
 
   const {

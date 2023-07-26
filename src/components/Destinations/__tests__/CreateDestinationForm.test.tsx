@@ -308,7 +308,7 @@ describe('destination create form - definitions + specifications', () => {
     expect(destinationDefInput.value).toBe('destination-def-name-2');
 
     // Specifications should populate
-    let hostSpec = screen.getByLabelText('Host*');
+    const hostSpec = screen.getByLabelText('Host*');
     expect(hostSpec).toBeInTheDocument();
     const dbNameSpec = screen.getByLabelText('DB Name');
     expect(dbNameSpec).toBeInTheDocument();

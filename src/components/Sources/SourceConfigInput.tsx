@@ -5,6 +5,7 @@ import { Controller } from 'react-hook-form';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import Input from '../UI/Input/Input';
+import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 export interface SourceConfigInputprops {
   errors: any;
@@ -38,7 +39,6 @@ export const SourceConfigInput = ({
   registerFormFieldValue,
   control,
   setFormValue,
-  unregisterFormField,
   source,
   lastRenderedSpecRef,
 }: SourceConfigInputprops) => {
@@ -62,8 +62,7 @@ export const SourceConfigInput = ({
     const tempSpecs = ConnectorConfigInput.fetchUpdatedSpecsOnObjectFieldChange(
       dropDownVal,
       field,
-      connectorSpecs,
-      unregisterFormField
+      connectorSpecs
     );
 
     setConnectorSpecs(tempSpecs);
