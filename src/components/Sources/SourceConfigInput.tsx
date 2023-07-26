@@ -15,6 +15,8 @@ export interface SourceConfigInputprops {
   setFormValue: (...args: any) => any;
   unregisterFormField: (...args: any) => any;
   source?: any;
+  setFieldsToRemove: (...args: any) => any;
+  getValues: (...args: any) => any;
 }
 
 export type SourceSpec = {
@@ -40,6 +42,8 @@ export const SourceConfigInput = ({
   setFormValue,
   unregisterFormField,
   source,
+  setFieldsToRemove,
+  getValues,
 }: SourceConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<SourceSpec>>([]);
 
@@ -68,6 +72,19 @@ export const SourceConfigInput = ({
 
     setConnectorSpecs(tempSpecs);
   };
+
+  useEffect(() => {
+    let unregister: Array<string> = [];
+    let formObj: any = getValues();
+    if (formObj) {
+      ConnectorConfigInput.traverseFormObj(
+        formObj['config'],
+        unregister,
+        connectorSpecs
+      );
+      setFieldsToRemove(unregister);
+    }
+  }, [connectorSpecs]);
 
   useEffect(() => {
     setConnectorSpecs(specs);

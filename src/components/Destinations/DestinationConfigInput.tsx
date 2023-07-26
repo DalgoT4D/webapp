@@ -36,6 +36,8 @@ export interface DestinationConfigInputprops {
   setFormValue: (...args: any) => any;
   unregisterFormField: (...args: any) => any;
   destination?: any;
+  setFieldsToRemove: (...args: any) => any;
+  getValues: (...args: any) => any;
 }
 
 export const DestinationConfigInput = ({
@@ -46,6 +48,8 @@ export const DestinationConfigInput = ({
   setFormValue,
   unregisterFormField,
   destination,
+  setFieldsToRemove,
+  getValues,
 }: DestinationConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<DestinationSpec>>(
     []
@@ -75,6 +79,19 @@ export const DestinationConfigInput = ({
 
     setConnectorSpecs(tempSpecs);
   };
+
+  useEffect(() => {
+    let unregister: Array<string> = [];
+    let formObj: any = getValues();
+    if (formObj) {
+      ConnectorConfigInput.traverseFormObj(
+        formObj['config'],
+        unregister,
+        connectorSpecs
+      );
+      setFieldsToRemove(unregister);
+    }
+  }, [connectorSpecs]);
 
   useEffect(() => {
     setConnectorSpecs(specs);

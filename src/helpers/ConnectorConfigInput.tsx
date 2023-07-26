@@ -313,14 +313,44 @@ class ConnectorConfigInput {
       .concat(filteredChildSpecs);
 
     // Unregister the form fields that have parent in enumsToRemove
-    currenRenderedSpecs.forEach((sp: ConnectorSpec) => {
-      if (sp.parent && enumsToRemove.includes(sp.parent)) {
-        console.log('unregisterin', sp);
-        unregisterFormFieldCallback(sp.field);
-      }
-    });
+    // currenRenderedSpecs.forEach((sp: ConnectorSpec) => {
+    //   if (sp.parent && enumsToRemove.includes(sp.parent)) {
+    //     console.log('unregisterin', sp);
+    //     unregisterFormFieldCallback(sp.field);
+    //   }
+    // });
 
     return tempSpecs;
+  }
+
+  // traverse form to match current specs with form fields
+  // adds the fields to be unregistered in the unregister object
+  static traverseFormObj(
+    formObj: any,
+    unregister: Array<string>,
+    specs: Array<ConnectorSpec>,
+    parentField: string = 'config'
+  ) {
+    try {
+      for (const [key, value] of Object.entries(formObj)) {
+        let field: string = `${parentField}.${key}`;
+
+        const valIsObject =
+          typeof value === 'object' && value !== null && !Array.isArray(value);
+
+        if (valIsObject) {
+          ConnectorConfigInput.traverseFormObj(value, unregister, specs, field);
+        } else {
+          const spec = specs.find((sp) => sp.field === field);
+          if (!spec) {
+            unregister.push(field);
+          }
+        }
+      }
+    } catch {
+      // do nothing
+      console.error('Something went wrong while finding unregistered fields');
+    }
   }
 }
 
