@@ -41,6 +41,7 @@ const CreateDestinationForm = ({
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
+  const [fieldsToRemove, setFieldsToRemove] = useState<Array<any>>([]);
   const globalContext = useContext(GlobalContext);
 
   const {
@@ -51,6 +52,7 @@ const CreateDestinationForm = ({
     reset,
     setValue,
     unregister,
+    getValues,
     formState: { errors },
   } = useForm<CreateDestinatinFormInput>({
     defaultValues: {
@@ -124,6 +126,16 @@ const CreateDestinationForm = ({
   };
 
   const onSubmit = async (data: any) => {
+    // unregister form fields
+    if (fieldsToRemove.length > 0) {
+      try {
+        for (const field of fieldsToRemove) {
+          unregister(field);
+        }
+      } catch {
+        console.error('Failed to unregister fields');
+      }
+    }
     setLoading(true);
     try {
       setSetupLogs([]);
@@ -211,6 +223,8 @@ const CreateDestinationForm = ({
           control={control}
           setFormValue={setValue}
           unregisterFormField={unregister}
+          setFieldsToRemove={setFieldsToRemove}
+          getValues={getValues}
         />
       </Box>
     );

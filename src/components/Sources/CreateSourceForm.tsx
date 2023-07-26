@@ -37,6 +37,7 @@ const CreateSourceForm = ({
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
   const [checking, setChecking] = useState<boolean>(false);
+  const [fieldsToRemove, setFieldsToRemove] = useState<Array<any>>([]);
   const toastContext = useContext(GlobalContext);
 
   const {
@@ -47,6 +48,7 @@ const CreateSourceForm = ({
     reset,
     setValue,
     unregister,
+    getValues,
     formState: { errors },
   } = useForm<CreateSourceFormInput>({
     defaultValues: {
@@ -160,6 +162,16 @@ const CreateSourceForm = ({
   };
 
   const onSubmit = async (data: any) => {
+    // unregister form fields
+    if (fieldsToRemove.length > 0) {
+      try {
+        for (const field of fieldsToRemove) {
+          unregister(field);
+        }
+      } catch {
+        console.error('Failed to unregister fields');
+      }
+    }
     await checkSourceConnectivity(data);
   };
 
@@ -217,6 +229,8 @@ const CreateSourceForm = ({
           control={control}
           setFormValue={setValue}
           unregisterFormField={unregister}
+          setFieldsToRemove={setFieldsToRemove}
+          getValues={getValues}
         />
       </Box>
     </>
