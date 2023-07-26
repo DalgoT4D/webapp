@@ -323,9 +323,30 @@ class ConnectorConfigInput {
     return tempSpecs;
   }
 
+  // unregister the form fields based on the specs user sees/renders
+  static syncFormFieldsWithSpecs(
+    formObj: any,
+    specs: Array<ConnectorSpec>,
+    formUnregsiterCallBack: (...args: any) => any
+  ) {
+    let unregister: Array<string> = [];
+    if (specs.length > 0 && formObj && 'config' in formObj) {
+      ConnectorConfigInput.traverseFormObj(
+        formObj['config'],
+        unregister,
+        specs
+      );
+    }
+
+    // unregister in form
+    for (const field of unregister) {
+      formUnregsiterCallBack(field);
+    }
+  }
+
   // traverse form to match current specs with form fields
   // adds the fields to be unregistered in the unregister object
-  static traverseFormObj(
+  private static traverseFormObj(
     formObj: any,
     unregister: Array<string>,
     specs: Array<ConnectorSpec>,

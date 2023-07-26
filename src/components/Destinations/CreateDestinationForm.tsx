@@ -1,5 +1,5 @@
 import { Autocomplete, Box, Button } from '@mui/material';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { DestinationConfigInput } from './DestinationConfigInput';
 import { Controller, useForm } from 'react-hook-form';
@@ -8,7 +8,9 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import Input from '../UI/Input/Input';
-import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
+import ConnectorConfigInput, {
+  ConnectorSpec,
+} from '@/helpers/ConnectorConfigInput';
 
 interface CreateDestinationFormProps {
   mutate: (...args: any) => any;
@@ -41,8 +43,11 @@ const CreateDestinationForm = ({
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
-  const [fieldsToRemove, setFieldsToRemove] = useState<Array<any>>([]);
+  const [lastRenderedSpecs, setLastRenderedSpecs] = useState<
+    Array<ConnectorSpec>
+  >([]);
   const globalContext = useContext(GlobalContext);
+  const lastRenderedSpecRef = useRef(new Array());
 
   const {
     register,
@@ -127,15 +132,16 @@ const CreateDestinationForm = ({
 
   const onSubmit = async (data: any) => {
     // unregister form fields
-    if (fieldsToRemove.length > 0) {
-      try {
-        for (const field of fieldsToRemove) {
-          unregister(field);
-        }
-      } catch {
-        console.error('Failed to unregister fields');
-      }
-    }
+    console.log('ref value from child', lastRenderedSpecRef);
+    ConnectorConfigInput.syncFormFieldsWithSpecs(
+      data,
+      lastRenderedSpecRef.current || [],
+      unregister
+    );
+
+    // update the data, some form fields might have been unregistered
+    data = getValues();
+
     setLoading(true);
     try {
       setSetupLogs([]);
@@ -223,8 +229,7 @@ const CreateDestinationForm = ({
           control={control}
           setFormValue={setValue}
           unregisterFormField={unregister}
-          setFieldsToRemove={setFieldsToRemove}
-          getValues={getValues}
+          lastRenderedSpecRef={lastRenderedSpecRef}
         />
       </Box>
     );

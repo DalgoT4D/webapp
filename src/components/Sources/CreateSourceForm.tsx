@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { Autocomplete, Box, Button } from '@mui/material';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -37,7 +37,7 @@ const CreateSourceForm = ({
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
   const [checking, setChecking] = useState<boolean>(false);
-  const [fieldsToRemove, setFieldsToRemove] = useState<Array<any>>([]);
+  const lastRenderedSpecRef = useRef(new Array());
   const toastContext = useContext(GlobalContext);
 
   const {
@@ -163,16 +163,13 @@ const CreateSourceForm = ({
 
   const onSubmit = async (data: any) => {
     // unregister form fields
-    if (fieldsToRemove.length > 0) {
-      try {
-        for (const field of fieldsToRemove) {
-          unregister(field);
-        }
-      } catch {
-        console.error('Failed to unregister fields');
-      }
-    }
-    await checkSourceConnectivity(data);
+    ConnectorConfigInput.syncFormFieldsWithSpecs(
+      data,
+      lastRenderedSpecRef.current || [],
+      unregister
+    );
+
+    await checkSourceConnectivity(getValues());
   };
 
   const formContent = (
@@ -229,8 +226,7 @@ const CreateSourceForm = ({
           control={control}
           setFormValue={setValue}
           unregisterFormField={unregister}
-          setFieldsToRemove={setFieldsToRemove}
-          getValues={getValues}
+          lastRenderedSpecRef={lastRenderedSpecRef}
         />
       </Box>
     </>
