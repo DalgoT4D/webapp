@@ -5,7 +5,6 @@ import { Controller } from 'react-hook-form';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import Input from '../UI/Input/Input';
-import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 export interface SourceConfigInputprops {
   errors: any;
