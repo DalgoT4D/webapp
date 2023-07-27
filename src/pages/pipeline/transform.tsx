@@ -167,9 +167,6 @@ const Transform = () => {
         </Typography>
         <Tabs value={activeTab} onChange={handleChangeTab} sx={{ mb: 3 }}>
           <Tab value="setup" label="Setup"></Tab>
-          {dbtSetupStage === 'complete' && workspace && (
-            <Tab value="docs" label="Docs"></Tab>
-          )}
         </Tabs>
         {activeTab === 'setup' && (
           <>
@@ -267,7 +264,9 @@ const Transform = () => {
                         setDbtRunLogs={(logs: string[]) => {
                           setDbtSetupLogs(logs);
                         }}
-                        blocks={dbtBlocks[target]}
+                        blocks={dbtBlocks[target].filter(
+                          (block) => block.action.indexOf('docs-generate') < 0
+                        )}
                       />
                     ))}
                     <Button
