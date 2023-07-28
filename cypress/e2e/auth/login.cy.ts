@@ -1,4 +1,4 @@
-describe('The Home Page', () => {
+describe('Login Page', () => {
   beforeEach(() => {
     cy.visit('/login');
   });
@@ -28,5 +28,12 @@ describe('The Home Page', () => {
     cy.get('[data-testid="password"]').type(Cypress.env('password'));
     cy.get('[data-testid="submitbutton"]').click();
     cy.get('div').should('contain', 'User logged in successfully');
+  });
+
+  it('Failure login', () => {
+    cy.get('[data-testid="username"]').type('randomeusername');
+    cy.get('[data-testid="password"]').type('randompassword');
+    cy.get('[data-testid="submitbutton"]').click();
+    cy.get('p').should('contain', 'Please check your credentials');
   });
 });
