@@ -40,7 +40,7 @@ describe('Login Page', () => {
     cy.get('div').should('contain', 'That is not the right signup code');
   });
 
-  it('Successfully login', () => {
+  it('Successfully signup', () => {
     cy.get('[data-testid="username"]').type(`cypress_${uuidv4()}@gmail.com`);
     cy.get('[data-testid="password"]').type('password');
     cy.get('[data-testid="confirmpassword"]').type('password');
