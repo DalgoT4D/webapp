@@ -1,4 +1,10 @@
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import {
+  render,
+  screen,
+  act,
+  fireEvent,
+  getByLabelText,
+} from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import FlowCreate from '../FlowCreate';
@@ -261,9 +267,11 @@ describe('Flow Creation', () => {
     const cronautocomplete = screen.getByTestId('cronautocomplete');
 
     // test with valid value
-    fireEvent.change(cronOption, { target: { value: 'daily' } });
+    await act(() =>
+      fireEvent.change(cronOption, { target: { value: 'daily' } })
+    );
     fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    await act(() => fireEvent.keyDown(cronautocomplete, { key: 'Enter' }));
     expect(cronOption.value).toBe('daily');
 
     // test with invalid value
@@ -288,19 +296,32 @@ describe('Flow Creation', () => {
     expect(mutateMock).not.toHaveBeenCalled();
 
     // enter last required field
-    let flowname = null;
-    screen.getAllByRole('textbox').forEach((element) => {
-      if ((element as HTMLInputElement).name === 'name') {
-        flowname = element;
-      }
-    });
-    expect(flowname).not.toBeNull();
-    await userEvent.type(flowname, 'MyFlow');
+    const flowname: any = screen.getByTestId('name').querySelector('input');
+    fireEvent.change(flowname, { target: { value: 'MyFlow' } });
+    expect(flowname.value).toBe('MyFlow');
     const fetchMock2 = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce({ name: 'created flowname' }),
     });
     (global as any).fetch = fetchMock2;
+
+    // select day of week
+    const dayOfWeekOption = screen.getByRole('combobox', {
+      name: 'Day of the week',
+    }) as HTMLInputElement;
+    const multiTagCronDaysOfWeek = screen.getByTestId('cronDaysOfWeek');
+    await act(() =>
+      fireEvent.change(dayOfWeekOption, { target: { value: 'Sunday' } })
+    );
+    fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'ArrowDown' });
+    await act(() =>
+      fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'Enter' })
+    );
+
+    // select the time also
+    const timeOfDayContainer = screen.getByTestId('cronTimeOfDay');
+    const inputTimeOfDay: any = timeOfDayContainer.querySelector('input');
+    fireEvent.change(inputTimeOfDay, { target: { value: '01:00 AM' } });
 
     await userEvent.click(savebutton);
     expect(updateCrudValMock).toHaveBeenCalled();
@@ -389,6 +410,24 @@ describe('Flow Creation', () => {
     });
     (global as any).fetch = fetchMock2;
 
+    // select day of week
+    // const dayOfWeekOption = screen.getByRole('combobox', {
+    //   name: 'Day of the week',
+    // }) as HTMLInputElement;
+    // const multiTagCronDaysOfWeek = screen.getByTestId('cronDaysOfWeek');
+    // await act(() =>
+    //   fireEvent.change(dayOfWeekOption, { target: { value: 'Sunday' } })
+    // );
+    // fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'ArrowDown' });
+    // await act(() =>
+    //   fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'Enter' })
+    // );
+
+    // select the time also
+    const timeOfDayContainer = screen.getByTestId('cronTimeOfDay');
+    const inputTimeOfDay: any = timeOfDayContainer.querySelector('input');
+    fireEvent.change(inputTimeOfDay, { target: { value: '06:30 AM' } });
+
     await userEvent.click(savebutton);
     expect(updateCrudValMock).toHaveBeenCalled();
     expect(mutateMock).toHaveBeenCalled();
@@ -472,6 +511,25 @@ describe('Flow Creation', () => {
     });
     (global as any).fetch = fetchMock2;
 
+    // select day of week
+    const dayOfWeekOption = screen.getByRole('combobox', {
+      name: 'Day of the week',
+    }) as HTMLInputElement;
+    const multiTagCronDaysOfWeek = screen.getByTestId('cronDaysOfWeek');
+    await act(() =>
+      fireEvent.change(dayOfWeekOption, { target: { value: 'Sunday' } })
+    );
+    fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'ArrowDown' });
+    await act(() =>
+      fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'Enter' })
+    );
+
+    // select the time also
+    const timeOfDayContainer = screen.getByTestId('cronTimeOfDay');
+    const inputTimeOfDay: any = timeOfDayContainer.querySelector('input');
+    fireEvent.change(inputTimeOfDay, { target: { value: '06:30 AM' } });
+    fireEvent.keyDown(inputTimeOfDay, { key: 'Enter' });
+
     await userEvent.click(savebutton);
     expect(updateCrudValMock).toHaveBeenCalled();
     expect(mutateMock).toHaveBeenCalled();
@@ -484,6 +542,6 @@ describe('Flow Creation', () => {
     expect(requestBody.connectionBlocks[0].seq).toBe(1);
     expect(requestBody.connectionBlocks[0].blockName).toBe('conn-1-block');
     expect(requestBody.connectionBlocks[0].name).toBe('conn-1');
-    expect(requestBody.cron).toBe('0 1 * * 1');
+    expect(requestBody.cron).toBe('0 1 * * 0');
   });
 });
