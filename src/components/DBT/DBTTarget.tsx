@@ -21,6 +21,7 @@ export type DbtBlock = {
 type params = {
   blocks: DbtBlock[];
   setRunning: any;
+  running: boolean;
   setDbtRunLogs: any;
   setExpandLogs: any;
 };
@@ -44,24 +45,21 @@ export const DBTTarget = ({
   blocks,
   setDbtRunLogs,
   setRunning,
+  running,
   setExpandLogs,
 }: params) => {
-  const [selectedBlock, setSelectedBlock] =
-    useState<string>('Select functions');
+  const [selectedBlock, setSelectedBlock] = useState<DbtBlock | undefined>();
   const toastContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
-  const runBlock = blocks.filter((block) => block.action === 'run');
-  const otherBlocks = blocks.filter((block) => block.action !== 'run');
-  const [deploymentRunning, setDeploymentRunning] = useState<boolean>(false);
 
-  const runDbtJob = async function (selectedBlock: string) {
+  const executeDbtJob = async function (block: DbtBlock) {
     setRunning(true);
     setExpandLogs(true);
     setDbtRunLogs([]);
 
     try {
       const message = await httpPost(session, 'prefect/flows/dbt_run/', {
-        blockName: selectedBlock,
+        blockName: block.blockName,
       });
       if (message?.status === 'success') {
         successToast('Job ran successfully', [], toastContext);
@@ -116,7 +114,8 @@ export const DBTTarget = ({
   const dbtRunWithDeployment = async (block: any) => {
     if (block.deploymentId) {
       setExpandLogs(true);
-      setDeploymentRunning(true);
+      setDbtRunLogs([]);
+      setRunning(true);
       try {
         const response = await httpPost(
           session,
@@ -142,9 +141,9 @@ export const DBTTarget = ({
         console.error(err);
         errorToast(err.message, [], toastContext);
       } finally {
-        setDeploymentRunning(false);
+        setRunning(false);
       }
-      setDeploymentRunning(false);
+      setRunning(false);
     } else {
       errorToast('No deployment found for this DBT block', [], toastContext);
     }
@@ -152,33 +151,45 @@ export const DBTTarget = ({
 
   return (
     <>
-      {runBlock.map((run) => (
-        <Button
-          data-testid="runJob"
-          key={run.blockName}
-          variant="contained"
-          sx={{ mr: 2 }}
-          onClick={() => dbtRunWithDeployment(run)}
-          disabled={deploymentRunning}
-        >
-          {deploymentRunning ? (
-            <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
-          ) : (
-            'Run'
-          )}
-        </Button>
-      ))}
+      <Button
+        data-testid="runJob"
+        key={selectedBlock?.blockName}
+        variant="contained"
+        sx={{ mr: 2 }}
+        onClick={() => {
+          if (selectedBlock) {
+            if (selectedBlock.action === 'run')
+              dbtRunWithDeployment(selectedBlock);
+            else executeDbtJob(selectedBlock);
+          } else {
+            errorToast(
+              'Please select a dbt function to execute',
+              [],
+              toastContext
+            );
+          }
+        }}
+        disabled={running}
+      >
+        {running ? (
+          <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
+        ) : (
+          'Execute'
+        )}
+      </Button>
       <Select
-        value={selectedBlock}
+        value={selectedBlock?.blockName}
         onChange={(event) => {
-          runDbtJob(event.target.value);
-          setSelectedBlock(event.target.value);
+          const block = blocks.find(
+            (blk: DbtBlock) => blk.blockName === event.target.value
+          );
+          setSelectedBlock(block);
         }}
       >
         <MenuItem value="Select functions" disabled>
           Select functions
         </MenuItem>
-        {otherBlocks.map((block) => (
+        {blocks.map((block) => (
           <MenuItem
             key={block.blockName}
             value={block.blockName}

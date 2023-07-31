@@ -261,6 +261,7 @@ const Transform = () => {
                         key={target}
                         setExpandLogs={setExpandLogs}
                         setRunning={setRunning}
+                        running={running}
                         setDbtRunLogs={(logs: string[]) => {
                           setDbtSetupLogs(logs);
                         }}
