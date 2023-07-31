@@ -141,7 +141,6 @@ const FlowCreate = ({
         try {
           const data: any = await httpGet(session, `prefect/flows/${flowId}`);
           const cronObject = convertCronToString(data.cron);
-          console.log(cronObject);
           reset({
             cron: {
               id: cronObject.schedule,
@@ -328,6 +327,7 @@ const FlowCreate = ({
               <Box>
                 <Input
                   sx={{ width: '90%' }}
+                  data-testid="name"
                   variant="outlined"
                   register={register}
                   disabled={isEditPage}
@@ -448,8 +448,8 @@ const FlowCreate = ({
                   render={({ field }) => (
                     <Autocomplete
                       id="cronDaysOfWeek"
-                      multiple
                       data-testid="cronDaysOfWeek"
+                      multiple
                       value={field.value}
                       options={Object.keys(WEEKDAYS).map((key) => ({
                         id: String(key),
@@ -479,8 +479,10 @@ const FlowCreate = ({
             ) : (
               ''
             )}
-            <Box>
-              <InputLabel>Time of the day*</InputLabel>
+            <Box data-testid="cronTimeOfDay">
+              <InputLabel htmlFor={'cronTimeOfDay'}>
+                Time of the day*
+              </InputLabel>
               <Controller
                 name="cronTimeOfDay"
                 control={control}
