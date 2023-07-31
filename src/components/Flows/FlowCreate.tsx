@@ -129,8 +129,8 @@ const FlowCreate = ({
     const daysOfWeek = vals[vals.length - 1].replace(/\*/g, '');
     const [utcHours, utcMinutes] = vals.splice(0, 2);
     return {
-      schedule: daysOfWeek != '*' ? 'weekly' : 'daily',
-      daysOfWeek: daysOfWeek.split(','),
+      schedule: daysOfWeek != '' ? 'weekly' : 'daily',
+      daysOfWeek: daysOfWeek != '' ? daysOfWeek.split(',') : [],
       timeOfDay: `${utcMinutes} ${utcHours}`,
     };
   };
@@ -141,6 +141,7 @@ const FlowCreate = ({
         try {
           const data: any = await httpGet(session, `prefect/flows/${flowId}`);
           const cronObject = convertCronToString(data.cron);
+          console.log(cronObject);
           reset({
             cron: {
               id: cronObject.schedule,
@@ -483,11 +484,18 @@ const FlowCreate = ({
               <Controller
                 name="cronTimeOfDay"
                 control={control}
-                rules={{ required: 'Schedule is required' }}
-                render={({ field }) => (
+                rules={{ required: 'Time of the day is required' }}
+                render={({ field, fieldState: { error } }) => (
                   <LocalizationProvider dateAdapter={AdapterMoment}>
                     <TimePicker
                       value={moment.utc(field.value, 'HH mm').local()}
+                      slotProps={{
+                        textField: {
+                          variant: 'outlined',
+                          error: !!error,
+                          helperText: error?.message,
+                        },
+                      }}
                       onChange={(value: Moment | null, context) => {
                         // the value will have a local time moment object
                         const utcMinutes = moment.utc(value).minute();
