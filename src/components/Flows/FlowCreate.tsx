@@ -14,7 +14,11 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import Input from '../UI/Input/Input';
+import moment, { Moment } from 'moment';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -39,6 +43,23 @@ type DeploymentDef = {
   dbtTransform: string;
   connectionBlocks: Array<any>;
   cron: string | object;
+  cronDaysOfWeek: Array<AutoCompleteOption>;
+  cronTimeOfDay: string;
+};
+
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+};
+
+const WEEKDAYS: any = {
+  0: 'Sunday',
+  1: 'Monday',
+  2: 'Tuesday',
+  3: 'Wednesday',
+  4: 'Thursday',
+  5: 'Friday',
+  6: 'Saturday',
 };
 
 const FlowCreate = ({
@@ -52,12 +73,14 @@ const FlowCreate = ({
   const toastContext = useContext(GlobalContext);
 
   const [connections, setConnections] = useState<DispConnection[]>([]);
+  const [daysOfWeek, setDaysOfWeek] = useState<any>([]);
   const {
     register,
     handleSubmit,
     control,
     formState: { dirtyFields, errors },
     reset,
+    watch,
   } = useForm<DeploymentDef>({
     defaultValues: {
       active: true,
@@ -65,29 +88,51 @@ const FlowCreate = ({
       dbtTransform: 'no',
       connectionBlocks: [],
       cron: '',
+      cronDaysOfWeek: [],
+      cronTimeOfDay: '',
     },
   });
+
+  const scheduleSelected: any = watch('cron');
 
   const handleClickCancel = () => {
     setSelectedFlow('');
     updateCrudVal('index');
   };
 
-  const convertCronExpression = (input: string) => {
+  const convertToCronExpression = (
+    schedule: string,
+    daysOfWeek: Array<string> = ['1'],
+    timeOfDay: string = '1 0' // will always be in UTC & 24 hour format, default 1:00AM = '1 0'
+  ) => {
+    const [utcHours, utcMinutes] = timeOfDay.split(' ');
     const cronMappings: any = {
-      daily: '0 1 * * *',
-      weekly: '0 1 * * 1',
+      daily: `${utcMinutes} ${utcHours} * * *`,
+      weekly: `${utcMinutes} ${utcHours} * * ${daysOfWeek.join(',')}`,
     };
 
-    if (input in cronMappings) {
-      return cronMappings[input];
+    if (schedule in cronMappings) {
+      return cronMappings[schedule];
     }
 
-    const reverseCronMappings = Object.fromEntries(
-      Object.entries(cronMappings).map(([key, value]) => [value, key])
-    );
+    // default return daily
+    return cronMappings.daily;
+  };
 
-    return reverseCronMappings[input] || '0 1 * * *';
+  const convertCronToString = (cronExp: string) => {
+    /* 
+    Figure out from the cron expression whether the flow is running daily or weekly
+    If day of the week is set that means its weekly or else its daily 
+    Returns {'daily/weekly', [<days-of-week-if-weekly-selected>]}
+    */
+    const vals = cronExp.split(' ');
+    const daysOfWeek = vals[vals.length - 1].replace(/\*/g, '');
+    const [utcHours, utcMinutes] = vals.splice(0, 2);
+    return {
+      schedule: daysOfWeek != '' ? 'weekly' : 'daily',
+      daysOfWeek: daysOfWeek != '' ? daysOfWeek.split(',') : [],
+      timeOfDay: `${utcMinutes} ${utcHours}`,
+    };
   };
 
   useEffect(() => {
@@ -95,10 +140,11 @@ const FlowCreate = ({
       (async () => {
         try {
           const data: any = await httpGet(session, `prefect/flows/${flowId}`);
+          const cronObject = convertCronToString(data.cron);
           reset({
             cron: {
-              id: convertCronExpression(data.cron),
-              label: convertCronExpression(data.cron),
+              id: cronObject.schedule,
+              label: cronObject.schedule,
             },
             dbtTransform: data.parameters.dbt_blocks.length > 0 ? 'yes' : 'no',
             connectionBlocks: data.parameters.airbyte_blocks.map(
@@ -106,6 +152,11 @@ const FlowCreate = ({
             ),
             active: data.isScheduleActive,
             name: data.name,
+            cronDaysOfWeek: cronObject.daysOfWeek.map((day: string) => ({
+              id: day,
+              label: WEEKDAYS[day],
+            })),
+            cronTimeOfDay: cronObject.timeOfDay,
           });
         } catch (err: any) {
           console.error(err);
@@ -138,8 +189,12 @@ const FlowCreate = ({
   }, []);
 
   const onSubmit = async (data: any) => {
-    console.log(dirtyFields);
     try {
+      const cronExpression = convertToCronExpression(
+        data.cron.id,
+        data.cronDaysOfWeek.map((option: AutoCompleteOption) => option.id),
+        data.cronTimeOfDay
+      );
       if (isEditPage) {
         // hit the set schedule api if the value is updated
         if (dirtyFields?.active) {
@@ -153,9 +208,13 @@ const FlowCreate = ({
         }
 
         // hit the update deplyment api if the cron is updated
-        if (dirtyFields?.cron) {
+        if (
+          dirtyFields?.cron ||
+          dirtyFields?.cronDaysOfWeek ||
+          dirtyFields?.cronTimeOfDay
+        ) {
           await httpPut(session, `prefect/flows/${flowId}`, {
-            cron: convertCronExpression(data.cron.id),
+            cron: cronExpression,
           });
         }
         successToast(
@@ -177,7 +236,7 @@ const FlowCreate = ({
           name: data.name,
           connectionBlocks: blocks,
           dbtTransform: data.dbtTransform,
-          cron: convertCronExpression(data.cron.id),
+          cron: cronExpression,
         });
         mutate();
         updateCrudVal('index');
@@ -192,7 +251,7 @@ const FlowCreate = ({
       errorToast(err.message, [], toastContext);
     }
   };
-  console.log(errors);
+
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} data-testid="form">
@@ -268,6 +327,7 @@ const FlowCreate = ({
               <Box>
                 <Input
                   sx={{ width: '90%' }}
+                  data-testid="name"
                   variant="outlined"
                   register={register}
                   disabled={isEditPage}
@@ -346,7 +406,7 @@ const FlowCreate = ({
             <Typography variant="h5" sx={{ marginBottom: '30px' }}>
               Schedule
             </Typography>
-            <Box>
+            <Box sx={{ marginBottom: '30px' }}>
               <Controller
                 name="cron"
                 control={control}
@@ -355,7 +415,6 @@ const FlowCreate = ({
                   <Autocomplete
                     id="cron"
                     value={field.value}
-                    // disabled={isEditPage}
                     data-testid="cronautocomplete"
                     options={[
                       { id: 'daily', label: 'daily' },
@@ -377,6 +436,77 @@ const FlowCreate = ({
                       />
                     )}
                   />
+                )}
+              />
+            </Box>
+            {scheduleSelected?.id === 'weekly' ? (
+              <Box sx={{ marginBottom: '30px' }}>
+                <Controller
+                  name="cronDaysOfWeek"
+                  control={control}
+                  rules={{ required: 'Day(s) of week is required' }}
+                  render={({ field }) => (
+                    <Autocomplete
+                      id="cronDaysOfWeek"
+                      data-testid="cronDaysOfWeek"
+                      multiple
+                      value={field.value}
+                      options={Object.keys(WEEKDAYS).map((key) => ({
+                        id: String(key),
+                        label: WEEKDAYS[key],
+                      }))}
+                      isOptionEqualToValue={(option: any, val: any) =>
+                        val && option?.id === val?.id
+                      }
+                      onChange={(e, data: Array<AutoCompleteOption>) =>
+                        field.onChange(data)
+                      }
+                      renderInput={(params) => (
+                        <Input
+                          name="cronDaysOfWeek"
+                          {...params}
+                          placeholder="Select day"
+                          label="Day of the week"
+                          variant="outlined"
+                          error={!!errors.cronDaysOfWeek}
+                          helperText={errors.cronDaysOfWeek?.message}
+                        />
+                      )}
+                    />
+                  )}
+                />
+              </Box>
+            ) : (
+              ''
+            )}
+            <Box data-testid="cronTimeOfDay">
+              <InputLabel htmlFor={'cronTimeOfDay'}>
+                Time of the day*
+              </InputLabel>
+              <Controller
+                name="cronTimeOfDay"
+                control={control}
+                rules={{ required: 'Time of the day is required' }}
+                render={({ field, fieldState: { error } }) => (
+                  <LocalizationProvider dateAdapter={AdapterMoment}>
+                    <TimePicker
+                      value={moment.utc(field.value, 'HH mm').local()}
+                      slotProps={{
+                        textField: {
+                          variant: 'outlined',
+                          error: !!error,
+                          helperText: error?.message,
+                        },
+                      }}
+                      onChange={(value: Moment | null, context) => {
+                        // the value will have a local time moment object
+                        const utcMinutes = moment.utc(value).minute();
+                        const utcHours = moment.utc(value).hours();
+                        const time = `${utcHours} ${utcMinutes}`;
+                        field.onChange(time);
+                      }}
+                    />
+                  </LocalizationProvider>
                 )}
               />
             </Box>
