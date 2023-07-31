@@ -180,7 +180,7 @@ export const DBTTarget = ({
       <Select
         value={selectedBlock?.blockName}
         onChange={(event) => {
-          let block = blocks.find(
+          const block = blocks.find(
             (blk: DbtBlock) => blk.blockName === event.target.value
           );
           setSelectedBlock(block);
