@@ -1,4 +1,10 @@
 /// <reference types="cypress" />
+declare namespace Cypress {
+  interface Chainable<Subject = any> {
+    login(): Chainable<any>;
+  }
+}
+
 // ***********************************************
 // This example commands.ts shows you how to
 // create various custom commands and overwrite
@@ -35,3 +41,10 @@
 //     }
 //   }
 // }
+Cypress.Commands.add('login', () => {
+  cy.visit('/login');
+  cy.get('[data-testid="username"]').type(Cypress.env('username'));
+  cy.get('[data-testid="password"]').type(Cypress.env('password'));
+  cy.get('[data-testid="submitbutton"]').click();
+  cy.get('div').should('contain', 'User logged in successfully');
+});
