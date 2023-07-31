@@ -141,10 +141,6 @@ const FlowCreate = ({
         try {
           const data: any = await httpGet(session, `prefect/flows/${flowId}`);
           const cronObject = convertCronToString(data.cron);
-          console.log(
-            'getting local time',
-            moment.utc(cronObject.timeOfDay, 'HH mm').local().toString()
-          );
           reset({
             cron: {
               id: cronObject.schedule,
@@ -493,10 +489,10 @@ const FlowCreate = ({
                     <TimePicker
                       value={moment.utc(field.value, 'HH mm').local()}
                       onChange={(value: Moment | null, context) => {
+                        // the value will have a local time moment object
                         const utcMinutes = moment.utc(value).minute();
                         const utcHours = moment.utc(value).hours();
                         const time = `${utcHours} ${utcMinutes}`;
-                        console.log(time);
                         field.onChange(time);
                       }}
                     />
