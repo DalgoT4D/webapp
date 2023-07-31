@@ -14,7 +14,11 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import Input from '../UI/Input/Input';
+import moment, { Moment } from 'moment';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -40,6 +44,7 @@ type DeploymentDef = {
   connectionBlocks: Array<any>;
   cron: string | object;
   cronDaysOfWeek: Array<AutoCompleteOption>;
+  cronTimeOfDay: string;
 };
 
 type AutoCompleteOption = {
@@ -76,7 +81,6 @@ const FlowCreate = ({
     formState: { dirtyFields, errors },
     reset,
     watch,
-    getValues,
   } = useForm<DeploymentDef>({
     defaultValues: {
       active: true,
@@ -85,6 +89,7 @@ const FlowCreate = ({
       connectionBlocks: [],
       cron: '',
       cronDaysOfWeek: [],
+      cronTimeOfDay: '',
     },
   });
 
@@ -97,11 +102,13 @@ const FlowCreate = ({
 
   const convertToCronExpression = (
     schedule: string,
-    daysOfWeek: Array<string> = ['1']
+    daysOfWeek: Array<string> = ['1'],
+    timeOfDay: string = '1 0' // will always be in UTC & 24 hour format, default 1:00AM = '1 0'
   ) => {
+    const [utcHours, utcMinutes] = timeOfDay.split(' ');
     const cronMappings: any = {
-      daily: '0 1 * * *',
-      weekly: `0 1 * * ${daysOfWeek.join(',')}`,
+      daily: `${utcMinutes} ${utcHours} * * *`,
+      weekly: `${utcMinutes} ${utcHours} * * ${daysOfWeek.join(',')}`,
     };
 
     if (schedule in cronMappings) {
@@ -119,10 +126,13 @@ const FlowCreate = ({
     Returns {'daily/weekly', [<days-of-week-if-weekly-selected>]}
     */
     const vals = cronExp.split(' ');
-    const daysOfWeek = vals[vals.length - 1];
-    if (daysOfWeek != '*')
-      return { schedule: 'weekly', daysOfWeek: daysOfWeek.split(',') };
-    return { schedule: 'daily', daysOfWeek: [] };
+    const daysOfWeek = vals[vals.length - 1].replace(/\*/g, '');
+    const [utcHours, utcMinutes] = vals.splice(0, 2);
+    return {
+      schedule: daysOfWeek != '*' ? 'weekly' : 'daily',
+      daysOfWeek: daysOfWeek.split(','),
+      timeOfDay: `${utcMinutes} ${utcHours}`,
+    };
   };
 
   useEffect(() => {
@@ -130,10 +140,15 @@ const FlowCreate = ({
       (async () => {
         try {
           const data: any = await httpGet(session, `prefect/flows/${flowId}`);
+          const cronObject = convertCronToString(data.cron);
+          console.log(
+            'getting local time',
+            moment.utc(cronObject.timeOfDay, 'HH mm').local().toString()
+          );
           reset({
             cron: {
-              id: convertCronToString(data.cron).schedule,
-              label: convertCronToString(data.cron).schedule,
+              id: cronObject.schedule,
+              label: cronObject.schedule,
             },
             dbtTransform: data.parameters.dbt_blocks.length > 0 ? 'yes' : 'no',
             connectionBlocks: data.parameters.airbyte_blocks.map(
@@ -141,12 +156,11 @@ const FlowCreate = ({
             ),
             active: data.isScheduleActive,
             name: data.name,
-            cronDaysOfWeek: convertCronToString(data.cron).daysOfWeek.map(
-              (day: string) => ({
-                id: day,
-                label: WEEKDAYS[day],
-              })
-            ),
+            cronDaysOfWeek: cronObject.daysOfWeek.map((day: string) => ({
+              id: day,
+              label: WEEKDAYS[day],
+            })),
+            cronTimeOfDay: cronObject.timeOfDay,
           });
         } catch (err: any) {
           console.error(err);
@@ -182,7 +196,8 @@ const FlowCreate = ({
     try {
       const cronExpression = convertToCronExpression(
         data.cron.id,
-        data.cronDaysOfWeek.map((option: AutoCompleteOption) => option.id)
+        data.cronDaysOfWeek.map((option: AutoCompleteOption) => option.id),
+        data.cronTimeOfDay
       );
       if (isEditPage) {
         // hit the set schedule api if the value is updated
@@ -197,7 +212,11 @@ const FlowCreate = ({
         }
 
         // hit the update deplyment api if the cron is updated
-        if (dirtyFields?.cron || dirtyFields?.cronDaysOfWeek) {
+        if (
+          dirtyFields?.cron ||
+          dirtyFields?.cronDaysOfWeek ||
+          dirtyFields?.cronTimeOfDay
+        ) {
           await httpPut(session, `prefect/flows/${flowId}`, {
             cron: cronExpression,
           });
@@ -424,7 +443,7 @@ const FlowCreate = ({
               />
             </Box>
             {scheduleSelected?.id === 'weekly' ? (
-              <Box>
+              <Box sx={{ marginBottom: '30px' }}>
                 <Controller
                   name="cronDaysOfWeek"
                   control={control}
@@ -463,6 +482,28 @@ const FlowCreate = ({
             ) : (
               ''
             )}
+            <Box>
+              <InputLabel>Time of the day*</InputLabel>
+              <Controller
+                name="cronTimeOfDay"
+                control={control}
+                rules={{ required: 'Schedule is required' }}
+                render={({ field }) => (
+                  <LocalizationProvider dateAdapter={AdapterMoment}>
+                    <TimePicker
+                      value={moment.utc(field.value, 'HH mm').local()}
+                      onChange={(value: Moment | null, context) => {
+                        const utcMinutes = moment.utc(value).minute();
+                        const utcHours = moment.utc(value).hours();
+                        const time = `${utcHours} ${utcMinutes}`;
+                        console.log(time);
+                        field.onChange(time);
+                      }}
+                    />
+                  </LocalizationProvider>
+                )}
+              />
+            </Box>
           </Box>
         </Box>
       </form>
