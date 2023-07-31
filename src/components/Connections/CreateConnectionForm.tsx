@@ -59,7 +59,7 @@ const CreateConnectionForm = ({
       name: '',
       sources: { label: '', id: '' },
       destinations: { label: '', id: '' },
-      destinationSchema: '',
+      destinationSchema: 'staging',
     },
   });
   const [sources, setSources] = useState<Array<string>>([]);
@@ -262,6 +262,7 @@ const CreateConnectionForm = ({
             variant="outlined"
             register={register}
             name="destinationSchema"
+            disabled={true}
           ></Input>
 
           <Box sx={{ m: 2 }} />
