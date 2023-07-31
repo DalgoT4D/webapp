@@ -39,6 +39,22 @@ type DeploymentDef = {
   dbtTransform: string;
   connectionBlocks: Array<any>;
   cron: string | object;
+  cronDaysOfWeek: Array<AutoCompleteOption>;
+};
+
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+};
+
+const WEEKDAYS: any = {
+  0: 'Sunday',
+  1: 'Monday',
+  2: 'Tuesday',
+  3: 'Wednesday',
+  4: 'Thursday',
+  5: 'Friday',
+  6: 'Saturday',
 };
 
 const FlowCreate = ({
@@ -52,12 +68,15 @@ const FlowCreate = ({
   const toastContext = useContext(GlobalContext);
 
   const [connections, setConnections] = useState<DispConnection[]>([]);
+  const [daysOfWeek, setDaysOfWeek] = useState<any>([]);
   const {
     register,
     handleSubmit,
     control,
     formState: { dirtyFields, errors },
     reset,
+    watch,
+    getValues,
   } = useForm<DeploymentDef>({
     defaultValues: {
       active: true,
@@ -65,29 +84,45 @@ const FlowCreate = ({
       dbtTransform: 'no',
       connectionBlocks: [],
       cron: '',
+      cronDaysOfWeek: [],
     },
   });
+
+  const scheduleSelected: any = watch('cron');
 
   const handleClickCancel = () => {
     setSelectedFlow('');
     updateCrudVal('index');
   };
 
-  const convertCronExpression = (input: string) => {
+  const convertToCronExpression = (
+    schedule: string,
+    daysOfWeek: Array<string> = ['1']
+  ) => {
     const cronMappings: any = {
       daily: '0 1 * * *',
-      weekly: '0 1 * * 1',
+      weekly: `0 1 * * ${daysOfWeek.join(',')}`,
     };
 
-    if (input in cronMappings) {
-      return cronMappings[input];
+    if (schedule in cronMappings) {
+      return cronMappings[schedule];
     }
 
-    const reverseCronMappings = Object.fromEntries(
-      Object.entries(cronMappings).map(([key, value]) => [value, key])
-    );
+    // default return daily
+    return cronMappings.daily;
+  };
 
-    return reverseCronMappings[input] || '0 1 * * *';
+  const convertCronToString = (cronExp: string) => {
+    /* 
+    Figure out from the cron expression whether the flow is running daily or weekly
+    If day of the week is set that means its weekly or else its daily 
+    Returns {'daily/weekly', [<days-of-week-if-weekly-selected>]}
+    */
+    const vals = cronExp.split(' ');
+    const daysOfWeek = vals[vals.length - 1];
+    if (daysOfWeek != '*')
+      return { schedule: 'weekly', daysOfWeek: daysOfWeek.split(',') };
+    return { schedule: 'daily', daysOfWeek: [] };
   };
 
   useEffect(() => {
@@ -97,8 +132,8 @@ const FlowCreate = ({
           const data: any = await httpGet(session, `prefect/flows/${flowId}`);
           reset({
             cron: {
-              id: convertCronExpression(data.cron),
-              label: convertCronExpression(data.cron),
+              id: convertCronToString(data.cron).schedule,
+              label: convertCronToString(data.cron).schedule,
             },
             dbtTransform: data.parameters.dbt_blocks.length > 0 ? 'yes' : 'no',
             connectionBlocks: data.parameters.airbyte_blocks.map(
@@ -106,6 +141,12 @@ const FlowCreate = ({
             ),
             active: data.isScheduleActive,
             name: data.name,
+            cronDaysOfWeek: convertCronToString(data.cron).daysOfWeek.map(
+              (day: string) => ({
+                id: day,
+                label: WEEKDAYS[day],
+              })
+            ),
           });
         } catch (err: any) {
           console.error(err);
@@ -138,8 +179,11 @@ const FlowCreate = ({
   }, []);
 
   const onSubmit = async (data: any) => {
-    console.log(dirtyFields);
     try {
+      const cronExpression = convertToCronExpression(
+        data.cron.id,
+        data.cronDaysOfWeek.map((option: AutoCompleteOption) => option.id)
+      );
       if (isEditPage) {
         // hit the set schedule api if the value is updated
         if (dirtyFields?.active) {
@@ -153,9 +197,9 @@ const FlowCreate = ({
         }
 
         // hit the update deplyment api if the cron is updated
-        if (dirtyFields?.cron) {
+        if (dirtyFields?.cron || dirtyFields?.cronDaysOfWeek) {
           await httpPut(session, `prefect/flows/${flowId}`, {
-            cron: convertCronExpression(data.cron.id),
+            cron: cronExpression,
           });
         }
         successToast(
@@ -177,7 +221,7 @@ const FlowCreate = ({
           name: data.name,
           connectionBlocks: blocks,
           dbtTransform: data.dbtTransform,
-          cron: convertCronExpression(data.cron.id),
+          cron: cronExpression,
         });
         mutate();
         updateCrudVal('index');
@@ -192,7 +236,7 @@ const FlowCreate = ({
       errorToast(err.message, [], toastContext);
     }
   };
-  console.log(errors);
+
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} data-testid="form">
@@ -346,7 +390,7 @@ const FlowCreate = ({
             <Typography variant="h5" sx={{ marginBottom: '30px' }}>
               Schedule
             </Typography>
-            <Box>
+            <Box sx={{ marginBottom: '30px' }}>
               <Controller
                 name="cron"
                 control={control}
@@ -355,7 +399,6 @@ const FlowCreate = ({
                   <Autocomplete
                     id="cron"
                     value={field.value}
-                    // disabled={isEditPage}
                     data-testid="cronautocomplete"
                     options={[
                       { id: 'daily', label: 'daily' },
@@ -380,6 +423,46 @@ const FlowCreate = ({
                 )}
               />
             </Box>
+            {scheduleSelected?.id === 'weekly' ? (
+              <Box>
+                <Controller
+                  name="cronDaysOfWeek"
+                  control={control}
+                  rules={{ required: 'Day(s) of week is required' }}
+                  render={({ field }) => (
+                    <Autocomplete
+                      id="cronDaysOfWeek"
+                      multiple
+                      data-testid="cronDaysOfWeek"
+                      value={field.value}
+                      options={Object.keys(WEEKDAYS).map((key) => ({
+                        id: String(key),
+                        label: WEEKDAYS[key],
+                      }))}
+                      isOptionEqualToValue={(option: any, val: any) =>
+                        val && option?.id === val?.id
+                      }
+                      onChange={(e, data: Array<AutoCompleteOption>) =>
+                        field.onChange(data)
+                      }
+                      renderInput={(params) => (
+                        <Input
+                          name="cronDaysOfWeek"
+                          {...params}
+                          placeholder="Select day"
+                          label="Day of the week"
+                          variant="outlined"
+                          error={!!errors.cronDaysOfWeek}
+                          helperText={errors.cronDaysOfWeek?.message}
+                        />
+                      )}
+                    />
+                  )}
+                />
+              </Box>
+            ) : (
+              ''
+            )}
           </Box>
         </Box>
       </form>
