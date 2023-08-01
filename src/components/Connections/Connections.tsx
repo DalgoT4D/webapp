@@ -314,7 +314,7 @@ export const Connections = () => {
         open={open}
         handleClose={handleClose}
         handleEdit={handleEditConnection}
-        handleDeleteConnection={handleDeleteConnection}
+        handleDelete={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
       />
       <CreateConnectionForm

@@ -3,6 +3,7 @@ import IngestIcon from '@/assets/icons/ingest';
 import TransformIcon from '@/assets/icons/transform';
 import PipelineIcon from '@/assets/icons/pipeline';
 import OrchestrateIcon from '@/assets/icons/orchestrate';
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 
 import { primaryColor } from './theme';
 
@@ -53,5 +54,12 @@ export const sideMenu: MenuOption[] = [
     icon: (selected: boolean) => <OrchestrateIcon fill={getColor(selected)} />,
     path: '/pipeline/orchestrate',
     parent: 2,
+  },
+
+  {
+    index: 3,
+    title: 'User management',
+    path: '/user-management',
+    icon: (selected: boolean) => <SupervisorAccountIcon />,
   },
 ];
