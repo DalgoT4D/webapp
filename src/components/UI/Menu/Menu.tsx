@@ -7,7 +7,13 @@ import DeleteIcon from '@/assets/icons/delete.svg';
 interface MenuProps {
   anchorEl: null | HTMLElement;
   open: boolean;
-  eleType: 'flow' | 'source' | 'connection' | 'dbtworkspace' | 'userManagement';
+  eleType:
+    | 'flow'
+    | 'source'
+    | 'connection'
+    | 'dbtworkspace'
+    | 'usermanagement'
+    | 'invitation';
   handleClose: () => void;
   handleEdit?: () => void;
   handleDelete?: () => void;
