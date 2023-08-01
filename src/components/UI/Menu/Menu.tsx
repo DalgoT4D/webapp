@@ -1,4 +1,4 @@
-import { Divider, ListItemIcon, Menu, MenuItem } from '@mui/material';
+import { Box, Divider, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import Image from 'next/image';
 import EditIcon from '@/assets/icons/edit.svg';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -7,10 +7,10 @@ import DeleteIcon from '@/assets/icons/delete.svg';
 interface MenuProps {
   anchorEl: null | HTMLElement;
   open: boolean;
-  eleType: 'flow' | 'source' | 'connection' | 'dbtworkspace';
+  eleType: 'flow' | 'source' | 'connection' | 'dbtworkspace' | 'userManagement';
   handleClose: () => void;
   handleEdit?: () => void;
-  handleDeleteConnection: () => void;
+  handleDelete?: () => void;
   handleResetConnection?: () => void;
 }
 
@@ -19,8 +19,8 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   open,
   eleType,
   handleClose,
-  handleEdit = () => {},
-  handleDeleteConnection,
+  handleEdit,
+  handleDelete,
   handleResetConnection,
 }) => (
   <Menu
@@ -42,22 +42,24 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       'aria-labelledby': 'basic-button',
     }}
   >
-    <MenuItem sx={{ my: 0 }} onClick={() => handleEdit()}>
-      <ListItemIcon style={{ minWidth: 28 }}>
-        <Image src={EditIcon} alt="edit icon" />
-      </ListItemIcon>
-      Edit
-    </MenuItem>
-    {eleType !== 'dbtworkspace' && (
-      <div key="fake-key">
+    {handleEdit && (
+      <MenuItem sx={{ my: 0 }} onClick={() => handleEdit()}>
+        <ListItemIcon style={{ minWidth: 28 }}>
+          <Image src={EditIcon} alt="edit icon" />
+        </ListItemIcon>
+        Edit
+      </MenuItem>
+    )}
+    {handleDelete && (
+      <Box key="fake-key">
         <Divider style={{ margin: 0 }} />
-        <MenuItem onClick={() => handleDeleteConnection()}>
+        <MenuItem onClick={() => handleDelete()}>
           <ListItemIcon style={{ minWidth: 28 }}>
             <Image src={DeleteIcon} alt="delete icon" />
           </ListItemIcon>
           Delete
         </MenuItem>
-      </div>
+      </Box>
     )}
     <Divider style={{ margin: 0 }} />
     {eleType === 'connection' && handleResetConnection && (

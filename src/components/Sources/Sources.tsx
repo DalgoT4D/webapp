@@ -133,7 +133,7 @@ export const Sources = () => {
         open={open}
         handleClose={handleClose}
         handleEdit={handleEditSource}
-        handleDeleteConnection={handleDeleteSource}
+        handleDelete={handleDeleteSource}
       />
       <CreateSourceForm
         mutate={mutate}
