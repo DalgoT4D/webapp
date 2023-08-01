@@ -63,7 +63,6 @@ const InviteUserForm = ({
 
   const onSubmit = async (data: any) => {
     setLoading(true);
-    console.log('submitting form with data', data);
     try {
       await httpPost(session, 'organizations/users/invite/', {
         invited_email: data.invited_email,
@@ -104,7 +103,7 @@ const InviteUserForm = ({
             </Button>
           </Box>
         }
-        loading={false}
+        loading={loading}
       />
     </>
   );
