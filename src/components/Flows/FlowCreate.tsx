@@ -73,7 +73,6 @@ const FlowCreate = ({
   const toastContext = useContext(GlobalContext);
 
   const [connections, setConnections] = useState<DispConnection[]>([]);
-  const [daysOfWeek, setDaysOfWeek] = useState<any>([]);
   const {
     register,
     handleSubmit,
@@ -103,7 +102,7 @@ const FlowCreate = ({
   const convertToCronExpression = (
     schedule: string,
     daysOfWeek: Array<string> = ['1'],
-    timeOfDay: string = '1 0' // will always be in UTC & 24 hour format, default 1:00AM = '1 0'
+    timeOfDay = '1 0' // will always be in UTC & 24 hour format, default 1:00AM = '1 0'
   ) => {
     const [utcHours, utcMinutes] = timeOfDay.split(' ');
     const cronMappings: any = {
@@ -498,7 +497,7 @@ const FlowCreate = ({
                           helperText: error?.message,
                         },
                       }}
-                      onChange={(value: Moment | null, context) => {
+                      onChange={(value: Moment | null) => {
                         // the value will have a local time moment object
                         const utcMinutes = moment.utc(value).minute();
                         const utcHours = moment.utc(value).hours();
