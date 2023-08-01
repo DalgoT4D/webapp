@@ -41,11 +41,16 @@ const Invitations = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
+  const [showConfirmResendialog, setShowConfirmResendialog] =
+    useState<boolean>(false);
   const [invitationToBeDeleted, setInvitationToBeDeleted] =
+    useState<Invitation | null>(null);
+  const [invitationToBeResent, setInvitationToBeResent] =
     useState<Invitation | null>(null);
 
   const openActionMenu = Boolean(anchorEl);
   const handleClick = (invitation: Invitation, event: HTMLElement | null) => {
+    setInvitationToBeResent(invitation);
     setInvitationToBeDeleted(invitation);
     setAnchorEl(event);
   };
@@ -59,6 +64,12 @@ const Invitations = ({
     setShowConfirmDeleteDialog(true);
   };
 
+  const handleClickResendAction = () => {
+    handleClose();
+    // resendInvitation(invitationToBeResent);
+    setShowConfirmResendialog(true);
+  };
+
   useEffect(() => {
     if (mutateInvitationsParent) {
       mutate();
@@ -69,6 +80,11 @@ const Invitations = ({
   const handleCancelDeleteInvitation = () => {
     setInvitationToBeDeleted(null);
     setShowConfirmDeleteDialog(false);
+  };
+
+  const handleCancelResendInvitation = () => {
+    setInvitationToBeResent(null);
+    setShowConfirmResendialog(false);
   };
 
   let rows = [];
@@ -131,6 +147,26 @@ const Invitations = ({
     handleCancelDeleteInvitation();
   };
 
+  const resendInvitation = async (invitation: Invitation | null) => {
+    if (invitation) {
+      setLoading(true);
+      try {
+        await httpPost(
+          session,
+          `users/invitations/resend/${invitation.id}`,
+          {}
+        );
+        successToast('Invitation sent again', [], globalContext);
+        mutate();
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], globalContext);
+      }
+      setLoading(false);
+    }
+    handleCancelResendInvitation();
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -143,6 +179,7 @@ const Invitations = ({
         open={openActionMenu}
         handleClose={handleClose}
         handleDelete={handleClickDeleteAction}
+        handleResendInvitation={handleClickResendAction}
       />
       <List
         openDialog={() => {}}
@@ -156,6 +193,13 @@ const Invitations = ({
         handleClose={() => handleCancelDeleteInvitation()}
         handleConfirm={() => deleteInvitation(invitationToBeDeleted)}
         message="The invitation sent to this user becomes invalid."
+        loading={loading}
+      />
+      <ConfirmationDialog
+        show={showConfirmResendialog}
+        handleClose={() => handleCancelResendInvitation()}
+        handleConfirm={() => resendInvitation(invitationToBeResent)}
+        message="The will trigger another invitation email to the user."
         loading={loading}
       />
     </>
