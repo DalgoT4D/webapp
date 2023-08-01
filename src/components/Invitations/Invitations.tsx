@@ -1,23 +1,52 @@
-import React, { useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import { List } from '../List/List';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import useSWR from 'swr';
 import moment from 'moment';
 import { backendUrl } from '@/config/constant';
+import ConfirmationDialog from '../Dialog/ConfirmationDialog';
+import { httpDelete, httpPost } from '@/helpers/http';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { useSession } from 'next-auth/react';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 const headers = ['Email', 'Role', 'Status', 'Sent On'];
 
-const Invitations = () => {
+type Invitation = {
+  id: number;
+  invited_email: string;
+  invited_role_slug: string;
+  invited_role: number;
+  invited_on: string;
+  status: string;
+};
+
+interface InvitationsInterface {
+  mutateInvitationsParent: boolean;
+  setMutateInvitationsParent: (...args: any) => any;
+}
+
+const Invitations = ({
+  mutateInvitationsParent,
+  setMutateInvitationsParent,
+}: InvitationsInterface) => {
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/users/invitations/`
   );
+  const globalContext = useContext(GlobalContext);
+  const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
+    useState<boolean>(false);
+  const [invitationToBeDeleted, setInvitationToBeDeleted] =
+    useState<Invitation | null>(null);
+
   const openActionMenu = Boolean(anchorEl);
-  const handleClick = (sourceId: string, event: HTMLElement | null) => {
-    // setSourceIdToEdit(sourceId);
-    // setSourceToBeDeleted(sourceId);
+  const handleClick = (invitation: Invitation, event: HTMLElement | null) => {
+    setInvitationToBeDeleted(invitation);
     setAnchorEl(event);
   };
 
@@ -25,10 +54,27 @@ const Invitations = () => {
     setAnchorEl(null);
   };
 
+  const handleClickDeleteAction = () => {
+    handleClose();
+    setShowConfirmDeleteDialog(true);
+  };
+
+  useEffect(() => {
+    if (mutateInvitationsParent) {
+      mutate();
+      setMutateInvitationsParent(false);
+    }
+  }, [mutateInvitationsParent]);
+
+  const handleCancelDeleteInvitation = () => {
+    setInvitationToBeDeleted(null);
+    setShowConfirmDeleteDialog(false);
+  };
+
   let rows = [];
   rows = useMemo(() => {
     if (data && data.length > 0) {
-      return data.map((invitation: any, idx: number) => [
+      return data.map((invitation: Invitation, idx: number) => [
         <Typography key={'email-' + idx} variant="body1" fontWeight={600}>
           {invitation.invited_email}
         </Typography>,
@@ -54,9 +100,7 @@ const Invitations = () => {
               aria-controls={openActionMenu ? 'basic-menu' : undefined}
               aria-haspopup="true"
               aria-expanded={openActionMenu ? 'true' : undefined}
-              onClick={(event) =>
-                handleClick('enter the user id here', event.currentTarget)
-              }
+              onClick={(event) => handleClick(invitation, event.currentTarget)}
               variant="contained"
               key={'menu-' + idx}
               color="info"
@@ -71,8 +115,25 @@ const Invitations = () => {
     return [];
   }, [data]);
 
-  const idx = 1;
-  const rows1 = [[]];
+  const deleteInvitation = async (invitation: Invitation | null) => {
+    if (invitation) {
+      setLoading(true);
+      try {
+        await httpDelete(session, `users/invitations/delete/${invitation.id}`);
+        successToast('Invitation rescinded successfully', [], globalContext);
+        mutate();
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], globalContext);
+      }
+      setLoading(false);
+    }
+    handleCancelDeleteInvitation();
+  };
+
+  if (isLoading) {
+    return <CircularProgress />;
+  }
 
   return (
     <>
@@ -81,7 +142,7 @@ const Invitations = () => {
         anchorEl={anchorEl}
         open={openActionMenu}
         handleClose={handleClose}
-        handleDelete={() => console.log('delete for action menu')}
+        handleDelete={handleClickDeleteAction}
       />
       <List
         openDialog={() => {}}
@@ -89,6 +150,13 @@ const Invitations = () => {
         headers={headers}
         rows={rows}
         onlyList={true}
+      />
+      <ConfirmationDialog
+        show={showConfirmDeleteDialog}
+        handleClose={() => handleCancelDeleteInvitation()}
+        handleConfirm={() => deleteInvitation(invitationToBeDeleted)}
+        message="The invitation sent to this user becomes invalid."
+        loading={loading}
       />
     </>
   );

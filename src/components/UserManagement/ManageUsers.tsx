@@ -29,13 +29,18 @@ type OrgUser = {
   org: Org;
 };
 
-const ManageUsers = () => {
+interface ManageUsersInterface {
+  setMutateInvitations: (...args: any) => any;
+}
+
+const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   const { data, isLoading, mutate } = useSWR(
     `${backendUrl}/api/organizations/users`
   );
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [orguserToBeDeleted, setOrguserToBeDeleted] = useState<OrgUser | null>(
@@ -105,6 +110,7 @@ const ManageUsers = () => {
 
   const deleteOrgUser = async (orguser: OrgUser | null) => {
     if (orguser) {
+      setLoading(true);
       try {
         await httpPost(session, `organizations/users/delete`, {
           email: orguser.email,
@@ -115,11 +121,14 @@ const ManageUsers = () => {
           globalContext
         );
         mutate();
+        setMutateInvitations(true);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], globalContext);
       }
+      setLoading(false);
     }
+    handleCancelDeleteOrguser();
   };
 
   if (isLoading) {
@@ -147,6 +156,7 @@ const ManageUsers = () => {
         handleClose={() => handleCancelDeleteOrguser()}
         handleConfirm={() => deleteOrgUser(orguserToBeDeleted)}
         message="This will delete the organization user permanently. The user will have to be invited again to join the platform"
+        loading={loading}
       />
     </>
   );

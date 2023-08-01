@@ -32,6 +32,7 @@ function TabPanel(props: TabPanelProps) {
 const UserManagement = () => {
   const [value, setValue] = React.useState(0);
   const [showInviteUserForm, setShowInviteUserForm] = useState<boolean>(false);
+  const [mutateInvitations, setMutateInvitations] = useState<boolean>(false);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -73,10 +74,13 @@ const UserManagement = () => {
           </Button>
         </Box>
         <TabPanel value={value} index={0}>
-          <ManageUsers />
+          <ManageUsers setMutateInvitations={setMutateInvitations} />
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <Invitations />
+          <Invitations
+            mutateInvitationsParent={mutateInvitations}
+            setMutateInvitationsParent={setMutateInvitations}
+          />
         </TabPanel>
         <InviteUserForm
           mutate={() => console.log('mutate here')}
