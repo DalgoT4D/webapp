@@ -61,7 +61,7 @@ const UserManagement = () => {
             aria-label="user-management-tabs"
           >
             <Tab label="Users" sx={{ mr: 4 }} />
-            <Tab label="Invitations" />
+            <Tab label="Pending Invitations" />
           </Tabs>
         </Box>
         <Box display="flex" justifyContent="flex-end" marginTop={'10px'}>

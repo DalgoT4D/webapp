@@ -12,7 +12,7 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-const headers = ['Email', 'Role', 'Status', 'Sent On'];
+const headers = ['Email', 'Role', 'Sent On'];
 
 type Invitation = {
   id: number;
@@ -97,10 +97,7 @@ const Invitations = ({
         <Typography key={'role-' + idx} variant="subtitle2" fontWeight={600}>
           {invitation.invited_role_slug.replace('_', ' ')}
         </Typography>,
-        <Typography key={'status-' + idx} variant="subtitle2" fontWeight={600}>
-          {invitation.status}
-        </Typography>,
-        <Typography key={'status-' + idx} variant="subtitle2" fontWeight={600}>
+        <Typography key={'sent-on-' + idx} variant="subtitle2" fontWeight={600}>
           {moment
             .utc(invitation.invited_on)
             .local()

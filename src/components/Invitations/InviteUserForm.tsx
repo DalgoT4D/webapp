@@ -7,7 +7,6 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
-import { roles } from '@/config/constant';
 
 interface InviteUserFormProps {
   mutate: (...args: any) => any;
@@ -66,8 +65,7 @@ const InviteUserForm = ({
     try {
       await httpPost(session, 'organizations/users/invite/', {
         invited_email: data.invited_email,
-        invited_role: roles.find((role) => role.slug === 'pipeline_manager')
-          ?.id,
+        invited_role_slug: 'pipeline_manager',
       });
       mutate();
       handleClose();
