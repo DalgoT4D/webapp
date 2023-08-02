@@ -53,6 +53,15 @@ const UserManagement = () => {
         >
           Manage users
         </Typography>
+        <Box display="flex" justifyContent="flex-end" marginTop={'10px'}>
+          <Button
+            data-testid={'invite-user'}
+            variant="contained"
+            onClick={handleClickInviteUser}
+          >
+            Invite user
+          </Button>
+        </Box>
         <Box sx={{ borderBottom: 1, borderColor: '#DDDDDD' }}>
           <Tabs
             value={value}
@@ -62,15 +71,6 @@ const UserManagement = () => {
             <Tab label="Users" sx={{ mr: 4 }} />
             <Tab label="Pending Invitations" />
           </Tabs>
-        </Box>
-        <Box display="flex" justifyContent="flex-end" marginTop={'10px'}>
-          <Button
-            data-testid={'invite-user'}
-            variant="contained"
-            onClick={handleClickInviteUser}
-          >
-            Invite user
-          </Button>
         </Box>
         <TabPanel value={value} index={0}>
           <ManageUsers setMutateInvitations={setMutateInvitations} />
