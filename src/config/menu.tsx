@@ -60,6 +60,6 @@ export const sideMenu: MenuOption[] = [
     index: 3,
     title: 'User management',
     path: '/user-management',
-    icon: (selected: boolean) => <SupervisorAccountIcon />,
+    icon: () => <SupervisorAccountIcon />,
   },
 ];
