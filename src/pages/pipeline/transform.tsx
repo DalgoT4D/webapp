@@ -153,7 +153,6 @@ const Transform = () => {
         open={open}
         handleClose={handleClose}
         handleEdit={handleEdit}
-        handleDeleteConnection={() => {}}
       />
       <PageHead title="DDP: Transform" />
       <main className={styles.main}>
