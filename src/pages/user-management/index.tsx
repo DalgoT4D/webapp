@@ -4,7 +4,6 @@ import { PageHead } from '@/components/PageHead';
 import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
 import ManageUsers from '@/components/UserManagement/ManageUsers';
 import Invitations from '@/components/Invitations/Invitations';
-import CustomDialog from '@/components/Dialog/CustomDialog';
 import InviteUserForm from '@/components/Invitations/InviteUserForm';
 
 interface TabPanelProps {
