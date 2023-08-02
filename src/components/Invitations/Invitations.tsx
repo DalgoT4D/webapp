@@ -108,20 +108,18 @@ const Invitations = ({
           sx={{ justifyContent: 'end', display: 'flex' }}
           key={'action-box-' + idx}
         >
-          {invitation.status !== 'accepted' && (
-            <Button
-              aria-controls={openActionMenu ? 'basic-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={openActionMenu ? 'true' : undefined}
-              onClick={(event) => handleClick(invitation, event.currentTarget)}
-              variant="contained"
-              key={'menu-' + idx}
-              color="info"
-              sx={{ px: 0, minWidth: 32 }}
-            >
-              <MoreHorizIcon />
-            </Button>
-          )}
+          <Button
+            aria-controls={openActionMenu ? 'basic-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={openActionMenu ? 'true' : undefined}
+            onClick={(event) => handleClick(invitation, event.currentTarget)}
+            variant="contained"
+            key={'menu-' + idx}
+            color="info"
+            sx={{ px: 0, minWidth: 32 }}
+          >
+            <MoreHorizIcon />
+          </Button>
         </Box>,
       ]);
     }
