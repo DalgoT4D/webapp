@@ -1,12 +1,4 @@
-import {
-  Autocomplete,
-  Box,
-  Menu,
-  MenuItem,
-  Paper,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Menu, MenuItem, Paper, Typography } from '@mui/material';
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
 import LogoutIcon from '@/assets/icons/logout.svg';
