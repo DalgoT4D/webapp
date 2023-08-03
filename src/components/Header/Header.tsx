@@ -1,11 +1,40 @@
-import { Box, Menu, MenuItem, Paper, Typography } from '@mui/material';
+import {
+  Autocomplete,
+  Box,
+  Menu,
+  MenuItem,
+  Paper,
+  TextField,
+  Typography,
+} from '@mui/material';
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
 import LogoutIcon from '@/assets/icons/logout.svg';
 import { signOut, useSession } from 'next-auth/react';
 import Logo from '@/assets/images/logo.svg';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { httpGet } from '@/helpers/http';
+import { useRouter } from 'next/navigation';
+
+type Org = {
+  name: string;
+  slug: string;
+  airbyte_workspace_id: string;
+};
+
+type OrgUser = {
+  email: string;
+  active: boolean;
+  role: number;
+  role_slug: string;
+  org: Org;
+};
+
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+};
 
 export const Header = () => {
   const handleSignout = () => {
@@ -13,8 +42,12 @@ export const Header = () => {
     signOut({ callbackUrl: `${window.location.origin}` });
   };
   const { data: session }: any = useSession();
-
+  const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [orgs, setOrgs] = useState<Array<AutoCompleteOption>>([]);
+  const [selectedOrg, setSelectedOrg] = useState<
+    AutoCompleteOption | null | undefined
+  >(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
     setAnchorEl(event);
@@ -22,10 +55,64 @@ export const Header = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  useEffect(() => {
+    // fetch the orgs associated with the orguser
+    (async () => {
+      try {
+        const orgusers = await httpGet(session, `currentuserv2`);
+        const orgs: Array<AutoCompleteOption> = orgusers.map(
+          (orguser: OrgUser, idx: number) => ({
+            id: orguser.org.slug,
+            label: orguser.org.name,
+          })
+        );
+        setOrgs(orgs);
+        // see if the org is set in the local storage
+        const currentOrgSlug = localStorage.getItem('org-slug');
+        let org: AutoCompleteOption | null | undefined = null;
+        org = orgs?.find(
+          (org: AutoCompleteOption) => org.id === currentOrgSlug
+        );
+        // If not pick the first org from the api response
+        if (!org && orgs && orgs.length > 0) org = orgs[0];
+        setSelectedOrg(org);
+      } catch (err: any) {
+        console.error(err);
+      }
+    })();
+  }, [session]);
+
+  useEffect(() => {
+    console.log('here in header');
+    const currentOrgSlug = localStorage.getItem('org-slug');
+    if (selectedOrg && selectedOrg.id && currentOrgSlug !== selectedOrg.id) {
+      localStorage.setItem('org-slug', selectedOrg.id);
+      router.refresh();
+    }
+  }, [selectedOrg]);
+
   return (
     <Paper className={styles.Header}>
       <Image src={Logo} style={{ margin: 4, marginLeft: 12 }} alt="ddp logo" />
-      <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
+      <Box
+        display="flex"
+        alignItems="center"
+        sx={{ marginLeft: 'auto', gap: '50px' }}
+      >
+        <Box display="flex" alignItems="center">
+          <Autocomplete
+            sx={{ width: '200px' }}
+            id="orgslug"
+            options={orgs}
+            data-testid="orgslug"
+            value={selectedOrg}
+            onChange={(e, data) => setSelectedOrg(data)}
+            renderInput={(params) => (
+              <TextField name="orgslug" {...params} variant="outlined" />
+            )}
+          />
+        </Box>
         <Image
           style={{ marginRight: 24, cursor: 'pointer' }}
           src={ProfileIcon}
