@@ -84,9 +84,9 @@ export const Header = () => {
   }, [session]);
 
   useEffect(() => {
-    console.log('here in header');
     const currentOrgSlug = localStorage.getItem('org-slug');
     if (selectedOrg && selectedOrg.id && currentOrgSlug !== selectedOrg.id) {
+      handleClose();
       localStorage.setItem('org-slug', selectedOrg.id);
       router.refresh();
     }
@@ -100,19 +100,6 @@ export const Header = () => {
         alignItems="center"
         sx={{ marginLeft: 'auto', gap: '50px' }}
       >
-        <Box display="flex" alignItems="center">
-          <Autocomplete
-            sx={{ width: '200px' }}
-            id="orgslug"
-            options={orgs}
-            data-testid="orgslug"
-            value={selectedOrg}
-            onChange={(e, data) => setSelectedOrg(data)}
-            renderInput={(params) => (
-              <TextField name="orgslug" {...params} variant="outlined" />
-            )}
-          />
-        </Box>
         <Image
           style={{ marginRight: 24, cursor: 'pointer' }}
           src={ProfileIcon}
@@ -153,7 +140,16 @@ export const Header = () => {
             {session?.user?.email || 'no user'}
           </Typography>
         </Box>
-
+        {orgs.map((org: AutoCompleteOption, idx: number) => (
+          <MenuItem
+            key={idx}
+            value={org.id}
+            onClick={() => setSelectedOrg(org)}
+            selected={selectedOrg?.id === org.id}
+          >
+            {org.label}
+          </MenuItem>
+        ))}
         <MenuItem onClick={() => handleSignout()}>
           <Image
             style={{ marginRight: 8 }}
