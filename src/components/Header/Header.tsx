@@ -54,7 +54,7 @@ export const Header = () => {
       try {
         const orgusers = await httpGet(session, `currentuserv2`);
         const orgs: Array<AutoCompleteOption> = orgusers.map(
-          (orguser: OrgUser, idx: number) => ({
+          (orguser: OrgUser) => ({
             id: orguser.org.slug,
             label: orguser.org.name,
           })
