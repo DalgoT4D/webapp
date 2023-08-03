@@ -6,7 +6,7 @@ export async function httpGet(session: any, path: string) {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${session?.user.token}`,
-      'x-kaapi-org': localStorage.getItem('org-slug') || '',
+      'x-dalgo-org': localStorage.getItem('org-slug') || '',
     },
   });
 
@@ -24,7 +24,7 @@ export async function httpPost(session: any, path: string, payload: object) {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session?.user.token}`,
-      'x-kaapi-org': localStorage.getItem('org-slug') || '',
+      'x-dalgo-org': localStorage.getItem('org-slug') || '',
     },
     body: JSON.stringify(payload),
   });
@@ -43,7 +43,7 @@ export async function httPut(session: any, path: string, payload: object) {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${session?.user.token}`,
-      'x-kaapi-org': localStorage.getItem('org-slug') || '',
+      'x-dalgo-org': localStorage.getItem('org-slug') || '',
     },
     body: JSON.stringify(payload),
   });
@@ -62,7 +62,7 @@ export async function httpPut(session: any, path: string, payload: object) {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${session?.user.token}`,
-      'x-kaapi-org': localStorage.getItem('org-slug') || '',
+      'x-dalgo-org': localStorage.getItem('org-slug') || '',
     },
     body: JSON.stringify(payload),
   });
@@ -81,7 +81,7 @@ export async function httpDelete(session: any, path: string) {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${session?.user.token}`,
-      'x-kaapi-org': localStorage.getItem('org-slug') || '',
+      'x-dalgo-org': localStorage.getItem('org-slug') || '',
     },
   });
 
