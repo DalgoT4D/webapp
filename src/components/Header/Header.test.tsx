@@ -1,13 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Header } from './Header';
 import { SessionProvider } from 'next-auth/react';
-import * as nextRouter from 'next/router';
+// import * as nextRouter from 'next/navigation';
 import { Session } from 'next-auth';
 
-describe('tests for page header', () => {
-  nextRouter.useRouter = jest.fn();
-  nextRouter.useRouter.mockImplementation(() => ({ route: '/' }));
+jest.mock('next/navigation');
 
+describe('tests for page header', () => {
   const mockSession: Session = {
     expires: '1',
     user: { email: 'test@example.com', name: 'Delta', image: 'c' },

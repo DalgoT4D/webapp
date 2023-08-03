@@ -40,6 +40,8 @@ jest.mock('next/router', () => ({
   },
 }));
 
+jest.mock('next/navigation');
+
 // ======================================================================
 describe('no token', () => {
   const mockSession: any = {
@@ -82,7 +84,7 @@ describe('token but no org', () => {
   });
 });
 
-// ======================================================================
+// // ======================================================================
 describe('token but no org, creating org', () => {
   const mockSession: any = {
     expires: '1',
@@ -105,7 +107,7 @@ describe('token but no org, creating org', () => {
   });
 });
 
-// ======================================================================
+// // ======================================================================
 describe('token and org, on creating-org page', () => {
   const mockSession: any = {
     expires: '1',
@@ -126,7 +128,7 @@ describe('token and org, on creating-org page', () => {
   });
 });
 
-// ======================================================================
+// // ======================================================================
 describe('token and org, normal flow', () => {
   const mockSession: any = {
     expires: '1',
