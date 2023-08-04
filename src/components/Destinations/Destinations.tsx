@@ -2,7 +2,6 @@ import { useState, useEffect, useContext } from 'react';
 import useSWR from 'swr';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { Table, TableBody, TableCell, TableRow } from '@mui/material';
-import { backendUrl } from '@/config/constant';
 import CreateDestinationForm from './CreateDestinationForm';
 import EditDestinationForm from './EditDestinationForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
