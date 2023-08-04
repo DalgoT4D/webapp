@@ -3,7 +3,6 @@ import useSWR from 'swr';
 import { CircularProgress, Box, Button, Typography } from '@mui/material';
 import { List } from '../List/List';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { httpDelete } from '@/helpers/http';
 import CreateSourceForm from './CreateSourceForm';
