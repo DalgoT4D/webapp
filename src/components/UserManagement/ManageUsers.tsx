@@ -87,18 +87,20 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
           sx={{ justifyContent: 'end', display: 'flex' }}
           key={'action-box-' + idx}
         >
-          <Button
-            aria-controls={openActionMenu ? 'basic-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={openActionMenu ? 'true' : undefined}
-            onClick={(event) => handleClick(orguser, event.currentTarget)}
-            variant="contained"
-            key={'menu-' + idx}
-            color="info"
-            sx={{ px: 0, minWidth: 32 }}
-          >
-            <MoreHorizIcon />
-          </Button>
+          {orguser.email !== session?.user?.email && (
+            <Button
+              aria-controls={openActionMenu ? 'basic-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={openActionMenu ? 'true' : undefined}
+              onClick={(event) => handleClick(orguser, event.currentTarget)}
+              variant="contained"
+              key={'menu-' + idx}
+              color="info"
+              sx={{ px: 0, minWidth: 32 }}
+            >
+              <MoreHorizIcon />
+            </Button>
+          )}
         </Box>,
       ]);
     }
