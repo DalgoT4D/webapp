@@ -34,9 +34,7 @@ interface ManageUsersInterface {
 }
 
 const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
-  const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/organizations/users`
-  );
+  const { data, isLoading, mutate } = useSWR(`organizations/users`);
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

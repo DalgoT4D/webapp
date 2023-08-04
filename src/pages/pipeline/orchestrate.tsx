@@ -16,9 +16,7 @@ export default function Orchestrate() {
     setCrudVal(crudState);
   };
 
-  const { data, mutate, isLoading } = useSWR(
-    `${backendUrl}/api/prefect/flows/`
-  );
+  const { data, mutate, isLoading } = useSWR(`prefect/flows/`);
 
   // when the flows list changes
   useEffect(() => {

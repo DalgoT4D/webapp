@@ -32,9 +32,7 @@ const Invitations = ({
   mutateInvitationsParent,
   setMutateInvitationsParent,
 }: InvitationsInterface) => {
-  const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/users/invitations/`
-  );
+  const { data, isLoading, mutate } = useSWR(`users/invitations/`);
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

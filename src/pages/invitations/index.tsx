@@ -41,6 +41,7 @@ const AcceptInvite = () => {
   });
   const password = watch('password');
   const globalContext = useContext(GlobalContext);
+  const [isUserPresent, setIsUserPresent] = useState<boolean>(true); // if the user is already registered we dont want to show the password fields
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [invitationCode, setInvitationCode] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -51,101 +52,115 @@ const AcceptInvite = () => {
     }
   }, [router.query]);
 
-  const onSubmit = async (data: any) => {
-    try {
-      setLoading(true);
-      await httpPost(session, 'organizations/users/invite/accept/', {
-        password: data.password,
-        invite_code: invitationCode,
-      });
-      router.push('/login');
-      successToast('Invitation successfully accepted', [], globalContext);
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.cause.detail, [], globalContext);
+  const acceptInviteApiCall = async (password: string, invite_code: string) => {
+    if (invite_code && invite_code.length > 0) {
+      try {
+        setLoading(true);
+        await httpPost(session, 'organizations/users/invite/accept/', {
+          invite_code: invite_code,
+          ...(password && password.length > 0 && { password: password }),
+        });
+        router.push('/login');
+        successToast('Invitation successfully accepted', [], globalContext);
+      } catch (err: any) {
+        if (err.cause.detail === 'password is required')
+          setIsUserPresent(false);
+        else {
+          errorToast(err.cause.detail, [], globalContext);
+        }
+      }
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const onSubmit = async (data: any) => {
+    await acceptInviteApiCall(data.password, invitationCode);
   };
 
   return (
-    <Auth heading="Welcome aboard" subHeading="User invitation">
+    <Auth
+      heading="Welcome aboard"
+      subHeading="Thank you. You are at the last step"
+    >
       <form
         onSubmit={handleSubmit(onSubmit)}
         data-testid="accept-invitation-form"
       >
         <Box className={styles.Container}>
-          <Input
-            error={!!errors.password}
-            helperText={errors.password?.message}
-            sx={{ width: '100%', pb: 3 }}
-            id="outlined-password-input"
-            data-testid="password"
-            label="Password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Enter your password"
-            autoComplete="current-password"
-            register={register}
-            required
-            name="password"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Box>
-                    <IconButton
-                      onClick={() => {
-                        setShowPassword(!showPassword);
-                      }}
-                      edge="end"
-                    >
-                      {showPassword ? (
-                        <VisibilityOutlinedIcon />
-                      ) : (
-                        <VisibilityOffOutlinedIcon />
-                      )}
-                    </IconButton>
-                  </Box>
-                </InputAdornment>
-              ),
-            }}
-          />
+          {!isUserPresent && (
+            <>
+              <Input
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                sx={{ width: '100%', pb: 3 }}
+                id="outlined-password-input"
+                data-testid="password"
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                register={register}
+                name="password"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Box>
+                        <IconButton
+                          onClick={() => {
+                            setShowPassword(!showPassword);
+                          }}
+                          edge="end"
+                        >
+                          {showPassword ? (
+                            <VisibilityOutlinedIcon />
+                          ) : (
+                            <VisibilityOffOutlinedIcon />
+                          )}
+                        </IconButton>
+                      </Box>
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-          <Input
-            error={!!errors.confirmpassword}
-            helperText={errors.confirmpassword?.message}
-            hookFormValidations={{
-              validate: (value: string) =>
-                value === password || 'Passwords do not match',
-            }}
-            sx={{ width: '100%', pb: 3 }}
-            id="outlined-confirm-password-input"
-            data-testid="confirmpassword"
-            label="Confirm Password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Confirm password"
-            register={register}
-            required
-            name="confirmpassword"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Box>
-                    <IconButton
-                      onClick={() => {
-                        setShowPassword(!showPassword);
-                      }}
-                      edge="end"
-                    >
-                      {showPassword ? (
-                        <VisibilityOutlinedIcon />
-                      ) : (
-                        <VisibilityOffOutlinedIcon />
-                      )}
-                    </IconButton>
-                  </Box>
-                </InputAdornment>
-              ),
-            }}
-          />
+              <Input
+                error={!!errors.confirmpassword}
+                helperText={errors.confirmpassword?.message}
+                hookFormValidations={{
+                  validate: (value: string) =>
+                    value === password || 'Passwords do not match',
+                }}
+                sx={{ width: '100%', pb: 3 }}
+                id="outlined-confirm-password-input"
+                data-testid="confirmpassword"
+                label="Confirm Password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Confirm password"
+                register={register}
+                name="confirmpassword"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Box>
+                        <IconButton
+                          onClick={() => {
+                            setShowPassword(!showPassword);
+                          }}
+                          edge="end"
+                        >
+                          {showPassword ? (
+                            <VisibilityOutlinedIcon />
+                          ) : (
+                            <VisibilityOffOutlinedIcon />
+                          )}
+                        </IconButton>
+                      </Box>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </>
+          )}
 
           <Button
             variant="contained"
@@ -153,7 +168,8 @@ const AcceptInvite = () => {
             type="submit"
             data-testid="submit"
           >
-            Confirm {loading && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
+            Accept
+            {loading && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
           </Button>
         </Box>
       </form>

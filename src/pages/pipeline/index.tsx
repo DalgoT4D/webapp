@@ -113,7 +113,7 @@ const BarChart = ({ runs }: any) => {
 };
 
 export default function Home() {
-  const { data, isLoading } = useSWR(`${backendUrl}/api/dashboard/`);
+  const { data, isLoading } = useSWR(`dashboard/`);
   if (isLoading) {
     return (
       <Box
