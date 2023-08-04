@@ -121,7 +121,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
     if (orguser) {
       setLoading(true);
       try {
-        await httpPost(session, `organizations/users/makeowner`, {
+        await httpPost(session, `organizations/users/makeowner/`, {
           new_owner_email: orguser.email,
         });
         successToast('Ownership changed successfully', [], globalContext);
