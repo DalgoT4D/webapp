@@ -33,10 +33,9 @@ interface Warehouse {
 }
 
 export const Destinations = () => {
-  const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/organizations/warehouses`,
-    { revalidateOnFocus: false }
-  );
+  const { data, isLoading, mutate } = useSWR(`organizations/warehouses`, {
+    revalidateOnFocus: false,
+  });
   const { data: session }: any = useSession();
   const [warehouse, setWarehouse] = useState<Warehouse>();
   const globalContext = useContext(GlobalContext);

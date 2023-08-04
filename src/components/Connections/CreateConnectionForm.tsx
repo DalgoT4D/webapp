@@ -68,7 +68,7 @@ const CreateConnectionForm = ({
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
   const [normalize, setNormalize] = useState<boolean>(false);
 
-  const { data: sourcesData } = useSWR(`${backendUrl}/api/airbyte/sources`);
+  const { data: sourcesData } = useSWR(`airbyte/sources`);
 
   const watchSourceSelection = watch('sources');
 

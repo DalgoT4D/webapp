@@ -65,3 +65,15 @@ const cronToLocalTZ = (expression: string) => {
 export const cronToString = (expression: string) => {
   return cronstrue.toString(cronToLocalTZ(expression), { verbose: true });
 };
+
+export const getOrgHeaderValue = (verb: string, path: string) => {
+  if (verb === 'GET' && ['currentuserv2', 'users/invitations'].includes(path)) {
+    return '';
+  } else if (
+    verb === 'POST' &&
+    ['organizations/', 'organizations/users/invite/accept/'].includes(path)
+  ) {
+    return '';
+  }
+  return localStorage.getItem('org-slug') || '';
+};

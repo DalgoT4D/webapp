@@ -21,9 +21,7 @@ export const Sources = () => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
 
-  const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/airbyte/sources`
-  );
+  const { data, isLoading, mutate } = useSWR(`airbyte/sources`);
   const [showCreateSourceDialog, setShowCreateSourceDialog] =
     useState<boolean>(false);
   const [showEditSourceDialog, setShowEditSourceDialog] =

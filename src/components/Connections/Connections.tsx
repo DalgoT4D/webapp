@@ -85,9 +85,7 @@ export const Connections = () => {
   const [showConfirmResetDialog, setShowConfirmResetDialog] =
     useState<boolean>(false);
 
-  const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/airbyte/connections`
-  );
+  const { data, isLoading, mutate } = useSWR(`airbyte/connections`);
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
