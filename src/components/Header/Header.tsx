@@ -31,6 +31,7 @@ type AutoCompleteOption = {
 export const Header = () => {
   const handleSignout = () => {
     // Hit backend api to invalidate the token
+    localStorage.clear();
     signOut({ callbackUrl: `${window.location.origin}` });
   };
   const { data: session }: any = useSession();

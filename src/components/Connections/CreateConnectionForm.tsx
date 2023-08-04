@@ -27,7 +27,6 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
-import { backendUrl } from '@/config/constant';
 import Input from '../UI/Input/Input';
 
 interface CreateConnectionFormProps {
@@ -68,7 +67,7 @@ const CreateConnectionForm = ({
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
   const [normalize, setNormalize] = useState<boolean>(false);
 
-  const { data: sourcesData } = useSWR(`${backendUrl}/api/airbyte/sources`);
+  const { data: sourcesData } = useSWR(`airbyte/sources`);
 
   const watchSourceSelection = watch('sources');
 

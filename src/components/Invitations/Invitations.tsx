@@ -5,7 +5,6 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import useSWR from 'swr';
 import moment from 'moment';
-import { backendUrl } from '@/config/constant';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import { httpDelete, httpPost } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -32,9 +31,7 @@ const Invitations = ({
   mutateInvitationsParent,
   setMutateInvitationsParent,
 }: InvitationsInterface) => {
-  const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/users/invitations/`
-  );
+  const { data, isLoading, mutate } = useSWR(`users/invitations/`);
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

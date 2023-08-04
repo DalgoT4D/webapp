@@ -2,7 +2,6 @@ import { useState, useEffect, useContext } from 'react';
 import useSWR from 'swr';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { Table, TableBody, TableCell, TableRow } from '@mui/material';
-import { backendUrl } from '@/config/constant';
 import CreateDestinationForm from './CreateDestinationForm';
 import EditDestinationForm from './EditDestinationForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -33,10 +32,9 @@ interface Warehouse {
 }
 
 export const Destinations = () => {
-  const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/organizations/warehouses`,
-    { revalidateOnFocus: false }
-  );
+  const { data, isLoading, mutate } = useSWR(`organizations/warehouses`, {
+    revalidateOnFocus: false,
+  });
   const { data: session }: any = useSession();
   const [warehouse, setWarehouse] = useState<Warehouse>();
   const globalContext = useContext(GlobalContext);
