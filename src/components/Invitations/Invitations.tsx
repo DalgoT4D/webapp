@@ -5,7 +5,6 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import useSWR from 'swr';
 import moment from 'moment';
-import { backendUrl } from '@/config/constant';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import { httpDelete, httpPost } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';

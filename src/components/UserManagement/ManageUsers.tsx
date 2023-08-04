@@ -6,7 +6,6 @@ import ProfileIcon from '@/assets/icons/profile.svg';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import useSWR from 'swr';
-import { backendUrl } from '@/config/constant';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
