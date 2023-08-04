@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 import { SideDrawer } from '../SideDrawer/SideDrawer';
 import { Header } from '../Header/Header';
 import { Box } from '@mui/material';
+import { getOrgHeaderValue } from '@/utils/common';
+import { backendUrl } from '@/config/constant';
 
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
@@ -21,12 +23,16 @@ export const Main = ({ children }: any) => {
       return (
         <SWRConfig
           value={{
-            fetcher: (resource) =>
-              fetch(resource, {
+            fetcher: (resource) => {
+              const org_slug = getOrgHeaderValue('GET', resource);
+
+              return fetch(`${backendUrl}/api/${resource}`, {
                 headers: {
                   Authorization: `Bearer ${session?.user.token}`,
+                  'x-dalgo-org': org_slug,
                 },
-              }).then((res) => res.json()),
+              }).then((res) => res.json());
+            },
           }}
         >
           <Header />

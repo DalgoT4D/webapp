@@ -19,6 +19,7 @@ interface MenuProps {
   handleDelete?: () => void;
   handleResetConnection?: () => void;
   handleResendInvitation?: () => void;
+  handleMakeAccountManager?: () => void;
 }
 
 export const ActionsMenu: React.FC<MenuProps> = ({
@@ -30,6 +31,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   handleDelete,
   handleResetConnection,
   handleResendInvitation,
+  handleMakeAccountManager,
 }) => (
   <Menu
     id="basic-menu"
@@ -64,6 +66,14 @@ export const ActionsMenu: React.FC<MenuProps> = ({
           <Image src={EditIcon} alt="edit icon" />
         </ListItemIcon>
         Resend
+      </MenuItem>
+    )}
+    {handleMakeAccountManager && (
+      <MenuItem sx={{ my: 0 }} onClick={() => handleMakeAccountManager()}>
+        <ListItemIcon style={{ minWidth: 28 }}>
+          <Image src={EditIcon} alt="edit icon" />
+        </ListItemIcon>
+        Make Account Manager
       </MenuItem>
     )}
     {handleDelete && (

@@ -6,7 +6,6 @@ import ProfileIcon from '@/assets/icons/profile.svg';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import useSWR from 'swr';
-import { backendUrl } from '@/config/constant';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
@@ -34,21 +33,20 @@ interface ManageUsersInterface {
 }
 
 const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
-  const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/organizations/users`
-  );
+  const { data, isLoading, mutate } = useSWR(`organizations/users`);
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
-  const [orguserToBeDeleted, setOrguserToBeDeleted] = useState<OrgUser | null>(
-    null
-  );
+  const [showMakeAccountManagerDialog, setShowMakeAccountManagerDialog] =
+    useState<boolean>(false);
+  const [orguserSelectedInAction, setOrguserSelectedInAction] =
+    useState<OrgUser | null>(null);
   const openActionMenu = Boolean(anchorEl);
   const handleClick = (orguser: OrgUser, event: HTMLElement | null) => {
-    setOrguserToBeDeleted(orguser);
+    setOrguserSelectedInAction(orguser);
     setAnchorEl(event);
   };
 
@@ -62,8 +60,17 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   };
 
   const handleCancelDeleteOrguser = () => {
-    setOrguserToBeDeleted(null);
+    setOrguserSelectedInAction(null);
     setShowConfirmDeleteDialog(false);
+  };
+
+  const handleClickMakeAccountOwnerAction = () => {
+    handleClose();
+    setShowMakeAccountManagerDialog(true);
+  };
+  const handleCancelMakeAccountManager = () => {
+    setOrguserSelectedInAction(null);
+    setShowMakeAccountManagerDialog(false);
   };
 
   let rows = [];
@@ -90,23 +97,44 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
           sx={{ justifyContent: 'end', display: 'flex' }}
           key={'action-box-' + idx}
         >
-          <Button
-            aria-controls={openActionMenu ? 'basic-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={openActionMenu ? 'true' : undefined}
-            onClick={(event) => handleClick(orguser, event.currentTarget)}
-            variant="contained"
-            key={'menu-' + idx}
-            color="info"
-            sx={{ px: 0, minWidth: 32 }}
-          >
-            <MoreHorizIcon />
-          </Button>
+          {orguser.email !== session?.user?.email && (
+            <Button
+              aria-controls={openActionMenu ? 'basic-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={openActionMenu ? 'true' : undefined}
+              onClick={(event) => handleClick(orguser, event.currentTarget)}
+              variant="contained"
+              key={'menu-' + idx}
+              color="info"
+              sx={{ px: 0, minWidth: 32 }}
+            >
+              <MoreHorizIcon />
+            </Button>
+          )}
         </Box>,
       ]);
     }
     return [];
   }, [data]);
+
+  const makeAccountManager = async (orguser: OrgUser | null) => {
+    if (orguser) {
+      setLoading(true);
+      try {
+        await httpPost(session, `organizations/users/makeowner/`, {
+          new_owner_email: orguser.email,
+        });
+        successToast('Ownership changed successfully', [], globalContext);
+        mutate();
+        setMutateInvitations(true);
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], globalContext);
+      }
+      setLoading(false);
+    }
+    handleCancelMakeAccountManager();
+  };
 
   const deleteOrgUser = async (orguser: OrgUser | null) => {
     if (orguser) {
@@ -143,6 +171,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
         open={openActionMenu}
         handleClose={handleClose}
         handleDelete={handleClickDeleteAction}
+        handleMakeAccountManager={handleClickMakeAccountOwnerAction}
       />
       <List
         openDialog={() => {}}
@@ -154,8 +183,15 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
         handleClose={() => handleCancelDeleteOrguser()}
-        handleConfirm={() => deleteOrgUser(orguserToBeDeleted)}
+        handleConfirm={() => deleteOrgUser(orguserSelectedInAction)}
         message="This will delete the organization user permanently. The user will have to be invited again to join the platform"
+        loading={loading}
+      />
+      <ConfirmationDialog
+        show={showMakeAccountManagerDialog}
+        handleClose={() => handleCancelMakeAccountManager()}
+        handleConfirm={() => makeAccountManager(orguserSelectedInAction)}
+        message="You will no longer be the account owner."
         loading={loading}
       />
     </>

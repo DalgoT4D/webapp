@@ -14,7 +14,6 @@ import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
 import SyncIcon from '@/assets/icons/sync.svg';
-import { backendUrl } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -85,9 +84,7 @@ export const Connections = () => {
   const [showConfirmResetDialog, setShowConfirmResetDialog] =
     useState<boolean>(false);
 
-  const { data, isLoading, mutate } = useSWR(
-    `${backendUrl}/api/airbyte/connections`
-  );
+  const { data, isLoading, mutate } = useSWR(`airbyte/connections`);
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {

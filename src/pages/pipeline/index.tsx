@@ -9,7 +9,6 @@ import moment from 'moment';
 
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { backendUrl } from '@/config/constant';
 import { lastRunTime } from '@/utils/common';
 import Image from 'next/image';
 
@@ -113,7 +112,7 @@ const BarChart = ({ runs }: any) => {
 };
 
 export default function Home() {
-  const { data, isLoading } = useSWR(`${backendUrl}/api/dashboard/`);
+  const { data, isLoading } = useSWR(`dashboard/`);
   if (isLoading) {
     return (
       <Box

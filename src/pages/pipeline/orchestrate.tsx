@@ -4,7 +4,6 @@ import { PageHead } from '@/components/PageHead';
 import { Flows } from '@/components/Flows/Flows';
 import { useEffect, useState } from 'react';
 import FlowCreate from '@/components/Flows/FlowCreate';
-import { backendUrl } from '@/config/constant';
 import { CircularProgress } from '@mui/material';
 
 export default function Orchestrate() {
@@ -16,9 +15,7 @@ export default function Orchestrate() {
     setCrudVal(crudState);
   };
 
-  const { data, mutate, isLoading } = useSWR(
-    `${backendUrl}/api/prefect/flows/`
-  );
+  const { data, mutate, isLoading } = useSWR(`prefect/flows/`);
 
   // when the flows list changes
   useEffect(() => {
