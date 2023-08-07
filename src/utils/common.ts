@@ -35,7 +35,7 @@ const cronToLocalTZ = (expression: string) => {
     newHours += 1;
   }
 
-  if (newHours > 24) {
+  if (newHours >= 24) {
     newHours -= 24;
     if (newDoW !== '*') {
       let newDoWInt = parseInt(newDoW, 10);
