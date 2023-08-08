@@ -49,14 +49,24 @@ describe('Side menu', () => {
     // By default we see the pipeline overview window
     cy.get('h4').should('contain', 'Overview');
 
-    cy.get('[data-testid="side-menu"]')
-      .find('li')
-      .first()
-      .within(() => {
-        cy.get('[data-testid="listButton"]').find('button').click();
-      });
+    // Go to user management
+    cy.get('[data-testid="side-menu"] > li').eq(1).click();
 
-    // still the same window
-    cy.get('h4').should('contain', 'Overview');
+    cy.get('h4').should('contain', 'Manage users');
+
+    // Go to ingest
+    cy.get('[data-testid="child-menu-1"] > li').eq(0).click();
+
+    cy.get('h4').should('contain', 'Ingest');
+
+    // Go to transform
+    cy.get('[data-testid="child-menu-1"] > li').eq(1).click();
+
+    cy.get('h4').should('contain', 'Transform');
+
+    // Go to transform
+    cy.get('[data-testid="child-menu-1"] > li').eq(2).click();
+
+    cy.get('h4').should('contain', 'Flows');
   });
 });
