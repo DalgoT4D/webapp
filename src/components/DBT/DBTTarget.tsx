@@ -151,11 +151,31 @@ export const DBTTarget = ({
 
   return (
     <>
+      <Select
+        value={selectedBlock?.blockName || 'Select function'}
+        sx={{ width: '150px', textAlign: 'center' }}
+        onChange={(event) => {
+          const block = blocks.find(
+            (blk: DbtBlock) => blk.blockName === event.target.value
+          );
+          setSelectedBlock(block);
+        }}
+      >
+        <MenuItem value="Select function" disabled>
+          Select function
+        </MenuItem>
+        {blocks.map((block) => (
+          <MenuItem
+            key={block.blockName}
+            value={block.blockName}
+          >{`DBT ${block.action}`}</MenuItem>
+        ))}
+      </Select>
       <Button
         data-testid="runJob"
         key={selectedBlock?.blockName}
         variant="contained"
-        sx={{ mr: 2 }}
+        sx={{ ml: 2 }}
         onClick={() => {
           if (selectedBlock) {
             if (selectedBlock.action === 'run')
@@ -177,25 +197,6 @@ export const DBTTarget = ({
           'Execute'
         )}
       </Button>
-      <Select
-        value={selectedBlock?.blockName}
-        onChange={(event) => {
-          const block = blocks.find(
-            (blk: DbtBlock) => blk.blockName === event.target.value
-          );
-          setSelectedBlock(block);
-        }}
-      >
-        <MenuItem value="Select functions" disabled>
-          Select functions
-        </MenuItem>
-        {blocks.map((block) => (
-          <MenuItem
-            key={block.blockName}
-            value={block.blockName}
-          >{`DBT ${block.action}`}</MenuItem>
-        ))}
-      </Select>
     </>
   );
 };

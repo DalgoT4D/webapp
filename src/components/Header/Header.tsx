@@ -91,8 +91,9 @@ export const Header = () => {
       <Box
         display="flex"
         alignItems="center"
-        sx={{ marginLeft: 'auto', gap: '50px' }}
+        sx={{ marginLeft: 'auto', gap: '20px' }}
       >
+        <Typography variant="h6">{selectedOrg?.label}</Typography>
         <Image
           style={{ marginRight: 24, cursor: 'pointer' }}
           src={ProfileIcon}
@@ -139,6 +140,7 @@ export const Header = () => {
             value={org.id}
             onClick={() => setSelectedOrg(org)}
             selected={selectedOrg?.id === org.id}
+            sx={selectedOrg?.id === org.id ? { fontWeight: 600 } : {}}
           >
             {org.label}
           </MenuItem>
