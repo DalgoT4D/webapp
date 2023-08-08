@@ -63,7 +63,7 @@ export const SideDrawer = () => {
   };
 
   const getList = (
-    <List component="div">
+    <List component="div" data-testid="side-menu">
       {sideMenu.map((item) => {
         const hasChildren = sideMenu.filter(
           (sideItem) => sideItem.parent === item.index
@@ -99,7 +99,12 @@ export const SideDrawer = () => {
                   timeout="auto"
                   unmountOnExit
                 >
-                  <List component="div" disablePadding sx={{ ml: 4 }}>
+                  <List
+                    component="div"
+                    disablePadding
+                    sx={{ ml: 4 }}
+                    data-testid={`child-menu-${item.index}`}
+                  >
                     {hasChildren.map((subitem) => (
                       <ListItem key={subitem.title}>
                         <ItemButton
