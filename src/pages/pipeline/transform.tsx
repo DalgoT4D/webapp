@@ -300,6 +300,7 @@ const Transform = () => {
                   gitrepoUrl=""
                   schema=""
                   mode="create"
+                  setWorkspace={setWorkspace}
                 />
               ) : dbtSetupStage === 'complete' && workspace ? (
                 <DBTSetup
@@ -313,6 +314,7 @@ const Transform = () => {
                   gitrepoUrl={workspace?.gitrepo_url}
                   schema={workspace?.default_schema}
                   mode="edit"
+                  setWorkspace={setWorkspace}
                 />
               ) : (
                 ''
