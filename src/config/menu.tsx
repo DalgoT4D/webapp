@@ -1,4 +1,4 @@
-// import AnalysisIcon from '@/assets/icons/analysis';
+import AnalysisIcon from '@/assets/icons/analysis';
 import IngestIcon from '@/assets/icons/ingest';
 import TransformIcon from '@/assets/icons/transform';
 import PipelineIcon from '@/assets/icons/pipeline';
@@ -21,43 +21,43 @@ export interface MenuOption {
 
 export const sideMenu: MenuOption[] = [
   // This will be added at a later stage
-  // {
-  //   index: 1,
-  //   title: 'Analysis',
-  //   path: '/analysis',
-  //   icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
-  // },
   {
     index: 1,
+    title: 'Analysis',
+    path: '/analysis',
+    icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
+  },
+  {
+    index: 2,
     title: 'Pipeline overview',
     path: '/pipeline',
     icon: (selected: boolean) => <PipelineIcon fill={getColor(selected)} />,
   },
 
   {
-    index: 1.1,
+    index: 2.1,
     title: 'Ingest',
     icon: (selected: boolean) => <IngestIcon fill={getColor(selected)} />,
     path: '/pipeline/ingest',
-    parent: 1,
+    parent: 2,
   },
   {
-    index: 1.2,
+    index: 2.2,
     title: 'Transform',
     icon: (selected: boolean) => <TransformIcon fill={getColor(selected)} />,
-    parent: 1,
+    parent: 2,
     path: '/pipeline/transform',
   },
   {
-    index: 1.3,
+    index: 2.3,
     title: 'Orchestrate',
     icon: (selected: boolean) => <OrchestrateIcon fill={getColor(selected)} />,
     path: '/pipeline/orchestrate',
-    parent: 1,
+    parent: 2,
   },
 
   {
-    index: 2,
+    index: 3,
     title: 'User management',
     path: '/user-management',
     icon: () => <SupervisorAccountIcon />,

@@ -1,5 +1,6 @@
 import { createContext, useReducer } from 'react';
 import { ToastReducer, initialToastState } from './reducers/ToastReducer';
+import { OrgReducer, initialOrgState } from './reducers/OrgReducer';
 
 import React from 'react';
 import ToastMessage from '@/components/ToastMessage/ToastMessage';
@@ -11,6 +12,7 @@ interface resourceContextInterface {
 
 interface context {
   Toast: resourceContextInterface;
+  Org: resourceContextInterface;
 }
 export const GlobalContext = createContext<context | null>(null);
 
@@ -21,11 +23,20 @@ const ContextProvider = ({ children }: any) => {
     initialToastState
   );
 
+  // Current org
+  const [org, orgDispatch]: [any, any] = useReducer<any>(
+    OrgReducer,
+    initialOrgState
+  );
+
   // You can add other reducers here to have global state for different use cases with the same global context
 
   return (
     <GlobalContext.Provider
-      value={{ Toast: { state: toast, dispatch: toastDisptach } }}
+      value={{
+        Toast: { state: toast, dispatch: toastDisptach },
+        Org: { state: org, dispatch: orgDispatch },
+      }}
     >
       {children}
       <ToastMessage

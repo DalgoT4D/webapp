@@ -5,14 +5,17 @@ import LogoutIcon from '@/assets/icons/logout.svg';
 import { signOut, useSession } from 'next-auth/react';
 import Logo from '@/assets/images/logo.svg';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/navigation';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 type Org = {
   name: string;
   slug: string;
   airbyte_workspace_id: string;
+  viz_url: string | null;
+  viz_login_type: string | null;
 };
 
 type OrgUser = {
@@ -38,9 +41,11 @@ export const Header = () => {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [orgs, setOrgs] = useState<Array<AutoCompleteOption>>([]);
+  const globalContext = useContext(GlobalContext);
   const [selectedOrg, setSelectedOrg] = useState<
     AutoCompleteOption | null | undefined
   >(null);
+  const [orgusers, setOrgusers] = useState<Array<OrgUser>>([]);
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
     setAnchorEl(event);
@@ -54,6 +59,7 @@ export const Header = () => {
     (async () => {
       try {
         const orgusers = await httpGet(session, `currentuserv2`);
+        setOrgusers(orgusers);
         const orgs: Array<AutoCompleteOption> = orgusers.map(
           (orguser: OrgUser) => ({
             id: orguser.org.slug,
@@ -79,15 +85,33 @@ export const Header = () => {
   useEffect(() => {
     const currentOrgSlug = localStorage.getItem('org-slug');
     if (selectedOrg && selectedOrg.id && currentOrgSlug !== selectedOrg.id) {
+      const orguser: OrgUser | any = orgusers.find(
+        (orguser: OrgUser) => orguser.org.slug === selectedOrg.id
+      );
+      if (orguser) {
+        console.log('here', orguser);
+        globalContext?.Org?.dispatch({
+          state: {
+            slug: orguser?.org.slug,
+            viz_url: orguser?.org.viz_url,
+          },
+        });
+      }
+
       handleClose();
       localStorage.setItem('org-slug', selectedOrg.id);
       router.refresh();
     }
   }, [selectedOrg]);
 
+  useEffect(() => {
+    console.log('changing', globalContext?.Org.state);
+  }, [globalContext?.Org?.state]);
+
   return (
     <Paper className={styles.Header}>
       <Image src={Logo} style={{ margin: 4, marginLeft: 12 }} alt="ddp logo" />
+      {globalContext?.Org?.state?.slug}
       <Box
         display="flex"
         alignItems="center"
