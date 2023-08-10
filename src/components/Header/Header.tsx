@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/navigation';
+import CreateOrgForm from '../Org/CreateOrgForm';
 
 type Org = {
   name: string;
@@ -38,6 +39,7 @@ export const Header = () => {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [orgs, setOrgs] = useState<Array<AutoCompleteOption>>([]);
+  const [showOrgCreateForm, setShowOrgCreateForm] = useState<boolean>(false);
   const [selectedOrg, setSelectedOrg] = useState<
     AutoCompleteOption | null | undefined
   >(null);
@@ -84,6 +86,10 @@ export const Header = () => {
       router.refresh();
     }
   }, [selectedOrg]);
+
+  const handleCreateOrgClick = () => {
+    setShowOrgCreateForm(true);
+  };
 
   return (
     <Paper className={styles.Header}>
@@ -134,6 +140,25 @@ export const Header = () => {
             {session?.user?.email || 'no user'}
           </Typography>
         </Box>
+        <Box
+          sx={{
+            my: 0,
+            py: 1,
+            px: 2,
+            ':hover': { cursor: 'pointer' },
+          }}
+          onClick={handleCreateOrgClick}
+        >
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
+              borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
+            }}
+          >
+            Create new org
+          </Typography>
+        </Box>
         {orgs.map((org: AutoCompleteOption, idx: number) => (
           <MenuItem
             key={idx}
@@ -153,6 +178,11 @@ export const Header = () => {
           />
           Logout
         </MenuItem>
+        <CreateOrgForm
+          closeSideMenu={handleClose}
+          showForm={showOrgCreateForm}
+          setShowForm={setShowOrgCreateForm}
+        />
       </Menu>
     </Paper>
   );
