@@ -55,15 +55,21 @@ export const authOptions: NextAuthOptions = {
           }),
         });
 
-        const user = await res.json();
-        if (res.ok && user) {
-          // Any object returned will be saved in `user` property of the JWT
-          return user;
+        if (res.ok) {
+          const user = await res.json();
+          if (user && user.email_verified) {
+            // Any object returned will be saved in `user` property of the JWT
+            return user;
+          }
         } else {
           // If you return null then an error will be displayed advising the user to check their details.
-          return null;
-
           // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
+          const errorRes = await res.json();
+          const error: any = new Error(
+            errorRes?.detail || 'Please check your credentials'
+          );
+          error.status = res.status;
+          throw error;
         }
       },
     }),
