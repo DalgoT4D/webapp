@@ -9,8 +9,6 @@ import { httpGet } from '@/helpers/http';
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
 
-  const router = useRouter();
-
   // if the user is not logged in, return immediately
   if (!session?.user.token) return children;
 

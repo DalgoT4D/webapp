@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';

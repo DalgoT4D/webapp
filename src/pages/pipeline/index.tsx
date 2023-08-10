@@ -1,5 +1,4 @@
 import styles from '@/styles/Home.module.css';
-import useSWR from 'swr';
 import CheckIcon from '@/assets/icons/check.svg';
 import CheckLargeIcon from '@/assets/icons/check-large.svg';
 import { Box, CircularProgress, Paper, Typography } from '@mui/material';
