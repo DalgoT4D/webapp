@@ -4,8 +4,6 @@ import { useRouter } from 'next/router';
 import { SideDrawer } from '../SideDrawer/SideDrawer';
 import { Header } from '../Header/Header';
 import { Box } from '@mui/material';
-import { getOrgHeaderValue } from '@/utils/common';
-import { backendUrl } from '@/config/constant';
 import { httpGet } from '@/helpers/http';
 
 export const Main = ({ children }: any) => {
