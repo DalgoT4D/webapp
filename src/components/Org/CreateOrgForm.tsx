@@ -5,7 +5,10 @@ import { useForm } from 'react-hook-form';
 import styles from '@/styles/Login.module.css';
 import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { successToast } from '@/components/ToastMessage/ToastHelper';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 import Input from '@/components/UI/Input/Input';
 import CustomDialog from '../Dialog/CustomDialog';
@@ -28,14 +31,14 @@ export const CreateOrgForm = ({
     register,
     handleSubmit,
     formState: { errors },
-    setError,
     reset,
   } = useForm({
     defaultValues: {
       name: '',
+      createorg_code: '',
     },
   });
-  const toastContext = useContext(GlobalContext);
+  const globalContext = useContext(GlobalContext);
 
   const handleClose = () => {
     reset();
@@ -48,20 +51,19 @@ export const CreateOrgForm = ({
     try {
       const message = await httpPost(session, 'organizations/', {
         name: data.name,
+        createorg_code: data.createorg_code,
       });
-      update({ org: message.name });
-      successToast('Success', [], toastContext);
-      router.push('/');
+      successToast('Success', [], globalContext);
     } catch (err: any) {
       console.error(err);
-      setError('name', { type: 'custom', message: err.message });
+      errorToast(err.message, [], globalContext);
     }
     setWaitForOrgCreation(false);
   };
 
   const formContent = (
     <>
-      <Box>
+      <Box sx={{ mt: 2 }}>
         <Input
           error={!!errors.name}
           helperText={errors.name?.message}
@@ -72,6 +74,20 @@ export const CreateOrgForm = ({
           variant="outlined"
           register={register}
           name="name"
+          required
+        />
+      </Box>
+      <Box>
+        <Input
+          error={!!errors.createorg_code}
+          helperText={errors.createorg_code?.message}
+          sx={{ mb: 4, width: '100%' }}
+          id="outlined-basic"
+          data-testid="input-code"
+          label="Code"
+          variant="outlined"
+          register={register}
+          name="createorg_code"
           required
         />
       </Box>
