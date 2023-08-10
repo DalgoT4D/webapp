@@ -1,8 +1,7 @@
 import { Box, Button, CircularProgress } from '@mui/material';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import styles from '@/styles/Login.module.css';
+import { useRouter } from 'next/navigation';
 import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import {
@@ -24,7 +23,7 @@ export const CreateOrgForm = ({
   showForm,
   setShowForm,
 }: CreateOrgFormProps) => {
-  const { data: session, update }: any = useSession();
+  const { data: session }: any = useSession();
   const [waitForOrgCreation, setWaitForOrgCreation] = useState(false);
   const router = useRouter();
   const {
@@ -49,11 +48,13 @@ export const CreateOrgForm = ({
   const onSubmit = async (data: any) => {
     setWaitForOrgCreation(true);
     try {
-      const message = await httpPost(session, 'organizations/', {
+      await httpPost(session, 'organizations/', {
         name: data.name,
         createorg_code: data.createorg_code,
       });
+      handleClose();
       successToast('Success', [], globalContext);
+      router.refresh();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
