@@ -6,6 +6,7 @@ import { Header } from '../Header/Header';
 import { Box } from '@mui/material';
 import { getOrgHeaderValue } from '@/utils/common';
 import { backendUrl } from '@/config/constant';
+import { httpGet } from '@/helpers/http';
 
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
@@ -16,37 +17,19 @@ export const Main = ({ children }: any) => {
   if (!session?.user.token) return children;
 
   // User is logged in
-  if (session?.user?.org) {
-    if (router.pathname === '/signup/createorg') {
-      router.push('/');
-    } else {
-      return (
-        <SWRConfig
-          value={{
-            fetcher: (resource) => {
-              const org_slug = getOrgHeaderValue('GET', resource);
-
-              return fetch(`${backendUrl}/api/${resource}`, {
-                headers: {
-                  Authorization: `Bearer ${session?.user.token}`,
-                  'x-dalgo-org': org_slug,
-                },
-              }).then((res) => res.json());
-            },
-          }}
-        >
-          <Header />
-          <Box sx={{ display: 'flex', pt: 6 }}>
-            <SideDrawer />
-            {children}
-          </Box>
-        </SWRConfig>
-      );
-    }
-  } else {
-    if (router.pathname === '/signup/createorg') return children;
-    router.push('/signup/createorg');
-  }
-
-  return null;
+  return (
+    <SWRConfig
+      value={{
+        fetcher: (resource) => {
+          return httpGet(session, resource).then((res) => res);
+        },
+      }}
+    >
+      <Header />
+      <Box sx={{ display: 'flex', pt: 6 }}>
+        <SideDrawer />
+        {children}
+      </Box>
+    </SWRConfig>
+  );
 };
