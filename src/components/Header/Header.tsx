@@ -5,10 +5,11 @@ import LogoutIcon from '@/assets/icons/logout.svg';
 import { signOut, useSession } from 'next-auth/react';
 import Logo from '@/assets/images/logo.svg';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/navigation';
 import CreateOrgForm from '../Org/CreateOrgForm';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 type Org = {
   name: string;
@@ -39,10 +40,12 @@ export const Header = () => {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [orgs, setOrgs] = useState<Array<AutoCompleteOption>>([]);
+  const [orgusers, setOrgusers] = useState<Array<OrgUser>>([]);
   const [showOrgCreateForm, setShowOrgCreateForm] = useState<boolean>(false);
   const [selectedOrg, setSelectedOrg] = useState<
     AutoCompleteOption | null | undefined
   >(null);
+  const globalContext = useContext(GlobalContext);
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
     setAnchorEl(event);
@@ -56,6 +59,7 @@ export const Header = () => {
     (async () => {
       try {
         const orgusers = await httpGet(session, `currentuserv2`);
+        setOrgusers(orgusers);
         const orgs: Array<AutoCompleteOption> = orgusers.map(
           (orguser: OrgUser) => ({
             id: orguser.org.slug,
@@ -84,6 +88,19 @@ export const Header = () => {
       handleClose();
       localStorage.setItem('org-slug', selectedOrg.id);
       router.refresh();
+    }
+
+    // always update the current org context from so that it is accessible anywhere in the app
+    if (selectedOrg) {
+      const selectedOrguser: OrgUser | any = orgusers.find(
+        (orguser: OrgUser) => orguser.org.slug === selectedOrg.id
+      );
+      if (selectedOrguser && selectedOrguser?.org) {
+        globalContext?.CurrentOrg?.dispatch({
+          type: 'new',
+          orgState: selectedOrguser.org,
+        });
+      }
     }
   }, [selectedOrg]);
 
