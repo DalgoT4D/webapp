@@ -1,6 +1,5 @@
 import { useSession } from 'next-auth/react';
 import { SWRConfig } from 'swr';
-import { useRouter } from 'next/router';
 import { SideDrawer } from '../SideDrawer/SideDrawer';
 import { Header } from '../Header/Header';
 import { Box } from '@mui/material';
