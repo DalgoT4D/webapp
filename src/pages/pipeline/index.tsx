@@ -122,17 +122,19 @@ export default function Home() {
   const globalContext = useContext(GlobalContext);
 
   useEffect(() => {
-    setIsLoading(true);
-    (async () => {
-      try {
-        const flowRuns: any = await httpGet(session, 'dashboard/');
-        setFlowRuns(flowRuns);
-      } catch (err: any) {
-        console.error(err);
-        errorToast(err.message, [], globalContext);
-      }
-    })();
-    setIsLoading(false);
+    if (session) {
+      setIsLoading(true);
+      (async () => {
+        try {
+          const flowRuns: any = await httpGet(session, 'dashboard/');
+          setFlowRuns(flowRuns);
+        } catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], globalContext);
+        }
+      })();
+      setIsLoading(false);
+    }
   }, [session]);
 
   if (isLoading) {
