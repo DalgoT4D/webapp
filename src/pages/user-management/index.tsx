@@ -1,10 +1,11 @@
 import styles from '@/styles/Home.module.css';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
 import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
 import ManageUsers from '@/components/UserManagement/ManageUsers';
 import Invitations from '@/components/Invitations/Invitations';
 import InviteUserForm from '@/components/Invitations/InviteUserForm';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface TabPanelProps {
   children?: React.ReactNode;
