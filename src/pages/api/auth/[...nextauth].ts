@@ -8,27 +8,20 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }: any) {
       if (token.id) {
         session.user.token = token.id;
-        session.user.org = token.org;
         session.user.email = token.email;
-        session.user.role = token.role;
         session.user.active = token.active;
+        session.user.email_verified = token.email_verified;
       }
       // Send properties to the client, like an access_token and user id from a provider.
       return session;
     },
     async jwt({ token, user, trigger, session }: any) {
-      if (trigger === 'update' && session?.org) {
-        token.org = session.org;
-        return token;
-      }
-
       // Persist the OAuth access_token and or the user id to the token right after signin
       if (user?.token) {
         token.id = user.token;
-        token.org = user.org;
         token.email = user.email;
-        token.role = user.role;
         token.active = user.active;
+        token.email_verified = user.email_verified;
       }
       return token;
     },
@@ -62,15 +55,19 @@ export const authOptions: NextAuthOptions = {
           }),
         });
 
-        const user = await res.json();
-        if (res.ok && user) {
+        if (res.ok) {
+          const user = await res.json();
           // Any object returned will be saved in `user` property of the JWT
           return user;
         } else {
           // If you return null then an error will be displayed advising the user to check their details.
-          return null;
-
           // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
+          const errorRes = await res.json();
+          const error: any = new Error(
+            errorRes?.detail || 'Please check your credentials'
+          );
+          error.status = res.status;
+          throw error;
         }
       },
     }),

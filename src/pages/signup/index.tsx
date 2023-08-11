@@ -57,7 +57,7 @@ export const SignUp = () => {
         username: data.username,
         password: data.password,
         redirect: true,
-        callbackUrl: '/signup/createorg',
+        callbackUrl: '/',
       });
     } catch (err: any) {
       console.error(err);

@@ -15,7 +15,10 @@ import styles from '@/styles/Login.module.css';
 import { useRouter } from 'next/router';
 import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { successToast } from '@/components/ToastMessage/ToastHelper';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
 import Input from '@/components/UI/Input/Input';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
@@ -26,7 +29,6 @@ export const Login = () => {
     register,
     handleSubmit,
     formState: { errors },
-    setError,
   } = useForm({
     defaultValues: {
       username: '',
@@ -51,10 +53,7 @@ export const Login = () => {
       router.push('/pipeline');
       successToast('User logged in successfully', [], context);
     } else {
-      setError('root', {
-        type: 'custom',
-        message: 'Please check your credentials',
-      });
+      errorToast(res.error, [], context);
     }
     setWaitForLogin(false);
   };
