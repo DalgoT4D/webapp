@@ -91,8 +91,7 @@ export const Header = () => {
         (orguser: OrgUser) => orguser.org.slug === selectedOrg.id
       );
       if (orguser) {
-        console.log('here', orguser);
-        globalContext?.Org?.dispatch({
+        globalContext?.CurrentOrg?.dispatch({
           state: {
             slug: orguser?.org.slug,
             viz_url: orguser?.org.viz_url,
@@ -126,7 +125,6 @@ export const Header = () => {
   return (
     <Paper className={styles.Header}>
       <Image src={Logo} style={{ margin: 4, marginLeft: 12 }} alt="ddp logo" />
-      {globalContext?.Org?.state?.slug}
       <Box
         display="flex"
         alignItems="center"

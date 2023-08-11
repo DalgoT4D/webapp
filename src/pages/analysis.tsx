@@ -2,8 +2,12 @@ import styles from '@/styles/Home.module.css';
 import '@/styles/Home.module.css';
 import { Box, Typography } from '@mui/material';
 import { PageHead } from '@/components/PageHead';
+import { useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 export default function Analysis() {
+  const globalContext = useContext(GlobalContext);
+
   return (
     <>
       <PageHead title="Development Data Platform" />
@@ -16,16 +20,18 @@ export default function Analysis() {
         >
           Analysis
         </Typography>
-        <Box sx={{ border: 'none' }}>
-          <iframe
-            src="http://localhost:8088/login/"
-            style={{
-              height: '70vh',
-              width: '100%',
-              border: 'none',
-            }}
-          />
-        </Box>
+        {globalContext?.CurrentOrg?.state.viz_url && (
+          <Box sx={{ border: 'none' }}>
+            <iframe
+              src={globalContext?.CurrentOrg?.state.viz_url}
+              style={{
+                height: '70vh',
+                width: '100%',
+                border: 'none',
+              }}
+            />
+          </Box>
+        )}
       </main>
     </>
   );
