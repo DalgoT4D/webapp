@@ -1,41 +1,37 @@
 import { Box, Button } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/router';
 import styles from '@/styles/Login.module.css';
 import { useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { useSearchParams } from 'next/navigation';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
-import { httpPost } from '../../helpers/http';
+import { httpGet } from '../../helpers/http';
 
-export const VerifyEmail = () => {
+export const VerifyEmailResend = () => {
   const { handleSubmit } = useForm();
   const { data: session }: any = useSession();
-  const toastContext = useContext(GlobalContext);
-
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const globalContext = useContext(GlobalContext);
 
   const onSubmit = async () => {
     try {
-      await httpPost(session, 'users/verify_email/resend', {
-        token: token,
-      });
-      router.push('/');
+      await httpGet(session, 'users/verify_email/resend');
+      successToast('Verification email sent to your inbox', [], globalContext);
     } catch (error: any) {
-      errorToast(error.cause.detail, [], toastContext);
+      console.log(error);
+      errorToast(error.cause.detail, [], globalContext);
     }
   };
 
   return (
-    <Auth heading="Click to resend the verification email" subHeading="">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        data-testid="email-verification-form"
-      >
+    <Auth
+      heading="Send verification email"
+      subHeading="Click here if you haven't received the verification email"
+    >
+      <form onSubmit={handleSubmit(onSubmit)} data-testid="resend-email-form">
         <Box className={styles.Container}>
           <Button
             variant="contained"
@@ -43,7 +39,7 @@ export const VerifyEmail = () => {
             type="submit"
             data-testid="submit"
           >
-            Resend
+            Send
           </Button>
         </Box>
       </form>
@@ -51,4 +47,4 @@ export const VerifyEmail = () => {
   );
 };
 
-export default VerifyEmail;
+export default VerifyEmailResend;

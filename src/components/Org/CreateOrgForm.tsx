@@ -34,7 +34,6 @@ export const CreateOrgForm = ({
   } = useForm({
     defaultValues: {
       name: '',
-      createorg_code: '',
     },
   });
   const globalContext = useContext(GlobalContext);
@@ -50,7 +49,6 @@ export const CreateOrgForm = ({
     try {
       await httpPost(session, 'organizations/', {
         name: data.name,
-        createorg_code: data.createorg_code,
       });
       handleClose();
       successToast('Success', [], globalContext);
@@ -75,20 +73,6 @@ export const CreateOrgForm = ({
           variant="outlined"
           register={register}
           name="name"
-          required
-        />
-      </Box>
-      <Box>
-        <Input
-          error={!!errors.createorg_code}
-          helperText={errors.createorg_code?.message}
-          sx={{ mb: 4, width: '100%' }}
-          id="outlined-basic"
-          data-testid="input-code"
-          label="Code"
-          variant="outlined"
-          register={register}
-          name="createorg_code"
           required
         />
       </Box>

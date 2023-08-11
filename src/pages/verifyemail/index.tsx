@@ -1,7 +1,6 @@
 import { Box, Button } from '@mui/material';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
-import { useRouter } from 'next/router';
 import styles from '@/styles/Login.module.css';
 import { useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -15,7 +14,6 @@ export const VerifyEmail = () => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
 
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
@@ -24,7 +22,7 @@ export const VerifyEmail = () => {
       await httpPost(session, 'users/verify_email/', {
         token: token,
       });
-      router.push('/');
+      signOut({ callbackUrl: '/login' });
     } catch (error: any) {
       errorToast(error.cause.detail, [], toastContext);
     }
