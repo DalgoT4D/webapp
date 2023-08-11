@@ -46,6 +46,7 @@ describe('dbt Setup', () => {
           setExpandLogs={() => {}}
           showDialog={true}
           setShowDialog={() => {}}
+          setWorkspace={() => {}}
         />
       </SessionProvider>
     );
@@ -82,6 +83,7 @@ describe('dbt Setup', () => {
           setExpandLogs={() => {}}
           showDialog={true}
           setShowDialog={() => {}}
+          setWorkspace={() => {}}
         />
       </SessionProvider>
     );
