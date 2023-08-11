@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/navigation';
+import CreateOrgForm from '../Org/CreateOrgForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
 type Org = {
@@ -41,11 +42,12 @@ export const Header = () => {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [orgs, setOrgs] = useState<Array<AutoCompleteOption>>([]);
-  const globalContext = useContext(GlobalContext);
+  const [orgusers, setOrgusers] = useState<Array<OrgUser>>([]);
+  const [showOrgCreateForm, setShowOrgCreateForm] = useState<boolean>(false);
   const [selectedOrg, setSelectedOrg] = useState<
     AutoCompleteOption | null | undefined
   >(null);
-  const [orgusers, setOrgusers] = useState<Array<OrgUser>>([]);
+  const globalContext = useContext(GlobalContext);
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
     setAnchorEl(event);
@@ -102,11 +104,24 @@ export const Header = () => {
       localStorage.setItem('org-slug', selectedOrg.id);
       router.refresh();
     }
+
+    // always update the current org context from so that it is accessible anywhere in the app
+    if (selectedOrg) {
+      const selectedOrguser: OrgUser | any = orgusers.find(
+        (orguser: OrgUser) => orguser.org.slug === selectedOrg.id
+      );
+      if (selectedOrguser && selectedOrguser?.org) {
+        globalContext?.CurrentOrg?.dispatch({
+          type: 'new',
+          orgState: selectedOrguser.org,
+        });
+      }
+    }
   }, [selectedOrg]);
 
-  useEffect(() => {
-    console.log('changing', globalContext?.Org.state);
-  }, [globalContext?.Org?.state]);
+  const handleCreateOrgClick = () => {
+    setShowOrgCreateForm(true);
+  };
 
   return (
     <Paper className={styles.Header}>
@@ -158,6 +173,25 @@ export const Header = () => {
             {session?.user?.email || 'no user'}
           </Typography>
         </Box>
+        <Box
+          sx={{
+            my: 0,
+            py: 1,
+            px: 2,
+            ':hover': { cursor: 'pointer' },
+          }}
+          onClick={handleCreateOrgClick}
+        >
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
+              borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
+            }}
+          >
+            Create new org
+          </Typography>
+        </Box>
         {orgs.map((org: AutoCompleteOption, idx: number) => (
           <MenuItem
             key={idx}
@@ -177,6 +211,11 @@ export const Header = () => {
           />
           Logout
         </MenuItem>
+        <CreateOrgForm
+          closeSideMenu={handleClose}
+          showForm={showOrgCreateForm}
+          setShowForm={setShowOrgCreateForm}
+        />
       </Menu>
     </Paper>
   );

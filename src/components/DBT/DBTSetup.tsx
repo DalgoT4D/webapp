@@ -17,6 +17,7 @@ interface DBTSetupProps {
   gitrepoUrl: string;
   schema: string;
   mode: string;
+  setWorkspace: (...args: any) => any;
 }
 
 interface DBTCreateWorkspaceParams {
@@ -34,6 +35,7 @@ export const DBTSetup = ({
   gitrepoUrl,
   schema,
   mode,
+  setWorkspace,
 }: DBTSetupProps) => {
   const {
     register,
@@ -137,6 +139,10 @@ export const DBTSetup = ({
   };
 
   const editWorkspace = async (data: DBTCreateWorkspaceParams) => {
+    setWorkspace({
+      gitrepo_url: data.gitrepoUrl,
+      default_schema: data.schema,
+    });
     if (data.schema && data.schema !== schema) {
       const updateSchemaPayload = {
         target_configs_schema: data.schema,
