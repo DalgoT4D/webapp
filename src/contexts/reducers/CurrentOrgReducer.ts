@@ -4,6 +4,8 @@ export interface CurrentOrgStateInterface {
   slug: string;
   name: string;
   airbyte_workspace_id: string;
+  viz_url: string;
+  viz_login_type: string;
 }
 
 interface Action {
