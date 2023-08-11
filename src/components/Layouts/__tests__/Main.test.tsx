@@ -7,7 +7,7 @@ jest.mock('next/navigation');
 
 jest.mock('next/router', () => ({
   useRouter() {
-    return true;
+    return { push: jest.fn() };
   },
 }));
 
@@ -36,7 +36,7 @@ describe('no token', () => {
 describe('token and normal flow', () => {
   const mockSession: any = {
     expires: '1',
-    user: { token: 'token' },
+    user: { token: 'token', email_verified: true },
   };
 
   it('renders the header and sidedrawer', () => {
