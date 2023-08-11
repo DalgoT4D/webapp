@@ -43,4 +43,6 @@ export const Main = ({ children }: any) => {
       </SWRConfig>
     );
   }
+
+  return null;
 };
