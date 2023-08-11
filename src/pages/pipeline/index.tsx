@@ -1,5 +1,4 @@
 import styles from '@/styles/Home.module.css';
-import useSWR from 'swr';
 import CheckIcon from '@/assets/icons/check.svg';
 import CheckLargeIcon from '@/assets/icons/check-large.svg';
 import { Box, CircularProgress, Paper, Typography } from '@mui/material';
@@ -7,10 +6,14 @@ import Pattern from '@/assets/images/pattern.png';
 import { PageHead } from '@/components/PageHead';
 import moment from 'moment';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { lastRunTime } from '@/utils/common';
 import Image from 'next/image';
+import { httpGet } from '@/helpers/http';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { useSession } from 'next-auth/react';
 
 const BarChart = ({ runs }: any) => {
   const svgRef = useRef(null);
@@ -112,7 +115,27 @@ const BarChart = ({ runs }: any) => {
 };
 
 export default function Home() {
-  const { data, isLoading } = useSWR(`dashboard/`);
+  const { data: session } = useSession();
+  const [flowRuns, setFlowRuns] = useState<Array<any>>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const globalContext = useContext(GlobalContext);
+
+  useEffect(() => {
+    if (session) {
+      setIsLoading(true);
+      (async () => {
+        try {
+          const flowRuns: any = await httpGet(session, 'dashboard/');
+          setFlowRuns(flowRuns);
+        } catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], globalContext);
+        }
+      })();
+      setIsLoading(false);
+    }
+  }, [session]);
+
   if (isLoading) {
     return (
       <Box
@@ -181,7 +204,7 @@ export default function Home() {
               color: 'white',
             }}
           >
-            {data && data.length > 0
+            {flowRuns && flowRuns.length > 0
               ? 'All flows are operational'
               : 'No flows available. Please create one'}{' '}
             <Image
@@ -191,8 +214,8 @@ export default function Home() {
             />
           </Typography>
 
-          {data &&
-            data.map((run: any) => {
+          {flowRuns &&
+            flowRuns.map((run: any) => {
               return (
                 <React.Fragment key={run.name}>
                   <Typography
