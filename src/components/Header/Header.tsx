@@ -92,10 +92,8 @@ export const Header = () => {
       );
       if (orguser) {
         globalContext?.CurrentOrg?.dispatch({
-          state: {
-            slug: orguser?.org.slug,
-            viz_url: orguser?.org.viz_url,
-          },
+          type: 'new',
+          state: orguser.org,
         });
       }
 

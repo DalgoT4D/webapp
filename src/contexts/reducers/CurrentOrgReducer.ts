@@ -17,6 +17,8 @@ export const initialCurrentOrgState = {
   slug: '',
   name: '',
   airbyte_workspace_id: '',
+  viz_url: '',
+  viz_login_type: '',
 };
 
 export const CurrentOrgReducer = (
