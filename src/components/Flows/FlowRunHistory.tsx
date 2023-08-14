@@ -19,6 +19,7 @@ import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { flowRunLogsOffsetLimit } from '@/config/constant';
 import moment from 'moment';
 
 interface FlowRunHistoryProps {
@@ -30,7 +31,9 @@ interface FlowRunHistoryProps {
 export type FlowRunLogMessage = {
   message: string;
 };
+
 export type FlowRun = {
+  id: string;
   name: string;
   status: string;
   logs: Array<FlowRunLogMessage>;
@@ -46,6 +49,8 @@ export const FlowRunHistory = ({
   const { data: session }: any = useSession();
   const [flowRuns, setFlowRuns] = useState<Array<FlowRun>>([]);
   const [showLogs, setShowLogs] = useState<Array<boolean>>([]);
+  const [rerender, setRerender] = useState<boolean>(false);
+  const [flowRunsOffset, setFlowRunsOffset] = useState<Array<number>>([]);
   const globalContext = useContext(GlobalContext);
   const handleClose = () => {
     setShowFlowRunHistory(false);
@@ -58,16 +63,61 @@ export const FlowRunHistory = ({
     ).fromNow();
   };
 
+  const fetchFlowRunLogsAndUpdateOffset = async (
+    flowRunId: string,
+    offset: number,
+    rowIdx: number
+  ) => {
+    if (flowRunId) {
+      (async () => {
+        try {
+          const data = await httpGet(
+            session,
+            `prefect/flow_runs/${flowRunId}/logs?offset=${offset}`
+          );
+
+          if (data?.logs?.logs && data.logs.logs.length >= 0) {
+            const tempFlowRuns = flowRuns.slice();
+            tempFlowRuns[rowIdx].logs = tempFlowRuns[rowIdx].logs.concat(
+              data.logs.logs
+            );
+            setFlowRuns(tempFlowRuns);
+
+            // increment the offset by 200 if we have more to fetch
+            // otherwise set it to -1 i.e. no more logs to show
+            const tempOffsets = flowRunsOffset.slice();
+            let offsetToUpdate = -1;
+            if (data.logs.logs.length >= 200)
+              offsetToUpdate = tempOffsets[rowIdx] + flowRunLogsOffsetLimit;
+            tempOffsets[rowIdx] = offsetToUpdate;
+            setFlowRunsOffset(tempOffsets);
+            setRerender(!rerender);
+          }
+        } catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], globalContext);
+        }
+      })();
+    }
+  };
+
   useEffect(() => {
     if (deploymentId && showFlowRunHistory) {
       (async () => {
         try {
-          const data = await httpGet(
+          const data: Array<FlowRun> = await httpGet(
             session,
             `prefect/flows/${deploymentId}/flow_runs/history`
           );
           setFlowRuns(data);
           setShowLogs(new Array(data.length).fill(false));
+
+          let initialLogsOffset = data.map((flowRun: FlowRun, idx: number) =>
+            flowRun?.logs.length >= flowRunLogsOffsetLimit
+              ? flowRunLogsOffsetLimit
+              : -1
+          );
+          setFlowRunsOffset(initialLogsOffset);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
@@ -80,6 +130,10 @@ export const FlowRunHistory = ({
     const tempLogs = showLogs.slice();
     tempLogs[idx] = !tempLogs[idx];
     setShowLogs(tempLogs);
+  };
+
+  const handleClickFetchMore = (idx: number) => {
+    fetchFlowRunLogsAndUpdateOffset(flowRuns[idx].id, flowRunsOffset[idx], idx);
   };
 
   return (
@@ -185,6 +239,14 @@ export const FlowRunHistory = ({
                       {flowRun?.logs?.map((log: any, idx1: number) => (
                         <Box key={idx1}>- {log?.message}</Box>
                       ))}
+                      {flowRunsOffset[idx] >= 0 && (
+                        <Button
+                          data-testid={'offset-' + idx}
+                          onClick={() => handleClickFetchMore(idx)}
+                        >
+                          Fetch more
+                        </Button>
+                      )}
                     </CardContent>
                   </Collapse>
                 </Box>
