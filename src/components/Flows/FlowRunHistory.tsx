@@ -112,7 +112,7 @@ export const FlowRunHistory = ({
           setFlowRuns(data);
           setShowLogs(new Array(data.length).fill(false));
 
-          let initialLogsOffset = data.map((flowRun: FlowRun, idx: number) =>
+          const initialLogsOffset = data.map((flowRun: FlowRun) =>
             flowRun?.logs.length >= flowRunLogsOffsetLimit
               ? flowRunLogsOffsetLimit
               : -1
