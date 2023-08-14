@@ -9,38 +9,38 @@ import Script from 'next/script';
 export default function Analysis() {
   const globalContext = useContext(GlobalContext);
   const iframeRef: any = useRef();
-  const [showIframe, setShowIframe] = useState<boolean>(false);
 
   useEffect(() => {}, []);
 
   const initiateGoogleSignIn = () => {
     // pop open a separate window here for users to do google auth
     var authWindow = window.open(
-      `${globalContext?.CurrentOrg?.state.viz_url}/#child`,
+      `${globalContext?.CurrentOrg?.state.viz_url}`,
       '_blank',
       'width=500,height=500'
     );
 
-    var locationStatusInterval = setInterval(() => {
-      authWindow?.postMessage(
-        { ask: 'locationStatus' },
-        `${globalContext?.CurrentOrg?.state.viz_url}/#child`
-      );
-    }, 2000);
+    // TODO: figure out a way to close the popup once logged in. The solution below works partially
+    // var locationStatusInterval = setInterval(() => {
+    //   authWindow?.postMessage(
+    //     { ask: 'locationStatus' },
+    //     `${globalContext?.CurrentOrg?.state.viz_url}/#child`
+    //   );
+    // }, 2000);
 
-    window?.addEventListener('message', (event) => {
-      console.log('receieved something', event.data);
-      const message = event.data;
-      if (
-        message?.locationStatus &&
-        message.locationStatus === '/superset/welcome/'
-      ) {
-        console.log('asking the window to be closed', message.locationStatus);
-        authWindow?.close();
-        authWindow = null;
-        clearInterval(locationStatusInterval);
-      }
-    });
+    // window?.addEventListener('message', (event) => {
+    //   console.log('receieved something', event.data);
+    //   const message = event.data;
+    //   if (
+    //     message?.locationStatus &&
+    //     message.locationStatus === '/superset/welcome/'
+    //   ) {
+    //     console.log('asking the window to be closed', message.locationStatus);
+    //     authWindow?.close();
+    //     authWindow = null;
+    //     clearInterval(locationStatusInterval);
+    //   }
+    // });
   };
 
   return (
@@ -74,7 +74,7 @@ export default function Analysis() {
         {globalContext?.CurrentOrg?.state.viz_url && (
           <Box sx={{ border: 'none' }}>
             <iframe
-              src={`${globalContext?.CurrentOrg?.state.viz_url}/#iframe`}
+              src={`${globalContext?.CurrentOrg?.state.viz_url}`}
               style={{
                 height: '70vh',
                 width: '100%',
