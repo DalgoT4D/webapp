@@ -3,6 +3,11 @@
   padding: 3rem 4rem;
 }
 
+.analysis {
+  width: 100%;
+  padding: 3rem 4rem;
+}
+
 .description {
   display: inherit;
   justify-content: inherit;
