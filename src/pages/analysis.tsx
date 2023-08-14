@@ -2,7 +2,7 @@ import styles from '@/styles/Home.module.css';
 import '@/styles/Home.module.css';
 import { Box, Button, Typography } from '@mui/material';
 import { PageHead } from '@/components/PageHead';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Script from 'next/script';
 
@@ -14,7 +14,7 @@ export default function Analysis() {
 
   const initiateGoogleSignIn = () => {
     // pop open a separate window here for users to do google auth
-    var authWindow = window.open(
+    window.open(
       `${globalContext?.CurrentOrg?.state.viz_url}`,
       '_blank',
       'width=500,height=500'
