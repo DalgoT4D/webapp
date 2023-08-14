@@ -15,6 +15,8 @@ type Org = {
   name: string;
   slug: string;
   airbyte_workspace_id: string;
+  viz_url: string | null;
+  viz_login_type: string | null;
 };
 
 type OrgUser = {
@@ -85,6 +87,16 @@ export const Header = () => {
   useEffect(() => {
     const currentOrgSlug = localStorage.getItem('org-slug');
     if (selectedOrg && selectedOrg.id && currentOrgSlug !== selectedOrg.id) {
+      const orguser: OrgUser | any = orgusers.find(
+        (orguser: OrgUser) => orguser.org.slug === selectedOrg.id
+      );
+      if (orguser) {
+        globalContext?.CurrentOrg?.dispatch({
+          type: 'new',
+          state: orguser.org,
+        });
+      }
+
       handleClose();
       localStorage.setItem('org-slug', selectedOrg.id);
       router.refresh();
