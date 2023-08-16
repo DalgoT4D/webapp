@@ -1,4 +1,4 @@
-import { render, screen, within, act, waitFor } from '@testing-library/react';
+import { render, screen, within, act } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
@@ -96,7 +96,7 @@ describe('Sync connection suite', () => {
       `sync-${CONNECTIONS[0].blockId}`
     );
 
-    // mock flow logs and flow status for syncing connection for successful sync
+    // mock flow logs and flow status for successful sync
     const flowStatusAndLogsFetch = jest
       .fn()
       .mockResolvedValueOnce({
