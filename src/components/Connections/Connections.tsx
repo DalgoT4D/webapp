@@ -149,7 +149,7 @@ export const Connections = () => {
         );
 
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
-          await new Promise((r) => setTimeout(r, 5000));
+          await setTimeout(() => {}, 5000);
           await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
@@ -212,6 +212,7 @@ export const Connections = () => {
           setSyncingBlockId(blockId);
           syncConnection(deploymentId);
         }}
+        data-testid={'sync-' + idx}
         disabled={syncingBlockId === blockId}
         key={'sync-' + idx}
         sx={{ marginRight: '10px' }}
