@@ -35,6 +35,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
 }) => (
   <Menu
     id="basic-menu"
+    data-testid="basic-menu"
     anchorEl={anchorEl}
     open={open}
     sx={{ marginTop: 2, py: 0 }}

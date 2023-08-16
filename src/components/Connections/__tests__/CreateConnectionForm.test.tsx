@@ -8,7 +8,7 @@ import {
 } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import CreateConnectionForm from './CreateConnectionForm';
+import CreateConnectionForm from '../CreateConnectionForm';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';

@@ -163,6 +163,7 @@ export const Connections = () => {
   };
 
   const deleteConnection = (blockId: any) => {
+    console.log('deleting the conn here');
     (async () => {
       try {
         const message = await httpDelete(

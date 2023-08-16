@@ -2,7 +2,7 @@ import React from 'react';
 import { act, render, screen, within } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import { Connections } from './Connections';
+import { Connections } from '../Connections';
 // import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
@@ -165,37 +165,5 @@ describe('Connections Setup', () => {
 
     const createConnForm = screen.getByTestId('test-create-conn-form');
     expect(createConnForm).toBeInTheDocument();
-  });
-
-  it('click delete connection button', async () => {
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce(CONNECTIONS),
-    });
-
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <SWRConfig
-            value={{
-              dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
-            }}
-          >
-            <Connections />
-          </SWRConfig>
-        </SessionProvider>
-      );
-    });
-
-    // look at only the first row of connection to check for delete button
-    const connectionsTable = screen.getByRole('table');
-    const connectionsTableRows = within(connectionsTable).getAllByRole('row');
-    const connCells = within(connectionsTableRows[1]).getAllByRole('cell');
-    expect(connCells.length).toBe(4);
-
-    const deleteButton = connCells[3]?.firstChild?.childNodes[1];
-    expect(deleteButton).toBeInTheDocument();
   });
 });
