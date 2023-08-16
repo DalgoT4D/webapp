@@ -1,15 +1,6 @@
-import {
-  render,
-  screen,
-  within,
-  fireEvent,
-  act,
-  waitFor,
-} from '@testing-library/react';
+import { render, screen, within, act } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import CreateConnectionForm from '../CreateConnectionForm';
-import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
 import { Connections } from '../Connections';
