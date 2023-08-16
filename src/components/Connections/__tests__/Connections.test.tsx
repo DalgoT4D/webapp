@@ -21,7 +21,7 @@ jest.mock('next/router', () => ({
   },
 }));
 
-jest.mock('./CreateConnectionForm', () => {
+jest.mock('./../CreateConnectionForm', () => {
   const MockCreateConnection = ({ showForm }: any) => {
     return (
       <Dialog open={showForm} data-testid="test-create-conn-form">
@@ -35,7 +35,7 @@ jest.mock('./CreateConnectionForm', () => {
   return MockCreateConnection;
 });
 
-jest.mock('./../Dialog/ConfirmationDialog', () => {
+jest.mock('./../../Dialog/ConfirmationDialog', () => {
   const MockConfirmationDialog = ({ show }: any) => {
     return (
       <Dialog open={show} data-testid="test-confirm-dialog">
