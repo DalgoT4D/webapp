@@ -4,7 +4,6 @@ import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
 import { Connections } from '../Connections';
-
 // const user = userEvent.setup();
 
 jest.mock('next/router', () => ({
@@ -15,7 +14,7 @@ jest.mock('next/router', () => ({
   },
 }));
 
-jest.useFakeTimers();
+jest.mock('./../../../utils/common');
 
 describe('Sync connection suite', () => {
   const mockSession: Session = {
@@ -152,11 +151,63 @@ describe('Sync connection suite', () => {
 
     (global as any).fetch = flowStatusAndLogsFetch;
 
-    // await act(() => syncButton.click());
     await act(() => syncButton.click());
 
-    await act(() => jest.runAllTimers());
-
     expect(flowStatusAndLogsFetch).toHaveBeenCalledTimes(6);
+  });
+
+  it('sync connection - flow run id not found', async () => {
+    (global as any).fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(CONNECTIONS),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(SOURCES),
+      });
+
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <SWRConfig
+            value={{
+              dedupingInterval: 0,
+              fetcher: (resource) =>
+                fetch(resource, {}).then((res) => res.json()),
+            }}
+          >
+            <Connections />
+          </SWRConfig>
+        </SessionProvider>
+      );
+    });
+
+    // look at only the first row of connection
+    const connectionsTable = screen.getByRole('table');
+    const connectionsTableRows = within(connectionsTable).getAllByRole('row');
+    const connCells = within(connectionsTableRows[1]).getAllByRole('cell');
+    expect(connCells.length).toBe(4);
+
+    const actionConnCell: any | HTMLElement | undefined =
+      connCells[3]?.firstChild;
+
+    const syncButton = within(actionConnCell).getByTestId(
+      `sync-${CONNECTIONS[0].blockId}`
+    );
+
+    const fetchFlowRunIdFailed = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({
+        detail: 'resource not found',
+      }),
+    });
+
+    (global as any).fetch = fetchFlowRunIdFailed;
+
+    await act(() => syncButton.click());
+
+    expect(fetchFlowRunIdFailed).toHaveBeenCalled();
   });
 });
