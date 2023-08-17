@@ -208,12 +208,12 @@ export const Header = () => {
           />
           Logout
         </MenuItem>
-        <CreateOrgForm
-          closeSideMenu={handleClose}
-          showForm={showOrgCreateForm}
-          setShowForm={setShowOrgCreateForm}
-        />
       </Menu>
+      <CreateOrgForm
+        closeSideMenu={handleClose}
+        showForm={showOrgCreateForm}
+        setShowForm={setShowOrgCreateForm}
+      />
     </Paper>
   );
 };
