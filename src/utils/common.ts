@@ -58,9 +58,9 @@ const cronToLocalTZ = (expression: string) => {
       if (newDoWInt >= 7) {
         newDoWInt = 0;
       }
-      newDoWInt += 1;
-      if (newDoWInt > 6) {
-        newDoWInt = 0;
+      newDoWInt -= 1;
+      if (newDoWInt < 0) {
+        newDoWInt = 6;
       }
       newDoW = String(newDoWInt);
     }
