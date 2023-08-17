@@ -10,7 +10,7 @@ export default function Analysis() {
   const globalContext = useContext(GlobalContext);
   const iframeRef: any = useRef();
   const iframeRefHidden: any = useRef();
-  const [signedIn, setSignedIn] = useState<boolean>(false);
+  const signedInRef = useRef<boolean>();
 
   useEffect(() => {
     // listen to responses from the iframe
@@ -21,15 +21,15 @@ export default function Analysis() {
         message?.locationStatus &&
         message.locationStatus === '/superset/welcome/'
       ) {
-        if (!signedIn) {
+        if (!signedInRef.current) {
           console.log('setting signedIn, and refreshing visible iframe');
-          setSignedIn(true);
+          signedInRef.current = true;
         }
       }
       if (message?.locationStatus && message.locationStatus === '/login/') {
-        if (signedIn) {
+        if (signedInRef.current) {
           console.log('setting !signedIn');
-          setSignedIn(false);
+          signedInRef.current = false;
         }
       }
     });
@@ -85,7 +85,7 @@ export default function Analysis() {
             Analysis
           </Typography>
           {globalContext?.CurrentOrg?.state.viz_login_type === 'google' &&
-            !signedIn && (
+            !signedInRef.current && (
               <>
                 <Button
                   sx={{ height: '50%' }}
@@ -100,7 +100,7 @@ export default function Analysis() {
             )}
         </Box>
 
-        {globalContext?.CurrentOrg?.state.viz_url && signedIn && (
+        {globalContext?.CurrentOrg?.state.viz_url && signedInRef.current && (
           <Box sx={{ border: 'none' }}>
             <iframe
               src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
