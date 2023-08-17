@@ -31,7 +31,7 @@ export default function Analysis() {
       }
     });
     // ask the iframe where it's at
-    setInterval(function () {
+    const intervalId = setInterval(function () {
       if (iframeRefHidden.current) {
         if (globalContext?.CurrentOrg?.state.viz_url) {
           iframeRefHidden.current.contentWindow.location.href =
@@ -45,6 +45,9 @@ export default function Analysis() {
         }
       }
     }, 2000);
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [globalContext?.CurrentOrg?.state.viz_url]);
 
   const initiateGoogleSignIn = () => {
