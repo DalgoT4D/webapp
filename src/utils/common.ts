@@ -39,7 +39,7 @@ const cronToLocalTZ = (expression: string) => {
     newHours -= 1;
   }
 
-  var adjustDaysBy = function (dowStr: string, delta: number) {
+  const adjustDaysBy = function (dowStr: string, delta: number) {
     let dowInt = parseInt(dowStr, 10);
     dowInt += delta;
     while (dowInt >= 7) {
