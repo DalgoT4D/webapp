@@ -66,7 +66,7 @@ export default function Analysis() {
       <PageHead title="Development Data Platform" />
       <main className={styles.analysis}>
         <iframe
-          src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
+          src={`${globalContext?.CurrentOrg?.state.viz_url}`}
           style={{
             height: '1px',
             width: '1px',
