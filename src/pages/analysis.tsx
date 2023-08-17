@@ -10,8 +10,8 @@ export default function Analysis() {
   const globalContext = useContext(GlobalContext);
   const iframeRef: any = useRef();
   const iframeRefHidden: any = useRef();
-  const signedInRef = useRef<boolean>();
-
+  const [signedIn, setSignedIn] = useState<string>('unknown');
+  console.log(signedIn);
   useEffect(() => {
     // listen to responses from the iframe
     window?.addEventListener('message', (event) => {
@@ -21,15 +21,17 @@ export default function Analysis() {
         message?.locationStatus &&
         message.locationStatus === '/superset/welcome/'
       ) {
-        if (!signedInRef.current) {
+        console.log('/welcome/ tells us', signedIn);
+        if (signedIn !== 'signedIn') {
           console.log('setting signedIn, and refreshing visible iframe');
-          signedInRef.current = true;
+          setSignedIn('signedIn');
         }
       }
       if (message?.locationStatus && message.locationStatus === '/login/') {
-        if (signedInRef.current) {
+        console.log('/login/ tells us', signedIn);
+        if (signedIn !== 'signedOut') {
           console.log('setting !signedIn');
-          signedInRef.current = false;
+          setSignedIn('signedOut');
         }
       }
     });
@@ -66,7 +68,7 @@ export default function Analysis() {
       <PageHead title="Development Data Platform" />
       <main className={styles.analysis}>
         <iframe
-          src={`${globalContext?.CurrentOrg?.state.viz_url}`}
+          src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
           style={{
             height: '1px',
             width: '1px',
@@ -85,7 +87,7 @@ export default function Analysis() {
             Analysis
           </Typography>
           {globalContext?.CurrentOrg?.state.viz_login_type === 'google' &&
-            !signedInRef.current && (
+            signedIn === 'signedOut' && (
               <>
                 <Button
                   sx={{ height: '50%' }}
@@ -100,19 +102,20 @@ export default function Analysis() {
             )}
         </Box>
 
-        {globalContext?.CurrentOrg?.state.viz_url && signedInRef.current && (
-          <Box sx={{ border: 'none' }}>
-            <iframe
-              src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
-              style={{
-                height: '70vh',
-                width: '100%',
-                border: 'none',
-              }}
-              ref={iframeRef}
-            />
-          </Box>
-        )}
+        {globalContext?.CurrentOrg?.state.viz_url &&
+          signedIn === 'signedIn' && (
+            <Box sx={{ border: 'none' }}>
+              <iframe
+                src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
+                style={{
+                  height: '70vh',
+                  width: '100%',
+                  border: 'none',
+                }}
+                ref={iframeRef}
+              />
+            </Box>
+          )}
       </main>
     </>
   );
