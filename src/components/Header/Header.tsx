@@ -60,7 +60,8 @@ export const Header = () => {
     // fetch the orgs associated with the orguser
     (async () => {
       try {
-        const orgusers = await httpGet(session, `currentuserv2`);
+        let orgusers = await httpGet(session, `currentuserv2`);
+        orgusers = orgusers.filter((orguser: OrgUser) => orguser.org);
         setOrgusers(orgusers);
         const orgs: Array<AutoCompleteOption> = orgusers.map(
           (orguser: OrgUser) => ({
