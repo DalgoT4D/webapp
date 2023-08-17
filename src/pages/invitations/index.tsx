@@ -24,9 +24,6 @@ import { httpPost } from '@/helpers/http';
 const AcceptInvite = () => {
   const { data: session }: any = useSession();
   const router = useRouter();
-  if (session?.user.token) {
-    router.push('/');
-  }
 
   const {
     register,
