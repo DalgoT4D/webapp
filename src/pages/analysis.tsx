@@ -11,26 +11,21 @@ export default function Analysis() {
   const iframeRef: any = useRef();
   const iframeRefHidden: any = useRef();
   const [signedIn, setSignedIn] = useState<string>('unknown');
-  console.log(signedIn);
+
   useEffect(() => {
     // listen to responses from the iframe
     window?.addEventListener('message', (event) => {
-      // console.log('receieved something', event.data);
       const message = event.data;
       if (
         message?.locationStatus &&
         message.locationStatus === '/superset/welcome/'
       ) {
-        console.log('/welcome/ tells us', signedIn);
         if (signedIn !== 'signedIn') {
-          console.log('setting signedIn, and refreshing visible iframe');
           setSignedIn('signedIn');
         }
       }
       if (message?.locationStatus && message.locationStatus === '/login/') {
-        console.log('/login/ tells us', signedIn);
         if (signedIn !== 'signedOut') {
-          console.log('setting !signedIn');
           setSignedIn('signedOut');
         }
       }
@@ -38,8 +33,6 @@ export default function Analysis() {
     // ask the iframe where it's at
     setInterval(function () {
       if (iframeRefHidden.current) {
-        // console.log('asking the iframe for its locationStatus');
-        // console.log(globalContext?.CurrentOrg?.state.viz_url);
         if (globalContext?.CurrentOrg?.state.viz_url) {
           iframeRefHidden.current.contentWindow.location.href =
             globalContext?.CurrentOrg?.state.viz_url;
