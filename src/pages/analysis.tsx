@@ -56,20 +56,20 @@ export default function Analysis() {
           >
             Analysis
           </Typography>
+          {globalContext?.CurrentOrg?.state.viz_login_type === 'google' && (
+            <>
+              <Button
+                sx={{ height: '50%' }}
+                variant="contained"
+                onClick={initiateGoogleSignIn}
+                id="oauth-signin-button"
+              >
+                Google Signin
+              </Button>
+              <Script id="oauth-script" onLoad={() => {}} />
+            </>
+          )}
         </Box>
-        {globalContext?.CurrentOrg?.state.viz_login_type === 'google' && (
-          <>
-            <Button
-              sx={{ marginBottom: '20px' }}
-              variant="contained"
-              onClick={initiateGoogleSignIn}
-              id="oauth-signin-button"
-            >
-              Google Signin
-            </Button>
-            <Script id="oauth-script" onLoad={() => {}} />
-          </>
-        )}
 
         {globalContext?.CurrentOrg?.state.viz_url && (
           <Box sx={{ border: 'none' }}>
