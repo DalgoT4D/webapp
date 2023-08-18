@@ -153,6 +153,8 @@ export const DBTTarget = ({
   return (
     <>
       <Select
+        label="Dbt functions"
+        data-testid="dbt-functions"
         value={selectedBlock?.blockName || 'Select function'}
         sx={{ width: '150px', textAlign: 'center' }}
         onChange={(event) => {
