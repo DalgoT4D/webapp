@@ -1,8 +1,7 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
-import { SWRConfig } from 'swr';
 import InviteUserForm from '../InviteUserForm';
 import userEvent from '@testing-library/user-event';
 
