@@ -2,7 +2,6 @@ import { act, render, screen, within } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
-import userEvent from '@testing-library/user-event';
 import ManageUsers from '../ManageUsers';
 import { SWRConfig } from 'swr';
 
