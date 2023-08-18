@@ -1,11 +1,9 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { DBTTarget } from '../DBTTarget';
-
-jest.mock('./../../../utils/common');
 
 // const user = userEvent.setup();
 
@@ -18,6 +16,8 @@ jest.mock('next/router', () => ({
     };
   },
 }));
+
+jest.mock('./../../../utils/common');
 
 const dbtBlocks: any = [
   {
@@ -42,7 +42,7 @@ const dbtBlocks: any = [
     blockType: 'dbt Core Operation',
     target: 'prod',
     action: 'run',
-    deploymentId: 'deployment-id',
+    deploymentId: null,
   },
   {
     blockName: 'block-4',
@@ -92,5 +92,314 @@ describe('Execute dbt jobs', () => {
 
     const executeButton = screen.getByTestId('runJob');
     expect(executeButton).toBeInTheDocument();
+  });
+
+  it('execute the dbt run job - failed deployment Id missing', async () => {
+    const excuteRunJobApiMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ flow_run_id: 'flow-run-id' }),
+    });
+
+    (global as any).fetch = excuteRunJobApiMock;
+
+    await act(() =>
+      render(
+        <SessionProvider session={mockSession}>
+          <DBTTarget
+            setDbtRunLogs={setDbtRunLogs}
+            setRunning={setRunning}
+            running={false}
+            setExpandLogs={setExpandLogs}
+            blocks={dbtBlocks}
+          />
+        </SessionProvider>
+      )
+    );
+
+    const selectDropDown = screen.getByText('Select function');
+    await userEvent.click(selectDropDown);
+
+    const selectDiv = screen.getByTestId('dbt-functions');
+    const selectInput = selectDiv.childNodes[1];
+    await act(() =>
+      fireEvent.change(selectInput, { target: { value: 'block-3' } })
+    );
+
+    // execute dbt run
+    const executeButton = screen.getByTestId('runJob');
+    expect(executeButton).toBeInTheDocument();
+    fireEvent.click(executeButton);
+
+    expect(excuteRunJobApiMock).not.toHaveBeenCalled();
+  });
+
+  it('execute the dbt run job - response failure', async () => {
+    const dbtBlocksUpdated = dbtBlocks.slice();
+    dbtBlocksUpdated[2].deploymentId = 'deployment-id-1';
+
+    const excuteRunJobApiMock = jest.fn().mockResolvedValueOnce({
+      ok: false,
+      json: jest.fn().mockResolvedValueOnce({ flow_run_id: 'flow-run-id' }),
+    });
+
+    (global as any).fetch = excuteRunJobApiMock;
+
+    await act(() =>
+      render(
+        <SessionProvider session={mockSession}>
+          <DBTTarget
+            setDbtRunLogs={setDbtRunLogs}
+            setRunning={setRunning}
+            running={false}
+            setExpandLogs={setExpandLogs}
+            blocks={dbtBlocksUpdated}
+          />
+        </SessionProvider>
+      )
+    );
+
+    const selectDropDown = screen.getByText('Select function');
+    await userEvent.click(selectDropDown);
+
+    const selectDiv = screen.getByTestId('dbt-functions');
+    const selectInput = selectDiv.childNodes[1];
+    await act(() =>
+      fireEvent.change(selectInput, { target: { value: 'block-3' } })
+    );
+
+    //execute
+    const executeButton = screen.getByTestId('runJob');
+    expect(executeButton).toBeInTheDocument();
+    await fireEvent.click(executeButton);
+
+    expect(excuteRunJobApiMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('execute the dbt run job - empty flow id', async () => {
+    const dbtBlocksUpdated = dbtBlocks.slice();
+    dbtBlocksUpdated[2].deploymentId = 'deployment-id-1';
+
+    const excuteRunJobApiMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ flow_run_id: null }),
+    });
+
+    (global as any).fetch = excuteRunJobApiMock;
+
+    await act(() =>
+      render(
+        <SessionProvider session={mockSession}>
+          <DBTTarget
+            setDbtRunLogs={setDbtRunLogs}
+            setRunning={setRunning}
+            running={false}
+            setExpandLogs={setExpandLogs}
+            blocks={dbtBlocksUpdated}
+          />
+        </SessionProvider>
+      )
+    );
+
+    const selectDropDown = screen.getByText('Select function');
+    await userEvent.click(selectDropDown);
+
+    const selectDiv = screen.getByTestId('dbt-functions');
+    const selectInput = selectDiv.childNodes[1];
+    await act(() =>
+      fireEvent.change(selectInput, { target: { value: 'block-3' } })
+    );
+
+    //execute
+    const executeButton = screen.getByTestId('runJob');
+    expect(executeButton).toBeInTheDocument();
+    await fireEvent.click(executeButton);
+
+    expect(excuteRunJobApiMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('execute the dbt run job - success', async () => {
+    const dbtBlocksUpdated = dbtBlocks.slice();
+    dbtBlocksUpdated[2].deploymentId = 'deployment-id-1';
+
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({ flow_run_id: 'flow-run-id-1' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          state_type: 'RUNNING',
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          logs: {
+            offset: 0,
+            logs: [
+              { message: 'message-1' },
+              { message: 'message-2' },
+              { message: 'message-3' },
+            ],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          state_type: 'COMPLETED',
+        }),
+      });
+
+    (global as any).fetch = fetchMock;
+
+    await act(() =>
+      render(
+        <SessionProvider session={mockSession}>
+          <DBTTarget
+            setDbtRunLogs={setDbtRunLogs}
+            setRunning={setRunning}
+            running={false}
+            setExpandLogs={setExpandLogs}
+            blocks={dbtBlocksUpdated}
+          />
+        </SessionProvider>
+      )
+    );
+
+    const selectDropDown = screen.getByText('Select function');
+    await userEvent.click(selectDropDown);
+
+    const selectDiv = screen.getByTestId('dbt-functions');
+    const selectInput = selectDiv.childNodes[1];
+    await act(() =>
+      fireEvent.change(selectInput, { target: { value: 'block-3' } })
+    );
+
+    //execute
+    const executeButton = screen.getByTestId('runJob');
+    expect(executeButton).toBeInTheDocument();
+    await act(() => fireEvent.click(executeButton));
+
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it('execute the deps | clean | test command - success', async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ status: 'success' }),
+    });
+
+    (global as any).fetch = fetchMock;
+
+    await act(() =>
+      render(
+        <SessionProvider session={mockSession}>
+          <DBTTarget
+            setDbtRunLogs={setDbtRunLogs}
+            setRunning={setRunning}
+            running={false}
+            setExpandLogs={setExpandLogs}
+            blocks={dbtBlocks}
+          />
+        </SessionProvider>
+      )
+    );
+
+    const selectDropDown = screen.getByText('Select function');
+    await userEvent.click(selectDropDown);
+
+    const selectDiv = screen.getByTestId('dbt-functions');
+    const selectInput = selectDiv.childNodes[1];
+    await act(() =>
+      fireEvent.change(selectInput, { target: { value: 'block-1' } })
+    );
+
+    //execute
+    const executeButton = screen.getByTestId('runJob');
+    expect(executeButton).toBeInTheDocument();
+    await act(() => fireEvent.click(executeButton));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('execute the deps | clean | test command - failure', async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ status: 'failed' }),
+    });
+
+    (global as any).fetch = fetchMock;
+
+    await act(() =>
+      render(
+        <SessionProvider session={mockSession}>
+          <DBTTarget
+            setDbtRunLogs={setDbtRunLogs}
+            setRunning={setRunning}
+            running={false}
+            setExpandLogs={setExpandLogs}
+            blocks={dbtBlocks}
+          />
+        </SessionProvider>
+      )
+    );
+
+    const selectDropDown = screen.getByText('Select function');
+    await userEvent.click(selectDropDown);
+
+    const selectDiv = screen.getByTestId('dbt-functions');
+    const selectInput = selectDiv.childNodes[1];
+    await act(() =>
+      fireEvent.change(selectInput, { target: { value: 'block-1' } })
+    );
+
+    //execute
+    const executeButton = screen.getByTestId('runJob');
+    expect(executeButton).toBeInTheDocument();
+    await act(() => fireEvent.click(executeButton));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('execute the deps | clean | test command - api failed', async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      ok: false,
+      json: jest.fn().mockResolvedValueOnce({ detail: 'something went wrong' }),
+    });
+
+    (global as any).fetch = fetchMock;
+
+    await act(() =>
+      render(
+        <SessionProvider session={mockSession}>
+          <DBTTarget
+            setDbtRunLogs={setDbtRunLogs}
+            setRunning={setRunning}
+            running={false}
+            setExpandLogs={setExpandLogs}
+            blocks={dbtBlocks}
+          />
+        </SessionProvider>
+      )
+    );
+
+    const selectDropDown = screen.getByText('Select function');
+    await userEvent.click(selectDropDown);
+
+    const selectDiv = screen.getByTestId('dbt-functions');
+    const selectInput = selectDiv.childNodes[1];
+    await act(() =>
+      fireEvent.change(selectInput, { target: { value: 'block-1' } })
+    );
+
+    //execute
+    const executeButton = screen.getByTestId('runJob');
+    expect(executeButton).toBeInTheDocument();
+    await act(() => fireEvent.click(executeButton));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
