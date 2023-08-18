@@ -20,6 +20,7 @@ const cronToLocalTZ = (expression: string) => {
   }
 
   let timezoneOffset = new Date().getTimezoneOffset();
+  // timezoneOffset = 6 * 60;
   timezoneOffset = -timezoneOffset;
 
   const hours = Math.round(timezoneOffset / 60 - 0.5);
@@ -33,20 +34,38 @@ const cronToLocalTZ = (expression: string) => {
   if (newMinutes >= 60) {
     newMinutes -= 60;
     newHours += 1;
+  } else if (newMinutes < 0) {
+    newMinutes += 60;
+    newHours -= 1;
   }
+
+  const adjustDaysBy = function (dowStr: string, delta: number) {
+    let dowInt = parseInt(dowStr, 10);
+    dowInt += delta;
+    while (dowInt >= 7) {
+      dowInt -= 7;
+    }
+    while (dowInt < 0) {
+      dowInt += 7;
+    }
+    return String(dowInt);
+  };
 
   if (newHours >= 24) {
     newHours -= 24;
     if (newDoW !== '*') {
-      let newDoWInt = parseInt(newDoW, 10);
-      if (newDoWInt >= 7) {
-        newDoWInt = 0;
-      }
-      newDoWInt += 1;
-      if (newDoWInt > 6) {
-        newDoWInt = 0;
-      }
-      newDoW = String(newDoWInt);
+      newDoW = newDoW
+        .split(',')
+        .map((dowStr: string) => adjustDaysBy(dowStr, 1))
+        .join(',');
+    }
+  } else if (newHours < 0) {
+    newHours += 24;
+    if (newDoW !== '*') {
+      newDoW = newDoW
+        .split(',')
+        .map((dowStr: string) => adjustDaysBy(dowStr, -1))
+        .join(',');
     }
   }
 
