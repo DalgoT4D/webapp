@@ -162,4 +162,126 @@ describe('Create workspace', () => {
     await act(() => savebutton.click());
     expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
   });
+
+  it('submit form to create workspace - check progress api failed', async () => {
+    const createWorkspaceFetchAndProgress = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          progress: [{ message: 'msg-1', status: 'running' }],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: jest.fn().mockResolvedValueOnce({
+          progress: [
+            { message: 'msg-1', status: 'running' },
+            { message: 'msg-2', status: 'running' },
+          ],
+        }),
+      });
+
+    (global as any).fetch = createWorkspaceFetchAndProgress;
+
+    render(
+      <SessionProvider session={mockSession}>
+        <DBTSetup
+          onCreateWorkspace={() => {}}
+          setLogs={() => {}}
+          setExpandLogs={() => {}}
+          showDialog={true}
+          setShowDialog={() => {}}
+          setWorkspace={() => {}}
+          mode="create"
+          gitrepoUrl=""
+          schema=""
+        />
+      </SessionProvider>
+    );
+
+    const savebutton = screen.getByTestId('save-github-url');
+
+    const urlinputfield = screen.getByLabelText('GitHub repo URL*');
+    await userEvent.type(urlinputfield, 'github-repo-url');
+
+    const patinputfield = screen.getByLabelText('Personal access token');
+    await userEvent.type(patinputfield, 'token-123');
+
+    const dbttargetschema = screen.getByLabelText('dbt target schema*');
+    await userEvent.type(dbttargetschema, 'dest-schema');
+
+    await act(() => savebutton.click());
+    expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
+  });
+
+  it('submit form to create workspace - check progress success', async () => {
+    const createWorkspaceFetchAndProgress = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          progress: [{ message: 'msg-1', status: 'running' }],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          progress: [
+            { message: 'msg-1', status: 'running' },
+            { message: 'msg-2', status: 'running' },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          progress: [
+            { message: 'msg-1', status: 'running' },
+            { message: 'msg-2', status: 'running' },
+            { message: 'msg-3', status: 'completed' },
+          ],
+        }),
+      });
+
+    (global as any).fetch = createWorkspaceFetchAndProgress;
+
+    render(
+      <SessionProvider session={mockSession}>
+        <DBTSetup
+          onCreateWorkspace={() => {}}
+          setLogs={() => {}}
+          setExpandLogs={() => {}}
+          showDialog={true}
+          setShowDialog={() => {}}
+          setWorkspace={() => {}}
+          mode="create"
+          gitrepoUrl=""
+          schema=""
+        />
+      </SessionProvider>
+    );
+
+    const savebutton = screen.getByTestId('save-github-url');
+
+    const urlinputfield = screen.getByLabelText('GitHub repo URL*');
+    await userEvent.type(urlinputfield, 'github-repo-url');
+
+    const patinputfield = screen.getByLabelText('Personal access token');
+    await userEvent.type(patinputfield, 'token-123');
+
+    const dbttargetschema = screen.getByLabelText('dbt target schema*');
+    await userEvent.type(dbttargetschema, 'dest-schema');
+
+    await act(() => savebutton.click());
+    expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(4);
+  });
 });
