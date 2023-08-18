@@ -166,9 +166,8 @@ export const DBTSetup = ({
       setExpandLogs(true);
       try {
         const message = await httpPut(session, 'dbt/github/', updateGitPayload);
-        setTimeout(() => {
-          checkProgress(message.task_id);
-        }, 1000);
+        await delay(1000);
+        checkProgress(message.task_id);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
