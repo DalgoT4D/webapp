@@ -101,7 +101,7 @@ export default function Analysis() {
                 onClick={initiateGoogleSignIn}
                 id="oauth-signin-button"
               >
-                Google Signin
+                Google Sign In
               </Button>
               <Script id="oauth-script" onLoad={() => {}} />
             </>
