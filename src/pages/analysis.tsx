@@ -1,6 +1,6 @@
 import styles from '@/styles/Home.module.css';
 import '@/styles/Home.module.css';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { PageHead } from '@/components/PageHead';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -63,16 +63,18 @@ export default function Analysis() {
     <>
       <PageHead title="Development Data Platform" />
       <main className={styles.analysis}>
-        <iframe
-          src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
-          style={{
-            height: '1px',
-            width: '1px',
-            border: 'none',
-            display: 'hidden',
-          }}
-          ref={iframeRefHidden}
-        ></iframe>
+        {globalContext?.CurrentOrg?.state.viz_url && (
+          <iframe
+            src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
+            style={{
+              height: '1px',
+              width: '1px',
+              border: 'none',
+              display: 'hidden',
+            }}
+            ref={iframeRefHidden}
+          ></iframe>
+        )}
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography
             sx={{ fontWeight: 700 }}
@@ -83,6 +85,13 @@ export default function Analysis() {
             Analysis
           </Typography>
         </Box>
+        {globalContext?.CurrentOrg?.state.viz_login_type === 'google' &&
+          signedIn === 'unknown' && (
+            <>
+              <CircularProgress />
+            </>
+          )}
+
         {globalContext?.CurrentOrg?.state.viz_login_type === 'google' &&
           signedIn === 'signedOut' && (
             <>
