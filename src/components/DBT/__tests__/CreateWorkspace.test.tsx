@@ -5,6 +5,8 @@ import { DBTSetup } from '../DBTSetup';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
+jest.mock('./../../../utils/common');
+
 // const user = userEvent.setup();
 
 const pushMock = jest.fn();
@@ -102,18 +104,33 @@ describe('Create workspace', () => {
     await userEvent.type(dbttargetschema, 'dest-schema');
 
     await act(() => savebutton.click());
-    expect(createWorkspaceFetch).toHaveBeenCalled();
+    expect(createWorkspaceFetch).toHaveBeenCalledTimes(1);
   });
 
-  it('submit form to create workspace - check progress', async () => {
-    const createWorkspaceFetch = jest.fn().mockResolvedValueOnce({
-      ok: false,
-      json: jest
-        .fn()
-        .mockResolvedValueOnce({ detail: "couldn't create workspace" }),
-    });
+  it('submit form to create workspace - check progress failed', async () => {
+    const createWorkspaceFetchAndProgress = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          progress: [{ message: 'msg-1', status: 'running' }],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          progress: [
+            { message: 'msg-1', status: 'running' },
+            { message: 'msg-2', status: 'failed' },
+          ],
+        }),
+      });
 
-    (global as any).fetch = createWorkspaceFetch;
+    (global as any).fetch = createWorkspaceFetchAndProgress;
 
     render(
       <SessionProvider session={mockSession}>
@@ -132,26 +149,17 @@ describe('Create workspace', () => {
     );
 
     const savebutton = screen.getByTestId('save-github-url');
-    await act(() => savebutton.click());
-
-    expect(createWorkspaceFetch).not.toHaveBeenCalled();
 
     const urlinputfield = screen.getByLabelText('GitHub repo URL*');
     await userEvent.type(urlinputfield, 'github-repo-url');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetch).not.toHaveBeenCalled();
-
     const patinputfield = screen.getByLabelText('Personal access token');
     await userEvent.type(patinputfield, 'token-123');
-
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetch).not.toHaveBeenCalled();
 
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
     await act(() => savebutton.click());
-    expect(createWorkspaceFetch).toHaveBeenCalled();
+    expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
   });
 });
