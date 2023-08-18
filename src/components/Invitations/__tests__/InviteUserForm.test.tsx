@@ -53,6 +53,7 @@ describe('Invite user', () => {
     await userEvent.click(savebutton);
 
     expect(inviteUserApiMock).toHaveBeenCalledTimes(1);
+    expect(mutate).toHaveBeenCalled();
   });
 
   it('initial render of the invite user form - failure', async () => {
