@@ -8,12 +8,10 @@ import {
 } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import CreateConnectionForm from './CreateConnectionForm';
+import CreateConnectionForm from '../CreateConnectionForm';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
-
-// const user = userEvent.setup();
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -23,14 +21,7 @@ jest.mock('next/router', () => ({
   },
 }));
 
-// afterEach(() => {
-//   const fakeResponse = {};
-//   const mRes = { json: jest.fn().mockResolvedValueOnce(fakeResponse) };
-//   const mockedFetch = jest.fn().mockResolvedValueOnce(mRes as any);
-//   (global as any).fetch = mockedFetch;
-// });
-
-describe('Connections Setup', () => {
+describe('Create connection', () => {
   const mockSession: Session = {
     expires: 'false',
     user: { email: 'a' },
@@ -70,6 +61,8 @@ describe('Connections Setup', () => {
           mutate={() => {}}
           showForm={true}
           setShowForm={() => {}}
+          blockId=""
+          setBlockId={() => {}}
         />
       </SessionProvider>
     );
@@ -124,6 +117,8 @@ describe('Connections Setup', () => {
               mutate={() => {}}
               showForm={true}
               setShowForm={() => {}}
+              setBlockId={() => {}}
+              blockId=""
             />
           </SWRConfig>
         </SessionProvider>
@@ -227,5 +222,197 @@ describe('Connections Setup', () => {
     // select stream 2 to sync
     await waitFor(() => userEvent.click(streamSyncSwitch1));
     expect(streamIncrementalSwitch1).toBeDisabled();
+  });
+
+  it('create connection success', async () => {
+    (global as any).fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(SOURCES),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          catalog: {
+            streams: [
+              {
+                stream: STREAMS[0],
+              },
+              {
+                stream: STREAMS[1],
+              },
+            ],
+          },
+        }),
+      });
+
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <SWRConfig
+            value={{
+              dedupingInterval: 0,
+              fetcher: (resource) =>
+                fetch(resource, {}).then((res) => res.json()),
+            }}
+          >
+            <CreateConnectionForm
+              mutate={() => {}}
+              showForm={true}
+              setShowForm={() => {}}
+              setBlockId={() => {}}
+              blockId=""
+            />
+          </SWRConfig>
+        </SessionProvider>
+      );
+    });
+
+    const connectionName = screen.getByLabelText('Name*');
+    await userEvent.type(connectionName, 'test-conn-name');
+
+    const sourceAutoCompelete = screen.getByTestId('sourceList');
+    // check if the source autpcomplete exists
+    await waitFor(() => {
+      expect(sourceAutoCompelete).toBeInTheDocument();
+    });
+
+    // select the input text box inside autocomplete
+    const sourceTextInput = within(sourceAutoCompelete).getByRole('combobox');
+    sourceAutoCompelete.focus();
+
+    // update the input text value and select it
+    await fireEvent.change(sourceTextInput, {
+      target: { value: 'Source 1' },
+    });
+    fireEvent.keyDown(sourceAutoCompelete, { key: 'ArrowDown' });
+    await act(() => fireEvent.keyDown(sourceAutoCompelete, { key: 'Enter' }));
+
+    // check if the source stream table is pushed to the dom
+    const sourceStreamTable = await screen.findByTestId('sourceStreamTable');
+    await waitFor(() => expect(sourceStreamTable).toBeInTheDocument());
+
+    // source stream table should have two rows i.e. header and one source stream
+    const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
+    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 1);
+
+    const connectButton = screen.getByText('Connect').closest('button');
+    const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
+
+    // select stream for sync
+    await waitFor(() => userEvent.click(streamSyncSwitch));
+
+    // set the incremental switch for the stream on
+    // await act(() => userEvent.click(streamIncrementalSwitch));
+
+    const mockCreateConnectionFetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ success: 1 }),
+    });
+
+    (global as any).fetch = mockCreateConnectionFetch;
+
+    // submit
+    await act(() => connectButton?.click());
+
+    expect(mockCreateConnectionFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('create connection failed', async () => {
+    (global as any).fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(SOURCES),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          catalog: {
+            streams: [
+              {
+                stream: STREAMS[0],
+              },
+              {
+                stream: STREAMS[1],
+              },
+            ],
+          },
+        }),
+      });
+
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <SWRConfig
+            value={{
+              dedupingInterval: 0,
+              fetcher: (resource) =>
+                fetch(resource, {}).then((res) => res.json()),
+            }}
+          >
+            <CreateConnectionForm
+              mutate={() => {}}
+              showForm={true}
+              setShowForm={() => {}}
+              setBlockId={() => {}}
+              blockId=""
+            />
+          </SWRConfig>
+        </SessionProvider>
+      );
+    });
+
+    const connectionName = screen.getByLabelText('Name*');
+    await userEvent.type(connectionName, 'test-conn-name');
+
+    const sourceAutoCompelete = screen.getByTestId('sourceList');
+    // check if the source autpcomplete exists
+    await waitFor(() => {
+      expect(sourceAutoCompelete).toBeInTheDocument();
+    });
+
+    // select the input text box inside autocomplete
+    const sourceTextInput = within(sourceAutoCompelete).getByRole('combobox');
+    sourceAutoCompelete.focus();
+
+    // update the input text value and select it
+    await fireEvent.change(sourceTextInput, {
+      target: { value: 'Source 1' },
+    });
+    fireEvent.keyDown(sourceAutoCompelete, { key: 'ArrowDown' });
+    await act(() => fireEvent.keyDown(sourceAutoCompelete, { key: 'Enter' }));
+
+    // check if the source stream table is pushed to the dom
+    const sourceStreamTable = await screen.findByTestId('sourceStreamTable');
+    await waitFor(() => expect(sourceStreamTable).toBeInTheDocument());
+
+    // source stream table should have two rows i.e. header and one source stream
+    const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
+    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 1);
+
+    const connectButton = screen.getByText('Connect').closest('button');
+    const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
+
+    // select stream for sync
+    await waitFor(() => userEvent.click(streamSyncSwitch));
+
+    // set the incremental switch for the stream on
+    // await act(() => userEvent.click(streamIncrementalSwitch));
+
+    const mockCreateConnectionFetch = jest.fn().mockResolvedValueOnce({
+      ok: false,
+      json: jest
+        .fn()
+        .mockResolvedValueOnce({ detail: 'could not create connection' }),
+    });
+
+    (global as any).fetch = mockCreateConnectionFetch;
+
+    // submit
+    await act(() => connectButton?.click());
+
+    expect(mockCreateConnectionFetch).toHaveBeenCalledTimes(1);
   });
 });

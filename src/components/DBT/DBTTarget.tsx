@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import SyncIcon from '@/assets/icons/sync.svg';
 import Image from 'next/image';
 import styles from './../Connections/Connections.module.css';
+import { delay } from '@/utils/common';
 
 export type DbtBlock = {
   blockName: string;
@@ -133,7 +134,7 @@ export const DBTTarget = ({
         );
 
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
-          await new Promise((r) => setTimeout(r, 5000));
+          await delay(5000);
           await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
@@ -152,6 +153,8 @@ export const DBTTarget = ({
   return (
     <>
       <Select
+        label="Dbt functions"
+        data-testid="dbt-functions"
         value={selectedBlock?.blockName || 'Select function'}
         sx={{ width: '150px', textAlign: 'center' }}
         onChange={(event) => {

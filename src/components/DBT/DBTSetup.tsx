@@ -7,6 +7,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import CustomDialog from '../Dialog/CustomDialog';
 import Input from '../UI/Input/Input';
+import { delay } from '@/utils/common';
 
 interface DBTSetupProps {
   onCreateWorkspace: (...args: any) => any;
@@ -62,9 +63,8 @@ export const DBTSetup = ({
         setSetupStatus('failed');
         setFailureMessage(lastMessage['message']);
       } else {
-        setTimeout(() => {
-          checkProgress(taskId);
-        }, 2000);
+        await delay(2000);
+        checkProgress(taskId);
       }
     } catch (err: any) {
       console.error(err);
@@ -128,9 +128,8 @@ export const DBTSetup = ({
 
     try {
       const message = await httpPost(session, 'dbt/workspace/', payload);
-      setTimeout(() => {
-        checkProgress(message.task_id);
-      }, 1000);
+      await delay(1000);
+      checkProgress(message.task_id);
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
@@ -167,9 +166,8 @@ export const DBTSetup = ({
       setExpandLogs(true);
       try {
         const message = await httpPut(session, 'dbt/github/', updateGitPayload);
-        setTimeout(() => {
-          checkProgress(message.task_id);
-        }, 1000);
+        await delay(1000);
+        checkProgress(message.task_id);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
