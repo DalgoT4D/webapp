@@ -1,16 +1,54 @@
 import styles from '@/styles/Home.module.css';
 import '@/styles/Home.module.css';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { PageHead } from '@/components/PageHead';
-import { useContext, useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Script from 'next/script';
 
 export default function Analysis() {
   const globalContext = useContext(GlobalContext);
   const iframeRef: any = useRef();
+  const iframeRefHidden: any = useRef();
+  const [signedIn, setSignedIn] = useState<string>('unknown');
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    // listen to responses from the iframe
+    window?.addEventListener('message', (event) => {
+      const message = event.data;
+      if (
+        message?.locationStatus &&
+        message.locationStatus === '/superset/welcome/'
+      ) {
+        if (signedIn !== 'signedIn') {
+          setSignedIn('signedIn');
+        }
+      }
+      if (message?.locationStatus && message.locationStatus === '/login/') {
+        if (signedIn !== 'signedOut') {
+          setSignedIn('signedOut');
+        }
+      }
+    });
+    // ask the iframe where it's at
+    const intervalId = setInterval(function () {
+      if (iframeRefHidden.current) {
+        if (globalContext?.CurrentOrg?.state.viz_url) {
+          iframeRefHidden.current.contentWindow.location.href =
+            globalContext?.CurrentOrg?.state.viz_url;
+          setTimeout(() => {
+            iframeRefHidden.current.contentWindow.postMessage(
+              { ask: 'locationStatus' },
+              globalContext?.CurrentOrg?.state.viz_url
+            );
+          }, 500);
+        }
+      }
+    }, 2000);
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [globalContext?.CurrentOrg?.state.viz_url]);
 
   const initiateGoogleSignIn = () => {
     // pop open a separate window here for users to do google auth
@@ -19,34 +57,24 @@ export default function Analysis() {
       '_blank',
       'width=500,height=500'
     );
-
-    // TODO: figure out a way to close the popup once logged in. The solution below works partially
-    // var locationStatusInterval = setInterval(() => {
-    //   authWindow?.postMessage(
-    //     { ask: 'locationStatus' },
-    //     `${globalContext?.CurrentOrg?.state.viz_url}/#child`
-    //   );
-    // }, 2000);
-
-    // window?.addEventListener('message', (event) => {
-    //   console.log('receieved something', event.data);
-    //   const message = event.data;
-    //   if (
-    //     message?.locationStatus &&
-    //     message.locationStatus === '/superset/welcome/'
-    //   ) {
-    //     console.log('asking the window to be closed', message.locationStatus);
-    //     authWindow?.close();
-    //     authWindow = null;
-    //     clearInterval(locationStatusInterval);
-    //   }
-    // });
   };
 
   return (
     <>
       <PageHead title="Development Data Platform" />
       <main className={styles.analysis}>
+        {globalContext?.CurrentOrg?.state.viz_url && (
+          <iframe
+            src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
+            style={{
+              height: '1px',
+              width: '1px',
+              border: 'none',
+              display: 'hidden',
+            }}
+            ref={iframeRefHidden}
+          ></iframe>
+        )}
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography
             sx={{ fontWeight: 700 }}
@@ -56,34 +84,43 @@ export default function Analysis() {
           >
             Analysis
           </Typography>
-          {globalContext?.CurrentOrg?.state.viz_login_type === 'google' && (
+        </Box>
+        {globalContext?.CurrentOrg?.state.viz_login_type === 'google' &&
+          signedIn === 'unknown' && (
+            <>
+              <CircularProgress />
+            </>
+          )}
+
+        {globalContext?.CurrentOrg?.state.viz_login_type === 'google' &&
+          signedIn === 'signedOut' && (
             <>
               <Button
-                sx={{ height: '50%' }}
+                sx={{ marginBottom: '15px' }}
                 variant="contained"
                 onClick={initiateGoogleSignIn}
                 id="oauth-signin-button"
               >
-                Google Signin
+                Google Sign In
               </Button>
               <Script id="oauth-script" onLoad={() => {}} />
             </>
           )}
-        </Box>
 
-        {globalContext?.CurrentOrg?.state.viz_url && (
-          <Box sx={{ border: 'none' }}>
-            <iframe
-              src={`${globalContext?.CurrentOrg?.state.viz_url}`}
-              style={{
-                height: '70vh',
-                width: '100%',
-                border: 'none',
-              }}
-              ref={iframeRef}
-            />
-          </Box>
-        )}
+        {globalContext?.CurrentOrg?.state.viz_url &&
+          signedIn === 'signedIn' && (
+            <Box sx={{ border: 'none' }}>
+              <iframe
+                src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
+                style={{
+                  height: '70vh',
+                  width: '100%',
+                  border: 'none',
+                }}
+                ref={iframeRef}
+              />
+            </Box>
+          )}
       </main>
     </>
   );

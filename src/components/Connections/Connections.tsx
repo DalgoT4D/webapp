@@ -28,7 +28,7 @@ import CreateConnectionForm from './CreateConnectionForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import Image from 'next/image';
 import styles from './Connections.module.css';
-import { lastRunTime } from '@/utils/common';
+import { delay, lastRunTime } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
@@ -149,7 +149,7 @@ export const Connections = () => {
         );
 
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
-          await new Promise((r) => setTimeout(r, 5000));
+          await delay(5000);
           await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
@@ -212,6 +212,7 @@ export const Connections = () => {
           setSyncingBlockId(blockId);
           syncConnection(deploymentId);
         }}
+        data-testid={'sync-' + idx}
         disabled={syncingBlockId === blockId}
         key={'sync-' + idx}
         sx={{ marginRight: '10px' }}
