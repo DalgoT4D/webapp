@@ -98,6 +98,7 @@ const CreateConnectionForm = ({
               destinationSyncMode: el.config.destinationSyncMode,
             }))
           );
+          setNormalize(data?.normalize || false);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
