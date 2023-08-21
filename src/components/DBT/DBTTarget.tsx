@@ -59,9 +59,18 @@ export const DBTTarget = ({
     setDbtRunLogs([]);
 
     try {
-      const message = await httpPost(session, 'prefect/flows/dbt_run/', {
-        blockName: block.blockName,
-      });
+      let message = null;
+      if (block.action === 'git-pull') {
+        message = await httpPost(session, 'dbt/git_pull/', {});
+        if (message.success) {
+          message.status = 'success';
+          message.result = ['git pull succeeded'];
+        }
+      } else {
+        message = await httpPost(session, 'prefect/flows/dbt_run/', {
+          blockName: block.blockName,
+        });
+      }
       if (message?.status === 'success') {
         successToast('Job ran successfully', [], toastContext);
       } else {
