@@ -249,6 +249,22 @@ export const FlowRunHistory = ({
                       )}
                     </CardContent>
                   </Collapse>
+                  {showLogs[idx] && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: '10px',
+                        alignItems: 'left',
+                      }}
+                    >
+                      <Button
+                        data-testid={'showlogs-after-' + idx}
+                        onClick={() => handleShowMore(idx)}
+                      >
+                        show less
+                      </Button>
+                    </Box>
+                  )}
                 </Box>
               </Box>
             ))}

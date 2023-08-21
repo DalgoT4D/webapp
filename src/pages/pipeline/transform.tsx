@@ -120,6 +120,16 @@ const Transform = () => {
         blocksByTarget[block.target].push(block);
       });
 
+      if (response && response.length) {
+        blocksByTarget[response[0].target].push({
+          blockName: 'Git Pull',
+          blockId: '',
+          blockType: 'Shell Operation',
+          target: response[0].target,
+          action: 'git-pull',
+          deploymentId: '',
+        });
+      }
       setDbtBlocks(blocksByTarget);
 
       if (response && response?.length > 0) {
