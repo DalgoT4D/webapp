@@ -206,12 +206,12 @@ export default function Home() {
           >
             {flowRuns && flowRuns.length > 0
               ? 'Scheduled flows are operational'
-              : 'No flows available. Please create one'}{' '}
-            <Image
+              : 'No flows available. Please create one'}
+            {/* <Image
               style={{ marginLeft: 'auto' }}
               src={CheckLargeIcon}
               alt="large check icon"
-            />
+            /> */}
           </Typography>
 
           {flowRuns &&
