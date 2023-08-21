@@ -50,7 +50,7 @@ const flowState = (flow: FlowInterface) => {
             sx={{ alignItems: 'center', fontWeight: 700, fontSize: 'large' }}
           />
           <Typography component="p" fontWeight={700}>
-            Running
+            Succeeded
           </Typography>
         </Box>
       ) : (
