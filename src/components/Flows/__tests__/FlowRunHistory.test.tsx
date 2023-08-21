@@ -110,5 +110,7 @@ describe('Flow Creation', () => {
     );
     expect(getByText0('- log-0-0')).toBeInTheDocument();
     expect(getByText0('- log-0-1')).toBeInTheDocument();
+    const showless = screen.getByTestId('showlogs-after-0');
+    expect(showless).toBeInTheDocument();
   });
 });
