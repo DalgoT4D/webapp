@@ -205,7 +205,7 @@ export default function Home() {
             }}
           >
             {flowRuns && flowRuns.length > 0
-              ? 'All flows are operational'
+              ? 'Scheduled flows are operational'
               : 'No flows available. Please create one'}{' '}
             <Image
               style={{ marginLeft: 'auto' }}
