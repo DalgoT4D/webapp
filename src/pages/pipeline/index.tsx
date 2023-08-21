@@ -1,6 +1,5 @@
 import styles from '@/styles/Home.module.css';
 import CheckIcon from '@/assets/icons/check.svg';
-import CheckLargeIcon from '@/assets/icons/check-large.svg';
 import { Box, CircularProgress, Paper, Typography } from '@mui/material';
 import Pattern from '@/assets/images/pattern.png';
 import { PageHead } from '@/components/PageHead';
