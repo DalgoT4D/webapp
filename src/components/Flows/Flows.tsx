@@ -50,7 +50,7 @@ const flowState = (flow: FlowInterface) => {
             sx={{ alignItems: 'center', fontWeight: 700, fontSize: 'large' }}
           />
           <Typography component="p" fontWeight={700}>
-            Running
+            Succeeded
           </Typography>
         </Box>
       ) : (
@@ -283,7 +283,7 @@ export const Flows = ({
       <List
         rows={rows}
         openDialog={handleClickCreateFlow}
-        headers={['Flow', 'Status', 'Last Run', 'Last run status']}
+        headers={['Flow', 'Status', 'Last Scheduled Run', 'Last run status']}
         title={'Flow'}
       />
 
