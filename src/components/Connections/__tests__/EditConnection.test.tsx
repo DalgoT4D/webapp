@@ -187,7 +187,7 @@ describe('Edit connection', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) => fetch(resource, {}).then((res) => SOURCES),
+              fetcher: (resource) => fetch(resource, {}).then(() => SOURCES),
             }}
           >
             <CreateConnectionForm
