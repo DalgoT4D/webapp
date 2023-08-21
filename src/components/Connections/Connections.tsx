@@ -47,7 +47,11 @@ type PrefectFlowRunLog = {
   message: string;
 };
 
-const headers = ['Connection details', 'Source → Destination', 'Last sync'];
+const headers = [
+  'Connection details',
+  'Source → Destination',
+  'Last manual sync',
+];
 const getSourceDest = (connection: any) => (
   <Typography variant="subtitle2" fontWeight={600}>
     {`${connection.source.name} → ${connection.destination.name}`}
