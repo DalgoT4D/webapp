@@ -2,7 +2,7 @@ import moment from 'moment';
 import cronstrue from 'cronstrue';
 
 export const lastRunTime = (startTime: string) => {
-  return startTime ? moment(new Date(startTime)).fromNow() : 'Not available';
+  return startTime ? moment(new Date(startTime)).fromNow() : '-';
 };
 
 // minutes, hours, day of month, month, day of week
