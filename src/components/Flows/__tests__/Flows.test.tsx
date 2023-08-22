@@ -86,7 +86,7 @@ describe('Flow Creation', () => {
     const flowlastrun0 = screen.getByTestId('flowlastrun-flow-0');
     expect(flowlastrun0).toBeInTheDocument();
     const { getByText: getByTextFlowRun_0 } = within(flowlastrun0);
-    expect(getByTextFlowRun_0('Last run 15 days ago')).toBeInTheDocument();
+    expect(getByTextFlowRun_0('15 days ago')).toBeInTheDocument();
 
     const flowstate2 = screen.getByTestId('flowstate-flow-2');
     expect(flowstate2).toBeInTheDocument();
