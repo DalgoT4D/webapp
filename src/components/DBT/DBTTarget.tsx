@@ -76,7 +76,21 @@ export const DBTTarget = ({
       } else {
         errorToast('Job failed', [], toastContext);
       }
-      setDbtRunLogs(message?.result);
+
+      // For dbt test command, we wont get the logs in message?.result if the operation fails
+      if (block.action === 'test') {
+        // Custom state has been returned
+        // need another api call to fetch the logs
+        if (message?.result[0]?.id) {
+          await fetchAndSetFlowRunLogs(
+            message.result[0]?.state_details?.flow_run_id
+          );
+        } else {
+          setDbtRunLogs(message?.result);
+        }
+      } else {
+        setDbtRunLogs(message?.result);
+      }
     } catch (err: any) {
       console.error(err.cause);
       errorToast(err.message, [], toastContext);
