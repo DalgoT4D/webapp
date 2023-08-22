@@ -50,7 +50,7 @@ const flowState = (flow: FlowInterface) => {
             sx={{ alignItems: 'center', fontWeight: 700, fontSize: 'large' }}
           />
           <Typography component="p" fontWeight={700}>
-            Succeeded
+            Success
           </Typography>
         </Box>
       ) : (
@@ -90,7 +90,9 @@ const flowLastRun = (flow: FlowInterface) => {
           fontWeight={600}
           component="p"
         >
-          Last run {lastRunTime(flow?.lastRun?.startTime)}
+          {lastRunTime(
+            flow?.lastRun?.startTime || flow?.lastRun?.expectedStartTime
+          )}
         </Typography>
       ) : (
         '-'
