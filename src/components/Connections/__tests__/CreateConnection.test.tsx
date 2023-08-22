@@ -155,9 +155,11 @@ describe('Create connection', () => {
       'columnheader'
     );
     expect(headerCells.length).toBe(4);
-    expect(headerCells[0].textContent).toBe('Stream');
-    expect(headerCells[1].textContent).toBe('Sync?');
-    expect(headerCells[2].textContent).toBe('Incremental?');
+    expect(headerCells[0].children[0].childNodes[0].textContent).toBe('Stream');
+    expect(headerCells[1].children[0].childNodes[0].textContent).toBe('Sync?');
+    expect(headerCells[2].children[0].childNodes[0].textContent).toBe(
+      'Incremental?'
+    );
     expect(headerCells[3].textContent).toBe('Destination');
 
     // check if the stream mocked by us is present
