@@ -85,6 +85,22 @@ export default function Analysis() {
             Analysis
           </Typography>
         </Box>
+        {!globalContext?.CurrentOrg?.state.viz_url && (
+          <>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 20 }}>
+              <Typography variant="h4" sx={{ alignContent: 'center' }}>
+                You have not subscribed to Superset for Visualisation.
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+              <Typography variant="h6">
+                Please contact the Dalgo team at{' '}
+                <a href="mailto:support@dalgo.in">support@dalgo.in</a> for more
+                information
+              </Typography>
+            </Box>
+          </>
+        )}
         {globalContext?.CurrentOrg?.state.viz_login_type === 'google' &&
           signedIn === 'unknown' && (
             <>
