@@ -285,6 +285,16 @@ const CreateConnectionForm = ({
     }
   };
 
+  useEffect(() => {
+    const filteredStreamNames = filteredSourceStreams.map(
+      (stream: SourceStream) => stream.name
+    );
+    const updateFilteredStreams = sourceStreams.filter((stream: SourceStream) =>
+      filteredStreamNames.includes(stream.name)
+    );
+    setFilteredSourceStreams(updateFilteredStreams);
+  }, [sourceStreams]);
+
   const FormContent = () => {
     return (
       <>
@@ -401,7 +411,6 @@ const CreateConnectionForm = ({
                         <Box>Stream</Box>
                         <Box>
                           <TextField
-                            autoFocus
                             key="search-input"
                             data-testid="search-stream"
                             label="Search"
