@@ -1,4 +1,4 @@
-import { Box, Button, Link, Typography } from '@mui/material';
+import { Box, Button, Link } from '@mui/material';
 import { signOut, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import styles from '@/styles/Login.module.css';
