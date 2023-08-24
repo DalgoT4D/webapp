@@ -1,4 +1,4 @@
-import { Box, Button, Link } from '@mui/material';
+import { Box, Button, Link, Typography } from '@mui/material';
 import { signOut, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import styles from '@/styles/Login.module.css';
@@ -35,10 +35,7 @@ export const VerifyEmailResend = () => {
   };
 
   return (
-    <Auth
-      heading="Send verification email"
-      subHeading="Click here if you haven't received the verification email"
-    >
+    <Auth heading="Check your Inbox for the verification email" subHeading="">
       <form onSubmit={handleSubmit(onSubmit)} data-testid="resend-email-form">
         <Box className={styles.Container}>
           <Button
@@ -47,7 +44,7 @@ export const VerifyEmailResend = () => {
             type="submit"
             data-testid="submit"
           >
-            Send
+            Resend verification email
           </Button>
         </Box>
       </form>
