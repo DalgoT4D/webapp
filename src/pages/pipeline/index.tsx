@@ -23,7 +23,13 @@ const BarChart = ({ runs }: any) => {
     const data = runs
       .map((run: any) => {
         const status = run.status;
-        const color = status === 'FAILED' ? '#C15E5E' : '#00897B';
+        const state_name = run.state_name;
+        const color =
+          state_name === 'DBT_TEST_FAILED'
+            ? '#df8e14'
+            : status === 'FAILED'
+            ? '#C15E5E'
+            : '#00897B';
         const lastRun = moment(new Date(run.startTime)).calendar();
         const totalRunTime = run.totalRunTime;
         return { color, status, lastRun, totalRunTime };
