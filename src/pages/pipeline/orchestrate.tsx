@@ -19,7 +19,7 @@ export default function Orchestrate() {
 
   // when the flows list changes
   useEffect(() => {
-    if (data && data.length > 0) {
+    if (data && data.length >= 0) {
       setFlows(data);
     }
   }, [data]);
