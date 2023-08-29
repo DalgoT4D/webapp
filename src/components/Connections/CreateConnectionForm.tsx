@@ -93,7 +93,7 @@ const CreateConnectionForm = ({
               name: el.stream.name,
               supportsIncremental:
                 el.stream.supportedSyncModes.indexOf('incremental') > -1,
-              selected: true,
+              selected: el.config.selected,
               syncMode: el.config.syncMode,
               destinationSyncMode: el.config.destinationSyncMode,
             }))
