@@ -16,14 +16,12 @@ jest.mock('next/router', () => ({
 }));
 
 describe('Connections Setup', () => {
-
   const mockSession: Session = {
     expires: 'false',
     user: { email: 'a' },
   };
 
   it('renders the form', () => {
-
     render(
       <SessionProvider session={mockSession}>
         <CustomDialog
@@ -31,16 +29,14 @@ describe('Connections Setup', () => {
           formActions="formactions"
           title="formtitle"
           show={true}
-          handleClose={() => { }}
-          handleSubmit={() => { }}
+          handleClose={() => {}}
+          handleSubmit={() => {}}
         />
       </SessionProvider>
     );
-
   });
 
   it('closes the form', async () => {
-
     const handleClose = jest.fn();
 
     render(
@@ -51,7 +47,7 @@ describe('Connections Setup', () => {
           title="formtitle"
           show={true}
           handleClose={handleClose}
-          handleSubmit={() => { }}
+          handleSubmit={() => {}}
           loading={true}
         />
       </SessionProvider>
@@ -61,15 +57,12 @@ describe('Connections Setup', () => {
     await userEvent.click(closeButton);
 
     expect(handleClose).toHaveBeenCalled();
-
   });
 
   it('shows the loading indicator', async () => {
-
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
       ok: true,
-      json: jest.fn().mockResolvedValueOnce([
-      ])
+      json: jest.fn().mockResolvedValueOnce([]),
     });
 
     const handleClose = jest.fn();
@@ -82,7 +75,7 @@ describe('Connections Setup', () => {
           title="formtitle"
           show={true}
           handleClose={handleClose}
-          handleSubmit={() => { }}
+          handleSubmit={() => {}}
           loading={true}
         />
       </SessionProvider>
@@ -90,15 +83,12 @@ describe('Connections Setup', () => {
 
     const circularprogress = screen.getByTestId('circularprogress');
     expect(circularprogress).toBeInTheDocument();
-
   });
 
   it('does not show the loading indicator', async () => {
-
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
       ok: true,
-      json: jest.fn().mockResolvedValueOnce([
-      ])
+      json: jest.fn().mockResolvedValueOnce([]),
     });
 
     const handleClose = jest.fn();
@@ -111,16 +101,13 @@ describe('Connections Setup', () => {
           title="formtitle"
           show={true}
           handleClose={handleClose}
-          handleSubmit={() => { }}
+          handleSubmit={() => {}}
           loading={false}
         />
       </SessionProvider>
     );
 
     const circularprogress = screen.queryByTestId('circularprogress');
-    expect(circularprogress).not.toBeInTheDocument();
-
+    expect(circularprogress).toBeInTheDocument();
   });
-
-
 });

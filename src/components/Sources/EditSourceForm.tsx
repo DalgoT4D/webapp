@@ -196,7 +196,7 @@ const EditSourceForm = ({
         config: data.config,
       });
       handleClose();
-      successToast('Source update', [], globalContext);
+      successToast('Source updated', [], globalContext);
       mutate();
     } catch (err: any) {
       console.error(err);

@@ -67,6 +67,7 @@ const CreateDestinationForm = ({
   useEffect(() => {
     if (showForm && destinationDefs.length === 0) {
       (async () => {
+        setLoading(true);
         try {
           const data = await httpGet(
             session,
@@ -84,6 +85,7 @@ const CreateDestinationForm = ({
           console.error(err);
           errorToast(err.message, [], globalContext);
         }
+        setLoading(false);
       })();
     }
   }, [showForm]);
@@ -91,6 +93,7 @@ const CreateDestinationForm = ({
   useEffect(() => {
     if (watchSelectedDestinationDef?.id) {
       (async () => {
+        setLoading(true);
         try {
           const data = await httpGet(
             session,
@@ -114,6 +117,7 @@ const CreateDestinationForm = ({
           console.error(err);
           errorToast(err.message, [], globalContext);
         }
+        setLoading(false);
       })();
     }
   }, [watchSelectedDestinationDef]);
@@ -127,7 +131,6 @@ const CreateDestinationForm = ({
 
   const onSubmit = async (data: any) => {
     // unregister form fields
-    console.log('ref value from child', lastRenderedSpecRef);
     ConnectorConfigInput.syncFormFieldsWithSpecs(
       data,
       lastRenderedSpecRef.current || [],
