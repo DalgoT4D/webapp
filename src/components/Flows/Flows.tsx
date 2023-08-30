@@ -117,6 +117,7 @@ export const Flows = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
+  const [deleteFlowLoading, setDeleteFlowLoading] = useState<boolean>(false);
 
   const open = Boolean(anchorEl);
   const handleClose = () => {
@@ -243,9 +244,9 @@ export const Flows = ({
 
   const handleDeleteFlow = () => {
     (async () => {
+      setDeleteFlowLoading(true);
       try {
         const data = await httpDelete(session, `prefect/flows/${deploymentId}`);
-        mutate();
         if (data?.success) {
           successToast('Flow deleted successfully', [], toastContext);
         } else {
@@ -255,9 +256,11 @@ export const Flows = ({
         console.error(err);
         errorToast(err.message, [], toastContext);
       } finally {
+        mutate();
         handleClose();
         setShowConfirmDeleteDialog(false);
       }
+      setDeleteFlowLoading(false);
     })();
   };
 
@@ -300,6 +303,7 @@ export const Flows = ({
         handleClose={() => setShowConfirmDeleteDialog(false)}
         handleConfirm={() => handleDeleteFlow()}
         message="This will permanently delete the Orchestration, which will also delete the sequence and remove it completely from the listing."
+        loading={deleteFlowLoading}
       />
     </>
   );

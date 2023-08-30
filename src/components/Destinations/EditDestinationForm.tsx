@@ -80,6 +80,7 @@ const EditDestinationForm = ({
   useEffect(() => {
     if (warehouse && showForm) {
       (async () => {
+        setLoading(true);
         try {
           const data: Array<DestinationDefinitionsApiResponse> = await httpGet(
             session,
@@ -109,6 +110,7 @@ const EditDestinationForm = ({
           console.error(err);
           errorToast(err.message, [], globalContext);
         }
+        setLoading(false);
       })();
     }
   }, [showForm]);
@@ -117,6 +119,7 @@ const EditDestinationForm = ({
     if (watchSelectedDestinationDef?.id) {
       (async () => {
         try {
+          setLoading(true);
           const data = await httpGet(
             session,
             `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`
@@ -154,6 +157,7 @@ const EditDestinationForm = ({
           console.error(err);
           errorToast(err.message, [], globalContext);
         }
+        setLoading(false);
       })();
     }
   }, [watchSelectedDestinationDef]);
@@ -167,7 +171,6 @@ const EditDestinationForm = ({
 
   const editWarehouse = async (data: any) => {
     // unregister form fields
-    console.log('ref value from child', lastRenderedSpecRef);
     ConnectorConfigInput.syncFormFieldsWithSpecs(
       data,
       lastRenderedSpecRef.current || [],
@@ -178,6 +181,7 @@ const EditDestinationForm = ({
     data = getValues();
 
     try {
+      setLoading(true);
       await httpPut(
         session,
         `airbyte/destinations/${warehouse.destinationId}/`,
@@ -192,6 +196,7 @@ const EditDestinationForm = ({
       console.error(err);
       errorToast(err.message, [], globalContext);
     }
+    setLoading(false);
   };
 
   const onSubmit = async (data: any) => {

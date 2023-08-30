@@ -140,18 +140,24 @@ export const DestinationConfigInput = ({
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <Box>
-                          <IconButton
-                            onClick={() => handleClickShowPassword(spec.field)}
-                            edge="end"
-                          >
-                            {showPasswords[spec.field] ? (
-                              <VisibilityOutlinedIcon />
-                            ) : (
-                              <VisibilityOffOutlinedIcon />
-                            )}
-                          </IconButton>
-                        </Box>
+                        {!destination ? (
+                          <Box>
+                            <IconButton
+                              onClick={() =>
+                                handleClickShowPassword(spec.field)
+                              }
+                              edge="end"
+                            >
+                              {showPasswords[spec.field] ? (
+                                <VisibilityOutlinedIcon />
+                              ) : (
+                                <VisibilityOffOutlinedIcon />
+                              )}
+                            </IconButton>
+                          </Box>
+                        ) : (
+                          <></>
+                        )}
                       </InputAdornment>
                     ),
                   }}

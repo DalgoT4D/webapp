@@ -1,8 +1,10 @@
 import { GlobalContext } from '@/contexts/ContextProvider';
 import {
   Autocomplete,
+  Backdrop,
   Box,
   Button,
+  CircularProgress,
   Divider,
   InputLabel,
   Stack,
@@ -73,6 +75,7 @@ const FlowCreate = ({
   const toastContext = useContext(GlobalContext);
 
   const [connections, setConnections] = useState<DispConnection[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const {
     register,
     handleSubmit,
@@ -137,6 +140,7 @@ const FlowCreate = ({
   useEffect(() => {
     if (flowId) {
       (async () => {
+        setLoading(true);
         try {
           const data: any = await httpGet(session, `prefect/flows/${flowId}`);
           const cronObject = convertCronToString(data.cron);
@@ -161,6 +165,7 @@ const FlowCreate = ({
           console.error(err);
           errorToast(err.message, [], toastContext);
         }
+        setLoading(false);
       })();
     }
   }, [flowId]);
@@ -195,6 +200,7 @@ const FlowCreate = ({
         data.cronTimeOfDay
       );
       if (isEditPage) {
+        setLoading(true);
         // hit the set schedule api if the value is updated
         if (dirtyFields?.active) {
           await httpPost(
@@ -225,6 +231,7 @@ const FlowCreate = ({
         mutate();
         updateCrudVal('index');
       } else {
+        setLoading(true);
         const blocks = data.connectionBlocks.map(
           (block: any, index: number) => ({
             ...block,
@@ -245,6 +252,7 @@ const FlowCreate = ({
           toastContext
         );
       }
+      setLoading(false);
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
@@ -254,6 +262,12 @@ const FlowCreate = ({
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} data-testid="form">
+        <Backdrop
+          open={loading !== undefined ? loading : false}
+          sx={{ zIndex: '100' }}
+        >
+          <CircularProgress data-testid="circularprogress" color="info" />
+        </Backdrop>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography
             sx={{ fontWeight: 700 }}

@@ -66,8 +66,8 @@ export const Destinations = () => {
   }
 
   const deleteDestination = async () => {
-    setDeleteLoading(true);
     (async () => {
+      setDeleteLoading(true);
       try {
         await httpDelete(session, 'organizations/warehouses/');
         setWarehouse(undefined);
@@ -77,8 +77,8 @@ export const Destinations = () => {
         console.error(err);
         errorToast(err.message, [], globalContext);
       }
+      setDeleteLoading(false);
     })();
-    setDeleteLoading(false);
   };
 
   return (
