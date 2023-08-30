@@ -83,8 +83,8 @@ const CreateConnectionForm = ({
 
   useEffect(() => {
     if (blockId) {
-      setLoading(true);
       (async () => {
+        setLoading(true);
         try {
           const data: any = await httpGet(
             session,
@@ -100,7 +100,7 @@ const CreateConnectionForm = ({
             name: el.stream.name,
             supportsIncremental:
               el.stream.supportedSyncModes.indexOf('incremental') > -1,
-            selected: true,
+            selected: el.config.selected,
             syncMode: el.config.syncMode,
             destinationSyncMode: el.config.destinationSyncMode,
           }));
@@ -111,8 +111,8 @@ const CreateConnectionForm = ({
           console.error(err);
           errorToast(err.message, [], globalContext);
         }
+        setLoading(false);
       })();
-      setLoading(false);
     }
   }, [blockId]);
 
@@ -130,9 +130,8 @@ const CreateConnectionForm = ({
   // source selection changes
   useEffect(() => {
     if (watchSourceSelection?.id && !blockId) {
-      setLoading(true);
-
       (async () => {
+        setLoading(true);
         try {
           const message = await httpGet(
             session,
@@ -188,15 +187,19 @@ const CreateConnectionForm = ({
     }
     try {
       if (blockId) {
+        setLoading(true);
         await httpPut(
           session,
           `airbyte/connections/${blockId}/update`,
           payload
         );
         successToast('Connection updated', [], globalContext);
+        setLoading(false);
       } else {
+        setLoading(true);
         await httpPost(session, 'airbyte/connections/', payload);
         successToast('Connection created', [], globalContext);
+        setLoading(false);
       }
       mutate();
       handleClose();
@@ -204,6 +207,7 @@ const CreateConnectionForm = ({
       console.error(err);
       errorToast(err.message, [], globalContext);
     }
+    setLoading(false);
   };
 
   const updateThisStreamTo_ = (
