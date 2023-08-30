@@ -1,5 +1,6 @@
 import { Close } from '@mui/icons-material';
 import {
+  Backdrop,
   Box,
   Button,
   CircularProgress,
@@ -62,44 +63,38 @@ const ConfirmationDialog = ({
         </Typography>
       </DialogContent>
 
-      {loading ? (
-        <Box
+      <Backdrop
+        open={loading !== undefined ? loading : false}
+        sx={{ zIndex: '100' }}
+      >
+        <CircularProgress data-testid="circularprogress" color="info" />
+      </Backdrop>
+      <DialogActions sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}>
+        <Button
+          data-testid="confirmbutton"
+          onClick={handleConfirm}
           sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            padding: '1.5rem',
+            width: '100%',
+            fontWeight: '700',
+            color: 'white',
+            backgroundColor: '#890000',
+            ':hover': {
+              backgroundColor: '#890000',
+            },
           }}
         >
-          <CircularProgress data-testid="circularprogress" />
-        </Box>
-      ) : (
-        <DialogActions sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}>
-          <Button
-            data-testid="confirmbutton"
-            onClick={handleConfirm}
-            sx={{
-              width: '100%',
-              fontWeight: '700',
-              color: 'white',
-              backgroundColor: '#890000',
-              ':hover': {
-                backgroundColor: '#890000',
-              },
-            }}
-          >
-            I Understand the consequences, confirm
-          </Button>
-          <Button
-            data-testid="cancelbutton"
-            color="secondary"
-            variant="outlined"
-            onClick={handleClose}
-            sx={{ marginLeft: '5px' }}
-          >
-            Cancel
-          </Button>
-        </DialogActions>
-      )}
+          I Understand the consequences, confirm
+        </Button>
+        <Button
+          data-testid="cancelbutton"
+          color="secondary"
+          variant="outlined"
+          onClick={handleClose}
+          sx={{ marginLeft: '5px' }}
+        >
+          Cancel
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };

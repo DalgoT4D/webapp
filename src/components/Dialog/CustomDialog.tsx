@@ -1,5 +1,6 @@
 import { Close } from '@mui/icons-material';
 import {
+  Backdrop,
   Box,
   CircularProgress,
   Dialog,
@@ -51,22 +52,23 @@ const CustomDialog = ({
         <DialogContent sx={{ minWidth: '400px', py: 0 }}>
           {formContent}
         </DialogContent>
-        {loading ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-            }}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          <Backdrop
+            open={loading !== undefined ? loading : false}
+            sx={{ zIndex: '100' }}
           >
-            <CircularProgress data-testid="circularprogress" />
-          </Box>
-        ) : (
-          <DialogActions
-            sx={{ justifyContent: 'flex-start', padding: 4, pt: 0 }}
-          >
-            {formActions}
-          </DialogActions>
-        )}
+            <CircularProgress data-testid="circularprogress" color="info" />
+          </Backdrop>
+        </Box>
+
+        <DialogActions sx={{ justifyContent: 'flex-start', padding: 4, pt: 0 }}>
+          {formActions}
+        </DialogActions>
       </form>
     </Dialog>
   );

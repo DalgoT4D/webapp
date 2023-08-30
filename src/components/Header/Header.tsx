@@ -123,7 +123,11 @@ export const Header = () => {
 
   return (
     <Paper className={styles.Header}>
-      <Image src={Logo} style={{ margin: 4, marginLeft: 12 }} alt="ddp logo" />
+      <Image
+        src={Logo}
+        style={{ margin: 4, marginLeft: '30px' }}
+        alt="ddp logo"
+      />
       <Box
         display="flex"
         alignItems="center"
