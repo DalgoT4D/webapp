@@ -226,7 +226,6 @@ const CreateConnectionForm = ({
       }
     }
     setSourceStreams(newstreams);
-    // setSomeStreamSelected(newstreams.some((stream) => stream.selected));
   };
   const selectStream = (checked: boolean, stream: SourceStream) => {
     updateThisStreamTo_(stream, {
