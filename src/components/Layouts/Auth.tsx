@@ -54,7 +54,7 @@ export const Auth: React.FC<AuthProps> = ({
               {children}
             </Paper>
             <Typography variant="body1" mt={4} pb={3}>
-              © 2023 DDP. All Rights Reserved.
+              2023, DALGO ALL RIGHTS RESERVED
             </Typography>
           </Grid>
         </Grid>
