@@ -2252,10 +2252,10 @@ cosmiconfig@^7.0.0:
     path-type "^4.0.0"
     yaml "^1.10.0"
 
-cronstrue@^2.28.0:
-  version "2.28.0"
-  resolved "https://registry.yarnpkg.com/cronstrue/-/cronstrue-2.28.0.tgz#2e90f3052b2529c15aa9d5d50ee6e3c6b95cde46"
-  integrity sha512-yByAR5on9i/p26djiSve4l29/AJkjCFDgopq+3gUVrQh2xgb3KKScofwkpf5XcRhuWAX0u0EuEK2nltB5hV1jQ==
+cronstrue@^2.29.0:
+  version "2.31.0"
+  resolved "https://registry.yarnpkg.com/cronstrue/-/cronstrue-2.31.0.tgz#73205a6753a245aac08b4f1f2e925f8c2989d711"
+  integrity sha512-A1cyfGyLSRdvT9MNn/pggoCTlvxnJyiCUItU9XHSXk89ZyK2YY9q9q7Rf4j8NhV9YwN1BjB0wimZlvKYb/9Bwg==
 
 cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
   version "7.0.3"
