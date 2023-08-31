@@ -195,7 +195,7 @@ describe('Create connection', () => {
       screen.getByTestId('stream-destmode-0').childNodes[1];
 
     // check if elements are abled
-    expect(streamSyncSwitch).toBeChecked();
+    expect(screen.getByTestId('stream-sync-0').firstChild).toBeChecked();
     expect(connectButton).not.toBeDisabled();
     expect(streamIncrementalSwitch).not.toBeDisabled();
     expect(streamSelectDestinationMode).not.toBeDisabled();
@@ -203,7 +203,7 @@ describe('Create connection', () => {
     // check stream incremental checkbox
     expect(streamIncrementalSwitch).not.toBeChecked();
     await act(() => userEvent.click(streamIncrementalSwitch));
-    expect(streamIncrementalSwitch).toBeChecked();
+    expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked();
 
     // check normalization after sync checkbox
     const normalizationCheckbox = screen.getByTestId('normalizationCheckbox')
@@ -211,7 +211,9 @@ describe('Create connection', () => {
 
     expect(normalizationCheckbox).not.toBeChecked();
     await act(() => userEvent.click(normalizationCheckbox));
-    expect(normalizationCheckbox).toBeChecked();
+    expect(
+      screen.getByTestId('normalizationCheckbox').firstChild?.firstChild
+    ).toBeChecked();
 
     // stream not supporting incremental sync mode we should always have
     // incremental switch disabled
