@@ -168,6 +168,9 @@ const CreateConnectionForm = ({
     setSourceStreams([]);
     setFilteredSourceStreams([]);
     setShowForm(false);
+    setSyncAllStreams(false);
+    setIncrementalAllStreams(false);
+    searchInputRef.current = '';
   };
 
   const handleRadioChange = (event: any) => {
@@ -223,7 +226,7 @@ const CreateConnectionForm = ({
       }
     }
     setSourceStreams(newstreams);
-    setSomeStreamSelected(newstreams.some((stream) => stream.selected));
+    // setSomeStreamSelected(newstreams.some((stream) => stream.selected));
   };
   const selectStream = (checked: boolean, stream: SourceStream) => {
     updateThisStreamTo_(stream, {
@@ -297,6 +300,7 @@ const CreateConnectionForm = ({
       filteredStreamNames.includes(stream.name)
     );
     setFilteredSourceStreams(updateFilteredStreams);
+    setSomeStreamSelected(sourceStreams.some((stream) => stream.selected));
   }, [sourceStreams]);
 
   const FormContent = () => {
@@ -415,6 +419,7 @@ const CreateConnectionForm = ({
                         <Box>Stream</Box>
                         <Box>
                           <TextField
+                            autoFocus
                             key="search-input"
                             data-testid="search-stream"
                             label="Search"
