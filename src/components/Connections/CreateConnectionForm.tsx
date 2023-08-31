@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import CustomDialog from '../Dialog/CustomDialog';
 import {
@@ -13,6 +13,7 @@ import {
   FormControl,
   FormLabel,
   Grid,
+  TextField,
 } from '@mui/material';
 import {
   Table,
@@ -63,9 +64,16 @@ const CreateConnectionForm = ({
   });
   const [sources, setSources] = useState<Array<string>>([]);
   const [sourceStreams, setSourceStreams] = useState<Array<SourceStream>>([]);
+  const [filteredSourceStreams, setFilteredSourceStreams] = useState<
+    Array<SourceStream>
+  >([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
   const [normalize, setNormalize] = useState<boolean>(false);
+  const [syncAllStreams, setSyncAllStreams] = useState<boolean>(false);
+  const [incrementalAllStreams, setIncrementalAllStreams] =
+    useState<boolean>(false);
+  const searchInputRef: any = useRef();
 
   const { data: sourcesData } = useSWR(`airbyte/sources`);
 
@@ -88,16 +96,16 @@ const CreateConnectionForm = ({
             id: data?.source.id,
           });
           setValue('destinationSchema', data?.destinationSchema);
-          setSourceStreams(
-            data?.syncCatalog.streams.map((el: any) => ({
-              name: el.stream.name,
-              supportsIncremental:
-                el.stream.supportedSyncModes.indexOf('incremental') > -1,
-              selected: el.config.selected,
-              syncMode: el.config.syncMode,
-              destinationSyncMode: el.config.destinationSyncMode,
-            }))
-          );
+          const streams = data?.syncCatalog.streams.map((el: any) => ({
+            name: el.stream.name,
+            supportsIncremental:
+              el.stream.supportedSyncModes.indexOf('incremental') > -1,
+            selected: el.config.selected,
+            syncMode: el.config.syncMode,
+            destinationSyncMode: el.config.destinationSyncMode,
+          }));
+          setSourceStreams(streams);
+          setFilteredSourceStreams(streams);
           setNormalize(data?.normalize || false);
         } catch (err: any) {
           console.error(err);
@@ -141,6 +149,7 @@ const CreateConnectionForm = ({
             });
           });
           setSourceStreams(streams);
+          setFilteredSourceStreams(streams);
         } catch (err: any) {
           if (err.cause) {
             errorToast(err.cause.detail, [], globalContext);
@@ -157,7 +166,11 @@ const CreateConnectionForm = ({
     reset();
     setBlockId('');
     setSourceStreams([]);
+    setFilteredSourceStreams([]);
     setShowForm(false);
+    setSyncAllStreams(false);
+    setIncrementalAllStreams(false);
+    searchInputRef.current = '';
   };
 
   const handleRadioChange = (event: any) => {
@@ -213,7 +226,6 @@ const CreateConnectionForm = ({
       }
     }
     setSourceStreams(newstreams);
-    setSomeStreamSelected(newstreams.some((stream) => stream.selected));
   };
   const selectStream = (checked: boolean, stream: SourceStream) => {
     updateThisStreamTo_(stream, {
@@ -242,6 +254,53 @@ const CreateConnectionForm = ({
       destinationSyncMode: value,
     } as SourceStream);
   };
+
+  const handleSyncAllStreams = (checked: boolean) => {
+    setSyncAllStreams(checked);
+    const sourceStreamsSlice: Array<SourceStream> = sourceStreams.map(
+      (stream: SourceStream) => ({ ...stream, selected: checked })
+    );
+    setSourceStreams(sourceStreamsSlice);
+  };
+
+  const handleIncrementalAllStreams = (checked: boolean) => {
+    setIncrementalAllStreams(checked);
+    const sourceStreamsSlice: Array<SourceStream> = sourceStreams.map(
+      (stream: SourceStream) => ({
+        ...stream,
+        syncMode: checked ? 'incremental' : 'full_refresh',
+      })
+    );
+    setSourceStreams(sourceStreamsSlice);
+  };
+
+  const handleSearchChange = (event: any) => {
+    searchInputRef.current = event.target.value;
+    updateFilteredStreams(event.target.value);
+  };
+
+  const updateFilteredStreams = async (searchString: string) => {
+    if (searchString && searchString.length > 0) {
+      const newFilteredStreams = sourceStreams.filter((stream: SourceStream) =>
+        stream.name.toLowerCase().startsWith(searchString.trim().toLowerCase())
+      );
+
+      setFilteredSourceStreams(newFilteredStreams);
+    } else {
+      setFilteredSourceStreams(sourceStreams);
+    }
+  };
+
+  useEffect(() => {
+    const filteredStreamNames = filteredSourceStreams.map(
+      (stream: SourceStream) => stream.name
+    );
+    const updateFilteredStreams = sourceStreams.filter((stream: SourceStream) =>
+      filteredStreamNames.includes(stream.name)
+    );
+    setFilteredSourceStreams(updateFilteredStreams);
+    setSomeStreamSelected(sourceStreams.some((stream) => stream.selected));
+  }, [sourceStreams]);
 
   const FormContent = () => {
     return (
@@ -343,19 +402,64 @@ const CreateConnectionForm = ({
             </FormControl>
           </Box>
 
-          {sourceStreams.length > 0 && (
+          {filteredSourceStreams.length >= 0 && (
             <>
-              <Table data-testid="sourceStreamTable">
+              <Table data-testid="sourceStreamTable" sx={{ marginTop: '5px' }}>
                 <TableHead>
                   <TableRow>
                     <TableCell key="streamname" align="center">
-                      Stream
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '2px',
+                        }}
+                      >
+                        <Box>Stream</Box>
+                        <Box>
+                          <TextField
+                            autoFocus
+                            key="search-input"
+                            data-testid="search-stream"
+                            label="Search"
+                            name="search-stream"
+                            value={searchInputRef.current}
+                            onChange={(event) => handleSearchChange(event)}
+                          />
+                        </Box>
+                      </Box>
                     </TableCell>
                     <TableCell key="selected" align="center">
-                      Sync?
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '2px',
+                        }}
+                      >
+                        <Box>Sync?</Box>
+                        <Box>
+                          <Switch
+                            data-testid={`sync-all-streams`}
+                            checked={syncAllStreams}
+                            onChange={(event) =>
+                              handleSyncAllStreams(event.target.checked)
+                            }
+                          />
+                        </Box>
+                      </Box>
                     </TableCell>
                     <TableCell key="incremental" align="center">
-                      Incremental?
+                      <Box>Incremental?</Box>
+                      <Box>
+                        <Switch
+                          data-testid={`incremental-all-streams`}
+                          checked={incrementalAllStreams}
+                          onChange={(event) =>
+                            handleIncrementalAllStreams(event.target.checked)
+                          }
+                        />
+                      </Box>
                     </TableCell>
                     <TableCell key="destsyncmode" align="center">
                       Destination
@@ -363,7 +467,7 @@ const CreateConnectionForm = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sourceStreams.map((stream, idx: number) => (
+                  {filteredSourceStreams.map((stream, idx: number) => (
                     <TableRow key={stream.name}>
                       <TableCell
                         key="name"

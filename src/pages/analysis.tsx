@@ -34,10 +34,8 @@ export default function Analysis() {
     const intervalId = setInterval(function () {
       if (iframeRefHidden?.current) {
         if (globalContext?.CurrentOrg?.state.viz_url) {
-          if (iframeRefHidden?.current?.contentWindow?.location?.href) {
-            iframeRefHidden.current.contentWindow.location.href =
-              globalContext?.CurrentOrg?.state.viz_url;
-          }
+          iframeRefHidden.current.contentWindow.location.href =
+            globalContext?.CurrentOrg?.state.viz_url;
           setTimeout(() => {
             iframeRefHidden?.current?.contentWindow?.postMessage(
               { ask: 'locationStatus' },
