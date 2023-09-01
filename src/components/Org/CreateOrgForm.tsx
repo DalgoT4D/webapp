@@ -2,7 +2,7 @@ import { Box, Button } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import {
   errorToast,
@@ -25,6 +25,7 @@ export const CreateOrgForm = ({
 }: CreateOrgFormProps) => {
   const { data: session }: any = useSession();
   const [waitForOrgCreation, setWaitForOrgCreation] = useState(false);
+  const [newlyCreatedOrg, setNewlyCreatedOrg] = useState<string>('');
   const router = useRouter();
   const {
     register,
@@ -47,11 +48,16 @@ export const CreateOrgForm = ({
   const onSubmit = async (data: any) => {
     setWaitForOrgCreation(true);
     try {
-      await httpPost(session, 'organizations/', {
+      const res = await httpPost(session, 'organizations/', {
         name: data.name,
       });
+      // directly updating locatStorage here doesn't, dont know why
+      if (res?.slug) {
+        setNewlyCreatedOrg(res.slug);
+      }
       handleClose();
       successToast('Success', [], globalContext);
+      setWaitForOrgCreation(false);
       router.refresh();
     } catch (err: any) {
       console.error(err);
@@ -59,6 +65,10 @@ export const CreateOrgForm = ({
     }
     setWaitForOrgCreation(false);
   };
+
+  useEffect(() => {
+    if (newlyCreatedOrg) localStorage.setItem('org-slug', newlyCreatedOrg);
+  }, [newlyCreatedOrg]);
 
   const formContent = (
     <>
