@@ -6,7 +6,6 @@ import { signOut, useSession } from 'next-auth/react';
 import Logo from '@/assets/images/logo.svg';
 import Image from 'next/image';
 import { useContext, useEffect, useState } from 'react';
-import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/navigation';
 import CreateOrgForm from '../Org/CreateOrgForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
