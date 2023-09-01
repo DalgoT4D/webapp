@@ -42,7 +42,7 @@ export const Header = () => {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [orgs, setOrgs] = useState<Array<AutoCompleteOption>>([]);
-  const [orgusers, setOrgusers] = useState<Array<OrgUser>>([]);
+  const [orgusers, setOrgusers] = useState<Array<OrgUser> | undefined>([]);
   const [showOrgCreateForm, setShowOrgCreateForm] = useState<boolean>(false);
   const [selectedOrg, setSelectedOrg] = useState<
     AutoCompleteOption | null | undefined
@@ -60,16 +60,16 @@ export const Header = () => {
     // fetch the orgs associated with the orguser
     (async () => {
       try {
-        let orgusers = await httpGet(session, `currentuserv2`);
-        orgusers = orgusers.filter((orguser: OrgUser) => orguser.org);
-        setOrgusers(orgusers);
-        const orgs: Array<AutoCompleteOption> = orgusers.map(
-          (orguser: OrgUser) => ({
+        setOrgusers(globalContext?.OrgUsers.state);
+        let orgs: Array<AutoCompleteOption> = [];
+        if (orgusers) {
+          orgs = orgusers?.map((orguser: OrgUser) => ({
             id: orguser.org.slug,
             label: orguser.org.name,
-          })
-        );
-        setOrgs(orgs);
+          }));
+          setOrgs(orgs);
+        }
+
         // see if the org is set in the local storage
         const currentOrgSlug = localStorage.getItem('org-slug');
         let org: AutoCompleteOption | null | undefined = null;
@@ -83,18 +83,18 @@ export const Header = () => {
         console.error(err);
       }
     })();
-  }, [session]);
+  }, [session, globalContext?.OrgUsers]);
 
   useEffect(() => {
     const currentOrgSlug = localStorage.getItem('org-slug');
     if (selectedOrg && selectedOrg.id && currentOrgSlug !== selectedOrg.id) {
-      const orguser: OrgUser | any = orgusers.find(
+      const orguser: OrgUser | any = orgusers?.find(
         (orguser: OrgUser) => orguser.org.slug === selectedOrg.id
       );
       if (orguser) {
         globalContext?.CurrentOrg?.dispatch({
           type: 'new',
-          state: orguser.org,
+          orgState: orguser.org,
         });
       }
 
@@ -105,7 +105,7 @@ export const Header = () => {
 
     // always update the current org context from so that it is accessible anywhere in the app
     if (selectedOrg) {
-      const selectedOrguser: OrgUser | any = orgusers.find(
+      const selectedOrguser: OrgUser | any = orgusers?.find(
         (orguser: OrgUser) => orguser.org.slug === selectedOrg.id
       );
       if (selectedOrguser && selectedOrguser?.org) {
