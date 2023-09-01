@@ -27,7 +27,9 @@ type OrgUser = {
 const MainDashboard = ({ children }: any) => {
   const { data: session }: any = useSession();
   const router = useRouter();
-  const [hasOrg, setHasOrg] = useState<boolean>(false);
+  const [redirectToOrgPage, setRedirectToOrgPage] = useState<boolean | null>(
+    null
+  );
   const globalContext = useContext(GlobalContext);
 
   useEffect(() => {
@@ -41,11 +43,13 @@ const MainDashboard = ({ children }: any) => {
             if (orguser.org !== null) hasOrg = true;
           }
         }
-        setHasOrg(hasOrg);
 
-        if (!hasOrg) {
+        if (!hasOrg && session?.user?.can_create_orgs) {
+          setRedirectToOrgPage(true);
           router.push('/createorg');
           return;
+        } else {
+          setRedirectToOrgPage(false);
         }
 
         // update orgusers in global state
@@ -83,7 +87,7 @@ const MainDashboard = ({ children }: any) => {
         },
       }}
     >
-      {hasOrg && (
+      {redirectToOrgPage === false && (
         <>
           <Header />
           <Box sx={{ display: 'flex', pt: 6 }}>

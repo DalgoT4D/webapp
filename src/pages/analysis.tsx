@@ -48,7 +48,7 @@ export default function Analysis() {
     return () => {
       clearInterval(intervalId);
     };
-  }, [globalContext?.CurrentOrg?.state.viz_url]);
+  }, [globalContext?.CurrentOrg?.state?.viz_url]);
 
   const initiateGoogleSignIn = () => {
     // pop open a separate window here for users to do google auth
@@ -63,7 +63,7 @@ export default function Analysis() {
     <>
       <PageHead title="Development Data Platform" />
       <main className={styles.analysis}>
-        {globalContext?.CurrentOrg?.state.viz_url && (
+        {globalContext?.CurrentOrg?.state?.viz_url && (
           <iframe
             src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
             style={{
@@ -85,7 +85,7 @@ export default function Analysis() {
             Analysis
           </Typography>
         </Box>
-        {!globalContext?.CurrentOrg?.state.viz_url && (
+        {!globalContext?.CurrentOrg?.state?.viz_url && (
           <>
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 20 }}>
               <Typography variant="h4" sx={{ alignContent: 'center' }}>
@@ -101,14 +101,14 @@ export default function Analysis() {
             </Box>
           </>
         )}
-        {globalContext?.CurrentOrg?.state.viz_login_type === 'google' &&
+        {globalContext?.CurrentOrg?.state?.viz_login_type === 'google' &&
           signedIn === 'unknown' && (
             <>
               <CircularProgress />
             </>
           )}
 
-        {globalContext?.CurrentOrg?.state.viz_login_type === 'google' &&
+        {globalContext?.CurrentOrg?.state?.viz_login_type === 'google' &&
           signedIn === 'signedOut' && (
             <>
               <Button
@@ -123,7 +123,7 @@ export default function Analysis() {
             </>
           )}
 
-        {globalContext?.CurrentOrg?.state.viz_url &&
+        {globalContext?.CurrentOrg?.state?.viz_url &&
           signedIn === 'signedIn' && (
             <Box sx={{ border: 'none' }}>
               <iframe
