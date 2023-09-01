@@ -173,25 +173,27 @@ export const Header = () => {
             {session?.user?.email || 'no user'}
           </Typography>
         </Box>
-        <Box
-          sx={{
-            my: 0,
-            py: 1,
-            px: 2,
-            ':hover': { cursor: 'pointer' },
-          }}
-          onClick={handleCreateOrgClick}
-        >
-          <Typography
-            variant="subtitle1"
+        {session?.user?.can_create_orgs && (
+          <Box
             sx={{
-              fontWeight: 600,
-              borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
+              my: 0,
+              py: 1,
+              px: 2,
+              ':hover': { cursor: 'pointer' },
             }}
+            onClick={handleCreateOrgClick}
           >
-            Create new org
-          </Typography>
-        </Box>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
+              }}
+            >
+              Create new org
+            </Typography>
+          </Box>
+        )}
         {orgs.map((org: AutoCompleteOption, idx: number) => (
           <MenuItem
             key={idx}

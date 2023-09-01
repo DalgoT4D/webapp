@@ -11,6 +11,7 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email;
         session.user.active = token.active;
         session.user.email_verified = token.email_verified;
+        session.user.can_create_orgs = token.can_create_orgs;
       }
       // Send properties to the client, like an access_token and user id from a provider.
       return session;
@@ -22,6 +23,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email;
         token.active = user.active;
         token.email_verified = user.email_verified;
+        token.can_create_orgs = user.can_create_orgs;
       }
       return token;
     },
