@@ -69,6 +69,6 @@ describe('token and normal flow', () => {
     );
 
     const normalFlow = screen.getByTestId('normal-flow');
-    expect(normalFlow).toBeInTheDocument();
+    expect(normalFlow).not.toBeInTheDocument();
   });
 });
