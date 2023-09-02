@@ -2,7 +2,7 @@ import { useSession } from 'next-auth/react';
 import { SWRConfig } from 'swr';
 import { SideDrawer } from '../SideDrawer/SideDrawer';
 import { Header } from '../Header/Header';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
@@ -30,6 +30,7 @@ const MainDashboard = ({ children }: any) => {
   const [redirectToOrgPage, setRedirectToOrgPage] = useState<boolean | null>(
     null
   );
+  const [hasOrg, setHasOrg] = useState<boolean>(false);
   const globalContext = useContext(GlobalContext);
 
   useEffect(() => {
@@ -37,10 +38,11 @@ const MainDashboard = ({ children }: any) => {
       try {
         let orgusers = await httpGet(session, `currentuserv2`);
         // if there are no orgs, redirect to create org page
-        let hasOrg = false;
         if (orgusers && orgusers.length > 0) {
           for (const orguser of orgusers) {
-            if (orguser.org !== null) hasOrg = true;
+            if (orguser.org !== null) {
+              setHasOrg(true);
+            }
           }
         }
 
@@ -87,7 +89,23 @@ const MainDashboard = ({ children }: any) => {
         },
       }}
     >
-      {redirectToOrgPage === false && (
+      {!hasOrg && !session?.user?.can_create_orgs && (
+        <>
+          <Header />
+          <Typography variant="h2" sx={{ pt: 20, textAlign: 'center' }}>
+            Welcome!
+          </Typography>
+          <Typography variant="h5" sx={{ textAlign: 'center' }}>
+            Please contact the Dalgo team to set up your account
+          </Typography>
+          <Box
+            sx={{ display: 'flex', justifyContent: 'center', fontSize: '18px' }}
+          >
+            <a href="mailto:support@dalgo.in">support@dalgo.in</a>
+          </Box>
+        </>
+      )}
+      {(hasOrg || session?.user?.can_create_orgs) && (
         <>
           <Header />
           <Box sx={{ display: 'flex', pt: 6 }}>
