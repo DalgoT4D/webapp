@@ -281,15 +281,15 @@ export const Flows = ({
           gutterBottom
           color="#000"
         >
-          Flows
+          Pipelines
         </Typography>
       </Box>
 
       <List
         rows={rows}
         openDialog={handleClickCreateFlow}
-        headers={['Flow', 'Status', 'Last Scheduled Run', 'Last run status']}
-        title={'Flow'}
+        headers={['', 'Pipeline Status', 'Last run', 'Last run status']}
+        title={'Pipeline'}
       />
 
       <FlowRunHistory
@@ -302,7 +302,7 @@ export const Flows = ({
         show={showConfirmDeleteDialog}
         handleClose={() => setShowConfirmDeleteDialog(false)}
         handleConfirm={() => handleDeleteFlow()}
-        message="This will permanently delete the Orchestration, which will also delete the sequence and remove it completely from the listing."
+        message="This will permanently delete the pipeline, which will also delete the sequence and remove it completely from the listing."
         loading={deleteFlowLoading}
       />
     </>
