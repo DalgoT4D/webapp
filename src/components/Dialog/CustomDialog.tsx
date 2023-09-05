@@ -29,9 +29,11 @@ const CustomDialog = ({
   handleClose,
   handleSubmit,
   loading,
+  ...rest
 }: CustomDialogProps) => {
   return (
     <Dialog
+      {...rest}
       open={show}
       onClose={handleClose}
       PaperProps={{
@@ -49,7 +51,7 @@ const CustomDialog = ({
         </Box>
       </DialogTitle>
       <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ minWidth: '400px', py: 0 }}>
+        <DialogContent sx={{ minWidth: '1000px', py: 0 }}>
           {formContent}
         </DialogContent>
         <Box
