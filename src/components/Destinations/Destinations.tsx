@@ -85,7 +85,7 @@ export const Destinations = () => {
     <>
       {warehouse && warehouse.wtype === 'postgres' && (
         <>
-          <Typography data-testid="wtype" variant="h3">
+          <Typography data-testid="wname" variant="h3">
             {warehouse.name}
           </Typography>
           <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
@@ -121,8 +121,8 @@ export const Destinations = () => {
       )}
       {warehouse && warehouse.wtype === 'bigquery' && (
         <>
-          <Typography data-testid="wtype" variant="h3">
-            {warehouse.wtype}
+          <Typography data-testid="wname" variant="h3">
+            {warehouse.name}
           </Typography>
           <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
           <Table sx={{ maxWidth: '600px' }}>
