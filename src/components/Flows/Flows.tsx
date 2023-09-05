@@ -34,9 +34,24 @@ export interface FlowsInterface {
 }
 
 const flowState = (flow: FlowInterface) => {
+  if (!flow.lastRun) {
+    return (
+      <Box
+        data-testid={'flowstate-' + flow.name}
+        sx={{
+          display: 'flex',
+          color: '#399D47',
+          gap: '3px',
+          alignItems: 'center',
+        }}
+      >
+        &mdash;
+      </Box>
+    );
+  }
   return (
     <>
-      {!flow.lastRun || flow.lastRun?.status === 'COMPLETED' ? (
+      {flow.lastRun?.status === 'COMPLETED' ? (
         <Box
           data-testid={'flowstate-' + flow.name}
           sx={{
@@ -95,7 +110,17 @@ const flowLastRun = (flow: FlowInterface) => {
           )}
         </Typography>
       ) : (
-        '-'
+        <Box
+          data-testid={'flowstate-' + flow.name}
+          sx={{
+            display: 'flex',
+            color: '#399D47',
+            gap: '3px',
+            alignItems: 'center',
+          }}
+        >
+          &mdash;
+        </Box>
       )}
     </>
   );
