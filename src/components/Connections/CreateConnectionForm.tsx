@@ -40,7 +40,6 @@ interface CreateConnectionFormProps {
 }
 
 type CursorFieldConfig = {
-  selectedCursorField: string;
   sourceDefinedCursor: boolean;
   cursorFieldOptions: string[];
 };
@@ -107,10 +106,10 @@ const CreateConnectionForm = ({
         destinationSyncMode:
           action === 'edit' ? el.config.destinationSyncMode : 'append',
         cursorFieldConfig: {
-          selectedCursorField: '',
           sourceDefinedCursor: false,
           cursorFieldOptions: [],
         },
+        cursorField: '',
       };
 
       let cursorFieldObj = stream.cursorFieldConfig;
@@ -121,7 +120,7 @@ const CreateConnectionForm = ({
 
       if (cursorFieldObj.sourceDefinedCursor) {
         // eg el.config.cursorField = ["indexed_on"] i.e. defined in the connector code
-        cursorFieldObj.selectedCursorField = el.config.cursorField[0];
+        stream.cursorField = el.config.cursorField[0];
         cursorFieldObj.cursorFieldOptions = el.config.cursorField;
       } else {
         // user needs to define the cursor field
@@ -133,14 +132,14 @@ const CreateConnectionForm = ({
 
         // set selected cursor field
         if ('defaultCursorField' in el.stream)
-          cursorFieldObj.selectedCursorField =
+          stream.cursorField =
             el.stream.defaultCursorField.length > 0
               ? el.stream.defaultCursorField[0]
               : '';
 
         // overwrite default if the cursor field is set
         if ('cursorField' in el.config)
-          cursorFieldObj.selectedCursorField =
+          stream.cursorField =
             el.config.cursorField.length > 0 ? el.config.cursorField[0] : '';
       }
 
