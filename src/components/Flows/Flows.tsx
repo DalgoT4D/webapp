@@ -34,9 +34,24 @@ export interface FlowsInterface {
 }
 
 const flowState = (flow: FlowInterface) => {
+  if (!flow.lastRun) {
+    return (
+      <Box
+        data-testid={'flowstate-' + flow.name}
+        sx={{
+          display: 'flex',
+          color: '#399D47',
+          gap: '3px',
+          alignItems: 'center',
+        }}
+      >
+        &mdash;
+      </Box>
+    );
+  }
   return (
     <>
-      {!flow.lastRun || flow.lastRun?.status === 'COMPLETED' ? (
+      {flow.lastRun?.status === 'COMPLETED' ? (
         <Box
           data-testid={'flowstate-' + flow.name}
           sx={{
@@ -95,7 +110,17 @@ const flowLastRun = (flow: FlowInterface) => {
           )}
         </Typography>
       ) : (
-        '-'
+        <Box
+          data-testid={'flowlastrun-' + flow.name}
+          sx={{
+            display: 'flex',
+            color: '#399D47',
+            gap: '3px',
+            alignItems: 'center',
+          }}
+        >
+          &mdash;
+        </Box>
       )}
     </>
   );
@@ -281,15 +306,15 @@ export const Flows = ({
           gutterBottom
           color="#000"
         >
-          Flows
+          Pipelines
         </Typography>
       </Box>
 
       <List
         rows={rows}
         openDialog={handleClickCreateFlow}
-        headers={['Flow', 'Status', 'Last Scheduled Run', 'Last run status']}
-        title={'Flow'}
+        headers={['', 'Pipeline Status', 'Last run', 'Last run status']}
+        title={'Pipeline'}
       />
 
       <FlowRunHistory
@@ -302,7 +327,7 @@ export const Flows = ({
         show={showConfirmDeleteDialog}
         handleClose={() => setShowConfirmDeleteDialog(false)}
         handleConfirm={() => handleDeleteFlow()}
-        message="This will permanently delete the Orchestration, which will also delete the sequence and remove it completely from the listing."
+        message="This will permanently delete the pipeline, which will also delete the sequence and remove it completely from the listing."
         loading={deleteFlowLoading}
       />
     </>
