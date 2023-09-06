@@ -190,6 +190,16 @@ export const SignUp = () => {
               Log in
             </Link>
           </Box>
+          <Box sx={{ mt: 1, textAlign: 'center' }}>
+            Need a signup code?{' '}
+            <Link
+              href="https://dalgo.in/contact-us/"
+              target="_blank"
+              sx={{ textDecoration: 'none' }}
+            >
+              Contact Us
+            </Link>
+          </Box>
         </Box>
       </form>
     </Auth>

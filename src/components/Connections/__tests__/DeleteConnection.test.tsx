@@ -25,15 +25,15 @@ describe('Delete connection', () => {
     {
       blockId: 'test-conn-1',
       name: 'test-conn-1',
-      source: { name: 'surveyCTO' },
-      destination: { name: 'postgres' },
+      source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
+      destination: { name: 'postgres-1', destinationName: 'postgres' },
       lastRun: { startTime: '1686937507' },
     },
     {
       blockId: 'test-conn-2',
       name: 'test-conn-2',
-      source: { name: 'surveyCTO' },
-      destination: { name: 'postgres' },
+      source: { name: 'YourSurveyCTO', sourceName: 'surveyCTO' },
+      destination: { name: 'postgres-2', destinationName: 'postgres' },
       lastRun: { startTime: '1686937507' },
     },
   ];

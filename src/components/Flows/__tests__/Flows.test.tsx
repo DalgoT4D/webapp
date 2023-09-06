@@ -91,13 +91,14 @@ describe('Flow Creation', () => {
     const flowstate2 = screen.getByTestId('flowstate-flow-2');
     expect(flowstate2).toBeInTheDocument();
     const { getByText: getByTextFlowRun_2 } = within(flowstate2);
-    expect(getByTextFlowRun_2('Success')).toBeInTheDocument();
+    expect(getByTextFlowRun_2('—')).toBeInTheDocument();
 
     // open history
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce([
         {
+          id: '',
           name: 'flow-run-0',
           status: 'COMPLETED',
           logs: [],
