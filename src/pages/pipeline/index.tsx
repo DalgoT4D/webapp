@@ -193,7 +193,7 @@ export default function Home() {
               fontWeight: 700,
             }}
           >
-            Overview
+            Pipeline Overview
           </Typography>
         </Box>
         <Box sx={{ mt: 3, mx: 12 }}>
@@ -209,9 +209,9 @@ export default function Home() {
               color: 'white',
             }}
           >
-            {flowRuns && flowRuns.length > 0
-              ? 'Scheduled flows are operational'
-              : 'No flows available. Please create one'}
+            {flowRuns &&
+              flowRuns.length === 0 &&
+              'No pipelines available. Please create one'}
             {/* <Image
               style={{ marginLeft: 'auto' }}
               src={CheckLargeIcon}
@@ -276,7 +276,7 @@ export default function Home() {
                         </Typography>
                       </>
                     ) : (
-                      'No runs found for this flow'
+                      'No runs found for this pipeline'
                     )}
                   </Paper>
                 </React.Fragment>

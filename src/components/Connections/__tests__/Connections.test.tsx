@@ -58,14 +58,14 @@ describe('Connections Setup', () => {
   const CONNECTIONS = [
     {
       name: 'test-conn-1',
-      source: { name: 'surveyCTO' },
-      destination: { name: 'postgres' },
+      source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
+      destination: { name: 'postgres-1', destinationName: 'postgres' },
       lastRun: { startTime: '1686937507' },
     },
     {
       name: 'test-conn-2',
-      source: { name: 'surveyCTO' },
-      destination: { name: 'postgres' },
+      source: { name: 'YourSurveyCTO', sourceName: 'surveyCTO' },
+      destination: { name: 'postgres-2', destinationName: 'postgres' },
       lastRun: { startTime: '1686937507' },
     },
   ];
@@ -127,8 +127,10 @@ describe('Connections Setup', () => {
       expect(connCells[0].textContent).toBe(CONNECTIONS[i]['name']);
       expect(connCells[1].textContent).toBe(
         CONNECTIONS[i]['source']['name'] +
-          ' → ' +
-          CONNECTIONS[i]['destination']['name']
+          CONNECTIONS[i]['source']['sourceName'] +
+          '→' +
+          CONNECTIONS[i]['destination']['name'] +
+          CONNECTIONS[i]['destination']['destinationName']
       );
       expect(connCells[2].textContent).toBe(
         lastRunTime(CONNECTIONS[i]['lastRun']['startTime'])
