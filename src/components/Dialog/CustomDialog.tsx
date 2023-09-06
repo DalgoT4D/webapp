@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  DialogProps,
 } from '@mui/material';
 import React from 'react';
 
@@ -19,9 +20,10 @@ interface CustomDialogProps {
   formContent: any;
   formActions: any;
   loading?: boolean;
+  [propName: string]: any;
 }
 
-const CustomDialog = ({
+const CustomDialog: React.FC<CustomDialogProps> = ({
   formContent,
   formActions,
   title,
@@ -30,7 +32,7 @@ const CustomDialog = ({
   handleSubmit,
   loading,
   ...rest
-}: CustomDialogProps) => {
+}) => {
   return (
     <Dialog
       {...rest}
