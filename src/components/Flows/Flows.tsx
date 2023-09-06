@@ -111,7 +111,7 @@ const flowLastRun = (flow: FlowInterface) => {
         </Typography>
       ) : (
         <Box
-          data-testid={'flowstate-' + flow.name}
+          data-testid={'flowlastrun-' + flow.name}
           sx={{
             display: 'flex',
             color: '#399D47',
