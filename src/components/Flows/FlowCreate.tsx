@@ -223,7 +223,7 @@ const FlowCreate = ({
           });
         }
         successToast(
-          `Flow ${data.name} updated successfully`,
+          `Pipeline ${data.name} updated successfully`,
           [],
           toastContext
         );
@@ -247,7 +247,7 @@ const FlowCreate = ({
         mutate();
         updateCrudVal('index');
         successToast(
-          `Flow ${response.name} created successfully`,
+          `Pipeline ${response.name} created successfully`,
           [],
           toastContext
         );
@@ -275,7 +275,7 @@ const FlowCreate = ({
             gutterBottom
             color="#000"
           >
-            {flowId ? 'Update flow' : 'Create a new Flow'}
+            {flowId ? 'Update pipeline' : 'Create a new Pipeline'}
           </Typography>
           <Box display="flex" alignItems="center">
             <Typography
@@ -312,7 +312,7 @@ const FlowCreate = ({
               sx={{ marginBottom: '30px' }}
               fontWeight={600}
             >
-              Flow details
+              Pipeline details
             </Typography>
             <Stack gap="12px">
               {isEditPage && (
@@ -345,8 +345,8 @@ const FlowCreate = ({
                   register={register}
                   disabled={isEditPage}
                   name="name"
-                  label="Flow name"
-                  placeholder="Enter the flow name"
+                  label="Name"
+                  placeholder="Enter the name of your pipeline"
                   required
                   error={!!errors.name}
                   helperText={errors.name?.message}
