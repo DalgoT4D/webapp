@@ -52,7 +52,7 @@ export const Destinations = () => {
         destinationId: w_house.airbyte_destination.destinationId,
         destinationDefinitionId:
           w_house.airbyte_destination.destinationDefinitionId,
-        name: w_house.airbyte_destination.name,
+        name: w_house.name,
         wtype: w_house.wtype,
         icon: w_house.airbyte_destination.icon,
         connectionConfiguration:
@@ -85,8 +85,8 @@ export const Destinations = () => {
     <>
       {warehouse && warehouse.wtype === 'postgres' && (
         <>
-          <Typography data-testid="wtype" variant="h3">
-            {warehouse.wtype}
+          <Typography data-testid="wname" variant="h3">
+            {warehouse.name}
           </Typography>
           <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
           <Table sx={{ maxWidth: '600px' }}>
@@ -121,8 +121,8 @@ export const Destinations = () => {
       )}
       {warehouse && warehouse.wtype === 'bigquery' && (
         <>
-          <Typography data-testid="wtype" variant="h3">
-            {warehouse.wtype}
+          <Typography data-testid="wname" variant="h3">
+            {warehouse.name}
           </Typography>
           <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
           <Table sx={{ maxWidth: '600px' }}>
