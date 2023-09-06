@@ -23,12 +23,13 @@ import {
   TableRow,
   FormControlLabel,
 } from '@mui/material';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import Input from '../UI/Input/Input';
+import { Stream } from 'stream';
 
 interface CreateConnectionFormProps {
   blockId: string;
@@ -38,12 +39,19 @@ interface CreateConnectionFormProps {
   setBlockId: (...args: any) => any;
 }
 
+type CursorFieldConfig = {
+  sourceDefinedCursor: boolean;
+  cursorFieldOptions: string[];
+};
+
 interface SourceStream {
   name: string;
   supportsIncremental: boolean;
   selected: boolean;
   syncMode: string; // incremental | full_refresh
   destinationSyncMode: string; // append | overwrite | append_dedup
+  cursorFieldConfig: CursorFieldConfig; // this will not be posted to backend
+  cursorField: string;
 }
 
 const CreateConnectionForm = ({
@@ -70,9 +78,10 @@ const CreateConnectionForm = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
   const [normalize, setNormalize] = useState<boolean>(false);
-  const [syncAllStreams, setSyncAllStreams] = useState<boolean>(false);
+  // const [syncAllStreams, setSyncAllStreams] = useState<boolean>(false);
   const [incrementalAllStreams, setIncrementalAllStreams] =
     useState<boolean>(false);
+  const [selectAllStreams, setSelectAllStreams] = useState<boolean>(false);
   const searchInputRef: any = useRef();
 
   const { data: sourcesData } = useSWR(`airbyte/sources`);
@@ -80,6 +89,65 @@ const CreateConnectionForm = ({
   const watchSourceSelection = watch('sources');
 
   const globalContext = useContext(GlobalContext);
+
+  const setupInitialStreamsState = (
+    catalog: any,
+    blockId: string | undefined | null
+  ) => {
+    const action = blockId ? 'edit' : 'create';
+
+    const streams = catalog.streams.map((el: any, idx: number) => {
+      const stream = {
+        name: el.stream.name,
+        supportsIncremental:
+          el.stream.supportedSyncModes.indexOf('incremental') > -1,
+        selected: action === 'edit' ? el.config.selected : false,
+        syncMode: action === 'edit' ? el.config.syncMode : 'full_refresh',
+        destinationSyncMode:
+          action === 'edit' ? el.config.destinationSyncMode : 'append',
+        cursorFieldConfig: {
+          sourceDefinedCursor: false,
+          cursorFieldOptions: [],
+        },
+        cursorField: '',
+      };
+
+      let cursorFieldObj = stream.cursorFieldConfig;
+
+      // will be true for most of our custom connectors
+      if ('sourceDefinedCursor' in el.stream)
+        cursorFieldObj.sourceDefinedCursor = el.stream.sourceDefinedCursor;
+
+      if (cursorFieldObj.sourceDefinedCursor) {
+        // eg el.config.cursorField = ["indexed_on"] i.e. defined in the connector code
+        stream.cursorField = el.config.cursorField[0];
+        cursorFieldObj.cursorFieldOptions = el.config.cursorField;
+      } else {
+        // user needs to define the cursor field
+        // available options are picked from the stream's jsonSchema (cols)
+        if ('jsonSchema' in el.stream)
+          cursorFieldObj.cursorFieldOptions = Object.keys(
+            el.stream.jsonSchema.properties
+          ) as any;
+
+        // set selected cursor field
+        if ('defaultCursorField' in el.stream)
+          stream.cursorField =
+            el.stream.defaultCursorField.length > 0
+              ? el.stream.defaultCursorField[0]
+              : '';
+
+        // overwrite default if the cursor field is set
+        if ('cursorField' in el.config)
+          stream.cursorField =
+            el.config.cursorField.length > 0 ? el.config.cursorField[0] : '';
+      }
+
+      return stream;
+    });
+
+    return streams;
+  };
 
   useEffect(() => {
     if (blockId) {
@@ -96,14 +164,7 @@ const CreateConnectionForm = ({
             id: data?.source.id,
           });
           setValue('destinationSchema', data?.destinationSchema);
-          const streams = data?.syncCatalog.streams.map((el: any) => ({
-            name: el.stream.name,
-            supportsIncremental:
-              el.stream.supportedSyncModes.indexOf('incremental') > -1,
-            selected: el.config.selected,
-            syncMode: el.config.syncMode,
-            destinationSyncMode: el.config.destinationSyncMode,
-          }));
+          const streams = setupInitialStreamsState(data?.syncCatalog, blockId);
           setSourceStreams(streams);
           setFilteredSourceStreams(streams);
           setNormalize(data?.normalize || false);
@@ -137,17 +198,10 @@ const CreateConnectionForm = ({
             session,
             `airbyte/sources/${watchSourceSelection.id}/schema_catalog`
           );
-          const streams: SourceStream[] = [];
-          message['catalog']['streams'].forEach((el: any) => {
-            streams.push({
-              name: el.stream.name,
-              supportsIncremental:
-                el.stream.supportedSyncModes.indexOf('incremental') > -1,
-              selected: false,
-              syncMode: 'full_refresh',
-              destinationSyncMode: 'append',
-            });
-          });
+          const streams: SourceStream[] = setupInitialStreamsState(
+            message['catalog'],
+            blockId
+          );
           setSourceStreams(streams);
           setFilteredSourceStreams(streams);
         } catch (err: any) {
@@ -168,7 +222,7 @@ const CreateConnectionForm = ({
     setSourceStreams([]);
     setFilteredSourceStreams([]);
     setShowForm(false);
-    setSyncAllStreams(false);
+    setSelectAllStreams(false);
     setIncrementalAllStreams(false);
     searchInputRef.current = '';
   };
@@ -179,10 +233,15 @@ const CreateConnectionForm = ({
 
   // create/update a connection
   const onSubmit = async (data: any) => {
+    // remove the cursorFieldConfig key before posting
     const payload: any = {
       name: data.name,
       sourceId: data.sources.id,
-      streams: sourceStreams,
+      streams: sourceStreams.map(
+        ({ cursorFieldConfig, ...rest }: SourceStream) => {
+          return rest;
+        }
+      ),
       normalize,
     };
     if (data.destinationSchema) {
@@ -228,35 +287,24 @@ const CreateConnectionForm = ({
     setSourceStreams(newstreams);
   };
   const selectStream = (checked: boolean, stream: SourceStream) => {
-    updateThisStreamTo_(stream, {
-      name: stream.name,
-      supportsIncremental: stream.supportsIncremental,
-      selected: checked,
-      syncMode: stream.syncMode,
-      destinationSyncMode: stream.destinationSyncMode,
-    } as SourceStream);
+    updateThisStreamTo_(stream, { ...stream, selected: checked });
   };
   const setStreamIncr = (checked: boolean, stream: SourceStream) => {
     updateThisStreamTo_(stream, {
-      name: stream.name,
-      supportsIncremental: stream.supportsIncremental,
-      selected: stream.selected,
+      ...stream,
       syncMode: checked ? 'incremental' : 'full_refresh',
-      destinationSyncMode: stream.destinationSyncMode,
-    } as SourceStream);
+    });
   };
   const setDestinationSyncMode = (value: string, stream: SourceStream) => {
-    updateThisStreamTo_(stream, {
-      name: stream.name,
-      supportsIncremental: stream.supportsIncremental,
-      selected: stream.selected,
-      syncMode: stream.syncMode,
-      destinationSyncMode: value,
-    } as SourceStream);
+    updateThisStreamTo_(stream, { ...stream, destinationSyncMode: value });
+  };
+
+  const updateCursorField = (value: string, stream: SourceStream) => {
+    updateThisStreamTo_(stream, { ...stream, cursorField: value });
   };
 
   const handleSyncAllStreams = (checked: boolean) => {
-    setSyncAllStreams(checked);
+    setSelectAllStreams(checked);
     const sourceStreamsSlice: Array<SourceStream> = sourceStreams.map(
       (stream: SourceStream) => ({ ...stream, selected: checked })
     );
@@ -401,56 +449,53 @@ const CreateConnectionForm = ({
               </RadioGroup>
             </FormControl>
           </Box>
-
           {filteredSourceStreams.length >= 0 && (
             <>
               <Table data-testid="sourceStreamTable" sx={{ marginTop: '5px' }}>
                 <TableHead>
                   <TableRow>
                     <TableCell key="streamname" align="center">
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '2px',
-                        }}
-                      >
-                        <Box>Stream</Box>
-                        <Box>
-                          <TextField
-                            autoFocus
-                            key="search-input"
-                            data-testid="search-stream"
-                            label="Search"
-                            name="search-stream"
-                            value={searchInputRef.current}
-                            onChange={(event) => handleSearchChange(event)}
-                          />
-                        </Box>
-                      </Box>
+                      Stream
                     </TableCell>
                     <TableCell key="selected" align="center">
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '2px',
-                        }}
-                      >
-                        <Box>Sync?</Box>
-                        <Box>
-                          <Switch
-                            data-testid={`sync-all-streams`}
-                            checked={syncAllStreams}
-                            onChange={(event) =>
-                              handleSyncAllStreams(event.target.checked)
-                            }
-                          />
-                        </Box>
-                      </Box>
+                      Sync?
                     </TableCell>
                     <TableCell key="incremental" align="center">
-                      <Box>Incremental?</Box>
+                      Incremental?
+                    </TableCell>
+                    <TableCell key="destsyncmode" align="center">
+                      Destination
+                    </TableCell>
+                    <TableCell key="cursorfield" align="center">
+                      Cursor Field
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell key="searchstream" align="center">
+                      <Box>
+                        <TextField
+                          autoFocus
+                          key="search-input"
+                          data-testid="search-stream"
+                          label="Search"
+                          name="search-stream"
+                          value={searchInputRef.current}
+                          onChange={(event) => handleSearchChange(event)}
+                        />
+                      </Box>
+                    </TableCell>
+                    <TableCell key="selectall" align="center">
+                      <Box>
+                        <Switch
+                          data-testid={`sync-all-streams`}
+                          checked={selectAllStreams}
+                          onChange={(event) =>
+                            handleSyncAllStreams(event.target.checked)
+                          }
+                        />
+                      </Box>
+                    </TableCell>
+                    <TableCell key="incrementall" align="center">
                       <Box>
                         <Switch
                           data-testid={`incremental-all-streams`}
@@ -461,9 +506,8 @@ const CreateConnectionForm = ({
                         />
                       </Box>
                     </TableCell>
-                    <TableCell key="destsyncmode" align="center">
-                      Destination
-                    </TableCell>
+                    <TableCell key="" align="center"></TableCell>
+                    <TableCell key="" align="center"></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -519,6 +563,26 @@ const CreateConnectionForm = ({
                           </MenuItem>
                         </Select>
                       </TableCell>
+                      <TableCell key="cursorfield" align="center">
+                        <Select
+                          data-testid={`stream-cursorfield-${idx}`}
+                          disabled={
+                            !stream.selected ||
+                            !stream.supportsIncremental ||
+                            stream.syncMode !== 'incremental'
+                          }
+                          value={stream.cursorField}
+                          onChange={(event) => {
+                            updateCursorField(event.target.value, stream);
+                          }}
+                        >
+                          {stream.cursorFieldConfig?.cursorFieldOptions.map(
+                            (option: string) => (
+                              <MenuItem value={option}>{option}</MenuItem>
+                            )
+                          )}
+                        </Select>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -529,9 +593,11 @@ const CreateConnectionForm = ({
       </>
     );
   };
+
   return (
     <>
       <CustomDialog
+        maxWidth={false}
         data-testid="dialog"
         title={'Add a new connection'}
         show={showForm}

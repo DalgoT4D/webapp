@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  DialogProps,
 } from '@mui/material';
 import React from 'react';
 
@@ -19,9 +20,10 @@ interface CustomDialogProps {
   formContent: any;
   formActions: any;
   loading?: boolean;
+  [propName: string]: any;
 }
 
-const CustomDialog = ({
+const CustomDialog: React.FC<CustomDialogProps> = ({
   formContent,
   formActions,
   title,
@@ -29,9 +31,11 @@ const CustomDialog = ({
   handleClose,
   handleSubmit,
   loading,
-}: CustomDialogProps) => {
+  ...rest
+}) => {
   return (
     <Dialog
+      {...rest}
       open={show}
       onClose={handleClose}
       PaperProps={{
@@ -49,7 +53,7 @@ const CustomDialog = ({
         </Box>
       </DialogTitle>
       <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ minWidth: '400px', py: 0 }}>
+        <DialogContent sx={{ minWidth: '1000px', py: 0 }}>
           {formContent}
         </DialogContent>
         <Box
