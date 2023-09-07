@@ -197,27 +197,22 @@ export default function Home() {
           </Typography>
         </Box>
         <Box sx={{ mt: 3, mx: 12 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              background: '#00897B',
-              borderRadius: 3,
-              fontWeight: 600,
-              color: 'white',
-            }}
-          >
-            {flowRuns &&
-              flowRuns.length === 0 &&
-              'No pipelines available. Please create one'}
-            {/* <Image
-              style={{ marginLeft: 'auto' }}
-              src={CheckLargeIcon}
-              alt="large check icon"
-            /> */}
-          </Typography>
+          {flowRuns && flowRuns.length === 0 && (
+            <Typography
+              variant="h6"
+              sx={{
+                p: 2,
+                display: 'flex',
+                alignItems: 'center',
+                background: '#00897B',
+                borderRadius: 3,
+                fontWeight: 600,
+                color: 'white',
+              }}
+            >
+              'No pipelines available. Please create one'
+            </Typography>
+          )}
 
           {flowRuns &&
             flowRuns.map((run: any) => {
@@ -255,7 +250,8 @@ export default function Home() {
                               src={CheckIcon}
                               alt="check icon"
                             />{' '}
-                            last performed {lastRunTime(run.runs[0].startTime)}
+                            last run performed{' '}
+                            {lastRunTime(run.runs[0].startTime)}
                           </Typography>
                           <Typography
                             variant="subtitle2"
