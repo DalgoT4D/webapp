@@ -148,7 +148,7 @@ export const Main = ({ children }: any) => {
       return children;
     }
   } else {
-    return <MainDashboard children={children} />;
+    return <MainDashboard>{children}</MainDashboard>;
   }
 
   return null;

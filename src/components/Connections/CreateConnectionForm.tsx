@@ -23,13 +23,12 @@ import {
   TableRow,
   FormControlLabel,
 } from '@mui/material';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import Input from '../UI/Input/Input';
-import { Stream } from 'stream';
 
 interface CreateConnectionFormProps {
   blockId: string;
@@ -96,7 +95,7 @@ const CreateConnectionForm = ({
   ) => {
     const action = blockId ? 'edit' : 'create';
 
-    const streams = catalog.streams.map((el: any, idx: number) => {
+    const streams = catalog.streams.map((el: any) => {
       const stream = {
         name: el.stream.name,
         supportsIncremental:
@@ -112,7 +111,7 @@ const CreateConnectionForm = ({
         cursorField: '',
       };
 
-      let cursorFieldObj = stream.cursorFieldConfig;
+      const cursorFieldObj = stream.cursorFieldConfig;
 
       // will be true for most of our custom connectors
       if ('sourceDefinedCursor' in el.stream)
@@ -237,11 +236,16 @@ const CreateConnectionForm = ({
     const payload: any = {
       name: data.name,
       sourceId: data.sources.id,
-      streams: sourceStreams.map(
-        ({ cursorFieldConfig, ...rest }: SourceStream) => {
-          return rest;
-        }
-      ),
+      streams: sourceStreams.map((stream: SourceStream) => {
+        return {
+          name: stream.name,
+          supportsIncremental: stream.supportsIncremental,
+          selected: stream.selected,
+          syncMode: stream.syncMode, // incremental | full_refresh
+          destinationSyncMode: stream.destinationSyncMode, // append | overwrite | append_dedup
+          cursorField: stream.cursorField,
+        };
+      }),
       normalize,
     };
     if (data.destinationSchema) {
@@ -578,7 +582,9 @@ const CreateConnectionForm = ({
                         >
                           {stream.cursorFieldConfig?.cursorFieldOptions.map(
                             (option: string) => (
-                              <MenuItem value={option}>{option}</MenuItem>
+                              <MenuItem key={option} value={option}>
+                                {option}
+                              </MenuItem>
                             )
                           )}
                         </Select>

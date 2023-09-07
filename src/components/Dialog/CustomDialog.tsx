@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  DialogProps,
 } from '@mui/material';
 import React from 'react';
 
