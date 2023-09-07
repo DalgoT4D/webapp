@@ -37,7 +37,7 @@ export default function Ingest() {
 
   return (
     <>
-      <PageHead title="Development Data Platform" />
+      <PageHead title="Dalgo" />
       <main className={styles.main}>
         <Typography
           sx={{ fontWeight: 700 }}
