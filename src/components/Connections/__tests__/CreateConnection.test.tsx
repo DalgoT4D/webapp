@@ -164,7 +164,7 @@ describe('Create connection', () => {
     expect(headerCells[4].textContent).toBe('Cursor Field');
 
     // check if the stream mocked by us is present
-    const rows = within(sourceStreamTable).getAllByRole('row');
+    // const rows = within(sourceStreamTable).getAllByRole('row');
     const streamRowCells = within(sourceStreamTableRows[2]).getAllByRole(
       'cell'
     );
