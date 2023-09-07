@@ -52,7 +52,7 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
         </Box>
       </DialogTitle>
       <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ minWidth: '1000px', py: 0 }}>
+        <DialogContent sx={{ minWidth: '400px', py: 0 }}>
           {formContent}
         </DialogContent>
         <Box
