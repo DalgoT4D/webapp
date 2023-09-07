@@ -159,7 +159,7 @@ export default function Home() {
 
   return (
     <>
-      <PageHead title="Development Data Platform" />
+      <PageHead title="Dalgo" />
       <main className={styles.main}>
         <Box
           className={styles.Box}
