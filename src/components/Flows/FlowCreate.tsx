@@ -493,13 +493,11 @@ const FlowCreate = ({
               ''
             )}
             <Box data-testid="cronTimeOfDay">
-              <InputLabel htmlFor={'cronTimeOfDay'}>
-                Time of the day*
-              </InputLabel>
+              <InputLabel htmlFor={'cronTimeOfDay'}>Time of day*</InputLabel>
               <Controller
                 name="cronTimeOfDay"
                 control={control}
-                rules={{ required: 'Time of the day is required' }}
+                rules={{ required: 'Time of day is required' }}
                 render={({ field, fieldState: { error } }) => (
                   <LocalizationProvider dateAdapter={AdapterMoment}>
                     <TimePicker
