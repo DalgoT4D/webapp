@@ -61,7 +61,7 @@ export default function Analysis() {
 
   return (
     <>
-      <PageHead title="Development Data Platform" />
+      <PageHead title="Dalgo" />
       <main className={styles.analysis}>
         {globalContext?.CurrentOrg?.state?.viz_url && (
           <iframe
