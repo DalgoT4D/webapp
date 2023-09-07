@@ -57,32 +57,29 @@ export const Header = () => {
 
   useEffect(() => {
     // fetch the orgs associated with the orguser
-    (async () => {
-      try {
-        setOrgusers(globalContext?.OrgUsers.state);
-        let orgs: Array<AutoCompleteOption> = [];
-        if (orgusers) {
-          orgs = orgusers?.map((orguser: OrgUser) => ({
-            id: orguser.org.slug,
-            label: orguser.org.name,
-          }));
-          setOrgs(orgs);
-        }
-
-        // see if the org is set in the local storage
-        const currentOrgSlug = localStorage.getItem('org-slug');
-        let org: AutoCompleteOption | null | undefined = null;
-        org = orgs?.find(
-          (org: AutoCompleteOption) => org.id === currentOrgSlug
-        );
-        // If not pick the first org from the api response
-        if (!org && orgs && orgs.length > 0) org = orgs[0];
-        setSelectedOrg(org);
-      } catch (err: any) {
-        console.error(err);
+    try {
+      const orgusers = globalContext?.OrgUsers.state;
+      let orgs: Array<AutoCompleteOption> = [];
+      if (orgusers) {
+        orgs = orgusers?.map((orguser: OrgUser) => ({
+          id: orguser.org.slug,
+          label: orguser.org.name,
+        }));
+        setOrgs(orgs);
       }
-    })();
-  }, [session, globalContext?.OrgUsers]);
+      setOrgusers(orgusers);
+
+      // see if the org is set in the local storage
+      const currentOrgSlug = localStorage.getItem('org-slug');
+      let org: AutoCompleteOption | null | undefined = null;
+      org = orgs?.find((org: AutoCompleteOption) => org.id === currentOrgSlug);
+      // If not pick the first org from the api response
+      if (!org && orgs && orgs.length > 0) org = orgs[0];
+      setSelectedOrg(org);
+    } catch (err: any) {
+      console.error(err);
+    }
+  }, [session, globalContext?.OrgUsers.state]);
 
   useEffect(() => {
     const currentOrgSlug = localStorage.getItem('org-slug');
