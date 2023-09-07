@@ -210,7 +210,7 @@ export default function Home() {
                 color: 'white',
               }}
             >
-              'No pipelines available. Please create one'
+              No pipelines available. Please create one
             </Typography>
           )}
 
