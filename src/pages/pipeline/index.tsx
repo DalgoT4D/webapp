@@ -127,8 +127,8 @@ export default function Home() {
 
   useEffect(() => {
     if (session) {
-      setIsLoading(true);
       (async () => {
+        setIsLoading(true);
         try {
           const flowRuns: any = await httpGet(session, 'dashboard/');
           setFlowRuns(flowRuns);
@@ -136,8 +136,8 @@ export default function Home() {
           console.error(err);
           errorToast(err.message, [], globalContext);
         }
+        setIsLoading(false);
       })();
-      setIsLoading(false);
     }
   }, [session]);
 
