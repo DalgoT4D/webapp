@@ -9,6 +9,7 @@ import {
   IconButton,
   Collapse,
   CardContent,
+  Tooltip,
 } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
@@ -47,15 +48,69 @@ type PrefectFlowRunLog = {
   message: string;
 };
 
+const truncateString = (input: string) => {
+  const maxlength = 20;
+  if (input.length <= maxlength) {
+    return input;
+  }
+  return input.substring(0, maxlength - 3) + '...';
+};
+
 const headers = [
   'Connection details',
   'Source → Destination',
   'Last manual sync',
 ];
 const getSourceDest = (connection: any) => (
-  <Typography variant="subtitle2" fontWeight={600}>
-    {`${connection.source.name} → ${connection.destination.name}`}
-  </Typography>
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'left',
+      justifyContent: 'start',
+    }}
+  >
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'left',
+        mr: 2,
+      }}
+    >
+      <Tooltip title={connection.source.name}>
+        <Typography variant="subtitle2" fontWeight={600}>
+          {truncateString(connection.source.name)}
+        </Typography>
+      </Tooltip>
+      <Tooltip title={connection.source.sourceName}>
+        <Typography variant="subtitle2" fontWeight={400}>
+          {truncateString(connection.source.sourceName)}
+        </Typography>
+      </Tooltip>
+    </Box>
+    <Typography variant="subtitle2" fontWeight={600}>
+      →
+    </Typography>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'left',
+        ml: 2,
+      }}
+    >
+      <Tooltip title={connection.destination.name}>
+        <Typography variant="subtitle2" fontWeight={600}>
+          {truncateString(connection.destination.name)}
+        </Typography>
+      </Tooltip>
+      <Tooltip title={connection.destination.destinationName}>
+        <Typography variant="subtitle2" fontWeight={400}>
+          {truncateString(connection.destination.destinationName)}
+        </Typography>
+      </Tooltip>
+    </Box>
+  </Box>
 );
 
 const getLastSync = (connection: any) => (

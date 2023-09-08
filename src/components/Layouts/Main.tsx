@@ -27,10 +27,7 @@ type OrgUser = {
 const MainDashboard = ({ children }: any) => {
   const { data: session }: any = useSession();
   const router = useRouter();
-  const [redirectToOrgPage, setRedirectToOrgPage] = useState<boolean | null>(
-    null
-  );
-  const [hasOrg, setHasOrg] = useState<boolean>(false);
+  const [redirectTo, setRedirectTo] = useState<string | null>('');
   const globalContext = useContext(GlobalContext);
 
   useEffect(() => {
@@ -38,20 +35,23 @@ const MainDashboard = ({ children }: any) => {
       try {
         let orgusers = await httpGet(session, `currentuserv2`);
         // if there are no orgs, redirect to create org page
+        let hasOrg = false;
         if (orgusers && orgusers.length > 0) {
           for (const orguser of orgusers) {
-            if (orguser.org !== null) {
-              setHasOrg(true);
-            }
+            if (orguser.org !== null) hasOrg = true;
           }
         }
 
         if (!hasOrg && session?.user?.can_create_orgs) {
-          setRedirectToOrgPage(true);
+          setRedirectTo('createorg');
           router.push('/createorg');
           return;
+        }
+
+        if (!hasOrg && !session?.user?.can_create_orgs) {
+          setRedirectTo('setup-account');
         } else {
-          setRedirectToOrgPage(false);
+          setRedirectTo('dashboard');
         }
 
         // update orgusers in global state
@@ -89,7 +89,7 @@ const MainDashboard = ({ children }: any) => {
         },
       }}
     >
-      {!hasOrg && !session?.user?.can_create_orgs && (
+      {redirectTo === 'setup-account' && (
         <>
           <Header />
           <Typography variant="h2" sx={{ pt: 20, textAlign: 'center' }}>
@@ -99,13 +99,17 @@ const MainDashboard = ({ children }: any) => {
             Please contact the Dalgo team to set up your account
           </Typography>
           <Box
-            sx={{ display: 'flex', justifyContent: 'center', fontSize: '18px' }}
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              fontSize: '18px',
+            }}
           >
             <a href="mailto:support@dalgo.in">support@dalgo.in</a>
           </Box>
         </>
       )}
-      {(hasOrg || session?.user?.can_create_orgs) && (
+      {redirectTo === 'dashboard' && (
         <>
           <Header />
           <Box sx={{ display: 'flex', pt: 6 }}>
@@ -144,7 +148,7 @@ export const Main = ({ children }: any) => {
       return children;
     }
   } else {
-    return <MainDashboard children={children} />;
+    return <MainDashboard>{children}</MainDashboard>;
   }
 
   return null;

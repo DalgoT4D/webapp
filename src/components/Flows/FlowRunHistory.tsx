@@ -140,7 +140,7 @@ export const FlowRunHistory = ({
     <Dialog open={showFlowRunHistory}>
       <DialogTitle>
         <Box sx={{ color: 'black', display: 'flex', alignItems: 'center' }}>
-          <Box flexGrow={1}>Flow Runs</Box>
+          <Box flexGrow={1}>Pipeline Runs</Box>
           <Box>
             <IconButton onClick={handleClose}>
               <Close data-testid="closebutton" />
