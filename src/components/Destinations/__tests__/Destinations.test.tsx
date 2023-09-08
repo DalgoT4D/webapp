@@ -71,6 +71,7 @@ describe('Destinations', () => {
             },
           },
           wtype: 'postgres',
+          name: 'PGWarehouse',
           icon: null,
         },
       ],
@@ -97,6 +98,7 @@ describe('Destinations', () => {
             },
           },
           wtype: 'bigquery',
+          name: 'BQWarehouse',
           icon: null,
         },
       ],
@@ -120,8 +122,8 @@ describe('Destinations', () => {
         </SWRConfig>
       );
     });
-    const wtype = screen.getByTestId('wtype');
-    expect(wtype).toHaveTextContent('postgres');
+    const wtype = screen.getByTestId('wname');
+    expect(wtype).toHaveTextContent('PGWarehouse');
     const host = screen.getByTestId('host');
     expect(host).toHaveTextContent('HOSTNAME');
     const port = screen.getByTestId('port');
@@ -155,8 +157,8 @@ describe('Destinations', () => {
         </SWRConfig>
       );
     });
-    const wtype = screen.getByTestId('wtype');
-    expect(wtype).toHaveTextContent('bigquery');
+    const wtype = screen.getByTestId('wname');
+    expect(wtype).toHaveTextContent('BQWarehouse');
     const project_id = screen.getByTestId('project_id');
     expect(project_id).toHaveTextContent('PROJECT_ID');
     const dataset_id = screen.getByTestId('dataset_id');

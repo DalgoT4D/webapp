@@ -94,9 +94,11 @@ describe('Create connection', () => {
             streams: [
               {
                 stream: STREAMS[0],
+                config: [],
               },
               {
                 stream: STREAMS[1],
+                config: [],
               },
             ],
           },
@@ -148,25 +150,25 @@ describe('Create connection', () => {
 
     // source stream table should have two rows i.e. header and one source stream
     const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
-    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 1);
+    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2);
 
     // check if the headers are correct
     const headerCells = within(sourceStreamTableRows[0]).getAllByRole(
       'columnheader'
     );
-    expect(headerCells.length).toBe(4);
-    expect(headerCells[0].children[0].childNodes[0].textContent).toBe('Stream');
-    expect(headerCells[1].children[0].childNodes[0].textContent).toBe('Sync?');
-    expect(headerCells[2].children[0].childNodes[0].textContent).toBe(
-      'Incremental?'
-    );
+    expect(headerCells.length).toBe(5);
+    expect(headerCells[0].textContent).toBe('Stream');
+    expect(headerCells[1].textContent).toBe('Sync?');
+    expect(headerCells[2].textContent).toBe('Incremental?');
     expect(headerCells[3].textContent).toBe('Destination');
+    expect(headerCells[4].textContent).toBe('Cursor Field');
 
     // check if the stream mocked by us is present
-    const streamRowCells = within(sourceStreamTableRows[1]).getAllByRole(
+    // const rows = within(sourceStreamTable).getAllByRole('row');
+    const streamRowCells = within(sourceStreamTableRows[2]).getAllByRole(
       'cell'
     );
-    expect(streamRowCells.length).toBe(4);
+    expect(streamRowCells.length).toBe(5);
     expect(streamRowCells[0].textContent).toBe(STREAMS[0].name);
 
     const connectButton = screen.getByText('Connect').closest('button');
@@ -242,9 +244,11 @@ describe('Create connection', () => {
             streams: [
               {
                 stream: STREAMS[0],
+                config: [],
               },
               {
                 stream: STREAMS[1],
+                config: [],
               },
             ],
           },
@@ -299,7 +303,7 @@ describe('Create connection', () => {
 
     // source stream table should have two rows i.e. header and one source stream
     const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
-    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 1);
+    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2);
 
     const connectButton = screen.getByText('Connect').closest('button');
     const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
@@ -337,9 +341,11 @@ describe('Create connection', () => {
             streams: [
               {
                 stream: STREAMS[0],
+                config: [],
               },
               {
                 stream: STREAMS[1],
+                config: [],
               },
             ],
           },
@@ -394,7 +400,7 @@ describe('Create connection', () => {
 
     // source stream table should have two rows i.e. header and one source stream
     const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
-    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 1);
+    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2);
 
     const connectButton = screen.getByText('Connect').closest('button');
     const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;

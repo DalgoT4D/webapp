@@ -127,8 +127,8 @@ export default function Home() {
 
   useEffect(() => {
     if (session) {
-      setIsLoading(true);
       (async () => {
+        setIsLoading(true);
         try {
           const flowRuns: any = await httpGet(session, 'dashboard/');
           setFlowRuns(flowRuns);
@@ -136,8 +136,8 @@ export default function Home() {
           console.error(err);
           errorToast(err.message, [], globalContext);
         }
+        setIsLoading(false);
       })();
-      setIsLoading(false);
     }
   }, [session]);
 
@@ -159,7 +159,7 @@ export default function Home() {
 
   return (
     <>
-      <PageHead title="Development Data Platform" />
+      <PageHead title="Dalgo" />
       <main className={styles.main}>
         <Box
           className={styles.Box}
@@ -193,31 +193,26 @@ export default function Home() {
               fontWeight: 700,
             }}
           >
-            Overview
+            Pipeline Overview
           </Typography>
         </Box>
         <Box sx={{ mt: 3, mx: 12 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              background: '#00897B',
-              borderRadius: 3,
-              fontWeight: 600,
-              color: 'white',
-            }}
-          >
-            {flowRuns && flowRuns.length > 0
-              ? 'Scheduled flows are operational'
-              : 'No flows available. Please create one'}
-            {/* <Image
-              style={{ marginLeft: 'auto' }}
-              src={CheckLargeIcon}
-              alt="large check icon"
-            /> */}
-          </Typography>
+          {flowRuns && flowRuns.length === 0 && (
+            <Typography
+              variant="h6"
+              sx={{
+                p: 2,
+                display: 'flex',
+                alignItems: 'center',
+                background: '#00897B',
+                borderRadius: 3,
+                fontWeight: 600,
+                color: 'white',
+              }}
+            >
+              No pipelines available. Please create one
+            </Typography>
+          )}
 
           {flowRuns &&
             flowRuns.map((run: any) => {
@@ -255,7 +250,8 @@ export default function Home() {
                               src={CheckIcon}
                               alt="check icon"
                             />{' '}
-                            last performed {lastRunTime(run.runs[0].startTime)}
+                            last run performed{' '}
+                            {lastRunTime(run.runs[0].startTime)}
                           </Typography>
                           <Typography
                             variant="subtitle2"
@@ -276,7 +272,7 @@ export default function Home() {
                         </Typography>
                       </>
                     ) : (
-                      'No runs found for this flow'
+                      'No runs found for this pipeline'
                     )}
                   </Paper>
                 </React.Fragment>
