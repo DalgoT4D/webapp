@@ -19,9 +19,10 @@ interface CustomDialogProps {
   formContent: any;
   formActions: any;
   loading?: boolean;
+  [propName: string]: any;
 }
 
-const CustomDialog = ({
+const CustomDialog: React.FC<CustomDialogProps> = ({
   formContent,
   formActions,
   title,
@@ -29,9 +30,11 @@ const CustomDialog = ({
   handleClose,
   handleSubmit,
   loading,
-}: CustomDialogProps) => {
+  ...rest
+}) => {
   return (
     <Dialog
+      {...rest}
       open={show}
       onClose={handleClose}
       PaperProps={{
