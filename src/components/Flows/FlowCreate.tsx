@@ -471,7 +471,7 @@ const FlowCreate = ({
                       isOptionEqualToValue={(option: any, val: any) =>
                         val && option?.id === val?.id
                       }
-                      onChange={(e, data: Array<AutoCompleteOption>) =>
+                      onChange={(e, data: readonly any[]) =>
                         field.onChange(data)
                       }
                       renderInput={(params) => (
