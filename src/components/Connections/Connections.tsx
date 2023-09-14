@@ -56,11 +56,7 @@ const truncateString = (input: string) => {
   return input.substring(0, maxlength - 3) + '...';
 };
 
-const headers = [
-  'Connection details',
-  'Source → Destination',
-  'Last manual sync',
-];
+const headers = ['Connection details', 'Source → Destination', 'Last sync'];
 const getSourceDest = (connection: any) => (
   <Box
     sx={{
