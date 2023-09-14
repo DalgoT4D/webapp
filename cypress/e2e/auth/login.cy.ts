@@ -23,17 +23,17 @@ describe('Login Page', () => {
     cy.get('h5').should('contain', 'Create an account');
   });
 
+  it('Failure login', () => {
+    cy.get('[data-testid="username"]').type('randomeusername');
+    cy.get('[data-testid="password"]').type('randompassword');
+    cy.get('[data-testid="submitbutton"]').click();
+    cy.get('div').should('contain', 'Please check your credentials');
+  });
+
   it('Successfully login', () => {
     cy.get('[data-testid="username"]').type(Cypress.env('username'));
     cy.get('[data-testid="password"]').type(Cypress.env('password'));
     cy.get('[data-testid="submitbutton"]').click();
     cy.get('div').should('contain', 'User logged in successfully');
-  });
-
-  it('Failure login', () => {
-    cy.get('[data-testid="username"]').type('randomeusername');
-    cy.get('[data-testid="password"]').type('randompassword');
-    cy.get('[data-testid="submitbutton"]').click();
-    cy.get('p').should('contain', 'Please check your credentials');
   });
 });

@@ -6,6 +6,10 @@ describe('Side menu', () => {
   it('Initial render of side menu', () => {
     // parent
     cy.get('[data-testid="side-menu"]')
+      .contains('Analysis')
+      .should('be.visible');
+
+    cy.get('[data-testid="side-menu"]')
       .contains('Pipeline overview')
       .should('be.visible');
 
@@ -27,22 +31,22 @@ describe('Side menu', () => {
     // Collapse the pipeline overview child items
     cy.get('[data-testid="side-menu"]')
       .find('li')
-      .first()
+      .eq(1)
       .within(() => {
         cy.get('[data-testid="listButton"]').find('button').click();
       });
 
-    cy.get('[data-testid="child-menu-1"]').should('not.be.visible');
+    cy.get('[data-testid="child-menu-2"]').should('not.be.visible');
 
     // Click again to show the child menu items
     cy.get('[data-testid="side-menu"]')
       .find('li')
-      .first()
+      .eq(1)
       .within(() => {
         cy.get('[data-testid="listButton"]').find('button').click();
       });
 
-    cy.get('[data-testid="child-menu-1"]').should('be.visible');
+    cy.get('[data-testid="child-menu-2"]').should('be.visible');
   });
 
   it('Switching between menu items', () => {
@@ -50,23 +54,23 @@ describe('Side menu', () => {
     cy.get('h4').should('contain', 'Overview');
 
     // Go to user management
-    cy.get('[data-testid="side-menu"] > li').eq(1).click();
+    cy.get('[data-testid="side-menu"] > li').eq(2).click();
 
     cy.get('h4').should('contain', 'Manage users');
 
     // Go to ingest
-    cy.get('[data-testid="child-menu-1"] > li').eq(0).click();
+    cy.get('[data-testid="child-menu-2"] > li').eq(0).click();
 
     cy.get('h4').should('contain', 'Ingest');
 
     // Go to transform
-    cy.get('[data-testid="child-menu-1"] > li').eq(1).click();
+    cy.get('[data-testid="child-menu-2"] > li').eq(1).click();
 
     cy.get('h4').should('contain', 'Transform');
 
     // Go to transform
-    cy.get('[data-testid="child-menu-1"] > li').eq(2).click();
+    cy.get('[data-testid="child-menu-2"] > li').eq(2).click();
 
-    cy.get('h4').should('contain', 'Flows');
+    cy.get('h4').should('contain', 'Pipelines');
   });
 });
