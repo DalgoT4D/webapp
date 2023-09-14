@@ -228,6 +228,7 @@ export const Destinations = () => {
         showForm={showEditWarehouseDialog}
         setShowForm={setShowEditWarehouseDialog}
         warehouse={warehouse}
+        mutate={mutate}
       />
       <ConfirmationDialog
         show={showDeleteWarehouseDialog}
