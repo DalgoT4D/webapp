@@ -5,8 +5,8 @@ describe('Header', () => {
     cy.login();
     // need to wait since the create org api takes time
     // cypress is intelligent to figure out the call with just the dynamic path
-    cy.intercept('/api/dashboard').as('pipeline');
-    cy.wait(['@pipeline']);
+    cy.intercept('/api/dashboard').as('dashboard');
+    cy.wait(['@dashboard']);
   });
 
   it('Should render logo and profile icon', () => {
@@ -22,7 +22,7 @@ describe('Header', () => {
     cy.get('h6').should('contain', 'Create new org');
   });
 
-  it('Create org', () => {
+  it('Create org & select it', () => {
     const name = `cyp_${uuidv4()}`;
     cy.get('[alt="profile icon"]').click();
     cy.contains('h6', 'Create new org').click();
@@ -31,10 +31,21 @@ describe('Header', () => {
     // submit
     cy.get('[data-testid="savebutton"]').click();
     // wait till the call is completed
-    cy.intercept('/api/organizations').as('orgs');
-    cy.intercept('/api/dashboard').as('pipeline');
-    cy.wait(['@pipeline', '@orgs'], { timeout: 20000 });
+    cy.wait(12000);
     // check if the newly created org is selected
     cy.get('h6').should('contain', name);
+  });
+
+  it('Switch between org', () => {
+    cy.get('[alt="profile icon"]').click();
+    cy.get('[role="menuitem"]')
+      .should('have.length.greaterThan', 2)
+      .then(() => {
+        cy.get('[role="menuitem"]').eq(0).click();
+        cy.get('body').click(0, 0);
+        cy.get('[alt="profile icon"]').click();
+        cy.get('[role="menuitem"]').eq(1).click();
+        cy.get('body').click(0, 0);
+      });
   });
 });
