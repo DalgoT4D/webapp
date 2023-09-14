@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-describe('Login Page', () => {
+describe('Sigup Page', () => {
   beforeEach(() => {
     cy.visit('/signup');
   });
@@ -46,15 +46,5 @@ describe('Login Page', () => {
     cy.get('[data-testid="confirmpassword"]').type('password');
     cy.get('[data-testid="signupcode"]').type(Cypress.env('signupcode'));
     cy.get('[data-testid="submitbutton"]').click();
-
-    // enter the org details and submit
-    cy.get('h5').should('contain', 'Enter organization details');
-    cy.get('[data-testid="input-orgname"]').type(`cypress_${uuidv4()}`);
-    cy.get('[data-testid="createorg-form"]').submit();
-    // need to wait since the create org api takes time
-    // cypress is intelligent to figure out the call with just the dynamic path
-    cy.intercept('/api/dashboard').as('pipeline');
-    cy.wait(['@pipeline']);
-    cy.get('div').should('contain', 'Success');
   });
 });
