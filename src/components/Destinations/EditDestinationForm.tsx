@@ -14,6 +14,7 @@ interface EditDestinationFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
   warehouse: any;
+  mutate: (...args: any) => any;
 }
 
 interface DestinationDefinitionsApiResponse {
@@ -44,6 +45,7 @@ const EditDestinationForm = ({
   showForm,
   setShowForm,
   warehouse,
+  mutate,
 }: EditDestinationFormProps) => {
   const { data: session }: any = useSession();
   const [loading, setLoading] = useState<boolean>(false);
@@ -214,6 +216,7 @@ const EditDestinationForm = ({
       if (connectivityCheck.status === 'succeeded') {
         await editWarehouse(data);
         handleClose();
+        mutate();
         successToast(
           'Warehouse details updated successfully',
           [],
