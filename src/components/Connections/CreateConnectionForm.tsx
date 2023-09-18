@@ -82,6 +82,8 @@ const CreateConnectionForm = ({
     useState<boolean>(false);
   const [selectAllStreams, setSelectAllStreams] = useState<boolean>(false);
   const searchInputRef: any = useRef();
+  const inputRef: any = useRef(null);
+  const shouldFocusInput: any = useRef(null);
 
   const { data: sourcesData } = useSWR(`airbyte/sources`);
 
@@ -329,7 +331,15 @@ const CreateConnectionForm = ({
   const handleSearchChange = (event: any) => {
     searchInputRef.current = event.target.value;
     updateFilteredStreams(event.target.value);
+    shouldFocusInput.current = true;
   };
+
+  useEffect(() => {
+    if (shouldFocusInput.current && inputRef.current) {
+      inputRef.current.focus();
+      shouldFocusInput.current = false; // Reset focus flag
+    }
+  });
 
   const updateFilteredStreams = async (searchString: string) => {
     if (searchString && searchString.length > 0) {
@@ -478,7 +488,7 @@ const CreateConnectionForm = ({
                     <TableCell key="searchstream" align="center">
                       <Box>
                         <TextField
-                          autoFocus
+                          inputRef={inputRef}
                           key="search-input"
                           data-testid="search-stream"
                           label="Search"
