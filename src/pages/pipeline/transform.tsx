@@ -295,8 +295,9 @@ const Transform = () => {
                   </Button>
                 ) : dbtSetupStage === 'complete' ? (
                   <>
-                    {anyBlockLocked && <CircularProgress></CircularProgress>}
-                    {!anyBlockLocked && (
+                    {anyBlockLocked ? (
+                      <CircularProgress />
+                    ) : (
                       <>
                         {Object.keys(dbtBlocks).map((target) => (
                           <DBTTarget
