@@ -29,7 +29,7 @@ import CreateConnectionForm from './CreateConnectionForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import Image from 'next/image';
 import styles from './Connections.module.css';
-import { delay, lastRunTime } from '@/utils/common';
+import { delay, lastRunTime, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
@@ -109,11 +109,16 @@ const getSourceDest = (connection: any) => (
   </Box>
 );
 
-const getLastSync = (connection: any) => (
-  <Typography variant="subtitle2" fontWeight={600}>
-    {lastRunTime(connection?.lastRun?.startTime)}
-  </Typography>
-);
+const getLastSync = (connection: any) =>
+  connection.lock ? (
+    <Typography variant="subtitle2" fontWeight={600}>
+      Currently running
+    </Typography>
+  ) : (
+    <Typography variant="subtitle2" fontWeight={600}>
+      {lastRunTime(connection?.lastRun?.startTime)}
+    </Typography>
+  );
 
 export const Connections = () => {
   const { data: session }: any = useSession();
@@ -317,11 +322,36 @@ export const Connections = () => {
         getSourceDest(connection),
         getLastSync(connection),
 
-        <Actions
-          key={`actions-${connection.blockId}`}
-          connection={connection}
-          idx={connection.blockId}
-        />,
+        connection.lock ? (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'end',
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-around',
+                alignItems: 'start',
+              }}
+            >
+              <Typography variant="body2" fontWeight={600}>
+                Triggered by: {trimEmail(connection.lock.lockedBy)}
+              </Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {lastRunTime(connection.lock.lockedAt)}
+              </Typography>
+            </Box>
+          </Box>
+        ) : (
+          <Actions
+            key={`actions-${connection.blockId}`}
+            connection={connection}
+            idx={connection.blockId}
+          />
+        ),
       ]);
     }
     return [];

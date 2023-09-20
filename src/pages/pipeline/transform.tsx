@@ -35,6 +35,7 @@ type DbtBlock = {
   target: string;
   action: string;
   deploymentId: string;
+  lock: object | null;
 };
 type TargetBlocks = {
   [id: string]: DbtBlock[];
@@ -61,6 +62,7 @@ const Transform = () => {
   const handleChangeTab = (event: React.SyntheticEvent, newTab: string) => {
     setActiveTab(newTab);
   };
+  const [anyBlockLocked, setAnyBlockLocked] = useState<boolean>(false);
 
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
@@ -118,6 +120,9 @@ const Transform = () => {
           expandByTargets[block.target] = false;
         }
         blocksByTarget[block.target].push(block);
+        if (block.lock) {
+          setAnyBlockLocked(true);
+        }
       });
 
       if (response && response.length) {
@@ -128,6 +133,7 @@ const Transform = () => {
           target: response[0].target,
           action: 'git-pull',
           deploymentId: '',
+          lock: null,
         });
       }
       setDbtBlocks(blocksByTarget);
@@ -265,31 +271,37 @@ const Transform = () => {
                   </Button>
                 ) : dbtSetupStage === 'complete' ? (
                   <>
-                    {Object.keys(dbtBlocks).map((target) => (
-                      <DBTTarget
-                        key={target}
-                        setExpandLogs={setExpandLogs}
-                        setRunning={setRunning}
-                        running={running}
-                        setDbtRunLogs={(logs: string[]) => {
-                          setDbtSetupLogs(logs);
-                        }}
-                        blocks={dbtBlocks[target].filter(
-                          (block) => block.action.indexOf('docs-generate') < 0
-                        )}
-                      />
-                    ))}
-                    <Button
-                      aria-controls={open ? 'basic-menu' : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={open ? 'true' : undefined}
-                      onClick={(event) => handleClick(event.currentTarget)}
-                      variant="contained"
-                      color="info"
-                      sx={{ p: 0, minWidth: 32, ml: 2 }}
-                    >
-                      <MoreHorizIcon />
-                    </Button>
+                    {anyBlockLocked && <CircularProgress></CircularProgress>}
+                    {!anyBlockLocked && (
+                      <>
+                        {Object.keys(dbtBlocks).map((target) => (
+                          <DBTTarget
+                            key={target}
+                            setExpandLogs={setExpandLogs}
+                            setRunning={setRunning}
+                            running={running}
+                            setDbtRunLogs={(logs: string[]) => {
+                              setDbtSetupLogs(logs);
+                            }}
+                            blocks={dbtBlocks[target].filter(
+                              (block) =>
+                                block.action.indexOf('docs-generate') < 0
+                            )}
+                          />
+                        ))}
+                        <Button
+                          aria-controls={open ? 'basic-menu' : undefined}
+                          aria-haspopup="true"
+                          aria-expanded={open ? 'true' : undefined}
+                          onClick={(event) => handleClick(event.currentTarget)}
+                          variant="contained"
+                          color="info"
+                          sx={{ p: 0, minWidth: 32, ml: 2 }}
+                        >
+                          <MoreHorizIcon />
+                        </Button>
+                      </>
+                    )}
                   </>
                 ) : (
                   ''

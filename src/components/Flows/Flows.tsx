@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, Tooltip } from '@mui/material';
 import React, { useContext, useMemo, useState } from 'react';
 import SyncIcon from '@/assets/icons/sync.svg';
 import FlowIcon from '@/assets/icons/flow.svg';
@@ -11,11 +11,16 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { List } from '../List/List';
 import { FlowRunHistory, FlowRun } from './FlowRunHistory';
-import { lastRunTime, cronToString } from '@/utils/common';
+import { lastRunTime, cronToString, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import styles from './Flows.module.css';
 import Image from 'next/image';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
+
+interface BlockLock {
+  lockedBy: string;
+  lockedAt: string;
+}
 
 export interface FlowInterface {
   name: string;
@@ -23,6 +28,7 @@ export interface FlowInterface {
   deploymentName: string;
   deploymentId: string;
   lastRun?: FlowRun;
+  lock: BlockLock | undefined | null;
   status: boolean;
 }
 
@@ -208,18 +214,27 @@ export const Flows = ({
             sx={{ mr: 1 }}
             data-testid={'btn-quickrundeployment-' + flow.name}
             variant="contained"
-            disabled={runningDeploymentId === flow.deploymentId}
+            disabled={!!flow.lock}
             onClick={() => {
               setRunningDeploymentId(flow.deploymentId);
               handleQuickRunDeployment(flow.deploymentId);
             }}
           >
-            {runningDeploymentId === flow.deploymentId ? (
-              <Image
-                src={SyncIcon}
-                className={styles.SyncIcon}
-                alt="sync icon"
-              />
+            {flow.lock ? (
+              <Tooltip
+                title={
+                  'triggered by ' +
+                  trimEmail(flow.lock.lockedBy) +
+                  ' ' +
+                  lastRunTime(flow.lock.lockedAt)
+                }
+              >
+                <Image
+                  src={SyncIcon}
+                  className={styles.SyncIcon}
+                  alt="sync icon"
+                />
+              </Tooltip>
             ) : (
               'Run'
             )}
