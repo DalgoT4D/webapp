@@ -27,6 +27,7 @@ import Image from 'next/image';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
 import { DBTTarget } from '@/components/DBT/DBTTarget';
 import { DBTDocs } from '@/components/DBT/DBTDocs';
+import { delay } from '@/utils/common';
 
 type DbtBlock = {
   blockName: string;
@@ -102,6 +103,23 @@ const Transform = () => {
     }
   };
 
+  const pollDbtBlocksLock = async () => {
+    try {
+      let isLocked: boolean = true;
+      while (isLocked) {
+        const response = await httpGet(session, 'prefect/blocks/dbt');
+
+        isLocked = response?.some((block: DbtBlock) =>
+          block.lock ? true : false
+        );
+        await delay(3000);
+      }
+      setAnyBlockLocked(false);
+    } catch (error) {
+      setAnyBlockLocked(false);
+    }
+  };
+
   const fetchDbtBlocks = async () => {
     if (!session) return;
     try {
@@ -110,6 +128,7 @@ const Transform = () => {
       const blocksByTarget: TargetBlocks = {};
       const expandByTargets: ExpandTarget = {};
 
+      let isAnyLocked: boolean = false;
       response?.forEach((block: DbtBlock) => {
         // const components: string[] = block.blockName.split('-');
         // block.target = block?.dbtTargetSchem;
@@ -121,7 +140,7 @@ const Transform = () => {
         }
         blocksByTarget[block.target].push(block);
         if (block.lock) {
-          setAnyBlockLocked(true);
+          isAnyLocked = true;
         }
       });
 
@@ -140,6 +159,11 @@ const Transform = () => {
 
       if (response && response?.length > 0) {
         setDbtSetupStage('complete');
+      }
+
+      if (isAnyLocked) {
+        setAnyBlockLocked(true);
+        pollDbtBlocksLock();
       }
     } catch (err: any) {
       console.error(err);
