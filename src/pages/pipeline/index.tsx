@@ -126,19 +126,28 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const globalContext = useContext(GlobalContext);
 
+  const fetchFlowRuns = async () => {
+    var timeout: NodeJS.Timeout | undefined = undefined;
+    try {
+      const flowRuns: any = await httpGet(session, 'dashboard/');
+      setFlowRuns(flowRuns);
+      if (flowRuns.some((run: any) => run.lock)) {
+        timeout = setTimeout(() => fetchFlowRuns(), 3000);
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+    if (timeout) {
+      return () => clearTimeout(timeout);
+    }
+  };
+
   useEffect(() => {
     if (session) {
-      (async () => {
-        setIsLoading(true);
-        try {
-          const flowRuns: any = await httpGet(session, 'dashboard/');
-          setFlowRuns(flowRuns);
-        } catch (err: any) {
-          console.error(err);
-          errorToast(err.message, [], globalContext);
-        }
-        setIsLoading(false);
-      })();
+      setIsLoading(true);
+      fetchFlowRuns();
+      setIsLoading(false);
     }
   }, [session]);
 
@@ -246,13 +255,29 @@ export default function Home() {
                               alignItems: 'center',
                             }}
                           >
-                            <Image
-                              style={{ marginRight: 8 }}
-                              src={CheckIcon}
-                              alt="check icon"
-                            />{' '}
-                            last run performed{' '}
-                            {lastRunTime(run.runs[0].startTime)}
+                            {run.lock && (
+                              <>
+                                <CircularProgress
+                                  style={{
+                                    width: 20,
+                                    height: 20,
+                                    marginRight: 10,
+                                  }}
+                                ></CircularProgress>
+                                Currently running
+                              </>
+                            )}
+                            {!run.lock && (
+                              <>
+                                <Image
+                                  style={{ marginRight: 8 }}
+                                  src={CheckIcon}
+                                  alt="check icon"
+                                />{' '}
+                                last run performed{' '}
+                                {lastRunTime(run.runs[0].startTime)}
+                              </>
+                            )}
                           </Typography>
                           <Typography
                             variant="subtitle2"
