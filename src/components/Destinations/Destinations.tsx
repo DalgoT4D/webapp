@@ -23,6 +23,7 @@ interface ConnectionConfiguration {
 }
 
 interface Warehouse {
+  airbyteWorkspaceId: string;
   destinationId: string;
   destinationDefinitionId: string;
   name: string;
@@ -49,6 +50,7 @@ export const Destinations = () => {
     if (data && data.warehouses && data.warehouses.length > 0) {
       const w_house = data.warehouses[0];
       setWarehouse({
+        airbyteWorkspaceId: w_house.airbyte_destination.workspaceId,
         destinationId: w_house.airbyte_destination.destinationId,
         destinationDefinitionId:
           w_house.airbyte_destination.destinationDefinitionId,
@@ -113,6 +115,12 @@ export const Destinations = () => {
                 <TableCell>User</TableCell>
                 <TableCell align="right" data-testid="username">
                   {warehouse.connectionConfiguration.username}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Airbyte Workspace ID</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.airbyteWorkspaceId}
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -182,6 +190,12 @@ export const Destinations = () => {
                 <TableCell>Transformation Priority</TableCell>
                 <TableCell align="right">
                   {warehouse.connectionConfiguration.transformation_priority}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Airbyte Workspace ID</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.airbyteWorkspaceId}
                 </TableCell>
               </TableRow>
             </TableBody>

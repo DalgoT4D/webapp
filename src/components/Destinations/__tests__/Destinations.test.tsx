@@ -60,6 +60,7 @@ describe('Destinations', () => {
       warehouses: [
         {
           airbyte_destination: {
+            workspaceId: 'WORKSPACE_ID',
             destinationId: 'fake-dest-id',
             destinationDefinitionId: 'fake-dest-def-id',
             name: 'warehouse-name',
@@ -84,6 +85,7 @@ describe('Destinations', () => {
       warehouses: [
         {
           airbyte_destination: {
+            workspaceId: 'WORKSPACE_ID',
             destinationId: 'fake-dest-id',
             destinationDefinitionId: 'fake-dest-def-id',
             name: 'warehouse-name',
@@ -132,6 +134,8 @@ describe('Destinations', () => {
     expect(database).toHaveTextContent('MYDATABASE');
     const username = screen.getByTestId('username');
     expect(username).toHaveTextContent('MYUSERNAME');
+    const abworkspace = screen.getByTestId('abworkspace');
+    expect(abworkspace).toHaveTextContent('WORKSPACE_ID');
 
     // Check if edit button renders the mocked component
     const editWarehouseButton = screen.getByTestId('edit-destination');
@@ -171,6 +175,8 @@ describe('Destinations', () => {
     expect(gcs_bucket_name_and_path).toHaveTextContent(
       'gcs_bucket_name / gcs_bucket_path'
     );
+    const abworkspace = screen.getByTestId('abworkspace');
+    expect(abworkspace).toHaveTextContent('WORKSPACE_ID');
 
     const edit_button = screen.getByTestId('edit-destination');
     expect(edit_button).toBeInTheDocument();
