@@ -119,7 +119,7 @@ export const Destinations = () => {
               </TableRow>
               <TableRow>
                 <TableCell>Airbyte Workspace ID</TableCell>
-                <TableCell align="right" data-testid="username">
+                <TableCell align="right" data-testid="abworkspace">
                   {warehouse.airbyteWorkspaceId}
                 </TableCell>
               </TableRow>
@@ -194,7 +194,7 @@ export const Destinations = () => {
               </TableRow>
               <TableRow>
                 <TableCell>Airbyte Workspace ID</TableCell>
-                <TableCell align="right" data-testid="username">
+                <TableCell align="right" data-testid="abworkspace">
                   {warehouse.airbyteWorkspaceId}
                 </TableCell>
               </TableRow>
