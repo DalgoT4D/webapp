@@ -111,9 +111,7 @@ const getSourceDest = (connection: any) => (
 
 const getLastSync = (connection: any) =>
   connection.lock ? (
-    <Typography variant="subtitle2" fontWeight={600}>
-      Currently running
-    </Typography>
+    <CircularProgress />
   ) : (
     <Typography variant="subtitle2" fontWeight={600}>
       {lastRunTime(connection?.lastRun?.startTime)}
@@ -137,12 +135,14 @@ export const Connections = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const [anyConnLocked, setAnyConnLocked] = useState<boolean>(false);
 
   const [showDialog, setShowDialog] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [showConfirmResetDialog, setShowConfirmResetDialog] =
     useState<boolean>(false);
+  const [rows, setRows] = useState<Array<any>>([]);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/connections`);
 
@@ -300,12 +300,9 @@ export const Connections = () => {
     </Box>
   );
 
-  // when the connection list changes
-  let rows = [];
-
-  rows = useMemo(() => {
-    if (data && data.length >= 0) {
-      return data.map((connection: any) => [
+  const updateRows = (data: any) => {
+    if (data && data.length > 0) {
+      let tempRows = data.map((connection: any) => [
         <Box
           key={`name-${connection.blockId}`}
           sx={{ display: 'flex', alignItems: 'center' }}
@@ -353,8 +350,28 @@ export const Connections = () => {
           />
         ),
       ]);
+
+      setRows(tempRows);
     }
-    return [];
+  };
+
+  // when the connection list changes
+  useMemo(() => {
+    (async () => {
+      // check if any connection is locked or not
+      let isLocked: boolean = data?.some((conn: any) => conn.lock);
+
+      updateRows(data);
+
+      while (isLocked) {
+        const data = await httpGet(session, 'airbyte/connections');
+
+        isLocked = data?.some((conn: any) => (conn.lock ? true : false));
+        await delay(3000);
+
+        if (!isLocked) updateRows(data);
+      }
+    })();
   }, [data, syncingBlockId]);
 
   const handleClickOpen = () => {
