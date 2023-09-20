@@ -7,7 +7,7 @@ import moment from 'moment';
 
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { lastRunTime } from '@/utils/common';
+import { delay, lastRunTime } from '@/utils/common';
 import Image from 'next/image';
 import { httpGet } from '@/helpers/http';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
@@ -127,19 +127,16 @@ export default function Home() {
   const globalContext = useContext(GlobalContext);
 
   const fetchFlowRuns = async () => {
-    var timeout: NodeJS.Timeout | undefined = undefined;
     try {
       const flowRuns: any = await httpGet(session, 'dashboard/');
       setFlowRuns(flowRuns);
       if (flowRuns.some((run: any) => run.lock)) {
-        timeout = setTimeout(() => fetchFlowRuns(), 3000);
+        await delay(3000);
+        fetchFlowRuns();
       }
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
-    }
-    if (timeout) {
-      return () => clearTimeout(timeout);
     }
   };
 
