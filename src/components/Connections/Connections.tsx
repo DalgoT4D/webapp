@@ -364,12 +364,14 @@ export const Connections = () => {
       updateRows(data);
 
       while (isLocked) {
-        const data = await httpGet(session, 'airbyte/connections');
-
-        isLocked = data?.some((conn: any) => (conn.lock ? true : false));
-        await delay(3000);
-
-        if (!isLocked) updateRows(data);
+        try {
+          const data = await httpGet(session, 'airbyte/connections');
+          isLocked = data?.some((conn: any) => (conn.lock ? true : false));
+          await delay(3000);
+          updateRows(data);
+        } catch (error) {
+          isLocked = false;
+        }
       }
     })();
   }, [data, syncingBlockId]);
