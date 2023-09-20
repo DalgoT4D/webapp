@@ -22,8 +22,9 @@ const BarChart = ({ runs }: any) => {
 
     const data = runs
       .map((run: any) => {
-        const status = run.status;
         const state_name = run.state_name;
+        const status =
+          state_name === 'DBT_TEST_FAILED' ? 'dbt tests failed' : run.status;
         const color =
           state_name === 'DBT_TEST_FAILED'
             ? '#df8e14'
