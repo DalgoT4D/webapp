@@ -98,3 +98,7 @@ export const getOrgHeaderValue = (verb: string, path: string) => {
 };
 
 export const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export const trimEmail = (email: string) => {
+  return email.split('@')[0];
+};
