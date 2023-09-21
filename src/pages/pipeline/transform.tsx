@@ -105,7 +105,7 @@ const Transform = () => {
 
   const pollDbtBlocksLock = async () => {
     try {
-      let isLocked: boolean = true;
+      let isLocked = true;
       while (isLocked) {
         const response = await httpGet(session, 'prefect/blocks/dbt');
 
@@ -128,7 +128,7 @@ const Transform = () => {
       const blocksByTarget: TargetBlocks = {};
       const expandByTargets: ExpandTarget = {};
 
-      let isAnyLocked: boolean = false;
+      let isAnyLocked = false;
       response?.forEach((block: DbtBlock) => {
         // const components: string[] = block.blockName.split('-');
         // block.target = block?.dbtTargetSchem;
