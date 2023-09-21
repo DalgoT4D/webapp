@@ -27,6 +27,7 @@ import Image from 'next/image';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
 import { DBTTarget } from '@/components/DBT/DBTTarget';
 import { DBTDocs } from '@/components/DBT/DBTDocs';
+import { delay } from '@/utils/common';
 
 type DbtBlock = {
   blockName: string;
@@ -35,6 +36,7 @@ type DbtBlock = {
   target: string;
   action: string;
   deploymentId: string;
+  lock: object | null;
 };
 type TargetBlocks = {
   [id: string]: DbtBlock[];
@@ -61,6 +63,7 @@ const Transform = () => {
   const handleChangeTab = (event: React.SyntheticEvent, newTab: string) => {
     setActiveTab(newTab);
   };
+  const [anyBlockLocked, setAnyBlockLocked] = useState<boolean>(false);
 
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
@@ -100,6 +103,23 @@ const Transform = () => {
     }
   };
 
+  const pollDbtBlocksLock = async () => {
+    try {
+      let isLocked = true;
+      while (isLocked) {
+        const response = await httpGet(session, 'prefect/blocks/dbt');
+
+        isLocked = response?.some((block: DbtBlock) =>
+          block.lock ? true : false
+        );
+        await delay(3000);
+      }
+      setAnyBlockLocked(false);
+    } catch (error) {
+      setAnyBlockLocked(false);
+    }
+  };
+
   const fetchDbtBlocks = async () => {
     if (!session) return;
     try {
@@ -108,6 +128,7 @@ const Transform = () => {
       const blocksByTarget: TargetBlocks = {};
       const expandByTargets: ExpandTarget = {};
 
+      let isAnyLocked = false;
       response?.forEach((block: DbtBlock) => {
         // const components: string[] = block.blockName.split('-');
         // block.target = block?.dbtTargetSchem;
@@ -118,6 +139,9 @@ const Transform = () => {
           expandByTargets[block.target] = false;
         }
         blocksByTarget[block.target].push(block);
+        if (block.lock) {
+          isAnyLocked = true;
+        }
       });
 
       if (response && response.length) {
@@ -128,12 +152,18 @@ const Transform = () => {
           target: response[0].target,
           action: 'git-pull',
           deploymentId: '',
+          lock: null,
         });
       }
       setDbtBlocks(blocksByTarget);
 
       if (response && response?.length > 0) {
         setDbtSetupStage('complete');
+      }
+
+      if (isAnyLocked) {
+        setAnyBlockLocked(true);
+        pollDbtBlocksLock();
       }
     } catch (err: any) {
       console.error(err);
@@ -265,31 +295,38 @@ const Transform = () => {
                   </Button>
                 ) : dbtSetupStage === 'complete' ? (
                   <>
-                    {Object.keys(dbtBlocks).map((target) => (
-                      <DBTTarget
-                        key={target}
-                        setExpandLogs={setExpandLogs}
-                        setRunning={setRunning}
-                        running={running}
-                        setDbtRunLogs={(logs: string[]) => {
-                          setDbtSetupLogs(logs);
-                        }}
-                        blocks={dbtBlocks[target].filter(
-                          (block) => block.action.indexOf('docs-generate') < 0
-                        )}
-                      />
-                    ))}
-                    <Button
-                      aria-controls={open ? 'basic-menu' : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={open ? 'true' : undefined}
-                      onClick={(event) => handleClick(event.currentTarget)}
-                      variant="contained"
-                      color="info"
-                      sx={{ p: 0, minWidth: 32, ml: 2 }}
-                    >
-                      <MoreHorizIcon />
-                    </Button>
+                    {anyBlockLocked ? (
+                      <CircularProgress />
+                    ) : (
+                      <>
+                        {Object.keys(dbtBlocks).map((target) => (
+                          <DBTTarget
+                            key={target}
+                            setExpandLogs={setExpandLogs}
+                            setRunning={setRunning}
+                            running={running}
+                            setDbtRunLogs={(logs: string[]) => {
+                              setDbtSetupLogs(logs);
+                            }}
+                            blocks={dbtBlocks[target].filter(
+                              (block) =>
+                                block.action.indexOf('docs-generate') < 0
+                            )}
+                          />
+                        ))}
+                        <Button
+                          aria-controls={open ? 'basic-menu' : undefined}
+                          aria-haspopup="true"
+                          aria-expanded={open ? 'true' : undefined}
+                          onClick={(event) => handleClick(event.currentTarget)}
+                          variant="contained"
+                          color="info"
+                          sx={{ p: 0, minWidth: 32, ml: 2 }}
+                        >
+                          <MoreHorizIcon />
+                        </Button>
+                      </>
+                    )}
                   </>
                 ) : (
                   ''

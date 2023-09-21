@@ -5,11 +5,15 @@ import { Flows } from '@/components/Flows/Flows';
 import { useEffect, useState } from 'react';
 import FlowCreate from '@/components/Flows/FlowCreate';
 import { CircularProgress } from '@mui/material';
+import { httpGet } from '@/helpers/http';
+import { useSession } from 'next-auth/react';
+import { delay } from '@/utils/common';
 
 export default function Orchestrate() {
   const [crudVal, setCrudVal] = useState<string>('index'); // can be index or create
   const [flows, setFlows] = useState<Array<any>>([]);
   const [selectedFlow, setSelectedFlow] = useState('');
+  const { data: session }: any = useSession();
 
   const updateCrudVal = (crudState: string) => {
     setCrudVal(crudState);
@@ -17,11 +21,31 @@ export default function Orchestrate() {
 
   const { data, mutate, isLoading } = useSWR(`prefect/flows/`);
 
+  const pollFlowsLock = async () => {
+    let isLocked = true;
+    try {
+      while (isLocked) {
+        await delay(3000);
+        const flows = await httpGet(session, 'prefect/flows/');
+        isLocked = flows?.some((flow: any) => (flow.lock ? true : false));
+        setFlows(flows);
+      }
+    } catch (error) {
+      isLocked = false;
+    }
+  };
+
   // when the flows list changes
   useEffect(() => {
+    const isLocked: boolean = flows?.some((flow: any) =>
+      flow.lock ? true : false
+    );
+
     if (data && data.length >= 0) {
       setFlows(data);
     }
+
+    if (isLocked) pollFlowsLock();
   }, [data]);
 
   return (

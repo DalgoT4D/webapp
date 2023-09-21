@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   CardContent,
+  CircularProgress,
   Collapse,
   Dialog,
   DialogContent,
@@ -47,6 +48,7 @@ export const FlowRunHistory = ({
   setShowFlowRunHistory,
 }: FlowRunHistoryProps) => {
   const { data: session }: any = useSession();
+  const [loadingFlowRuns, setLoadingFlowRuns] = useState<boolean>(false);
   const [flowRuns, setFlowRuns] = useState<Array<FlowRun>>([]);
   const [showLogs, setShowLogs] = useState<Array<boolean>>([]);
   const [rerender, setRerender] = useState<boolean>(false);
@@ -105,6 +107,7 @@ export const FlowRunHistory = ({
     if (deploymentId && showFlowRunHistory) {
       (async () => {
         try {
+          setLoadingFlowRuns(true);
           const data: Array<FlowRun> = await httpGet(
             session,
             `prefect/flows/${deploymentId}/flow_runs/history`
@@ -118,6 +121,7 @@ export const FlowRunHistory = ({
               : -1
           );
           setFlowRunsOffset(initialLogsOffset);
+          setLoadingFlowRuns(false);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
@@ -150,6 +154,10 @@ export const FlowRunHistory = ({
       </DialogTitle>
       <DialogContent sx={{ marginLeft: '20px', overflowX: 'hidden' }}>
         <Stack width="100rem">
+          {loadingFlowRuns && <CircularProgress></CircularProgress>}
+          {!loadingFlowRuns && flowRuns.length === 0 && (
+            <Typography>No runs to show</Typography>
+          )}
           {flowRuns &&
             flowRuns.map((flowRun: FlowRun, idx: number) => (
               <Box display="flex" gap="10px" key={idx}>
