@@ -1,12 +1,5 @@
-import {
-  Box,
-  Button,
-  Typography,
-  Tooltip,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import React, { useContext, useMemo, useState } from 'react';
-import SyncIcon from '@/assets/icons/sync.svg';
 import FlowIcon from '@/assets/icons/flow.svg';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useSession } from 'next-auth/react';
@@ -19,7 +12,6 @@ import { List } from '../List/List';
 import { FlowRunHistory, FlowRun } from './FlowRunHistory';
 import { lastRunTime, cronToString, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
-import styles from './Flows.module.css';
 import Image from 'next/image';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 

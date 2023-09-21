@@ -22,7 +22,7 @@ export default function Orchestrate() {
   const { data, mutate, isLoading } = useSWR(`prefect/flows/`);
 
   const pollFlowsLock = async () => {
-    let isLocked: boolean = true;
+    let isLocked = true;
     try {
       while (isLocked) {
         await delay(3000);
@@ -37,7 +37,7 @@ export default function Orchestrate() {
 
   // when the flows list changes
   useEffect(() => {
-    let isLocked: boolean = flows?.some((flow: any) =>
+    const isLocked: boolean = flows?.some((flow: any) =>
       flow.lock ? true : false
     );
 

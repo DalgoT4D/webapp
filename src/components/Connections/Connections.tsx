@@ -135,8 +135,6 @@ export const Connections = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const [anyConnLocked, setAnyConnLocked] = useState<boolean>(false);
-
   const [showDialog, setShowDialog] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
@@ -302,7 +300,7 @@ export const Connections = () => {
 
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
-      let tempRows = data.map((connection: any) => [
+      const tempRows = data.map((connection: any) => [
         <Box
           key={`name-${connection.blockId}`}
           sx={{ display: 'flex', alignItems: 'center' }}
