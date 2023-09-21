@@ -1,4 +1,10 @@
-import { Box, Button, Typography, Tooltip } from '@mui/material';
+import {
+  Box,
+  Button,
+  Typography,
+  Tooltip,
+  CircularProgress,
+} from '@mui/material';
 import React, { useContext, useMemo, useState } from 'react';
 import SyncIcon from '@/assets/icons/sync.svg';
 import FlowIcon from '@/assets/icons/flow.svg';
@@ -195,7 +201,7 @@ export const Flows = ({
         flowStatus(flow.status),
 
         flowLastRun(flow),
-        flowState(flow),
+        flow.lock ? <CircularProgress /> : flowState(flow),
 
         <Box key={idx}>
           <Button
@@ -210,49 +216,45 @@ export const Flows = ({
           >
             last logs
           </Button>
-          <Button
-            sx={{ mr: 1 }}
-            data-testid={'btn-quickrundeployment-' + flow.name}
-            variant="contained"
-            disabled={!!flow.lock}
-            onClick={() => {
-              setRunningDeploymentId(flow.deploymentId);
-              handleQuickRunDeployment(flow.deploymentId);
-            }}
-          >
-            {flow.lock ? (
-              <Tooltip
-                title={
-                  'triggered by ' +
-                  trimEmail(flow.lock.lockedBy) +
-                  ' ' +
-                  lastRunTime(flow.lock.lockedAt)
-                }
+          {flow.lock ? (
+            <>
+              <Typography variant="body2" fontWeight={600}>
+                Triggered by: {trimEmail(flow.lock.lockedBy)}
+              </Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {lastRunTime(flow.lock.lockedAt)}
+              </Typography>
+            </>
+          ) : (
+            <>
+              <Button
+                sx={{ mr: 1 }}
+                data-testid={'btn-quickrundeployment-' + flow.name}
+                variant="contained"
+                disabled={!!flow.lock}
+                onClick={() => {
+                  setRunningDeploymentId(flow.deploymentId);
+                  handleQuickRunDeployment(flow.deploymentId);
+                }}
               >
-                <Image
-                  src={SyncIcon}
-                  className={styles.SyncIcon}
-                  alt="sync icon"
-                />
-              </Tooltip>
-            ) : (
-              'Run'
-            )}
-          </Button>
-          <Button
-            aria-controls={open ? 'basic-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? 'true' : undefined}
-            onClick={(event) =>
-              handleClick(flow.deploymentId, event.currentTarget)
-            }
-            variant="contained"
-            key={'menu-' + idx}
-            color="info"
-            sx={{ px: 0, minWidth: 32 }}
-          >
-            <MoreHorizIcon />
-          </Button>
+                Run
+              </Button>
+              <Button
+                aria-controls={open ? 'basic-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+                onClick={(event) =>
+                  handleClick(flow.deploymentId, event.currentTarget)
+                }
+                variant="contained"
+                key={'menu-' + idx}
+                color="info"
+                sx={{ px: 0, minWidth: 32 }}
+              >
+                <MoreHorizIcon />
+              </Button>
+            </>
+          )}
         </Box>,
       ]);
     }
@@ -273,6 +275,7 @@ export const Flows = ({
       try {
         await httpPost(session, `prefect/flows/${deploymentId}/flow_run`, {});
         successToast('Flow run inititated successfully', [], toastContext);
+        mutate();
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
