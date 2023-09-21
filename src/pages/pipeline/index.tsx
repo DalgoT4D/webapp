@@ -7,7 +7,7 @@ import moment from 'moment';
 
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { lastRunTime } from '@/utils/common';
+import { delay, lastRunTime } from '@/utils/common';
 import Image from 'next/image';
 import { httpGet } from '@/helpers/http';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
@@ -22,8 +22,9 @@ const BarChart = ({ runs }: any) => {
 
     const data = runs
       .map((run: any) => {
-        const status = run.status;
         const state_name = run.state_name;
+        const status =
+          state_name === 'DBT_TEST_FAILED' ? 'dbt tests failed' : run.status;
         const color =
           state_name === 'DBT_TEST_FAILED'
             ? '#df8e14'
@@ -125,19 +126,25 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const globalContext = useContext(GlobalContext);
 
+  const fetchFlowRuns = async () => {
+    try {
+      const flowRuns: any = await httpGet(session, 'dashboard/');
+      setFlowRuns(flowRuns);
+      if (flowRuns.some((run: any) => run.lock)) {
+        await delay(3000);
+        fetchFlowRuns();
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+  };
+
   useEffect(() => {
     if (session) {
-      (async () => {
-        setIsLoading(true);
-        try {
-          const flowRuns: any = await httpGet(session, 'dashboard/');
-          setFlowRuns(flowRuns);
-        } catch (err: any) {
-          console.error(err);
-          errorToast(err.message, [], globalContext);
-        }
-        setIsLoading(false);
-      })();
+      setIsLoading(true);
+      fetchFlowRuns();
+      setIsLoading(false);
     }
   }, [session]);
 
@@ -245,13 +252,29 @@ export default function Home() {
                               alignItems: 'center',
                             }}
                           >
-                            <Image
-                              style={{ marginRight: 8 }}
-                              src={CheckIcon}
-                              alt="check icon"
-                            />{' '}
-                            last run performed{' '}
-                            {lastRunTime(run.runs[0].startTime)}
+                            {run.lock && (
+                              <>
+                                <CircularProgress
+                                  style={{
+                                    width: 20,
+                                    height: 20,
+                                    marginRight: 10,
+                                  }}
+                                ></CircularProgress>
+                                Currently running
+                              </>
+                            )}
+                            {!run.lock && (
+                              <>
+                                <Image
+                                  style={{ marginRight: 8 }}
+                                  src={CheckIcon}
+                                  alt="check icon"
+                                />{' '}
+                                last run performed{' '}
+                                {lastRunTime(run.runs[0].startTime)}
+                              </>
+                            )}
                           </Typography>
                           <Typography
                             variant="subtitle2"
