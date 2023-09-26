@@ -126,13 +126,19 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const globalContext = useContext(GlobalContext);
 
-  const fetchFlowRuns = async () => {
+  const fetchFlowRuns = async (showLoadingIndicator: boolean) => {
     try {
+      if (showLoadingIndicator) {
+        setIsLoading(true);
+      }
       const flowRuns: any = await httpGet(session, 'dashboard/');
       setFlowRuns(flowRuns);
       if (flowRuns.some((run: any) => run.lock)) {
         await delay(3000);
-        fetchFlowRuns();
+        fetchFlowRuns(false);
+      }
+      if (showLoadingIndicator) {
+        setIsLoading(false);
       }
     } catch (err: any) {
       console.error(err);
@@ -142,9 +148,7 @@ export default function Home() {
 
   useEffect(() => {
     if (session) {
-      setIsLoading(true);
-      fetchFlowRuns();
-      setIsLoading(false);
+      fetchFlowRuns(true);
     }
   }, [session]);
 
