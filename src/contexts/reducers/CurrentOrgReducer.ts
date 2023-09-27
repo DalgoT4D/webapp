@@ -6,6 +6,7 @@ export interface CurrentOrgStateInterface {
   airbyte_workspace_id: string;
   viz_url: string;
   viz_login_type: string;
+  wtype: string;
 }
 
 interface Action {
@@ -19,6 +20,7 @@ export const initialCurrentOrgState = {
   airbyte_workspace_id: '',
   viz_url: '',
   viz_login_type: '',
+  wtype: '',
 };
 
 export const CurrentOrgReducer = (
