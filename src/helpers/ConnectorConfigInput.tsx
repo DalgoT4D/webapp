@@ -120,7 +120,10 @@ class ConnectorConfigInput {
     // Push the parent enum in the array
     if (exclude.length > 0) {
       if (exclude[0] in data?.properties) {
-        dropdownEnums.push(data?.properties[exclude[0]]?.const);
+        dropdownEnums.push(
+          data?.properties[exclude[0]]?.const ||
+            data?.properties[exclude[0]]?.enum[0]
+        );
       }
     }
 
@@ -137,11 +140,11 @@ class ConnectorConfigInput {
         if (value['oneOf'] && value['oneOf'].length > 1) {
           value['oneOf']?.forEach((ele: any) => {
             if (commonField.length > 0) {
-              commonField = ele?.required.filter((value: any) =>
+              commonField = Object.keys(ele?.properties).filter((value: any) =>
                 commonField.includes(value)
               );
             } else {
-              commonField = ele?.required;
+              commonField = Object.keys(ele?.properties);
             }
           });
         }

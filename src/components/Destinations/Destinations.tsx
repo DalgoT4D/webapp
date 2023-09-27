@@ -20,6 +20,9 @@ interface ConnectionConfiguration {
   dataset_location?: string;
   transformation_priority?: string;
   loading_method?: any;
+  warehouse?: any;
+  schema?: any;
+  role?: any;
 }
 
 interface Warehouse {
@@ -190,6 +193,66 @@ export const Destinations = () => {
                 <TableCell>Transformation Priority</TableCell>
                 <TableCell align="right">
                   {warehouse.connectionConfiguration.transformation_priority}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Airbyte Workspace ID</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.airbyteWorkspaceId}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </>
+      )}
+      {warehouse && warehouse.wtype === 'snowflake' && (
+        <>
+          <Typography data-testid="wname" variant="h3">
+            {warehouse.name}
+          </Typography>
+          <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
+          <Table sx={{ maxWidth: '600px' }}>
+            <TableBody>
+              <TableRow>
+                <TableCell>Host</TableCell>
+                <TableCell align="right" data-testid="project_id">
+                  {warehouse.connectionConfiguration.host}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Compute Warehouse</TableCell>
+                <TableCell align="right" data-testid="dataset_id">
+                  {warehouse.connectionConfiguration.warehouse}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Database</TableCell>
+                <TableCell align="right" data-testid="dataset_id">
+                  {warehouse.connectionConfiguration.database}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Schema</TableCell>
+                <TableCell align="right" data-testid="dataset_id">
+                  {warehouse.connectionConfiguration.schema}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>User</TableCell>
+                <TableCell align="right">
+                  {warehouse.connectionConfiguration.username}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Role</TableCell>
+                <TableCell align="right">
+                  {warehouse.connectionConfiguration.role}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Loading Method</TableCell>
+                <TableCell align="right" data-testid="loading_method">
+                  {warehouse.connectionConfiguration.loading_method.method}
                 </TableCell>
               </TableRow>
               <TableRow>
