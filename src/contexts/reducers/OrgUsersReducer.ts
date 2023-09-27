@@ -7,6 +7,7 @@ export interface OrgUserStateInterface {
   role: number;
   role_slug: string;
   org: CurrentOrgStateInterface;
+  wtype: string;
 }
 
 interface Action {

@@ -24,6 +24,7 @@ type OrgUser = {
   role: number;
   role_slug: string;
   org: Org;
+  wtype: string;
 };
 
 type AutoCompleteOption = {
@@ -90,7 +91,7 @@ export const Header = () => {
       if (orguser) {
         globalContext?.CurrentOrg?.dispatch({
           type: 'new',
-          orgState: orguser.org,
+          orgState: { ...orguser.org, wtype: orguser.wtype },
         });
       }
 
@@ -107,7 +108,7 @@ export const Header = () => {
       if (selectedOrguser && selectedOrguser?.org) {
         globalContext?.CurrentOrg?.dispatch({
           type: 'new',
-          orgState: selectedOrguser.org,
+          orgState: { ...selectedOrguser.org, wtype: selectedOrguser.wtype },
         });
       }
     }
