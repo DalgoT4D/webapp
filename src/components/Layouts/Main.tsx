@@ -22,6 +22,7 @@ type OrgUser = {
   role: number;
   role_slug: string;
   org: Org;
+  wtype: string;
 };
 
 const MainDashboard = ({ children }: any) => {
@@ -73,7 +74,7 @@ const MainDashboard = ({ children }: any) => {
         // update current org in global state
         globalContext?.CurrentOrg.dispatch({
           type: 'new',
-          orgState: currentOrgUser?.org,
+          orgState: { ...currentOrgUser?.org, wtype: currentOrgUser?.wtype },
         });
       } catch (error) {
         console.error(error);

@@ -66,7 +66,7 @@ const Transform = () => {
   const [anyBlockLocked, setAnyBlockLocked] = useState<boolean>(false);
 
   const { data: session }: any = useSession();
-  const toastContext = useContext(GlobalContext);
+  const globalContext = useContext(GlobalContext);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -91,7 +91,7 @@ const Transform = () => {
         setWorkspace({ ...workspace, status: 'fetched' });
         // do nothing
       } else if (response.error) {
-        errorToast(response.error, [], toastContext);
+        errorToast(response.error, [], globalContext);
       } else {
         response.status = 'fetched';
         setWorkspace(response);
@@ -99,7 +99,7 @@ const Transform = () => {
       }
     } catch (err: any) {
       console.error(err);
-      errorToast(err.message, [], toastContext);
+      errorToast(err.message, [], globalContext);
     }
   };
 
@@ -167,7 +167,7 @@ const Transform = () => {
       }
     } catch (err: any) {
       console.error(err);
-      errorToast(err.message, [], toastContext);
+      errorToast(err.message, [], globalContext);
     }
   };
 
@@ -177,7 +177,7 @@ const Transform = () => {
       setDbtSetupStage('complete');
     } catch (err: any) {
       console.error(err);
-      errorToast(err.message, [], toastContext);
+      errorToast(err.message, [], globalContext);
     }
   };
 
@@ -204,206 +204,220 @@ const Transform = () => {
         >
           Transformation
         </Typography>
-        <Tabs value={activeTab} onChange={handleChangeTab} sx={{ mb: 3 }}>
-          <Tab value="setup" label="Setup"></Tab>
-        </Tabs>
-        {activeTab === 'setup' && (
+        {globalContext?.CurrentOrg.state.wtype === 'snowflake' ? (
+          <Typography variant="h4" sx={{ alignContent: 'center' }}>
+            Dbt not available for snowflake warehouse
+          </Typography>
+        ) : (
           <>
-            <Card
-              sx={{
-                background: 'white',
-                display: 'flex',
-                borderRadius: '8px',
-                padding: '16px',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  gap: '10px',
-                  alignItems: 'center',
-                }}
-              >
-                <Image
-                  src={Dbt}
-                  alt="Banner"
-                  style={{ width: '46px', height: '46px' }}
-                />
-                <Box
+            <Tabs value={activeTab} onChange={handleChangeTab} sx={{ mb: 3 }}>
+              <Tab value="setup" label="Setup"></Tab>
+            </Tabs>
+            {activeTab === 'setup' && (
+              <>
+                <Card
                   sx={{
+                    background: 'white',
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: '5px',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                   }}
                 >
-                  <Typography
-                    sx={{ fontWeight: 700 }}
-                    variant="h4"
-                    color="#000"
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: '10px',
+                      alignItems: 'center',
+                    }}
                   >
-                    DBT REPOSITORY
-                  </Typography>
-                  {workspace && workspace.gitrepo_url ? (
-                    <>
-                      <Link
-                        sx={{
-                          backgroundColor: '#F2F2EB',
-                          borderRadius: '6px',
-                          padding: '3px 6px 3px 6px',
-                          width: 'min-content',
-                          display: 'inline-flex',
-                          textDecoration: 'none',
-                          ':hover': { cursor: 'pointer' },
-                        }}
-                        target="_blank"
-                        rel="noopener"
-                        href={workspace.gitrepo_url}
+                    <Image
+                      src={Dbt}
+                      alt="Banner"
+                      style={{ width: '46px', height: '46px' }}
+                    />
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '5px',
+                      }}
+                    >
+                      <Typography
+                        sx={{ fontWeight: 700 }}
+                        variant="h4"
+                        color="#000"
                       >
-                        <Typography sx={{ fontWeight: 600, color: '#0F2440' }}>
-                          {workspace.gitrepo_url}
-                        </Typography>
-                      </Link>
-                      <Box
-                        sx={{
-                          backgroundColor: '#F2F2EB',
-                          borderRadius: '6px',
-                          padding: '3px 6px 3px 6px',
-                          width: 'min-content',
-                          display: 'inline-flex',
-                        }}
+                        DBT REPOSITORY
+                      </Typography>
+                      {workspace && workspace.gitrepo_url ? (
+                        <>
+                          <Link
+                            sx={{
+                              backgroundColor: '#F2F2EB',
+                              borderRadius: '6px',
+                              padding: '3px 6px 3px 6px',
+                              width: 'min-content',
+                              display: 'inline-flex',
+                              textDecoration: 'none',
+                              ':hover': { cursor: 'pointer' },
+                            }}
+                            target="_blank"
+                            rel="noopener"
+                            href={workspace.gitrepo_url}
+                          >
+                            <Typography
+                              sx={{ fontWeight: 600, color: '#0F2440' }}
+                            >
+                              {workspace.gitrepo_url}
+                            </Typography>
+                          </Link>
+                          <Box
+                            sx={{
+                              backgroundColor: '#F2F2EB',
+                              borderRadius: '6px',
+                              padding: '3px 6px 3px 6px',
+                              width: 'min-content',
+                              display: 'inline-flex',
+                            }}
+                          >
+                            <Typography
+                              sx={{ fontWeight: 600, color: '#0F2440' }}
+                            >
+                              {workspace?.default_schema}
+                            </Typography>
+                          </Box>
+                        </>
+                      ) : (
+                        ''
+                      )}
+                    </Box>
+                  </Box>
+                  <Box>
+                    {dbtSetupStage === 'create-workspace' ? (
+                      <Button
+                        variant="contained"
+                        onClick={() => setShowConnectRepoDialog(true)}
                       >
-                        <Typography sx={{ fontWeight: 600, color: '#0F2440' }}>
-                          {workspace?.default_schema}
-                        </Typography>
-                      </Box>
-                    </>
+                        Connect & Setup Repo{' '}
+                      </Button>
+                    ) : dbtSetupStage === 'complete' ? (
+                      <>
+                        {anyBlockLocked ? (
+                          <CircularProgress />
+                        ) : (
+                          <>
+                            {Object.keys(dbtBlocks).map((target) => (
+                              <DBTTarget
+                                key={target}
+                                setExpandLogs={setExpandLogs}
+                                setRunning={setRunning}
+                                running={running}
+                                setDbtRunLogs={(logs: string[]) => {
+                                  setDbtSetupLogs(logs);
+                                }}
+                                blocks={dbtBlocks[target].filter(
+                                  (block) =>
+                                    block.action.indexOf('docs-generate') < 0
+                                )}
+                              />
+                            ))}
+                            <Button
+                              aria-controls={open ? 'basic-menu' : undefined}
+                              aria-haspopup="true"
+                              aria-expanded={open ? 'true' : undefined}
+                              onClick={(event) =>
+                                handleClick(event.currentTarget)
+                              }
+                              variant="contained"
+                              color="info"
+                              sx={{ p: 0, minWidth: 32, ml: 2 }}
+                            >
+                              <MoreHorizIcon />
+                            </Button>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      ''
+                    )}
+                  </Box>
+                </Card>
+                <Box>
+                  {dbtSetupStage === 'create-workspace' ? (
+                    <DBTSetup
+                      setLogs={setDbtSetupLogs}
+                      setExpandLogs={setExpandLogs}
+                      onCreateWorkspace={() => {
+                        createProfile();
+                        setRerender(!rerender);
+                      }}
+                      showDialog={showConnectRepoDialog}
+                      setShowDialog={setShowConnectRepoDialog}
+                      gitrepoUrl=""
+                      schema=""
+                      mode="create"
+                      setWorkspace={setWorkspace}
+                    />
+                  ) : dbtSetupStage === 'complete' && workspace ? (
+                    <DBTSetup
+                      setLogs={setDbtSetupLogs}
+                      setExpandLogs={setExpandLogs}
+                      onCreateWorkspace={async () => {
+                        await fetchDbtWorkspace();
+                      }}
+                      showDialog={showConnectRepoDialog}
+                      setShowDialog={setShowConnectRepoDialog}
+                      gitrepoUrl={workspace?.gitrepo_url}
+                      schema={workspace?.default_schema}
+                      mode="edit"
+                      setWorkspace={setWorkspace}
+                    />
                   ) : (
                     ''
                   )}
-                </Box>
-              </Box>
-              <Box>
-                {dbtSetupStage === 'create-workspace' ? (
-                  <Button
-                    variant="contained"
-                    onClick={() => setShowConnectRepoDialog(true)}
+                  <Card
+                    sx={{
+                      marginTop: '10px',
+                      padding: '4px',
+                      borderRadius: '8px',
+                      color: '#092540',
+                    }}
                   >
-                    Connect & Setup Repo{' '}
-                  </Button>
-                ) : dbtSetupStage === 'complete' ? (
-                  <>
-                    {anyBlockLocked ? (
-                      <CircularProgress />
-                    ) : (
-                      <>
-                        {Object.keys(dbtBlocks).map((target) => (
-                          <DBTTarget
-                            key={target}
-                            setExpandLogs={setExpandLogs}
-                            setRunning={setRunning}
-                            running={running}
-                            setDbtRunLogs={(logs: string[]) => {
-                              setDbtSetupLogs(logs);
-                            }}
-                            blocks={dbtBlocks[target].filter(
-                              (block) =>
-                                block.action.indexOf('docs-generate') < 0
-                            )}
-                          />
-                        ))}
-                        <Button
-                          aria-controls={open ? 'basic-menu' : undefined}
-                          aria-haspopup="true"
-                          aria-expanded={open ? 'true' : undefined}
-                          onClick={(event) => handleClick(event.currentTarget)}
-                          variant="contained"
-                          color="info"
-                          sx={{ p: 0, minWidth: 32, ml: 2 }}
-                        >
-                          <MoreHorizIcon />
-                        </Button>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  ''
-                )}
-              </Box>
-            </Card>
-            <Box>
-              {dbtSetupStage === 'create-workspace' ? (
-                <DBTSetup
-                  setLogs={setDbtSetupLogs}
-                  setExpandLogs={setExpandLogs}
-                  onCreateWorkspace={() => {
-                    createProfile();
-                    setRerender(!rerender);
-                  }}
-                  showDialog={showConnectRepoDialog}
-                  setShowDialog={setShowConnectRepoDialog}
-                  gitrepoUrl=""
-                  schema=""
-                  mode="create"
-                  setWorkspace={setWorkspace}
-                />
-              ) : dbtSetupStage === 'complete' && workspace ? (
-                <DBTSetup
-                  setLogs={setDbtSetupLogs}
-                  setExpandLogs={setExpandLogs}
-                  onCreateWorkspace={async () => {
-                    await fetchDbtWorkspace();
-                  }}
-                  showDialog={showConnectRepoDialog}
-                  setShowDialog={setShowConnectRepoDialog}
-                  gitrepoUrl={workspace?.gitrepo_url}
-                  schema={workspace?.default_schema}
-                  mode="edit"
-                  setWorkspace={setWorkspace}
-                />
-              ) : (
-                ''
-              )}
-              <Card
-                sx={{
-                  marginTop: '10px',
-                  padding: '4px',
-                  borderRadius: '8px',
-                  color: '#092540',
-                }}
-              >
-                <CardActions
-                  sx={{ display: 'flex', justifyContent: 'space-between' }}
-                >
-                  <Box>Logs</Box>
-                  <IconButton onClick={() => setExpandLogs(!expandLogs)}>
-                    <ExpandMoreIcon
-                      sx={{
-                        transform: !expandLogs
-                          ? 'rotate(0deg)'
-                          : 'rotate(180deg)',
-                      }}
-                    />
-                  </IconButton>
-                </CardActions>
-                <Collapse in={expandLogs} unmountOnExit>
-                  {
-                    <CardContent>
-                      {running && <CircularProgress />}
-                      {dbtSetupLogs?.map((logMessage, idx) => (
-                        <Box key={idx}>{logMessage}</Box>
-                      ))}
-                    </CardContent>
-                  }
-                </Collapse>
-              </Card>
-            </Box>
+                    <CardActions
+                      sx={{ display: 'flex', justifyContent: 'space-between' }}
+                    >
+                      <Box>Logs</Box>
+                      <IconButton onClick={() => setExpandLogs(!expandLogs)}>
+                        <ExpandMoreIcon
+                          sx={{
+                            transform: !expandLogs
+                              ? 'rotate(0deg)'
+                              : 'rotate(180deg)',
+                          }}
+                        />
+                      </IconButton>
+                    </CardActions>
+                    <Collapse in={expandLogs} unmountOnExit>
+                      {
+                        <CardContent>
+                          {running && <CircularProgress />}
+                          {dbtSetupLogs?.map((logMessage, idx) => (
+                            <Box key={idx}>{logMessage}</Box>
+                          ))}
+                        </CardContent>
+                      }
+                    </Collapse>
+                  </Card>
+                </Box>
+              </>
+            )}
+            {activeTab === 'docs' &&
+              dbtSetupStage === 'complete' &&
+              workspace && <DBTDocs />}
           </>
-        )}
-        {activeTab === 'docs' && dbtSetupStage === 'complete' && workspace && (
-          <DBTDocs />
         )}
       </main>
     </>
