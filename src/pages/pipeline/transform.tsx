@@ -206,7 +206,7 @@ const Transform = () => {
         </Typography>
         {globalContext?.CurrentOrg.state.wtype === 'snowflake' ? (
           <Typography variant="h4" sx={{ alignContent: 'center' }}>
-            Dbt not available for snowflake warehouse
+            dbt not available for snowflake warehouses at this time
           </Typography>
         ) : (
           <>
