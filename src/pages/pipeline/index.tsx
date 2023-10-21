@@ -70,7 +70,7 @@ const BarChart = ({ runs }: any) => {
       .data(data)
       .enter()
       .append('rect')
-      .attr('x', (d, i) => i * (barWidth + 8)) // Adding 10 for t
+      .attr('x', (d, i) => i * (barWidth + 6)) // Adding 10 for t
       .attr('y', height)
       .attr('width', barWidth)
       .attr('height', 0) // Initially set the height to 0
