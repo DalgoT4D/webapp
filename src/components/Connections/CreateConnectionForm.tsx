@@ -387,7 +387,7 @@ const CreateConnectionForm = ({
             variant="outlined"
             register={register}
             name="destinationSchema"
-            disabled={true}
+            disabled={false}
           ></Input>
 
           <Box sx={{ m: 2 }} />
