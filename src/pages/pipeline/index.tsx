@@ -13,8 +13,18 @@ import { httpGet } from '@/helpers/http';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
+import { SingleFlowRunHistory } from '@/components/Flows/SingleFlowRunHistory';
 
-const BarChart = ({ runs }: any) => {
+type FlowRun = {
+  id: string;
+  name: string;
+  color: string;
+  status: string;
+  lastRun: string;
+  totalRunTime: number;
+};
+
+const BarChart = ({ runs, selectFlowRun }: any) => {
   const svgRef = useRef(null);
 
   useEffect(() => {
@@ -33,7 +43,7 @@ const BarChart = ({ runs }: any) => {
             : '#00897B';
         const lastRun = moment(new Date(run.startTime)).calendar();
         const totalRunTime = run.totalRunTime;
-        return { color, status, lastRun, totalRunTime };
+        return { id: run.id, name: run.name, color, status, lastRun, totalRunTime, };
       })
       .reverse();
 
@@ -85,11 +95,13 @@ const BarChart = ({ runs }: any) => {
             `<strong>Start time:</strong> ${d.lastRun}
             <br><strong>Run time:</strong> ${d.totalRunTime}s
             <br> <strong>Status:</strong> ${d.status}
-            <br><a class="log-link" href="/pipeline/orchestrate">Check logs</a>
             `
           )
           .style('left', `${x - 5}px`)
           .style('top', `${y - 95}px`);
+      })
+      .on("click", (event, d: any) => {
+        selectFlowRun(d);
       })
       .on('mouseout', (d3) => {
         if (tooltip && !tooltip?.node()?.contains(d3.relatedTarget)) {
@@ -124,6 +136,7 @@ export default function Home() {
   const { data: session } = useSession();
   const [flowRuns, setFlowRuns] = useState<Array<any>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFlowRun, setSelectedFlowRun] = useState<FlowRun | null>(null);
   const globalContext = useContext(GlobalContext);
 
   const fetchFlowRuns = async (showLoadingIndicator: boolean) => {
@@ -167,6 +180,12 @@ export default function Home() {
       </Box>
     );
   }
+
+  const selectFlowRun  = async (flowRun: FlowRun) => {
+    setSelectedFlowRun(null);
+    await delay(1000);
+    setSelectedFlowRun(flowRun);
+  };
 
   return (
     <>
@@ -293,7 +312,7 @@ export default function Home() {
                             /{run.runs.length} successful runs
                           </Typography>
                         </Box>
-                        <BarChart runs={run.runs} />
+                        <BarChart runs={run.runs} selectFlowRun={selectFlowRun} />
                         <Typography variant="subtitle2" fontWeight={600}>
                           Last {run.runs.length} runs
                         </Typography>
@@ -306,6 +325,11 @@ export default function Home() {
               );
             })}
         </Box>
+        { selectedFlowRun &&
+        (
+          <SingleFlowRunHistory flowRun={selectedFlowRun} />
+        )
+        }
       </main>
     </>
   );
