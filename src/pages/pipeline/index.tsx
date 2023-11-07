@@ -22,6 +22,8 @@ type FlowRun = {
   status: string;
   lastRun: string;
   totalRunTime: number;
+  startTime: string | null;
+  expectedStartTime: string;
 };
 
 const BarChart = ({ runs, selectFlowRun }: any) => {
@@ -327,7 +329,16 @@ export default function Home() {
         </Box>
         { selectedFlowRun &&
         (
-          <SingleFlowRunHistory flowRun={selectedFlowRun} />
+          <SingleFlowRunHistory flowRun={
+            {
+              id: selectedFlowRun.id,
+              name: selectedFlowRun.name,
+              status: selectedFlowRun.status,
+              lastRun: selectedFlowRun.lastRun,
+              startTime: selectedFlowRun.startTime,
+              expectedStartTime: selectedFlowRun.expectedStartTime,
+            }
+          } />
         )
         }
       </main>
