@@ -2,7 +2,7 @@ import { render, screen, act, within } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { Flows, FlowInterface } from '../Flows';
-import { FlowRun } from '../FlowRunHistory';
+import { FlowRun } from '../SingleFlowRunHistory';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -39,7 +39,6 @@ describe('Flow Creation', () => {
                 lastRun: {
                   name: 'flow-run-0',
                   status: 'COMPLETED',
-                  logs: [],
                   startTime: startTime.toString(),
                   expectedStartTime: startTime.toString(),
                 } as FlowRun,
@@ -52,7 +51,6 @@ describe('Flow Creation', () => {
                 lastRun: {
                   name: 'flow-run-1',
                   status: 'FAILED',
-                  logs: [],
                   startTime: startTime.toString(),
                   expectedStartTime: startTime.toString(),
                 } as FlowRun,
@@ -101,17 +99,16 @@ describe('Flow Creation', () => {
           id: '',
           name: 'flow-run-0',
           status: 'COMPLETED',
-          logs: [],
           startTime: startTime.toString(),
           expectedStartTime: startTime.toString(),
         } as FlowRun,
       ]),
     });
-    const openFlowRunHistoryButton = screen.getByTestId(
+    const fetchLastFlowRunButton = screen.getByTestId(
       'btn-openhistory-flow-0'
     );
-    await userEvent.click(openFlowRunHistoryButton);
-    const flowRunInfo = screen.getByTestId('info-0');
+    await userEvent.click(fetchLastFlowRunButton);
+    const flowRunInfo = screen.getByTestId('single-flow-run-logs');
     expect(flowRunInfo).toBeInTheDocument();
 
     // quick run deployment
