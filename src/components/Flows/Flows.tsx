@@ -9,7 +9,8 @@ import { httpDelete, httpPost } from '@/helpers/http';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { List } from '../List/List';
-import { FlowRunHistory, FlowRun } from './FlowRunHistory';
+import { httpGet } from '@/helpers/http';
+import { SingleFlowRunHistory, FlowRun } from './SingleFlowRunHistory';
 import { lastRunTime, cronToString, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import Image from 'next/image';
@@ -136,9 +137,7 @@ export const Flows = ({
   mutate,
   setSelectedFlow,
 }: FlowsInterface) => {
-  const [showFlowRunHistory, setShowFlowRunHistory] = useState<boolean>(false);
-  const [flowRunHistoryDeploymentId, setFlowRunHistoryDeploymentId] =
-    useState<string>('');
+  const [lastFlowRun, setLastFlowRun] = useState<FlowRun>();
   const [runningDeploymentId, setRunningDeploymentId] = useState<string>('');
   const [deploymentId, setDeploymentId] = useState<string>('');
   const { data: session }: any = useSession();
@@ -147,6 +146,7 @@ export const Flows = ({
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [deleteFlowLoading, setDeleteFlowLoading] = useState<boolean>(false);
+  const globalContext = useContext(GlobalContext);
 
   const open = Boolean(anchorEl);
   const handleClose = () => {
@@ -204,7 +204,7 @@ export const Flows = ({
               fontWeight: 600,
               marginRight: '5px',
             }}
-            onClick={() => handleOpenFlowRunHistory(flow.deploymentId)}
+            onClick={() => fetchLastFlowRun(flow.deploymentId)}
           >
             last logs
           </Button>
@@ -253,9 +253,22 @@ export const Flows = ({
     return [];
   }, [flows, runningDeploymentId]);
 
-  const handleOpenFlowRunHistory = (deploymentId: string) => {
-    setFlowRunHistoryDeploymentId(deploymentId);
-    setShowFlowRunHistory(true);
+  const fetchLastFlowRun = async (deploymentId: string) => {
+    try {
+      const response = await httpGet(
+        session,
+        `prefect/flows/${deploymentId}/flow_runs/history?limit=1&fetchlogs=false`
+      );
+      if (response.length > 0) {
+        setLastFlowRun(response[0]);
+      } else {
+        setLastFlowRun(undefined);
+      }
+
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
   };
 
   const handleClickCreateFlow = () => {
@@ -327,11 +340,9 @@ export const Flows = ({
         title={'Pipeline'}
       />
 
-      <FlowRunHistory
-        showFlowRunHistory={showFlowRunHistory}
-        setShowFlowRunHistory={setShowFlowRunHistory}
-        deploymentId={flowRunHistoryDeploymentId}
-      />
+      {lastFlowRun && (
+          <SingleFlowRunHistory flowRun={lastFlowRun} />
+      )}
 
       <ConfirmationDialog
         show={showConfirmDeleteDialog}

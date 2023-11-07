@@ -20,6 +20,8 @@ export type FlowRun = {
   name: string;
   status: string;
   lastRun: string;
+  startTime: string | null;
+  expectedStartTime: string;
 };
 
 export const SingleFlowRunHistory = ({
@@ -41,10 +43,8 @@ export const SingleFlowRunHistory = ({
           `prefect/flow_runs/${flowRun.id}/logs?offset=${flowRunOffset}`
         );
 
-        console.log(data);
-
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
-          var newlogs = logs.concat(
+          const newlogs = logs.concat(
             data.logs.logs
           );
           setLogs(newlogs);
