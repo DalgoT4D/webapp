@@ -1,8 +1,7 @@
-import { render, screen, act, within } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import { SingleFlowRunHistory, FlowRun } from '../SingleFlowRunHistory';
-import userEvent from '@testing-library/user-event';
+import { SingleFlowRunHistory } from '../SingleFlowRunHistory';
 import '@testing-library/jest-dom';
 
 jest.mock('next/router', () => ({
