@@ -69,7 +69,7 @@ export const SingleFlowRunHistory = ({
   }, [session]);
 
   return (
-    <Box display="" gap="10px" sx={{marginTop: '20px'}} >
+    <Box display="" gap="10px" sx={{marginTop: '20px'}} data-testid="single-flow-run-logs" >
       <Typography variant="h6" component="div">{flowRun.lastRun}</Typography>
       <Box
         sx={{
