@@ -25,19 +25,21 @@ export default function Usage() {
         const mountHTMLElement: HTMLElement | null = document.getElementById(
           'dashboard-container'
         );
-        embedDashboard({
-          id: usageDashboardId || '',
-          supersetDomain: usageDashboardDomain || '',
-          mountPoint: mountHTMLElement,
-          fetchGuestToken: () => embed_token,
-          dashboardUiConfig: {
-            // dashboard UI config: hideTitle, hideTab, hideChartControls, filters.visible, filters.expanded (optional)
-            hideTitle: true,
-            filters: {
-              expanded: true,
+        if (mountHTMLElement) {
+          embedDashboard({
+            id: usageDashboardId || '',
+            supersetDomain: usageDashboardDomain || '',
+            mountPoint: mountHTMLElement,
+            fetchGuestToken: () => embed_token,
+            dashboardUiConfig: {
+              // dashboard UI config: hideTitle, hideTab, hideChartControls, filters.visible, filters.expanded (optional)
+              hideTitle: true,
+              filters: {
+                expanded: true,
+              },
             },
-          },
-        });
+          });
+        }
       })();
     }
   }, [session]);
