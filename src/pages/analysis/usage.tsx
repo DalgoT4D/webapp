@@ -1,40 +1,53 @@
 import { embedDashboard } from '@superset-ui/embedded-sdk';
-import { useContext, useEffect, useRef, useState } from 'react';
+import styles from '@/styles/Home.module.css';
+import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
-import { httpDelete, httpGet, httpPost } from '@/helpers/http';
+import { PageHead } from '@/components/PageHead';
+import { httpPost } from '@/helpers/http';
+import { usageDashboardId, usageDashboardDomain } from '@/config/constant';
 
 export default function Usage() {
-
   const { data: session }: any = useSession();
-  const dashboard_uuid = 'ca6790fd-45ad-4351-accc-63aa5f3cbd95';
+
+  const fetchEmbedToken = async () => {
+    const { embed_token } = await httpPost(
+      session,
+      `superset/embed_token/${usageDashboardId}/`,
+      {}
+    );
+    return embed_token;
+  };
 
   useEffect(() => {
-    const mountPoint = document.getElementById('dashboard-container');
-
-    if (mountPoint && 0) {
+    if (session?.user?.token) {
       (async () => {
-
-        const {embed_token} = await httpPost(
-          session,
-          `superset/embed_token/${dashboard_uuid}/`,
-          {}
+        const embed_token = await fetchEmbedToken();
+        const mountHTMLElement: HTMLElement | null = document.getElementById(
+          'dashboard-container'
         );
-        console.log(embed_token);
-
         embedDashboard({
-          id: dashboard_uuid,
-          supersetDomain: 'https://superset.dalgo.in',
-          mountPoint,
-          fetchGuestToken: () => {
-            return embed_token
+          id: usageDashboardId || '',
+          supersetDomain: usageDashboardDomain || '',
+          mountPoint: mountHTMLElement,
+          fetchGuestToken: () => embed_token,
+          dashboardUiConfig: {
+            // dashboard UI config: hideTitle, hideTab, hideChartControls, filters.visible, filters.expanded (optional)
+            hideTitle: true,
+            filters: {
+              expanded: true,
+            },
           },
         });
       })();
     }
-  }, []);
+  }, [session]);
 
   return (
-    <Box id="dashboard-container" />
+    <>
+      <PageHead title="Dalgo" />
+      <main className={styles.usage}>
+        <div id="dashboard-container"></div>
+      </main>
+    </>
   );
 }
