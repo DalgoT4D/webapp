@@ -174,7 +174,7 @@ const CreateSourceForm = ({
 
   const formContent = (
     <>
-      <Box sx={{ pt: 2, pb: 4 }}>
+      <Box sx={{ pt: 2, pb: 4 }} data-testid="create-source-dialog">
         <Input
           error={!!errors.name}
           helperText={errors.name?.message}
