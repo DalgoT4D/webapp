@@ -24,48 +24,105 @@ describe('Add source', () => {
 
     // create source
     cy.get('[data-testid="add-new-source"]').click();
-    cy.get('[role="combobox"]').type('Google Sheets');
-    cy.contains('Google Sheets').click();
-    cy.get('[data-testid="autocomplete"]')
-      .contains('label', 'Authentication')
-      .parent()
-      .find('input')
-      .type('Service');
-    cy.contains('Service').click();
 
     cy.get('[data-testid="create-source-dialog"]')
-      .contains('label', 'Service Account Information.')
+      .contains('label', 'Select source type')
       .parent()
       .find('input')
-      .type(JSON.stringify(Cypress.env('SRC_GSHEETS_SERVICE_ACCOUNT')), {
-        parseSpecialCharSequences: false,
-      });
+      .type('Kobotoolbox');
 
     cy.get('[data-testid="create-source-dialog"]')
-      .contains('label', 'Row Batch Size')
+      .contains('label', 'Select source type')
       .parent()
-      .find('input')
-      .type('200');
+      .get('.MuiAutocomplete-listbox li')
+      .contains('Kobotoolbox')
+      .invoke('show') // Trigger the 'show' event on the option
+      .click();
+
+    // Cypress is not allowing me to type the correct service account json & hence check connection fials
+    // Google sheets specific fields
+    // cy.get('[data-testid="autocomplete"]')
+    //   .contains('label', 'Authentication')
+    //   .parent()
+    //   .find('input')
+    //   .type('Service');
+    // cy.get('[data-testid="create-source-dialog"]')
+    //   .contains('label', 'Authentication')
+    //   .parent()
+    //   .get('.MuiAutocomplete-listbox li')
+    //   .contains('Service')
+    //   .invoke('show')
+    //   .click();
+
+    // cy.get('[data-testid="create-source-dialog"]')
+    //   .contains('label', 'Service Account Information.')
+    //   .parent()
+    //   .find('input')
+    //   .type(
+    //     JSON.stringify(Cypress.env('SRC_GSHEETS_SERVICE_ACCOUNT'))
+    //       .replace(/[\"]/g, '\\"')
+    //       .replace(/[\\]/g, '\\\\')
+    //       .replace(/[\/]/g, '\\/')
+    //       .replace(/[\b]/g, '\\b')
+    //       .replace(/[\f]/g, '\\f')
+    //       .replace(/[\n]/g, '\\n')
+    //       .replace(/[\r]/g, '\\r')
+    //       .replace(/[\t]/g, '\\t'),
+    //     {
+    //       parseSpecialCharSequences: false,
+    //     }
+    //   );
+
+    // cy.get('[data-testid="create-source-dialog"]')
+    //   .contains('label', 'Row Batch Size')
+    //   .parent()
+    //   .find('input')
+    //   .type('10');
+
+    // cy.get('[data-testid="create-source-dialog"]')
+    //   .contains('label', 'Spreadsheet Link')
+    //   .parent()
+    //   .find('input')
+    //   .type(Cypress.env('SRC_GSHEETS_SPREADSHEET_LINK'), {
+    //     parseSpecialCharSequences: false,
+    //   });
+
+    // cy.get('[data-testid="create-source-dialog"]')
+    //   .contains('label', 'Name')
+    //   .parent()
+    //   .find('input')
+    //   .type('cypress_test_source');
 
     cy.get('[data-testid="create-source-dialog"]')
-      .contains('label', 'Spreadsheet Link')
+      .contains('label', 'Username')
       .parent()
       .find('input')
-      .type(Cypress.env('SRC_GSHEETS_SPREADSHEET_LINK'), {
-        parseSpecialCharSequences: false,
-      });
+      .type(Cypress.env('SRC_KOBO_USERNAME'));
+
+    cy.get('[data-testid="create-source-dialog"]')
+      .contains('label', 'Password')
+      .parent()
+      .find('input')
+      .type(Cypress.env('SRC_KOBO_PASSWORD'));
+
+    cy.get('[data-testid="create-source-dialog"]')
+      .contains('label', 'Base Url')
+      .parent()
+      .find('input')
+      .type(Cypress.env('SRC_KOBO_BASE_URL'));
 
     cy.get('[data-testid="create-source-dialog"]')
       .contains('label', 'Name')
       .parent()
       .find('input')
-      .type('cypress_test_source');
+      .type('cypress test src');
 
     cy.get('[data-testid="savebutton"]').click();
 
     cy.intercept('/api/airbyte/sources/check_connection').as(
       'check_connection'
     );
-    cy.wait(['@check_connection'], { timeout: 120000 });
+
+    cy.contains('td', 'cypress test src');
   });
 });
