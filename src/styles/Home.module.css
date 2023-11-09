@@ -8,6 +8,17 @@
   padding: 3rem 4rem;
 }
 
+.usage {
+  width: 100%;
+  padding: 3rem 4rem;
+}
+
+.usage iframe {
+  height: 70vh;
+  width: 100%;
+  border: none;
+}
+
 .description {
   display: inherit;
   justify-content: inherit;
