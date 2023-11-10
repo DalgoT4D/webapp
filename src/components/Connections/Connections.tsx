@@ -161,7 +161,7 @@ export const Connections = () => {
         const logsArray = response.logs.logs.map(
           // eslint-disable-next-line
           (logObject: PrefectFlowRunLog, idx: number) =>
-            `- ${logObject.message} '\n'`
+            `${logObject.message} '\n'`
         );
 
         setSyncLogs(logsArray);
