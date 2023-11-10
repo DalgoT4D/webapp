@@ -110,7 +110,7 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
           .style('left', `${x - 5}px`)
           .style('top', `${y - 95}px`)
           .on('click', (event) => {
-            selectFlowRun(d);
+            if (event.target.className == 'log-link') selectFlowRun(d);
           });
       })
       .on('mouseout', (d3) => {
