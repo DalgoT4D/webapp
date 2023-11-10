@@ -113,9 +113,6 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
             selectFlowRun(d);
           });
       })
-      .on('click', (event, d: any) => {
-        selectFlowRun(d);
-      })
       .on('mouseout', (d3) => {
         if (tooltip && !tooltip?.node()?.contains(d3.relatedTarget)) {
           tooltip.style('visibility', 'hidden');
