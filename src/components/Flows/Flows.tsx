@@ -340,9 +340,7 @@ export const Flows = ({
         title={'Pipeline'}
       />
 
-      {lastFlowRun && (
-          <SingleFlowRunHistory flowRun={lastFlowRun} />
-      )}
+      <SingleFlowRunHistory flowRun={lastFlowRun} />
 
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
