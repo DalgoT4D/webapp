@@ -19,7 +19,7 @@
     "@mui/material": "^5.14.10",
     "@mui/x-date-pickers": "^6.16.0",
     "@superset-ui/embedded-sdk": "^0.1.0-alpha.10",
-    "@types/d3": "^7.4.1",
+    "@types/d3": "^7.4.2",
     "cronstrue": "^2.32.0",
     "d3": "^7.8.5",
     "eslint": "8.51.0",
