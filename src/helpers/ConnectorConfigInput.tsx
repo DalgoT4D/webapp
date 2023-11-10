@@ -165,7 +165,7 @@ class ConnectorConfigInput {
 
         result.push(objResult);
 
-        value?.oneOf.forEach((eachEnum: any) => {
+        value?.oneOf?.forEach((eachEnum: any) => {
           ConnectorConfigInput.traverseSpecs(
             objResult.specs,
             eachEnum,
