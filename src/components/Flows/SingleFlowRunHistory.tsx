@@ -1,4 +1,4 @@
-import { Box, Button, CardContent, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { httpGet } from '@/helpers/http';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { useSession } from 'next-auth/react';
@@ -20,7 +20,7 @@ export type FlowRun = {
   expectedStartTime: string;
 };
 
-export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun }) => {
+export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun | null | undefined }) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
 
@@ -30,6 +30,7 @@ export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun }) => {
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
 
   const fetchLogs = async () => {
+    if (!flowRun) { return; }
     setExpandLogs(true);
     (async () => {
       try {
@@ -72,7 +73,7 @@ export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun }) => {
       data-testid="single-flow-run-logs"
     >
       <Typography variant="h6" component="div">
-        {flowRun.lastRun}
+        {flowRun?.lastRun}
       </Typography>
 
       <LogCard
