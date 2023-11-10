@@ -21,7 +21,6 @@ import Image from 'next/image';
 import styles from './Connections.module.css';
 import { delay, lastRunTime, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { LogCard } from '@/components/Logs/LogCard';
 
 type PrefectFlowRun = {
