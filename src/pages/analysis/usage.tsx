@@ -67,7 +67,6 @@ export default function Usage() {
             Usage Dashboard
           </Typography>
         </Box>
-        <div id="dashboard-container"></div>
         {!globalContext?.CurrentOrg?.state?.viz_url ? (
           <>
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 20 }}>
