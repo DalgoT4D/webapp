@@ -63,7 +63,7 @@ const getSourceDest = (connection: any) => (
         mr: 2,
       }}
     >
-      <Tooltip title={connection.source.name}>
+      <Tooltip title={connection.source?.name}>
         <Typography variant="subtitle2" fontWeight={600}>
           {truncateString(connection.source.name)}
         </Typography>
