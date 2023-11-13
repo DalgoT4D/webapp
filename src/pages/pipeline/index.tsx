@@ -45,7 +45,14 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
             : '#00897B';
         const lastRun = moment(new Date(run.startTime)).calendar();
         const totalRunTime = run.totalRunTime;
-        return { id: run.id, name: run.name, color, status, lastRun, totalRunTime, };
+        return {
+          id: run.id,
+          name: run.name,
+          color,
+          status,
+          lastRun,
+          totalRunTime,
+        };
       })
       .reverse();
 
@@ -97,13 +104,14 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
             `<strong>Start time:</strong> ${d.lastRun}
             <br><strong>Run time:</strong> ${d.totalRunTime}s
             <br> <strong>Status:</strong> ${d.status}
+            <br><a class="log-link" style="cursor:pointer" >Check logs</a>
             `
           )
           .style('left', `${x - 5}px`)
-          .style('top', `${y - 95}px`);
-      })
-      .on("click", (event, d: any) => {
-        selectFlowRun(d);
+          .style('top', `${y - 95}px`)
+          .on('click', (event) => {
+            if (event.target.className == 'log-link') selectFlowRun(d);
+          });
       })
       .on('mouseout', (d3) => {
         if (tooltip && !tooltip?.node()?.contains(d3.relatedTarget)) {
@@ -183,7 +191,7 @@ export default function Home() {
     );
   }
 
-  const selectFlowRun  = async (flowRun: FlowRun) => {
+  const selectFlowRun = async (flowRun: FlowRun) => {
     setSelectedFlowRun(null);
     await delay(1000);
     setSelectedFlowRun(flowRun);
@@ -314,7 +322,10 @@ export default function Home() {
                             /{run.runs.length} successful runs
                           </Typography>
                         </Box>
-                        <BarChart runs={run.runs} selectFlowRun={selectFlowRun} />
+                        <BarChart
+                          runs={run.runs}
+                          selectFlowRun={selectFlowRun}
+                        />
                         <Typography variant="subtitle2" fontWeight={600}>
                           Last {run.runs.length} runs
                         </Typography>
@@ -327,20 +338,16 @@ export default function Home() {
               );
             })}
         </Box>
-        { selectedFlowRun &&
-        (
-          <SingleFlowRunHistory flowRun={
-            {
-              id: selectedFlowRun.id,
-              name: selectedFlowRun.name,
-              status: selectedFlowRun.status,
-              lastRun: selectedFlowRun.lastRun,
-              startTime: selectedFlowRun.startTime,
-              expectedStartTime: selectedFlowRun.expectedStartTime,
-            }
-          } />
-        )
-        }
+        <SingleFlowRunHistory flowRun={ selectedFlowRun && 
+          {
+            id: selectedFlowRun.id,
+            name: selectedFlowRun.name,
+            status: selectedFlowRun.status,
+            lastRun: selectedFlowRun.lastRun,
+            startTime: selectedFlowRun.startTime,
+            expectedStartTime: selectedFlowRun.expectedStartTime,
+          }
+        } />
       </main>
     </>
   );
