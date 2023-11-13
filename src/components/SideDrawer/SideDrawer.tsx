@@ -49,10 +49,18 @@ const ItemButton: React.FC<ItemButtonProps> = ({
 
 export const SideDrawer = () => {
   const router = useRouter();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(
+    new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
+  );
   const [selectedIndex, setSelectedIndex] = useState(
     sideMenu.find((item) => item.path === router.pathname)?.index
   );
+
+  const handleCollpaseArrowClick = (idx: number) => {
+    const newOpen = [...open];
+    newOpen[idx] = !newOpen[idx];
+    setOpen(newOpen);
+  };
 
   useEffect(() => {
     setSelectedIndex(
@@ -67,7 +75,7 @@ export const SideDrawer = () => {
 
   const getList = (
     <List component="div" data-testid="side-menu">
-      {sideMenu.map((item) => {
+      {sideMenu.map((item, idx: number) => {
         const hasChildren = sideMenu.filter(
           (sideItem) => sideItem.parent === item.index
         );
@@ -84,9 +92,9 @@ export const SideDrawer = () => {
                   {hasChildren.length > 0 && (
                     <IconButton
                       sx={{ padding: 0 }}
-                      onClick={() => setOpen(!open)}
+                      onClick={() => handleCollpaseArrowClick(idx)}
                     >
-                      {open ? (
+                      {open[idx] ? (
                         <ExpandLess color={itemColor} />
                       ) : (
                         <ExpandMore color={itemColor} />
@@ -97,7 +105,7 @@ export const SideDrawer = () => {
               </ListItem>
               {hasChildren.length > 0 && (
                 <Collapse
-                  in={open}
+                  in={open[idx]}
                   key={item.index}
                   timeout="auto"
                   unmountOnExit

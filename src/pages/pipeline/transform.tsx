@@ -9,11 +9,7 @@ import {
   Box,
   Button,
   Card,
-  CardActions,
-  CardContent,
   CircularProgress,
-  Collapse,
-  IconButton,
   Link,
   Tabs,
   Tab,
@@ -21,13 +17,13 @@ import {
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import React, { useContext, useEffect, useState } from 'react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Dbt from '@/assets/images/dbt.png';
 import Image from 'next/image';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
 import { DBTTarget } from '@/components/DBT/DBTTarget';
 import { DBTDocs } from '@/components/DBT/DBTDocs';
 import { delay } from '@/utils/common';
+import { LogCard } from '@/components/Logs/LogCard';
 
 type DbtBlock = {
   blockName: string;
@@ -378,39 +374,11 @@ const Transform = () => {
                   ) : (
                     ''
                   )}
-                  <Card
-                    sx={{
-                      marginTop: '10px',
-                      padding: '4px',
-                      borderRadius: '8px',
-                      color: '#092540',
-                    }}
-                  >
-                    <CardActions
-                      sx={{ display: 'flex', justifyContent: 'space-between' }}
-                    >
-                      <Box>Logs</Box>
-                      <IconButton onClick={() => setExpandLogs(!expandLogs)}>
-                        <ExpandMoreIcon
-                          sx={{
-                            transform: !expandLogs
-                              ? 'rotate(0deg)'
-                              : 'rotate(180deg)',
-                          }}
-                        />
-                      </IconButton>
-                    </CardActions>
-                    <Collapse in={expandLogs} unmountOnExit>
-                      {
-                        <CardContent>
-                          {running && <CircularProgress />}
-                          {dbtSetupLogs?.map((logMessage, idx) => (
-                            <Box key={idx}>{logMessage}</Box>
-                          ))}
-                        </CardContent>
-                      }
-                    </Collapse>
-                  </Card>
+                  <LogCard
+                    logs={dbtSetupLogs}
+                    expand={expandLogs}
+                    setExpand={setExpandLogs}
+                  />
                 </Box>
               </>
             )}
