@@ -1,16 +1,6 @@
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
-import {
-  CircularProgress,
-  Box,
-  Typography,
-  Card,
-  CardActions,
-  IconButton,
-  Collapse,
-  CardContent,
-  Tooltip,
-} from '@mui/material';
+import { CircularProgress, Box, Typography, Tooltip } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
@@ -31,7 +21,7 @@ import Image from 'next/image';
 import styles from './Connections.module.css';
 import { delay, lastRunTime, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { LogCard } from '@/components/Logs/LogCard';
 
 type PrefectFlowRun = {
   id: string;
@@ -73,7 +63,7 @@ const getSourceDest = (connection: any) => (
         mr: 2,
       }}
     >
-      <Tooltip title={connection.source.name}>
+      <Tooltip title={connection.source?.name}>
         <Typography variant="subtitle2" fontWeight={600}>
           {truncateString(connection.source.name)}
         </Typography>
@@ -170,7 +160,7 @@ export const Connections = () => {
         const logsArray = response.logs.logs.map(
           // eslint-disable-next-line
           (logObject: PrefectFlowRunLog, idx: number) =>
-            `- ${logObject.message} '\n'`
+            `${logObject.message} '\n'`
         );
 
         setSyncLogs(logsArray);
@@ -442,34 +432,11 @@ export const Connections = () => {
         handleConfirm={() => resetConnection(blockId)}
         message="Resetting the connection will clear all data at the warehouse."
       />
-      <Card
-        sx={{
-          marginTop: '10px',
-          padding: '4px',
-          borderRadius: '8px',
-          color: '#092540',
-        }}
-      >
-        <CardActions sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Box>Logs</Box>
-          <IconButton onClick={() => setExpandSyncLogs(!expandSyncLogs)}>
-            <ExpandMoreIcon
-              sx={{
-                transform: !expandSyncLogs ? 'rotate(0deg)' : 'rotate(180deg)',
-              }}
-            />
-          </IconButton>
-        </CardActions>
-        <Collapse in={expandSyncLogs} unmountOnExit>
-          {
-            <CardContent>
-              {syncLogs?.map((logMessage, idx) => (
-                <Box key={idx}>{logMessage}</Box>
-              ))}
-            </CardContent>
-          }
-        </Collapse>
-      </Card>
+      <LogCard
+        logs={syncLogs}
+        expand={expandSyncLogs}
+        setExpand={setExpandSyncLogs}
+      />
     </>
   );
 };
