@@ -1,4 +1,4 @@
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, act, fireEvent} from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import FlowCreate from '../FlowCreate';
@@ -214,13 +214,16 @@ describe('Flow Creation', () => {
     const autocomplete = screen.getByTestId('cronautocomplete');
 
     // test with valid value
-    fireEvent.change(cronOption, { target: { value: 'daily' } });
+    autocomplete.focus();
+    await act(() => userEvent.type(cronOption, 'daily'));
     fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
     expect(cronOption.value).toBe('daily');
 
     // test with invalid value
-    fireEvent.change(cronOption, { target: { value: 'foo' } });
+    await act(async () => {
+      userEvent.type(cronOption, 'foo');
+    });
     fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
     expect(cronOption.value).not.toBe('foo');
@@ -261,15 +264,18 @@ describe('Flow Creation', () => {
     const cronautocomplete = screen.getByTestId('cronautocomplete');
 
     // test with valid value
-    await act(() =>
-      fireEvent.change(cronOption, { target: { value: 'daily' } })
-    );
+    // cronautocomplete.focus();
+    await act(async () => {
+      await userEvent.clear(cronOption);
+      await userEvent.type(cronOption, 'daily');
+    });
     fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-    await act(() => fireEvent.keyDown(cronautocomplete, { key: 'Enter' }));
+    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
     expect(cronOption.value).toBe('daily');
 
     // test with invalid value
-    fireEvent.change(cronOption, { target: { value: 'foo' } });
+    await act(() => userEvent.type(cronOption, 'foo'));
+    // fireEvent.change(cronOption, { target: { value: 'foo' } });
     fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
     expect(cronOption.value).not.toBe('foo');
@@ -300,6 +306,13 @@ describe('Flow Creation', () => {
     (global as any).fetch = fetchMock2;
 
     // select day of week
+    await userEvent.clear(cronOption);
+    await act(async () => {
+      await userEvent.type(cronOption, 'weekly');
+      fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+      fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    });
+    expect(cronOption.value).toBe('weekly');
     const dayOfWeekOption = screen.getByRole('combobox', {
       name: 'Day of the week',
     }) as HTMLInputElement;
@@ -372,9 +385,12 @@ describe('Flow Creation', () => {
     const cronautocomplete = screen.getByTestId('cronautocomplete');
 
     // test with valid value
-    fireEvent.change(cronOption, { target: { value: 'daily' } });
-    fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    await userEvent.clear(cronOption);
+    await act(async () => {
+      await userEvent.type(cronOption, 'daily');
+      fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+      fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    });
     expect(cronOption.value).toBe('daily');
 
     // type name of connection into the autocomplete
@@ -437,7 +453,7 @@ describe('Flow Creation', () => {
     // expect(requestBody.cron).toBe('0 1 * * *');
   });
 
-  // ================================================================================
+  // // ================================================================================
   it('check another payload sent to api - cron weekly', async () => {
     const fetchMock = jest
       .fn()
@@ -472,10 +488,16 @@ describe('Flow Creation', () => {
     const cronautocomplete = screen.getByTestId('cronautocomplete');
 
     // test with valid value
-    fireEvent.change(cronOption, { target: { value: 'weekly' } });
-    fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    // fireEvent.change(cronOption, { target: { value: 'weekly' } });
+    // fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+    // fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+    // fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    await userEvent.clear(cronOption);
+    await act(async () => {
+      await userEvent.type(cronOption, 'weekly');
+      fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+      fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    });
     expect(cronOption.value).toBe('weekly');
 
     // type name of connection into the autocomplete

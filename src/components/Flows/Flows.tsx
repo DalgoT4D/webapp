@@ -187,7 +187,7 @@ export const Flows = ({
             color="rgba(9, 37, 64, 0.87)"
             fontWeight={700}
           >
-            &nbsp; {cronToString(flow.cron)}
+            &nbsp; {flow?.cron ? cronToString(flow.cron) : 'Manual'}
           </Typography>
         </Box>,
         flowStatus(flow.status),
