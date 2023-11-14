@@ -109,6 +109,7 @@ const FlowCreate = ({
   ) => {
     const [utcHours, utcMinutes] = timeOfDay.split(' ');
     const cronMappings: any = {
+      manual: '',
       daily: `${utcMinutes} ${utcHours} * * *`,
       weekly: `${utcMinutes} ${utcHours} * * ${daysOfWeek.join(',')}`,
     };
@@ -127,6 +128,12 @@ const FlowCreate = ({
     If day of the week is set that means its weekly or else its daily 
     Returns {'daily/weekly', [<days-of-week-if-weekly-selected>]}
     */
+    if (!cronExp)
+      return {
+        schedule: 'manual',
+        daysOfWeek: [],
+        timeOfDay: '',
+      };
     const vals = cronExp.split(' ');
     const daysOfWeek = vals[vals.length - 1].replace(/\*/g, '');
     const [utcHours, utcMinutes] = vals.splice(0, 2);
@@ -151,7 +158,12 @@ const FlowCreate = ({
             },
             dbtTransform: data.parameters.dbt_blocks.length > 0 ? 'yes' : 'no',
             connectionBlocks: data.parameters.airbyte_blocks.map(
-              (data: any) => data.name
+              (conn: any) => ({
+                id: conn.blockName,
+                label: conn.name,
+                name: conn.name,
+                blockName: conn.blockName,
+              })
             ),
             active: data.isScheduleActive,
             name: data.name,
@@ -199,6 +211,10 @@ const FlowCreate = ({
         data.cronDaysOfWeek.map((option: AutoCompleteOption) => option.id),
         data.cronTimeOfDay
       );
+      const blocks = data.connectionBlocks.map((block: any, index: number) => ({
+        ...block,
+        seq: index + 1,
+      }));
       if (isEditPage) {
         setLoading(true);
         // hit the set schedule api if the value is updated
@@ -213,45 +229,34 @@ const FlowCreate = ({
         }
 
         // hit the update deplyment api if the cron is updated
-        if (
-          dirtyFields?.cron ||
-          dirtyFields?.cronDaysOfWeek ||
-          dirtyFields?.cronTimeOfDay
-        ) {
-          await httpPut(session, `prefect/flows/${flowId}`, {
-            cron: cronExpression,
-          });
-        }
+        await httpPut(session, `prefect/flows/${flowId}`, {
+          cron: cronExpression,
+          name: data.name,
+          connectionBlocks: blocks,
+          dbtTransform: data.dbtTransform,
+        });
         successToast(
           `Pipeline ${data.name} updated successfully`,
           [],
           toastContext
         );
         setSelectedFlow('');
-        mutate();
-        updateCrudVal('index');
       } else {
         setLoading(true);
-        const blocks = data.connectionBlocks.map(
-          (block: any, index: number) => ({
-            ...block,
-            seq: index + 1,
-          })
-        );
         const response = await httpPost(session, 'prefect/flows/', {
           name: data.name,
           connectionBlocks: blocks,
           dbtTransform: data.dbtTransform,
           cron: cronExpression,
         });
-        mutate();
-        updateCrudVal('index');
         successToast(
           `Pipeline ${response.name} created successfully`,
           [],
           toastContext
         );
       }
+      updateCrudVal('index');
+      mutate();
       setLoading(false);
     } catch (err: any) {
       console.error(err);
@@ -343,7 +348,6 @@ const FlowCreate = ({
                   data-testid="name"
                   variant="outlined"
                   register={register}
-                  disabled={isEditPage}
                   name="name"
                   label="Name"
                   placeholder="Enter the name of your pipeline"
@@ -356,11 +360,9 @@ const FlowCreate = ({
                 <Controller
                   name="connectionBlocks"
                   control={control}
-                  rules={{ required: 'Atleast one connection is required' }}
                   render={({ field }: any) => (
                     <Autocomplete
                       id="connectionBlocks"
-                      disabled={isEditPage}
                       multiple
                       ChipProps={{
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -402,7 +404,6 @@ const FlowCreate = ({
                     <Stack direction={'row'} alignItems="center" gap={'10%'}>
                       <Switch
                         checked={value === 'yes'}
-                        disabled={isEditPage}
                         value={value}
                         onChange={(event, value) => {
                           onChange(value ? 'yes' : 'no');
@@ -419,6 +420,7 @@ const FlowCreate = ({
             <Typography variant="h5" sx={{ marginBottom: '30px' }}>
               Schedule
             </Typography>
+
             <Box sx={{ marginBottom: '30px' }}>
               <Controller
                 name="cron"
@@ -430,6 +432,7 @@ const FlowCreate = ({
                     value={field.value}
                     data-testid="cronautocomplete"
                     options={[
+                      { id: 'manual', label: 'manual' },
                       { id: 'daily', label: 'daily' },
                       { id: 'weekly', label: 'weekly' },
                     ]}
@@ -492,35 +495,39 @@ const FlowCreate = ({
             ) : (
               ''
             )}
-            <Box data-testid="cronTimeOfDay">
-              <InputLabel htmlFor={'cronTimeOfDay'}>Time of day*</InputLabel>
-              <Controller
-                name="cronTimeOfDay"
-                control={control}
-                rules={{ required: 'Time of day is required' }}
-                render={({ field, fieldState: { error } }) => (
-                  <LocalizationProvider dateAdapter={AdapterMoment}>
-                    <TimePicker
-                      value={moment.utc(field.value, 'HH mm').local()}
-                      slotProps={{
-                        textField: {
-                          variant: 'outlined',
-                          error: !!error,
-                          helperText: error?.message,
-                        },
-                      }}
-                      onChange={(value: Moment | null) => {
-                        // the value will have a local time moment object
-                        const utcMinutes = moment.utc(value).minute();
-                        const utcHours = moment.utc(value).hours();
-                        const time = `${utcHours} ${utcMinutes}`;
-                        field.onChange(time);
-                      }}
-                    />
-                  </LocalizationProvider>
-                )}
-              />
-            </Box>
+            {scheduleSelected && scheduleSelected?.id !== 'manual' ? (
+              <Box data-testid="cronTimeOfDay">
+                <InputLabel htmlFor={'cronTimeOfDay'}>Time of day*</InputLabel>
+                <Controller
+                  name="cronTimeOfDay"
+                  control={control}
+                  rules={{ required: 'Time of day is required' }}
+                  render={({ field, fieldState: { error } }) => (
+                    <LocalizationProvider dateAdapter={AdapterMoment}>
+                      <TimePicker
+                        value={moment.utc(field.value, 'HH mm').local()}
+                        slotProps={{
+                          textField: {
+                            variant: 'outlined',
+                            error: !!error,
+                            helperText: error?.message,
+                          },
+                        }}
+                        onChange={(value: Moment | null) => {
+                          // the value will have a local time moment object
+                          const utcMinutes = moment.utc(value).minute();
+                          const utcHours = moment.utc(value).hours();
+                          const time = `${utcHours} ${utcMinutes}`;
+                          field.onChange(time);
+                        }}
+                      />
+                    </LocalizationProvider>
+                  )}
+                />
+              </Box>
+            ) : (
+              ''
+            )}
           </Box>
         </Box>
       </form>
