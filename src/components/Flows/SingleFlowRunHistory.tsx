@@ -20,7 +20,13 @@ export type FlowRun = {
   expectedStartTime: string;
 };
 
-export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun | null | undefined }) => {
+interface SingleFlowRunHistoryProps {
+  flowRun: FlowRun | null | undefined;
+}
+
+export const SingleFlowRunHistory = ({
+  flowRun,
+}: SingleFlowRunHistoryProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
 
@@ -30,17 +36,23 @@ export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun | null | un
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
 
   const fetchLogs = async () => {
-    if (!flowRun) { return; }
+    if (!flowRun) {
+      return;
+    }
     setExpandLogs(true);
     (async () => {
       try {
         const data = await httpGet(
           session,
-          `prefect/flow_runs/${flowRun.id}/logs?offset=${flowRunOffset}`
+          `prefect/flow_runs/${flowRun.id}/logs?offset=${Math.max(
+            flowRunOffset,
+            0
+          )}`
         );
 
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
-          const newlogs = logs.concat(data.logs.logs);
+          const newlogs =
+            flowRunOffset <= 0 ? data.logs.logs : logs.concat(data.logs.logs);
           setLogs(newlogs);
 
           // increment the offset by 200 if we have more to fetch
@@ -60,10 +72,10 @@ export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun | null | un
   };
 
   useEffect(() => {
-    if (session) {
+    if (flowRun?.id) {
       fetchLogs();
     }
-  }, [session]);
+  }, [flowRun?.id]);
 
   return (
     <Box
@@ -80,7 +92,7 @@ export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun | null | un
         logs={logs}
         expand={expandLogs}
         setExpand={setExpandLogs}
-        fetchMore={flowRunOffset >= 0}
+        fetchMore={flowRunOffset > 0}
         fetchMoreLogs={() => fetchLogs()}
       />
     </Box>
