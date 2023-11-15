@@ -20,7 +20,11 @@ export type FlowRun = {
   expectedStartTime: string;
 };
 
-export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun | null | undefined }) => {
+export const SingleFlowRunHistory = ({
+  flowRun,
+}: {
+  flowRun: FlowRun | null | undefined;
+}) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
 
@@ -30,7 +34,9 @@ export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun | null | un
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
 
   const fetchLogs = async () => {
-    if (!flowRun) { return; }
+    if (!flowRun) {
+      return;
+    }
     setExpandLogs(true);
     (async () => {
       try {
@@ -60,10 +66,10 @@ export const SingleFlowRunHistory = ({ flowRun }: { flowRun: FlowRun | null | un
   };
 
   useEffect(() => {
-    if (session) {
+    if (flowRun) {
       fetchLogs();
     }
-  }, [session]);
+  }, [session, flowRun]);
 
   return (
     <Box
