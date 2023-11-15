@@ -51,7 +51,8 @@ export const SingleFlowRunHistory = ({
         );
 
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
-          const newlogs = logs.concat(data.logs.logs);
+          const newlogs =
+            flowRunOffset <= 0 ? data.logs.logs : logs.concat(data.logs.logs);
           setLogs(newlogs);
 
           // increment the offset by 200 if we have more to fetch
