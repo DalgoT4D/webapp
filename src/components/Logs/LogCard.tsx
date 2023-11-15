@@ -14,7 +14,7 @@ export type FlowRunLogMessage = {
   message: string;
 };
 
-interface LogCardPropss {
+interface LogCardProps {
   expand: boolean;
   logs: Array<string | FlowRunLogMessage>;
   setExpand: (...args: any) => any;
@@ -28,7 +28,7 @@ export const LogCard = ({
   logs,
   fetchMore = false,
   fetchMoreLogs = () => {},
-}: LogCardPropss) => {
+}: LogCardProps) => {
   return (
     <Card
       sx={{
@@ -63,7 +63,7 @@ export const LogCard = ({
               <Box key={idx}>- {log?.message || log}</Box>
             ))}
             {fetchMore && (
-              <Button data-testid="offset" onClick={() => fetchMoreLogs()}>
+              <Button data-testid="offset" onClick={fetchMoreLogs}>
                 Fetch more
               </Button>
             )}
