@@ -20,11 +20,13 @@ export type FlowRun = {
   expectedStartTime: string;
 };
 
+interface SingleFlowRunHistoryProps {
+  flowRun: FlowRun | null | undefined;
+}
+
 export const SingleFlowRunHistory = ({
   flowRun,
-}: {
-  flowRun: FlowRun | null | undefined;
-}) => {
+}: SingleFlowRunHistoryProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
 
@@ -42,7 +44,10 @@ export const SingleFlowRunHistory = ({
       try {
         const data = await httpGet(
           session,
-          `prefect/flow_runs/${flowRun.id}/logs?offset=${flowRunOffset}`
+          `prefect/flow_runs/${flowRun.id}/logs?offset=${Math.max(
+            flowRunOffset,
+            0
+          )}`
         );
 
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
@@ -66,10 +71,10 @@ export const SingleFlowRunHistory = ({
   };
 
   useEffect(() => {
-    if (flowRun) {
+    if (flowRun?.id) {
       fetchLogs();
     }
-  }, [session, flowRun]);
+  }, [flowRun?.id]);
 
   return (
     <Box
@@ -86,7 +91,7 @@ export const SingleFlowRunHistory = ({
         logs={logs}
         expand={expandLogs}
         setExpand={setExpandLogs}
-        fetchMore={flowRunOffset >= 0}
+        fetchMore={flowRunOffset > 0}
         fetchMoreLogs={() => fetchLogs()}
       />
     </Box>

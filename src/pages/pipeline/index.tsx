@@ -338,16 +338,20 @@ export default function Home() {
               );
             })}
         </Box>
-        <SingleFlowRunHistory flowRun={ selectedFlowRun && 
-          {
-            id: selectedFlowRun.id,
-            name: selectedFlowRun.name,
-            status: selectedFlowRun.status,
-            lastRun: selectedFlowRun.lastRun,
-            startTime: selectedFlowRun.startTime,
-            expectedStartTime: selectedFlowRun.expectedStartTime,
+        <SingleFlowRunHistory
+          flowRun={
+            selectedFlowRun
+              ? {
+                  id: selectedFlowRun.id,
+                  name: selectedFlowRun.name,
+                  status: selectedFlowRun.status,
+                  lastRun: selectedFlowRun.lastRun,
+                  startTime: selectedFlowRun.startTime,
+                  expectedStartTime: selectedFlowRun.expectedStartTime,
+                }
+              : null
           }
-        } />
+        />
       </main>
     </>
   );
