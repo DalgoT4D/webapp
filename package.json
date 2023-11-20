@@ -17,7 +17,7 @@
     "@emotion/styled": "^11.10.8",
     "@mui/icons-material": "^5.14.15",
     "@mui/material": "^5.14.14",
-    "@mui/x-date-pickers": "^6.16.0",
+    "@mui/x-date-pickers": "^6.17.0",
     "@superset-ui/embedded-sdk": "^0.1.0-alpha.10",
     "@types/d3": "^7.4.2",
     "cronstrue": "^2.41.0",
