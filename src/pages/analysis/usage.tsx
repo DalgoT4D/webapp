@@ -14,6 +14,9 @@ export default function Usage() {
   const globalContext = useContext(GlobalContext);
 
   const fetchEmbedToken = async () => {
+    if (!usageDashboardId) {
+      return null;
+    }
     try {
       const { embed_token } = await httpPost(
         session,
