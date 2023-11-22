@@ -14,6 +14,7 @@ import {
   FormLabel,
   Grid,
   TextField,
+  Typography,
 } from '@mui/material';
 import {
   Table,
@@ -23,6 +24,7 @@ import {
   TableRow,
   FormControlLabel,
 } from '@mui/material';
+import NewReleasesIcon from '@mui/icons-material/NewReleases';
 import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -51,6 +53,7 @@ interface SourceStream {
   destinationSyncMode: string; // append | overwrite | append_dedup
   cursorFieldConfig: CursorFieldConfig; // this will not be posted to backend
   cursorField: string;
+  isNew?: boolean;
 }
 
 const CreateConnectionForm = ({
@@ -364,6 +367,45 @@ const CreateConnectionForm = ({
     setSomeStreamSelected(sourceStreams.some((stream) => stream.selected));
   }, [sourceStreams]);
 
+  const refreshSourceSchema = async () => {
+    try {
+      setLoading(true);
+      const data: any = await httpGet(
+        session,
+        `airbyte/connections/${blockId}/refreshschema`
+      );
+      setValue('name', data?.name);
+      setValue('sources', {
+        label: data?.source.name,
+        id: data?.source.id,
+      });
+      setValue('destinationSchema', data?.destinationSchema);
+
+      let newSyncedCatalog = data.newCatalog;
+      // copy over existing streams
+      data.syncCatalog.streams
+        .filter((catStream: {stream: SourceStream}) => !data.removedStreams.includes(catStream.stream.name))
+        .forEach((catStream: {stream: SourceStream}) => newSyncedCatalog.streams.push(catStream));
+
+      const streams = setupInitialStreamsState(newSyncedCatalog, blockId);
+      // add a flag to indicate new streams
+      streams.forEach((stream: SourceStream) => {
+        if (data.addedStreams.includes(stream.name)) {
+          stream.isNew = true;
+        }
+      });
+      setSourceStreams(streams);
+      setFilteredSourceStreams(streams);
+      setNormalize(data?.normalize || false);
+      successToast('Fetched schema', [], globalContext);
+      setLoading(false);
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+    setLoading(false);
+};
+
   const FormContent = () => {
     return (
       <>
@@ -536,7 +578,19 @@ const CreateConnectionForm = ({
                             : {}
                         }
                       >
-                        {stream.name}
+                        {stream.isNew && (
+                          <>
+                          <NewReleasesIcon style={{color: 'purple', fontWeight: 700}} />
+                          <Typography style={{color: 'purple', fontWeight: 700}}>
+                            {stream.name}
+                          </Typography>
+                          </>
+                        )}
+                        {!stream.isNew && (
+                          <Typography>
+                            {stream.name}
+                          </Typography>
+                        )}
                       </TableCell>
                       <TableCell key="sel" align="center">
                         <Switch
@@ -622,16 +676,29 @@ const CreateConnectionForm = ({
         formContent={<FormContent />}
         formActions={
           <>
-            <Button
-              variant="contained"
-              type="submit"
-              disabled={!someStreamSelected}
-            >
-              Connect
-            </Button>
-            <Button color="secondary" variant="outlined" onClick={handleClose}>
-              Cancel
-            </Button>
+            <Box style={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+              <Box style={{display: 'flex'}}>
+                <Box style={{paddingRight: '2px'}}>
+                  <Button
+                    variant="contained"
+                    type="submit"
+                    disabled={!someStreamSelected}
+                  >
+                    Connect
+                  </Button>
+                </Box>
+                <Box style={{paddingLeft: '2px'}}>
+                  <Button color="secondary" variant="outlined" onClick={handleClose}>
+                    Cancel
+                  </Button>
+                </Box>
+              </Box>
+              <Box>
+                <Button color="secondary" variant="outlined" onClick={refreshSourceSchema}>
+                  Refresh Streams
+                </Button>
+              </Box>
+            </Box>
           </>
         }
         loading={loading}
