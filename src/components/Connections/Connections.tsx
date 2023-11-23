@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react';
 import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import ReportIcon from '@mui/icons-material/Report';
 import { useContext } from 'react';
 import {
   errorToast,
@@ -303,6 +304,14 @@ export const Connections = () => {
           <Typography variant="body1" fontWeight={600}>
             {connection.name}
           </Typography>
+          { connection.schemaChange !== "no_change" && (
+            <Tooltip
+              style={{fontSize: 28, color: 'orange', marginLeft: 10}}
+              title="Schema change detected. Please edit the connection and refresh the streams"
+            >
+              <ReportIcon />
+            </Tooltip>
+          )}
         </Box>,
         getSourceDest(connection),
         getLastSync(connection),
