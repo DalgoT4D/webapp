@@ -35,7 +35,7 @@ export const LogCard = ({
         gap: '10px',
         display: 'flex',
         flexDirection: 'column',
-        marginTop: '10px',
+        marginTop: '0px',
         paddingLeft: '4px',
         paddingTop: '10px',
         paddingBottom: '20px',
