@@ -52,6 +52,11 @@ export const Auth: React.FC<AuthProps> = ({
                 )}
               </Box>
               {children}
+              <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                <Typography variant="body1"  >
+                    <a href="https://dalgo.in/privacy-policy/" target="_blank">Privacy Policy</a>
+                </Typography>
+              </Box>
             </Paper>
             <Typography variant="body1" mt={4} pb={3}>
               2023, DALGO ALL RIGHTS RESERVED
