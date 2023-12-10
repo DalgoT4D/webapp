@@ -20,7 +20,7 @@
     "@mui/x-date-pickers": "^6.17.0",
     "@superset-ui/embedded-sdk": "^0.1.0-alpha.10",
     "@types/d3": "^7.4.2",
-    "cronstrue": "^2.41.0",
+    "cronstrue": "^2.44.0",
     "d3": "^7.8.5",
     "eslint": "8.53.0",
     "eslint-config-next": "13.5.6",
