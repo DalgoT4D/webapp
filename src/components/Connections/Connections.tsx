@@ -150,27 +150,20 @@ export const Connections = () => {
     }
   };
 
-  const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
+  const fetchAirbyteLogs = async (blockId: string) => {
     try {
       const response = await httpGet(
         session,
-        `prefect/flow_runs/${flow_run_id}/logs`
+        `airbyte/connections/${blockId}/jobs`
       );
-      if (response?.logs?.logs && response.logs.logs.length > 0) {
-        const logsArray = response.logs.logs.map(
-          // eslint-disable-next-line
-          (logObject: PrefectFlowRunLog, idx: number) =>
-            `${logObject.message} '\n'`
-        );
-
-        setSyncLogs(logsArray);
-      }
+      setSyncLogs(response.logs);
+      return response.status;
     } catch (err: any) {
       console.error(err);
     }
   };
 
-  const syncConnection = (deploymentId: any) => {
+  const syncConnection = (deploymentId: string, blockId: string) => {
     (async () => {
       setExpandSyncLogs(true);
       if (!deploymentId) {
@@ -198,7 +191,7 @@ export const Connections = () => {
 
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
           await delay(5000);
-          await fetchAndSetFlowRunLogs(response.flow_run_id);
+          await fetchAirbyteLogs(blockId);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
       } catch (err: any) {
@@ -210,7 +203,7 @@ export const Connections = () => {
     })();
   };
 
-  const deleteConnection = (blockId: any) => {
+  const deleteConnection = (blockId: string) => {
     (async () => {
       try {
         const message = await httpDelete(
@@ -258,7 +251,7 @@ export const Connections = () => {
         variant="contained"
         onClick={() => {
           setSyncingBlockId(blockId);
-          syncConnection(deploymentId);
+          syncConnection(deploymentId, blockId);
         }}
         data-testid={'sync-' + idx}
         disabled={syncingBlockId === blockId}
