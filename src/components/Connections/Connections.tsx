@@ -99,15 +99,6 @@ const getSourceDest = (connection: any) => (
   </Box>
 );
 
-const getLastSync = (connection: any) =>
-  connection.lock ? (
-    <CircularProgress />
-  ) : (
-    <Typography variant="subtitle2" fontWeight={600}>
-      {lastRunTime(connection?.lastRun?.startTime)}
-    </Typography>
-  );
-
 export const Connections = () => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
@@ -150,27 +141,47 @@ export const Connections = () => {
     }
   };
 
-  const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
+  function removeEscapeSequences(log: string) {
+    // This regular expression matches typical ANSI escape codes
+    return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+  }
+
+  const fetchAirbyteLogs = async (blockId: string) => {
     try {
       const response = await httpGet(
         session,
-        `prefect/flow_runs/${flow_run_id}/logs`
+        `airbyte/connections/${blockId}/jobs`
       );
-      if (response?.logs?.logs && response.logs.logs.length > 0) {
-        const logsArray = response.logs.logs.map(
-          // eslint-disable-next-line
-          (logObject: PrefectFlowRunLog, idx: number) =>
-            `${logObject.message} '\n'`
-        );
-
-        setSyncLogs(logsArray);
+      let formattedLogs : Array<string> = [];
+      if (response.status === "not found") {
+        formattedLogs.push("No logs found");
+        setSyncLogs(formattedLogs);
+        return response.status;
       }
+      response.logs.forEach((log: string) => {
+        log = removeEscapeSequences(log);
+        const pattern1 = /\)[:;]\d+ -/;
+        const pattern2 = /\)[:;]\d+/;
+        let match = log.match(pattern1);
+        let index = 0;
+        if (match?.index) {
+          index = match.index + match[0].length;
+        } else {
+          match = log.match(pattern2);
+          if (match?.index) {
+            index = match.index + match[0].length;
+          }
+        }
+        formattedLogs.push(log.slice(index));
+      });
+      setSyncLogs(formattedLogs);
+      return response.status;
     } catch (err: any) {
       console.error(err);
     }
   };
 
-  const syncConnection = (deploymentId: any) => {
+  const syncConnection = (deploymentId: string, blockId: string) => {
     (async () => {
       setExpandSyncLogs(true);
       if (!deploymentId) {
@@ -198,7 +209,7 @@ export const Connections = () => {
 
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
           await delay(5000);
-          await fetchAndSetFlowRunLogs(response.flow_run_id);
+          await fetchAirbyteLogs(blockId);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
       } catch (err: any) {
@@ -210,7 +221,7 @@ export const Connections = () => {
     })();
   };
 
-  const deleteConnection = (blockId: any) => {
+  const deleteConnection = (blockId: string) => {
     (async () => {
       try {
         const message = await httpDelete(
@@ -258,7 +269,7 @@ export const Connections = () => {
         variant="contained"
         onClick={() => {
           setSyncingBlockId(blockId);
-          syncConnection(deploymentId);
+          syncConnection(deploymentId, blockId);
         }}
         data-testid={'sync-' + idx}
         disabled={syncingBlockId === blockId}
@@ -287,6 +298,27 @@ export const Connections = () => {
       </Button>
     </Box>
   );
+  const getLastSync = (connection: any) =>
+    connection.lock ? (
+      <CircularProgress />
+    ) : syncingBlockId ? (
+      <Typography variant="subtitle2" fontWeight={600}>
+        {lastRunTime(connection?.lastRun?.startTime)}
+      </Typography>
+    ) : (
+      <>
+        <Typography variant="subtitle2" fontWeight={600}>
+          {lastRunTime(connection?.lastRun?.startTime)}
+        </Typography>
+        <Button onClick={() => {
+          fetchAirbyteLogs(connection.blockId);
+          setExpandSyncLogs(true);
+        }}>
+          Fetch Logs
+        </Button>
+      </>
+    );
+
 
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
