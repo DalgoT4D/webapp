@@ -7,3 +7,11 @@
   border-radius: 4px;
   line-height: 2;
 }
+
+.color-on-hover:hover {
+  background-color: #05443e;
+  color: #b9cac9;
+  padding-left: 1px;
+  padding-right: 1px;
+  font-weight: bold;
+}

@@ -99,15 +99,6 @@ const getSourceDest = (connection: any) => (
   </Box>
 );
 
-const getLastSync = (connection: any) =>
-  connection.lock ? (
-    <CircularProgress />
-  ) : (
-    <Typography variant="subtitle2" fontWeight={600}>
-      {lastRunTime(connection?.lastRun?.startTime)}
-    </Typography>
-  );
-
 export const Connections = () => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
@@ -150,13 +141,40 @@ export const Connections = () => {
     }
   };
 
+  function removeEscapeSequences(log: string) {
+    // This regular expression matches typical ANSI escape codes
+    return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+  }
+
   const fetchAirbyteLogs = async (blockId: string) => {
     try {
       const response = await httpGet(
         session,
         `airbyte/connections/${blockId}/jobs`
       );
-      setSyncLogs(response.logs);
+      let formattedLogs : Array<string> = [];
+      if (response.status === "not found") {
+        formattedLogs.push("No logs found");
+        setSyncLogs(formattedLogs);
+        return response.status;
+      }
+      response.logs.forEach((log: string) => {
+        log = removeEscapeSequences(log);
+        const pattern1 = /\)[:;]\d+ -/;
+        const pattern2 = /\)[:;]\d+/;
+        let match = log.match(pattern1);
+        let index = 0;
+        if (match?.index) {
+          index = match.index + match[0].length;
+        } else {
+          match = log.match(pattern2);
+          if (match?.index) {
+            index = match.index + match[0].length;
+          }
+        }
+        formattedLogs.push(log.slice(index));
+      });
+      setSyncLogs(formattedLogs);
       return response.status;
     } catch (err: any) {
       console.error(err);
@@ -280,6 +298,27 @@ export const Connections = () => {
       </Button>
     </Box>
   );
+  const getLastSync = (connection: any) =>
+    connection.lock ? (
+      <CircularProgress />
+    ) : syncingBlockId ? (
+      <Typography variant="subtitle2" fontWeight={600}>
+        {lastRunTime(connection?.lastRun?.startTime)}
+      </Typography>
+    ) : (
+      <>
+        <Typography variant="subtitle2" fontWeight={600}>
+          {lastRunTime(connection?.lastRun?.startTime)}
+        </Typography>
+        <Button onClick={() => {
+          fetchAirbyteLogs(connection.blockId);
+          setExpandSyncLogs(true);
+        }}>
+          Fetch Logs
+        </Button>
+      </>
+    );
+
 
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
