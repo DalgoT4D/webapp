@@ -42,7 +42,7 @@ export const LogCard = ({
         borderRadius: '8px',
         color: '#092540',
         width: '100%',
-        wordWrap: 'break-word',
+        wordWrap: 'anywhere',
         border: '1px solid #e0e0e0',
       }}
     >
@@ -60,7 +60,9 @@ export const LogCard = ({
         {
           <CardContent data-testid="logmessages">
             {logs?.map((log: any, idx) => (
-              <Box key={idx}>- {log?.message || log}</Box>
+              <Box className="color-on-hover" key={idx}>
+                - {log?.message || log}
+              </Box>
             ))}
             {fetchMore && (
               <Button data-testid="offset" onClick={fetchMoreLogs}>
