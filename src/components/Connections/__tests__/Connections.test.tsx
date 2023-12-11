@@ -133,7 +133,7 @@ describe('Connections Setup', () => {
           CONNECTIONS[i]['destination']['destinationName']
       );
       expect(connCells[2].textContent).toBe(
-        lastRunTime(CONNECTIONS[i]['lastRun']['startTime'])
+        lastRunTime(CONNECTIONS[i]['lastRun']['startTime']) + "Fetch Logs"
       );
     }
   });
