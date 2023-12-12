@@ -6,6 +6,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { flowRunLogsOffsetLimit } from '@/config/constant';
 import { LogCard } from '../Logs/LogCard';
+import { LogSummaryCard, LogSummary } from '../Logs/LogSummaryCard';
 
 export type FlowRunLogMessage = {
   message: string;
@@ -34,6 +35,27 @@ export const SingleFlowRunHistory = ({
   const [flowRunOffset, setFlowRunOffset] = useState<number>(0);
   const [logs, setLogs] = useState<Array<FlowRunLogMessage>>([]);
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
+  const [logsummary, setLogsummary] = useState<Array<LogSummary>>([]);
+  const [logsummarylogs, setLogsummaryLogs] = useState<Array<string>>([]);
+
+  const fetchLogSummaries = async () => {
+    if (!flowRun) {
+      return;
+    }
+    (async () => {
+      try {
+        const data = await httpGet(
+          session,
+          `prefect/flow_runs/${flowRun.id}/logsummary`
+        );
+        console.log(data);
+        setLogsummary(data);
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], globalContext);
+      }
+    })();
+  };
 
   const fetchLogs = async () => {
     if (!flowRun) {
@@ -74,6 +96,10 @@ export const SingleFlowRunHistory = ({
   useEffect(() => {
     if (flowRun?.id) {
       fetchLogs();
+      // fetchLogSummaries();
+      // if (logsummary.length === 0) {
+      //   fetchLogs();
+      // }
     }
   }, [flowRun?.id]);
 
@@ -88,6 +114,27 @@ export const SingleFlowRunHistory = ({
         {flowRun?.lastRun}
       </Typography>
 
+      {logsummary.length > 0 && (
+        <>
+        <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+          <Box sx={{width: '50%', margin: '5px'}}>
+            <LogSummaryCard logsummary={logsummary} setLogsummaryLogs={setLogsummaryLogs} />
+          </Box>
+          <Box sx={{width: '50%', margin: '5px'}}>
+            {logsummarylogs.length > 0 && (
+              <LogCard
+                logs={logsummarylogs}
+                expand={true}
+                setExpand={() => {}}
+                fetchMore={false}
+                fetchMoreLogs={() => {}}
+              />
+            )}
+          </Box>
+        </Box>
+        </>
+      )}
+      {logsummary.length === 0 && (
       <LogCard
         logs={logs}
         expand={expandLogs}
@@ -95,6 +142,7 @@ export const SingleFlowRunHistory = ({
         fetchMore={flowRunOffset > 0}
         fetchMoreLogs={() => fetchLogs()}
       />
+      )}
     </Box>
   );
 };
