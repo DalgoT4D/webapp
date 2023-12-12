@@ -6,10 +6,10 @@ export type LogSummary = {
   status: string;
   pattern?: string;
   log_lines: Array<string>;
-  errors?: Number;
-  passed?: Number;
-  skipped?: Number;
-  warnings?: Number;
+  errors?: number;
+  passed?: number;
+  skipped?: number;
+  warnings?: number;
   tests: Array<any>;
 };
 
@@ -22,8 +22,8 @@ export const LogSummaryCard = ({logsummary, setLogsummaryLogs}: LogSummaryCardPr
 
   return (
     <Box>
-      {logsummary.map((log: LogSummary) => (
-        <LogSummaryBlock logsummary={log} setLogsummaryLogs={setLogsummaryLogs} />
+      {logsummary.map((log: LogSummary, index: number) => (
+        <LogSummaryBlock key={index} logsummary={log} setLogsummaryLogs={setLogsummaryLogs} />
       ))}
     </Box>
   )
