@@ -95,11 +95,14 @@ export const SingleFlowRunHistory = ({
 
   useEffect(() => {
     if (flowRun?.id) {
-      fetchLogs();
-      // fetchLogSummaries();
-      // if (logsummary.length === 0) {
-      //   fetchLogs();
-      // }
+      if (process.env.ENABLE_LOG_SUMMARIES) {
+        fetchLogSummaries();
+        if (logsummary.length === 0) {
+          fetchLogs();
+        }
+      } else {
+        fetchLogs();
+      }
     }
   }, [flowRun?.id]);
 
