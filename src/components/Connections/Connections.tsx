@@ -33,12 +33,6 @@ type PrefectFlowRun = {
   state_name: string;
 };
 
-type PrefectFlowRunLog = {
-  level: number;
-  timestamp: string;
-  message: string;
-};
-
 const truncateString = (input: string) => {
   const maxlength = 20;
   if (input.length <= maxlength) {
@@ -153,7 +147,7 @@ export const Connections = () => {
         session,
         `airbyte/connections/${blockId}/jobs`
       );
-      let formattedLogs : Array<string> = [];
+      const formattedLogs : Array<string> = [];
       if (response.status === "not found") {
         formattedLogs.push("No logs found");
         setSyncLogs(formattedLogs);
