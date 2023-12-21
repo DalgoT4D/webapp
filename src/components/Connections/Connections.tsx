@@ -221,7 +221,7 @@ export const Connections = () => {
       try {
         const response = await httpPost(
           session,
-          `prefect/flows/${deploymentId}/flow_run`,
+          `prefect/v1/flows/${deploymentId}/flow_run/`,
           {}
         );
         if (response?.detail) errorToast(response.detail, [], toastContext);
