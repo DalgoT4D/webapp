@@ -48,7 +48,7 @@ export const CreateOrgForm = ({
   const onSubmit = async (data: any) => {
     setWaitForOrgCreation(true);
     try {
-      const res = await httpPost(session, 'organizations/', {
+      const res = await httpPost(session, 'v1/organizations/', {
         name: data.name,
       });
       // directly updating locatStorage here doesn't, dont know why
