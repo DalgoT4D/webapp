@@ -35,7 +35,7 @@ export interface FlowsInterface {
   flows: Array<FlowInterface>;
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
-  setSelectedFlow: (arg: string) => any;
+  setSelectedFlowId: (arg: string) => any;
 }
 
 const flowState = (flow: FlowInterface) => {
@@ -135,7 +135,7 @@ export const Flows = ({
   flows,
   updateCrudVal,
   mutate,
-  setSelectedFlow,
+  setSelectedFlowId,
 }: FlowsInterface) => {
   const [lastFlowRun, setLastFlowRun] = useState<FlowRun>();
   const [runningDeploymentId, setRunningDeploymentId] = useState<string>('');
@@ -160,7 +160,7 @@ export const Flows = ({
 
   const handleEditConnection = () => {
     handleClose();
-    setSelectedFlow(deploymentId);
+    setSelectedFlowId(deploymentId);
     updateCrudVal('update');
   };
 
@@ -264,7 +264,6 @@ export const Flows = ({
       } else {
         setLastFlowRun(undefined);
       }
-
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
@@ -278,7 +277,11 @@ export const Flows = ({
   const handleQuickRunDeployment = (deploymentId: string) => {
     (async () => {
       try {
-        await httpPost(session, `prefect/flows/${deploymentId}/flow_run`, {});
+        await httpPost(
+          session,
+          `prefect/v1/flows/${deploymentId}/flow_run`,
+          {}
+        );
         successToast('Flow run inititated successfully', [], toastContext);
         mutate();
       } catch (err: any) {
@@ -294,7 +297,10 @@ export const Flows = ({
     (async () => {
       setDeleteFlowLoading(true);
       try {
-        const data = await httpDelete(session, `prefect/flows/${deploymentId}`);
+        const data = await httpDelete(
+          session,
+          `prefect/v1/flows/${deploymentId}`
+        );
         if (data?.success) {
           successToast('Flow deleted successfully', [], toastContext);
         } else {

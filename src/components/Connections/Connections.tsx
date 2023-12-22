@@ -52,7 +52,7 @@ type Destination = {
   workspaceId: string;
 };
 
-type Connection = {
+export type Connection = {
   name: string;
   connectionId: string;
   deploymentId: string;
