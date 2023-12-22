@@ -9,6 +9,7 @@ import SyncIcon from '@/assets/icons/sync.svg';
 import Image from 'next/image';
 import styles from './../Connections/Connections.module.css';
 import { delay } from '@/utils/common';
+import { TASK_DBTRUN, TASK_DBTTEST } from '@/config/constant';
 
 export type DbtBlock = {
   blockName: string;
@@ -19,8 +20,16 @@ export type DbtBlock = {
   deploymentId: string;
 };
 
+type TransformTask = {
+  label: string;
+  slug: string;
+  id: number;
+  deploymentId: string | null;
+  lock: string | null;
+};
+
 type params = {
-  blocks: DbtBlock[];
+  tasks: TransformTask[];
   setRunning: any;
   running: boolean;
   setDbtRunLogs: any;
@@ -43,34 +52,25 @@ type PrefectFlowRun = {
 };
 
 export const DBTTarget = ({
-  blocks,
+  tasks,
   setDbtRunLogs,
   setRunning,
   running,
   setExpandLogs,
 }: params) => {
   const [selectedBlock, setSelectedBlock] = useState<DbtBlock | undefined>();
+  const [selectedTask, setSelectedTask] = useState<TransformTask | undefined>();
   const toastContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
 
-  const executeDbtJob = async function (block: DbtBlock) {
+  const executeDbtJob = async function (task: TransformTask) {
     setRunning(true);
     setExpandLogs(true);
     setDbtRunLogs([]);
 
     try {
       let message = null;
-      if (block.action === 'git-pull') {
-        message = await httpPost(session, 'dbt/git_pull/', {});
-        if (message.success) {
-          message.status = 'success';
-          message.result = ['git pull succeeded'];
-        }
-      } else {
-        message = await httpPost(session, 'prefect/flows/dbt_run/', {
-          blockName: block.blockName,
-        });
-      }
+      message = await httpPost(session, `prefect/tasks/${task.id}/run/`, {});
       if (message?.status === 'success') {
         successToast('Job ran successfully', [], toastContext);
       } else {
@@ -78,7 +78,7 @@ export const DBTTarget = ({
       }
 
       // For dbt test command, we wont get the logs in message?.result if the operation fails
-      if (block.action === 'test') {
+      if (task.slug === TASK_DBTTEST) {
         // Custom state has been returned
         // need another api call to fetch the logs
         if (message?.result[0]?.id) {
@@ -135,15 +135,15 @@ export const DBTTarget = ({
     }
   };
 
-  const dbtRunWithDeployment = async (block: any) => {
-    if (block.deploymentId) {
+  const dbtRunWithDeployment = async (task: any) => {
+    if (task.deploymentId) {
       setExpandLogs(true);
       setDbtRunLogs([]);
       setRunning(true);
       try {
         const response = await httpPost(
           session,
-          `prefect/flows/${block.deploymentId}/flow_run`,
+          `prefect/v1/flows/${task.deploymentId}/flow_run/`,
           {}
         );
 
@@ -169,7 +169,7 @@ export const DBTTarget = ({
       }
       setRunning(false);
     } else {
-      errorToast('No deployment found for this DBT block', [], toastContext);
+      errorToast('No deployment found for this DBT task', [], toastContext);
     }
   };
 
@@ -178,35 +178,34 @@ export const DBTTarget = ({
       <Select
         label="Dbt functions"
         data-testid="dbt-functions"
-        value={selectedBlock?.blockName || 'Select function'}
+        value={selectedTask?.slug || 'Select function'}
         sx={{ width: '150px', textAlign: 'center' }}
         onChange={(event) => {
-          const block = blocks.find(
-            (blk: DbtBlock) => blk.blockName === event.target.value
+          const task = tasks.find(
+            (task: TransformTask) => task.slug === event.target.value
           );
-          setSelectedBlock(block);
+          setSelectedTask(task);
         }}
       >
         <MenuItem value="Select function" disabled>
           Select function
         </MenuItem>
-        {blocks.map((block) => (
-          <MenuItem
-            key={block.blockName}
-            value={block.blockName}
-          >{`DBT ${block.action}`}</MenuItem>
+        {tasks.map((task) => (
+          <MenuItem key={task.id} value={task.slug}>
+            {task.label}
+          </MenuItem>
         ))}
       </Select>
       <Button
         data-testid="runJob"
-        key={selectedBlock?.blockName}
+        key={selectedTask?.slug}
         variant="contained"
         sx={{ ml: 2 }}
         onClick={() => {
-          if (selectedBlock) {
-            if (selectedBlock.action === 'run')
-              dbtRunWithDeployment(selectedBlock);
-            else executeDbtJob(selectedBlock);
+          if (selectedTask) {
+            if (selectedTask.slug === TASK_DBTRUN)
+              dbtRunWithDeployment(selectedTask);
+            else executeDbtJob(selectedTask);
           } else {
             errorToast(
               'Please select a dbt function to execute',

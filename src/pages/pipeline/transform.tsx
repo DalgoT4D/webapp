@@ -24,6 +24,7 @@ import { DBTTarget } from '@/components/DBT/DBTTarget';
 import { DBTDocs } from '@/components/DBT/DBTDocs';
 import { delay } from '@/utils/common';
 import { LogCard } from '@/components/Logs/LogCard';
+import { TASK_DOCSGENERATE } from '@/config/constant';
 
 type DbtBlock = {
   blockName: string;
@@ -41,13 +42,23 @@ type ExpandTarget = {
   [id: string]: boolean;
 };
 
+type TransformTask = {
+  label: string;
+  slug: string;
+  id: number;
+  deploymentId: string | null;
+  lock: string | null;
+};
+
+type Tasks = TransformTask[];
+
 const Transform = () => {
   const [workspace, setWorkspace] = useState({
     status: '',
     gitrepo_url: '',
     default_schema: '',
   });
-  const [dbtBlocks, setDbtBlocks] = useState<TargetBlocks>({});
+  const [tasks, setTasks] = useState<Tasks>([]);
   const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
   const [running, setRunning] = useState<boolean>(false);
@@ -59,7 +70,7 @@ const Transform = () => {
   const handleChangeTab = (event: React.SyntheticEvent, newTab: string) => {
     setActiveTab(newTab);
   };
-  const [anyBlockLocked, setAnyBlockLocked] = useState<boolean>(false);
+  const [anyTaskLocked, setAnyTaskLocked] = useState<boolean>(false);
 
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -91,7 +102,7 @@ const Transform = () => {
       } else {
         response.status = 'fetched';
         setWorkspace(response);
-        fetchDbtBlocks();
+        fetchDbtTasks();
       }
     } catch (err: any) {
       console.error(err);
@@ -99,67 +110,45 @@ const Transform = () => {
     }
   };
 
-  const pollDbtBlocksLock = async () => {
+  const pollDbtTasksLock = async () => {
     try {
       let isLocked = true;
       while (isLocked) {
-        const response = await httpGet(session, 'prefect/blocks/dbt');
+        const response = await httpGet(session, 'prefect/tasks/transform/');
 
-        isLocked = response?.some((block: DbtBlock) =>
-          block.lock ? true : false
+        isLocked = response?.some((task: TransformTask) =>
+          task.lock ? true : false
         );
         await delay(3000);
       }
-      setAnyBlockLocked(false);
+      setAnyTaskLocked(false);
     } catch (error) {
-      setAnyBlockLocked(false);
+      setAnyTaskLocked(false);
     }
   };
 
-  const fetchDbtBlocks = async () => {
+  const fetchDbtTasks = async () => {
     if (!session) return;
     try {
-      const response = await httpGet(session, 'prefect/blocks/dbt');
+      const response = await httpGet(session, 'prefect/tasks/transform/');
 
-      const blocksByTarget: TargetBlocks = {};
-      const expandByTargets: ExpandTarget = {};
+      const tasks: TransformTask[] = [];
 
       let isAnyLocked = false;
-      response?.forEach((block: DbtBlock) => {
-        // const components: string[] = block.blockName.split('-');
-        // block.target = block?.dbtTargetSchem;
-        // block.action = components[3];
-
-        if (!blocksByTarget.hasOwnProperty(block.target)) {
-          blocksByTarget[block.target] = [];
-          expandByTargets[block.target] = false;
-        }
-        blocksByTarget[block.target].push(block);
-        if (block.lock) {
-          isAnyLocked = true;
-        }
+      response?.forEach((task: TransformTask) => {
+        if (task.lock) isAnyLocked = true;
+        tasks.push(task);
       });
 
-      if (response && response.length) {
-        blocksByTarget[response[0].target].push({
-          blockName: 'Git Pull',
-          blockId: '',
-          blockType: 'Shell Operation',
-          target: response[0].target,
-          action: 'git-pull',
-          deploymentId: '',
-          lock: null,
-        });
-      }
-      setDbtBlocks(blocksByTarget);
+      setTasks(tasks);
 
       if (response && response?.length > 0) {
         setDbtSetupStage('complete');
       }
 
       if (isAnyLocked) {
-        setAnyBlockLocked(true);
-        pollDbtBlocksLock();
+        setAnyTaskLocked(true);
+        pollDbtTasksLock();
       }
     } catch (err: any) {
       console.error(err);
@@ -169,8 +158,9 @@ const Transform = () => {
 
   const createProfile = async () => {
     try {
-      await httpPost(session, `prefect/blocks/dbt/`, {});
+      await httpPost(session, `prefect/tasks/transform/`, {});
       setDbtSetupStage('complete');
+      fetchDbtTasks();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
@@ -301,25 +291,21 @@ const Transform = () => {
                       </Button>
                     ) : dbtSetupStage === 'complete' ? (
                       <>
-                        {anyBlockLocked ? (
+                        {anyTaskLocked ? (
                           <CircularProgress />
                         ) : (
                           <>
-                            {Object.keys(dbtBlocks).map((target) => (
-                              <DBTTarget
-                                key={target}
-                                setExpandLogs={setExpandLogs}
-                                setRunning={setRunning}
-                                running={running}
-                                setDbtRunLogs={(logs: string[]) => {
-                                  setDbtSetupLogs(logs);
-                                }}
-                                blocks={dbtBlocks[target].filter(
-                                  (block) =>
-                                    block.action.indexOf('docs-generate') < 0
-                                )}
-                              />
-                            ))}
+                            <DBTTarget
+                              setExpandLogs={setExpandLogs}
+                              setRunning={setRunning}
+                              running={running}
+                              setDbtRunLogs={(logs: string[]) => {
+                                setDbtSetupLogs(logs);
+                              }}
+                              tasks={tasks.filter(
+                                (task) => task.slug != TASK_DOCSGENERATE
+                              )}
+                            />
                             <Button
                               aria-controls={open ? 'basic-menu' : undefined}
                               aria-haspopup="true"
