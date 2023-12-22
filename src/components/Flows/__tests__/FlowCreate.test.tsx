@@ -1,4 +1,4 @@
-import { render, screen, act, fireEvent} from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import FlowCreate from '../FlowCreate';
@@ -238,7 +238,7 @@ describe('Flow Creation', () => {
         json: jest
           .fn()
           .mockResolvedValueOnce([
-            { name: 'conn-1', blockName: 'conn-1-block' },
+            { name: 'conn-1', connectionId: 'conn-1-id' },
           ]),
       })
       .mockResolvedValueOnce({
@@ -337,10 +337,9 @@ describe('Flow Creation', () => {
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
     expect(requestBody.name).toBe('MyFlow');
     expect(requestBody.dbtTransform).toBe('no');
-    expect(requestBody.connectionBlocks.length).toBe(1);
-    expect(requestBody.connectionBlocks[0].seq).toBe(1);
-    expect(requestBody.connectionBlocks[0].blockName).toBe('conn-1-block');
-    expect(requestBody.connectionBlocks[0].name).toBe('conn-1');
+    expect(requestBody.connections.length).toBe(1);
+    expect(requestBody.connections[0].seq).toBe(1);
+    expect(requestBody.connections[0].id).toBe('conn-1-id');
 
     // expect(fetchMock2).toHaveBeenCalledWith({
     //   name: 'MyFlow',
@@ -359,7 +358,7 @@ describe('Flow Creation', () => {
         json: jest
           .fn()
           .mockResolvedValueOnce([
-            { name: 'conn-1', blockName: 'conn-1-block' },
+            { name: 'conn-1', connectionId: 'conn-1-id' },
           ]),
       })
       .mockResolvedValueOnce({
@@ -446,10 +445,9 @@ describe('Flow Creation', () => {
 
     expect(requestBody.name).toBe('MyFlow');
     expect(requestBody.dbtTransform).toBe('no');
-    expect(requestBody.connectionBlocks.length).toBe(1);
-    expect(requestBody.connectionBlocks[0].seq).toBe(1);
-    expect(requestBody.connectionBlocks[0].blockName).toBe('conn-1-block');
-    expect(requestBody.connectionBlocks[0].name).toBe('conn-1');
+    expect(requestBody.connections.length).toBe(1);
+    expect(requestBody.connections[0].seq).toBe(1);
+    expect(requestBody.connections[0].id).toBe('conn-1-id');
     // expect(requestBody.cron).toBe('0 1 * * *');
   });
 
@@ -462,7 +460,7 @@ describe('Flow Creation', () => {
         json: jest
           .fn()
           .mockResolvedValueOnce([
-            { name: 'conn-1', blockName: 'conn-1-block' },
+            { name: 'conn-1', connectionId: 'conn-1-id' },
           ]),
       })
       .mockResolvedValueOnce({
@@ -554,10 +552,9 @@ describe('Flow Creation', () => {
 
     expect(requestBody.name).toBe('MyFlow');
     expect(requestBody.dbtTransform).toBe('no');
-    expect(requestBody.connectionBlocks.length).toBe(1);
-    expect(requestBody.connectionBlocks[0].seq).toBe(1);
-    expect(requestBody.connectionBlocks[0].blockName).toBe('conn-1-block');
-    expect(requestBody.connectionBlocks[0].name).toBe('conn-1');
+    expect(requestBody.connections.length).toBe(1);
+    expect(requestBody.connections[0].seq).toBe(1);
+    expect(requestBody.connections[0].id).toBe('conn-1-id');
     // expect(requestBody.cron).toBe('0 1 * * 0');
   });
 });
