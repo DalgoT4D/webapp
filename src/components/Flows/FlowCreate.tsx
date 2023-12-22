@@ -21,18 +21,15 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import Input from '../UI/Input/Input';
 import moment, { Moment } from 'moment';
+import { Connection } from '@/components/Connections/Connections';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
   flowId?: string;
-  setSelectedFlow?: (args: string) => any;
+  setSelectedFlowId?: (args: string) => any;
 }
 
-type ApiResponseConnection = {
-  blockName: string;
-  name: string;
-};
 // DispConnection is for the AutoComplete list: {id, label}
 type DispConnection = {
   id: string;
@@ -43,7 +40,7 @@ type DeploymentDef = {
   active: boolean;
   name: string;
   dbtTransform: string;
-  connectionBlocks: Array<any>;
+  connections: Array<any>;
   cron: string | object;
   cronDaysOfWeek: Array<AutoCompleteOption>;
   cronTimeOfDay: string;
@@ -68,13 +65,15 @@ const FlowCreate = ({
   flowId,
   updateCrudVal,
   mutate,
-  setSelectedFlow = () => {},
+  setSelectedFlowId = () => {},
 }: FlowCreateInterface) => {
   const isEditPage = flowId !== '' && flowId !== undefined;
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
 
-  const [connections, setConnections] = useState<DispConnection[]>([]);
+  const [connectionOptions, setConnectionOptions] = useState<DispConnection[]>(
+    []
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const {
     register,
@@ -83,12 +82,13 @@ const FlowCreate = ({
     formState: { dirtyFields, errors },
     reset,
     watch,
+    setValue,
   } = useForm<DeploymentDef>({
     defaultValues: {
       active: true,
       name: '',
       dbtTransform: 'no',
-      connectionBlocks: [],
+      connections: [],
       cron: '',
       cronDaysOfWeek: [],
       cronTimeOfDay: '',
@@ -98,7 +98,7 @@ const FlowCreate = ({
   const scheduleSelected: any = watch('cron');
 
   const handleClickCancel = () => {
-    setSelectedFlow('');
+    setSelectedFlowId('');
     updateCrudVal('index');
   };
 
@@ -149,22 +149,23 @@ const FlowCreate = ({
       (async () => {
         setLoading(true);
         try {
-          const data: any = await httpGet(session, `prefect/flows/${flowId}`);
+          const data: any = await httpGet(
+            session,
+            `prefect/v1/flows/${flowId}`
+          );
           const cronObject = convertCronToString(data.cron);
           reset({
             cron: {
               id: cronObject.schedule,
               label: cronObject.schedule,
             },
-            dbtTransform: data.parameters.dbt_blocks.length > 0 ? 'yes' : 'no',
-            connectionBlocks: data.parameters.airbyte_blocks.map(
-              (conn: any) => ({
-                id: conn.blockName,
+            dbtTransform: data.dbtTransform,
+            connections: data.connections
+              .sort((c1: any, c2: any) => c1.seq - c2.seq)
+              .map((conn: any) => ({
+                id: conn.id,
                 label: conn.name,
-                name: conn.name,
-                blockName: conn.blockName,
-              })
-            ),
+              })),
             active: data.isScheduleActive,
             name: data.name,
             cronDaysOfWeek: cronObject.daysOfWeek.map((day: string) => ({
@@ -185,18 +186,17 @@ const FlowCreate = ({
   useEffect(() => {
     (async () => {
       try {
-        const data = await httpGet(session, 'airbyte/connections');
+        const data = await httpGet(session, 'airbyte/v1/connections');
         const tempConns: Array<DispConnection> = data.map(
-          (conn: ApiResponseConnection) => {
+          (conn: Connection) => {
             return {
-              id: conn.blockName,
+              id: conn.connectionId,
               label: conn.name,
               name: conn.name,
-              blockName: conn.blockName,
             };
           }
         );
-        setConnections(tempConns);
+        setConnectionOptions(tempConns);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
@@ -211,10 +211,12 @@ const FlowCreate = ({
         data.cronDaysOfWeek.map((option: AutoCompleteOption) => option.id),
         data.cronTimeOfDay
       );
-      const blocks = data.connectionBlocks.map((block: any, index: number) => ({
-        ...block,
-        seq: index + 1,
-      }));
+      const selectedConns = data.connections.map(
+        (conn: DispConnection, index: number) => ({
+          id: conn.id,
+          seq: index + 1,
+        })
+      );
       if (isEditPage) {
         setLoading(true);
         // hit the set schedule api if the value is updated
@@ -229,10 +231,10 @@ const FlowCreate = ({
         }
 
         // hit the update deplyment api if the cron is updated
-        await httpPut(session, `prefect/flows/${flowId}`, {
+        await httpPut(session, `prefect/v1/flows/${flowId}`, {
           cron: cronExpression,
           name: data.name,
-          connectionBlocks: blocks,
+          connections: selectedConns,
           dbtTransform: data.dbtTransform,
         });
         successToast(
@@ -240,12 +242,12 @@ const FlowCreate = ({
           [],
           toastContext
         );
-        setSelectedFlow('');
+        setSelectedFlowId('');
       } else {
         setLoading(true);
-        const response = await httpPost(session, 'prefect/flows/', {
+        const response = await httpPost(session, 'prefect/v1/flows/', {
           name: data.name,
-          connectionBlocks: blocks,
+          connections: selectedConns,
           dbtTransform: data.dbtTransform,
           cron: cronExpression,
         });
@@ -358,39 +360,41 @@ const FlowCreate = ({
               </Box>
               <Box>
                 <Controller
-                  name="connectionBlocks"
+                  name="connections"
                   control={control}
-                  render={({ field }: any) => (
-                    <Autocomplete
-                      id="connectionBlocks"
-                      multiple
-                      ChipProps={{
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                        // @ts-ignore
-                        'data-testid': 'connectionchip',
-                      }}
-                      data-testid="connectionautocomplete"
-                      value={field.value}
-                      sx={{ marginBottom: '10px', width: '90%' }}
-                      options={connections}
-                      isOptionEqualToValue={(option: any, val: any) =>
-                        val && option?.id === val?.id
-                      }
-                      onChange={(e, data) => field.onChange(data)}
-                      renderInput={(params) => (
-                        <Input
-                          {...params}
-                          placeholder="Select your connection"
-                          name="connectionBlocks"
-                          variant="outlined"
-                          label="Connections"
-                          required
-                          error={!!errors.connectionBlocks}
-                          helperText={errors.connectionBlocks?.message}
-                        />
-                      )}
-                    />
-                  )}
+                  render={({ field }: any) => {
+                    return (
+                      <Autocomplete
+                        id="connections"
+                        multiple
+                        ChipProps={{
+                          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                          // @ts-ignore
+                          'data-testid': 'connectionchip',
+                        }}
+                        data-testid="connectionautocomplete"
+                        value={field.value}
+                        sx={{ marginBottom: '10px', width: '90%' }}
+                        options={connectionOptions}
+                        isOptionEqualToValue={(option: any, val: any) =>
+                          val && option?.id === val?.id
+                        }
+                        onChange={(e, data) => field.onChange(data)}
+                        renderInput={(params) => (
+                          <Input
+                            {...params}
+                            placeholder="Select your connection"
+                            name="connections"
+                            variant="outlined"
+                            label="Connections"
+                            required
+                            error={!!errors.connections}
+                            helperText={errors.connections?.message}
+                          />
+                        )}
+                      />
+                    );
+                  }}
                 />
               </Box>
               <Box>

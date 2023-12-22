@@ -11,16 +11,7 @@ import styles from './../Connections/Connections.module.css';
 import { delay } from '@/utils/common';
 import { TASK_DBTRUN, TASK_DBTTEST } from '@/config/constant';
 
-export type DbtBlock = {
-  blockName: string;
-  blockId: string;
-  blockType: string;
-  target: string;
-  action: string;
-  deploymentId: string;
-};
-
-type TransformTask = {
+export type TransformTask = {
   label: string;
   slug: string;
   id: number;
@@ -58,7 +49,6 @@ export const DBTTarget = ({
   running,
   setExpandLogs,
 }: params) => {
-  const [selectedBlock, setSelectedBlock] = useState<DbtBlock | undefined>();
   const [selectedTask, setSelectedTask] = useState<TransformTask | undefined>();
   const toastContext = useContext(GlobalContext);
   const { data: session }: any = useSession();

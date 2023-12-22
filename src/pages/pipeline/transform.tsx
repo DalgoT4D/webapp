@@ -20,35 +20,11 @@ import React, { useContext, useEffect, useState } from 'react';
 import Dbt from '@/assets/images/dbt.png';
 import Image from 'next/image';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
-import { DBTTarget } from '@/components/DBT/DBTTarget';
+import { DBTTarget, TransformTask } from '@/components/DBT/DBTTarget';
 import { DBTDocs } from '@/components/DBT/DBTDocs';
 import { delay } from '@/utils/common';
 import { LogCard } from '@/components/Logs/LogCard';
 import { TASK_DOCSGENERATE } from '@/config/constant';
-
-type DbtBlock = {
-  blockName: string;
-  blockId: string;
-  blockType: string;
-  target: string;
-  action: string;
-  deploymentId: string;
-  lock: object | null;
-};
-type TargetBlocks = {
-  [id: string]: DbtBlock[];
-};
-type ExpandTarget = {
-  [id: string]: boolean;
-};
-
-type TransformTask = {
-  label: string;
-  slug: string;
-  id: number;
-  deploymentId: string | null;
-  lock: string | null;
-};
 
 type Tasks = TransformTask[];
 
