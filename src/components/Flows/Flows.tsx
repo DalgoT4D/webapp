@@ -279,7 +279,7 @@ export const Flows = ({
       try {
         await httpPost(
           session,
-          `prefect/v1/flows/${deploymentId}/flow_run`,
+          `prefect/v1/flows/${deploymentId}/flow_run/`,
           {}
         );
         successToast('Flow run inititated successfully', [], toastContext);
