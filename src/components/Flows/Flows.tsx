@@ -2,6 +2,7 @@ import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import React, { useContext, useMemo, useState } from 'react';
 import FlowIcon from '@/assets/icons/flow.svg';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import SyncIcon from '@/assets/icons/sync.svg';
 import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -15,6 +16,7 @@ import { lastRunTime, cronToString, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import Image from 'next/image';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
+import styles from './Flows.module.css';
 
 interface BlockLock {
   lockedBy: string;
@@ -223,13 +225,21 @@ export const Flows = ({
                 sx={{ mr: 1 }}
                 data-testid={'btn-quickrundeployment-' + flow.name}
                 variant="contained"
-                disabled={!!flow.lock}
+                disabled={runningDeploymentId === flow.deploymentId}
                 onClick={() => {
                   setRunningDeploymentId(flow.deploymentId);
                   handleQuickRunDeployment(flow.deploymentId);
                 }}
               >
-                Run
+                {runningDeploymentId === flow.deploymentId ? (
+                  <Image
+                    src={SyncIcon}
+                    className={styles.SyncIcon}
+                    alt="sync icon"
+                  />
+                ) : (
+                  'Run'
+                )}
               </Button>
               <Button
                 aria-controls={open ? 'basic-menu' : undefined}
