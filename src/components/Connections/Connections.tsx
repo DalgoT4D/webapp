@@ -32,6 +32,12 @@ type PrefectFlowRun = {
   state_name: string;
 };
 
+type PrefectFlowRunLog = {
+  level: number;
+  timestamp: string;
+  message: string;
+};
+
 type Source = {
   connectionConfiguration: object;
   name: string;
@@ -211,6 +217,26 @@ export const Connections = () => {
     }
   };
 
+  const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
+    try {
+      const response = await httpGet(
+        session,
+        `prefect/flow_runs/${flow_run_id}/logs`
+      );
+      if (response?.logs?.logs && response.logs.logs.length > 0) {
+        const logsArray = response.logs.logs.map(
+          // eslint-disable-next-line
+          (logObject: PrefectFlowRunLog, idx: number) =>
+            `${logObject.message} '\n'`
+        );
+
+        setSyncLogs(logsArray);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
   const syncConnection = (deploymentId: string, connectionId: string) => {
     (async () => {
       setExpandSyncLogs(true);
@@ -239,7 +265,7 @@ export const Connections = () => {
 
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
           await delay(5000);
-          await fetchAirbyteLogs(connectionId);
+          await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
       } catch (err: any) {
