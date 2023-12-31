@@ -186,7 +186,7 @@ const EditDestinationForm = ({
       setLoading(true);
       await httpPut(
         session,
-        `airbyte/destinations/${warehouse.destinationId}/`,
+        `airbyte/v1/destinations/${warehouse.destinationId}/`,
         {
           name: data.name,
           destinationDefId: data.destinationDef.id,
