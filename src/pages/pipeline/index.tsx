@@ -154,7 +154,7 @@ export default function Home() {
       if (showLoadingIndicator) {
         setIsLoading(true);
       }
-      const flowRuns: any = await httpGet(session, 'dashboard/');
+      const flowRuns: any = await httpGet(session, 'dashboard/v1');
       setFlowRuns(flowRuns);
       if (flowRuns.some((run: any) => run.lock)) {
         await delay(3000);
