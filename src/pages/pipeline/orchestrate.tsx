@@ -12,21 +12,21 @@ import { delay } from '@/utils/common';
 export default function Orchestrate() {
   const [crudVal, setCrudVal] = useState<string>('index'); // can be index or create
   const [flows, setFlows] = useState<Array<any>>([]);
-  const [selectedFlow, setSelectedFlow] = useState('');
+  const [selectedFlowId, setSelectedFlowId] = useState('');
   const { data: session }: any = useSession();
 
   const updateCrudVal = (crudState: string) => {
     setCrudVal(crudState);
   };
 
-  const { data, mutate, isLoading } = useSWR(`prefect/flows/`);
+  const { data, mutate, isLoading } = useSWR(`prefect/v1/flows/`);
 
   const pollFlowsLock = async () => {
     let isLocked = true;
     try {
       while (isLocked) {
         await delay(3000);
-        const flows = await httpGet(session, 'prefect/flows/');
+        const flows = await httpGet(session, 'prefect/v1/flows/');
         isLocked = flows?.some((flow: any) => (flow.lock ? true : false));
         setFlows(flows);
       }
@@ -60,7 +60,7 @@ export default function Orchestrate() {
               flows={flows}
               updateCrudVal={updateCrudVal}
               mutate={mutate}
-              setSelectedFlow={setSelectedFlow}
+              setSelectedFlowId={setSelectedFlowId}
             />
           ))}
         {crudVal === 'create' && (
@@ -68,8 +68,8 @@ export default function Orchestrate() {
         )}
         {crudVal === 'update' && (
           <FlowCreate
-            setSelectedFlow={setSelectedFlow}
-            flowId={selectedFlow}
+            setSelectedFlowId={setSelectedFlowId}
+            flowId={selectedFlowId}
             updateCrudVal={updateCrudVal}
             mutate={mutate}
           />
