@@ -33,6 +33,46 @@ type PrefectFlowRun = {
   state_name: string;
 };
 
+type PrefectFlowRunLog = {
+  level: number;
+  timestamp: string;
+  message: string;
+};
+
+type Source = {
+  connectionConfiguration: object;
+  name: string;
+  icon: string;
+  sourceDefinitionId: string;
+  sourceId: string;
+  sourceName: string;
+  workspaceId: string;
+};
+
+type Destination = {
+  connectionConfiguration: object;
+  name: string;
+  icon: string;
+  destinationDefinitionId: string;
+  destinationId: string;
+  destinationName: string;
+  workspaceId: string;
+};
+
+export type Connection = {
+  name: string;
+  connectionId: string;
+  deploymentId: string;
+  catalogId: string;
+  destination: Destination;
+  source: Source;
+  lock: { lockedBy: string | null; lockedAt: string | null } | null;
+  lastRun: null | any;
+  normalize: boolean;
+  status: string;
+  syncCatalog: object;
+};
+
 const truncateString = (input: string) => {
   const maxlength = 20;
   if (input.length <= maxlength) {
@@ -42,7 +82,7 @@ const truncateString = (input: string) => {
 };
 
 const headers = ['Connection details', 'Source → Destination', 'Last sync'];
-const getSourceDest = (connection: any) => (
+const getSourceDest = (connection: Connection) => (
   <Box
     sx={{
       display: 'flex',
@@ -97,15 +137,17 @@ const getSourceDest = (connection: any) => (
 export const Connections = () => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
-  const [blockId, setBlockId] = useState<string>('');
-  const [syncingBlockId, setSyncingBlockId] = useState<string>('');
+  // const [blockId, setBlockId] = useState<string>('');
+  const [connectionId, setConnectionId] = useState<string>('');
+  // const [syncingBlockId, setSyncingBlockId] = useState<string>('');
+  const [syncingConnectionId, setSyncingConnectionId] = useState<string>('');
   const [syncLogs, setSyncLogs] = useState<Array<string>>([]);
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const handleClick = (blockId: string, event: HTMLElement | null) => {
-    setBlockId(blockId);
+  const handleClick = (connectionId: string, event: HTMLElement | null) => {
+    setConnectionId(connectionId);
     setAnchorEl(event);
   };
   const handleClose = () => {
@@ -118,7 +160,7 @@ export const Connections = () => {
     useState<boolean>(false);
   const [rows, setRows] = useState<Array<any>>([]);
 
-  const { data, isLoading, mutate } = useSWR(`airbyte/connections`);
+  const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -141,15 +183,15 @@ export const Connections = () => {
     return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
   }
 
-  const fetchAirbyteLogs = async (blockId: string) => {
+  const fetchAirbyteLogs = async (connectionId: string) => {
     try {
       const response = await httpGet(
         session,
-        `airbyte/connections/${blockId}/jobs`
+        `airbyte/v1/connections/${connectionId}/jobs`
       );
-      const formattedLogs : Array<string> = [];
-      if (response.status === "not found") {
-        formattedLogs.push("No logs found");
+      const formattedLogs: Array<string> = [];
+      if (response.status === 'not found') {
+        formattedLogs.push('No logs found');
         setSyncLogs(formattedLogs);
         return response.status;
       }
@@ -176,7 +218,27 @@ export const Connections = () => {
     }
   };
 
-  const syncConnection = (deploymentId: string, blockId: string) => {
+  const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
+    try {
+      const response = await httpGet(
+        session,
+        `prefect/flow_runs/${flow_run_id}/logs`
+      );
+      if (response?.logs?.logs && response.logs.logs.length > 0) {
+        const logsArray = response.logs.logs.map(
+          // eslint-disable-next-line
+          (logObject: PrefectFlowRunLog, idx: number) =>
+            `${logObject.message} '\n'`
+        );
+
+        setSyncLogs(logsArray);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
+  const syncConnection = (deploymentId: string) => {
     (async () => {
       setExpandSyncLogs(true);
       if (!deploymentId) {
@@ -186,7 +248,7 @@ export const Connections = () => {
       try {
         const response = await httpPost(
           session,
-          `prefect/flows/${deploymentId}/flow_run`,
+          `prefect/v1/flows/${deploymentId}/flow_run/`,
           {}
         );
         if (response?.detail) errorToast(response.detail, [], toastContext);
@@ -204,24 +266,25 @@ export const Connections = () => {
 
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
           await delay(5000);
-          await fetchAirbyteLogs(blockId);
+          await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
+        setSyncingConnectionId('');
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
       } finally {
-        setSyncingBlockId('');
+        setSyncingConnectionId('');
       }
     })();
   };
 
-  const deleteConnection = (blockId: string) => {
+  const deleteConnection = (connectionId: string) => {
     (async () => {
       try {
         const message = await httpDelete(
           session,
-          `airbyte/connections/${blockId}`
+          `airbyte/v1/connections/${connectionId}`
         );
         if (message.success) {
           successToast('Connection deleted', [], toastContext);
@@ -235,12 +298,12 @@ export const Connections = () => {
     handleCancelDeleteConnection();
   };
 
-  const resetConnection = (blockId: string) => {
+  const resetConnection = (connectionId: string) => {
     (async () => {
       try {
         const message = await httpPost(
           session,
-          `airbyte/connections/${blockId}/reset`,
+          `airbyte/v1/connections/${connectionId}/reset`,
           {}
         );
         if (message.success) {
@@ -258,20 +321,23 @@ export const Connections = () => {
     handleCancelResetConnection();
   };
 
-  const Actions = ({ connection: { blockId, deploymentId }, idx }: any) => (
+  const Actions = ({
+    connection: { connectionId, deploymentId },
+    idx,
+  }: any) => (
     <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
       <Button
         variant="contained"
         onClick={() => {
-          setSyncingBlockId(blockId);
-          syncConnection(deploymentId, blockId);
+          setSyncingConnectionId(connectionId);
+          syncConnection(deploymentId);
         }}
         data-testid={'sync-' + idx}
-        disabled={syncingBlockId === blockId}
+        disabled={syncingConnectionId === connectionId}
         key={'sync-' + idx}
         sx={{ marginRight: '10px' }}
       >
-        {syncingBlockId === blockId ? (
+        {syncingConnectionId === connectionId ? (
           <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
         ) : (
           'Sync'
@@ -283,7 +349,7 @@ export const Connections = () => {
         aria-controls={open ? 'basic-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}
-        onClick={(event) => handleClick(blockId, event.currentTarget)}
+        onClick={(event) => handleClick(connectionId, event.currentTarget)}
         variant="contained"
         key={'menu-' + idx}
         color="info"
@@ -293,10 +359,10 @@ export const Connections = () => {
       </Button>
     </Box>
   );
-  const getLastSync = (connection: any) =>
+  const getLastSync = (connection: Connection) =>
     connection.lock ? (
       <CircularProgress />
-    ) : syncingBlockId ? (
+    ) : syncingConnectionId ? (
       <Typography variant="subtitle2" fontWeight={600}>
         {lastRunTime(connection?.lastRun?.startTime)}
       </Typography>
@@ -305,15 +371,16 @@ export const Connections = () => {
         <Typography variant="subtitle2" fontWeight={600}>
           {lastRunTime(connection?.lastRun?.startTime)}
         </Typography>
-        <Button onClick={() => {
-          fetchAirbyteLogs(connection.blockId);
-          setExpandSyncLogs(true);
-        }}>
+        <Button
+          onClick={() => {
+            fetchAirbyteLogs(connection.connectionId);
+            setExpandSyncLogs(true);
+          }}
+        >
           Fetch Logs
         </Button>
       </>
     );
-
 
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
@@ -388,7 +455,7 @@ export const Connections = () => {
 
       while (isLocked) {
         try {
-          const data = await httpGet(session, 'airbyte/connections');
+          const data = await httpGet(session, 'airbyte/v1/connections');
           isLocked = data?.some((conn: any) => (conn.lock ? true : false));
           await delay(3000);
           updateRows(data);
@@ -397,7 +464,7 @@ export const Connections = () => {
         }
       }
     })();
-  }, [data, syncingBlockId]);
+  }, [data, syncingConnectionId]);
 
   const handleClickOpen = () => {
     setShowDialog(true);
@@ -443,8 +510,8 @@ export const Connections = () => {
         handleResetConnection={handleResetConnection}
       />
       <CreateConnectionForm
-        setBlockId={setBlockId}
-        blockId={blockId}
+        setConnectionId={setConnectionId}
+        connectionId={connectionId}
         mutate={mutate}
         showForm={showDialog}
         setShowForm={setShowDialog}
@@ -458,13 +525,13 @@ export const Connections = () => {
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
         handleClose={() => handleCancelDeleteConnection()}
-        handleConfirm={() => deleteConnection(blockId)}
+        handleConfirm={() => deleteConnection(connectionId)}
         message="This will delete the connection permanently and all the flows built on top of this."
       />
       <ConfirmationDialog
         show={showConfirmResetDialog}
         handleClose={() => handleCancelResetConnection()}
-        handleConfirm={() => resetConnection(blockId)}
+        handleConfirm={() => resetConnection(connectionId)}
         message="Resetting the connection will clear all data at the warehouse."
       />
       <LogCard
