@@ -237,7 +237,7 @@ export const Connections = () => {
     }
   };
 
-  const syncConnection = (deploymentId: string, connectionId: string) => {
+  const syncConnection = (deploymentId: string) => {
     (async () => {
       setExpandSyncLogs(true);
       if (!deploymentId) {
@@ -268,6 +268,7 @@ export const Connections = () => {
           await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
+        setSyncingConnectionId('');
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
@@ -328,7 +329,7 @@ export const Connections = () => {
         variant="contained"
         onClick={() => {
           setSyncingConnectionId(connectionId);
-          syncConnection(deploymentId, connectionId);
+          syncConnection(deploymentId);
         }}
         data-testid={'sync-' + idx}
         disabled={syncingConnectionId === connectionId}
