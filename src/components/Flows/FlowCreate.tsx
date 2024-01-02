@@ -82,7 +82,6 @@ const FlowCreate = ({
     formState: { dirtyFields, errors },
     reset,
     watch,
-    setValue,
   } = useForm<DeploymentDef>({
     defaultValues: {
       active: true,
