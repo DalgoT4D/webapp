@@ -19,38 +19,34 @@ jest.mock('next/router', () => ({
 
 jest.mock('./../../../utils/common');
 
-const dbtBlocks: any = [
+const tasks: any = [
   {
-    blockName: 'block-1',
-    blockId: 'block-id-1',
-    blockType: 'dbt Core Operation',
-    target: 'prod',
-    action: 'clean',
+    label: 'DBT clean',
+    slug: 'dbt-clean',
     deploymentId: null,
+    lock: null,
+    id: 'task-id-1',
   },
   {
-    blockName: 'block-2',
-    blockId: 'block-id-2',
-    blockType: 'dbt Core Operation',
-    target: 'prod',
-    action: 'deps',
+    label: 'DBT deps',
+    slug: 'dbt-deps',
     deploymentId: null,
+    lock: null,
+    id: 'task-id-2',
   },
   {
-    blockName: 'block-3',
-    blockId: 'block-id-3',
-    blockType: 'dbt Core Operation',
-    target: 'prod',
-    action: 'run',
+    label: 'DBT run',
+    slug: 'dbt-run',
     deploymentId: null,
+    lock: null,
+    id: 'task-id-3',
   },
   {
-    blockName: 'block-4',
-    blockId: 'block-id-4',
-    blockType: 'dbt Core Operation',
-    target: 'prod',
-    action: 'test',
+    label: 'DBT test',
+    slug: 'dbt-test',
     deploymentId: null,
+    lock: null,
+    id: 'task-id-4',
   },
 ];
 
@@ -73,7 +69,7 @@ describe('Execute dbt jobs', () => {
             setRunning={setRunning}
             running={false}
             setExpandLogs={setExpandLogs}
-            blocks={dbtBlocks}
+            tasks={tasks}
           />
         </SessionProvider>
       )
@@ -83,7 +79,7 @@ describe('Execute dbt jobs', () => {
     await userEvent.click(selectDropDown);
 
     const options = screen.getAllByRole('option');
-    expect(options.length).toBe(dbtBlocks.length + 1);
+    expect(options.length).toBe(tasks.length + 1);
     expect(options[0]).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByText('DBT clean')).toBeInTheDocument();
     expect(screen.getByText('DBT deps')).toBeInTheDocument();
@@ -110,7 +106,7 @@ describe('Execute dbt jobs', () => {
             setRunning={setRunning}
             running={false}
             setExpandLogs={setExpandLogs}
-            blocks={dbtBlocks}
+            tasks={tasks}
           />
         </SessionProvider>
       )
@@ -122,7 +118,7 @@ describe('Execute dbt jobs', () => {
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
     await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'block-3' } })
+      fireEvent.change(selectInput, { target: { value: 'dbt-run' } })
     );
 
     // execute dbt run
@@ -134,8 +130,8 @@ describe('Execute dbt jobs', () => {
   });
 
   it('execute the dbt run job - response failure', async () => {
-    const dbtBlocksUpdated = dbtBlocks.slice();
-    dbtBlocksUpdated[2].deploymentId = 'deployment-id-1';
+    const tasksUpdated = tasks.slice();
+    tasksUpdated[2].deploymentId = 'deployment-id-1';
 
     const excuteRunJobApiMock = jest.fn().mockResolvedValueOnce({
       ok: false,
@@ -152,7 +148,7 @@ describe('Execute dbt jobs', () => {
             setRunning={setRunning}
             running={false}
             setExpandLogs={setExpandLogs}
-            blocks={dbtBlocksUpdated}
+            tasks={tasks}
           />
         </SessionProvider>
       )
@@ -164,7 +160,7 @@ describe('Execute dbt jobs', () => {
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
     await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'block-3' } })
+      fireEvent.change(selectInput, { target: { value: 'dbt-run' } })
     );
 
     //execute
@@ -176,8 +172,8 @@ describe('Execute dbt jobs', () => {
   });
 
   it('execute the dbt run job - empty flow id', async () => {
-    const dbtBlocksUpdated = dbtBlocks.slice();
-    dbtBlocksUpdated[2].deploymentId = 'deployment-id-1';
+    const tasksUpdated = tasks.slice();
+    tasksUpdated[2].deploymentId = 'deployment-id-1';
 
     const excuteRunJobApiMock = jest.fn().mockResolvedValueOnce({
       ok: true,
@@ -194,7 +190,7 @@ describe('Execute dbt jobs', () => {
             setRunning={setRunning}
             running={false}
             setExpandLogs={setExpandLogs}
-            blocks={dbtBlocksUpdated}
+            tasks={tasks}
           />
         </SessionProvider>
       )
@@ -206,7 +202,7 @@ describe('Execute dbt jobs', () => {
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
     await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'block-3' } })
+      fireEvent.change(selectInput, { target: { value: 'dbt-run' } })
     );
 
     //execute
@@ -218,8 +214,8 @@ describe('Execute dbt jobs', () => {
   });
 
   it('execute the dbt run job - success', async () => {
-    const dbtBlocksUpdated = dbtBlocks.slice();
-    dbtBlocksUpdated[2].deploymentId = 'deployment-id-1';
+    const tasksUpdated = tasks.slice();
+    tasksUpdated[2].deploymentId = 'deployment-id-1';
 
     const fetchMock = jest
       .fn()
@@ -263,7 +259,7 @@ describe('Execute dbt jobs', () => {
             setRunning={setRunning}
             running={false}
             setExpandLogs={setExpandLogs}
-            blocks={dbtBlocksUpdated}
+            tasks={tasks}
           />
         </SessionProvider>
       )
@@ -275,7 +271,7 @@ describe('Execute dbt jobs', () => {
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
     await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'block-3' } })
+      fireEvent.change(selectInput, { target: { value: 'dbt-run' } })
     );
 
     //execute
@@ -302,7 +298,7 @@ describe('Execute dbt jobs', () => {
             setRunning={setRunning}
             running={false}
             setExpandLogs={setExpandLogs}
-            blocks={dbtBlocks}
+            tasks={tasks}
           />
         </SessionProvider>
       )
@@ -314,7 +310,7 @@ describe('Execute dbt jobs', () => {
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
     await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'block-1' } })
+      fireEvent.change(selectInput, { target: { value: 'dbt-clean' } })
     );
 
     //execute
@@ -341,7 +337,7 @@ describe('Execute dbt jobs', () => {
             setRunning={setRunning}
             running={false}
             setExpandLogs={setExpandLogs}
-            blocks={dbtBlocks}
+            tasks={tasks}
           />
         </SessionProvider>
       )
@@ -353,7 +349,7 @@ describe('Execute dbt jobs', () => {
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
     await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'block-1' } })
+      fireEvent.change(selectInput, { target: { value: 'dbt-clean' } })
     );
 
     //execute
@@ -380,7 +376,7 @@ describe('Execute dbt jobs', () => {
             setRunning={setRunning}
             running={false}
             setExpandLogs={setExpandLogs}
-            blocks={dbtBlocks}
+            tasks={tasks}
           />
         </SessionProvider>
       )
@@ -392,7 +388,7 @@ describe('Execute dbt jobs', () => {
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
     await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'block-1' } })
+      fireEvent.change(selectInput, { target: { value: 'dbt-clean' } })
     );
 
     //execute

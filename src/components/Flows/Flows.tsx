@@ -2,6 +2,7 @@ import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import React, { useContext, useMemo, useState } from 'react';
 import FlowIcon from '@/assets/icons/flow.svg';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import SyncIcon from '@/assets/icons/sync.svg';
 import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -15,6 +16,7 @@ import { lastRunTime, cronToString, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import Image from 'next/image';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
+import styles from './Flows.module.css';
 
 interface BlockLock {
   lockedBy: string;
@@ -35,7 +37,7 @@ export interface FlowsInterface {
   flows: Array<FlowInterface>;
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
-  setSelectedFlow: (arg: string) => any;
+  setSelectedFlowId: (arg: string) => any;
 }
 
 const flowState = (flow: FlowInterface) => {
@@ -135,7 +137,7 @@ export const Flows = ({
   flows,
   updateCrudVal,
   mutate,
-  setSelectedFlow,
+  setSelectedFlowId,
 }: FlowsInterface) => {
   const [lastFlowRun, setLastFlowRun] = useState<FlowRun>();
   const [runningDeploymentId, setRunningDeploymentId] = useState<string>('');
@@ -160,7 +162,7 @@ export const Flows = ({
 
   const handleEditConnection = () => {
     handleClose();
-    setSelectedFlow(deploymentId);
+    setSelectedFlowId(deploymentId);
     updateCrudVal('update');
   };
 
@@ -223,13 +225,21 @@ export const Flows = ({
                 sx={{ mr: 1 }}
                 data-testid={'btn-quickrundeployment-' + flow.name}
                 variant="contained"
-                disabled={!!flow.lock}
+                disabled={runningDeploymentId === flow.deploymentId}
                 onClick={() => {
                   setRunningDeploymentId(flow.deploymentId);
                   handleQuickRunDeployment(flow.deploymentId);
                 }}
               >
-                Run
+                {runningDeploymentId === flow.deploymentId ? (
+                  <Image
+                    src={SyncIcon}
+                    className={styles.SyncIcon}
+                    alt="sync icon"
+                  />
+                ) : (
+                  'Run'
+                )}
               </Button>
               <Button
                 aria-controls={open ? 'basic-menu' : undefined}
@@ -264,7 +274,6 @@ export const Flows = ({
       } else {
         setLastFlowRun(undefined);
       }
-
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
@@ -278,7 +287,11 @@ export const Flows = ({
   const handleQuickRunDeployment = (deploymentId: string) => {
     (async () => {
       try {
-        await httpPost(session, `prefect/flows/${deploymentId}/flow_run`, {});
+        await httpPost(
+          session,
+          `prefect/v1/flows/${deploymentId}/flow_run/`,
+          {}
+        );
         successToast('Flow run inititated successfully', [], toastContext);
         mutate();
       } catch (err: any) {
@@ -294,7 +307,10 @@ export const Flows = ({
     (async () => {
       setDeleteFlowLoading(true);
       try {
-        const data = await httpDelete(session, `prefect/flows/${deploymentId}`);
+        const data = await httpDelete(
+          session,
+          `prefect/v1/flows/${deploymentId}`
+        );
         if (data?.success) {
           successToast('Flow deleted successfully', [], toastContext);
         } else {

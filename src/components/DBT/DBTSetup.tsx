@@ -147,7 +147,7 @@ export const DBTSetup = ({
         target_configs_schema: data.schema,
       };
       try {
-        await httpPut(session, 'dbt/schema/', updateSchemaPayload);
+        await httpPut(session, 'dbt/v1/schema/', updateSchemaPayload);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
