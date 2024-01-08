@@ -14,3 +14,7 @@ export const TASK_DBTCLEAN = 'dbt-clean';
 export const TASK_DBTDEPS = 'dbt-deps';
 export const TASK_GITPULL = 'git-pull';
 export const TASK_DOCSGENERATE = 'dbt-docs-generate';
+
+// Demo account
+export const demoAccDestSchema =
+  process.env.NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA;
