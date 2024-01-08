@@ -14,6 +14,7 @@ type Org = {
   airbyte_workspace_id: string;
   viz_url: string | null;
   viz_login_type: string | null;
+  is_demo: boolean;
 };
 
 type OrgUser = {

@@ -194,8 +194,8 @@ describe('Edit connection', () => {
               mutate={() => {}}
               showForm={true}
               setShowForm={() => {}}
-              blockId={'edit-conn-block'}
-              setBlockId={() => {}}
+              connectionId={'edit-conn-block'}
+              setConnectionId={() => {}}
             />
           </SWRConfig>
         </SessionProvider>
