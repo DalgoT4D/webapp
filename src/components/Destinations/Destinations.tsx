@@ -66,6 +66,8 @@ export const Destinations = () => {
     }
   }, [data]);
 
+  console.log('current org', globalContext?.CurrentOrg.state);
+
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -265,7 +267,7 @@ export const Destinations = () => {
           </Table>
         </>
       )}
-      {warehouse && (
+      {warehouse && !globalContext?.CurrentOrg.state.is_demo && (
         <Box sx={{ display: 'flex', gap: '5px' }}>
           <Button
             variant="contained"
