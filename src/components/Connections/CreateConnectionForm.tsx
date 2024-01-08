@@ -28,14 +28,15 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
+import { demoAccDestSchema } from '@/config/constant';
 import Input from '../UI/Input/Input';
 
 interface CreateConnectionFormProps {
-  blockId: string;
+  connectionId: string;
   mutate: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
-  setBlockId: (...args: any) => any;
+  setConnectionId: (...args: any) => any;
 }
 
 type CursorFieldConfig = {
@@ -54,19 +55,22 @@ interface SourceStream {
 }
 
 const CreateConnectionForm = ({
-  setBlockId,
-  blockId,
+  setConnectionId,
+  connectionId,
   mutate,
   showForm,
   setShowForm,
 }: CreateConnectionFormProps) => {
   const { data: session }: any = useSession();
+  const globalContext = useContext(GlobalContext);
   const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
       name: '',
       sources: { label: '', id: '' },
       destinations: { label: '', id: '' },
-      destinationSchema: 'staging',
+      destinationSchema: globalContext?.CurrentOrg.state.is_demo
+        ? demoAccDestSchema
+        : 'staging',
     },
   });
   const [sources, setSources] = useState<Array<string>>([]);
@@ -89,13 +93,11 @@ const CreateConnectionForm = ({
 
   const watchSourceSelection = watch('sources');
 
-  const globalContext = useContext(GlobalContext);
-
   const setupInitialStreamsState = (
     catalog: any,
-    blockId: string | undefined | null
+    connectionId: string | undefined | null
   ) => {
-    const action = blockId ? 'edit' : 'create';
+    const action = connectionId ? 'edit' : 'create';
 
     const streams = catalog.streams.map((el: any) => {
       const stream = {
@@ -151,13 +153,13 @@ const CreateConnectionForm = ({
   };
 
   useEffect(() => {
-    if (blockId) {
+    if (connectionId) {
       (async () => {
         setLoading(true);
         try {
           const data: any = await httpGet(
             session,
-            `airbyte/connections/${blockId}`
+            `airbyte/v1/connections/${connectionId}`
           );
           setValue('name', data?.name);
           setValue('sources', {
@@ -165,7 +167,10 @@ const CreateConnectionForm = ({
             id: data?.source.id,
           });
           setValue('destinationSchema', data?.destinationSchema);
-          const streams = setupInitialStreamsState(data?.syncCatalog, blockId);
+          const streams = setupInitialStreamsState(
+            data?.syncCatalog,
+            connectionId
+          );
           setSourceStreams(streams);
           setFilteredSourceStreams(streams);
           setNormalize(data?.normalize || false);
@@ -176,7 +181,7 @@ const CreateConnectionForm = ({
         setLoading(false);
       })();
     }
-  }, [blockId]);
+  }, [connectionId]);
 
   // when the source list changes
   useEffect(() => {
@@ -191,7 +196,7 @@ const CreateConnectionForm = ({
 
   // source selection changes
   useEffect(() => {
-    if (watchSourceSelection?.id && !blockId) {
+    if (watchSourceSelection?.id && !connectionId) {
       (async () => {
         setLoading(true);
         try {
@@ -201,7 +206,7 @@ const CreateConnectionForm = ({
           );
           const streams: SourceStream[] = setupInitialStreamsState(
             message['catalog'],
-            blockId
+            connectionId
           );
           setSourceStreams(streams);
           setFilteredSourceStreams(streams);
@@ -219,7 +224,7 @@ const CreateConnectionForm = ({
 
   const handleClose = () => {
     reset();
-    setBlockId('');
+    setConnectionId('');
     setSourceStreams([]);
     setFilteredSourceStreams([]);
     setShowForm(false);
@@ -254,18 +259,18 @@ const CreateConnectionForm = ({
       payload.destinationSchema = data.destinationSchema;
     }
     try {
-      if (blockId) {
+      if (connectionId) {
         setLoading(true);
         await httpPut(
           session,
-          `airbyte/connections/${blockId}/update`,
+          `airbyte/v1/connections/${connectionId}/update`,
           payload
         );
         successToast('Connection updated', [], globalContext);
         setLoading(false);
       } else {
         setLoading(true);
-        await httpPost(session, 'airbyte/connections/', payload);
+        await httpPost(session, 'airbyte/v1/connections/', payload);
         successToast('Connection created', [], globalContext);
         setLoading(false);
       }
@@ -387,7 +392,7 @@ const CreateConnectionForm = ({
             variant="outlined"
             register={register}
             name="destinationSchema"
-            disabled={false}
+            disabled={globalContext?.CurrentOrg.state.is_demo ? true : false}
           ></Input>
 
           <Box sx={{ m: 2 }} />
@@ -398,7 +403,7 @@ const CreateConnectionForm = ({
             rules={{ required: true }}
             render={({ field }: any) => (
               <Autocomplete
-                readOnly={blockId ? true : false}
+                readOnly={connectionId ? true : false}
                 data-testid="sourceList"
                 options={sources}
                 value={field.value}
@@ -414,7 +419,7 @@ const CreateConnectionForm = ({
 
           <Box
             sx={{
-              ...(blockId && { pointerEvents: 'none' }),
+              ...(connectionId && { pointerEvents: 'none' }),
             }}
           >
             <FormControl sx={{ width: '100%' }}>

@@ -7,6 +7,7 @@ export interface CurrentOrgStateInterface {
   viz_url: string;
   viz_login_type: string;
   wtype: string;
+  is_demo: boolean;
 }
 
 interface Action {
@@ -21,6 +22,7 @@ export const initialCurrentOrgState = {
   viz_url: '',
   viz_login_type: '',
   wtype: '',
+  is_demo: false,
 };
 
 export const CurrentOrgReducer = (
