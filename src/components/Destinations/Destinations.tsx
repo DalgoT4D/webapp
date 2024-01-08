@@ -76,7 +76,7 @@ export const Destinations = () => {
     (async () => {
       setDeleteLoading(true);
       try {
-        await httpDelete(session, 'organizations/warehouses/');
+        await httpDelete(session, 'v1/organizations/warehouses/');
         setWarehouse(undefined);
         mutate();
         setShowDeleteWarehouseDialog(false);
