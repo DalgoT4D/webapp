@@ -28,6 +28,7 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
+import { demoAccDestSchema } from '@/config/constant';
 import Input from '../UI/Input/Input';
 
 interface CreateConnectionFormProps {
@@ -61,12 +62,15 @@ const CreateConnectionForm = ({
   setShowForm,
 }: CreateConnectionFormProps) => {
   const { data: session }: any = useSession();
+  const globalContext = useContext(GlobalContext);
   const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
       name: '',
       sources: { label: '', id: '' },
       destinations: { label: '', id: '' },
-      destinationSchema: 'staging',
+      destinationSchema: globalContext?.CurrentOrg.state.is_demo
+        ? demoAccDestSchema
+        : 'staging',
     },
   });
   const [sources, setSources] = useState<Array<string>>([]);
@@ -88,8 +92,6 @@ const CreateConnectionForm = ({
   const { data: sourcesData } = useSWR(`airbyte/sources`);
 
   const watchSourceSelection = watch('sources');
-
-  const globalContext = useContext(GlobalContext);
 
   const setupInitialStreamsState = (
     catalog: any,
@@ -390,7 +392,7 @@ const CreateConnectionForm = ({
             variant="outlined"
             register={register}
             name="destinationSchema"
-            disabled={false}
+            disabled={globalContext?.CurrentOrg.state.is_demo ? true : false}
           ></Input>
 
           <Box sx={{ m: 2 }} />
