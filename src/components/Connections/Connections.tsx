@@ -5,6 +5,7 @@ import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
 import SyncIcon from '@/assets/icons/sync.svg';
+import LockIcon from '@mui/icons-material/Lock';
 import { useSession } from 'next-auth/react';
 import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -67,6 +68,7 @@ export type Connection = {
   source: Source;
   lock: { lockedBy: string | null; lockedAt: string | null } | null;
   lastRun: null | any;
+  isRunning: boolean;
   normalize: boolean;
   status: string;
   syncCatalog: object;
@@ -359,8 +361,10 @@ export const Connections = () => {
     </Box>
   );
   const getLastSync = (connection: Connection) =>
+    connection.isRunning ? 
+      <CircularProgress /> :
     connection.lock ? (
-      <CircularProgress />
+      <LockIcon />
     ) : syncingConnectionId ? (
       <Typography variant="subtitle2" fontWeight={600}>
         {lastRunTime(connection?.lastRun?.startTime)}

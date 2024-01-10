@@ -1,6 +1,7 @@
 import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import React, { useContext, useMemo, useState } from 'react';
 import FlowIcon from '@/assets/icons/flow.svg';
+import LockIcon from '@mui/icons-material/Lock';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SyncIcon from '@/assets/icons/sync.svg';
 import { useSession } from 'next-auth/react';
@@ -30,6 +31,7 @@ export interface FlowInterface {
   deploymentId: string;
   lastRun?: FlowRun;
   lock: BlockLock | undefined | null;
+  isRunning: boolean;
   status: boolean;
 }
 
@@ -195,7 +197,9 @@ export const Flows = ({
         flowStatus(flow.status),
 
         flowLastRun(flow),
-        flow.lock ? <CircularProgress /> : flowState(flow),
+        flow.isRunning ? 
+        <CircularProgress /> :
+        flow.lock ? <LockIcon /> : flowState(flow),
 
         <Box key={idx}>
           <Button
