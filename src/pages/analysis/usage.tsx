@@ -83,7 +83,10 @@ export default function Usage() {
             </Box>
           </>
         ) : (
-          <div id="dashboard-container"></div>
+          <div
+            id="dashboard-container"
+            className={styles.embeddedsuperset}
+          ></div>
         )}
       </main>
     </>
