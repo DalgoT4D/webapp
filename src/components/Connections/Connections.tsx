@@ -366,10 +366,16 @@ export const Connections = () => {
         {lastRunTime(connection?.lastRun?.startTime)}
       </Typography>
     ) : (
-      <>
-        <Typography variant="subtitle2" fontWeight={600}>
+      <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+        <Typography variant="subtitle2" fontWeight={600} >
           {lastRunTime(connection?.lastRun?.startTime)}
         </Typography>
+        {connection?.lastRun?.status && 
+          <Typography variant="subtitle2" fontWeight={600} 
+            sx={{ color: connection.lastRun.status === "FAILED" ? '#C15E5E' : '#00897B', marginTop: '8px', fontWeight: 700}} >
+            {connection.lastRun.status}
+          </Typography>
+        }
         <Button
           onClick={() => {
             fetchAirbyteLogs(connection.connectionId);
@@ -378,7 +384,7 @@ export const Connections = () => {
         >
           Fetch Logs
         </Button>
-      </>
+      </Box>
     );
 
   const updateRows = (data: any) => {
