@@ -5,6 +5,8 @@ import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
 import SyncIcon from '@/assets/icons/sync.svg';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useSession } from 'next-auth/react';
 import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -366,16 +368,56 @@ export const Connections = () => {
         {lastRunTime(connection?.lastRun?.startTime)}
       </Typography>
     ) : (
-      <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-        <Typography variant="subtitle2" fontWeight={600} >
+      <Box
+        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+      >
+        <Typography variant="subtitle2" fontWeight={600}>
           {lastRunTime(connection?.lastRun?.startTime)}
         </Typography>
-        {connection?.lastRun?.status && 
-          <Typography variant="subtitle2" fontWeight={600} 
-            sx={{ color: connection.lastRun.status === "FAILED" ? '#C15E5E' : '#00897B', marginTop: '8px', fontWeight: 700}} >
-            {connection.lastRun.status}
-          </Typography>
-        }
+        {connection?.lastRun?.status &&
+          (connection?.lastRun?.status == 'COMPLETED' ? (
+            <Box
+              data-testid={'connectionstate-success'}
+              sx={{
+                display: 'flex',
+                color: '#399D47',
+                gap: '3px',
+                alignItems: 'center',
+              }}
+            >
+              <TaskAltIcon
+                sx={{
+                  alignItems: 'center',
+                  fontWeight: 700,
+                  fontSize: 'large',
+                }}
+              />
+              <Typography component="p" fontWeight={700}>
+                Success
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              data-testid={'connectionstate-failed'}
+              sx={{
+                display: 'flex',
+                color: '#981F1F',
+                gap: '3px',
+                alignItems: 'center',
+              }}
+            >
+              <WarningAmberIcon
+                sx={{
+                  alignItems: 'center',
+                  fontWeight: 700,
+                  fontSize: 'large',
+                }}
+              />
+              <Typography component="p" fontWeight={700}>
+                Failed
+              </Typography>
+            </Box>
+          ))}
         <Button
           onClick={() => {
             fetchAirbyteLogs(connection.connectionId);
