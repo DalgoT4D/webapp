@@ -123,7 +123,7 @@ export default function Analysis() {
             </>
           )}
 
-        {globalContext?.CurrentOrg?.state?.viz_url &&
+        {globalContext?.CurrentOrg?.state?.viz_login_type === 'google' &&
           signedIn === 'signedIn' && (
             <Box sx={{ border: 'none' }}>
               <iframe
@@ -137,6 +137,19 @@ export default function Analysis() {
               />
             </Box>
           )}
+        {globalContext?.CurrentOrg?.state?.viz_login_type === 'basic' && (
+          <Box sx={{ border: 'none' }}>
+            <iframe
+              src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
+              style={{
+                height: '70vh',
+                width: '100%',
+                border: 'none',
+              }}
+              ref={iframeRef}
+            />
+          </Box>
+        )}
       </main>
     </>
   );
