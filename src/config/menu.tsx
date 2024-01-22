@@ -27,13 +27,13 @@ export const sideMenu: MenuOption[] = [
     path: '/analysis',
     icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
   },
-  {
-    index: 1.1,
-    title: 'Usage',
-    path: '/analysis/usage',
-    icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
-    parent: 1,
-  },
+  // {
+  //   index: 1.1,
+  //   title: 'Usage',
+  //   path: '/analysis/usage',
+  //   icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
+  //   parent: 1,
+  // },
   {
     index: 2,
     title: 'Pipeline overview',
