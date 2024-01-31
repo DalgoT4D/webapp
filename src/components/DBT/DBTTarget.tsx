@@ -17,6 +17,7 @@ export type TransformTask = {
   id: number;
   deploymentId: string | null;
   lock: string | null;
+  command: string | null;
 };
 
 type params = {
