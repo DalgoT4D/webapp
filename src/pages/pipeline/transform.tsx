@@ -21,6 +21,7 @@ import Dbt from '@/assets/images/dbt.png';
 import Image from 'next/image';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
 import { DBTTarget, TransformTask } from '@/components/DBT/DBTTarget';
+import { DBTTaskList } from '@/components/DBT/DBTTaskList';
 import { DBTDocs } from '@/components/DBT/DBTDocs';
 import { delay } from '@/utils/common';
 import { LogCard } from '@/components/Logs/LogCard';
@@ -265,44 +266,12 @@ const Transform = () => {
                       >
                         Connect & Setup Repo{' '}
                       </Button>
-                    ) : dbtSetupStage === 'complete' ? (
-                      <>
-                        {anyTaskLocked ? (
-                          <CircularProgress />
-                        ) : (
-                          <>
-                            <DBTTarget
-                              setExpandLogs={setExpandLogs}
-                              setRunning={setRunning}
-                              running={running}
-                              setDbtRunLogs={(logs: string[]) => {
-                                setDbtSetupLogs(logs);
-                              }}
-                              tasks={tasks.filter(
-                                (task) => task.slug != TASK_DOCSGENERATE
-                              )}
-                            />
-                            <Button
-                              aria-controls={open ? 'basic-menu' : undefined}
-                              aria-haspopup="true"
-                              aria-expanded={open ? 'true' : undefined}
-                              onClick={(event) =>
-                                handleClick(event.currentTarget)
-                              }
-                              variant="contained"
-                              color="info"
-                              sx={{ p: 0, minWidth: 32, ml: 2 }}
-                            >
-                              <MoreHorizIcon />
-                            </Button>
-                          </>
-                        )}
-                      </>
                     ) : (
                       ''
                     )}
                   </Box>
                 </Card>
+                <DBTTaskList tasks={tasks}></DBTTaskList>
                 <Box>
                   {dbtSetupStage === 'create-workspace' ? (
                     <DBTSetup
