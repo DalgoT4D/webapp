@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import MuiDrawer from '@mui/material/Drawer';
-import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
+import { styled, Theme, CSSObject } from '@mui/material/styles';
 
 import { MenuOption, drawerWidth, sideMenu } from '@/config/menu';
 
@@ -106,7 +106,6 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 
 
 export const SideDrawer = ({ openMenu }: any) => {
-  const theme = useTheme();
   const router = useRouter();
   const [open, setOpen] = useState(
     new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
