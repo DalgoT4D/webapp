@@ -2,7 +2,6 @@ import { Fragment, ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import {
   Collapse,
-  Drawer,
   IconButton,
   List,
   ListItem,
@@ -13,11 +12,17 @@ import {
   Link,
   Typography,
 } from '@mui/material';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import MuiDrawer from '@mui/material/Drawer';
+import { styled, Theme, CSSObject } from '@mui/material/styles';
 
 import { MenuOption, drawerWidth, sideMenu } from '@/config/menu';
 
+// assets
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+
+
 export interface ItemButtonProps {
+  openMenu: boolean;
   item: MenuOption;
   isSelected: boolean;
   onClick: (item: MenuOption) => void;
@@ -28,26 +33,79 @@ const ItemButton: React.FC<ItemButtonProps> = ({
   item,
   isSelected,
   onClick,
+  openMenu,
   children,
 }: ItemButtonProps) => (
   <ListItemButton
+    sx={openMenu ? {} : { pl: "8px" }}
     disableRipple
     data-testid="listButton"
     onClick={() => onClick(item)}
     selected={isSelected}
   >
-    <ListItemIcon>{item.icon(isSelected)}</ListItemIcon>
-    <ListItemText
-      primaryTypographyProps={{
-        color: isSelected ? 'primary' : 'inherit',
-      }}
-      primary={item.title}
-    />
+    <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>{item.icon(isSelected)}</ListItemIcon>
+    {openMenu &&
+      <ListItemText
+        primaryTypographyProps={{
+          color: isSelected ? 'primary' : 'inherit',
+        }}
+        primary={item.title}
+      />
+    }
     {children}
   </ListItemButton>
 );
 
-export const SideDrawer = () => {
+// const DrawerHeader = styled('div')(({ theme }) => ({
+//   display: 'flex',
+//   alignItems: 'center',
+//   justifyContent: 'flex-end',
+//   padding: theme.spacing(0, 1),
+//   minHeight: '20px',
+//   // necessary for content to be below app bar
+//   ...theme.mixins.toolbar,
+// }));
+
+const openedMixin = (theme: Theme): CSSObject => ({
+  width: drawerWidth,
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.enteringScreen,
+  }),
+  overflowX: 'hidden',
+});
+
+const closedMixin = (theme: Theme): CSSObject => ({
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  overflowX: 'hidden',
+  width: `calc(${theme.spacing(7)} + 1px)`,
+  [theme.breakpoints.up('sm')]: {
+    width: `calc(${theme.spacing(8)} + 1px)`,
+  },
+});
+
+const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
+  ({ theme, open }) => ({
+    width: drawerWidth,
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+    boxSizing: 'border-box',
+    ...(open && {
+      ...openedMixin(theme),
+      '& .MuiDrawer-paper': openedMixin(theme),
+    }),
+    ...(!open && {
+      ...closedMixin(theme),
+      '& .MuiDrawer-paper': closedMixin(theme),
+    }),
+  }),
+);
+
+
+export const SideDrawer = ({ openMenu }: any) => {
   const router = useRouter();
   const [open, setOpen] = useState(
     new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
@@ -55,6 +113,8 @@ export const SideDrawer = () => {
   const [selectedIndex, setSelectedIndex] = useState(
     sideMenu.find((item) => item.path === router.pathname)?.index
   );
+
+  // handle drawer expand and collapse
 
   const handleCollpaseArrowClick = (idx: number) => {
     const newOpen = [...open];
@@ -73,6 +133,10 @@ export const SideDrawer = () => {
     router.push(item.path);
   };
 
+  useEffect(() => {
+    setOpen(new Array(sideMenu.filter((item) => !item.parent).length).fill(true));
+  }, [openMenu])
+
   const getList = (
     <List component="div" data-testid="side-menu">
       {sideMenu.map((item, idx: number) => {
@@ -83,8 +147,11 @@ export const SideDrawer = () => {
         return (
           !item.parent && (
             <Fragment key={item.title}>
-              <ListItem>
+              <ListItem
+                sx={{ px: 1.5 }}
+              >
                 <ItemButton
+                  openMenu={openMenu}
                   item={item}
                   isSelected={selectedIndex === item.index}
                   onClick={() => handleListItemClick(item)}
@@ -113,12 +180,13 @@ export const SideDrawer = () => {
                   <List
                     component="div"
                     disablePadding
-                    sx={{ ml: 4 }}
+                    sx={{ ml: openMenu ? 4 : 0 }}
                     data-testid={`child-menu-${item.index}`}
                   >
                     {hasChildren.map((subitem) => (
-                      <ListItem key={subitem.title}>
+                      <ListItem key={subitem.title} sx={{ px: 1.5 }}>
                         <ItemButton
+                          openMenu={openMenu}
                           item={subitem}
                           isSelected={selectedIndex === subitem.index}
                           onClick={() => handleListItemClick(subitem)}
@@ -140,22 +208,24 @@ export const SideDrawer = () => {
         sx: { border: 'none' },
       }}
       sx={{
-        width: drawerWidth,
-        flexShrink: 0,
+        // width: drawerWidth,
+        // flexShrink: 0,
         '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-          paddingTop: 8,
+          display: "flex",
+          justifyContent: "space-between",
+          // width: drawerWidth,
+          // boxSizing: 'border-box',
+          paddingTop: 7,
         },
       }}
-      open
-      anchor={'left'}
+      open={openMenu}
+      // anchor={'left'}
       variant="permanent"
     >
       {getList}
       <Box
         sx={{
-          position: 'fixed',
+          position: 'relative',
           bottom: 0,
           paddingBottom: 4,
           width: drawerWidth,
