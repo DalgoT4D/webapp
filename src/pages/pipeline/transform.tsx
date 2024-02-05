@@ -273,15 +273,22 @@ const Transform = () => {
                     )}
                   </Box>
                 </Card>
-                <DBTTaskList
-                  setExpandLogs={setExpandLogs}
-                  tasks={tasks.filter(
-                    (task: TransformTask) => task.slug != TASK_DOCSGENERATE
-                  )}
-                  setDbtRunLogs={(logs: string[]) => {
-                    setDbtSetupLogs(logs);
-                  }}
-                ></DBTTaskList>
+                {dbtSetupStage === 'complete' ? (
+                  <DBTTaskList
+                    setExpandLogs={setExpandLogs}
+                    tasks={tasks.filter(
+                      (task: TransformTask) => task.slug != TASK_DOCSGENERATE
+                    )}
+                    setDbtRunLogs={(logs: string[]) => {
+                      setDbtSetupLogs(logs);
+                    }}
+                    anyTaskLocked={anyTaskLocked}
+                    fetchDbtTasks={fetchDbtTasks}
+                  />
+                ) : (
+                  ''
+                )}
+
                 <Box>
                   {dbtSetupStage === 'create-workspace' ? (
                     <DBTSetup
