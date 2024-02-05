@@ -14,11 +14,12 @@ import {
 } from '@mui/material';
 import MuiDrawer from '@mui/material/Drawer';
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 import { MenuOption, drawerWidth, sideMenu } from '@/config/menu';
+
+// assets
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+
 
 export interface ItemButtonProps {
   openMenu: boolean;
@@ -55,14 +56,15 @@ const ItemButton: React.FC<ItemButtonProps> = ({
   </ListItemButton>
 );
 
-const DrawerHeader = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
-  ...theme.mixins.toolbar,
-}));
+// const DrawerHeader = styled('div')(({ theme }) => ({
+//   display: 'flex',
+//   alignItems: 'center',
+//   justifyContent: 'flex-end',
+//   padding: theme.spacing(0, 1),
+//   minHeight: '20px',
+//   // necessary for content to be below app bar
+//   ...theme.mixins.toolbar,
+// }));
 
 const openedMixin = (theme: Theme): CSSObject => ({
   width: drawerWidth,
@@ -103,22 +105,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 );
 
 
-const icon = (
-  <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg">
-    <g fill="none" fillRule="evenodd">
-      <path d="M0 0h24v24H0z" />
-      <g fill="currentColor" fillRule="nonzero">
-        <path
-          d="M14.3283 11.4343 18.5126 7.25c.4142-.4142.4142-1.0858 0-1.5-.4142-.4142-1.0858-.4142-1.5 0l-5.543 5.5429c-.3904.3905-.3904 1.0237 0 1.4142l5.543 5.5429c.4142.4142 1.0858.4142 1.5 0 .4142-.4142.4142-1.0858 0-1.5l-4.1843-4.1843a.8.8 0 0 1 0-1.1314Z"
-          opacity=".48"
-        />
-        <path d="M8.3283 11.4343 12.5126 7.25c.4142-.4142.4142-1.0858 0-1.5-.4142-.4142-1.0858-.4142-1.5 0l-5.543 5.5429c-.3904.3905-.3904 1.0237 0 1.4142l5.543 5.5429c.4142.4142 1.0858.4142 1.5 0 .4142-.4142.4142-1.0858 0-1.5l-4.1843-4.1843a.8.8 0 0 1 0-1.1314Z" />
-      </g>
-    </g>
-  </svg>
-);
-
-export const SideDrawer = () => {
+export const SideDrawer = ({ openMenu }: any) => {
   const theme = useTheme();
   const router = useRouter();
   const [open, setOpen] = useState(
@@ -129,16 +116,6 @@ export const SideDrawer = () => {
   );
 
   // handle drawer expand and collapse
-  const [openMenu, setOpenMenu] = useState<boolean>(true);
-
-  const handleDrawerOpen = () => {
-    setOpenMenu(true);
-  };
-
-  const handleDrawerClose = () => {
-    setOpenMenu(false);
-    setOpen(new Array(sideMenu.filter((item) => !item.parent).length).fill(true));
-  };
 
   const handleCollpaseArrowClick = (idx: number) => {
     const newOpen = [...open];
@@ -156,6 +133,10 @@ export const SideDrawer = () => {
     setSelectedIndex(item.index);
     router.push(item.path);
   };
+
+  useEffect(() => {
+    setOpen(new Array(sideMenu.filter((item) => !item.parent).length).fill(true));
+  }, [openMenu])
 
   const getList = (
     <List component="div" data-testid="side-menu">
@@ -235,32 +216,14 @@ export const SideDrawer = () => {
           justifyContent: "space-between",
           // width: drawerWidth,
           // boxSizing: 'border-box',
-          paddingTop: 8,
+          paddingTop: 7,
         },
       }}
       open={openMenu}
       // anchor={'left'}
       variant="permanent"
     >
-      <Box>
-        <DrawerHeader>
-          <IconButton onClick={!openMenu ? handleDrawerOpen : handleDrawerClose}
-            sx={{
-              lineHeight: 0,
-              transition: (theme) =>
-                theme.transitions.create('transform', {
-                  duration: theme.transitions.duration.shorter,
-                }),
-              ...(!openMenu && {
-                transform: 'rotate(180deg)',
-              }),
-            }}
-          >
-            {icon}
-          </IconButton>
-        </DrawerHeader>
-        {getList}
-      </Box>
+      {getList}
       <Box
         sx={{
           position: 'relative',
