@@ -27,7 +27,9 @@ import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 type params = {
   tasks: TransformTask[];
   setDbtRunLogs: (...args: any) => any;
-  setExpandLogs: any;
+  setExpandLogs: (...args: any) => any;
+  anyTaskLocked: boolean;
+  fetchDbtTasks: (...args: any) => any;
 };
 
 type PrefectFlowRun = {
@@ -49,6 +51,8 @@ export const DBTTaskList = ({
   tasks,
   setDbtRunLogs,
   setExpandLogs,
+  anyTaskLocked,
+  fetchDbtTasks,
 }: params) => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
@@ -56,10 +60,18 @@ export const DBTTaskList = ({
   const [taskId, setTaskId] = useState<string>('');
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
-  const [running, setRunning] = useState<boolean>(false);
+  const [running, setRunning] = useState<boolean>(anyTaskLocked);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
+  useEffect(() => {
+    if (anyTaskLocked != null) {
+      setRunning(anyTaskLocked);
+    }
+    fetchDbtTasks();
+  }, [anyTaskLocked, running]);
+
+  console.log('any task locked', anyTaskLocked);
   const handleClick = (taskId: string, event: HTMLElement | null) => {
     setTaskId(taskId);
     setAnchorEl(event);
