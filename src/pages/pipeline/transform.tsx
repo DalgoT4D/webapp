@@ -26,6 +26,7 @@ import { DBTDocs } from '@/components/DBT/DBTDocs';
 import { delay } from '@/utils/common';
 import { LogCard } from '@/components/Logs/LogCard';
 import { TASK_DOCSGENERATE } from '@/config/constant';
+import { List } from '@/components/List/List';
 
 type Tasks = TransformTask[];
 
@@ -186,6 +187,7 @@ const Transform = () => {
                     padding: '16px',
                     justifyContent: 'space-between',
                     alignItems: 'center',
+                    marginBottom: '20px',
                   }}
                 >
                   <Box
@@ -271,7 +273,15 @@ const Transform = () => {
                     )}
                   </Box>
                 </Card>
-                <DBTTaskList tasks={tasks}></DBTTaskList>
+                <DBTTaskList
+                  setExpandLogs={setExpandLogs}
+                  tasks={tasks.filter(
+                    (task: TransformTask) => task.slug != TASK_DOCSGENERATE
+                  )}
+                  setDbtRunLogs={(logs: string[]) => {
+                    setDbtSetupLogs(logs);
+                  }}
+                ></DBTTaskList>
                 <Box>
                   {dbtSetupStage === 'create-workspace' ? (
                     <DBTSetup
