@@ -13,7 +13,8 @@ interface MenuProps {
     | 'connection'
     | 'dbtworkspace'
     | 'usermanagement'
-    | 'invitation';
+    | 'invitation'
+    | 'transformtask';
   handleClose: () => void;
   handleEdit?: () => void;
   handleDelete?: () => void;

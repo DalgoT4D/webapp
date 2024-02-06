@@ -21,7 +21,7 @@ import connectionIcon from '@/assets/icons/connection.svg';
 import CreateConnectionForm from './CreateConnectionForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import Image from 'next/image';
-import styles from './Connections.module.css';
+import styles from '@/styles/Common.module.css';
 import { delay, lastRunTime, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import { LogCard } from '@/components/Logs/LogCard';
@@ -363,9 +363,9 @@ export const Connections = () => {
     </Box>
   );
   const getLastSync = (connection: Connection) =>
-    connection.isRunning ? 
-      <CircularProgress /> :
-    connection.lock ? (
+    connection.isRunning ? (
+      <CircularProgress />
+    ) : connection.lock ? (
       <LockIcon />
     ) : syncingConnectionId ? (
       <Typography variant="subtitle2" fontWeight={600}>
@@ -443,7 +443,7 @@ export const Connections = () => {
           <Image
             style={{ marginRight: 10 }}
             src={connectionIcon}
-            alt="connection icon"
+            alt="dbt icon"
           />
           <Typography variant="body1" fontWeight={600}>
             {connection.name}
