@@ -1,13 +1,4 @@
-import {
-  Box,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import SyncIcon from '@/assets/icons/sync.svg';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -23,13 +14,18 @@ import Image from 'next/image';
 import { TASK_DBTRUN, TASK_DBTTEST } from '@/config/constant';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
+import { TASK_DOCSGENERATE } from '@/config/constant';
 
 type params = {
-  tasks: TransformTask[];
   setDbtRunLogs: (...args: any) => any;
   setExpandLogs: (...args: any) => any;
-  anyTaskLocked: boolean;
+  tasks: TransformTask[];
+  isAnyTaskLocked: boolean;
   fetchDbtTasks: (...args: any) => any;
+};
+
+type ActionsParam = {
+  task: TransformTask;
 };
 
 type PrefectFlowRun = {
@@ -51,7 +47,7 @@ export const DBTTaskList = ({
   tasks,
   setDbtRunLogs,
   setExpandLogs,
-  anyTaskLocked,
+  isAnyTaskLocked,
   fetchDbtTasks,
 }: params) => {
   const { data: session }: any = useSession();
@@ -60,18 +56,10 @@ export const DBTTaskList = ({
   const [taskId, setTaskId] = useState<string>('');
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
-  const [running, setRunning] = useState<boolean>(anyTaskLocked);
+  const [runningTask, setRunningTask] = useState<TransformTask | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  useEffect(() => {
-    if (anyTaskLocked != null) {
-      setRunning(anyTaskLocked);
-    }
-    fetchDbtTasks();
-  }, [anyTaskLocked, running]);
-
-  console.log('any task locked', anyTaskLocked);
   const handleClick = (taskId: string, event: HTMLElement | null) => {
     setTaskId(taskId);
     setAnchorEl(event);
@@ -80,7 +68,7 @@ export const DBTTaskList = ({
     setAnchorEl(null);
   };
 
-  const Actions = ({ task }: { task: TransformTask }) => (
+  const Actions = ({ task }: ActionsParam) => (
     <Box
       sx={{ justifyContent: 'end', display: 'flex' }}
       key={'task-' + task.id}
@@ -88,47 +76,49 @@ export const DBTTaskList = ({
       <Button
         variant="contained"
         onClick={() => {
-          if (task) {
-            if (task.slug === TASK_DBTRUN) dbtRunWithDeployment(task);
-            else executeDbtJob(task);
-          } else {
-            errorToast(
-              'Please select a dbt function to execute',
-              [],
-              toastContext
-            );
-          }
+          setRunningTask(task);
         }}
         data-testid={'task-' + task.id}
-        disabled={running}
+        disabled={runningTask || isAnyTaskLocked ? true : false}
         key={'task-' + task.id}
         sx={{ marginRight: '10px' }}
       >
-        {running ? (
+        {runningTask || isAnyTaskLocked ? (
           <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
         ) : (
           'Execute'
         )}
       </Button>
-
-      <Button
-        id={task.slug}
-        aria-controls={open ? 'basic-menu' : undefined}
-        aria-haspopup="true"
-        aria-expanded={open ? 'true' : undefined}
-        onClick={(event) => handleClick(String(task.id), event.currentTarget)}
-        variant="contained"
-        key={'menu-' + task.id}
-        color="info"
-        sx={{ p: 0, minWidth: 32 }}
-      >
-        <MoreHorizIcon />
-      </Button>
+      {
+        <Button
+          id={task.slug}
+          aria-controls={open ? 'basic-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={(event) => handleClick(String(task.id), event.currentTarget)}
+          variant="contained"
+          key={'menu-' + task.id}
+          color="info"
+          sx={{
+            p: 0,
+            minWidth: 32,
+            ...((runningTask || isAnyTaskLocked) && { visibility: 'hidden' }),
+          }}
+        >
+          <MoreHorizIcon />
+        </Button>
+      }
     </Box>
   );
 
+  useEffect(() => {
+    if (runningTask) {
+      if (runningTask.slug === TASK_DBTRUN) dbtRunWithDeployment(runningTask);
+      else executeDbtJob(runningTask);
+    }
+  }, [runningTask]);
+
   const executeDbtJob = async function (task: TransformTask) {
-    setRunning(true);
     setExpandLogs(true);
     setDbtRunLogs([]);
 
@@ -155,12 +145,13 @@ export const DBTTaskList = ({
       } else {
         setDbtRunLogs(message?.result);
       }
+      setRunningTask(null);
     } catch (err: any) {
       console.error(err.cause);
       errorToast(err.message, [], toastContext);
+    } finally {
+      setRunningTask(null);
     }
-
-    setRunning(false);
   };
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
@@ -203,7 +194,6 @@ export const DBTTaskList = ({
     if (task.deploymentId) {
       setExpandLogs(true);
       setDbtRunLogs([]);
-      setRunning(true);
       try {
         const response = await httpPost(
           session,
@@ -225,12 +215,12 @@ export const DBTTaskList = ({
           await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
-        setRunning(false);
+        setRunningTask(null);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
       } finally {
-        setRunning(false);
+        setRunningTask(null);
       }
     } else {
       errorToast('No deployment found for this DBT task', [], toastContext);
@@ -239,63 +229,65 @@ export const DBTTaskList = ({
 
   useEffect(() => {
     if (tasks && tasks.length > 0) {
-      const tempRows = tasks.map((task: TransformTask) => [
-        <Box
-          key={`name-${task.id}`}
-          sx={{ display: 'flex', alignItems: 'center' }}
-        >
-          <Typography variant="body1" fontWeight={400}>
-            {task.label}
-          </Typography>
-        </Box>,
-        <Box
-          key={`name-${task.id}`}
-          sx={{ display: 'flex', alignItems: 'center' }}
-        >
-          <Typography variant="body2" fontWeight={400}>
-            {task.command}
-          </Typography>
-        </Box>,
-        <Box
-          key={`name-${task.id}`}
-          sx={{ display: 'flex', alignItems: 'center' }}
-        >
-          <Typography variant="body2" fontWeight={400}>
-            {task.generated_by}
-          </Typography>
-        </Box>,
-
-        task.lock ? (
+      const tempRows = tasks
+        .filter((task: TransformTask) => task.slug != TASK_DOCSGENERATE)
+        .map((task: TransformTask) => [
           <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'end',
-            }}
+            key={`name-${task.id}`}
+            sx={{ display: 'flex', alignItems: 'center' }}
           >
+            <Typography variant="body1" fontWeight={400}>
+              {task.label}
+            </Typography>
+          </Box>,
+          <Box
+            key={`name-${task.id}`}
+            sx={{ display: 'flex', alignItems: 'center' }}
+          >
+            <Typography variant="body2" fontWeight={400}>
+              {task.command}
+            </Typography>
+          </Box>,
+          <Box
+            key={`name-${task.id}`}
+            sx={{ display: 'flex', alignItems: 'center' }}
+          >
+            <Typography variant="body2" fontWeight={400}>
+              {task.generated_by}
+            </Typography>
+          </Box>,
+
+          task.lock && isAnyTaskLocked ? (
             <Box
               sx={{
                 display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-around',
-                alignItems: 'start',
+                justifyContent: 'end',
               }}
             >
-              <Typography variant="body2" fontWeight={400}>
-                Triggered by: {trimEmail(task.lock.lockedBy)}
-              </Typography>
-              <Typography variant="body2" fontWeight={400}>
-                {lastRunTime(task.lock.lockedAt)}
-              </Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-around',
+                  alignItems: 'start',
+                }}
+              >
+                <Typography variant="body2" fontWeight={400}>
+                  Triggered by: {trimEmail(task.lock.lockedBy)}
+                </Typography>
+                <Typography variant="body2" fontWeight={400}>
+                  {lastRunTime(task.lock.lockedAt)}
+                </Typography>
+              </Box>
             </Box>
-          </Box>
-        ) : (
-          <Actions key={`actions-${task.id}`} task={task} />
-        ),
-      ]);
+          ) : (
+            <Actions key={`actions-${task.id}`} task={task} />
+          ),
+        ]);
 
       setRows(tempRows);
     }
-  }, [tasks]);
+  }, [tasks, runningTask, isAnyTaskLocked]);
 
   const deleteTask = (taskId: string) => {
     (async () => {
@@ -303,7 +295,7 @@ export const DBTTaskList = ({
         const message = await httpDelete(session, `prefect/tasks/${taskId}/`);
         if (message.success) {
           successToast('Task deleted', [], toastContext);
-          // mutate();
+          fetchDbtTasks();
         }
       } catch (err: any) {
         console.error(err);
@@ -336,6 +328,7 @@ export const DBTTaskList = ({
         title="Task"
         headers={['Task', 'Command', 'Generated By']}
         rows={rows}
+        onlyList={true}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
