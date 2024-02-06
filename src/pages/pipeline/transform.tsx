@@ -4,27 +4,17 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import {
-  Box,
-  Button,
-  Card,
-  CircularProgress,
-  Link,
-  Tabs,
-  Tab,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Card, Link, Tabs, Tab, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import React, { useContext, useEffect, useState } from 'react';
 import Dbt from '@/assets/images/dbt.png';
 import Image from 'next/image';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
-import { DBTTarget, TransformTask } from '@/components/DBT/DBTTarget';
+import { TransformTask } from '@/components/DBT/DBTTarget';
+import { DBTTaskList } from '@/components/DBT/DBTTaskList';
 import { DBTDocs } from '@/components/DBT/DBTDocs';
 import { delay } from '@/utils/common';
 import { LogCard } from '@/components/Logs/LogCard';
-import { TASK_DOCSGENERATE } from '@/config/constant';
 
 type Tasks = TransformTask[];
 
@@ -37,7 +27,6 @@ const Transform = () => {
   const [tasks, setTasks] = useState<Tasks>([]);
   const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
-  const [running, setRunning] = useState<boolean>(false);
   const [showConnectRepoDialog, setShowConnectRepoDialog] =
     useState<boolean>(false);
   const [rerender, setRerender] = useState<boolean>(false);
@@ -55,9 +44,6 @@ const Transform = () => {
   const open = Boolean(anchorEl);
   const handleClose = () => {
     setAnchorEl(null);
-  };
-  const handleClick = (event: HTMLElement | null) => {
-    setAnchorEl(event);
   };
   const handleEdit = () => {
     setShowConnectRepoDialog(true);
@@ -185,6 +171,7 @@ const Transform = () => {
                     padding: '16px',
                     justifyContent: 'space-between',
                     alignItems: 'center',
+                    marginBottom: '20px',
                   }}
                 >
                   <Box
@@ -265,44 +252,25 @@ const Transform = () => {
                       >
                         Connect & Setup Repo{' '}
                       </Button>
-                    ) : dbtSetupStage === 'complete' ? (
-                      <>
-                        {anyTaskLocked ? (
-                          <CircularProgress />
-                        ) : (
-                          <>
-                            <DBTTarget
-                              setExpandLogs={setExpandLogs}
-                              setRunning={setRunning}
-                              running={running}
-                              setDbtRunLogs={(logs: string[]) => {
-                                setDbtSetupLogs(logs);
-                              }}
-                              tasks={tasks.filter(
-                                (task) => task.slug != TASK_DOCSGENERATE
-                              )}
-                            />
-                            <Button
-                              aria-controls={open ? 'basic-menu' : undefined}
-                              aria-haspopup="true"
-                              aria-expanded={open ? 'true' : undefined}
-                              onClick={(event) =>
-                                handleClick(event.currentTarget)
-                              }
-                              variant="contained"
-                              color="info"
-                              sx={{ p: 0, minWidth: 32, ml: 2 }}
-                            >
-                              <MoreHorizIcon />
-                            </Button>
-                          </>
-                        )}
-                      </>
                     ) : (
                       ''
                     )}
                   </Box>
                 </Card>
+                {dbtSetupStage === 'complete' ? (
+                  <DBTTaskList
+                    setExpandLogs={setExpandLogs}
+                    setDbtRunLogs={(logs: string[]) => {
+                      setDbtSetupLogs(logs);
+                    }}
+                    tasks={tasks}
+                    isAnyTaskLocked={anyTaskLocked}
+                    fetchDbtTasks={fetchDbtTasks}
+                  />
+                ) : (
+                  ''
+                )}
+
                 <Box>
                   {dbtSetupStage === 'create-workspace' ? (
                     <DBTSetup
