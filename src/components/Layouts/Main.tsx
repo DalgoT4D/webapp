@@ -32,6 +32,8 @@ const MainDashboard = ({ children }: any) => {
   const [redirectTo, setRedirectTo] = useState<string | null>('');
   const globalContext = useContext(GlobalContext);
 
+  const [openMenu, setOpenMenu] = useState<boolean>(true);
+
   useEffect(() => {
     (async () => {
       try {
@@ -113,9 +115,9 @@ const MainDashboard = ({ children }: any) => {
       )}
       {redirectTo === 'dashboard' && (
         <>
-          <Header />
+          <Header openMenu={openMenu} setOpenMenu={setOpenMenu} />
           <Box sx={{ display: 'flex', pt: 6 }}>
-            <SideDrawer />
+            <SideDrawer openMenu={openMenu} />
             {children}
           </Box>
         </>

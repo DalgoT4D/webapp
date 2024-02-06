@@ -1,4 +1,4 @@
-import { Box, Menu, MenuItem, Paper, Typography } from '@mui/material';
+import { Box, Menu, MenuItem, Paper, Typography, IconButton } from '@mui/material';
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
 import LogoutIcon from '@/assets/icons/logout.svg';
@@ -9,6 +9,9 @@ import { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CreateOrgForm from '../Org/CreateOrgForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
+
+// assets
+import HamburgerIcon from "../../assets/icons/hamburger.svg";
 
 type Org = {
   name: string;
@@ -32,7 +35,7 @@ type AutoCompleteOption = {
   label: string;
 };
 
-export const Header = () => {
+export const Header = ({ openMenu, setOpenMenu }: any) => {
   const handleSignout = () => {
     // Hit backend api to invalidate the token
     localStorage.clear();
@@ -120,11 +123,27 @@ export const Header = () => {
 
   return (
     <Paper className={styles.Header}>
-      <Image
-        src={Logo}
-        style={{ margin: 4, marginLeft: '30px' }}
-        alt="ddp logo"
-      />
+      <Box sx={{ display: "flex", alignItems: "center", gap: 4, ml: 1.8 }}>
+        <IconButton onClick={() => setOpenMenu(!openMenu)}
+          sx={{
+            borderRadius: "50%",
+            lineHeight: 0,
+            transition: (theme) =>
+              theme.transitions.create('transform', {
+                duration: theme.transitions.duration.shorter,
+              }),
+            ...(!openMenu && {
+              transform: 'rotate(180deg)',
+            }),
+          }}
+        >
+          <Image src={HamburgerIcon} alt="Hamburger-icon" />
+        </IconButton>
+        <Image
+          src={Logo}
+          alt="ddp logo"
+        />
+      </Box>
       <Box
         display="flex"
         alignItems="center"
