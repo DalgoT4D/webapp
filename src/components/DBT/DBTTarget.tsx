@@ -16,7 +16,9 @@ export type TransformTask = {
   slug: string;
   id: number;
   deploymentId: string | null;
-  lock: string | null;
+  lock: { lockedBy: string; lockedAt: string } | null;
+  command: string | null;
+  generated_by: string;
 };
 
 type params = {
