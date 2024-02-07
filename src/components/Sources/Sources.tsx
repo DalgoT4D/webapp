@@ -73,7 +73,7 @@ export const Sources = () => {
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
             onClick={(event) =>
-              handleClick(source.sourceId, event.currentTarget)
+              globalContext?.CurrentOrg.state.is_demo ? {} : handleClick(source.sourceId, event.currentTarget)
             }
             variant="contained"
             key={'menu-' + idx}
