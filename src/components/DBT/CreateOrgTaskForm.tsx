@@ -87,6 +87,7 @@ const CreateOrgTaskForm = ({
 
   const selectedTask: AutocompleteOption = watch('task_slug');
   const selectedFlags = watch('flags');
+  optionsRef.current = watch('options');
 
   useEffect(() => {
     (async () => {
@@ -264,10 +265,12 @@ const CreateOrgTaskForm = ({
                       label=""
                       variant="outlined"
                       register={register}
+                      autoFocus
                     ></Input>
 
                     <Button
                       type="button"
+                      variant="outlined"
                       onClick={() => {
                         remove(index);
                         optionsRef.current = getValues()['options'];
@@ -280,6 +283,8 @@ const CreateOrgTaskForm = ({
               })}
               <Button
                 type="button"
+                variant="outlined"
+                sx={{ marginTop: '10px' }}
                 onClick={() => {
                   optionsRef.current = getValues()['options'];
                   append({ key: '', value: '' });
