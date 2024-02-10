@@ -1,9 +1,9 @@
-import { Box, Chip, Stack } from '@mui/material';
+import { Box, Chip, Stack, TextFieldProps } from '@mui/material';
 import React, { useState } from 'react';
 import { Close } from '@mui/icons-material';
 import Input from './UI/Input/Input';
 
-export interface MultiTagInput {
+export interface MultiTagInput extends Omit<TextFieldProps, 'variant'> {
   field: string;
   label: string;
   fieldValueArr: Array<string>;
@@ -17,6 +17,7 @@ const MultiTagInput = ({
   fieldValueArr,
   setFormValue,
   disabled,
+  ...rest
 }: MultiTagInput) => {
   const [currentValue, setCurrentValue] = useState<string>('');
 
@@ -63,6 +64,7 @@ const MultiTagInput = ({
         onChange={(e) => setCurrentValue(e.target.value.replace('\n', ''))}
         onKeyDown={handleKeyDown}
         disabled={disabled}
+        {...rest}
         InputProps={{
           startAdornment: (
             <Stack
