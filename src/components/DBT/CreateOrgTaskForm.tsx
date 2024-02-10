@@ -94,7 +94,7 @@ const CreateOrgTaskForm = ({
       setLoading(true);
       try {
         const data: Array<MasterTask> = await httpGet(session, `data/tasks/`);
-        let tasksDropDownRows = data
+        const tasksDropDownRows = data
           .filter(
             (task: MasterTask) =>
               ![TASK_GITPULL, TASK_DBTCLEAN, TASK_DOCSGENERATE].includes(
@@ -146,7 +146,7 @@ const CreateOrgTaskForm = ({
 
   const onSubmit = async (data: any) => {
     setLoading(true);
-    let paramOptions: any = {};
+    const paramOptions: any = {};
     data.options
       .filter((opt: any) => opt.key && opt.value)
       .forEach((opt: { key: string; value: string }) => {
