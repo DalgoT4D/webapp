@@ -117,7 +117,7 @@ const CreateOrgTaskForm = ({
     if (selectedTask?.id) {
       (async () => {
         setValue('flags', []);
-        setValue('options', [{ key: '', value: '' }]);
+        setValue('options', []);
         setLoading(true);
         try {
           const data: MasterTaskConfig = await httpGet(
