@@ -39,7 +39,7 @@ export const CreateOrgPage = () => {
   const onSubmit = async (data: any) => {
     setWaitForOrgCreation(true);
     try {
-      await httpPost(session, 'organizations/', {
+      await httpPost(session, 'v1/organizations/', {
         name: data.name,
       });
       successToast('Success', [], globalContext);
