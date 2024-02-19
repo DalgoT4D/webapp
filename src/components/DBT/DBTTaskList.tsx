@@ -78,16 +78,16 @@ export const DBTTaskList = ({
   const Actions = ({ task }: ActionsParam) => (
     <Box
       sx={{ justifyContent: 'end', display: 'flex' }}
-      key={'task-' + task.id}
+      key={'task-' + task.uuid}
     >
       <Button
         variant="contained"
         onClick={() => {
           setRunningTask(task);
         }}
-        data-testid={'task-' + task.id}
+        data-testid={'task-' + task.uuid}
         disabled={runningTask || isAnyTaskLocked ? true : false}
-        key={'task-' + task.id}
+        key={'task-' + task.uuid}
         sx={{ marginRight: '10px' }}
       >
         {runningTask || isAnyTaskLocked ? (
@@ -96,16 +96,17 @@ export const DBTTaskList = ({
           'Execute'
         )}
       </Button>
-      {
-        task.generated_by === 'client' ? (
+      {task.generated_by === 'client' ? (
         <Button
           id={task.slug}
           aria-controls={open ? 'basic-menu' : undefined}
           aria-haspopup="true"
           aria-expanded={open ? 'true' : undefined}
-          onClick={(event) => handleClick(String(task.id), event.currentTarget)}
+          onClick={(event) =>
+            handleClick(String(task.uuid), event.currentTarget)
+          }
           variant="contained"
-          key={'menu-' + task.id}
+          key={'menu-' + task.uuid}
           color="info"
           sx={{
             p: 0,
@@ -115,15 +116,16 @@ export const DBTTaskList = ({
         >
           <MoreHorizIcon />
         </Button>
-        ) : <SettingsIcon
-              sx={{
-                minWidth: '32px',
+      ) : (
+        <SettingsIcon
+          sx={{
+            minWidth: '32px',
 
-                color: 'text.secondary',
-                marginTop: '5px',
-              }}
-            ></SettingsIcon>
-      }
+            color: 'text.secondary',
+            marginTop: '5px',
+          }}
+        ></SettingsIcon>
+      )}
     </Box>
   );
 
@@ -140,7 +142,7 @@ export const DBTTaskList = ({
 
     try {
       let message = null;
-      message = await httpPost(session, `prefect/tasks/${task.id}/run/`, {});
+      message = await httpPost(session, `prefect/tasks/${task.uuid}/run/`, {});
       if (message?.status === 'success') {
         successToast('Job ran successfully', [], toastContext);
       } else {
@@ -249,8 +251,8 @@ export const DBTTaskList = ({
         .filter((task: TransformTask) => task.slug != TASK_DOCSGENERATE)
         .map((task: TransformTask) => [
           <Box
-            key={`name-${task.id}`}
-            sx={{ display: 'flex', alignItems: 'center', marginLeft: '10px'}}
+            key={`name-${task.uuid}`}
+            sx={{ display: 'flex', alignItems: 'center', marginLeft: '10px' }}
           >
             <Typography variant="body2" fontWeight={400}>
               {task.command}
@@ -280,7 +282,7 @@ export const DBTTaskList = ({
               </Box>
             </Box>
           ) : (
-            <Actions key={`actions-${task.id}`} task={task} />
+            <Actions key={`actions-${task.uuid}`} task={task} />
           ),
         ]);
 
