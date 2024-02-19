@@ -14,11 +14,12 @@ import { TASK_DBTRUN, TASK_DBTTEST } from '@/config/constant';
 export type TransformTask = {
   label: string;
   slug: string;
-  id: number;
   deploymentId: string | null;
   lock: { lockedBy: string; lockedAt: string } | null;
   command: string | null;
   generated_by: string;
+  uuid: string;
+  seq: number;
 };
 
 type params = {
@@ -62,7 +63,7 @@ export const DBTTarget = ({
 
     try {
       let message = null;
-      message = await httpPost(session, `prefect/tasks/${task.id}/run/`, {});
+      message = await httpPost(session, `prefect/tasks/${task.uuid}/run/`, {});
       if (message?.status === 'success') {
         successToast('Job ran successfully', [], toastContext);
       } else {
@@ -183,7 +184,7 @@ export const DBTTarget = ({
           Select function
         </MenuItem>
         {tasks.map((task) => (
-          <MenuItem key={task.id} value={task.slug}>
+          <MenuItem key={task.uuid} value={task.slug}>
             {task.label}
           </MenuItem>
         ))}
