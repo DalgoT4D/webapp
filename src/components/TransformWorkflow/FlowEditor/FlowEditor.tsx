@@ -14,7 +14,7 @@ const FlowEditor = ({}) => {
         paddingTop: '3.5rem',
       }}
     >
-      <Box sx={{ display: 'flex', height: '60%', overflow: 'auto' }}>
+      <Box sx={{ display: 'flex', height: '70%', overflow: 'auto' }}>
         <Box sx={{ width: '20%' }}>
           <ProjectTree />
         </Box>
@@ -24,7 +24,7 @@ const FlowEditor = ({}) => {
         </Box>
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
-      <Box sx={{ height: '50%', overflow: 'auto' }}>
+      <Box sx={{ height: '30%', overflow: 'auto' }}>
         <PreviewPane />
       </Box>
     </Box>
