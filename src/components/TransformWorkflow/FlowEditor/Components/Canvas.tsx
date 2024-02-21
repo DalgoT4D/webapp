@@ -23,9 +23,7 @@ import { DbtSourceModel } from '../FlowEditor';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 
-type CanvasProps = {
-  setSourceModelToPreview: (...args: any) => any;
-};
+type CanvasProps = {};
 
 const CanvasHeader = ({}) => {
   return (
@@ -70,7 +68,7 @@ const nodeTypes = { custom: DbtSourceModelNode };
 
 const defaultViewport = { x: 0, y: 0, zoom: 0.8 };
 
-const Canvas = ({ setSourceModelToPreview }: CanvasProps) => {
+const Canvas = ({}: CanvasProps) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const flowEditorContext = useContext(FlowEditorContext);
@@ -100,13 +98,30 @@ const Canvas = ({ setSourceModelToPreview }: CanvasProps) => {
 
   const handleDeleteNode = (nodeId: string) => {
     console.log('deleting a node with id ', nodeId);
+    // remove the node from preview if its there
+    // this will work once we use the uuids from the backend
+    if (nodeId === flowEditorContext?.NodeActionTodo.state.node?.id) {
+      flowEditorContext?.NodeActionTodo.dispatch({
+        type: 'clear-preview',
+        actionState: {
+          node: null,
+          toDo: 'clear-preview',
+        },
+      });
+    }
     setNodes((nds) => applyNodeChanges([{ type: 'remove', id: nodeId }], nds));
   };
 
   const handlePreviewDataForNode = (sourceModel: DbtSourceModel | null) => {
     console.log('previewing data for ', sourceModel);
     if (sourceModel) {
-      setSourceModelToPreview(sourceModel);
+      flowEditorContext?.NodeActionTodo.dispatch({
+        type: 'preview',
+        actionState: {
+          node: sourceModel,
+          toDo: 'preview',
+        },
+      });
     }
   };
 
@@ -127,14 +142,6 @@ const Canvas = ({ setSourceModelToPreview }: CanvasProps) => {
         position: { x: 100, y: 125 },
       };
       setNodes((nds) => nds.concat(newNode));
-
-      flowEditorContext?.NodeActionTodo.dispatch({
-        type: 'clear',
-        actionState: {
-          node: null,
-          toDo: null,
-        },
-      });
     }
   };
 

@@ -24,14 +24,6 @@ const FlowEditor = ({}) => {
   const [sourceModelToPreview, setSourceModelToPreview] =
     useState<DbtSourceModel | null>();
 
-  useEffect(() => {
-    if (flowEditorContext?.NodeActionTodo.state.toDo === 'preview') {
-      setSourceModelToPreview(flowEditorContext?.NodeActionTodo.state.node);
-    } else if (flowEditorContext?.NodeActionTodo.state.toDo === 'new') {
-      setSourceModelToPreview(null);
-    }
-  }, [flowEditorContext?.NodeActionTodo.state]);
-
   const fetchSourcesModels = async () => {
     try {
       const response: DbtSourceModel[] = await httpGet(
@@ -52,8 +44,6 @@ const FlowEditor = ({}) => {
     if (session) fetchSourcesModels();
   }, [session]);
 
-  const addModeToCanvas = () => {};
-
   console.log('context', flowEditorContext?.NodeActionTodo.state);
 
   return (
@@ -71,12 +61,12 @@ const FlowEditor = ({}) => {
         </Box>
         <Divider orientation="vertical" sx={{ color: 'black' }} />
         <Box sx={{ width: '80%' }}>
-          <Canvas setSourceModelToPreview={setSourceModelToPreview} />
+          <Canvas />
         </Box>
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box sx={{ height: '30%', overflow: 'auto' }}>
-        <PreviewPane dbtSourceModel={sourceModelToPreview} />
+        <PreviewPane />
       </Box>
     </Box>
   );

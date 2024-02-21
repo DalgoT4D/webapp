@@ -8,21 +8,31 @@ import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 
-type PreviewPaneProps = {
-  dbtSourceModel: DbtSourceModel | undefined | null;
-};
+type PreviewPaneProps = {};
 
-const PreviewPane = ({ dbtSourceModel }: PreviewPaneProps) => {
-  console.log('dbtSourceModel', dbtSourceModel);
+const PreviewPane = ({}: PreviewPaneProps) => {
+  const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
+  const flowEditorContext = useContext(FlowEditorContext);
 
   // Row Data: The data to be displayed.
   const [rowData, setRowData] = useState([]);
 
   // Column Definitions: Defines & controls grid columns.
   const [colDefs, setColDefs] = useState([]);
+
+  useEffect(() => {
+    if (flowEditorContext?.NodeActionTodo.state.toDo === 'preview') {
+      setModelToPreview(flowEditorContext?.NodeActionTodo.state.node);
+    } else if (
+      flowEditorContext?.NodeActionTodo.state.toDo === 'clear-preview'
+    ) {
+      setModelToPreview(null);
+    }
+  }, [flowEditorContext?.NodeActionTodo.state]);
 
   const fetchColumns = async (schema: string, table: string) => {
     try {
@@ -57,15 +67,15 @@ const PreviewPane = ({ dbtSourceModel }: PreviewPaneProps) => {
   };
 
   useEffect(() => {
-    if (dbtSourceModel) {
+    if (modelToPreview) {
       (async () => {
-        await fetchColumns(dbtSourceModel.schema, dbtSourceModel.input_name);
+        await fetchColumns(modelToPreview.schema, modelToPreview.input_name);
       })();
       (async () => {
-        await fetchRows(dbtSourceModel.schema, dbtSourceModel.input_name);
+        await fetchRows(modelToPreview.schema, modelToPreview.input_name);
       })();
     }
-  }, [dbtSourceModel]);
+  }, [modelToPreview]);
 
   if (rowData.length === 0) {
     return (
@@ -79,7 +89,7 @@ const PreviewPane = ({ dbtSourceModel }: PreviewPaneProps) => {
   return (
     <Box sx={{}}>
       <Typography variant="h6">
-        Preview of {dbtSourceModel?.schema}.{dbtSourceModel?.input_name}
+        Preview of {modelToPreview?.schema}.{modelToPreview?.input_name}
       </Typography>
       <Box
         className="ag-theme-quartz"
