@@ -88,7 +88,7 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
 
   const handleNodeClick = (nodes: NodeApi<any>[]) => {
     console.log('node clicked', nodes);
-    if (nodes.length > 0) {
+    if (nodes.length > 0 && nodes[0].isLeaf) {
       flowEditorContext?.NodeActionTodo.dispatch({
         type: 'new',
         actionState: {

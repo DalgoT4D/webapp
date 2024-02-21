@@ -3,13 +3,13 @@
 import { DbtSourceModel } from '@/components/TransformWorkflow/FlowEditor/FlowEditor';
 
 export interface NodeActionToDoInterface {
-  toDo: 'new' | 'preview' | 'clear' | null;
+  toDo: 'new' | 'preview' | 'clear-preview' | 'clear' | null;
   node: DbtSourceModel | undefined | null;
 }
 
 // action to add a new node to canvas or preview the node
 interface Action {
-  type: 'new' | 'preview' | 'clear';
+  type: 'new' | 'preview' | 'clear-preview' | 'clear';
   actionState: NodeActionToDoInterface;
 }
 
@@ -24,6 +24,7 @@ export const NodeActionToDoReducer = (
 ) => {
   switch (updateAction?.type) {
     case 'preview':
+    case 'clear-preview':
     case 'new':
       return { node: updateAction.actionState.node, toDo: updateAction.type };
     case 'clear':
