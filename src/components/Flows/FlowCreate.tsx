@@ -23,7 +23,7 @@ import Input from '../UI/Input/Input';
 import moment, { Moment } from 'moment';
 import { Connection } from '@/components/Connections/Connections';
 import { TransformTask } from '../DBT/DBTTarget';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -49,7 +49,7 @@ type DeploymentDef = {
   name: string;
   dbtTransform: string;
   connections: Array<any>;
-  transformTasks: Array<any>;
+  transformTasks: Array<DispTransform>;
   cron: string | object;
   cronDaysOfWeek: Array<AutoCompleteOption>;
   cronTimeOfDay: string;
@@ -84,7 +84,6 @@ const FlowCreate = ({
   const [connectionOptions, setConnectionOptions] = useState<DispConnection[]>(
     []
   );
-  const [transformOptions, setTransformOptions] = useState<DispTransform[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const {
     register,
@@ -155,14 +154,16 @@ const FlowCreate = ({
     };
   };
 
-  const onDragEnd = (result: any) => {
-    if (!result.destination) return; // Dragged outside the list
+  const onDragEnd = (oldList: Array<DispTransform>, result: any) => {
+    if (!result.destination) return oldList; // Dragged outside the list
+    console.log(result.source.index);
+    console.log(result.destination.index);
 
-    const reorderedItems = Array.from(transformOptions);
+    const reorderedItems = Array.from(oldList);
     const [reorderedItem] = reorderedItems.splice(result.source.index, 1);
     reorderedItems.splice(result.destination.index, 0, reorderedItem);
 
-    setTransformOptions(reorderedItems);
+    return reorderedItems;
   };
 
   useEffect(() => {
@@ -239,13 +240,6 @@ const FlowCreate = ({
       label: 'dbt_seed',
     },
   ];
-
-  const addTransformTaskToList = (task: DispTransform) => {
-    var options = transformOptions;
-    options.push(task);
-    console.log(transformOptions);
-    setTransformOptions(options);
-  };
 
   const onSubmit = async (data: any) => {
     try {
@@ -465,44 +459,84 @@ const FlowCreate = ({
                 />
               </Box>
               <Box>
-                {availableTransformTasks.map(
-                  (task: DispTransform, index: number) => {
-                    return (
-                      <Button onClick={() => addTransformTaskToList(task)}>
-                        {task.orgTaskUUID}
-                      </Button>
-                    );
-                  }
-                )}
-                <DragDropContext onDragEnd={onDragEnd}>
-                  <Droppable droppableId="droppable">
-                    {(provided: any) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef}>
-                        HELLO {JSON.stringify(transformOptions)}
-                        {transformOptions.map(
-                          (task: DispTransform, index: number) => {
-                            <Draggable
-                              key={index}
-                              draggableId={task.orgTaskUUID}
-                              index={index}
+                <Controller
+                  name="transformTasks"
+                  control={control}
+                  render={({ field }) => (
+                    <>
+                      {availableTransformTasks.map(
+                        (task: DispTransform, index: number) => {
+                          return (
+                            <Button
+                              key={`add-task-${index}`}
+                              onClick={() => field.value.push(task)}
                             >
-                              THERE
-                              {(provided: any) => (
-                                <Box
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                >
-                                  {task.orgTaskUUID}
-                                </Box>
+                              {task.orgTaskUUID}
+                            </Button>
+                          );
+                        }
+                      )}
+
+                      <DragDropContext
+                        onDragEnd={(result: any) => {
+                          field.onChange(onDragEnd(field.value, result));
+                        }}
+                      >
+                        <Droppable droppableId="droppable">
+                          {(provided: any) => (
+                            <div
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                            >
+                              {field.value.map(
+                                (task: DispTransform, index: number) => {
+                                  return (
+                                    <Draggable
+                                      key={`${index}${task.orgTaskUUID}`}
+                                      draggableId={task.orgTaskUUID}
+                                      index={index}
+                                    >
+                                      {(provided: any) => (
+                                        <Box
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                          sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            marginBottom: '10px',
+                                            border: '1px solid #e0e0e0',
+                                            borderRadius: '2px',
+                                            padding: '3px',
+                                          }}
+                                        >
+                                          <Typography>
+                                            {task.orgTaskUUID} {index}
+                                          </Typography>
+                                          <Button
+                                            onClick={() =>
+                                              (field.value = field.value.splice(
+                                                index,
+                                                1
+                                              ))
+                                            }
+                                          >
+                                            Remove
+                                          </Button>
+                                        </Box>
+                                      )}
+                                    </Draggable>
+                                  );
+                                }
                               )}
-                            </Draggable>;
-                          }
-                        )}
-                      </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
+                            </div>
+                          )}
+                        </Droppable>
+                      </DragDropContext>
+                    </>
+                  )}
+                ></Controller>
               </Box>
             </Stack>
           </Box>

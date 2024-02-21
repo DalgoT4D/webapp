@@ -15,6 +15,7 @@
   "dependencies": {
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.10.8",
+    "@hello-pangea/dnd": "^16.5.0",
     "@mui/icons-material": "^5.15.6",
     "@mui/material": "^5.15.4",
     "@mui/x-date-pickers": "^6.18.6",
@@ -28,7 +29,6 @@
     "next": "13.5.6",
     "next-auth": "^4.24.5",
     "react": "18.2.0",
-    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.49.3",
     "superset-ui": "^0.0.0-1",
