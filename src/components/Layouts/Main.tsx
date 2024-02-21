@@ -126,6 +126,22 @@ const MainDashboard = ({ children }: any) => {
   );
 };
 
+const TransformWorkflowLayout = ({ children }: any) => {
+  const { data: session }: any = useSession();
+  return (
+    <SWRConfig
+      value={{
+        fetcher: (resource) => {
+          return httpGet(session, resource).then((res) => res);
+        },
+      }}
+    >
+      <Header hideMenu={true} />
+      {children}
+    </SWRConfig>
+  );
+};
+
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
 
@@ -151,6 +167,8 @@ export const Main = ({ children }: any) => {
     } else {
       return children;
     }
+  } else if (router.pathname === '/workflow/editor') {
+    return <TransformWorkflowLayout>{children}</TransformWorkflowLayout>;
   } else {
     return <MainDashboard>{children}</MainDashboard>;
   }
