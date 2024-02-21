@@ -231,14 +231,11 @@ const FlowCreate = ({
   }, []);
 
   const availableTransformTasks = [
-    {
-      orgTaskUUID: 'dbt_run',
-      label: 'dbt_run',
-    },
-    {
-      orgTaskUUID: 'dbt_seed',
-      label: 'dbt_seed',
-    },
+    { orgTaskUUID: '7d80bc12-84d7-4ff3-b1fa-8754677b258e', label: 'git-pull' },
+    { orgTaskUUID: '97dfd6b9-0d1b-4f20-bc67-4d2ff1c18b7a', label: 'dbt-clean' },
+    { orgTaskUUID: '079a9d6b-1492-44d2-b2e6-7b605c733a0f', label: 'dbt-deps' },
+    { orgTaskUUID: 'a4167137-ec59-46c2-bcb3-ad81297adb76', label: 'dbt-run' },
+    { orgTaskUUID: '852a6677-0bde-44db-a549-f52320475b98', label: 'dbt-test' },
   ];
 
   const onSubmit = async (data: any) => {
@@ -469,9 +466,13 @@ const FlowCreate = ({
                           return (
                             <Button
                               key={`add-task-${index}`}
-                              onClick={() => field.value.push(task)}
+                              onClick={() => {
+                                const newTasks = field.value;
+                                newTasks.push(task);
+                                field.onChange(newTasks);
+                              }}
                             >
-                              {task.orgTaskUUID}
+                              {task.label}
                             </Button>
                           );
                         }
@@ -512,15 +513,16 @@ const FlowCreate = ({
                                           }}
                                         >
                                           <Typography>
-                                            {task.orgTaskUUID} {index}
+                                            {task.label} having index {index}
                                           </Typography>
                                           <Button
-                                            onClick={() =>
-                                              (field.value = field.value.splice(
-                                                index,
-                                                1
-                                              ))
-                                            }
+                                            onClick={() => {
+                                              const newValue = [
+                                                ...field.value.slice(0, index),
+                                                ...field.value.slice(index + 1),
+                                              ];
+                                              field.onChange(newValue);
+                                            }}
                                           >
                                             Remove
                                           </Button>
