@@ -23,6 +23,7 @@ import Input from '../UI/Input/Input';
 import moment, { Moment } from 'moment';
 import { Connection } from '@/components/Connections/Connections';
 import { TransformTask } from '../DBT/DBTTarget';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -38,11 +39,17 @@ type DispConnection = {
   label: string;
 };
 
+type DispTransform = {
+  orgTaskUUID: string;
+  label: string;
+};
+
 type DeploymentDef = {
   active: boolean;
   name: string;
   dbtTransform: string;
   connections: Array<any>;
+  transformTasks: Array<any>;
   cron: string | object;
   cronDaysOfWeek: Array<AutoCompleteOption>;
   cronTimeOfDay: string;
@@ -77,6 +84,7 @@ const FlowCreate = ({
   const [connectionOptions, setConnectionOptions] = useState<DispConnection[]>(
     []
   );
+  const [transformOptions, setTransformOptions] = useState<DispTransform[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const {
     register,
@@ -91,6 +99,7 @@ const FlowCreate = ({
       name: '',
       dbtTransform: 'no',
       connections: [],
+      transformTasks: [],
       cron: '',
       cronDaysOfWeek: [],
       cronTimeOfDay: '',
@@ -146,6 +155,16 @@ const FlowCreate = ({
     };
   };
 
+  const onDragEnd = (result: any) => {
+    if (!result.destination) return; // Dragged outside the list
+
+    const reorderedItems = Array.from(transformOptions);
+    const [reorderedItem] = reorderedItems.splice(result.source.index, 1);
+    reorderedItems.splice(result.destination.index, 0, reorderedItem);
+
+    setTransformOptions(reorderedItems);
+  };
+
   useEffect(() => {
     if (flowId) {
       (async () => {
@@ -162,6 +181,10 @@ const FlowCreate = ({
               label: cronObject.schedule,
             },
             dbtTransform: data.dbtTransform,
+            transformTasks: data.transformTasks.map((task: any) => ({
+              orgTaskUUID: task.uuid,
+              label: task.uuid,
+            })), // need the label from the backend
             connections: data.connections
               .sort((c1: any, c2: any) => c1.seq - c2.seq)
               .map((conn: any) => ({
@@ -206,6 +229,24 @@ const FlowCreate = ({
     })();
   }, []);
 
+  const availableTransformTasks = [
+    {
+      orgTaskUUID: 'dbt_run',
+      label: 'dbt_run',
+    },
+    {
+      orgTaskUUID: 'dbt_seed',
+      label: 'dbt_seed',
+    },
+  ];
+
+  const addTransformTaskToList = (task: DispTransform) => {
+    var options = transformOptions;
+    options.push(task);
+    console.log(transformOptions);
+    setTransformOptions(options);
+  };
+
   const onSubmit = async (data: any) => {
     try {
       const cronExpression = convertToCronExpression(
@@ -241,6 +282,7 @@ const FlowCreate = ({
           transformTasks:
             tasks && data.dbtTransform === 'yes'
               ? tasks
+                  // remove this filter
                   .filter(
                     (task: TransformTask) => task.generated_by === 'system'
                   )
@@ -266,6 +308,7 @@ const FlowCreate = ({
           transformTasks:
             tasks && data.dbtTransform === 'yes'
               ? tasks
+                  // remove this filter
                   .filter(
                     (task: TransformTask) => task.generated_by === 'system'
                   )
@@ -422,24 +465,44 @@ const FlowCreate = ({
                 />
               </Box>
               <Box>
-                <InputLabel sx={{ marginBottom: '5px' }}>
-                  Transform data ?
-                </InputLabel>
-                <Controller
-                  name="dbtTransform"
-                  control={control}
-                  render={({ field: { value, onChange } }) => (
-                    <Stack direction={'row'} alignItems="center" gap={'10%'}>
-                      <Switch
-                        checked={value === 'yes'}
-                        value={value}
-                        onChange={(event, value) => {
-                          onChange(value ? 'yes' : 'no');
-                        }}
-                      />
-                    </Stack>
-                  )}
-                />
+                {availableTransformTasks.map(
+                  (task: DispTransform, index: number) => {
+                    return (
+                      <Button onClick={() => addTransformTaskToList(task)}>
+                        {task.orgTaskUUID}
+                      </Button>
+                    );
+                  }
+                )}
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <Droppable droppableId="droppable">
+                    {(provided: any) => (
+                      <div {...provided.droppableProps} ref={provided.innerRef}>
+                        HELLO {JSON.stringify(transformOptions)}
+                        {transformOptions.map(
+                          (task: DispTransform, index: number) => {
+                            <Draggable
+                              key={index}
+                              draggableId={task.orgTaskUUID}
+                              index={index}
+                            >
+                              THERE
+                              {(provided: any) => (
+                                <Box
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                >
+                                  {task.orgTaskUUID}
+                                </Box>
+                              )}
+                            </Draggable>;
+                          }
+                        )}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
               </Box>
             </Stack>
           </Box>
