@@ -1,6 +1,6 @@
 import { Box, Button, Divider, Typography } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useCallback, useState } from 'react';
 import ReactFlow, {
   applyEdgeChanges,
@@ -16,8 +16,16 @@ import ReactFlow, {
   ControlButton,
   Node,
   Edge,
+  useEdgesState,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { DbtSourceModel } from '../FlowEditor';
+import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
+import { FlowEditorContext } from '@/contexts/FlowEditorContext';
+
+type CanvasProps = {
+  setSourceModelToPreview: (...args: any) => any;
+};
 
 const CanvasHeader = ({}) => {
   return (
@@ -58,13 +66,84 @@ const CanvasHeader = ({}) => {
   );
 };
 
-const Canvas = ({}) => {
-  const nodes: any = [];
-  const edges: any = [];
-  const handleNodesChange = () => {};
-  const handleEdgesChange = () => {};
-  const handleNewConnection = () => {};
-  const nodeTypes: any = [];
+const nodeTypes = { custom: DbtSourceModelNode };
+
+const defaultViewport = { x: 0, y: 0, zoom: 0.8 };
+
+const Canvas = ({ setSourceModelToPreview }: CanvasProps) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const flowEditorContext = useContext(FlowEditorContext);
+
+  const handleNodesChange = (changes: NodeChange[]) => {
+    console.log(
+      'inside handle nodes changes; changes include move, drag and select'
+    );
+    console.log('node changes', changes);
+    onNodesChange(changes);
+  };
+
+  const handleEdgesChange = (changes: EdgeChange[]) => {
+    console.log(
+      'inside handle edges changes; changes include select and remove'
+    );
+    onEdgesChange(changes);
+  };
+
+  const handleNewConnection = (connection: Connection) => {
+    console.log(
+      'inside handle new connection; when two nodes are connected by user',
+      connection
+    );
+    setEdges((edges) => addEdge(connection, edges));
+  };
+
+  const handleDeleteNode = (nodeId: string) => {
+    console.log('deleting a node with id ', nodeId);
+    setNodes((nds) => applyNodeChanges([{ type: 'remove', id: nodeId }], nds));
+  };
+
+  const handlePreviewDataForNode = (sourceModel: DbtSourceModel | null) => {
+    console.log('previewing data for ', sourceModel);
+    if (sourceModel) {
+      setSourceModelToPreview(sourceModel);
+    }
+  };
+
+  const addNewNodeToCanvas = (
+    dbtSourceModel: DbtSourceModel | null | undefined
+  ) => {
+    if (dbtSourceModel) {
+      console.log('adding a source or a model to canvas', dbtSourceModel);
+      const newNode = {
+        id: `randomnode_${+new Date()}`,
+        type: 'custom',
+        data: {
+          label: `${dbtSourceModel.input_type} | ${dbtSourceModel.schema}.${dbtSourceModel.input_name}`,
+          triggerDelete: handleDeleteNode,
+          triggerPreview: handlePreviewDataForNode,
+          dbtSourceModel: dbtSourceModel,
+        },
+        position: { x: 100, y: 125 },
+      };
+      setNodes((nds) => nds.concat(newNode));
+
+      flowEditorContext?.NodeActionTodo.dispatch({
+        type: 'clear',
+        actionState: {
+          node: null,
+          toDo: null,
+        },
+      });
+    }
+  };
+
+  useEffect(() => {
+    // This event is triggered via the ProjectTree component
+    if (flowEditorContext?.NodeActionTodo.state.toDo === 'new') {
+      addNewNodeToCanvas(flowEditorContext?.NodeActionTodo.state.node);
+    }
+  }, [flowEditorContext?.NodeActionTodo.state]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -82,6 +161,7 @@ const Canvas = ({}) => {
             onConnect={handleNewConnection}
             nodeTypes={nodeTypes}
             proOptions={{ hideAttribution: true }}
+            defaultViewport={defaultViewport}
             fitView
           >
             <Background />
