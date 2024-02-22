@@ -25,14 +25,14 @@ const PreviewPane = ({}: PreviewPaneProps) => {
   const [colDefs, setColDefs] = useState([]);
 
   useEffect(() => {
-    if (flowEditorContext?.NodeActionTodo.state.toDo === 'preview') {
-      setModelToPreview(flowEditorContext?.NodeActionTodo.state.node);
+    if (flowEditorContext?.previewNode.state.action === 'preview') {
+      setModelToPreview(flowEditorContext?.previewNode.state.node);
     } else if (
-      flowEditorContext?.NodeActionTodo.state.toDo === 'clear-preview'
+      flowEditorContext?.previewNode.state.action === 'clear-preview'
     ) {
       setModelToPreview(null);
     }
-  }, [flowEditorContext?.NodeActionTodo.state]);
+  }, [flowEditorContext?.previewNode.state]);
 
   const fetchColumns = async (schema: string, table: string) => {
     try {
@@ -40,7 +40,6 @@ const PreviewPane = ({}: PreviewPaneProps) => {
         session,
         `warehouse/table_columns/${schema}/${table}`
       );
-      // console.log(columnSpec);
       setColDefs(
         columnSpec.map((col: string) => ({
           field: col,
@@ -74,6 +73,9 @@ const PreviewPane = ({}: PreviewPaneProps) => {
       (async () => {
         await fetchRows(modelToPreview.schema, modelToPreview.input_name);
       })();
+    } else {
+      setColDefs([]);
+      setRowData([]);
     }
   }, [modelToPreview]);
 
@@ -100,6 +102,7 @@ const PreviewPane = ({}: PreviewPaneProps) => {
         }}
       >
         <AgGridReact
+          resetRowDataOnUpdate={true}
           autoSizePadding={20}
           rowData={rowData}
           columnDefs={colDefs}

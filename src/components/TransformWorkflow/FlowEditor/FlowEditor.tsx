@@ -5,16 +5,14 @@ import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/PreviewPane';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-import FlowEditorContextProvider, {
-  FlowEditorContext,
-} from '@/contexts/FlowEditorContext';
+import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 
 export type DbtSourceModel = {
   source_name: string;
   input_name: string;
   input_type: 'model' | 'source';
   schema: string;
-  id: string | null;
+  id: string;
 };
 
 const FlowEditor = ({}) => {
@@ -30,10 +28,6 @@ const FlowEditor = ({}) => {
         session,
         'transform/dbt_project/sources_models/'
       );
-      response.map(
-        (dbtSourceModel: DbtSourceModel, idx: number) =>
-          (dbtSourceModel.id = `randomnode${idx}_${+new Date()}`)
-      );
       setSourcesModels(response);
     } catch (error) {
       console.log(error);
@@ -43,8 +37,6 @@ const FlowEditor = ({}) => {
   useEffect(() => {
     if (session) fetchSourcesModels();
   }, [session]);
-
-  console.log('context', flowEditorContext?.NodeActionTodo.state);
 
   return (
     <Box

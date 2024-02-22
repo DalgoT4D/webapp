@@ -77,6 +77,8 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
       }
     );
 
+    console.log('tree data', treeData);
+
     setProjectTreeData([{ id: '0', schema: 'Store', children: treeData }]);
   };
 
@@ -87,13 +89,16 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
   }, [dbtSourceModels]);
 
   const handleNodeClick = (nodes: NodeApi<any>[]) => {
-    console.log('node clicked', nodes);
     if (nodes.length > 0 && nodes[0].isLeaf) {
-      flowEditorContext?.NodeActionTodo.dispatch({
-        type: 'new',
-        actionState: {
+      console.log(
+        'adding a node to canvas from project tree component',
+        nodes[0].data
+      );
+      flowEditorContext?.canvasNode.dispatch({
+        type: 'add',
+        state: {
           node: nodes[0].data,
-          toDo: 'new',
+          action: 'add',
         },
       });
     }
