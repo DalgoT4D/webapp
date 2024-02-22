@@ -99,13 +99,12 @@ const Canvas = ({}: CanvasProps) => {
   const handleDeleteNode = (nodeId: string) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
-    // this will work once we use the uuids from the backend
-    if (nodeId === flowEditorContext?.NodeActionTodo.state.node?.id) {
-      flowEditorContext?.NodeActionTodo.dispatch({
+    console.log('compare with', flowEditorContext?.previewNode.state.node?.id);
+    if (nodeId === flowEditorContext?.previewNode.state.node?.id) {
+      flowEditorContext?.previewNode.dispatch({
         type: 'clear-preview',
-        actionState: {
+        state: {
           node: null,
-          toDo: 'clear-preview',
         },
       });
     }
@@ -113,13 +112,12 @@ const Canvas = ({}: CanvasProps) => {
   };
 
   const handlePreviewDataForNode = (sourceModel: DbtSourceModel | null) => {
-    console.log('previewing data for ', sourceModel);
     if (sourceModel) {
-      flowEditorContext?.NodeActionTodo.dispatch({
+      flowEditorContext?.previewNode.dispatch({
         type: 'preview',
-        actionState: {
+        state: {
           node: sourceModel,
-          toDo: 'preview',
+          action: 'preview',
         },
       });
     }
@@ -131,7 +129,7 @@ const Canvas = ({}: CanvasProps) => {
     if (dbtSourceModel) {
       console.log('adding a source or a model to canvas', dbtSourceModel);
       const newNode = {
-        id: `randomnode_${+new Date()}`,
+        id: dbtSourceModel.id,
         type: 'custom',
         data: {
           label: `${dbtSourceModel.input_type} | ${dbtSourceModel.schema}.${dbtSourceModel.input_name}`,
@@ -147,10 +145,10 @@ const Canvas = ({}: CanvasProps) => {
 
   useEffect(() => {
     // This event is triggered via the ProjectTree component
-    if (flowEditorContext?.NodeActionTodo.state.toDo === 'new') {
-      addNewNodeToCanvas(flowEditorContext?.NodeActionTodo.state.node);
+    if (flowEditorContext?.canvasNode.state.action === 'add') {
+      addNewNodeToCanvas(flowEditorContext?.canvasNode.state.node);
     }
-  }, [flowEditorContext?.NodeActionTodo.state]);
+  }, [flowEditorContext?.canvasNode.state]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

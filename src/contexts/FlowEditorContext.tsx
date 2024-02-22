@@ -1,22 +1,30 @@
 import { createContext, useReducer } from 'react';
 import {
-  NodeActionToDoReducer,
-  initialNodeActionToDoState,
-  NodeActionToDoInterface,
-} from './reducers/FlowEditor/SelectedNodeReducer';
+  CanvasReducer,
+  PreviewPaneReducer,
+  initialFlowEditorNodeState,
+  FlowEditorNodeInterface,
+} from './reducers/FlowEditor/FlowEditorNodeReducer';
 
 import React from 'react';
 
 interface context {
-  NodeActionTodo: { state: NodeActionToDoInterface; dispatch: any };
+  previewNode: { state: FlowEditorNodeInterface; dispatch: any };
+  canvasNode: { state: FlowEditorNodeInterface; dispatch: any };
 }
 export const FlowEditorContext = createContext<context | null>(null);
 
 const FlowEditorContextProvider = ({ children }: any) => {
-  // NodeActionToDo reducer/logic-updater
-  const [nodeActionToDo, nodeActionToDoDispatch]: [any, any] = useReducer<any>(
-    NodeActionToDoReducer,
-    initialNodeActionToDoState
+  // Canvas node state & reducer/logic-updater
+  const [canvasNode, canvasNodeDispatch]: [any, any] = useReducer<any>(
+    CanvasReducer,
+    initialFlowEditorNodeState
+  );
+
+  // Preview node state & reducer/logic-updater
+  const [previewNode, previewNodeDispatch]: [any, any] = useReducer<any>(
+    PreviewPaneReducer,
+    initialFlowEditorNodeState
   );
 
   // You can add other reducers here to have global state for different use cases with the same global context
@@ -24,9 +32,13 @@ const FlowEditorContextProvider = ({ children }: any) => {
   return (
     <FlowEditorContext.Provider
       value={{
-        NodeActionTodo: {
-          state: nodeActionToDo,
-          dispatch: nodeActionToDoDispatch,
+        previewNode: {
+          state: previewNode,
+          dispatch: previewNodeDispatch,
+        },
+        canvasNode: {
+          state: canvasNode,
+          dispatch: canvasNodeDispatch,
         },
       }}
     >
