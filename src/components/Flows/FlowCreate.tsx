@@ -22,12 +22,14 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import Input from '../UI/Input/Input';
 import moment, { Moment } from 'moment';
 import { Connection } from '@/components/Connections/Connections';
+import { TransformTask } from '../DBT/DBTTarget';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
   flowId?: string;
   setSelectedFlowId?: (args: string) => any;
+  tasks: Array<TransformTask>;
 }
 
 // DispConnection is for the AutoComplete list: {id, label}
@@ -66,6 +68,7 @@ const FlowCreate = ({
   updateCrudVal,
   mutate,
   setSelectedFlowId = () => {},
+  tasks,
 }: FlowCreateInterface) => {
   const isEditPage = flowId !== '' && flowId !== undefined;
   const { data: session } = useSession();
@@ -235,6 +238,17 @@ const FlowCreate = ({
           name: data.name,
           connections: selectedConns,
           dbtTransform: data.dbtTransform,
+          transformTasks:
+            tasks && data.dbtTransform === 'yes'
+              ? tasks
+                  .filter(
+                    (task: TransformTask) => task.generated_by === 'system'
+                  )
+                  .map((task: TransformTask) => ({
+                    uuid: task.uuid,
+                    seq: task.seq,
+                  }))
+              : [],
         });
         successToast(
           `Pipeline ${data.name} updated successfully`,
@@ -249,6 +263,17 @@ const FlowCreate = ({
           connections: selectedConns,
           dbtTransform: data.dbtTransform,
           cron: cronExpression,
+          transformTasks:
+            tasks && data.dbtTransform === 'yes'
+              ? tasks
+                  .filter(
+                    (task: TransformTask) => task.generated_by === 'system'
+                  )
+                  .map((task: TransformTask) => ({
+                    uuid: task.uuid,
+                    seq: task.seq,
+                  }))
+              : [],
         });
         successToast(
           `Pipeline ${response.name} created successfully`,
@@ -386,7 +411,6 @@ const FlowCreate = ({
                             name="connections"
                             variant="outlined"
                             label="Connections"
-                            required
                             error={!!errors.connections}
                             helperText={errors.connections?.message}
                           />
