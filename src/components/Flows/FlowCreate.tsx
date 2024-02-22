@@ -411,7 +411,6 @@ const FlowCreate = ({
                             name="connections"
                             variant="outlined"
                             label="Connections"
-                            required
                             error={!!errors.connections}
                             helperText={errors.connections?.message}
                           />
