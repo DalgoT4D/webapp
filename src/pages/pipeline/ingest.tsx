@@ -5,6 +5,7 @@ import { Connections } from '@/components/Connections/Connections';
 import { Sources } from '@/components/Sources/Sources';
 import { Destinations } from '@/components/Destinations/Destinations';
 import { PageHead } from '@/components/PageHead';
+import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -52,6 +53,7 @@ export default function Ingest() {
             value={value}
             onChange={handleChange}
             aria-label="ingestion tabs"
+            className="product_tabs"
           >
             <Tab label="Connections" sx={{ mr: 4 }} />
             <Tab label="Sources" sx={{ mr: 4 }} />
@@ -67,6 +69,25 @@ export default function Ingest() {
         <TabPanel value={value} index={2}>
           <Destinations />
         </TabPanel>
+        {typeof window !== 'undefined' && (
+          <Joyride
+            callback={() => {}}
+            continuous
+            hideCloseButton
+            run={true}
+            scrollToFirstStep
+            showProgress
+            showSkipButton
+            steps={[]}
+            styles={{
+              options: {
+                zIndex: 10000,
+              },
+            }}
+            ref={null}
+            floaterProps={{ disableAnimation: true }}
+          />
+        )}
       </main>
     </>
   );
