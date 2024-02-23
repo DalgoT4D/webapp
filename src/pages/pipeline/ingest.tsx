@@ -1,14 +1,12 @@
 import styles from '@/styles/Home.module.css';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { Connections } from '@/components/Connections/Connections';
 import { Sources } from '@/components/Sources/Sources';
 import { Destinations } from '@/components/Destinations/Destinations';
 import { PageHead } from '@/components/PageHead';
-import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
-import { WalkThroughContent } from '@/components/ProductWalk/WalkThroughContent';
-import { primaryColor } from '@/config/theme';
 import { ProductWalk } from '@/components/ProductWalk/ProductWalk';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -35,6 +33,7 @@ function TabPanel(props: TabPanelProps) {
 export default function Ingest() {
   const [value, setValue] = React.useState(0);
   const [runWalkThrough, setRunWalkThrough] = React.useState(false);
+  const globalContext = useContext(GlobalContext);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -84,23 +83,25 @@ export default function Ingest() {
         <TabPanel value={value} index={2}>
           <Destinations />
         </TabPanel>
-        <ProductWalk
-          run={runWalkThrough}
-          steps={[
-            {
-              target: '.warehouse_walkthrough',
-              body: 'Your Postgres Warehouse is already set up here',
-            },
-            {
-              target: '.sources_walkthrough',
-              body: 'You will not be able to add new sources here. You will be able to choose from the available sources only',
-            },
-            {
-              target: '.connections_walkthrough',
-              body: 'Click the add button to create a new Connection',
-            },
-          ]}
-        />
+        {globalContext?.CurrentOrg.state.is_demo && (
+          <ProductWalk
+            run={runWalkThrough}
+            steps={[
+              {
+                target: '.warehouse_walkthrough',
+                body: 'Your Postgres Warehouse is already set up here',
+              },
+              {
+                target: '.sources_walkthrough',
+                body: 'You will not be able to add new sources here. You will be able to choose from the available sources only',
+              },
+              {
+                target: '.connections_walkthrough',
+                body: 'Click the add button to create a new Connection',
+              },
+            ]}
+          />
+        )}
       </main>
     </>
   );
