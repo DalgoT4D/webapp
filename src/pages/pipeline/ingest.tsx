@@ -1,11 +1,14 @@
 import styles from '@/styles/Home.module.css';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Connections } from '@/components/Connections/Connections';
 import { Sources } from '@/components/Sources/Sources';
 import { Destinations } from '@/components/Destinations/Destinations';
 import { PageHead } from '@/components/PageHead';
 import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
+import { WalkThroughContent } from '@/components/ProductWalk/WalkThroughContent';
+import { primaryColor } from '@/config/theme';
+import { ProductWalk } from '@/components/ProductWalk/ProductWalk';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -31,10 +34,15 @@ function TabPanel(props: TabPanelProps) {
 
 export default function Ingest() {
   const [value, setValue] = React.useState(0);
+  const [runWalkThrough, setRunWalkThrough] = React.useState(false);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
+
+  useEffect(() => {
+    setRunWalkThrough(true);
+  }, []);
 
   return (
     <>
@@ -53,11 +61,18 @@ export default function Ingest() {
             value={value}
             onChange={handleChange}
             aria-label="ingestion tabs"
-            className="product_tabs"
           >
-            <Tab label="Connections" sx={{ mr: 4 }} />
-            <Tab label="Sources" sx={{ mr: 4 }} />
-            <Tab label="Your Warehouse" />
+            <Tab
+              label="Connections"
+              sx={{ mr: 4 }}
+              className="connections_walkthrough"
+            />
+            <Tab
+              label="Sources"
+              sx={{ mr: 4 }}
+              className="sources_walkthrough"
+            />
+            <Tab label="Your Warehouse" className="warehouse_walkthrough" />
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
@@ -69,25 +84,23 @@ export default function Ingest() {
         <TabPanel value={value} index={2}>
           <Destinations />
         </TabPanel>
-        {typeof window !== 'undefined' && (
-          <Joyride
-            callback={() => {}}
-            continuous
-            hideCloseButton
-            run={true}
-            scrollToFirstStep
-            showProgress
-            showSkipButton
-            steps={[]}
-            styles={{
-              options: {
-                zIndex: 10000,
-              },
-            }}
-            ref={null}
-            floaterProps={{ disableAnimation: true }}
-          />
-        )}
+        <ProductWalk
+          run={runWalkThrough}
+          steps={[
+            {
+              target: '.warehouse_walkthrough',
+              body: 'Your Postgres Warehouse is already set up here',
+            },
+            {
+              target: '.sources_walkthrough',
+              body: 'You will not be able to add new sources here. You will be able to choose from the available sources only',
+            },
+            {
+              target: '.connections_walkthrough',
+              body: 'Click the add button to create a new Connection',
+            },
+          ]}
+        />
       </main>
     </>
   );
