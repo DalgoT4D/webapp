@@ -1,6 +1,6 @@
 import { Box, Button, Divider, Typography } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import { useCallback, useState } from 'react';
 import ReactFlow, {
   applyEdgeChanges,
@@ -71,7 +71,12 @@ const defaultViewport = { x: 0, y: 0, zoom: 0.8 };
 const Canvas = ({}: CanvasProps) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const previewNodeRef = useRef<DbtSourceModel | null>();
   const flowEditorContext = useContext(FlowEditorContext);
+
+  useEffect(() => {
+    previewNodeRef.current = flowEditorContext?.previewNode.state.node;
+  }, [flowEditorContext?.previewNode.state]);
 
   const handleNodesChange = (changes: NodeChange[]) => {
     console.log(
@@ -99,8 +104,8 @@ const Canvas = ({}: CanvasProps) => {
   const handleDeleteNode = (nodeId: string) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
-    console.log('compare with', flowEditorContext?.previewNode.state.node?.id);
-    if (nodeId === flowEditorContext?.previewNode.state.node?.id) {
+    console.log('compare with', previewNodeRef.current?.id);
+    if (nodeId === previewNodeRef.current?.id) {
       flowEditorContext?.previewNode.dispatch({
         type: 'clear-preview',
         state: {
@@ -108,7 +113,8 @@ const Canvas = ({}: CanvasProps) => {
         },
       });
     }
-    setNodes((nds) => applyNodeChanges([{ type: 'remove', id: nodeId }], nds));
+    // setNodes((nds) => applyNodeChanges([{ type: 'remove', id: nodeId }], nds));
+    handleNodesChange([{ type: 'remove', id: nodeId }]);
   };
 
   const handlePreviewDataForNode = (sourceModel: DbtSourceModel | null) => {
