@@ -83,25 +83,6 @@ export default function Ingest() {
         <TabPanel value={value} index={2}>
           <Destinations />
         </TabPanel>
-        {globalContext?.CurrentOrg.state.is_demo && (
-          <ProductWalk
-            run={runWalkThrough}
-            steps={[
-              {
-                target: '.warehouse_walkthrough',
-                body: 'Your Postgres Warehouse is already set up here',
-              },
-              {
-                target: '.sources_walkthrough',
-                body: 'You will not be able to add new sources here. You will be able to choose from the available sources only',
-              },
-              {
-                target: '.connections_walkthrough',
-                body: 'Click the add button to create a new Connection',
-              },
-            ]}
-          />
-        )}
       </main>
     </>
   );

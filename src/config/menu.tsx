@@ -17,6 +17,7 @@ export interface MenuOption {
   path: string;
   icon: (selected: boolean) => JSX.Element;
   parent?: number;
+  className?: string;
 }
 
 export const sideMenu: MenuOption[] = [
@@ -26,6 +27,7 @@ export const sideMenu: MenuOption[] = [
     title: 'Analysis',
     path: '/analysis',
     icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
+    className: 'analysis_walkthrough',
   },
   {
     index: 1.1,
@@ -33,12 +35,14 @@ export const sideMenu: MenuOption[] = [
     path: '/analysis/usage',
     icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
     parent: 1,
+    className: 'usage_walkthrough',
   },
   {
     index: 2,
     title: 'Pipeline overview',
     path: '/pipeline',
     icon: (selected: boolean) => <PipelineIcon fill={getColor(selected)} />,
+    className: 'pipeline_walkthrough',
   },
 
   {
@@ -47,6 +51,7 @@ export const sideMenu: MenuOption[] = [
     icon: (selected: boolean) => <IngestIcon fill={getColor(selected)} />,
     path: '/pipeline/ingest',
     parent: 2,
+    className: 'ingest_walkthrough',
   },
   {
     index: 2.2,
@@ -54,6 +59,7 @@ export const sideMenu: MenuOption[] = [
     icon: (selected: boolean) => <TransformIcon fill={getColor(selected)} />,
     parent: 2,
     path: '/pipeline/transform',
+    className: 'transform_walkthrough',
   },
   {
     index: 2.3,
@@ -61,6 +67,7 @@ export const sideMenu: MenuOption[] = [
     icon: (selected: boolean) => <OrchestrateIcon fill={getColor(selected)} />,
     path: '/pipeline/orchestrate',
     parent: 2,
+    className: 'orchestrate_walkthrough',
   },
 
   {
@@ -68,5 +75,6 @@ export const sideMenu: MenuOption[] = [
     title: 'User management',
     path: '/user-management',
     icon: () => <SupervisorAccountIcon />,
+    className: 'usermanagement_walkthrough',
   },
 ];
