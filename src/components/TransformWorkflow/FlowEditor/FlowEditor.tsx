@@ -17,10 +17,7 @@ export type DbtSourceModel = {
 
 const FlowEditor = ({}) => {
   const { data: session } = useSession();
-  const flowEditorContext = useContext(FlowEditorContext);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
-  const [sourceModelToPreview, setSourceModelToPreview] =
-    useState<DbtSourceModel | null>();
 
   const fetchSourcesModels = async () => {
     try {
