@@ -17,7 +17,6 @@ export const ProductWalk = ({ run, steps }: ProductWalkProps) => {
   return (
     <Joyride
       callback={() => {}}
-      continuous
       hideCloseButton
       run={run}
       showProgress
