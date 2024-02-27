@@ -319,6 +319,10 @@ export const SideDrawer = ({ openMenu }: any) => {
               target: '.pipelineadd_walkthrough',
               body: 'Click here to add a new pipeline',
             },
+            {
+              target: '.analysis_walkthrough',
+              body: 'Click here to view your dashboard(s) and create new ones',
+            },
           ]}
         />
       )}
