@@ -113,17 +113,6 @@ export default function Orchestrate() {
             ]}
           />
         )}
-        {globalContext?.CurrentOrg.state.is_demo && (
-          <ProductWalk
-            run={runWalkThrough}
-            steps={[
-              {
-                target: '.warehouse_walkthrough',
-                body: 'Your Postgres Warehouse is already set up here',
-              },
-            ]}
-          />
-        )}
       </main>
     </>
   );
