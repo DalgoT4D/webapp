@@ -1,3 +1,4 @@
+import { Box } from '@mui/material';
 import React from 'react';
 
 interface WalkThroughContentProps {
@@ -7,5 +8,5 @@ interface WalkThroughContentProps {
 export const WalkThroughContent = ({ body }: WalkThroughContentProps) => {
   // Your component logic here
 
-  return <>{body}</>;
+  return <Box sx={{ fontSize: '20px' }}>{body}</Box>;
 };

@@ -21,6 +21,7 @@ import { MenuOption, drawerWidth, sideMenu } from '@/config/menu';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { ProductWalk } from '../ProductWalk/ProductWalk';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { demoProductWalkthrough } from '@/config/constant';
 
 export interface ItemButtonProps {
   openMenu: boolean;
@@ -287,9 +288,10 @@ export const SideDrawer = ({ openMenu }: any) => {
           </Box>
         </Link>
       </Box>
-      {globalContext?.CurrentOrg.state.is_demo && (
+      {globalContext?.CurrentOrg.state.is_demo && demoProductWalkthrough && (
         <ProductWalk
           run={runWalkThrough}
+          setRun={setRunWalkThrough}
           steps={[
             {
               target: '.ingest_walkthrough',
