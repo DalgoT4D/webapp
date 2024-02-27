@@ -8,6 +8,7 @@ import { CircularProgress } from '@mui/material';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
+import { TransformTask } from '@/components/DBT/DBTTarget';
 import { ProductWalk } from '@/components/ProductWalk/ProductWalk';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
@@ -16,6 +17,7 @@ export default function Orchestrate() {
   const [flows, setFlows] = useState<Array<any>>([]);
   const [selectedFlowId, setSelectedFlowId] = useState('');
   const { data: session }: any = useSession();
+  const [tasks, setTasks] = useState<Array<TransformTask>>([]);
   const [runWalkThrough, setRunWalkThrough] = useState(false);
   const globalContext = useContext(GlobalContext);
 
@@ -53,8 +55,7 @@ export default function Orchestrate() {
   }, [data]);
 
   useEffect(() => {
-    setRunWalkThrough(true);
-  }, []);
+
 
   return (
     <>
@@ -72,7 +73,11 @@ export default function Orchestrate() {
             />
           ))}
         {crudVal === 'create' && (
-          <FlowCreate updateCrudVal={updateCrudVal} mutate={mutate} />
+          <FlowCreate
+            updateCrudVal={updateCrudVal}
+            mutate={mutate}
+            tasks={tasks}
+          />
         )}
         {crudVal === 'update' && (
           <FlowCreate
@@ -80,6 +85,7 @@ export default function Orchestrate() {
             flowId={selectedFlowId}
             updateCrudVal={updateCrudVal}
             mutate={mutate}
+            tasks={tasks}
           />
         )}
       </main>
