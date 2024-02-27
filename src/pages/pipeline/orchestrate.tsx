@@ -55,7 +55,17 @@ export default function Orchestrate() {
   }, [data]);
 
   useEffect(() => {
-
+    if (session) {
+      (async () => {
+        try {
+          const response = await httpGet(session, 'prefect/tasks/transform/');
+          setTasks(response);
+        } catch (error) {
+          console.error(error);
+        }
+      })();
+    }
+  }, [session]);
 
   return (
     <>
