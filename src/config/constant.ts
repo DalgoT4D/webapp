@@ -21,7 +21,7 @@ export const demoAccDestSchema =
 
 // Product walkthrough for demo account
 export const demoProductWalkthrough =
-  process.env.NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED;
+  process.env.NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED || false;
 
 // alpha features
 export const enableLogSummaries = process.env.NEXT_PUBLIC_ENABLE_LOG_SUMMARIES;
