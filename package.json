@@ -31,7 +31,7 @@
     "react": "18.2.0",
     "react-arborist": "^3.4.0",
     "react-dom": "18.2.0",
-    "react-hook-form": "^7.49.3",
+    "react-hook-form": "^7.50.1",
     "reactflow": "^11.10.4",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.2.4",
