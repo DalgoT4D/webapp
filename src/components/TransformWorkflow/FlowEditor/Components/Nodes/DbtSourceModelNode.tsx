@@ -72,7 +72,7 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
           }}
         >
           <Typography variant="subtitle2" fontWeight={700}>
-            {`${data.dbtSourceModel.input_type} | ${data.dbtSourceModel.schema}.${data.dbtSourceModel.input_name}`}
+            {`${data.dbtSourceModel.schema}.${data.dbtSourceModel.input_name}`}
           </Typography>
           <Box>
             <IconButton
@@ -131,6 +131,8 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
                   sx={{
                     boxShadow: 'none',
                     background: idx % 2 === 0 ? '#E1E1E1' : '#F5F5F5',
+                    fontSize: '11px',
+                    fontWeight: 500,
                   }}
                   key={row.name}
                 >
