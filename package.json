@@ -20,7 +20,7 @@
     "@mui/x-date-pickers": "^6.19.2",
     "@superset-ui/embedded-sdk": "^0.1.0-alpha.10",
     "@types/d3": "^7.4.2",
-    "cronstrue": "^2.44.0",
+    "cronstrue": "^2.48.0",
     "d3": "^7.8.5",
     "eslint": "8.56.0",
     "eslint-config-next": "13.5.6",
@@ -30,6 +30,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.49.3",
+    "react-joyride": "^2.7.3",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.2.4",
     "typescript": "5.3.3"
