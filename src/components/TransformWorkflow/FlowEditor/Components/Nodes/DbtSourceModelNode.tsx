@@ -13,6 +13,7 @@ import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
 import { Close } from '@mui/icons-material';
 import PreviewIcon from '@mui/icons-material/Preview';
 import { DbtSourceModel } from '../../FlowEditor';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 interface DbtSourceModelNodeData {
   label: string;
@@ -38,6 +39,10 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
     data.triggerPreview(data.dbtSourceModel);
   };
 
+  const handleOpenOperationList = () => {
+    console.log('open operation list');
+  };
+
   const rows = [
     { name: 'Month', dataType: 'string' },
     { name: 'ngo', dataType: 'string' },
@@ -51,14 +56,25 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
     { name: 'Indicator', dataType: 'string' },
   ];
 
+  const operations = [
+    { label: 'Flatten', slug: 'flatte' },
+    { label: 'Flatten json', slug: 'flattenjson' },
+    { label: 'Cast data type', slug: 'castdatatypes' },
+    { label: 'Coalesce columns', slug: 'coalescecolumns' },
+    { label: 'Arithmetic', slug: 'arithmetic' },
+    { label: 'Concat', slug: 'concat' },
+    { label: 'Drop columns', slug: 'dropcolumns' },
+    { label: 'Rename columns', slug: 'renamecolumns' },
+    { label: 'Regex extraction', slug: 'regexextraction' },
+  ];
+
   return (
-    <>
+    <Box sx={{ display: 'flex' }}>
       <Box
         sx={{
           borderRadius: '5px',
           display: 'flex',
           flexDirection: 'column',
-          width: '200px',
         }}
       >
         <Handle type="target" position={Position.Left} />
@@ -85,6 +101,12 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
             <IconButton onClick={handleDeleteAction} data-testid="closebutton">
               <Close />
             </IconButton>
+            <IconButton
+              onClick={handleOpenOperationList}
+              data-testid="closebutton"
+            >
+              <ChevronRightIcon />
+            </IconButton>
           </Box>
         </Box>
         <Box
@@ -106,7 +128,14 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
                 }}
                 key={'NAME'}
               >
-                <TableCell sx={{ padding: '4px 0px 4px 10px' }} align="left">
+                <TableCell
+                  sx={{
+                    padding: '4px 0px 4px 10px',
+                    fontWeight: 600,
+                    color: '#212121',
+                  }}
+                  align="left"
+                >
                   NAME
                 </TableCell>
                 <TableCell
@@ -114,10 +143,12 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
                     padding: '4px 0px 4px 10px',
                     width: '40%',
                     borderLeft: '1px solid #F8F8F8',
+                    fontWeight: 600,
+                    color: '#212121',
                   }}
                   align="left"
                 >
-                  DATA TYPE
+                  DATA
                 </TableCell>
               </TableRow>
               {rows.map((row, idx: number) => (
@@ -126,11 +157,17 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
                     boxShadow: 'none',
                     background: idx % 2 === 0 ? '#E1E1E1' : '#F5F5F5',
                     fontSize: '11px',
-                    fontWeight: 500,
                   }}
                   key={row.name}
                 >
-                  <TableCell sx={{ padding: '4px 0px 4px 10px' }} align="left">
+                  <TableCell
+                    sx={{
+                      padding: '4px 0px 4px 10px',
+                      color: '#212121',
+                      fontWeight: 500,
+                    }}
+                    align="left"
+                  >
                     {row.name}
                   </TableCell>
                   <TableCell
@@ -138,6 +175,8 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
                       padding: '4px 0px 4px 10px',
                       width: '40%',
                       borderLeft: '1px solid #F8F8F8',
+                      color: '#212121',
+                      fontWeight: 500,
                     }}
                     align="left"
                   >
@@ -149,6 +188,41 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
           </Table>
         </Box>
       </Box>
-    </>
+      <Box
+        sx={{
+          position: 'sticky',
+          zIndex: '1000',
+          marginLeft: '10px',
+          width: '150px',
+          borderRadius: '100px',
+          height: '300px',
+        }}
+      >
+        <Table sx={{ borderSpacing: '0px' }}>
+          <TableBody>
+            {operations.map((op, idx: number) => (
+              <TableRow
+                sx={{
+                  boxShadow: 'none',
+                  fontSize: '13px',
+                }}
+                key={op.slug}
+              >
+                <TableCell
+                  sx={{
+                    padding: '10px 4px 10px 10px',
+                    color: '#7D8998',
+                    fontWeight: 600,
+                  }}
+                  align="left"
+                >
+                  {op.label}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Box>
+    </Box>
   );
 }
