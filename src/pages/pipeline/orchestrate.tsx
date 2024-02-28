@@ -2,15 +2,13 @@ import styles from '@/styles/Home.module.css';
 import useSWR from 'swr';
 import { PageHead } from '@/components/PageHead';
 import { Flows } from '@/components/Flows/Flows';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import FlowCreate from '@/components/Flows/FlowCreate';
 import { CircularProgress } from '@mui/material';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
 import { TransformTask } from '@/components/DBT/DBTTarget';
-import { ProductWalk } from '@/components/ProductWalk/ProductWalk';
-import { GlobalContext } from '@/contexts/ContextProvider';
 
 export default function Orchestrate() {
   const [crudVal, setCrudVal] = useState<string>('index'); // can be index or create
@@ -18,8 +16,6 @@ export default function Orchestrate() {
   const [selectedFlowId, setSelectedFlowId] = useState('');
   const { data: session }: any = useSession();
   const [tasks, setTasks] = useState<Array<TransformTask>>([]);
-  const [runWalkThrough, setRunWalkThrough] = useState(false);
-  const globalContext = useContext(GlobalContext);
 
   const updateCrudVal = (crudState: string) => {
     setCrudVal(crudState);
