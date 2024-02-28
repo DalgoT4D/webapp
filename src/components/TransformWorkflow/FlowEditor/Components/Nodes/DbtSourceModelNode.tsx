@@ -8,7 +8,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
 import { Close } from '@mui/icons-material';
 import PreviewIcon from '@mui/icons-material/Preview';
@@ -27,7 +27,7 @@ interface DbtSourceModelNodeProps {
 }
 
 export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
-  console.log('inside custom node', data);
+  const [openOperationList, setOpenOperationList] = useState(false);
 
   const nodeId: string | null = useNodeId();
 
@@ -41,6 +41,7 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
 
   const handleOpenOperationList = () => {
     console.log('open operation list');
+    setOpenOperationList(!openOperationList);
   };
 
   const rows = [
@@ -188,41 +189,43 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
           </Table>
         </Box>
       </Box>
-      <Box
-        sx={{
-          position: 'sticky',
-          zIndex: '1000',
-          marginLeft: '10px',
-          width: '150px',
-          borderRadius: '100px',
-          height: '300px',
-        }}
-      >
-        <Table sx={{ borderSpacing: '0px' }}>
-          <TableBody>
-            {operations.map((op, idx: number) => (
-              <TableRow
-                sx={{
-                  boxShadow: 'none',
-                  fontSize: '13px',
-                }}
-                key={op.slug}
-              >
-                <TableCell
+      {openOperationList && (
+        <Box
+          sx={{
+            position: 'sticky',
+            zIndex: '1000',
+            marginLeft: '10px',
+            width: '150px',
+            borderRadius: '100px',
+            height: '300px',
+          }}
+        >
+          <Table sx={{ borderSpacing: '0px' }}>
+            <TableBody>
+              {operations.map((op, idx: number) => (
+                <TableRow
                   sx={{
-                    padding: '10px 4px 10px 10px',
-                    color: '#7D8998',
-                    fontWeight: 600,
+                    boxShadow: 'none',
+                    fontSize: '13px',
                   }}
-                  align="left"
+                  key={op.slug}
                 >
-                  {op.label}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
+                  <TableCell
+                    sx={{
+                      padding: '10px 4px 10px 10px',
+                      color: '#7D8998',
+                      fontWeight: 600,
+                    }}
+                    align="left"
+                  >
+                    {op.label}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Box>
+      )}
     </Box>
   );
 }

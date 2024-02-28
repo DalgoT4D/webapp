@@ -5,7 +5,6 @@ import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/PreviewPane';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 
 export type DbtSourceModel = {
   source_name: string;
