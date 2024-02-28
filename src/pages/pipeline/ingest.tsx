@@ -1,12 +1,10 @@
 import styles from '@/styles/Home.module.css';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import React, { useContext, useEffect } from 'react';
+import React from 'react';
 import { Connections } from '@/components/Connections/Connections';
 import { Sources } from '@/components/Sources/Sources';
 import { Destinations } from '@/components/Destinations/Destinations';
 import { PageHead } from '@/components/PageHead';
-import { ProductWalk } from '@/components/ProductWalk/ProductWalk';
-import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -32,16 +30,10 @@ function TabPanel(props: TabPanelProps) {
 
 export default function Ingest() {
   const [value, setValue] = React.useState(0);
-  const [runWalkThrough, setRunWalkThrough] = React.useState(false);
-  const globalContext = useContext(GlobalContext);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
-
-  useEffect(() => {
-    setRunWalkThrough(true);
-  }, []);
 
   return (
     <>
