@@ -58,6 +58,7 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
           borderRadius: '5px',
           display: 'flex',
           flexDirection: 'column',
+          width: '200px',
         }}
       >
         <Handle type="target" position={Position.Left} />
@@ -71,25 +72,18 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
             padding: '0px 10px',
           }}
         >
-          <Typography variant="subtitle2" fontWeight={700}>
-            {`${data.dbtSourceModel.schema}.${data.dbtSourceModel.input_name}`}
-          </Typography>
           <Box>
-            <IconButton
-              onClick={handleDeleteAction}
-              data-testid="closebutton"
-              sx={{}}
-            >
-              <Close />
-            </IconButton>
-          </Box>
-          <Box>
-            <IconButton
+            <Typography
+              variant="subtitle2"
+              fontWeight={700}
               onClick={handlePreviewAction}
-              data-testid="closebutton"
-              sx={{}}
             >
-              <PreviewIcon />
+              {`${data.dbtSourceModel.schema}.${data.dbtSourceModel.input_name}`}
+            </Typography>
+          </Box>
+          <Box sx={{ marginLeft: 'auto' }}>
+            <IconButton onClick={handleDeleteAction} data-testid="closebutton">
+              <Close />
             </IconButton>
           </Box>
         </Box>
