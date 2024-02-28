@@ -1,4 +1,13 @@
-import { Box, IconButton } from '@mui/material';
+import {
+  Box,
+  Divider,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import { useCallback } from 'react';
 import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
 import { Close } from '@mui/icons-material';
@@ -29,38 +38,119 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
     data.triggerPreview(data.dbtSourceModel);
   };
 
+  const rows = [
+    { name: 'Month', dataType: 'string' },
+    { name: 'ngo', dataType: 'string' },
+    { name: 'spoc', dataType: 'string' },
+    { name: 'measure', dataType: 'string' },
+    { name: 'Indicator', dataType: 'string' },
+    { name: 'Month', dataType: 'string' },
+    { name: 'ngo', dataType: 'string' },
+    { name: 'spoc', dataType: 'string' },
+    { name: 'measure', dataType: 'string' },
+    { name: 'Indicator', dataType: 'string' },
+  ];
+
   return (
     <>
       <Box
         sx={{
-          background: 'white',
-          padding: '10px',
-          borderRadius: '10px',
-          border: '1px solid black',
+          borderRadius: '5px',
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
         }}
       >
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />
-        {`${data.dbtSourceModel.input_type} | ${data.dbtSourceModel.schema}.${data.dbtSourceModel.input_name}`}
-        <Box>
-          <IconButton
-            onClick={handleDeleteAction}
-            data-testid="closebutton"
-            sx={{}}
-          >
-            <Close />
-          </IconButton>
+        <Box
+          sx={{
+            background: '#C3C3C3',
+            display: 'flex',
+            borderRadius: '4px 4px 0px 0px',
+            alignItems: 'center',
+            padding: '0px 10px',
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight={700}>
+            {`${data.dbtSourceModel.input_type} | ${data.dbtSourceModel.schema}.${data.dbtSourceModel.input_name}`}
+          </Typography>
+          <Box>
+            <IconButton
+              onClick={handleDeleteAction}
+              data-testid="closebutton"
+              sx={{}}
+            >
+              <Close />
+            </IconButton>
+          </Box>
+          <Box>
+            <IconButton
+              onClick={handlePreviewAction}
+              data-testid="closebutton"
+              sx={{}}
+            >
+              <PreviewIcon />
+            </IconButton>
+          </Box>
         </Box>
-        <Box>
-          <IconButton
-            onClick={handlePreviewAction}
-            data-testid="closebutton"
-            sx={{}}
-          >
-            <PreviewIcon />
-          </IconButton>
+        <Box
+          sx={{
+            background: '#F8F8F8',
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: '0px 0px 4px 4px',
+            height: '120px',
+            overflow: 'auto',
+          }}
+        >
+          <Table sx={{ borderSpacing: '0px' }}>
+            <TableBody>
+              <TableRow
+                sx={{
+                  boxShadow: 'none',
+                  background: '#F5F5F5',
+                }}
+                key={'NAME'}
+              >
+                <TableCell sx={{ padding: '4px 0px 4px 10px' }} align="left">
+                  NAME
+                </TableCell>
+                <TableCell
+                  sx={{
+                    padding: '4px 0px 4px 10px',
+                    width: '40%',
+                    borderLeft: '1px solid #F8F8F8',
+                  }}
+                  align="left"
+                >
+                  DATA TYPE
+                </TableCell>
+              </TableRow>
+              {rows.map((row, idx: number) => (
+                <TableRow
+                  sx={{
+                    boxShadow: 'none',
+                    background: idx % 2 === 0 ? '#E1E1E1' : '#F5F5F5',
+                  }}
+                  key={row.name}
+                >
+                  <TableCell sx={{ padding: '4px 0px 4px 10px' }} align="left">
+                    {row.name}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      padding: '4px 0px 4px 10px',
+                      width: '40%',
+                      borderLeft: '1px solid #F8F8F8',
+                    }}
+                    align="left"
+                  >
+                    {row.dataType}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </Box>
       </Box>
     </>
