@@ -358,7 +358,10 @@ export const Flows = ({
         handleClose={handleClose}
         handleDelete={handleDeleteConnection}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'space-between' }}
+        className="pipelinelist_walkthrough"
+      >
         <Typography
           sx={{ fontWeight: 700 }}
           variant="h4"
