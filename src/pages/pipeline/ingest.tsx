@@ -53,9 +53,17 @@ export default function Ingest() {
             onChange={handleChange}
             aria-label="ingestion tabs"
           >
-            <Tab label="Connections" sx={{ mr: 4 }} />
-            <Tab label="Sources" sx={{ mr: 4 }} />
-            <Tab label="Your Warehouse" />
+            <Tab
+              label="Connections"
+              sx={{ mr: 4 }}
+              className="connections_walkthrough"
+            />
+            <Tab
+              label="Sources"
+              sx={{ mr: 4 }}
+              className="sources_walkthrough"
+            />
+            <Tab label="Your Warehouse" className="warehouse_walkthrough" />
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
