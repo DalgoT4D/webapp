@@ -1,4 +1,4 @@
-import React from 'react';
+import 'react';
 import { PageHead } from '@/components/PageHead';
 import styles from '@/styles/Home.module.css';
 import FlowEditor from '@/components/TransformWorkflow/FlowEditor/FlowEditor';
