@@ -1,16 +1,7 @@
 import { primaryColor } from '@/config/theme';
 import React from 'react';
-import Joyride, {
-  ACTIONS,
-  EVENTS,
-  ORIGIN,
-  STATUS,
-  CallBackProps,
-  TooltipProps,
-  TooltipRenderProps,
-} from 'react-joyride';
+import Joyride from 'react-joyride';
 import { WalkThroughContent } from './WalkThroughContent';
-import { Box, Button, Tooltip } from '@mui/material';
 
 interface StepContent {
   target: string;
@@ -23,10 +14,8 @@ interface ProductWalkProps {
   steps: StepContent[];
 }
 
-export const ProductWalk = ({ run, steps, setRun }: ProductWalkProps) => {
-  const handleJoyrideCallback = (data: CallBackProps) => {
-    const { action, index, origin, status, type } = data;
-  };
+export const ProductWalk = ({ run, steps }: ProductWalkProps) => {
+  const handleJoyrideCallback = () => {};
 
   return (
     <Joyride
@@ -35,7 +24,7 @@ export const ProductWalk = ({ run, steps, setRun }: ProductWalkProps) => {
       continuous
       showProgress
       showSkipButton
-      steps={steps.map((step: StepContent, idx: number) => ({
+      steps={steps.map((step: StepContent) => ({
         target: step.target,
         content: <WalkThroughContent body={step.body} />,
         placementBeacon: 'right',
