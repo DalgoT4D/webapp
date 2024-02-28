@@ -1,4 +1,4 @@
-import { Fragment, ReactNode, useEffect, useState } from 'react';
+import { Fragment, ReactNode, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import {
   Collapse,
@@ -19,7 +19,9 @@ import { MenuOption, drawerWidth, sideMenu } from '@/config/menu';
 
 // assets
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
-
+import { ProductWalk } from '../ProductWalk/ProductWalk';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { demoProductWalkthrough } from '@/config/constant';
 
 export interface ItemButtonProps {
   openMenu: boolean;
@@ -37,21 +39,23 @@ const ItemButton: React.FC<ItemButtonProps> = ({
   children,
 }: ItemButtonProps) => (
   <ListItemButton
-    sx={openMenu ? {} : { pl: "8px" }}
+    sx={openMenu ? {} : { pl: '8px' }}
     disableRipple
     data-testid="listButton"
     onClick={() => onClick(item)}
     selected={isSelected}
   >
-    <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>{item.icon(isSelected)}</ListItemIcon>
-    {openMenu &&
+    <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>
+      {item.icon(isSelected)}
+    </ListItemIcon>
+    {openMenu && (
       <ListItemText
         primaryTypographyProps={{
           color: isSelected ? 'primary' : 'inherit',
         }}
         primary={item.title}
       />
-    }
+    )}
     {children}
   </ListItemButton>
 );
@@ -87,23 +91,22 @@ const closedMixin = (theme: Theme): CSSObject => ({
   },
 });
 
-const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
-  ({ theme, open }) => ({
-    width: drawerWidth,
-    flexShrink: 0,
-    whiteSpace: 'nowrap',
-    boxSizing: 'border-box',
-    ...(open && {
-      ...openedMixin(theme),
-      '& .MuiDrawer-paper': openedMixin(theme),
-    }),
-    ...(!open && {
-      ...closedMixin(theme),
-      '& .MuiDrawer-paper': closedMixin(theme),
-    }),
+const Drawer = styled(MuiDrawer, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
+  width: drawerWidth,
+  flexShrink: 0,
+  whiteSpace: 'nowrap',
+  boxSizing: 'border-box',
+  ...(open && {
+    ...openedMixin(theme),
+    '& .MuiDrawer-paper': openedMixin(theme),
   }),
-);
-
+  ...(!open && {
+    ...closedMixin(theme),
+    '& .MuiDrawer-paper': closedMixin(theme),
+  }),
+}));
 
 export const SideDrawer = ({ openMenu }: any) => {
   const router = useRouter();
@@ -113,6 +116,8 @@ export const SideDrawer = ({ openMenu }: any) => {
   const [selectedIndex, setSelectedIndex] = useState(
     sideMenu.find((item) => item.path === router.pathname)?.index
   );
+  const [runWalkThrough, setRunWalkThrough] = useState(false);
+  const globalContext = useContext(GlobalContext);
 
   // handle drawer expand and collapse
 
@@ -134,8 +139,14 @@ export const SideDrawer = ({ openMenu }: any) => {
   };
 
   useEffect(() => {
-    setOpen(new Array(sideMenu.filter((item) => !item.parent).length).fill(true));
-  }, [openMenu])
+    setOpen(
+      new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
+    );
+  }, [openMenu]);
+
+  useEffect(() => {
+    setRunWalkThrough(true);
+  }, []);
 
   const getList = (
     <List component="div" data-testid="side-menu">
@@ -147,9 +158,7 @@ export const SideDrawer = ({ openMenu }: any) => {
         return (
           !item.parent && (
             <Fragment key={item.title}>
-              <ListItem
-                sx={{ px: 1.5 }}
-              >
+              <ListItem sx={{ px: 1.5 }} className={item.className}>
                 <ItemButton
                   openMenu={openMenu}
                   item={item}
@@ -184,7 +193,11 @@ export const SideDrawer = ({ openMenu }: any) => {
                     data-testid={`child-menu-${item.index}`}
                   >
                     {hasChildren.map((subitem) => (
-                      <ListItem key={subitem.title} sx={{ px: 1.5 }}>
+                      <ListItem
+                        key={subitem.title}
+                        sx={{ px: 1.5 }}
+                        className={subitem.className}
+                      >
                         <ItemButton
                           openMenu={openMenu}
                           item={subitem}
@@ -211,8 +224,8 @@ export const SideDrawer = ({ openMenu }: any) => {
         // width: drawerWidth,
         // flexShrink: 0,
         '& .MuiDrawer-paper': {
-          display: "flex",
-          justifyContent: "space-between",
+          display: 'flex',
+          justifyContent: 'space-between',
           // width: drawerWidth,
           // boxSizing: 'border-box',
           paddingTop: 7,
@@ -275,6 +288,46 @@ export const SideDrawer = ({ openMenu }: any) => {
           </Box>
         </Link>
       </Box>
+      {globalContext?.CurrentOrg.state.is_demo && demoProductWalkthrough && (
+        <ProductWalk
+          run={runWalkThrough}
+          setRun={setRunWalkThrough}
+          steps={[
+            {
+              target: '.ingest_walkthrough',
+              body: 'Start by clicking here',
+            },
+            {
+              target: '.warehouse_walkthrough',
+              body: 'Your Postgres Warehouse is already set up here',
+            },
+            {
+              target: '.sources_walkthrough',
+              body: 'You will not be able to add new sources here. You will be able to choose from the available sources only',
+            },
+            {
+              target: '.connections_walkthrough',
+              body: 'Click the add button to create a new Connection',
+            },
+            {
+              target: '.transform_walkthrough',
+              body: 'Proceed to the transform page where we have set up your transformations that will help you build your dashboards',
+            },
+            {
+              target: '.orchestrate_walkthrough',
+              body: 'Proceed to the orchestrate page to setup your pipelines',
+            },
+            {
+              target: '.pipelineadd_walkthrough',
+              body: 'Click here to add a new pipeline',
+            },
+            {
+              target: '.analysis_walkthrough',
+              body: 'Click here to view your dashboard(s) and create new ones',
+            },
+          ]}
+        />
+      )}
     </Drawer>
   );
 };
