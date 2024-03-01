@@ -12,6 +12,7 @@ export type DbtSourceModel = {
   input_type: 'model' | 'source';
   schema: string;
   id: string;
+  type: string;
 };
 
 const FlowEditor = ({}) => {
