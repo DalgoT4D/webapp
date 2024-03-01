@@ -72,7 +72,10 @@ const CanvasHeader = ({}) => {
   );
 };
 
-const nodeTypes = { custom: DbtSourceModelNode, operation: OperationNode };
+const nodeTypes = {
+  src_model_node: DbtSourceModelNode,
+  operation_node: OperationNode,
+};
 
 const defaultViewport = { x: 0, y: 0, zoom: 0.8 };
 
@@ -168,7 +171,7 @@ const Canvas = ({}: CanvasProps) => {
       console.log('adding a source or a model to canvas', dbtSourceModel);
       const newNode = {
         id: dbtSourceModel.id,
-        type: 'custom',
+        type: 'src_model_node',
         data: {
           label: `${dbtSourceModel.input_type} | ${dbtSourceModel.schema}.${dbtSourceModel.input_name}`,
           triggerDelete: handleDeleteNode,
