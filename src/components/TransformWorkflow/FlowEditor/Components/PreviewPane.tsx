@@ -41,9 +41,9 @@ const PreviewPane = ({}: PreviewPaneProps) => {
         `warehouse/table_columns/${schema}/${table}`
       );
       setColDefs(
-        columnSpec.map((col: string) => ({
-          field: col,
-          headerName: col,
+        columnSpec.map((col: { name: string; data_type: string }) => ({
+          field: col.name,
+          headerName: col.name,
           autoHeight: true,
         }))
       );
