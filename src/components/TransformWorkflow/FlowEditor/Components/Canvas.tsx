@@ -22,8 +22,16 @@ import 'reactflow/dist/style.css';
 import { DbtSourceModel } from '../FlowEditor';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { FlowEditorContext } from '@/contexts/FlowEditorContext';
+import { OperationNode } from './Nodes/OperationNode';
+import { useSession } from 'next-auth/react';
+import { httpGet } from '@/helpers/http';
 
 type CanvasProps = {};
+
+type DbtProjectGraph = {
+  nodes: DbtSourceModel[];
+  edges: { id: number; source: string; target: string }[];
+};
 
 const CanvasHeader = ({}) => {
   return (
@@ -64,15 +72,39 @@ const CanvasHeader = ({}) => {
   );
 };
 
-const nodeTypes = { custom: DbtSourceModelNode };
+const nodeTypes = { custom: DbtSourceModelNode, operation: OperationNode };
 
 const defaultViewport = { x: 0, y: 0, zoom: 0.8 };
 
 const Canvas = ({}: CanvasProps) => {
+  const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const previewNodeRef = useRef<DbtSourceModel | null>();
   const flowEditorContext = useContext(FlowEditorContext);
+
+  const fetchDbtProjectGraph = async () => {
+    try {
+      const response: DbtProjectGraph = await httpGet(
+        session,
+        'transform/dbt_project/graph/'
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // useEffect(async () => {
+  //   try {
+  //     const response: DbtSourceModel[] = await httpGet(
+  //       session,
+  //       'transform/dbt_project/sources_models/'
+  //     );
+  //     setSourcesModels(response);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // }, [session]);
 
   useEffect(() => {
     previewNodeRef.current = flowEditorContext?.previewNode.state.node;
