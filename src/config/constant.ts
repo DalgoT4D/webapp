@@ -25,3 +25,7 @@ export const demoProductWalkthrough =
 
 // alpha features
 export const enableLogSummaries = process.env.NEXT_PUBLIC_ENABLE_LOG_SUMMARIES;
+
+// Product walkthrough for demo account
+export const demoProductWalkthrough =
+  process.env.NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED || false;
