@@ -28,6 +28,7 @@ interface DbtSourceModelNodeProps {
 
 export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
   const [openOperationList, setOpenOperationList] = useState(false);
+  const [operationSlug, setOperationSlug] = useState<string | null>(null);
 
   const nodeId: string | null = useNodeId();
 
@@ -44,12 +45,13 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
     setOpenOperationList(!openOperationList);
   };
 
+  const handleSelectNewOperation = (event: any, opSlug: string) => {
+    console.log('selected operation', opSlug);
+    setOperationSlug(opSlug);
+    setOpenOperationList(false);
+  };
+
   const rows = [
-    { name: 'Month', dataType: 'string' },
-    { name: 'ngo', dataType: 'string' },
-    { name: 'spoc', dataType: 'string' },
-    { name: 'measure', dataType: 'string' },
-    { name: 'Indicator', dataType: 'string' },
     { name: 'Month', dataType: 'string' },
     { name: 'ngo', dataType: 'string' },
     { name: 'spoc', dataType: 'string' },
@@ -78,8 +80,12 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
           flexDirection: 'column',
         }}
       >
-        <Handle type="target" position={Position.Left} />
-        <Handle type="source" position={Position.Right} />
+        {!openOperationList && (
+          <>
+            <Handle type="target" position={Position.Left} />
+            <Handle type="source" position={Position.Right} />
+          </>
+        )}
         <Box
           sx={{
             background: '#C3C3C3',
@@ -196,8 +202,10 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
             zIndex: '1000',
             marginLeft: '10px',
             width: '150px',
-            borderRadius: '100px',
+            borderRadius: '6px',
             height: '300px',
+            overflow: 'auto',
+            ':hover': { cursor: 'pointer' },
           }}
         >
           <Table sx={{ borderSpacing: '0px' }}>
@@ -215,8 +223,12 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
                       padding: '10px 4px 10px 10px',
                       color: '#7D8998',
                       fontWeight: 600,
+                      ':hover': { background: '#F5F5F5' },
                     }}
                     align="left"
+                    onClick={(event) =>
+                      handleSelectNewOperation(event, op.slug)
+                    }
                   >
                     {op.label}
                   </TableCell>
