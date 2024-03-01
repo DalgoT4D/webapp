@@ -19,7 +19,7 @@ interface DbtSourceModelNodeData {
   label: string;
   triggerDelete: (nodeId: string | null) => void;
   triggerPreview: (sourceModel: DbtSourceModel | null) => void;
-  dbtSourceModel: DbtSourceModel;
+  node: DbtSourceModel;
 }
 
 interface DbtSourceModelNodeProps {
@@ -37,7 +37,7 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
   };
 
   const handlePreviewAction = () => {
-    data.triggerPreview(data.dbtSourceModel);
+    data.triggerPreview(data.node);
   };
 
   const handleOpenOperationList = () => {
@@ -101,7 +101,7 @@ export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
               fontWeight={700}
               onClick={handlePreviewAction}
             >
-              {`${data.dbtSourceModel.schema}.${data.dbtSourceModel.input_name}`}
+              {`${data.node.schema}.${data.node.input_name}`}
             </Typography>
           </Box>
           <Box sx={{ marginLeft: 'auto' }}>
