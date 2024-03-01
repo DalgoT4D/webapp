@@ -1,3 +1,4 @@
+import ELK from 'elkjs/lib/elk.bundled.js';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import React, { useContext, useEffect, useRef } from 'react';
@@ -17,6 +18,7 @@ import ReactFlow, {
   Node,
   Edge,
   useEdgesState,
+  useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { DbtSourceModel } from '../FlowEditor';
@@ -92,22 +94,29 @@ const Canvas = ({}: CanvasProps) => {
         session,
         'transform/dbt_project/graph/'
       );
+      const nodes: any[] = response.nodes.map((node) => ({
+        id: node.id,
+        type: node.type,
+        data: {
+          node: node,
+          triggerDelete: handleDeleteNode,
+          triggerPreview: handlePreviewDataForNode,
+        },
+        position: { x: 100, y: 125 },
+      }));
+      const edges: any[] = response.edges.map((edge) => ({
+        ...edge,
+      }));
+      setNodes(nodes);
+      setEdges(edges);
     } catch (error) {
       console.log(error);
     }
   };
 
-  // useEffect(async () => {
-  //   try {
-  //     const response: DbtSourceModel[] = await httpGet(
-  //       session,
-  //       'transform/dbt_project/sources_models/'
-  //     );
-  //     setSourcesModels(response);
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // }, [session]);
+  useEffect(() => {
+    if (session) fetchDbtProjectGraph();
+  }, [session]);
 
   useEffect(() => {
     previewNodeRef.current = flowEditorContext?.previewNode.state.node;
@@ -173,10 +182,9 @@ const Canvas = ({}: CanvasProps) => {
         id: dbtSourceModel.id,
         type: 'src_model_node',
         data: {
-          label: `${dbtSourceModel.input_type} | ${dbtSourceModel.schema}.${dbtSourceModel.input_name}`,
           triggerDelete: handleDeleteNode,
           triggerPreview: handlePreviewDataForNode,
-          dbtSourceModel: dbtSourceModel,
+          node: dbtSourceModel,
         },
         position: { x: 100, y: 125 },
       };
