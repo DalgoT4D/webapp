@@ -1,4 +1,3 @@
-import ELK from 'elkjs/lib/elk.bundled.js';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import React, { useContext, useEffect, useRef } from 'react';
