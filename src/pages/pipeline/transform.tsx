@@ -40,9 +40,9 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
     if (session) {
         fetchTransformType().then((transformType) => {
           if (transformType === 'github') {
-            window.location.href = '/pipeline/github';
+            window.location.href = '/pipeline/dbtsetup';
           } else if (transformType === 'ui') {
-            window.location.href = '/workflow/ui';
+            window.location.href = '/pipeline/dbtsetup';
           } else {
             setIsLoading(false);
           }
@@ -93,7 +93,7 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
                 Create a project to effortlessly integrate your dbt repository by providing your repository URL and
                 authentication details in further steps
               </Typography>
-              <Link href="/pipeline/github?method=github">
+              <Link href="/pipeline/dbtsetup?method=github">
                 <Button variant="contained" color="primary" sx={{ width: '100%' }}>
                   Setup using Github
                 </Button>
@@ -123,7 +123,7 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
                   authentication details in further steps
                 </Typography>
               </div>
-              <Link href="/pipeline/github?method=ui">
+              <Link href="/pipeline/dbtsetup?method=ui">
                 <Button variant="contained" color="primary" sx={{ width: '100%' }}>
                   Setup using UI
                 </Button>

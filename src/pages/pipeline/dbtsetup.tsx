@@ -53,6 +53,18 @@ const Transform = () => {
     handleClose();
   };
 
+  const handleGoToWorkflow = async () => {
+    try {
+      const payload = {
+        default_schema: 'intermediate'
+      };
+      await httpPost(session, 'transform/dbt_project/', payload);
+    } catch (error: any) {
+      console.error(error);
+      errorToast(error.message, [], globalContext);
+    }
+  };
+
   const fetchDbtWorkspace = async () => {
     if (!session) return;
 
@@ -261,6 +273,14 @@ const Transform = () => {
                     )}
                   </Box>
                 </Card>
+                )}
+                
+                {method === 'ui' && (
+                <Link href="/workflow/editor">
+                  <Button variant="contained" color="primary" sx={{ width: 'auto' }} onClick={handleGoToWorkflow}>
+                    Go to workflow
+                  </Button>
+                </Link>
                 )}
                 {dbtSetupStage === 'complete' ? (
                   <DBTTaskList
