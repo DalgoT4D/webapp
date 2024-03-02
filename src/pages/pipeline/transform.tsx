@@ -93,7 +93,7 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
                 Create a project to effortlessly integrate your dbt repository by providing your repository URL and
                 authentication details in further steps
               </Typography>
-              <Link href="/pipeline/dbtsetup?method=github">
+              <Link href="/pipeline/dbtsetup?transform_type=github">
                 <Button variant="contained" color="primary" sx={{ width: '100%' }}>
                   Setup using Github
                 </Button>
@@ -123,7 +123,7 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
                   authentication details in further steps
                 </Typography>
               </div>
-              <Link href="/pipeline/dbtsetup?method=ui">
+              <Link href="/pipeline/dbtsetup?transform_type=ui">
                 <Button variant="contained" color="primary" sx={{ width: '100%' }}>
                   Setup using UI
                 </Button>
