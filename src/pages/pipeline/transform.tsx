@@ -77,7 +77,6 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
               height={550}
               bgcolor="white"
               color="grey"
-              className={styles.box}
               textAlign="left"
               lineHeight={2}
               display="flex"
@@ -87,7 +86,7 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
             >
               <Image src={Github} alt="github_transform" style={{ width: 'auto', height: '300px'}} />
               <Typography sx={{ fontWeight: 550 }} variant="h5" align="left" color="#000">
-                Github Users <span className={styles['bracket-text']}>(for advanced users)</span>
+                Github Users <span>(for advanced users)</span>
               </Typography>
               <Typography sx={{ fontWeight: 400 }} variant="h6" gutterBottom color="#808080">
                 Create a project to effortlessly integrate your dbt repository by providing your repository URL and
@@ -105,7 +104,6 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
               height={550}
               bgcolor="white"
               color="grey"
-              className={styles.box}
               textAlign="left"
               lineHeight={2}
               display="flex"
@@ -114,15 +112,13 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
               sx={{ padding: '30px' }}
             >
               <Image src={UI} alt="ui_transform" style={{ width: 'auto', height: '300px'}} />
-              <div style={{ marginBottom: '20px' }}>
                 <Typography sx={{ fontWeight: 600 }} variant="h5" gutterBottom align="left" color="#000">
-                  UI Users <span className={styles['bracket-text']}>(for Non technical users)</span>
+                  UI Users <span>(for Non technical users)</span>
                 </Typography>
                 <Typography sx={{ fontWeight: 400 }} variant="h6" gutterBottom color="#808080">
                   Create a project to effortlessly integrate your dbt repository by providing your repository URL and
                   authentication details in further steps
                 </Typography>
-              </div>
               <Link href="/pipeline/dbtsetup?transform_type=ui">
                 <Button variant="contained" color="primary" sx={{ width: '100%' }}>
                   Setup using UI
