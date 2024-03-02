@@ -88,16 +88,21 @@ const Transform = () => {
     
   const handleGoToWorkflow = async () => {
     try {
-      const payload = {
-        default_schema: 'intermediate'
-      };
-      await httpPost(session, 'transform/dbt_project/', payload);
+      // Check if the transformation is already completed
+      if (dbtSetupStage === 'complete') {
+        router.push('/workflow/editor');
+      } else {
+        // If not completed, proceed with the API call
+        const payload = {
+          default_schema: 'intermediate'
+        };
+        await httpPost(session, 'transform/dbt_project/', payload);
+      }
     } catch (error: any) {
       console.error(error);
       errorToast(error.message, [], globalContext);
     }
   };
-
   const fetchDbtWorkspace = async () => {
     if (!session) return;
 
