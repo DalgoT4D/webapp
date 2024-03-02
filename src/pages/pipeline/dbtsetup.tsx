@@ -31,6 +31,7 @@ const Transform = () => {
   const [showConnectRepoDialog, setShowConnectRepoDialog] =
     useState<boolean>(false);
   const [rerender, setRerender] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dbtSetupLogs, setDbtSetupLogs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<string>('setup');
   const handleChangeTab = (event: React.SyntheticEvent, newTab: string) => {
@@ -40,7 +41,7 @@ const Transform = () => {
 
   const { data: session }: any = useSession();
   const router = useRouter();
-  const { method } = router.query;
+  const { transform_type } = router.query;
   const globalContext = useContext(GlobalContext);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -53,6 +54,38 @@ const Transform = () => {
     handleClose();
   };
 
+  type TransformType = 'github' | 'ui';
+
+  const [transformType, setTransformType] = useState<TransformType | null>(null);
+
+  useEffect(() => {
+    const fetchTransformType = async () => {
+      try {
+        if (transformType === null) {
+          const res = await httpGet(session, 'dbt/dbt_transform/');
+          const { transform_type } = await res;
+          console.log(transform_type);
+          setIsLoading(false);
+          setTransformType(transform_type as TransformType);
+        } else {
+          const { transform_type: type } = router.query;
+          console.log(transformType);
+          if (type) {
+            setIsLoading(true);
+            setTransformType(type as TransformType);
+            setIsLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error(error);
+        setIsLoading(false);
+      }
+    };
+  
+    fetchTransformType();
+  }, [transformType, router.query, session]);
+  
+    
   const handleGoToWorkflow = async () => {
     try {
       const payload = {
@@ -178,7 +211,7 @@ const Transform = () => {
             </Tabs>
             {activeTab === 'setup' && (
               <>
-                {method === 'github' && (
+                {(transformType === 'github' || transform_type === 'github') && (
                 <Card
                   sx={{
                     background: 'white',
@@ -275,7 +308,7 @@ const Transform = () => {
                 </Card>
                 )}
                 
-                {method === 'ui' && (
+                {(transformType === 'ui' || transform_type === 'ui') && (
                 <Link href="/workflow/editor">
                   <Button variant="contained" color="primary" sx={{ width: 'auto' }} onClick={handleGoToWorkflow}>
                     Go to workflow
