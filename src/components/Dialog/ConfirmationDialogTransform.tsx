@@ -12,7 +12,7 @@ interface ConfirmationDialogProps {
   transformType: TransformType | null;
 }
 
-const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ open, handleClose, transformType }) => {
+const ConfirmationDialogTransform: React.FC<ConfirmationDialogProps> = ({ open, handleClose, transformType }) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const { data: session } = useSession();
@@ -85,4 +85,4 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ open, handleClo
   );
 };
 
-export default ConfirmationDialog;
+export default ConfirmationDialogTransform;
