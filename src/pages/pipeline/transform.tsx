@@ -33,25 +33,28 @@ const Transform = () => {
   };
 
   useEffect(() => {
-    const fetchTransformType = async (): Promise<TransformTypeResponse> => {
+    const fetchTransformType = async () => {
       try {
         const res = await httpGet(session, 'dbt/dbt_transform/');
         const { transform_type } = await res;
         console.log(transform_type);
-        return { transform_type: transform_type as TransformType }; // Return the TransformTypeResponse
+  
+        return { transform_type: transform_type as TransformType };
       } catch (error) {
         console.error(error);
-        throw error; // Rethrow the error to be handled by the caller
+        throw error;
       }
     };
   
     interface TransformTypeResponse {
       transform_type: TransformType;
     }
+  
     if (session) {
       fetchTransformType()
         .then((response: TransformTypeResponse) => {
           const transformType = response.transform_type;
+          
           if (transformType === 'github' || transformType === 'ui') {
             router.push(`/pipeline/dbtsetup?transform_type=${transformType}`);
           } else {
@@ -63,8 +66,8 @@ const Transform = () => {
           setIsLoading(false);
         });
     }
-    
   }, [session]);
+  
 
   return (
     <>
