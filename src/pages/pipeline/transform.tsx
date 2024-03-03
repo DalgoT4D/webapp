@@ -8,8 +8,8 @@ import { ActionsMenu } from '../../components/UI/Menu/Menu';
 import Image from 'next/image';
 import Github from '@/assets/images/github_transform.png';
 import UI from '@/assets/images/ui_transform.png';
-import ConfirmationDialog from './confirmationDialog';
 import { useSession } from 'next-auth/react';
+import ConfirmationDialogTransform from '@/components/Dialog/ConfirmationDialogTransform';
 
 type TransformType = 'github' | 'ui';
 
@@ -77,7 +77,7 @@ const Transform = () => {
         open={open}
         handleClose={handleClose}
       />
-      <ConfirmationDialog
+      <ConfirmationDialogTransform
         open={confirmationOpen}
         handleClose={() => setConfirmationOpen(false)}
         transformType={selectedTransform}
