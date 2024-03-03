@@ -1,58 +1,70 @@
+import React, { useEffect, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
 import { httpGet } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
 import { Box, Grid, Typography, Button } from '@mui/material';
-import { useSession } from 'next-auth/react';
-import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
 import Image from 'next/image';
 import Github from '@/assets/images/github_transform.png';
 import UI from '@/assets/images/ui_transform.png';
-import Link from 'next/link';
+import ConfirmationDialog from './confirmationDialog';
+import { useSession } from 'next-auth/react';
 
 type TransformType = 'github' | 'ui';
 
-const Transform = ({ transformType }: { transformType: TransformType }) => {
+const Transform = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const { data: session } = useSession();
+  const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
+  const [selectedTransform, setSelectedTransform] = useState<TransformType | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const router = useRouter();
+  const { data: session } = useSession();
 
   const open = Boolean(anchorEl);
+
   const handleClose = () => {
     setAnchorEl(null);
   };
 
+  const handleSetup = (transformType: TransformType) => {
+    setSelectedTransform(transformType);
+    setConfirmationOpen(true);
+  };
+
   useEffect(() => {
-    const fetchTransformType = async () => {
+    const fetchTransformType = async (): Promise<TransformTypeResponse> => {
       try {
         const res = await httpGet(session, 'dbt/dbt_transform/');
         const { transform_type } = await res;
         console.log(transform_type);
-        setIsLoading(false);
-        return transform_type as TransformType;
+        return { transform_type: transform_type as TransformType }; // Return the TransformTypeResponse
       } catch (error) {
         console.error(error);
-        setIsLoading(false);
-        return null;
+        throw error; // Rethrow the error to be handled by the caller
       }
     };
-
+  
+    interface TransformTypeResponse {
+      transform_type: TransformType;
+    }
     if (session) {
-        fetchTransformType().then((transformType) => {
-          if (transformType === 'github') {
-            window.location.href = '/pipeline/dbtsetup';
-          } else if (transformType === 'ui') {
-            window.location.href = '/pipeline/dbtsetup';
+      fetchTransformType()
+        .then((response: TransformTypeResponse) => {
+          const transformType = response.transform_type;
+          if (transformType === 'github' || transformType === 'ui') {
+            router.push(`/pipeline/dbtsetup?transform_type=${transformType}`);
           } else {
             setIsLoading(false);
           }
+        })
+        .catch((error) => {
+          console.error('Error fetching transform type:', error);
+          setIsLoading(false);
         });
-      }
-    }, [session]);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+    }
+    
+  }, [session]);
 
   return (
     <>
@@ -62,6 +74,12 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
         open={open}
         handleClose={handleClose}
       />
+      <ConfirmationDialog
+        open={confirmationOpen}
+        handleClose={() => setConfirmationOpen(false)}
+        transformType={selectedTransform}
+      />
+
       <PageHead title="DDP: Transform" />
       <main className={styles.main}>
         <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
@@ -92,11 +110,14 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
                 Create a project to effortlessly integrate your dbt repository by providing your repository URL and
                 authentication details in further steps
               </Typography>
-              <Link href="/pipeline/dbtsetup?transform_type=github">
-                <Button variant="contained" color="primary" sx={{ width: '100%' }}>
-                  Setup using Github
-                </Button>
-              </Link>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ width: '100%' }}
+                onClick={() => handleSetup('github')}
+              >
+                Setup using Github
+              </Button>
             </Box>
           </Grid>
           <Grid item xs={6}>
@@ -119,11 +140,14 @@ const Transform = ({ transformType }: { transformType: TransformType }) => {
                   Create a project to effortlessly integrate your dbt repository by providing your repository URL and
                   authentication details in further steps
                 </Typography>
-              <Link href="/pipeline/dbtsetup?transform_type=ui">
-                <Button variant="contained" color="primary" sx={{ width: '100%' }}>
-                  Setup using UI
-                </Button>
-              </Link>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ width: '100%' }}
+                onClick={() => handleSetup('ui')}
+              >
+                Setup using UI
+              </Button>
             </Box>
           </Grid>
         </Grid>
