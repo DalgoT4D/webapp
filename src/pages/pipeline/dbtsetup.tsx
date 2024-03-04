@@ -4,7 +4,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
-import { Box, Button, Card, Link, Tabs, Tab, Typography } from '@mui/material';
+import { Box, Button, Card, Link, Tabs, Tab, Typography, CircularProgress } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import React, { useContext, useEffect, useState } from 'react';
 import Dbt from '@/assets/images/dbt.png';
@@ -38,6 +38,7 @@ const Transform = () => {
     setActiveTab(newTab);
   };
   const [anyTaskLocked, setAnyTaskLocked] = useState<boolean>(false);
+  const [setupInProgress, setSetupInProgress] = useState<boolean>(false);
 
   const { data: session }: any = useSession();
   const router = useRouter();
@@ -61,21 +62,22 @@ const Transform = () => {
   useEffect(() => {
     const fetchTransformType = async () => {
       try {
-        if (transformType === null) {
-          const res = await httpGet(session, 'dbt/dbt_transform/');
-          const { transform_type } = await res;
-          console.log(transform_type);
-          setIsLoading(false);
+        setIsLoading(true);
+        const res = await httpGet(session, 'dbt/dbt_transform/');
+        const { transform_type } = await res;
+        
+        if (transform_type) {
           setTransformType(transform_type as TransformType);
         } else {
           const { transform_type: type } = router.query;
-          console.log(transformType);
           if (type) {
-            setIsLoading(true);
             setTransformType(type as TransformType);
-            setIsLoading(false);
+          } else {
+            router.push('/pipeline/transform');
           }
         }
+        
+        setIsLoading(false);
       } catch (error) {
         console.error(error);
         setIsLoading(false);
@@ -83,26 +85,29 @@ const Transform = () => {
     };
   
     fetchTransformType();
-  }, [transformType, router.query, session]);
+  }, [router.query, session]);
   
     
-  const handleGoToWorkflow = async () => {
+  const handleGoToWorkflow = () => {
+    router.push('/workflow/editor');
+  };
+
+  const setupDBTUI = async () => {
     try {
-      // Check if the transformation is already completed
-      if (dbtSetupStage === 'complete') {
-        router.push('/workflow/editor');
-      } else {
-        // If not completed, proceed with the API call
-        const payload = {
-          default_schema: 'intermediate'
-        };
-        await httpPost(session, 'transform/dbt_project/', payload);
-      }
+      setSetupInProgress(true);
+      await httpPost(session, 'transform/dbt_project/', { default_schema: 'intermediate' });
+      setDbtSetupStage('complete');
+      createProfile();
+      fetchDbtTasks();
     } catch (error: any) {
       console.error(error);
       errorToast(error.message, [], globalContext);
+    } finally {
+      setSetupInProgress(false);
     }
   };
+
+
   const fetchDbtWorkspace = async () => {
     if (!session) return;
 
@@ -216,7 +221,7 @@ const Transform = () => {
             </Tabs>
             {activeTab === 'setup' && (
               <>
-                {(transformType === 'github' || transform_type === 'github') && (
+                {(transformType === 'github') && (
                 <Card
                   sx={{
                     background: 'white',
@@ -312,14 +317,21 @@ const Transform = () => {
                   </Box>
                 </Card>
                 )}
-                
-                {(transformType === 'ui' || transform_type === 'ui') && (
-                <Link href="/workflow/editor">
-                  <Button variant="contained" color="primary" sx={{ width: 'auto' }} onClick={handleGoToWorkflow}>
-                    Go to workflow
+
+                {(dbtSetupStage !== 'complete' && (transformType === 'ui')) && (
+                  <Button variant="contained" color="primary" sx={{ width: 'auto' }} onClick={setupDBTUI}>
+                    {setupInProgress ? <CircularProgress size={24} /> : 'Setup DBT UI'}
                   </Button>
-                </Link>
                 )}
+
+                {(dbtSetupStage === 'complete' && (transformType === 'ui')) && (
+                  <Link href="/workflow/editor">
+                    <Button variant="contained" color="primary" sx={{ width: 'auto' }} onClick={handleGoToWorkflow}>
+                      Go to workflow
+                    </Button>
+                  </Link>
+                )}
+
                 {dbtSetupStage === 'complete' ? (
                   <DBTTaskList
                     setExpandLogs={setExpandLogs}
