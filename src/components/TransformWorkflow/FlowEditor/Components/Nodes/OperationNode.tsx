@@ -1,11 +1,12 @@
 import { Box } from '@mui/material';
 import 'react';
 import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
+import { OperationNodeType } from '../Canvas';
 
-export function OperationNode({ data }: any) {
+export function OperationNode(node: OperationNodeType) {
   return (
     <Box>
-      {data?.node?.config?.type}
+      {node.data.node.config?.type}
       <>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />

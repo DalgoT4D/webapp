@@ -1,6 +1,5 @@
 import {
   Box,
-  Divider,
   IconButton,
   Table,
   TableBody,
@@ -8,25 +7,14 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { useCallback, useState } from 'react';
-import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
+import { useState } from 'react';
+import { Handle, Position, useNodeId } from 'reactflow';
 import { Close } from '@mui/icons-material';
-import PreviewIcon from '@mui/icons-material/Preview';
-import { DbtSourceModel } from '../../FlowEditor';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { SrcModelNodeType } from '../Canvas';
 
-interface DbtSourceModelNodeData {
-  label: string;
-  triggerDelete: (nodeId: string | null) => void;
-  triggerPreview: (sourceModel: DbtSourceModel | null) => void;
-  node: DbtSourceModel;
-}
-
-interface DbtSourceModelNodeProps {
-  data: DbtSourceModelNodeData;
-}
-
-export function DbtSourceModelNode({ data }: DbtSourceModelNodeProps) {
+export function DbtSourceModelNode(node: SrcModelNodeType) {
+  const { data } = node;
   const [openOperationList, setOpenOperationList] = useState(false);
   const [operationSlug, setOperationSlug] = useState<string | null>(null);
 
