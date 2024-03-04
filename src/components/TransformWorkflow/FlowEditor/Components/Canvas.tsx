@@ -1,7 +1,7 @@
+import Dagre from '@dagrejs/dagre';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import React, { useContext, useEffect, useRef } from 'react';
-import { useCallback, useState } from 'react';
 import ReactFlow, {
   applyEdgeChanges,
   applyNodeChanges,
@@ -18,6 +18,7 @@ import ReactFlow, {
   Edge,
   useEdgesState,
   useReactFlow,
+  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { DbtSourceModel } from '../FlowEditor';
@@ -29,9 +30,25 @@ import { httpGet } from '@/helpers/http';
 
 type CanvasProps = {};
 
+interface CustomNodeData {
+  node: DbtSourceModel;
+  triggerDelete: (...args: any) => void;
+  triggerPreview: (...args: any) => void;
+}
+
+interface CustomNode extends Node {
+  data: CustomNodeData;
+}
+
+type EdgeData = {
+  id: string;
+  source: string;
+  target: string;
+};
+
 type DbtProjectGraph = {
   nodes: DbtSourceModel[];
-  edges: { id: number; source: string; target: string }[];
+  edges: EdgeData[];
 };
 
 const CanvasHeader = ({}) => {
@@ -80,6 +97,45 @@ const nodeTypes = {
 
 const defaultViewport = { x: 0, y: 0, zoom: 0.8 };
 
+const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+
+const getLayoutedElements = ({
+  nodes,
+  edges,
+  options,
+}: {
+  nodes: CustomNode[];
+  edges: Edge[];
+  options: { direction: string };
+}) => {
+  g.setGraph({
+    rankdir: options.direction,
+    nodesep: 1000,
+    edgesep: 100,
+    width: 100,
+    height: 100,
+    ranker: 'longest-path',
+    marginx: 100,
+    marginy: 100,
+    ranksep: 300,
+  });
+
+  edges.forEach((edge: Edge) => g.setEdge(edge.source, edge.target));
+  nodes.forEach((node: CustomNode) => g.setNode(node.id, {}));
+
+  // build the layout
+  Dagre.layout(g);
+
+  return {
+    nodes: nodes.map((node: CustomNode) => {
+      const { x, y } = g.node(node.id);
+
+      return { ...node, position: { x, y } };
+    }),
+    edges,
+  };
+};
+
 const Canvas = ({}: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -93,21 +149,37 @@ const Canvas = ({}: CanvasProps) => {
         session,
         'transform/dbt_project/graph/'
       );
-      const nodes: any[] = response.nodes.map((node) => ({
-        id: node.id,
-        type: node.type,
-        data: {
-          node: node,
-          triggerDelete: handleDeleteNode,
-          triggerPreview: handlePreviewDataForNode,
+      const nodes: CustomNode[] = response.nodes.map(
+        (model: DbtSourceModel) => ({
+          id: model.id,
+          type: model.type,
+          data: {
+            node: model,
+            triggerDelete: handleDeleteNode,
+            triggerPreview: handlePreviewDataForNode,
+          },
+          position: { x: 100, y: 125 },
+        })
+      );
+      const edges: Edge[] = response.edges.map((edgeData: EdgeData) => ({
+        ...edgeData,
+        markerEnd: {
+          type: MarkerType.Arrow,
+          width: 20,
+          height: 20,
+          color: 'black',
         },
-        position: { x: 100, y: 125 },
       }));
-      const edges: any[] = response.edges.map((edge) => ({
-        ...edge,
-      }));
-      setNodes(nodes);
-      setEdges(edges);
+
+      const { nodes: layoutedNodes, edges: layoutedEdges } =
+        getLayoutedElements({
+          nodes: nodes,
+          edges: edges,
+          options: { direction: 'LR' },
+        });
+
+      setNodes([...layoutedNodes]);
+      setEdges([...layoutedEdges]);
     } catch (error) {
       console.log(error);
     }
