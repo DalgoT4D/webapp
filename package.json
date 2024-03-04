@@ -13,6 +13,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^1.0.4",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.10.8",
     "@mui/icons-material": "^5.15.6",
@@ -32,8 +33,8 @@
     "react-arborist": "^3.4.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.50.1",
-    "reactflow": "^11.10.4",
     "react-joyride": "^2.7.3",
+    "reactflow": "^11.10.4",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.2.4",
     "typescript": "5.3.3"
