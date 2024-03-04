@@ -100,9 +100,9 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
 
   const edges = useEdges();
   const nodeId: string | null = useNodeId();
-  const { data } = node;
+  const { data, type } = node;
 
-  // can only this node if it doesn't have anything emanating from it i.e. leaf node
+  // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean = edges.find(
     (edge: Edge) => edge.source === nodeId
   )
@@ -110,7 +110,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     : true;
 
   const handleDeleteAction = () => {
-    data.triggerDelete(nodeId);
+    data.triggerDelete(nodeId, type);
   };
 
   const handlePreviewAction = () => {
@@ -140,7 +140,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
         console.log(error);
       }
     })();
-  }, [session, node.data.node.schema, node.data.node.input_name]);
+  }, [session]);
 
   const operations = [
     { label: 'Flatten', slug: 'flatte' },

@@ -1,7 +1,7 @@
 import Dagre from '@dagrejs/dagre';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   applyEdgeChanges,
   applyNodeChanges,
@@ -29,7 +29,11 @@ import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 import { OperationNode } from './Nodes/OperationNode';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
-import { httpGet } from '@/helpers/http';
+import { httpDelete, httpGet, httpPost } from '@/helpers/http';
+import { set } from 'cypress/types/lodash';
+import { successToast } from '@/components/ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { TASK_DBTRUN } from '@/config/constant';
 
 type CanvasProps = {};
 
@@ -79,7 +83,11 @@ const nodeTypes: NodeTypes = {
   operation_node: OperationNode,
 };
 
-const CanvasHeader = ({}) => {
+const CanvasHeader = ({
+  runWorkflow,
+}: {
+  runWorkflow: (...args: any) => void;
+}) => {
   return (
     <Box
       sx={{
@@ -97,13 +105,7 @@ const CanvasHeader = ({}) => {
       </Typography>
 
       <Box sx={{ marginLeft: 'auto', display: 'flex', gap: '20px' }}>
-        <Button
-          variant="contained"
-          type="button"
-          onClick={() =>
-            alert('This will run the workflow with or without parameters.')
-          }
-        >
+        <Button variant="contained" type="button" onClick={runWorkflow}>
           Run
         </Button>
         <Button
@@ -162,8 +164,10 @@ const Canvas = ({}: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [redrawGraph, setRedrawGraph] = useState<boolean>(false);
   const previewNodeRef = useRef<DbtSourceModel | null>();
   const flowEditorContext = useContext(FlowEditorContext);
+  const globalContext = useContext(GlobalContext);
   const EdgeStyle: EdgeStyleProps = {
     markerEnd: {
       type: MarkerType.Arrow,
@@ -210,7 +214,7 @@ const Canvas = ({}: CanvasProps) => {
 
   useEffect(() => {
     if (session) fetchDbtProjectGraph();
-  }, [session]);
+  }, [session, redrawGraph]);
 
   useEffect(() => {
     previewNodeRef.current = flowEditorContext?.previewNode.state.node;
@@ -249,7 +253,7 @@ const Canvas = ({}: CanvasProps) => {
     }
   };
 
-  const handleDeleteNode = (nodeId: string) => {
+  const handleDeleteNode = async (nodeId: string, type: string) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
     console.log('compare with', previewNodeRef.current?.id);
@@ -261,6 +265,29 @@ const Canvas = ({}: CanvasProps) => {
         },
       });
     }
+
+    // remove node from canvas
+    if (type === 'src_model_node') {
+      // hit the backend api to remove the node in a try catch
+      try {
+        await httpDelete(session, `transform/dbt_project/model/${nodeId}/`);
+        setRedrawGraph(!redrawGraph);
+      } catch (error) {
+        console.log(error);
+      }
+    } else if (type === 'operation_node') {
+      // hit the backend api to remove the node in a try catch
+      try {
+        await httpDelete(
+          session,
+          `transform/dbt_project/model/operations/${nodeId}/`
+        );
+        setRedrawGraph(!redrawGraph);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
     handleNodesChange([{ type: 'remove', id: nodeId }]);
   };
 
@@ -302,10 +329,30 @@ const Canvas = ({}: CanvasProps) => {
     }
   }, [flowEditorContext?.canvasNode.state]);
 
+  const handleRunWorkflow = async () => {
+    console.log('running the workflow');
+    try {
+      const tasks: any = await httpGet(session, `prefect/tasks/transform/`);
+
+      const dbtRunTask = tasks.find((task: any) => task.slug === TASK_DBTRUN);
+
+      if (dbtRunTask) {
+        await httpPost(
+          session,
+          `prefect/v1/flows/${dbtRunTask.deploymentId}/flow_run/`,
+          {}
+        );
+        successToast('Workflow initiated', [], globalContext);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ height: '10%', background: 'lightgrey' }}>
-        <CanvasHeader />
+        <CanvasHeader runWorkflow={handleRunWorkflow} />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box sx={{ height: '90%' }}>
@@ -324,11 +371,10 @@ const Canvas = ({}: CanvasProps) => {
             <Background />
             <Controls>
               <ControlButton
-                onClick={() =>
-                  alert(
-                    'This should clear the canvas and reset things, not sure yet. ✨'
-                  )
-                }
+                onClick={() => {
+                  successToast('Graph has been refreshed', [], globalContext);
+                  setRedrawGraph(!redrawGraph);
+                }}
               >
                 <ReplayIcon />
               </ControlButton>
