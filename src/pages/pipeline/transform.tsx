@@ -84,7 +84,7 @@ const Transform = () => {
       />
 
       <PageHead title="DDP: Transform" />
-      {selectedTransform && (
+      {!selectedTransform && (
         <main className={styles.main}>
           <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
             Transformation
