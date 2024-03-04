@@ -546,6 +546,18 @@
     debug "^3.1.0"
     lodash.once "^4.1.1"
 
+"@dagrejs/dagre@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@dagrejs/dagre/-/dagre-1.0.4.tgz#16ab98b457dbceccdbd3b23bc96e76bb8b925580"
+  integrity sha512-jrEore+HhW1yg1Rsd9H1PPMcoEOD4bVh0WCXc6GqzyzubnJj4GaWGg8ETOrskTd/3n/g5LOzumGM4CCgpNLJNw==
+  dependencies:
+    "@dagrejs/graphlib" "2.1.13"
+
+"@dagrejs/graphlib@2.1.13":
+  version "2.1.13"
+  resolved "https://registry.yarnpkg.com/@dagrejs/graphlib/-/graphlib-2.1.13.tgz#7d0481966e67226d0a864484524f0db933ffc753"
+  integrity sha512-calbMa7Gcyo+/t23XBaqQqon8LlgE9regey4UVoikoenKBXvUnCUL3s9RP6USCxttfr0XWVICtYUuKMdehKqMw==
+
 "@emotion/babel-plugin@^11.11.0":
   version "11.11.0"
   resolved "https://registry.yarnpkg.com/@emotion/babel-plugin/-/babel-plugin-11.11.0.tgz#c2d872b6a7767a9d176d007f5b31f7d504bb5d6c"
