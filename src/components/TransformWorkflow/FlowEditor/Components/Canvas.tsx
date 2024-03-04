@@ -19,26 +19,43 @@ import ReactFlow, {
   useEdgesState,
   useReactFlow,
   MarkerType,
+  NodeTypes,
+  NodeProps,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { DbtSourceModel } from '../FlowEditor';
-import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 import { OperationNode } from './Nodes/OperationNode';
+import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
 import { httpGet } from '@/helpers/http';
 
 type CanvasProps = {};
 
-interface CustomNodeData {
-  node: DbtSourceModel;
-  triggerDelete: (...args: any) => void;
-  triggerPreview: (...args: any) => void;
+interface OperationNodeData {
+  id: string;
+  output_cols: Array<string>;
+  type: 'operation_node';
+  config?: any;
 }
 
-interface CustomNode extends Node {
-  data: CustomNodeData;
+export interface OperationNodeType extends NodeProps {
+  data: {
+    node: OperationNodeData;
+    triggerDelete: (...args: any) => void;
+    triggerPreview: (...args: any) => void;
+  };
 }
+
+export interface SrcModelNodeType extends NodeProps {
+  data: {
+    node: DbtSourceModel;
+    triggerDelete: (...args: any) => void;
+    triggerPreview: (...args: any) => void;
+  };
+}
+
+type CustomNode = OperationNodeType | SrcModelNodeType;
 
 type EdgeData = {
   id: string;
@@ -46,9 +63,14 @@ type EdgeData = {
   target: string;
 };
 
-type DbtProjectGraph = {
-  nodes: DbtSourceModel[];
+type DbtProjectGraphApiResponse = {
+  nodes: Array<DbtSourceModel | OperationNodeData>;
   edges: EdgeData[];
+};
+
+const nodeTypes: NodeTypes = {
+  src_model_node: DbtSourceModelNode,
+  operation_node: OperationNode,
 };
 
 const CanvasHeader = ({}) => {
@@ -88,11 +110,6 @@ const CanvasHeader = ({}) => {
       </Box>
     </Box>
   );
-};
-
-const nodeTypes = {
-  src_model_node: DbtSourceModelNode,
-  operation_node: OperationNode,
 };
 
 const defaultViewport = { x: 0, y: 0, zoom: 0.8 };
@@ -145,22 +162,20 @@ const Canvas = ({}: CanvasProps) => {
 
   const fetchDbtProjectGraph = async () => {
     try {
-      const response: DbtProjectGraph = await httpGet(
+      const response: DbtProjectGraphApiResponse = await httpGet(
         session,
         'transform/dbt_project/graph/'
       );
-      const nodes: CustomNode[] = response.nodes.map(
-        (model: DbtSourceModel) => ({
-          id: model.id,
-          type: model.type,
+      const nodes: Array<DbtSourceModel | OperationNodeData | any> =
+        response.nodes.map((nn: DbtSourceModel | OperationNodeData) => ({
+          id: nn.id,
+          type: nn.type,
           data: {
-            node: model,
+            node: nn,
             triggerDelete: handleDeleteNode,
             triggerPreview: handlePreviewDataForNode,
           },
-          position: { x: 100, y: 125 },
-        })
-      );
+        }));
       const edges: Edge[] = response.edges.map((edgeData: EdgeData) => ({
         ...edgeData,
         markerEnd: {
