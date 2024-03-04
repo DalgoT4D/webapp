@@ -21,6 +21,7 @@ import ReactFlow, {
   MarkerType,
   NodeTypes,
   NodeProps,
+  EdgeMarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { DbtSourceModel } from '../FlowEditor';
@@ -66,6 +67,11 @@ type EdgeData = {
 type DbtProjectGraphApiResponse = {
   nodes: Array<DbtSourceModel | OperationNodeData>;
   edges: EdgeData[];
+};
+
+type EdgeStyleProps = {
+  markerEnd?: EdgeMarkerType;
+  markerStart?: EdgeMarkerType;
 };
 
 const nodeTypes: NodeTypes = {
@@ -159,6 +165,14 @@ const Canvas = ({}: CanvasProps) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const previewNodeRef = useRef<DbtSourceModel | null>();
   const flowEditorContext = useContext(FlowEditorContext);
+  const EdgeStyle: EdgeStyleProps = {
+    markerEnd: {
+      type: MarkerType.Arrow,
+      width: 20,
+      height: 20,
+      color: 'black',
+    },
+  };
 
   const fetchDbtProjectGraph = async () => {
     try {
@@ -178,12 +192,7 @@ const Canvas = ({}: CanvasProps) => {
         }));
       const edges: Edge[] = response.edges.map((edgeData: EdgeData) => ({
         ...edgeData,
-        markerEnd: {
-          type: MarkerType.Arrow,
-          width: 20,
-          height: 20,
-          color: 'black',
-        },
+        ...EdgeStyle,
       }));
 
       const { nodes: layoutedNodes, edges: layoutedEdges } =
@@ -228,7 +237,17 @@ const Canvas = ({}: CanvasProps) => {
       'inside handle new connection; when two nodes are connected by user',
       connection
     );
-    setEdges((edges) => addEdge(connection, edges));
+    if (connection.source && connection.target) {
+      const newEdge: Edge = {
+        source: connection.source,
+        sourceHandle: connection.sourceHandle,
+        target: connection.target,
+        targetHandle: connection.targetHandle,
+        id: `${connection.source}_${connection.target}`,
+        ...EdgeStyle,
+      };
+      handleEdgesChange([{ type: 'add', item: newEdge }]);
+    }
   };
 
   const handleDeleteNode = (nodeId: string) => {
@@ -243,7 +262,6 @@ const Canvas = ({}: CanvasProps) => {
         },
       });
     }
-    // setNodes((nds) => applyNodeChanges([{ type: 'remove', id: nodeId }], nds));
     handleNodesChange([{ type: 'remove', id: nodeId }]);
   };
 
@@ -274,7 +292,7 @@ const Canvas = ({}: CanvasProps) => {
         },
         position: { x: 100, y: 125 },
       };
-      setNodes((nds) => nds.concat(newNode));
+      handleNodesChange([{ type: 'add', item: newNode }]);
     }
   };
 
