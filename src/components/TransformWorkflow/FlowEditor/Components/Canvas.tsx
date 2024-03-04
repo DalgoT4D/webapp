@@ -133,14 +133,13 @@ const getLayoutedElements = ({
 }) => {
   g.setGraph({
     rankdir: options.direction,
-    nodesep: 1000,
+    nodesep: 2000,
     edgesep: 100,
-    width: 100,
-    height: 100,
-    ranker: 'longest-path',
+    width: 250,
+    height: 120,
     marginx: 100,
     marginy: 100,
-    ranksep: 300,
+    ranksep: 350,
   });
 
   edges.forEach((edge: Edge) => g.setEdge(edge.source, edge.target));
