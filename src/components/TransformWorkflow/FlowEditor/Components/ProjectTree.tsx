@@ -48,7 +48,6 @@ interface ProjectTreeProps {
 // type TreeData = Partial<DbtSourceModel> & { children: TreeData[] };
 
 const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
-  const { data: session } = useSession();
   const flowEditorContext = useContext(FlowEditorContext);
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
 
@@ -82,8 +81,9 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
     setProjectTreeData([{ id: '0', schema: 'Store', children: treeData }]);
   };
 
-  useMemo(() => {
+  useEffect(() => {
     if (dbtSourceModels) {
+      console.log('rerendeirng project tree');
       constructAndSetProjectTreeData(dbtSourceModels);
     }
   }, [dbtSourceModels]);

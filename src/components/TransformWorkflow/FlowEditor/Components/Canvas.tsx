@@ -35,7 +35,10 @@ import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
 
-type CanvasProps = {};
+type CanvasProps = {
+  redrawGraph: boolean;
+  setRedrawGraph: (...args: any) => void;
+};
 
 interface OperationNodeData {
   id: string;
@@ -160,11 +163,11 @@ const getLayoutedElements = ({
   };
 };
 
-const Canvas = ({}: CanvasProps) => {
+const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [redrawGraph, setRedrawGraph] = useState<boolean>(false);
+  // const [redrawGraph, setRedrawGraph] = useState<boolean>(false);
   const previewNodeRef = useRef<DbtSourceModel | null>();
   const flowEditorContext = useContext(FlowEditorContext);
   const globalContext = useContext(GlobalContext);
