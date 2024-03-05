@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { SrcModelNodeType } from '../Canvas';
@@ -140,7 +140,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
         console.log(error);
       }
     })();
-  }, [session]);
+  }, [session, edges]);
 
   const operations = [
     { label: 'Flatten', slug: 'flatte' },

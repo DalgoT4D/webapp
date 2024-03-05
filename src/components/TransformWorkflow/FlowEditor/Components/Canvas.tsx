@@ -342,7 +342,7 @@ const Canvas = ({}: CanvasProps) => {
           `prefect/v1/flows/${dbtRunTask.deploymentId}/flow_run/`,
           {}
         );
-        successToast('Workflow initiated', [], globalContext);
+        successToast('Dbt run initiated', [], globalContext);
       }
     } catch (error) {
       console.log(error);
