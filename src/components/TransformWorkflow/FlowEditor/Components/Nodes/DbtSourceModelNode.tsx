@@ -222,7 +222,9 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
                 width: '100%',
               }}
             >
-              <Typography>Columns not available</Typography>
+              <Typography>
+                Please click run to materialize your model
+              </Typography>
             </Box>
           )}
         </Box>
