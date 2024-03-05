@@ -18,6 +18,7 @@ export type DbtSourceModel = {
 const FlowEditor = ({}) => {
   const { data: session } = useSession();
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
+  const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
 
   const fetchSourcesModels = async () => {
     try {
@@ -33,7 +34,7 @@ const FlowEditor = ({}) => {
 
   useEffect(() => {
     if (session) fetchSourcesModels();
-  }, [session]);
+  }, [session, refreshEditor]);
 
   return (
     <Box
@@ -50,7 +51,10 @@ const FlowEditor = ({}) => {
         </Box>
         <Divider orientation="vertical" sx={{ color: 'black' }} />
         <Box sx={{ width: '80%' }}>
-          <Canvas />
+          <Canvas
+            redrawGraph={refreshEditor}
+            setRedrawGraph={setRefreshEditor}
+          />
         </Box>
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
