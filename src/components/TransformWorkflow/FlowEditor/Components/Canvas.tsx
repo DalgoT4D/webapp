@@ -34,6 +34,7 @@ import { set } from 'cypress/types/lodash';
 import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
+import OperationConfigLayout from './OperationConfigLayout';
 
 type CanvasProps = {
   redrawGraph: boolean;
@@ -167,7 +168,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  // const [redrawGraph, setRedrawGraph] = useState<boolean>(false);
+  const [openOperationConfig, setOpenOperationConfig] =
+    useState<boolean>(false);
   const previewNodeRef = useRef<DbtSourceModel | null>();
   const flowEditorContext = useContext(FlowEditorContext);
   const globalContext = useContext(GlobalContext);
@@ -360,12 +362,18 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
+    >
       <Box sx={{ height: '10%', background: 'lightgrey' }}>
         <CanvasHeader runWorkflow={handleRunWorkflow} />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
-      <Box sx={{ height: '90%' }}>
+      <Box sx={{ display: 'flex', height: '90%' }}>
         <ReactFlowProvider>
           <ReactFlow
             nodes={nodes}
@@ -391,6 +399,16 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
             </Controls>
           </ReactFlow>
         </ReactFlowProvider>
+        <OperationConfigLayout
+          openConfigPanel={openOperationConfig}
+          setOpenConfigPanel={setOpenOperationConfig}
+          sx={{
+            background: '#FFFFFF',
+            justifyContent: 'flex-end',
+            width: '40%',
+            boxShadow: '0px 0px 4px 0px rgba(0, 0, 0, 0.16)',
+          }}
+        />
       </Box>
     </Box>
   );

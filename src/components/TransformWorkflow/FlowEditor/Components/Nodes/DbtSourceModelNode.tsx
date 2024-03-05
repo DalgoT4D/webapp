@@ -14,6 +14,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { SrcModelNodeType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
+import { operations } from '../OperationConfigForms/constant';
 
 interface ColumnData {
   name: string;
@@ -142,20 +143,8 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     })();
   }, [session, edges]);
 
-  const operations = [
-    { label: 'Flatten', slug: 'flatte' },
-    { label: 'Flatten json', slug: 'flattenjson' },
-    { label: 'Cast data type', slug: 'castdatatypes' },
-    { label: 'Coalesce columns', slug: 'coalescecolumns' },
-    { label: 'Arithmetic', slug: 'arithmetic' },
-    { label: 'Concat', slug: 'concat' },
-    { label: 'Drop columns', slug: 'dropcolumns' },
-    { label: 'Rename columns', slug: 'renamecolumns' },
-    { label: 'Regex extraction', slug: 'regexextraction' },
-  ];
-
   return (
-    <Box sx={{ display: 'flex', width: '250px' }}>
+    <Box sx={{ display: 'flex' }}>
       {!openOperationList && (
         <>
           <Handle type="target" position={Position.Left} />
@@ -167,7 +156,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
           borderRadius: '5px',
           display: 'flex',
           flexDirection: 'column',
-          width: '100%',
+          width: '250px',
         }}
       >
         <Box
@@ -241,14 +230,14 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
       {openOperationList && (
         <Box
           sx={{
-            position: 'sticky',
-            zIndex: '1000',
+            // position: 'sticky',
+            // zIndex: '1000',
             marginLeft: '10px',
-            width: '150px',
             borderRadius: '6px',
+            width: '200px',
             height: '300px',
-            overflow: 'auto',
             ':hover': { cursor: 'pointer' },
+            overflow: 'auto',
           }}
         >
           <Table sx={{ borderSpacing: '0px' }}>
