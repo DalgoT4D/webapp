@@ -33,7 +33,7 @@ import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { set } from 'cypress/types/lodash';
 import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { TASK_DBTRUN } from '@/config/constant';
+import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
 
 type CanvasProps = {};
 
@@ -333,6 +333,13 @@ const Canvas = ({}: CanvasProps) => {
     console.log('running the workflow');
     try {
       const tasks: any = await httpGet(session, `prefect/tasks/transform/`);
+
+      const dbtDepsTask = tasks.find((task: any) => task.slug === TASK_DBTDEPS);
+
+      if (dbtDepsTask) {
+        successToast('Installing dependencies', [], globalContext);
+        await httpPost(session, `prefect/tasks/${dbtDepsTask.uuid}/run/`, {});
+      }
 
       const dbtRunTask = tasks.find((task: any) => task.slug === TASK_DBTRUN);
 
