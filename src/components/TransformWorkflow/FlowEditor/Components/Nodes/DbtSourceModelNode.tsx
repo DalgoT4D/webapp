@@ -11,7 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect, useMemo, useState } from 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { SrcModelNodeType } from '../Canvas';
+import { SrcModelNodeType, UIOperationType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { operations } from '../OperationConfigForms/constant';
@@ -97,7 +97,6 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   const { data: session } = useSession();
   const [openOperationList, setOpenOperationList] = useState(false);
   const [columns, setColumns] = useState<Array<any>>([]);
-  const [operationSlug, setOperationSlug] = useState<string | null>(null);
 
   const edges = useEdges();
   const nodeId: string | null = useNodeId();
@@ -123,9 +122,10 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     setOpenOperationList(!openOperationList);
   };
 
-  const handleSelectNewOperation = (event: any, opSlug: string) => {
-    console.log('selected operation', opSlug);
-    setOperationSlug(opSlug);
+  const handleSelectNewOperation = (event: any, operation: UIOperationType) => {
+    // setOperationSlug(opSlug);
+    // console.log(data.node);
+    data.triggerSelectOperation(operation, node);
     setOpenOperationList(false);
   };
 
@@ -260,9 +260,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
                       ':hover': { background: '#F5F5F5' },
                     }}
                     align="left"
-                    onClick={(event) =>
-                      handleSelectNewOperation(event, op.slug)
-                    }
+                    onClick={(event) => handleSelectNewOperation(event, op)}
                   >
                     {op.label}
                   </TableCell>

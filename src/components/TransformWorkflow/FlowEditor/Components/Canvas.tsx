@@ -53,6 +53,10 @@ export interface OperationNodeType extends NodeProps {
     node: OperationNodeData;
     triggerDelete: (...args: any) => void;
     triggerPreview: (...args: any) => void;
+    triggerSelectOperation: (
+      operation: { slug: string; label: string },
+      node: OperationNodeType | SrcModelNodeType
+    ) => void;
   };
 }
 
@@ -61,6 +65,10 @@ export interface SrcModelNodeType extends NodeProps {
     node: DbtSourceModel;
     triggerDelete: (...args: any) => void;
     triggerPreview: (...args: any) => void;
+    triggerSelectOperation: (
+      operation: { slug: string; label: string },
+      node: OperationNodeType | SrcModelNodeType
+    ) => void;
   };
 }
 
@@ -81,6 +89,11 @@ type EdgeStyleProps = {
   markerEnd?: EdgeMarkerType;
   markerStart?: EdgeMarkerType;
 };
+
+export interface UIOperationType {
+  slug: string;
+  label: string;
+}
 
 const nodeTypes: NodeTypes = {
   src_model_node: DbtSourceModelNode,
@@ -170,6 +183,13 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [openOperationConfig, setOpenOperationConfig] =
     useState<boolean>(false);
+  const [nodeSelectedForConfig, setNodeSelectedForConfig] = useState<
+    SrcModelNodeType | OperationNodeType | null
+  >(null);
+  const [operationSelectedForConfig, setOperationSelectedForConfig] = useState<{
+    slug: string;
+    label: string;
+  } | null>(null);
   const previewNodeRef = useRef<DbtSourceModel | null>();
   const flowEditorContext = useContext(FlowEditorContext);
   const globalContext = useContext(GlobalContext);
@@ -196,6 +216,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
             node: nn,
             triggerDelete: handleDeleteNode,
             triggerPreview: handlePreviewDataForNode,
+            triggerSelectOperation: handleSelectOperation,
           },
         }));
       const edges: Edge[] = response.edges.map((edgeData: EdgeData) => ({
@@ -308,6 +329,16 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
   };
 
+  const handleSelectOperation = (
+    operation: UIOperationType,
+    node: OperationNodeType | SrcModelNodeType
+  ) => {
+    console.log('node to be sent to operation config compoentn', node);
+    setOperationSelectedForConfig(operation);
+    setNodeSelectedForConfig(node);
+    setOpenOperationConfig(true);
+  };
+
   const addNewNodeToCanvas = (
     dbtSourceModel: DbtSourceModel | null | undefined
   ) => {
@@ -319,6 +350,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         data: {
           triggerDelete: handleDeleteNode,
           triggerPreview: handlePreviewDataForNode,
+          triggerSelectOperation: handleSelectOperation,
           node: dbtSourceModel,
         },
         position: { x: 100, y: 125 },
@@ -402,10 +434,12 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         <OperationConfigLayout
           openConfigPanel={openOperationConfig}
           setOpenConfigPanel={setOpenOperationConfig}
+          operation={operationSelectedForConfig}
+          node={nodeSelectedForConfig}
           sx={{
             background: '#FFFFFF',
             justifyContent: 'flex-end',
-            width: '40%',
+            width: '300px',
             boxShadow: '0px 0px 4px 0px rgba(0, 0, 0, 0.16)',
           }}
         />
