@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { SrcModelNodeType, UIOperationType } from '../Canvas';
@@ -244,7 +244,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
         >
           <Table sx={{ borderSpacing: '0px' }}>
             <TableBody>
-              {operations.map((op, idx: number) => (
+              {operations.map((op) => (
                 <TableRow
                   sx={{
                     boxShadow: 'none',
