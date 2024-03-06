@@ -16,8 +16,8 @@ type TransformType = 'github' | 'ui';
 const Transform = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
-  const [selectedTransform, setSelectedTransform] = useState<TransformType | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [selectedTransform, setSelectedTransform] =
+    useState<TransformType | null>(null);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -38,36 +38,32 @@ const Transform = () => {
         const res = await httpGet(session, 'dbt/dbt_transform/');
         const { transform_type } = await res;
         console.log(transform_type);
-  
+
         return { transform_type: transform_type as TransformType };
       } catch (error) {
         console.error(error);
         throw error;
       }
     };
-  
+
     interface TransformTypeResponse {
       transform_type: TransformType;
     }
-  
+
     if (session) {
       fetchTransformType()
         .then((response: TransformTypeResponse) => {
           const transformType = response.transform_type;
-          
+
           if (transformType === 'github' || transformType === 'ui') {
             router.push(`/pipeline/dbtsetup?transform_type=${transformType}`);
-          } else {
-            setIsLoading(false);
           }
         })
         .catch((error) => {
           console.error('Error fetching transform type:', error);
-          setIsLoading(false);
         });
     }
   }, [session]);
-  
 
   return (
     <>
@@ -86,10 +82,20 @@ const Transform = () => {
       <PageHead title="DDP: Transform" />
       {!selectedTransform && (
         <main className={styles.main}>
-          <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
+          <Typography
+            sx={{ fontWeight: 700 }}
+            variant="h4"
+            gutterBottom
+            color="#000"
+          >
             Transformation
           </Typography>
-          <Typography sx={{ fontWeight: 400, marginBottom: '60px' }} variant="h6" gutterBottom color="#808080">
+          <Typography
+            sx={{ fontWeight: 400, marginBottom: '60px' }}
+            variant="h6"
+            gutterBottom
+            color="#808080"
+          >
             Please select one method you would like to proceed with to setup
           </Typography>
 
@@ -106,13 +112,28 @@ const Transform = () => {
                 justifyContent="space-between"
                 sx={{ padding: '30px', marginRight: '20px' }}
               >
-                <Image src={Github} alt="github_transform" style={{ width: 'auto', height: '300px'}} />
-                <Typography sx={{ fontWeight: 550 }} variant="h5" align="left" color="#000">
+                <Image
+                  src={Github}
+                  alt="github_transform"
+                  style={{ width: 'auto', height: '300px' }}
+                />
+                <Typography
+                  sx={{ fontWeight: 550 }}
+                  variant="h5"
+                  align="left"
+                  color="#000"
+                >
                   Github Users <span>(for advanced users)</span>
                 </Typography>
-                <Typography sx={{ fontWeight: 400 }} variant="h6" gutterBottom color="#808080">
-                  Create a project to effortlessly integrate your dbt repository by providing your repository URL and
-                  authentication details in further steps
+                <Typography
+                  sx={{ fontWeight: 400 }}
+                  variant="h6"
+                  gutterBottom
+                  color="#808080"
+                >
+                  Create a project to effortlessly integrate your dbt repository
+                  by providing your repository URL and authentication details in
+                  further steps
                 </Typography>
                 <Button
                   variant="contained"
@@ -136,14 +157,30 @@ const Transform = () => {
                 justifyContent="space-between"
                 sx={{ padding: '30px' }}
               >
-                <Image src={UI} alt="ui_transform" style={{ width: 'auto', height: '300px'}} />
-                  <Typography sx={{ fontWeight: 600 }} variant="h5" gutterBottom align="left" color="#000">
-                    UI Users <span>(for Non technical users)</span>
-                  </Typography>
-                  <Typography sx={{ fontWeight: 400 }} variant="h6" gutterBottom color="#808080">
-                    Create a project to effortlessly integrate your dbt repository by providing your repository URL and
-                    authentication details in further steps
-                  </Typography>
+                <Image
+                  src={UI}
+                  alt="ui_transform"
+                  style={{ width: 'auto', height: '300px' }}
+                />
+                <Typography
+                  sx={{ fontWeight: 600 }}
+                  variant="h5"
+                  gutterBottom
+                  align="left"
+                  color="#000"
+                >
+                  UI Users <span>(for Non technical users)</span>
+                </Typography>
+                <Typography
+                  sx={{ fontWeight: 400 }}
+                  variant="h6"
+                  gutterBottom
+                  color="#808080"
+                >
+                  Create a project to effortlessly integrate your dbt repository
+                  by providing your repository URL and authentication details in
+                  further steps
+                </Typography>
                 <Button
                   variant="contained"
                   color="primary"

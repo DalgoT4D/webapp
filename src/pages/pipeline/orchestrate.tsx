@@ -2,14 +2,12 @@ import styles from '@/styles/Home.module.css';
 import useSWR from 'swr';
 import { PageHead } from '@/components/PageHead';
 import { Flows } from '@/components/Flows/Flows';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import FlowCreate from '@/components/Flows/FlowCreate';
 import { CircularProgress } from '@mui/material';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
-import { ProductWalk } from '@/components/ProductWalk/ProductWalk';
-import { GlobalContext } from '@/contexts/ContextProvider';
 import { TransformTask } from '@/components/DBT/DBTTarget';
 
 export default function Orchestrate() {
@@ -17,8 +15,6 @@ export default function Orchestrate() {
   const [flows, setFlows] = useState<Array<any>>([]);
   const [selectedFlowId, setSelectedFlowId] = useState('');
   const { data: session }: any = useSession();
-  const [runWalkThrough, setRunWalkThrough] = useState(false);
-  const globalContext = useContext(GlobalContext);
   const [tasks, setTasks] = useState<Array<TransformTask>>([]);
 
   const updateCrudVal = (crudState: string) => {
@@ -53,10 +49,6 @@ export default function Orchestrate() {
 
     if (isLocked) pollFlowsLock();
   }, [data]);
-
-  useEffect(() => {
-    setRunWalkThrough(true);
-  }, []);
 
   useEffect(() => {
     if (session) {
