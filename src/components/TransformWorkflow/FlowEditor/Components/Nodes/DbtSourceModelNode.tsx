@@ -95,7 +95,6 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
 
 export function DbtSourceModelNode(node: SrcModelNodeType) {
   const { data: session } = useSession();
-  const [openOperationList, setOpenOperationList] = useState(false);
   const [columns, setColumns] = useState<Array<any>>([]);
 
   const edges = useEdges();
@@ -117,16 +116,8 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     data.triggerPreview(data.node);
   };
 
-  const handleOpenOperationList = () => {
-    console.log('open operation list');
-    setOpenOperationList(!openOperationList);
-  };
-
-  const handleSelectNewOperation = (event: any, operation: UIOperationType) => {
-    // setOperationSlug(opSlug);
-    // console.log(data.node);
-    data.triggerSelectOperation(operation, node);
-    setOpenOperationList(false);
+  const handleClickOpenOperationPanel = () => {
+    data.triggerSelectOperation(node);
   };
 
   useMemo(() => {
@@ -145,12 +136,10 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      {!openOperationList && (
-        <>
-          <Handle type="target" position={Position.Left} />
-          <Handle type="source" position={Position.Right} />
-        </>
-      )}
+      <>
+        <Handle type="target" position={Position.Left} />
+        <Handle type="source" position={Position.Right} />
+      </>
       <Box
         sx={{
           borderRadius: '5px',
@@ -188,7 +177,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
               </IconButton>
             )}
             <IconButton
-              onClick={handleOpenOperationList}
+              onClick={handleClickOpenOperationPanel}
               data-testid="openoperationlist"
             >
               <ChevronRightIcon />
@@ -229,7 +218,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
           )}
         </Box>
       </Box>
-      {openOperationList && (
+      {/* {openOperationList && (
         <Box
           sx={{
             // position: 'sticky',
@@ -269,7 +258,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
             </TableBody>
           </Table>
         </Box>
-      )}
+      )} */}
     </Box>
   );
 }

@@ -49,7 +49,12 @@ const renameGridStyles: {
   },
 };
 
-const RenameColumnOp = ({ node, operation, sx }: OperationFormProps) => {
+const RenameColumnOp = ({
+  node,
+  operation,
+  sx,
+  clearOperation,
+}: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<String[]>([]);
   const globalContext = useContext(GlobalContext);
@@ -71,7 +76,7 @@ const RenameColumnOp = ({ node, operation, sx }: OperationFormProps) => {
   console.log('Selected this operation in name form', operation);
 
   const fetchAndSetSourceColumns = async () => {
-    if (node.data.node.type === SRC_MODEL_NODE) {
+    if (node.type === SRC_MODEL_NODE) {
       const nodeConfig = node.data.node as DbtSourceModel;
       try {
         const data: ColumnData[] = await httpGet(
@@ -84,7 +89,7 @@ const RenameColumnOp = ({ node, operation, sx }: OperationFormProps) => {
       }
     }
 
-    if (node.data.node.type === OPERATION_NODE) {
+    if (node.type === OPERATION_NODE) {
       const nodeConfig = node.data.node as OperationNodeData;
       setSrcColumns(nodeConfig.output_cols);
     }
@@ -96,8 +101,7 @@ const RenameColumnOp = ({ node, operation, sx }: OperationFormProps) => {
         op_type: operation.slug,
         select_columns: srcColumns,
         config: { columns: {} },
-        input_uuids:
-          node.data.node.type === SRC_MODEL_NODE ? [node.data.node.id] : [],
+        input_uuids: node.type === SRC_MODEL_NODE ? [node.data.node.id] : [],
         model_uuid: nodeConfig?.target_model_id || '',
       };
       data.config.forEach((item: any) => {
@@ -121,6 +125,7 @@ const RenameColumnOp = ({ node, operation, sx }: OperationFormProps) => {
   };
 
   const handleClose = () => {
+    clearOperation();
     reset();
     flowEditorContext?.canvasNode.dispatch({
       type: 'refresh-canvas',
@@ -134,8 +139,6 @@ const RenameColumnOp = ({ node, operation, sx }: OperationFormProps) => {
   useEffect(() => {
     fetchAndSetSourceColumns();
   }, [session]);
-
-  console.log('srcColumns', srcColumns);
 
   return (
     <Box sx={{ ...sx }}>
@@ -201,7 +204,7 @@ const RenameColumnOp = ({ node, operation, sx }: OperationFormProps) => {
             <Button variant="contained" type="submit" data-testid="savebutton">
               Save
             </Button>
-            <Button color="secondary" variant="outlined" onClick={() => {}}>
+            <Button color="secondary" variant="outlined" onClick={handleClose}>
               Cancel
             </Button>
           </Box>
