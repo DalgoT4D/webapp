@@ -10,6 +10,8 @@ import {
 } from 'reactflow';
 import { OperationNodeType } from '../Canvas';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { operations } from '../../constant';
 
 export function OperationNode(node: OperationNodeType) {
   const edges = useEdges();
@@ -27,6 +29,10 @@ export function OperationNode(node: OperationNodeType) {
     data.triggerDelete(nodeId, type);
   };
 
+  const handleClickOpenOperationPanel = () => {
+    data.triggerSelectOperation(node);
+  };
+
   return (
     <Box>
       <>
@@ -35,7 +41,7 @@ export function OperationNode(node: OperationNodeType) {
       </>
       <Box
         sx={{
-          width: '80px',
+          width: '90px',
           height: '100px',
           background: '#F8F8F8',
           boxShadow: '0px 2px 4px 0px rgba(0, 0, 0, 0.16)',
@@ -66,10 +72,28 @@ export function OperationNode(node: OperationNodeType) {
           </Box>
         </Box>
         <Divider orientation="horizontal" sx={{ color: '#EEEEEE' }} />
-        <Box>
-          <Typography fontWeight="600" fontSize="12px" padding="8px">
-            {node.data.node.config?.type}
-          </Typography>
+        <Box sx={{ display: 'flex' }}>
+          <Box
+            sx={{
+              flex: '1',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+            }}
+          >
+            <Typography fontWeight="600" fontSize="12px" padding="8px">
+              {operations.find((op) => op.slug === node.data.node.config?.type)
+                ?.label || 'Not found'}
+            </Typography>
+          </Box>
+
+          <Box sx={{ alignSelf: 'flex-end' }}>
+            <IconButton
+              onClick={handleClickOpenOperationPanel}
+              data-testid="openoperationlist"
+            >
+              <ChevronRightIcon sx={{ width: '16px', height: '16px' }} />
+            </IconButton>
+          </Box>
         </Box>
       </Box>
     </Box>
