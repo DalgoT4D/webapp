@@ -55,7 +55,6 @@ export interface OperationNodeType extends NodeProps {
     triggerDelete: (...args: any) => void;
     triggerPreview: (...args: any) => void;
     triggerSelectOperation: (
-      operation: { slug: string; label: string },
       node: OperationNodeType | SrcModelNodeType
     ) => void;
   };
@@ -67,7 +66,6 @@ export interface SrcModelNodeType extends NodeProps {
     triggerDelete: (...args: any) => void;
     triggerPreview: (...args: any) => void;
     triggerSelectOperation: (
-      operation: { slug: string; label: string },
       node: OperationNodeType | SrcModelNodeType
     ) => void;
   };
@@ -331,11 +329,9 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   };
 
   const handleSelectOperation = (
-    operation: UIOperationType,
     node: OperationNodeType | SrcModelNodeType
   ) => {
-    console.log('node to be sent to operation config compoentn', node);
-    setOperationSelectedForConfig(operation);
+    console.log('node to be sent to operation config panel component', node);
     setNodeSelectedForConfig(node);
     setOpenOperationConfig(true);
   };
@@ -439,17 +435,15 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           </ReactFlow>
         </ReactFlowProvider>
         <OperationConfigLayout
-          openConfigPanel={openOperationConfig}
-          setOpenConfigPanel={setOpenOperationConfig}
-          operation={operationSelectedForConfig}
+          openPanel={openOperationConfig}
+          setOpenPanel={setOpenOperationConfig}
           node={nodeSelectedForConfig}
           sx={{
             background: '#FFFFFF',
-            justifyContent: 'flex-end',
             width: '500px',
             boxShadow: '0px 0px 4px 0px rgba(0, 0, 0, 0.16)',
             borderRadius: '6px 0px 0px 6px',
-            overflowY: 'auto',
+            zIndex: 1000,
           }}
         />
       </Box>
