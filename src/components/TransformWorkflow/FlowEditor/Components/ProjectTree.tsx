@@ -1,14 +1,11 @@
 import { Box, Typography } from '@mui/material';
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { Tree, NodeRendererProps } from 'react-arborist';
+import React, { useContext, useEffect, useState } from 'react';
+import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@mui/icons-material/Toc';
 import { FlowEditorContext } from '@/contexts/FlowEditorContext';
-import { flow } from 'cypress/types/lodash';
-import { useSession } from 'next-auth/react';
 import { DbtSourceModel } from '../FlowEditor';
-import { event } from 'cypress/types/jquery';
 import { NodeApi } from 'react-arborist';
 
 const Node = ({ node, style, dragHandle }: any) => {
