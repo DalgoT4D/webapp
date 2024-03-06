@@ -1,7 +1,7 @@
 import { Box, Divider, SxProps, Typography } from '@mui/material';
 import React from 'react';
 import { OperationNodeType, SrcModelNodeType, UIOperationType } from './Canvas';
-import { operations } from './OperationConfigForms/constant';
+// import { operations } from './OperationConfigForms/constant';
 import InfoIcon from '@mui/icons-material/Info';
 import { RENAME_COLUMNS_OP } from './OperationConfigForms/constant';
 import RenameColumnOpForm from './OperationConfigForms/RenameColumnOpForm';
@@ -33,7 +33,7 @@ const OperationConfigLayout = ({
   operation,
   node,
   openConfigPanel,
-  setOpenConfigPanel,
+  // setOpenConfigPanel,
   sx,
 }: OperationConfigProps) => {
   if (!openConfigPanel) return null;

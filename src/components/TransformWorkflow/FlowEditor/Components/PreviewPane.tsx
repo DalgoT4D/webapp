@@ -10,7 +10,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 
-type PreviewPaneProps = {};
+type PreviewPaneProps = object;
 
 const PreviewPane = ({}: PreviewPaneProps) => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
