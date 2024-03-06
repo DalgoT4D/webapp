@@ -19,3 +19,7 @@ export const operations = [
   { label: 'Rename columns', slug: RENAME_COLUMNS_OP },
   { label: 'Regex extraction', slug: REGEX_EXTRACTION_OP },
 ];
+
+// Node types
+export const SRC_MODEL_NODE: string = 'src_model_node';
+export const OPERATION_NODE: string = 'operation_node';

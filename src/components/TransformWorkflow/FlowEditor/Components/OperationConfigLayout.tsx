@@ -3,7 +3,7 @@ import React from 'react';
 import { OperationNodeType, SrcModelNodeType, UIOperationType } from './Canvas';
 // import { operations } from './OperationConfigForms/constant';
 import InfoIcon from '@mui/icons-material/Info';
-import { RENAME_COLUMNS_OP } from './OperationConfigForms/constant';
+import { RENAME_COLUMNS_OP } from '../constant';
 import RenameColumnOpForm from './OperationConfigForms/RenameColumnOpForm';
 
 interface OperationConfigProps {
@@ -14,26 +14,27 @@ interface OperationConfigProps {
   node: SrcModelNodeType | OperationNodeType | null;
 }
 
-interface OperationFormProps {
+export interface OperationFormProps {
   node: SrcModelNodeType | OperationNodeType;
   operation: UIOperationType;
+  sx: SxProps;
 }
 
 const operationComponentMapping: any = {
-  [RENAME_COLUMNS_OP]: ({ node, operation }: OperationFormProps) => (
-    <RenameColumnOpForm node={node} operation={operation} />
+  [RENAME_COLUMNS_OP]: ({ node, operation, sx }: OperationFormProps) => (
+    <RenameColumnOpForm node={node} operation={operation} sx={sx} />
   ), // add more operations here
 };
 
-const OperationForm = ({ operation, node }: OperationFormProps) => {
-  return operationComponentMapping[operation.slug]({ operation, node });
+const OperationForm = ({ operation, node, sx }: OperationFormProps) => {
+  return operationComponentMapping[operation.slug]({ operation, node, sx });
 };
 
 const OperationConfigLayout = ({
   operation,
   node,
   openConfigPanel,
-  // setOpenConfigPanel,
+  setOpenConfigPanel,
   sx,
 }: OperationConfigProps) => {
   if (!openConfigPanel) return null;
@@ -42,8 +43,6 @@ const OperationConfigLayout = ({
 
   if (!node) return <Box sx={{ ...sx }}>Please select a node</Box>;
 
-  console.log('Selected this node in config form', node);
-  console.log('Selected this operation in config form', operation);
   return (
     <Box sx={{ ...sx }}>
       <Box
@@ -61,7 +60,11 @@ const OperationConfigLayout = ({
         </Box>
       </Box>
       <Divider orientation="horizontal" />
-      <OperationForm operation={operation} node={node} />
+      <OperationForm
+        operation={operation}
+        node={node}
+        sx={{ marginTop: '17px' }}
+      />
     </Box>
   );
 };

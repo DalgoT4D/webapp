@@ -34,16 +34,18 @@ import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
 import OperationConfigLayout from './OperationConfigLayout';
+import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
 
 type CanvasProps = {
   redrawGraph: boolean;
   setRedrawGraph: (...args: any) => void;
 };
 
-interface OperationNodeData {
+export interface OperationNodeData {
   id: string;
   output_cols: Array<string>;
-  type: 'operation_node';
+  type: typeof OPERATION_NODE;
+  target_model_id: string;
   config?: any;
 }
 
@@ -95,8 +97,8 @@ export interface UIOperationType {
 }
 
 const nodeTypes: NodeTypes = {
-  src_model_node: DbtSourceModelNode,
-  operation_node: OperationNode,
+  [`${SRC_MODEL_NODE}`]: DbtSourceModelNode,
+  [`${OPERATION_NODE}`]: OperationNode,
 };
 
 const CanvasHeader = ({
@@ -151,7 +153,7 @@ const getLayoutedElements = ({
 }) => {
   g.setGraph({
     rankdir: options.direction,
-    nodesep: 2000,
+    nodesep: 200,
     edgesep: 100,
     width: 250,
     height: 120,
@@ -292,7 +294,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
 
     // remove node from canvas
-    if (type === 'src_model_node') {
+    if (type === SRC_MODEL_NODE) {
       // hit the backend api to remove the node in a try catch
       try {
         await httpDelete(session, `transform/dbt_project/model/${nodeId}/`);
@@ -300,7 +302,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       } catch (error) {
         console.log(error);
       }
-    } else if (type === 'operation_node') {
+    } else if (type === OPERATION_NODE) {
       // hit the backend api to remove the node in a try catch
       try {
         await httpDelete(
@@ -345,7 +347,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       console.log('adding a source or a model to canvas', dbtSourceModel);
       const newNode = {
         id: dbtSourceModel.id,
-        type: 'src_model_node',
+        type: SRC_MODEL_NODE,
         data: {
           triggerDelete: handleDeleteNode,
           triggerPreview: handlePreviewDataForNode,
@@ -362,6 +364,12 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     // This event is triggered via the ProjectTree component
     if (flowEditorContext?.canvasNode.state.action === 'add') {
       addNewNodeToCanvas(flowEditorContext?.canvasNode.state.node);
+    }
+
+    if (flowEditorContext?.canvasNode.state.action === 'refresh-canvas') {
+      setRedrawGraph(!redrawGraph);
+      setOperationSelectedForConfig(null);
+      setOpenOperationConfig(false);
     }
   }, [flowEditorContext?.canvasNode.state]);
 
@@ -438,8 +446,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           sx={{
             background: '#FFFFFF',
             justifyContent: 'flex-end',
-            width: '300px',
+            width: '500px',
             boxShadow: '0px 0px 4px 0px rgba(0, 0, 0, 0.16)',
+            borderRadius: '6px 0px 0px 6px',
+            overflowY: 'auto',
           }}
         />
       </Box>

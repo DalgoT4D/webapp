@@ -4,12 +4,12 @@ import { DbtSourceModel } from '@/components/TransformWorkflow/FlowEditor/FlowEd
 
 export interface FlowEditorNodeInterface {
   node: DbtSourceModel | undefined | null;
-  action: 'preview' | 'clear-preview' | 'clear' | 'add' | null;
+  action: 'preview' | 'clear-preview' | 'add' | 'refresh-canvas' | null;
 }
 
 // action to add a new node to canvas or preview the node
 interface Action {
-  type: 'add' | 'preview' | 'clear-preview' | 'clear';
+  type: 'add' | 'preview' | 'clear-preview' | 'refresh-canvas';
   state: FlowEditorNodeInterface;
 }
 
@@ -25,6 +25,8 @@ export const CanvasReducer = (
   switch (updateAction?.type) {
     case 'add':
       return { node: updateAction.state.node, action: updateAction.type };
+    case 'refresh-canvas':
+      return { node: null, action: updateAction.type };
     default:
       return state;
   }
