@@ -296,7 +296,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       // hit the backend api to remove the node in a try catch
       try {
         await httpDelete(session, `transform/dbt_project/model/${nodeId}/`);
-        setRedrawGraph(!redrawGraph);
       } catch (error) {
         console.log(error);
       }
@@ -307,13 +306,13 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           session,
           `transform/dbt_project/model/operations/${nodeId}/`
         );
-        setRedrawGraph(!redrawGraph);
       } catch (error) {
         console.log(error);
       }
     }
 
     handleNodesChange([{ type: 'remove', id: nodeId }]);
+    setRedrawGraph(!redrawGraph);
   };
 
   const handlePreviewDataForNode = (sourceModel: DbtSourceModel | null) => {

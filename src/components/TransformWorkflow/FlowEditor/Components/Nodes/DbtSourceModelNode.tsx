@@ -14,7 +14,6 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { SrcModelNodeType, UIOperationType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-import { operations } from '../../constant';
 
 export interface ColumnData {
   name: string;
