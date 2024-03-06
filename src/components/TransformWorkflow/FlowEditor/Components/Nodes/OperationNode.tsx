@@ -86,14 +86,16 @@ export function OperationNode(node: OperationNodeType) {
             </Typography>
           </Box>
 
-          <Box sx={{ alignSelf: 'flex-end' }}>
-            <IconButton
-              onClick={handleClickOpenOperationPanel}
-              data-testid="openoperationlist"
-            >
-              <ChevronRightIcon sx={{ width: '16px', height: '16px' }} />
-            </IconButton>
-          </Box>
+          {isDeletable && (
+            <Box sx={{ alignSelf: 'flex-end' }}>
+              <IconButton
+                onClick={handleClickOpenOperationPanel}
+                data-testid="openoperationlist"
+              >
+                <ChevronRightIcon sx={{ width: '16px', height: '16px' }} />
+              </IconButton>
+            </Box>
+          )}
         </Box>
       </Box>
     </Box>
