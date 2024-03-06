@@ -5,6 +5,7 @@ import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/PreviewPane';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
+import { SRC_MODEL_NODE } from './constant';
 
 export type DbtSourceModel = {
   source_name: string;
@@ -12,7 +13,7 @@ export type DbtSourceModel = {
   input_type: 'model' | 'source';
   schema: string;
   id: string;
-  type: 'src_model_node';
+  type: typeof SRC_MODEL_NODE;
 };
 
 const FlowEditor = ({}) => {
