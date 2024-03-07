@@ -1,4 +1,4 @@
-import { Box, Divider } from '@mui/material';
+import { Box, Divider, Tab, Tabs } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
@@ -20,6 +20,7 @@ const FlowEditor = ({}) => {
   const { data: session } = useSession();
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
+  const [selectedTab, setSelectedTab] = useState(0);
 
   const fetchSourcesModels = async () => {
     try {
@@ -37,6 +38,10 @@ const FlowEditor = ({}) => {
     if (session) fetchSourcesModels();
   }, [session, refreshEditor]);
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
+  };
+
   return (
     <Box
       sx={{
@@ -46,7 +51,7 @@ const FlowEditor = ({}) => {
         paddingTop: '3.5rem',
       }}
     >
-      <Box sx={{ display: 'flex', height: '70%', overflow: 'inherit' }}>
+      <Box sx={{ display: 'flex', height: '60%', overflow: 'inherit' }}>
         <Box sx={{ width: '20%' }}>
           <ProjectTree dbtSourceModels={sourcesModels} />
         </Box>
@@ -59,8 +64,26 @@ const FlowEditor = ({}) => {
         </Box>
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
-      <Box sx={{ height: '30%', overflow: 'auto' }}>
-        <PreviewPane />
+      <Box>
+        <Tabs
+          value={selectedTab}
+          onChange={handleTabChange}
+          sx={{ display: 'flex', height: '4rem', alignItems: 'center' }}
+        >
+          <Tab label="Preview" />
+          <Tab label="Logs" />
+        </Tabs>
+      </Box>
+      <Divider orientation="horizontal" sx={{ color: 'black' }} />
+      <Box sx={{ height: '40%', overflow: 'auto' }}>
+        {selectedTab === 0 && (
+          <PreviewPane />
+        )}
+        {selectedTab === 1 && (
+          <Box sx={{ padding: '1rem' }}>
+            {/* Logs content goes here */}
+          </Box>
+        )}
       </Box>
     </Box>
   );
