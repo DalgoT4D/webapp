@@ -10,6 +10,8 @@ import { DbtSourceModel } from '../FlowEditor';
 
 type PreviewPaneProps = {};
 
+const pageSize = 5;
+
 const PreviewPane = ({}: PreviewPaneProps) => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
   const { data: session } = useSession();
@@ -21,6 +23,10 @@ const PreviewPane = ({}: PreviewPaneProps) => {
 
   // Row Data: The data to be displayed.
   const [data, setData] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState(0); // Total count of rows
+  const [pageCount, setPageCount] = useState(0); // Total number of pages
+  const [remainingData, setRemainingData] = useState<any[]>([]); // Remaining data for pagination
+  const [pageIndex, setPageIndex] = useState(0); // Page index
 
   useEffect(() => {
     if (flowEditorContext?.previewNode.state.action === 'preview') {
@@ -30,10 +36,20 @@ const PreviewPane = ({}: PreviewPaneProps) => {
     }
   }, [flowEditorContext?.previewNode.state]);
 
-  const fetchColumnsAndRows = async (schema: string, table: string, offset: number) => {
+  useEffect(() => {
+    if (modelToPreview) {
+      const page = 0; // Set the initial page
+      const limit = 10; // Set the limit per page
+      fetchColumnsAndRows(modelToPreview.schema, modelToPreview.input_name, page, limit);
+    }
+  }, [modelToPreview]);
+
+  const fetchColumnsAndRows = async (schema: string, table: string, page: number, limit: number) => {
     try {
       const columnSpec = await httpGet(session, `warehouse/table_columns/${schema}/${table}`);
-      const rows = await httpGet(session, `warehouse/table_data/${schema}/${table}?limit=10&offset=${offset}`);
+      const rows = await httpGet(session, `warehouse/table_data/${schema}/${table}?page=${page}&limit=${limit}`);
+      const count = await httpGet(session, `warehouse/table_count/${schema}/${table}`);
+      setTotalCount(count.total_rows); // Update total count of rows
       setColumns(
         columnSpec.map((col: { name: string; data_type: string }) => ({
           Header: col.name,
@@ -41,18 +57,20 @@ const PreviewPane = ({}: PreviewPaneProps) => {
           autoHeight: true,
         }))
       );
-      setData(rows);
+
+      // Set current page data and remaining data
+      const currentPageData = rows.slice(0, pageSize);
+      const remainingRows = rows.slice(pageSize);
+      setData(currentPageData);
+      setRemainingData(remainingRows);
+
+      const totalPages = Math.ceil(count.total_rows / pageSize);
+      setPageCount(totalPages);
+
     } catch (error: any) {
       errorToast(error.message, [], toastContext);
     }
   };
-  
-  useEffect(() => {
-    setData([]);
-    if (modelToPreview) {
-      fetchColumnsAndRows(modelToPreview.schema, modelToPreview.input_name, 0);
-    }
-  }, [modelToPreview]);
 
   const tableData = useMemo(() => {
     return {
@@ -60,6 +78,32 @@ const PreviewPane = ({}: PreviewPaneProps) => {
       data
     };
   }, [columns, data]);
+
+  const handleNextPage = async () => {
+    if (remainingData.length > 0) {
+      const nextPageData = remainingData.slice(0, pageSize);
+      const newRemainingData = remainingData.slice(pageSize);
+      setData(nextPageData);
+      setRemainingData(newRemainingData);
+      setPageIndex((pageIndex) => pageIndex + 1);
+    } else {
+      const nextPageIndex = pageIndex + 1;
+      try {
+        const nextPageData = await httpGet(
+          session,
+          `warehouse/table_data/${modelToPreview.schema}/${modelToPreview.input_name}?page=${nextPageIndex}&limit=${pageSize * 2}`
+        );
+        console.log('Next page data:', nextPageData);
+        const currentPageData = nextPageData.slice(0, pageSize);
+        const remainingRows = nextPageData.slice(pageSize);
+        setData(currentPageData);
+        setRemainingData(remainingRows);
+        setPageIndex(nextPageIndex);
+      } catch (error: any) {
+        errorToast(error.message, [], toastContext);
+      }
+    }
+  };
 
   const {
     getTableProps,
@@ -71,18 +115,21 @@ const PreviewPane = ({}: PreviewPaneProps) => {
     nextPage,
     previousPage,
     canNextPage,
-    pageOptions,
-    state: { pageIndex, pageSize }
+    canPreviousPage
   } = useTable(
     {
       columns: tableData.columns,
       data: tableData.data,
-      initialState: { pageIndex: 0, pageSize: 5 }
+      manualPagination: true,
+      pageCount: pageCount
     },
     useSortBy,
     usePagination
   );
-
+  
+  const handlePreviousPage = () => {
+    previousPage();
+  };
 
   return (
     <Box>
@@ -107,7 +154,7 @@ const PreviewPane = ({}: PreviewPaneProps) => {
                     <Box display="flex" alignItems="center">
                       <Typography>{column.render('Header')}</Typography>
                       <TableSortLabel
-                        active={true} // Always set to true
+                        active={true}
                         direction={column.isSortedDesc ? 'desc' : 'asc'}
                         sx={{ marginLeft: '4px' }}
                       />
@@ -125,7 +172,7 @@ const PreviewPane = ({}: PreviewPaneProps) => {
                   {row.cells.map((cell: any) => (
                     <TableCell
                       {...cell.getCellProps()}
-                      sx={{ border: '1px solid #dddddd', padding: '4px', textAlign: 'left', fontSize: '0.8rem' }} // Adjusting cell padding and font size
+                      sx={{ border: '1px solid #dddddd', padding: '4px', textAlign: 'left', fontSize: '0.8rem' }}
                     >
                       {cell.column.id === '_airbyte_data' ? cell.render('Cell')._airbyte_data : cell.render('Cell')}
                     </TableCell>
@@ -135,21 +182,25 @@ const PreviewPane = ({}: PreviewPaneProps) => {
             })}
           </TableBody>
         </Table>
-        {/* Pagination controls */}
         {data.length > 0 && (
           <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
             <ButtonGroup variant="outlined" color="primary" aria-label="pagination">
-              <Button onClick={() => previousPage()} disabled={pageIndex === 0}>
+              <Button onClick={handlePreviousPage} disabled={!canPreviousPage}>
                 Previous
               </Button>
-              <Button onClick={() => nextPage()} disabled={!canNextPage}>
+              <Button onClick={handleNextPage} disabled={!canNextPage}>
                 Next
               </Button>
             </ButtonGroup>
             <Typography variant="body1" component="span" sx={{ marginLeft: '1rem' }}>
-              Page <strong>{pageIndex + 1}</strong> of <strong>{pageOptions.length}</strong>
+              Page <strong>{pageIndex + 1}</strong> of <strong>{pageCount}</strong>
             </Typography>
           </Box>
+        )}
+        {totalCount > 0 && (
+          <Typography variant="body1" component="div" sx={{ textAlign: 'center', marginTop: '1rem' }}>
+            Total rows: {totalCount}
+          </Typography>
         )}
       </Box>
     </Box>
