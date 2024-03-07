@@ -105,6 +105,22 @@ const PreviewPane = ({}: PreviewPaneProps) => {
     }
   };
 
+  const handlePreviousPage = async () => {
+    if (pageIndex > 1) { // Check if pageIndex is greater than 1
+      const previousPageIndex = pageIndex - 1;
+      try {
+        const previousPageData = await httpGet(
+          session,
+          `warehouse/table_data/${modelToPreview.schema}/${modelToPreview.input_name}?page=${previousPageIndex}&limit=${pageSize}`
+        );
+        setData(previousPageData);
+        setPageIndex(previousPageIndex);
+      } catch (error) {
+        errorToast(error.message, [], toastContext);
+      }
+    }
+  }
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -126,10 +142,6 @@ const PreviewPane = ({}: PreviewPaneProps) => {
     useSortBy,
     usePagination
   );
-  
-  const handlePreviousPage = () => {
-    previousPage();
-  };
 
   return (
     <Box>
@@ -185,7 +197,7 @@ const PreviewPane = ({}: PreviewPaneProps) => {
         {data.length > 0 && (
           <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
             <ButtonGroup variant="outlined" color="primary" aria-label="pagination">
-              <Button onClick={handlePreviousPage} disabled={!canPreviousPage}>
+              <Button onClick={handlePreviousPage} disabled={pageIndex === 0}>
                 Previous
               </Button>
               <Button onClick={handleNextPage} disabled={!canNextPage}>
