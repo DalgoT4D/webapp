@@ -110,51 +110,6 @@ const Transform = () => {
                 display="flex"
                 flexDirection="column"
                 justifyContent="space-between"
-                sx={{ padding: '30px', marginRight: '20px' }}
-              >
-                <Image
-                  src={Github}
-                  alt="github_transform"
-                  style={{ width: 'auto', height: '300px' }}
-                />
-                <Typography
-                  sx={{ fontWeight: 550 }}
-                  variant="h5"
-                  align="left"
-                  color="#000"
-                >
-                  Github Users <span>(for advanced users)</span>
-                </Typography>
-                <Typography
-                  sx={{ fontWeight: 400 }}
-                  variant="h6"
-                  gutterBottom
-                  color="#808080"
-                >
-                  Create a project to effortlessly integrate your dbt repository
-                  by providing your repository URL and authentication details in
-                  further steps
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  sx={{ width: '100%' }}
-                  onClick={() => handleSetup('github')}
-                >
-                  Setup using Github
-                </Button>
-              </Box>
-            </Grid>
-            <Grid item xs={6}>
-              <Box
-                height={550}
-                bgcolor="white"
-                color="grey"
-                textAlign="left"
-                lineHeight={2}
-                display="flex"
-                flexDirection="column"
-                justifyContent="space-between"
                 sx={{ padding: '30px' }}
               >
                 <Image
@@ -188,6 +143,51 @@ const Transform = () => {
                   onClick={() => handleSetup('ui')}
                 >
                   Setup using UI
+                </Button>
+              </Box>
+            </Grid>
+            <Grid item xs={6}>
+              <Box
+                height={550}
+                bgcolor="white"
+                color="grey"
+                textAlign="left"
+                lineHeight={2}
+                display="flex"
+                flexDirection="column"
+                justifyContent="space-between"
+                sx={{ padding: '30px', marginRight: '20px' }}
+              >
+                <Image
+                  src={Github}
+                  alt="github_transform"
+                  style={{ width: 'auto', height: '300px' }}
+                />
+                <Typography
+                  sx={{ fontWeight: 550 }}
+                  variant="h5"
+                  align="left"
+                  color="#000"
+                >
+                  Github Users <span>(for advanced users)</span>
+                </Typography>
+                <Typography
+                  sx={{ fontWeight: 400 }}
+                  variant="h6"
+                  gutterBottom
+                  color="#808080"
+                >
+                  Create a project to effortlessly integrate your dbt repository
+                  by providing your repository URL and authentication details in
+                  further steps
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ width: '100%' }}
+                  onClick={() => handleSetup('github')}
+                >
+                  Setup using Github
                 </Button>
               </Box>
             </Grid>
