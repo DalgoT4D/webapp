@@ -25,6 +25,10 @@ const PreviewPane = ({ }: PreviewPaneProps) => {
   const [pageCount, setPageCount] = useState(0); // Total number of pages
   const [remainingData, setRemainingData] = useState<any[]>([]); // Remaining data for pagination
   const [currentPageIndex, setCurrentPageIndex] = useState(0); // Page index
+  
+  const [sortedColumn, setSortedColumn] = useState(null); // Track sorted column
+  const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
+
 
   useEffect(() => {
     if (flowEditorContext?.previewNode.state.action === 'preview') {
@@ -42,12 +46,21 @@ const PreviewPane = ({ }: PreviewPaneProps) => {
     }
   }, [modelToPreview]);
 
-  const fetchColumns = async (schema: string, table: string, initialPage: number, limit: number) => {
+  const fetchColumns = async (schema: string, table: string, initialPage: number, limit: number, order_by?: string, order?: number) => {
     try {
-      const columnSpec = await httpGet(session, `warehouse/table_columns/${schema}/${table}`);
-      const rows = await httpGet(session, `warehouse/table_data/${schema}/${table}?page=${initialPage}&limit=${limit}`);
-      const count = await httpGet(session, `warehouse/table_count/${schema}/${table}`);
-      setTotalCount(count.total_rows); // Update total count of rows
+      let dataUrl = `warehouse/table_data/${schema}/${table}?page=${initialPage}&limit=${limit}`;
+      if (order_by && order) {
+        dataUrl += `&order_by=${order_by}&order=${order}`;
+      }
+  
+      // Fetch table data and column specifications
+      const [columnSpec, rows, count] = await Promise.all([
+        httpGet(session, `warehouse/table_columns/${schema}/${table}`),
+        httpGet(session, dataUrl),
+        httpGet(session, `warehouse/table_count/${schema}/${table}`)
+      ]);
+  
+      setTotalCount(count.total_rows);
       setColumns(
         columnSpec.map((col: { name: string; data_type: string }) => ({
           Header: col.name,
@@ -61,11 +74,21 @@ const PreviewPane = ({ }: PreviewPaneProps) => {
       const remainingRows = rows.slice(pageSize);
       setData(currentPageData);
       setRemainingData(remainingRows);
-
+  
       const totalPages = Math.ceil(count.total_rows / pageSize);
       setPageCount(totalPages);
     } catch (error: any) {
       errorToast(error.message, [], toastContext);
+    }
+  };
+  
+
+  const handleSort = (columnId: string) => {
+    if (sortedColumn === columnId) {
+      setSortOrder(sortOrder === 1 ? -1 : 1);
+    } else {
+      setSortedColumn(columnId);
+      setSortOrder(1);
     }
   };
   
@@ -86,20 +109,36 @@ const PreviewPane = ({ }: PreviewPaneProps) => {
     setCurrentPageIndex(previousPageIndex);
   };
 
+  const fetchSortedData = async () => {
+    fetchColumns(modelToPreview.schema, modelToPreview.input_name, currentPageIndex, pageSize, sortedColumn, sortOrder);
+  };
+  
+  useEffect(() => {
+    if (modelToPreview) {
+      fetchSortedData();
+    }
+  }, [modelToPreview, currentPageIndex, sortedColumn, sortOrder]);
+  
+  // Update useTable hook
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     prepareRow,
-    page: tablePage, // Renamed to tablePage to avoid conflicts
-    state: { pageIndex }
+    page: tablePage,
+    state: { pageIndex, sortBy } // Add sortBy
   } = useTable(
     {
       columns: tableData.columns,
       data: tableData.data,
       manualPagination: true,
-      pageCount: 0, // Initial pageCount can be set to 0
-      manualSortBy: true // Set manualSortBy to true
+      pageCount: 0,
+      manualSortBy: false,
+      // Pass sorting parameters
+      initialState: {
+        pageIndex: currentPageIndex,
+        sortBy: [{ id: sortedColumn, desc: sortOrder === -1 }]
+      }
     },
     useSortBy,
     usePagination
@@ -145,10 +184,14 @@ const PreviewPane = ({ }: PreviewPaneProps) => {
                     <Box display="flex" alignItems="center">
                       <Typography>{column.render('Header')}</Typography>
                       <TableSortLabel
-                        active={column.isSorted}
-                        direction={column.isSortedDesc ? 'desc' : 'asc'}
+                        active={sortedColumn === column.id}
+                        direction={sortedColumn === column.id ? (sortOrder === 1 ? 'asc' : 'desc') : 'asc'}
+                        onClick={() => handleSort(column.id)}
                         sx={{ marginLeft: '4px' }}
-                      />
+                      >
+                        {column.render('Header')}
+                      </TableSortLabel>
+
                     </Box>
                   </TableCell>
                 ))}
