@@ -182,7 +182,6 @@ const PreviewPane = ({ }: PreviewPaneProps) => {
                     }}
                   >
                     <Box display="flex" alignItems="center">
-                      <Typography>{column.render('Header')}</Typography>
                       <TableSortLabel
                         active={sortedColumn === column.id}
                         direction={sortedColumn === column.id ? (sortOrder === 1 ? 'asc' : 'desc') : 'asc'}
