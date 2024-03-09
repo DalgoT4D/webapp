@@ -8,11 +8,11 @@ import {
   Switch,
   Select,
   MenuItem,
-  RadioGroup,
-  Radio,
-  FormControl,
-  FormLabel,
-  Grid,
+  // RadioGroup,
+  // Radio,
+  // FormControl,
+  // FormLabel,
+  // Grid,
   TextField,
 } from '@mui/material';
 import {
@@ -21,7 +21,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  FormControlLabel,
+  // FormControlLabel,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -233,9 +233,9 @@ const CreateConnectionForm = ({
     searchInputRef.current = '';
   };
 
-  const handleRadioChange = (event: any) => {
-    setNormalize(event.target.value === 'normalized');
-  };
+  // const handleRadioChange = (event: any) => {
+  //   setNormalize(event.target.value === 'normalized');
+  // };
 
   // create/update a connection
   const onSubmit = async (data: any) => {
