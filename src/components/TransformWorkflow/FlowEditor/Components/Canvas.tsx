@@ -35,6 +35,9 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
 import OperationConfigLayout from './OperationConfigLayout';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
+import { delay } from '@/utils/common';
+import { PrefectFlowRun, PrefectFlowRunLog } from '@/components/DBT/DBTTarget';
+import { useDbtRunLogsUpdate } from '@/contexts/DbtRunLogsContext';
 
 type CanvasProps = {
   redrawGraph: boolean;
@@ -200,6 +203,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       color: 'black',
     },
   };
+  const setDbtRunLogs = useDbtRunLogsUpdate();
 
   const fetchDbtProjectGraph = async () => {
     try {
@@ -368,6 +372,42 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
   }, [flowEditorContext?.canvasNode.state]);
 
+  const fetchFlowRunStatus = async (flow_run_id: string) => {
+    try {
+      const flowRun: PrefectFlowRun = await httpGet(
+        session,
+        `prefect/flow_runs/${flow_run_id}`
+      );
+
+      if (!flowRun.state_type) return 'FAILED';
+
+      return flowRun.state_type;
+    } catch (err: any) {
+      console.error(err);
+      return 'FAILED';
+    }
+  };
+
+  const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
+    try {
+      const response = await httpGet(
+        session,
+        `prefect/flow_runs/${flow_run_id}/logs`
+      );
+      if (response?.logs?.logs && response.logs.logs.length > 0) {
+        const logsArray = response.logs.logs.map(
+          // eslint-disable-next-line
+          (logObject: PrefectFlowRunLog, idx: number) =>
+            `- ${logObject.message} '\n'`
+        );
+
+        setDbtRunLogs(logsArray);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
   const handleRunWorkflow = async () => {
     console.log('running the workflow');
     try {
@@ -383,12 +423,21 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       const dbtRunTask = tasks.find((task: any) => task.slug === TASK_DBTRUN);
 
       if (dbtRunTask) {
-        await httpPost(
+        const response = await httpPost(
           session,
           `prefect/v1/flows/${dbtRunTask.deploymentId}/flow_run/`,
           {}
         );
         successToast('Dbt run initiated', [], globalContext);
+        let flowRunStatus: string = await fetchFlowRunStatus(
+          response.flow_run_id
+        );
+
+        while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
+          await delay(5000);
+          await fetchAndSetFlowRunLogs(response.flow_run_id);
+          flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
+        }
       }
     } catch (error) {
       console.log(error);
