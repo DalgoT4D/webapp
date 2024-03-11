@@ -169,9 +169,9 @@ const PreviewPane = ({}: PreviewPaneProps) => {
       >
         <Table sx={{ borderCollapse: 'collapse', width: '100%' }}>
           <TableHead>
-            {getHeaderGroups().map((headerGroup) => (
+            {getHeaderGroups().map((headerGroup: any) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map((header: any) => (
                   <TableCell
                     key={header.id}
                     colSpan={header.colSpan}
@@ -207,10 +207,10 @@ const PreviewPane = ({}: PreviewPaneProps) => {
             ))}
           </TableHead>
           <TableBody sx={{ borderColor: '#dddddd' }}>
-            {getRowModel().rows.map((row) => {
+            {getRowModel().rows.map((row: any) => {
               return (
                 <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map((cell: any) => (
                     <TableCell
                       key={cell.id}
                       sx={{
