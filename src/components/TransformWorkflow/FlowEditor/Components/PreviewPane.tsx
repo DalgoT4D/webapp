@@ -24,6 +24,7 @@ import {
 } from '@tanstack/react-table';
 import { httpGet } from '@/helpers/http';
 import { DbtSourceModel } from '../FlowEditor';
+import { useDbtRunLogs } from '@/contexts/DbtRunLogsContext';
 
 type PreviewPaneProps = {};
 
@@ -43,6 +44,8 @@ const PreviewPane = ({}: PreviewPaneProps) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(1); // Page index
   const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
   const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
+
+  const dbtRunLogs = useDbtRunLogs();
 
   useEffect(() => {
     if (flowEditorContext?.previewNode.state.action === 'preview') {
