@@ -52,36 +52,38 @@ const FlowEditor = ({}) => {
         paddingTop: '3.5rem',
       }}
     >
-      <Box sx={{ display: 'flex', height: '60%', overflow: 'inherit' }}>
-        <Box sx={{ width: '20%' }}>
-          <ProjectTree dbtSourceModels={sourcesModels} />
+      <DbtRunLogsProvider>
+        <Box sx={{ display: 'flex', height: '60%', overflow: 'inherit' }}>
+          <Box sx={{ width: '20%' }}>
+            <ProjectTree dbtSourceModels={sourcesModels} />
+          </Box>
+          <Divider orientation="vertical" sx={{ color: 'black' }} />
+          <Box sx={{ width: '80%' }}>
+            <Canvas
+              redrawGraph={refreshEditor}
+              setRedrawGraph={setRefreshEditor}
+            />
+          </Box>
         </Box>
-        <Divider orientation="vertical" sx={{ color: 'black' }} />
-        <Box sx={{ width: '80%' }}>
-          <Canvas
-            redrawGraph={refreshEditor}
-            setRedrawGraph={setRefreshEditor}
-          />
+        <Divider orientation="horizontal" sx={{ color: 'black' }} />
+        <Box>
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            sx={{ display: 'flex', height: '4rem', alignItems: 'center' }}
+          >
+            <Tab label="Preview" />
+            <Tab label="Logs" />
+          </Tabs>
         </Box>
-      </Box>
-      <Divider orientation="horizontal" sx={{ color: 'black' }} />
-      <Box>
-        <Tabs
-          value={selectedTab}
-          onChange={handleTabChange}
-          sx={{ display: 'flex', height: '4rem', alignItems: 'center' }}
-        >
-          <Tab label="Preview" />
-          <Tab label="Logs" />
-        </Tabs>
-      </Box>
-      <Divider orientation="horizontal" sx={{ color: 'black' }} />
-      <Box sx={{ height: '40%', overflow: 'auto' }}>
-        {selectedTab === 0 && <PreviewPane />}
-        {selectedTab === 1 && (
-          <Box sx={{ padding: '1rem' }}>{/* Logs content goes here */}</Box>
-        )}
-      </Box>
+        <Divider orientation="horizontal" sx={{ color: 'black' }} />
+        <Box sx={{ height: '40%', overflow: 'auto' }}>
+          {selectedTab === 0 && <PreviewPane />}
+          {selectedTab === 1 && (
+            <Box sx={{ padding: '1rem' }}>{/* Logs content goes here */}</Box>
+          )}
+        </Box>
+      </DbtRunLogsProvider>
     </Box>
   );
 };
