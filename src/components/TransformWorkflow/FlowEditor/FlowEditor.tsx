@@ -53,7 +53,14 @@ const FlowEditor = ({}) => {
         height: '100vh',
       }}
     >
-      <Box sx={{ display: 'flex', height: '60%', overflow: 'inherit' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          height: '60%',
+          overflow: 'inherit',
+          marginTop: '3.5rem',
+        }}
+      >
         <Box sx={{ width: '20%' }}>
           <ProjectTree dbtSourceModels={sourcesModels} />
         </Box>
