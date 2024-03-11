@@ -56,7 +56,7 @@ const FlowEditor = ({}) => {
       <Box
         sx={{
           display: 'flex',
-          height: '60%',
+          height: '50%',
           overflow: 'inherit',
           marginTop: '3.5rem',
         }}
