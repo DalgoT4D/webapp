@@ -395,10 +395,9 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         `prefect/flow_runs/${flow_run_id}/logs`
       );
       if (response?.logs?.logs && response.logs.logs.length > 0) {
-        const logsArray = response.logs.logs.map(
+        const logsArray: PrefectFlowRunLog[] = response.logs.logs.map(
           // eslint-disable-next-line
-          (logObject: PrefectFlowRunLog, idx: number) =>
-            `- ${logObject.message} '\n'`
+          (logObject: PrefectFlowRunLog, idx: number) => logObject
         );
 
         setDbtRunLogs(logsArray);
@@ -432,7 +431,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         let flowRunStatus: string = await fetchFlowRunStatus(
           response.flow_run_id
         );
-
+        await fetchAndSetFlowRunLogs(response.flow_run_id);
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
           await delay(5000);
           await fetchAndSetFlowRunLogs(response.flow_run_id);

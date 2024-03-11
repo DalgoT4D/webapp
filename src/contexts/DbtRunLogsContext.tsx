@@ -1,9 +1,11 @@
 import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
-const DbtRunLogsContext = React.createContext<string[]>([]);
+import { PrefectFlowRunLog } from '@/components/DBT/DBTTarget';
+
+const DbtRunLogsContext = React.createContext<PrefectFlowRunLog[]>([]);
 const DbtRunLogsUpdateContext = React.createContext<
-  Dispatch<SetStateAction<string[]>>
->((() => {}) as Dispatch<SetStateAction<string[]>>);
+  Dispatch<SetStateAction<PrefectFlowRunLog[]>>
+>((() => {}) as Dispatch<SetStateAction<PrefectFlowRunLog[]>>);
 
 export const useDbtRunLogs = () => {
   return useContext(DbtRunLogsContext);
@@ -14,7 +16,7 @@ export const useDbtRunLogsUpdate = () => {
 };
 
 export const DbtRunLogsProvider = ({ children }: any) => {
-  const [dbtRunLogs, setDbtRunLogs] = useState<string[]>([]);
+  const [dbtRunLogs, setDbtRunLogs] = useState<PrefectFlowRunLog[]>([]);
 
   return (
     <DbtRunLogsContext.Provider value={dbtRunLogs}>
