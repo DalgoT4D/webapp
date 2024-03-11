@@ -51,7 +51,6 @@ const FlowEditor = ({}) => {
         overflow: 'hidden',
         flexDirection: 'column',
         height: '100vh',
-        paddingTop: '3.5rem',
       }}
     >
       <Box sx={{ display: 'flex', height: '60%', overflow: 'inherit' }}>
@@ -66,19 +65,24 @@ const FlowEditor = ({}) => {
           />
         </Box>
       </Box>
-      <Divider orientation="horizontal" sx={{ color: 'black' }} />
-      <Box>
+      <Box
+        sx={{
+          height: '7%',
+          background: '#F8F8F8',
+          borderTop: '1px solid #CCCCCC',
+          borderBottom: '1px solid #CCCCCC',
+        }}
+      >
         <Tabs
           value={selectedTab}
           onChange={handleTabChange}
-          sx={{ display: 'flex', height: '4rem', alignItems: 'center' }}
+          sx={{ display: 'flex', alignItems: 'center', height: '100%' }}
         >
           <Tab label="Preview" />
           <Tab label="Logs" />
         </Tabs>
       </Box>
-      <Divider orientation="horizontal" sx={{ color: 'black' }} />
-      <Box sx={{ height: '40%', overflow: 'auto' }}>
+      <Box sx={{ height: '33%', overflow: 'auto' }}>
         {selectedTab === 0 && <PreviewPane />}
         {selectedTab === 1 && (
           <Box sx={{ padding: '1rem' }}>
