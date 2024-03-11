@@ -7,6 +7,9 @@ export const ARITHMETIC_OP = 'arithmetic';
 export const CONCAT_COLUMNS_OP = 'concat';
 export const DROP_COLUMNS_OP = 'dropcolumns';
 export const REGEX_EXTRACTION_OP = 'regexextraction';
+export const JOIN_OP = 'join';
+export const WHERE_OP = 'where';
+export const GROUPBY_OP = 'groupby';
 
 export const operations = [
   { label: 'Flatten', slug: FLATTEN_OP },
@@ -18,6 +21,9 @@ export const operations = [
   { label: 'Drop', slug: DROP_COLUMNS_OP },
   { label: 'Rename', slug: RENAME_COLUMNS_OP },
   { label: 'Regex extraction', slug: REGEX_EXTRACTION_OP },
+  { label: 'Join', slug: JOIN_OP },
+  { label: 'Filter', slug: WHERE_OP },
+  { label: 'Group By', slug: GROUPBY_OP },
 ];
 
 // Node types
