@@ -142,11 +142,9 @@ const PreviewPane = ({}: PreviewPaneProps) => {
   });
 
   return (
-    <Box>
+    <Box sx={{ height: '100%' }}>
       <Box
         sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
         }}
       >
@@ -159,14 +157,7 @@ const PreviewPane = ({}: PreviewPaneProps) => {
           {modelToPreview?.input_name}
         </Typography>
       </Box>
-      <Box
-        sx={{
-          width: '100%',
-          marginTop: '0',
-          overflowX: 'auto',
-          position: 'relative',
-        }}
-      >
+      <Box>
         <Table sx={{ borderCollapse: 'collapse', width: '100%' }}>
           <TableHead>
             {getHeaderGroups().map((headerGroup: any) => (
@@ -268,13 +259,17 @@ const PreviewPane = ({}: PreviewPaneProps) => {
           </Box>
         )}
         {totalCount > 0 && (
-          <Typography
-            variant="body1"
-            component="div"
-            sx={{ textAlign: 'center', marginTop: '1rem' }}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginTop: '1rem',
+            }}
           >
-            Total rows: {totalCount}
-          </Typography>
+            <Typography variant="body1" component="div">
+              Total rows: {totalCount}
+            </Typography>
+          </Box>
         )}
       </Box>
     </Box>
