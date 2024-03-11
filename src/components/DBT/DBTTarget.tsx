@@ -30,13 +30,13 @@ type params = {
   setExpandLogs: any;
 };
 
-type PrefectFlowRunLog = {
+export type PrefectFlowRunLog = {
   level: number;
   timestamp: string;
   message: string;
 };
 
-type PrefectFlowRun = {
+export type PrefectFlowRun = {
   id: string;
   name: string;
   deployment_id: string;

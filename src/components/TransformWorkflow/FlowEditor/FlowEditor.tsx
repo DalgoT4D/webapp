@@ -7,6 +7,8 @@ import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { SRC_MODEL_NODE } from './constant';
 
+import { useDbtRunLogs } from '@/contexts/DbtRunLogsContext';
+
 export type DbtSourceModel = {
   source_name: string;
   input_name: string;
@@ -21,6 +23,7 @@ const FlowEditor = ({}) => {
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState(0);
+  const dbtRunLogs = useDbtRunLogs();
 
   const fetchSourcesModels = async () => {
     try {
@@ -76,12 +79,29 @@ const FlowEditor = ({}) => {
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box sx={{ height: '40%', overflow: 'auto' }}>
-        {selectedTab === 0 && (
-          <PreviewPane />
-        )}
+        {selectedTab === 0 && <PreviewPane />}
         {selectedTab === 1 && (
           <Box sx={{ padding: '1rem' }}>
-            {/* Logs content goes here */}
+            {dbtRunLogs.length > 0 ? (
+              dbtRunLogs.map((log, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Box sx={{ fontWeight: 700, minWidth: '25%' }}>
+                    {new Date(log.timestamp).toTimeString()}
+                  </Box>
+                  <Box sx={{ color: 'blue', textAlign: 'left', width: '100%' }}>
+                    {log.message}
+                  </Box>
+                </Box>
+              ))
+            ) : (
+              <Box>No logs available</Box>
+            )}
           </Box>
         )}
       </Box>
