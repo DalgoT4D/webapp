@@ -181,11 +181,21 @@ const Transform = () => {
     }
   };
 
+  const syncSources = async () => {
+    try {
+      await httpPost(session, `transform/dbt_project/sync_sources/`, {});
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+  };
+
   const createProfile = async () => {
     try {
       await httpPost(session, `prefect/tasks/transform/`, {});
       setDbtSetupStage('complete');
       fetchDbtTasks();
+      syncSources();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
