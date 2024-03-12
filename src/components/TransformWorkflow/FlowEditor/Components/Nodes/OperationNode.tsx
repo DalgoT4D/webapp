@@ -12,10 +12,16 @@ import { OperationNodeType } from '../Canvas';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { operations } from '../../constant';
+import {
+  useCanvasAction,
+  useCanvasNode,
+} from '@/contexts/FlowEditorCanvasContext';
 
 export function OperationNode(node: OperationNodeType) {
   const edges = useEdges();
   const nodeId = useNodeId();
+  const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { canvasNode, setCanvasNode } = useCanvasNode();
 
   const { data, type } = node;
   // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
@@ -25,12 +31,27 @@ export function OperationNode(node: OperationNodeType) {
     ? false
     : true;
 
+  // const handleDeleteAction = () => {
+  //   data.triggerDelete(nodeId, type);
+  // };
   const handleDeleteAction = () => {
-    data.triggerDelete(nodeId, type);
+    setCanvasAction({
+      type: 'delete-node',
+      data: { nodeId: nodeId, nodeType: type },
+    });
   };
 
+  // const handleClickOpenOperationPanel = () => {
+  //   data.triggerSelectOperation(node);
+  // };
+
   const handleClickOpenOperationPanel = () => {
-    data.triggerSelectOperation(node);
+    setCanvasAction({
+      type: 'open-opconfig-panel',
+      data: null,
+    });
+
+    setCanvasNode(node);
   };
 
   return (

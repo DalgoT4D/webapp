@@ -13,9 +13,10 @@ interface CanvasNodeContext {
   >;
 }
 
-const CanvasNodeContext = React.createContext<CanvasNodeContext | undefined>(
-  undefined
-);
+const CanvasNodeContext = React.createContext<CanvasNodeContext>({
+  canvasNode: null,
+  setCanvasNode: () => {},
+});
 
 export const CanvasNodeProvider = ({ children }: any) => {
   const [canvasNode, setCanvasNode] = useState<
@@ -30,13 +31,20 @@ export const CanvasNodeProvider = ({ children }: any) => {
 };
 
 export const useCanvasNode = () => {
-  return useContext(CanvasNodeContext);
+  return useContext<CanvasNodeContext>(CanvasNodeContext);
 };
 
 ///////////////////////////// Canvas Action ////////////////////////////////
 
 interface Action {
-  type: 'add' | 'refresh-canvas' | '' | undefined | null;
+  type:
+    | 'add'
+    | 'refresh-canvas'
+    | 'delete-node'
+    | 'open-opconfig-panel'
+    | ''
+    | undefined
+    | null;
   data: any;
 }
 
