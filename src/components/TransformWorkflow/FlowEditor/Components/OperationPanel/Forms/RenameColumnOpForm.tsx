@@ -196,7 +196,7 @@ const RenameColumnOp = ({
             </>
           ))}
           <Box>
-            <Button variant="contained" type="submit" data-testid="savebutton">
+            <Button variant="outlined" type="submit" data-testid="savebutton">
               Save
             </Button>
             <Button color="secondary" variant="outlined" onClick={handleClose}>

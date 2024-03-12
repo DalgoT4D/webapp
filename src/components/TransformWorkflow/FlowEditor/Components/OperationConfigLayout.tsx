@@ -27,6 +27,7 @@ import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { DbtSourceModel } from '../FlowEditor';
 import CreateTableOrAddFunction from './OperationPanel/CreateTableOrAddFunction';
+import { set } from 'cypress/types/lodash';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -80,11 +81,13 @@ const OperationConfigLayout = ({
 }: OperationConfigProps) => {
   const { data: session } = useSession();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
-  // const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
+  const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
 
   const handleClosePanel = () => {
-    setOpenPanel(false);
+    console.log('clear panel');
+    setShowFunctionsList(false);
     setSelectedOp(null);
+    setOpenPanel(false);
   };
 
   if (!openPanel) return null;
@@ -196,11 +199,7 @@ const OperationConfigLayout = ({
 
   const handleAddFunction = () => {
     console.log('add function');
-  };
-
-  const handleClearPanel = () => {
-    console.log('clear panel');
-    setSelectedOp(null);
+    setShowFunctionsList(true);
   };
 
   return (
@@ -230,9 +229,9 @@ const OperationConfigLayout = ({
               sx={{ marginTop: '17px' }}
               operation={selectedOp}
               node={node}
-              clearOperation={handleClearPanel}
+              clearOperation={handleClosePanel}
             />
-          ) : node?.type === SRC_MODEL_NODE ? (
+          ) : node?.type === OPERATION_NODE || showFunctionsList ? (
             <OperationList
               sx={{
                 marginTop: '5px',
