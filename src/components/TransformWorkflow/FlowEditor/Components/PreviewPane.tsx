@@ -24,6 +24,7 @@ import {
 } from '@tanstack/react-table';
 import { httpGet } from '@/helpers/http';
 import { DbtSourceModel } from '../FlowEditor';
+import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
 type PreviewPaneProps = {};
 
@@ -32,7 +33,8 @@ const PreviewPane = ({}: PreviewPaneProps) => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
-  const flowEditorContext = useContext(FlowEditorContext);
+  // const flowEditorContext = useContext(FlowEditorContext);
+  const { previewAction, setPreviewAction } = usePreviewAction();
 
   const [columns, setColumns] = useState<any[]>([]);
 
@@ -45,14 +47,12 @@ const PreviewPane = ({}: PreviewPaneProps) => {
   const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
 
   useEffect(() => {
-    if (flowEditorContext?.previewNode.state.action === 'preview') {
-      setModelToPreview(flowEditorContext?.previewNode.state.node);
-    } else if (
-      flowEditorContext?.previewNode.state.action === 'clear-preview'
-    ) {
+    if (previewAction.type === 'preview') {
+      setModelToPreview(previewAction.data);
+    } else if (previewAction.type === 'clear-preview') {
       setModelToPreview(null);
     }
-  }, [flowEditorContext?.previewNode.state]);
+  }, [previewAction]);
 
   useEffect(() => {
     if (modelToPreview) {

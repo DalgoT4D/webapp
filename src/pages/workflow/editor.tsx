@@ -4,16 +4,27 @@ import styles from '@/styles/Home.module.css';
 import FlowEditor from '@/components/TransformWorkflow/FlowEditor/FlowEditor';
 import FlowEditorContextProvider from '@/contexts/FlowEditorContext';
 import { DbtRunLogsProvider } from '@/contexts/DbtRunLogsContext';
+import {
+  CanvasActionProvider,
+  CanvasNodeProvider,
+} from '@/contexts/FlowEditorCanvasContext';
+import { PreviewActionProvider } from '@/contexts/FlowEditorPreviewContext';
 export default function WorkflowEditor() {
   return (
     <>
       <PageHead title="FlowEditors" />
       <main className={styles.floweditor}>
-        <FlowEditorContextProvider>
-          <DbtRunLogsProvider>
-            <FlowEditor />
-          </DbtRunLogsProvider>
-        </FlowEditorContextProvider>
+        {/* <FlowEditorContextProvider> */}
+        <CanvasNodeProvider>
+          <CanvasActionProvider>
+            <PreviewActionProvider>
+              <DbtRunLogsProvider>
+                <FlowEditor />
+              </DbtRunLogsProvider>
+            </PreviewActionProvider>
+          </CanvasActionProvider>
+        </CanvasNodeProvider>
+        {/* </FlowEditorContextProvider> */}
       </main>
     </>
   );
