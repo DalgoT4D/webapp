@@ -25,7 +25,6 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { DbtSourceModel } from '../FlowEditor';
-import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 import { OperationNode } from './Nodes/OperationNode';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
@@ -38,6 +37,8 @@ import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
 import { delay } from '@/utils/common';
 import { PrefectFlowRun, PrefectFlowRunLog } from '@/components/DBT/DBTTarget';
 import { useDbtRunLogsUpdate } from '@/contexts/DbtRunLogsContext';
+import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
+import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
 type CanvasProps = {
   redrawGraph: boolean;
@@ -192,8 +193,9 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     slug: string;
     label: string;
   } | null>(null);
+  const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { previewAction, setPreviewAction } = usePreviewAction();
   const previewNodeRef = useRef<DbtSourceModel | null>();
-  const flowEditorContext = useContext(FlowEditorContext);
   const globalContext = useContext(GlobalContext);
   const EdgeStyle: EdgeStyleProps = {
     markerEnd: {
@@ -246,8 +248,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   }, [session, redrawGraph]);
 
   useEffect(() => {
-    previewNodeRef.current = flowEditorContext?.previewNode.state.node;
-  }, [flowEditorContext?.previewNode.state]);
+    previewNodeRef.current = previewAction.data;
+  }, [previewAction]);
 
   const handleNodesChange = (changes: NodeChange[]) => {
     console.log(
@@ -287,12 +289,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     // remove the node from preview if its there
     console.log('compare with', previewNodeRef.current?.id);
     if (nodeId === previewNodeRef.current?.id) {
-      flowEditorContext?.previewNode.dispatch({
-        type: 'clear-preview',
-        state: {
-          node: null,
-        },
-      });
+      setPreviewAction({ type: 'clear-preview', data: null });
     }
 
     // remove node from canvas
@@ -321,13 +318,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
 
   const handlePreviewDataForNode = (sourceModel: DbtSourceModel | null) => {
     if (sourceModel) {
-      flowEditorContext?.previewNode.dispatch({
-        type: 'preview',
-        state: {
-          node: sourceModel,
-          action: 'preview',
-        },
-      });
+      setPreviewAction({ type: 'preview', data: sourceModel });
     }
   };
 
@@ -361,16 +352,16 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
 
   useEffect(() => {
     // This event is triggered via the ProjectTree component
-    if (flowEditorContext?.canvasNode.state.action === 'add') {
-      addNewNodeToCanvas(flowEditorContext?.canvasNode.state.node);
+    if (canvasAction.type === 'add') {
+      addNewNodeToCanvas(canvasAction.data);
     }
 
-    if (flowEditorContext?.canvasNode.state.action === 'refresh-canvas') {
+    if (canvasAction.type === 'refresh-canvas') {
       setRedrawGraph(!redrawGraph);
       setOperationSelectedForConfig(null);
       setOpenOperationConfig(false);
     }
-  }, [flowEditorContext?.canvasNode.state]);
+  }, [canvasAction]);
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {

@@ -1,12 +1,12 @@
 import { Box, Typography } from '@mui/material';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@mui/icons-material/Toc';
-import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 import { DbtSourceModel } from '../FlowEditor';
 import { NodeApi } from 'react-arborist';
+import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 
 const Node = ({ node, style, dragHandle }: any) => {
   /* This node instance can do many things. See the API reference. */
@@ -45,7 +45,7 @@ interface ProjectTreeProps {
 // type TreeData = Partial<DbtSourceModel> & { children: TreeData[] };
 
 const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
-  const flowEditorContext = useContext(FlowEditorContext);
+  const { canvasAction, setCanvasAction } = useCanvasAction();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
 
   const constructAndSetProjectTreeData = (
@@ -91,13 +91,7 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
         'adding a node to canvas from project tree component',
         nodes[0].data
       );
-      flowEditorContext?.canvasNode.dispatch({
-        type: 'add',
-        state: {
-          node: nodes[0].data,
-          action: 'add',
-        },
-      });
+      setCanvasAction({ type: 'add', data: nodes[0].data });
     }
   };
 
