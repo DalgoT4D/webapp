@@ -67,8 +67,6 @@ const RenameColumnOp = ({
     },
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'config' });
-  console.log('Selected this node in rename form', node);
-  console.log('Selected this operation in name form', operation);
 
   const fetchAndSetSourceColumns = async () => {
     if (node.type === SRC_MODEL_NODE) {
