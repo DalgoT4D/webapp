@@ -14,7 +14,6 @@ import {
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
-import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 import {
   useReactTable,
   getCoreRowModel,
@@ -26,10 +25,8 @@ import { httpGet } from '@/helpers/http';
 import { DbtSourceModel } from '../FlowEditor';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
-type PreviewPaneProps = {};
-
 const pageSize = 5;
-const PreviewPane = ({}: PreviewPaneProps) => {
+const PreviewPane = () => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);

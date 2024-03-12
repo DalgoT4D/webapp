@@ -27,5 +27,5 @@ export const operations = [
 ];
 
 // Node types
-export const SRC_MODEL_NODE: string = 'src_model_node';
-export const OPERATION_NODE: string = 'operation_node';
+export const SRC_MODEL_NODE = 'src_model_node';
+export const OPERATION_NODE = 'operation_node';
