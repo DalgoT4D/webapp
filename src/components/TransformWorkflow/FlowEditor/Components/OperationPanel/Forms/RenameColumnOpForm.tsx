@@ -21,8 +21,8 @@ import {
   errorToast,
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
-import { FlowEditorContext } from '@/contexts/FlowEditorContext';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 
 const renameGridStyles: {
   container: SxProps;
@@ -53,7 +53,7 @@ const RenameColumnOp = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<String[]>([]);
   const globalContext = useContext(GlobalContext);
-  const flowEditorContext = useContext(FlowEditorContext);
+  const { canvasAction, setCanvasAction } = useCanvasAction();
   const nodeConfig: any =
     node.data.node.type === SRC_MODEL_NODE
       ? (node.data.node as DbtSourceModel)
@@ -120,13 +120,7 @@ const RenameColumnOp = ({
   const handleClose = () => {
     clearOperation();
     reset();
-    flowEditorContext?.canvasNode.dispatch({
-      type: 'refresh-canvas',
-      state: {
-        node: null,
-        action: 'refresh-canvas',
-      },
-    });
+    setCanvasAction({ type: 'refresh-canvas', data: null });
   };
 
   useEffect(() => {

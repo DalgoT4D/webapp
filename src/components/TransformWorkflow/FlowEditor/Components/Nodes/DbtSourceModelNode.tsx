@@ -14,6 +14,11 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { SrcModelNodeType, UIOperationType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
+import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
+import {
+  useCanvasAction,
+  useCanvasNode,
+} from '@/contexts/FlowEditorCanvasContext';
 
 export interface ColumnData {
   name: string;
@@ -94,6 +99,9 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
 
 export function DbtSourceModelNode(node: SrcModelNodeType) {
   const { data: session } = useSession();
+  const { previewAction, setPreviewAction } = usePreviewAction();
+  const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { canvasNode, setCanvasNode } = useCanvasNode();
   const [columns, setColumns] = useState<Array<any>>([]);
 
   const edges = useEdges();
@@ -108,15 +116,23 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     : true;
 
   const handleDeleteAction = () => {
-    data.triggerDelete(nodeId, type);
+    setCanvasAction({
+      type: 'delete-node',
+      data: { nodeId: nodeId, nodeType: type },
+    });
   };
 
   const handlePreviewAction = () => {
-    data.triggerPreview(data.node);
+    setPreviewAction({ type: 'preview', data: data.node });
   };
 
   const handleClickOpenOperationPanel = () => {
-    data.triggerSelectOperation(node);
+    setCanvasAction({
+      type: 'open-opconfig-panel',
+      data: null,
+    });
+
+    setCanvasNode(node);
   };
 
   useMemo(() => {

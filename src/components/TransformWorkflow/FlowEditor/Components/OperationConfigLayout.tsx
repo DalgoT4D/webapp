@@ -33,7 +33,7 @@ interface OperationConfigProps {
   sx: SxProps;
   openPanel: boolean;
   setOpenPanel: (...args: any) => void;
-  node: SrcModelNodeType | OperationNodeType | null;
+  node: SrcModelNodeType | OperationNodeType | null | undefined;
 }
 
 export interface OperationFormProps {
