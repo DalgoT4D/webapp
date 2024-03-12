@@ -10,13 +10,23 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { OperationNodeType, SrcModelNodeType, UIOperationType } from './Canvas';
+import CloseIcon from '@mui/icons-material/Close';
+import {
+  OperationNodeData,
+  OperationNodeType,
+  SrcModelNodeType,
+  UIOperationType,
+} from './Canvas';
 // import { operations } from './OperationConfigForms/constant';
 import InfoIcon from '@mui/icons-material/Info';
-import { RENAME_COLUMNS_OP } from '../constant';
-import RenameColumnOpForm from './OperationConfigForms/RenameColumnOpForm';
+import { OPERATION_NODE, RENAME_COLUMNS_OP, SRC_MODEL_NODE } from '../constant';
+import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import { operations } from '../constant';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import { httpGet, httpPost } from '@/helpers/http';
+import { useSession } from 'next-auth/react';
+import { DbtSourceModel } from '../FlowEditor';
+import CreateTableOrAddFunction from './OperationPanel/CreateTableOrAddFunction';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -68,7 +78,14 @@ const OperationConfigLayout = ({
   setOpenPanel,
   sx,
 }: OperationConfigProps) => {
+  const { data: session } = useSession();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
+  // const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
+
+  const handleClosePanel = () => {
+    setOpenPanel(false);
+    setSelectedOp(null);
+  };
 
   if (!openPanel) return null;
 
@@ -94,17 +111,25 @@ const OperationConfigLayout = ({
               <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
             </IconButton>
           )}
-          <Typography
-            fontWeight={600}
-            fontSize="15px"
-            color="#5E5E5E"
-            lineHeight={'21px'}
-          >
-            {selectedOp ? selectedOp.label : 'Functions'}
-          </Typography>
-          <Box sx={{ width: '16px', height: '16px' }}>
-            <InfoIcon sx={{ color: '#D9D9D9' }} />
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
+            <Typography
+              fontWeight={600}
+              fontSize="15px"
+              color="#5E5E5E"
+              lineHeight={'21px'}
+            >
+              {selectedOp ? selectedOp.label : 'Functions'}
+            </Typography>
+            <Box sx={{ width: '16px', height: '16px' }}>
+              <InfoIcon sx={{ color: '#D9D9D9' }} />
+            </Box>
           </Box>
+          <IconButton
+            onClick={handleClosePanel}
+            data-testid="closeoperationpanel"
+          >
+            <CloseIcon fontSize="small" width="16px" height="16px" />
+          </IconButton>
         </Box>
         <Divider orientation="horizontal" />
       </Box>
@@ -165,6 +190,19 @@ const OperationConfigLayout = ({
     );
   };
 
+  const handleCreateTable = () => {
+    console.log('create table');
+  };
+
+  const handleAddFunction = () => {
+    console.log('add function');
+  };
+
+  const handleClearPanel = () => {
+    console.log('clear panel');
+    setSelectedOp(null);
+  };
+
   return (
     <Box
       sx={{
@@ -192,14 +230,19 @@ const OperationConfigLayout = ({
               sx={{ marginTop: '17px' }}
               operation={selectedOp}
               node={node}
-              clearOperation={() => setSelectedOp(null)}
+              clearOperation={handleClearPanel}
             />
-          ) : (
+          ) : node?.type === SRC_MODEL_NODE ? (
             <OperationList
               sx={{
                 marginTop: '5px',
                 ':hover': { cursor: 'pointer' },
               }}
+            />
+          ) : (
+            <CreateTableOrAddFunction
+              clickCreateTable={handleCreateTable}
+              clickAddFunction={handleAddFunction}
             />
           )}
         </Box>

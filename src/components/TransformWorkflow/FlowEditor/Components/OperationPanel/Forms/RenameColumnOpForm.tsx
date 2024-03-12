@@ -1,10 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import {
-  OperationNodeData,
-  OperationNodeType,
-  SrcModelNodeType,
-  UIOperationType,
-} from '../Canvas';
+import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import {
   Autocomplete,
@@ -15,10 +10,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../constant';
-import { DbtSourceModel } from '../../FlowEditor';
+import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
+import { DbtSourceModel } from '../../../FlowEditor';
 import { httpGet, httpPost } from '@/helpers/http';
-import { ColumnData } from '../Nodes/DbtSourceModelNode';
+import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -27,7 +22,7 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import { FlowEditorContext } from '@/contexts/FlowEditorContext';
-import { OperationFormProps } from '../OperationConfigLayout';
+import { OperationFormProps } from '../../OperationConfigLayout';
 
 const renameGridStyles: {
   container: SxProps;
