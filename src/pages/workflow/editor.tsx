@@ -2,7 +2,6 @@ import 'react';
 import { PageHead } from '@/components/PageHead';
 import styles from '@/styles/Home.module.css';
 import FlowEditor from '@/components/TransformWorkflow/FlowEditor/FlowEditor';
-import FlowEditorContextProvider from '@/contexts/FlowEditorContext';
 import { DbtRunLogsProvider } from '@/contexts/DbtRunLogsContext';
 import {
   CanvasActionProvider,

@@ -1,7 +1,3 @@
-import {
-  OperationNodeType,
-  SrcModelNodeType,
-} from '@/components/TransformWorkflow/FlowEditor/Components/Canvas';
 import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
 ///////////////////////////// Preview Action ////////////////////////////////

@@ -51,7 +51,7 @@ const RenameColumnOp = ({
   clearOperation,
 }: OperationFormProps) => {
   const { data: session } = useSession();
-  const [srcColumns, setSrcColumns] = useState<String[]>([]);
+  const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const nodeConfig: any =
