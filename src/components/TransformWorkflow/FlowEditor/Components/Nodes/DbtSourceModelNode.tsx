@@ -145,7 +145,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   }, [session, edges]);
 
   return (
-    <Box sx={{ display: 'flex' }} onClick={handleSelectNode}>
+    <Box sx={{ display: 'flex' }}>
       <>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />
@@ -195,6 +195,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
             overflow: 'auto',
             width: '100%',
           }}
+          onClick={handleSelectNode}
         >
           {columns.length > 0 ? (
             <Box>
