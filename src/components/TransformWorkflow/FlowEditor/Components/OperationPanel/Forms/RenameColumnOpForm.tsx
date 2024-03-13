@@ -65,11 +65,11 @@ const RenameColumnOp = ({
       config: [{ old: '', new: '' }],
     },
   });
+  // Include this for multi-row input
   const { fields, append, remove } = useFieldArray({ control, name: 'config' });
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
-      // const nodeData: DbtSourceModel = node?.data;
       try {
         const data: ColumnData[] = await httpGet(
           session,
@@ -82,7 +82,6 @@ const RenameColumnOp = ({
     }
 
     if (node?.type === OPERATION_NODE) {
-      // const nodeData = node?.data as OperationNodeData;
       setSrcColumns(nodeData.output_cols);
     }
   };
