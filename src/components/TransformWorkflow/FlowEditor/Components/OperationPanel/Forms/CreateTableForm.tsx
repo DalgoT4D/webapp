@@ -43,7 +43,7 @@ const CreateTableForm = ({
           }
         );
         reset();
-        setCanvasAction({ type: 'refresh-canvas', data: null });
+        setCanvasAction({ type: 'run-workflow', data: null });
         clearAndClosePanel();
       } catch (error) {
         console.log(error);

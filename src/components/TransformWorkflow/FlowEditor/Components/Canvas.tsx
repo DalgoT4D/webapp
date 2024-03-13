@@ -322,6 +322,11 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
   };
 
+  const handleRefreshCanvas = () => {
+    setRedrawGraph(!redrawGraph);
+    setOperationSelectedForConfig(null);
+  };
+
   useEffect(() => {
     // This event is triggered via the ProjectTree component
     if (canvasAction.type === 'add') {
@@ -329,8 +334,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
 
     if (canvasAction.type === 'refresh-canvas') {
-      setRedrawGraph(!redrawGraph);
-      setOperationSelectedForConfig(null);
+      handleRefreshCanvas();
     }
 
     if (canvasAction.type === 'delete-node') {
@@ -339,6 +343,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
 
     if (canvasAction.type === 'open-opconfig-panel') {
       setOpenOperationConfig(true);
+    }
+
+    if (canvasAction.type === 'run-workflow') {
+      handleRunWorkflow();
     }
   }, [canvasAction]);
 
@@ -407,6 +415,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
+        handleRefreshCanvas();
       }
     } catch (error) {
       console.log(error);
