@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { SRC_MODEL_NODE } from './constant';
 import { DbtSourceModel } from './Components/Canvas';
 import { useDbtRunLogs } from '@/contexts/DbtRunLogsContext';
+import { ReactFlowProvider } from 'reactflow';
 
 const FlowEditor = ({}) => {
   const { data: session } = useSession();
@@ -57,10 +58,12 @@ const FlowEditor = ({}) => {
         </Box>
         <Divider orientation="vertical" sx={{ color: 'black' }} />
         <Box sx={{ width: '80%' }}>
-          <Canvas
-            redrawGraph={refreshEditor}
-            setRedrawGraph={setRefreshEditor}
-          />
+          <ReactFlowProvider>
+            <Canvas
+              redrawGraph={refreshEditor}
+              setRedrawGraph={setRefreshEditor}
+            />
+          </ReactFlowProvider>
         </Box>
       </Box>
       <Box

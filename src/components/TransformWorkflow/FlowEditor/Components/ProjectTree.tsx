@@ -91,7 +91,7 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
         'adding a node to canvas from project tree component',
         nodes[0].data
       );
-      setCanvasAction({ type: 'add', data: nodes[0].data });
+      setCanvasAction({ type: 'add-srcmodel-node', data: nodes[0].data });
     }
   };
 
