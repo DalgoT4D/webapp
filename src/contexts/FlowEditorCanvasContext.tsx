@@ -38,9 +38,9 @@ export const useCanvasNode = () => {
 
 interface Action {
   type:
-    | 'add'
-    | 'refresh-canvas'
+    | 'add-srcmodel-node'
     | 'delete-node'
+    | 'refresh-canvas'
     | 'open-opconfig-panel'
     | 'run-workflow'
     | ''

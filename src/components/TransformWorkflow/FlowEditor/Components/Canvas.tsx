@@ -22,6 +22,7 @@ import ReactFlow, {
   NodeTypes,
   NodeProps,
   EdgeMarkerType,
+  useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { OperationNode } from './Nodes/OperationNode';
@@ -177,6 +178,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const [openOperationConfig, setOpenOperationConfig] =
     useState<boolean>(false);
   const { canvasNode, setCanvasNode } = useCanvasNode();
+  const { addNodes, addEdges } = useReactFlow();
 
   const [operationSelectedForConfig, setOperationSelectedForConfig] = useState<{
     slug: string;
@@ -300,7 +302,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     setRedrawGraph(!redrawGraph);
   };
 
-  const addNewNodeToCanvas = (
+  const addSrcModelNodeToCanvas = (
     dbtSourceModel: DbtSourceModel | null | undefined
   ) => {
     if (dbtSourceModel) {
@@ -311,7 +313,24 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         data: dbtSourceModel,
         position: { x: 100, y: 125 },
       };
-      handleNodesChange([{ type: 'add', item: newNode }]);
+      // handleNodesChange([{ type: 'add', item: newNode }]);
+      addNodes([newNode]);
+    }
+  };
+
+  const addOperationNodeToCanvas = (
+    operationNode: OperationNodeData | null | undefined
+  ) => {
+    if (operationNode) {
+      console.log('adding an operation node to canvas', operationNode);
+      const newNode = {
+        id: operationNode.id,
+        type: OPERATION_NODE,
+        data: operationNode,
+        position: { x: 100, y: 125 },
+      };
+      // handleNodesChange([{ type: 'add', item: newNode }]);
+      addNodes([newNode]);
     }
   };
 
@@ -322,8 +341,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
 
   useEffect(() => {
     // This event is triggered via the ProjectTree component
-    if (canvasAction.type === 'add') {
-      addNewNodeToCanvas(canvasAction.data);
+    if (canvasAction.type === 'add-srcmodel-node') {
+      addSrcModelNodeToCanvas(canvasAction.data);
     }
 
     if (canvasAction.type === 'refresh-canvas') {
@@ -428,31 +447,29 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box sx={{ display: 'flex', height: '90%' }}>
-        <ReactFlowProvider>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={handleNodesChange}
-            onEdgesChange={handleEdgesChange}
-            onConnect={handleNewConnection}
-            nodeTypes={nodeTypes}
-            proOptions={{ hideAttribution: true }}
-            defaultViewport={defaultViewport}
-            fitView
-          >
-            <Background />
-            <Controls>
-              <ControlButton
-                onClick={() => {
-                  successToast('Graph has been refreshed', [], globalContext);
-                  setRedrawGraph(!redrawGraph);
-                }}
-              >
-                <ReplayIcon />
-              </ControlButton>
-            </Controls>
-          </ReactFlow>
-        </ReactFlowProvider>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={handleNodesChange}
+          onEdgesChange={handleEdgesChange}
+          onConnect={handleNewConnection}
+          nodeTypes={nodeTypes}
+          proOptions={{ hideAttribution: true }}
+          defaultViewport={defaultViewport}
+          fitView
+        >
+          <Background />
+          <Controls>
+            <ControlButton
+              onClick={() => {
+                successToast('Graph has been refreshed', [], globalContext);
+                setRedrawGraph(!redrawGraph);
+              }}
+            >
+              <ReplayIcon />
+            </ControlButton>
+          </Controls>
+        </ReactFlow>
         <OperationConfigLayout
           openPanel={openOperationConfig}
           setOpenPanel={setOpenOperationConfig}

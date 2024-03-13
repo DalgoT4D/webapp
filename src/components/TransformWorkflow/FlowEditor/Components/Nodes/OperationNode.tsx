@@ -1,13 +1,6 @@
 import { Box, Divider, IconButton, Typography } from '@mui/material';
 import 'react';
-import {
-  Handle,
-  Position,
-  // useReactFlow,
-  useNodeId,
-  useEdges,
-  Edge,
-} from 'reactflow';
+import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { OperationNodeType } from '../Canvas';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';

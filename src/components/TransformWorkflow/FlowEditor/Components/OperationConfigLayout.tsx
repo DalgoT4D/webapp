@@ -9,7 +9,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
@@ -33,6 +33,13 @@ import {
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
 import CreateTableForm from './OperationPanel/Forms/CreateTableForm';
+import {
+  Connection,
+  EdgeChange,
+  useEdgesState,
+  useNodesState,
+  useReactFlow,
+} from 'reactflow';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -107,11 +114,43 @@ const OperationConfigLayout = ({
   const { canvasNode, setCanvasNode } = useCanvasNode();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
+  const { addEdges, addNodes } = useReactFlow();
 
   const handleClosePanel = () => {
     setOpenPanel(false);
     setShowFunctionsList(false);
     setSelectedOp(null);
+  };
+
+  const handleSelectOp = (op: UIOperationType) => {
+    // Create the dummy node on canvas
+    // For multi input operation we might have to do it inside the operation once they select the other inputs
+    const nodeId = String(Date.now());
+    const dummyTargetNodeData: any = {
+      id: nodeId,
+      type: OPERATION_NODE,
+      data: {
+        id: nodeId,
+        type: OPERATION_NODE,
+        output_cols: [],
+        target_model_id: '',
+        config: { type: op.slug },
+      },
+      position: {
+        x: canvasNode ? canvasNode?.xPos + 150 : 100,
+        y: canvasNode?.yPos,
+      },
+    };
+    const newEdge: any = {
+      id: `${canvasNode ? canvasNode.id : ''}_${nodeId}`,
+      source: canvasNode ? canvasNode.id : '',
+      target: nodeId,
+      sourceHandle: null,
+      targetHandle: null,
+    };
+    addNodes([dummyTargetNodeData]);
+    addEdges([newEdge]);
+    setSelectedOp(op);
   };
 
   if (!openPanel) return null;
@@ -204,7 +243,7 @@ const OperationConfigLayout = ({
                   ':hover': { background: '#F5F5F5' },
                 }}
                 align="left"
-                onClick={(event) => setSelectedOp(op)}
+                onClick={() => handleSelectOp(op)}
               >
                 {op.label}
               </TableCell>
