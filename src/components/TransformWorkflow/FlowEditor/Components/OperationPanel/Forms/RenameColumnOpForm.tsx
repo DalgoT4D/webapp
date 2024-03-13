@@ -22,7 +22,6 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 
 const renameGridStyles: {
   container: SxProps;
@@ -48,17 +47,17 @@ const RenameColumnOp = ({
   node,
   operation,
   sx,
-  clearOperation,
+  continueOperationChain,
+  clearAndClosePanel,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
-  const { canvasAction, setCanvasAction } = useCanvasAction();
   const nodeData: any =
-    node.type === SRC_MODEL_NODE
-      ? (node.data as DbtSourceModel)
-      : node.type === OPERATION_NODE
-      ? (node.data as OperationNodeData)
+    node?.type === SRC_MODEL_NODE
+      ? (node?.data as DbtSourceModel)
+      : node?.type === OPERATION_NODE
+      ? (node?.data as OperationNodeData)
       : {};
 
   const { control, register, handleSubmit, reset } = useForm({
@@ -69,8 +68,8 @@ const RenameColumnOp = ({
   const { fields, append, remove } = useFieldArray({ control, name: 'config' });
 
   const fetchAndSetSourceColumns = async () => {
-    if (node.type === SRC_MODEL_NODE) {
-      // const nodeData: DbtSourceModel = node.data;
+    if (node?.type === SRC_MODEL_NODE) {
+      // const nodeData: DbtSourceModel = node?.data;
       try {
         const data: ColumnData[] = await httpGet(
           session,
@@ -82,8 +81,8 @@ const RenameColumnOp = ({
       }
     }
 
-    if (node.type === OPERATION_NODE) {
-      // const nodeData = node.data as OperationNodeData;
+    if (node?.type === OPERATION_NODE) {
+      // const nodeData = node?.data as OperationNodeData;
       setSrcColumns(nodeData.output_cols);
     }
   };
@@ -95,7 +94,7 @@ const RenameColumnOp = ({
         source_columns: srcColumns,
         other_inputs: [],
         config: { columns: {} },
-        input_uuid: node.type === SRC_MODEL_NODE ? node.data.id : '',
+        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
       };
       data.config.forEach((item: any) => {
@@ -110,19 +109,17 @@ const RenameColumnOp = ({
       }
 
       // api call
-      await httpPost(session, `transform/dbt_project/model/`, postData);
+      const operationNode: any = await httpPost(
+        session,
+        `transform/dbt_project/model/`,
+        postData
+      );
 
-      // TODO:  need to set the config panel to add another operation
-      handleClose();
+      continueOperationChain(operationNode);
+      reset();
     } catch (error) {
       console.log(error);
     }
-  };
-
-  const handleClose = () => {
-    clearOperation();
-    reset();
-    setCanvasAction({ type: 'refresh-canvas', data: null });
   };
 
   useEffect(() => {
@@ -130,7 +127,7 @@ const RenameColumnOp = ({
   }, [session]);
 
   return (
-    <Box sx={{ ...sx }}>
+    <Box sx={{ ...sx, marginTop: '17px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
         <Grid container sx={{ ...renameGridStyles.container }}>
           <Grid item xs={6} sx={{ ...renameGridStyles.headerItem }}>
@@ -190,11 +187,13 @@ const RenameColumnOp = ({
             </>
           ))}
           <Box>
-            <Button variant="outlined" type="submit" data-testid="savebutton">
+            <Button
+              variant="outlined"
+              type="submit"
+              data-testid="savebutton"
+              fullWidth
+            >
               Save
-            </Button>
-            <Button color="secondary" variant="outlined" onClick={handleClose}>
-              Cancel
             </Button>
           </Box>
         </Grid>

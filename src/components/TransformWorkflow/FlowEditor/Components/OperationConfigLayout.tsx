@@ -28,19 +28,24 @@ import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import CreateTableOrAddFunction from './OperationPanel/CreateTableOrAddFunction';
 import { set } from 'cypress/types/lodash';
+import {
+  useCanvasAction,
+  useCanvasNode,
+} from '@/contexts/FlowEditorCanvasContext';
+import CreateTableForm from './OperationPanel/Forms/CreateTableForm';
 
 interface OperationConfigProps {
   sx: SxProps;
   openPanel: boolean;
   setOpenPanel: (...args: any) => void;
-  node: SrcModelNodeType | OperationNodeType | null | undefined;
 }
 
 export interface OperationFormProps {
-  node: SrcModelNodeType | OperationNodeType;
+  node: SrcModelNodeType | OperationNodeType | null | undefined;
   operation: UIOperationType;
   sx: SxProps;
-  clearOperation: (...args: any) => void;
+  continueOperationChain: (...args: any) => void;
+  clearAndClosePanel: (...args: any) => void;
 }
 
 const operationComponentMapping: any = {
@@ -48,13 +53,15 @@ const operationComponentMapping: any = {
     node,
     operation,
     sx,
-    clearOperation,
+    continueOperationChain,
+    clearAndClosePanel,
   }: OperationFormProps) => (
     <RenameColumnOpForm
       node={node}
       operation={operation}
       sx={sx}
-      clearOperation={clearOperation}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
     />
   ), // add more operations here
 };
@@ -63,36 +70,51 @@ const OperationForm = ({
   operation,
   node,
   sx,
-  clearOperation,
+  continueOperationChain,
+  clearAndClosePanel,
 }: OperationFormProps) => {
+  if (operation.slug === 'create-table') {
+    return (
+      <CreateTableForm
+        node={node}
+        operation={operation}
+        sx={sx}
+        continueOperationChain={continueOperationChain}
+        clearAndClosePanel={clearAndClosePanel}
+      />
+    );
+  }
+
+  if (!Object.keys(operationComponentMapping).includes(operation.slug)) {
+    return <>Operation not yet supported</>;
+  }
+
   return operationComponentMapping[operation.slug]({
     operation,
     node,
     sx,
-    clearOperation,
+    continueOperationChain,
+    clearAndClosePanel,
   });
 };
 
 const OperationConfigLayout = ({
-  node,
   openPanel,
   setOpenPanel,
   sx,
 }: OperationConfigProps) => {
-  const { data: session } = useSession();
+  const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { canvasNode, setCanvasNode } = useCanvasNode();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
 
   const handleClosePanel = () => {
-    console.log('clear panel');
+    setOpenPanel(false);
     setShowFunctionsList(false);
     setSelectedOp(null);
-    setOpenPanel(false);
   };
 
   if (!openPanel) return null;
-
-  if (!node) return <Box sx={{ ...sx }}>Please select a node</Box>;
 
   const PanelHeader = () => {
     return (
@@ -193,13 +215,25 @@ const OperationConfigLayout = ({
     );
   };
 
-  const handleCreateTable = () => {
-    console.log('create table');
+  const handleCreateTable = async () => {
+    console.log('create table', canvasNode);
+    setSelectedOp({ slug: 'create-table', label: 'Create Output Table' });
   };
 
   const handleAddFunction = () => {
     console.log('add function');
     setShowFunctionsList(true);
+  };
+
+  const prepareForNextOperation = (opNodeData: OperationNodeData) => {
+    setCanvasAction({ type: 'refresh-canvas', data: null });
+    setSelectedOp(null);
+    setCanvasNode({
+      id: opNodeData.id,
+      type: OPERATION_NODE,
+      data: opNodeData,
+    } as OperationNodeType);
+    setShowFunctionsList(false);
   };
 
   return (
@@ -226,12 +260,13 @@ const OperationConfigLayout = ({
         >
           {selectedOp ? (
             <OperationForm
-              sx={{ marginTop: '17px' }}
+              sx={{}}
               operation={selectedOp}
-              node={node}
-              clearOperation={handleClosePanel}
+              node={canvasNode}
+              continueOperationChain={prepareForNextOperation}
+              clearAndClosePanel={handleClosePanel}
             />
-          ) : node?.type === OPERATION_NODE || showFunctionsList ? (
+          ) : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE ? (
             <OperationList
               sx={{
                 marginTop: '5px',
