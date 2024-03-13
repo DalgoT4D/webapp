@@ -23,7 +23,7 @@ export function OperationNode(node: OperationNodeType) {
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { canvasNode, setCanvasNode } = useCanvasNode();
 
-  // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
+  // can only delete/chain more ops if this node doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean = edges.find(
     (edge: Edge) => edge.source === nodeId
   )
@@ -37,12 +37,19 @@ export function OperationNode(node: OperationNodeType) {
     });
   };
 
-  const handleClickOpenOperationPanel = () => {
-    setCanvasAction({
-      type: 'open-opconfig-panel',
-      data: null,
-    });
-
+  const handleSelectNode = () => {
+    if (isDeletable) {
+      setCanvasAction({
+        type: 'open-opconfig-panel',
+        data: null,
+      });
+    } else {
+      // just view the config if its node in the middel of chain
+      setCanvasAction({
+        type: 'open-opconfig-panel',
+        data: 'view',
+      });
+    }
     setCanvasNode(node);
   };
 
@@ -85,7 +92,7 @@ export function OperationNode(node: OperationNodeType) {
           </Box>
         </Box>
         <Divider orientation="horizontal" sx={{ color: '#EEEEEE' }} />
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{ display: 'flex' }} onClick={handleSelectNode}>
           <Box
             sx={{
               flex: '1',
@@ -98,17 +105,6 @@ export function OperationNode(node: OperationNodeType) {
                 ?.label || 'Not found'}
             </Typography>
           </Box>
-
-          {isDeletable && (
-            <Box sx={{ alignSelf: 'flex-end' }}>
-              <IconButton
-                onClick={handleClickOpenOperationPanel}
-                data-testid="openoperationlist"
-              >
-                <ChevronRightIcon sx={{ width: '16px', height: '16px' }} />
-              </IconButton>
-            </Box>
-          )}
         </Box>
       </Box>
     </Box>
