@@ -125,13 +125,6 @@ const CanvasHeader = ({
         <Button variant="contained" type="button" onClick={runWorkflow}>
           Run
         </Button>
-        <Button
-          variant="contained"
-          type="button"
-          onClick={() => alert('Not sure what this will do')}
-        >
-          Save
-        </Button>
       </Box>
     </Box>
   );

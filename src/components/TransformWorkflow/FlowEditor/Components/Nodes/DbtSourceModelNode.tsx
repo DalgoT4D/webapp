@@ -121,17 +121,13 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     });
   };
 
-  const handlePreviewAction = () => {
-    setPreviewAction({ type: 'preview', data: node.data });
-  };
-
-  const handleClickOpenOperationPanel = () => {
+  const handleSelectNode = () => {
     setCanvasAction({
       type: 'open-opconfig-panel',
       data: null,
     });
-
     setCanvasNode(node);
+    setPreviewAction({ type: 'preview', data: node.data });
   };
 
   useMemo(() => {
@@ -149,7 +145,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   }, [session, edges]);
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex' }} onClick={handleSelectNode}>
       <>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />
@@ -168,16 +164,12 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
             display: 'flex',
             borderRadius: '4px 4px 0px 0px',
             alignItems: 'center',
-            padding: '0px 10px',
+            padding: '10px 10px',
             gap: '30px',
           }}
         >
           <Box>
-            <Typography
-              variant="subtitle2"
-              fontWeight={700}
-              onClick={handlePreviewAction}
-            >
+            <Typography variant="subtitle2" fontWeight={700}>
               {`${node.data.input_name}`}
             </Typography>
           </Box>
@@ -190,12 +182,6 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
                 <DeleteIcon fontSize="small" />
               </IconButton>
             )}
-            <IconButton
-              onClick={handleClickOpenOperationPanel}
-              data-testid="openoperationlist"
-            >
-              <ChevronRightIcon />
-            </IconButton>
           </Box>
         </Box>
         <Box
