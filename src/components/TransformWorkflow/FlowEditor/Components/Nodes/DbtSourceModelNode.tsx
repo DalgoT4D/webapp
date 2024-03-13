@@ -106,7 +106,6 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
 
   const edges = useEdges();
   const nodeId: string | null = useNodeId();
-  const { data, type } = node;
 
   // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean = edges.find(
@@ -118,12 +117,12 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   const handleDeleteAction = () => {
     setCanvasAction({
       type: 'delete-node',
-      data: { nodeId: nodeId, nodeType: type },
+      data: { nodeId: nodeId, nodeType: node.type },
     });
   };
 
   const handlePreviewAction = () => {
-    setPreviewAction({ type: 'preview', data: data.node });
+    setPreviewAction({ type: 'preview', data: node.data });
   };
 
   const handleClickOpenOperationPanel = () => {
@@ -140,7 +139,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
       try {
         const data: ColumnData[] = await httpGet(
           session,
-          `warehouse/table_columns/${node.data.node.schema}/${node.data.node.input_name}`
+          `warehouse/table_columns/${node.data.schema}/${node.data.input_name}`
         );
         setColumns(data);
       } catch (error) {
@@ -179,7 +178,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
               fontWeight={700}
               onClick={handlePreviewAction}
             >
-              {`${data.node.input_name}`}
+              {`${node.data.input_name}`}
             </Typography>
           </Box>
           <Box sx={{ marginLeft: 'auto' }}>

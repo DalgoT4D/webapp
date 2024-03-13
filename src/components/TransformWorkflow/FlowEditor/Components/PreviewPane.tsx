@@ -22,7 +22,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { httpGet } from '@/helpers/http';
-import { DbtSourceModel } from '../FlowEditor';
+import { DbtSourceModel } from './Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
 const pageSize = 5;

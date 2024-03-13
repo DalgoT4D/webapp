@@ -23,7 +23,6 @@ export function OperationNode(node: OperationNodeType) {
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { canvasNode, setCanvasNode } = useCanvasNode();
 
-  const { data, type } = node;
   // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean = edges.find(
     (edge: Edge) => edge.source === nodeId
@@ -31,19 +30,12 @@ export function OperationNode(node: OperationNodeType) {
     ? false
     : true;
 
-  // const handleDeleteAction = () => {
-  //   data.triggerDelete(nodeId, type);
-  // };
   const handleDeleteAction = () => {
     setCanvasAction({
       type: 'delete-node',
-      data: { nodeId: nodeId, nodeType: type },
+      data: { nodeId: nodeId, nodeType: node.type },
     });
   };
-
-  // const handleClickOpenOperationPanel = () => {
-  //   data.triggerSelectOperation(node);
-  // };
 
   const handleClickOpenOperationPanel = () => {
     setCanvasAction({
@@ -53,6 +45,8 @@ export function OperationNode(node: OperationNodeType) {
 
     setCanvasNode(node);
   };
+
+  console.log('operation node', node);
 
   return (
     <Box>
@@ -102,7 +96,7 @@ export function OperationNode(node: OperationNodeType) {
             }}
           >
             <Typography fontWeight="600" fontSize="12px" padding="8px">
-              {operations.find((op) => op.slug === node.data.node.config?.type)
+              {operations.find((op) => op.slug === node.data.config?.type)
                 ?.label || 'Not found'}
             </Typography>
           </Box>

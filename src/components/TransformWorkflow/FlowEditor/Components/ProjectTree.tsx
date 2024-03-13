@@ -4,7 +4,7 @@ import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@mui/icons-material/Toc';
-import { DbtSourceModel } from '../FlowEditor';
+import { DbtSourceModel } from './Canvas';
 import { NodeApi } from 'react-arborist';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 
