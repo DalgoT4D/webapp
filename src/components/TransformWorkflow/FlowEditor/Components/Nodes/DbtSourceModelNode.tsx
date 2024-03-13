@@ -232,47 +232,6 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
           )}
         </Box>
       </Box>
-      {/* {openOperationList && (
-        <Box
-          sx={{
-            // position: 'sticky',
-            // zIndex: '1000',
-            marginLeft: '10px',
-            borderRadius: '6px',
-            width: '200px',
-            height: '300px',
-            ':hover': { cursor: 'pointer' },
-            overflow: 'auto',
-          }}
-        >
-          <Table sx={{ borderSpacing: '0px' }}>
-            <TableBody>
-              {operations.map((op) => (
-                <TableRow
-                  sx={{
-                    boxShadow: 'none',
-                    fontSize: '13px',
-                  }}
-                  key={op.slug}
-                >
-                  <TableCell
-                    sx={{
-                      padding: '10px 4px 10px 10px',
-                      color: '#7D8998',
-                      fontWeight: 600,
-                      ':hover': { background: '#F5F5F5' },
-                    }}
-                    align="left"
-                    onClick={(event) => handleSelectNewOperation(event, op)}
-                  >
-                    {op.label}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Box>
-      )} */}
     </Box>
   );
 }
