@@ -9,11 +9,10 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
-  DbtSourceModel,
   OperationNodeType,
   SrcModelNodeType,
   UIOperationType,
@@ -24,22 +23,13 @@ import { OPERATION_NODE, RENAME_COLUMNS_OP, SRC_MODEL_NODE } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import { operations } from '../constant';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { httpGet, httpPost } from '@/helpers/http';
-import { useSession } from 'next-auth/react';
 import CreateTableOrAddFunction from './OperationPanel/CreateTableOrAddFunction';
-import { set } from 'cypress/types/lodash';
 import {
   useCanvasAction,
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
 import CreateTableForm from './OperationPanel/Forms/CreateTableForm';
-import {
-  Connection,
-  EdgeChange,
-  useEdgesState,
-  useNodesState,
-  useReactFlow,
-} from 'reactflow';
+import { useReactFlow } from 'reactflow';
 
 interface OperationConfigProps {
   sx: SxProps;
