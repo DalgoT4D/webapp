@@ -13,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
+  DbtSourceModel,
   OperationNodeType,
   SrcModelNodeType,
   UIOperationType,
@@ -25,7 +26,6 @@ import { operations } from '../constant';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-import { DbtSourceModel } from '../FlowEditor';
 import CreateTableOrAddFunction from './OperationPanel/CreateTableOrAddFunction';
 import { set } from 'cypress/types/lodash';
 

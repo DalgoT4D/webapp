@@ -6,17 +6,8 @@ import PreviewPane from './Components/PreviewPane';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { SRC_MODEL_NODE } from './constant';
-
+import { DbtSourceModel } from './Components/Canvas';
 import { useDbtRunLogs } from '@/contexts/DbtRunLogsContext';
-
-export type DbtSourceModel = {
-  source_name: string;
-  input_name: string;
-  input_type: 'model' | 'source';
-  schema: string;
-  id: string;
-  type: typeof SRC_MODEL_NODE;
-};
 
 const FlowEditor = ({}) => {
   const { data: session } = useSession();

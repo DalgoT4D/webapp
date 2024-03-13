@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../../FlowEditor';
+import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -54,11 +54,11 @@ const RenameColumnOp = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const { canvasAction, setCanvasAction } = useCanvasAction();
-  const nodeConfig: any =
-    node.data.node.type === SRC_MODEL_NODE
-      ? (node.data.node as DbtSourceModel)
-      : node.data.node.type === OPERATION_NODE
-      ? (node.data.node as OperationNodeData)
+  const nodeData: any =
+    node.type === SRC_MODEL_NODE
+      ? (node.data as DbtSourceModel)
+      : node.type === OPERATION_NODE
+      ? (node.data as OperationNodeData)
       : {};
 
   const { control, register, handleSubmit, reset } = useForm({
@@ -70,11 +70,11 @@ const RenameColumnOp = ({
 
   const fetchAndSetSourceColumns = async () => {
     if (node.type === SRC_MODEL_NODE) {
-      const nodeConfig = node.data.node as DbtSourceModel;
+      // const nodeData: DbtSourceModel = node.data;
       try {
         const data: ColumnData[] = await httpGet(
           session,
-          `warehouse/table_columns/${nodeConfig.schema}/${nodeConfig.input_name}`
+          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
         setSrcColumns(data.map((col: ColumnData) => col.name));
       } catch (error) {
@@ -83,8 +83,8 @@ const RenameColumnOp = ({
     }
 
     if (node.type === OPERATION_NODE) {
-      const nodeConfig = node.data.node as OperationNodeData;
-      setSrcColumns(nodeConfig.output_cols);
+      // const nodeData = node.data as OperationNodeData;
+      setSrcColumns(nodeData.output_cols);
     }
   };
 
@@ -92,10 +92,11 @@ const RenameColumnOp = ({
     try {
       const postData: any = {
         op_type: operation.slug,
-        select_columns: srcColumns,
+        source_columns: srcColumns,
+        other_inputs: [],
         config: { columns: {} },
-        input_uuids: node.type === SRC_MODEL_NODE ? [node.data.node.id] : [],
-        model_uuid: nodeConfig?.target_model_id || '',
+        input_uuid: node.type === SRC_MODEL_NODE ? node.data.id : '',
+        target_model_uuid: nodeData?.target_model_id || '',
       };
       data.config.forEach((item: any) => {
         if (item.old && item.new) postData.config.columns[item.old] = item.new;
@@ -111,6 +112,7 @@ const RenameColumnOp = ({
       // api call
       await httpPost(session, `transform/dbt_project/model/`, postData);
 
+      // TODO:  need to set the config panel to add another operation
       handleClose();
     } catch (error) {
       console.log(error);

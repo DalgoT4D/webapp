@@ -24,7 +24,6 @@ import ReactFlow, {
   EdgeMarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { DbtSourceModel } from '../FlowEditor';
 import { OperationNode } from './Nodes/OperationNode';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
@@ -56,22 +55,21 @@ export interface OperationNodeData {
   config?: any;
 }
 
+export type DbtSourceModel = {
+  source_name: string;
+  input_name: string;
+  input_type: 'model' | 'source';
+  schema: string;
+  id: string;
+  type: typeof SRC_MODEL_NODE;
+};
+
 export interface OperationNodeType extends NodeProps {
-  data: {
-    node: OperationNodeData;
-    triggerSelectOperation: (
-      node: OperationNodeType | SrcModelNodeType
-    ) => void;
-  };
+  data: OperationNodeData;
 }
 
 export interface SrcModelNodeType extends NodeProps {
-  data: {
-    node: DbtSourceModel;
-    triggerSelectOperation: (
-      node: OperationNodeType | SrcModelNodeType
-    ) => void;
-  };
+  data: DbtSourceModel;
 }
 
 type CustomNode = OperationNodeType | SrcModelNodeType;
@@ -215,9 +213,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         response.nodes.map((nn: DbtSourceModel | OperationNodeData) => ({
           id: nn.id,
           type: nn.type,
-          data: {
-            node: nn,
-          },
+          data: nn,
         }));
       const edges: Edge[] = response.edges.map((edgeData: EdgeData) => ({
         ...edgeData,
@@ -316,9 +312,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       const newNode = {
         id: dbtSourceModel.id,
         type: SRC_MODEL_NODE,
-        data: {
-          node: dbtSourceModel,
-        },
+        data: dbtSourceModel,
         position: { x: 100, y: 125 },
       };
       handleNodesChange([{ type: 'add', item: newNode }]);
