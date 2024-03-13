@@ -278,10 +278,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const handleDeleteNode = async (nodeId: string, type: string) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
-    console.log('compare with', previewNodeRef.current?.id);
-    if (nodeId === previewNodeRef.current?.id) {
-      setPreviewAction({ type: 'clear-preview', data: null });
-    }
+    // console.log('compare with', previewNodeRef.current?.id);
+    // if (nodeId === previewNodeRef.current?.id) {
+    //   setPreviewAction({ type: 'clear-preview', data: null });
+    // }
 
     // remove node from canvas
     if (type === SRC_MODEL_NODE) {
@@ -294,7 +294,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     } else if (type === OPERATION_NODE) {
       // hit the backend api to remove the node in a try catch
       try {
-        await httpDelete(session, `transform/dbt_project/model/${nodeId}/`);
+        await httpDelete(
+          session,
+          `transform/dbt_project/model/operations/${nodeId}/`
+        );
       } catch (error) {
         console.log(error);
       }
@@ -328,7 +331,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     if (canvasAction.type === 'refresh-canvas') {
       setRedrawGraph(!redrawGraph);
       setOperationSelectedForConfig(null);
-      setOpenOperationConfig(false);
     }
 
     if (canvasAction.type === 'delete-node') {
@@ -452,7 +454,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         <OperationConfigLayout
           openPanel={openOperationConfig}
           setOpenPanel={setOpenOperationConfig}
-          node={canvasNode}
           sx={{
             background: '#FFFFFF',
             width: '500px',

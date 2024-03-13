@@ -46,8 +46,6 @@ export function OperationNode(node: OperationNodeType) {
     setCanvasNode(node);
   };
 
-  console.log('operation node', node);
-
   return (
     <Box>
       <>
