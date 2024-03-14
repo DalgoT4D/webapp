@@ -19,7 +19,12 @@ import {
 } from './Canvas';
 // import { operations } from './OperationConfigForms/constant';
 import InfoIcon from '@mui/icons-material/Info';
-import { OPERATION_NODE, RENAME_COLUMNS_OP, SRC_MODEL_NODE } from '../constant';
+import {
+  OPERATION_NODE,
+  RENAME_COLUMNS_OP,
+  SRC_MODEL_NODE,
+  JOIN_OP,
+} from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import { operations } from '../constant';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -30,6 +35,7 @@ import {
 } from '@/contexts/FlowEditorCanvasContext';
 import CreateTableForm from './OperationPanel/Forms/CreateTableForm';
 import { useReactFlow } from 'reactflow';
+import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -60,7 +66,22 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
     />
-  ), // add more operations here
+  ),
+  [JOIN_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+  }: OperationFormProps) => (
+    <JoinOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+    />
+  ),
 };
 
 const OperationForm = ({
