@@ -9,7 +9,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
@@ -49,6 +49,7 @@ export interface OperationFormProps {
   sx: SxProps;
   continueOperationChain: (...args: any) => void;
   clearAndClosePanel: (...args: any) => void;
+  dummyNodeId: string;
 }
 
 const operationComponentMapping: any = {
@@ -58,6 +59,7 @@ const operationComponentMapping: any = {
     sx,
     continueOperationChain,
     clearAndClosePanel,
+    dummyNodeId,
   }: OperationFormProps) => (
     <RenameColumnOpForm
       node={node}
@@ -65,6 +67,7 @@ const operationComponentMapping: any = {
       sx={sx}
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
     />
   ),
   [JOIN_OP]: ({
@@ -73,6 +76,7 @@ const operationComponentMapping: any = {
     sx,
     continueOperationChain,
     clearAndClosePanel,
+    dummyNodeId,
   }: OperationFormProps) => (
     <JoinOpForm
       node={node}
@@ -80,6 +84,7 @@ const operationComponentMapping: any = {
       sx={sx}
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
     />
   ),
 };
@@ -90,6 +95,7 @@ const OperationForm = ({
   sx,
   continueOperationChain,
   clearAndClosePanel,
+  dummyNodeId,
 }: OperationFormProps) => {
   if (operation.slug === 'create-table') {
     return (
@@ -99,6 +105,7 @@ const OperationForm = ({
         sx={sx}
         continueOperationChain={continueOperationChain}
         clearAndClosePanel={clearAndClosePanel}
+        dummyNodeId={dummyNodeId}
       />
     );
   }
@@ -113,6 +120,7 @@ const OperationForm = ({
     sx,
     continueOperationChain,
     clearAndClosePanel,
+    dummyNodeId,
   });
 };
 
@@ -125,9 +133,11 @@ const OperationConfigLayout = ({
   const { canvasNode, setCanvasNode } = useCanvasNode();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
-  const { addEdges, addNodes } = useReactFlow();
+  const dummyNodeIdRef: any = useRef(null);
+  const { addEdges, addNodes, deleteElements } = useReactFlow();
 
   const handleClosePanel = () => {
+    deleteElements({ nodes: [{ id: dummyNodeIdRef.current }] });
     setOpenPanel(false);
     setShowFunctionsList(false);
     setSelectedOp(null);
@@ -159,6 +169,7 @@ const OperationConfigLayout = ({
       sourceHandle: null,
       targetHandle: null,
     };
+    dummyNodeIdRef.current = nodeId;
     addNodes([dummyTargetNodeData]);
     addEdges([newEdge]);
     setSelectedOp(op);
@@ -315,6 +326,7 @@ const OperationConfigLayout = ({
               node={canvasNode}
               continueOperationChain={prepareForNextOperation}
               clearAndClosePanel={handleClosePanel}
+              dummyNodeId={dummyNodeIdRef.current || ''}
             />
           ) : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE ? (
             <OperationList

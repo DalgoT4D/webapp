@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 
 import { httpGet, httpPost } from '@/helpers/http';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
@@ -11,6 +11,7 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { Autocomplete, Box, Button, Grid, Typography } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
+import { Edge, useReactFlow } from 'reactflow';
 
 const JoinOpForm = ({
   node,
@@ -18,20 +19,21 @@ const JoinOpForm = ({
   sx,
   continueOperationChain,
   clearAndClosePanel,
+  dummyNodeId,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const [table2Columns, setTable2Columns] = useState<string[]>([]);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const globalContext = useContext(GlobalContext);
+  const modelDummyNodeId: any = useRef('');
+  const { deleteElements, addEdges, addNodes, getEdges } = useReactFlow();
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
       ? (node?.data as OperationNodeData)
       : {};
-
-  console.log('nodeData', nodeData);
 
   const { control, register, handleSubmit, reset, setValue } = useForm({
     defaultValues: {
@@ -94,6 +96,40 @@ const JoinOpForm = ({
     }
   };
 
+  const clearAndAddDummyModelNode = (model: DbtSourceModel) => {
+    const edges: Edge[] = getEdges();
+    if (
+      modelDummyNodeId.current &&
+      edges.filter(
+        (edge: Edge) =>
+          edge.source === modelDummyNodeId.current ||
+          edge.target === modelDummyNodeId.current
+      ).length <= 1
+    ) {
+      deleteElements({ nodes: [{ id: modelDummyNodeId.current }] });
+    }
+
+    const dummySourceNodeData: any = {
+      id: model.id,
+      type: SRC_MODEL_NODE,
+      data: model,
+      position: {
+        x: node ? node?.xPos + 150 : 100,
+        y: node?.yPos,
+      },
+    };
+    const newEdge: any = {
+      id: `${dummySourceNodeData.id}_${dummyNodeId}`,
+      source: dummySourceNodeData.id,
+      target: dummyNodeId,
+      sourceHandle: null,
+      targetHandle: null,
+    };
+    addNodes([dummySourceNodeData]);
+    addEdges([newEdge]);
+    modelDummyNodeId.current = model.id;
+  };
+
   const handleSelectSecondTable = async (id: string | null) => {
     const model: DbtSourceModel | null | undefined = sourcesModels.find(
       (model: DbtSourceModel) => model.id === id
@@ -102,7 +138,6 @@ const JoinOpForm = ({
     setValue('table2.key', '');
 
     if (model) {
-      console.log(model);
       try {
         const data: Array<string> = await fetchWareohuseTableColumns(
           model.schema,
@@ -112,6 +147,7 @@ const JoinOpForm = ({
       } catch (error) {
         console.log(error);
       }
+      clearAndAddDummyModelNode(model);
     }
   };
 
