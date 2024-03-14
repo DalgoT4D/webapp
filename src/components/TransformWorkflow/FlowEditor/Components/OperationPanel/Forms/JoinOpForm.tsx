@@ -170,7 +170,7 @@ const JoinOpForm = ({
           },
         ],
         config: {
-          join_type: data.join_type,
+          join_type: data.join_type === 'right' ? 'left' : data.join_type,
           join_on: {
             key1: data.table1.key,
             key2: data.table2.key,

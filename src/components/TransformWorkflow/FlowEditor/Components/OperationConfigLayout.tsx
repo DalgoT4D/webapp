@@ -24,6 +24,7 @@ import {
   RENAME_COLUMNS_OP,
   SRC_MODEL_NODE,
   JOIN_OP,
+  REPLACE_COLUMN_VALUE_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import { operations } from '../constant';
@@ -36,6 +37,7 @@ import {
 import CreateTableForm from './OperationPanel/Forms/CreateTableForm';
 import { useReactFlow } from 'reactflow';
 import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
+import ReplaceValueOpForm from './OperationPanel/Forms/ReplaceValueOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -79,6 +81,23 @@ const operationComponentMapping: any = {
     dummyNodeId,
   }: OperationFormProps) => (
     <JoinOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
+  [REPLACE_COLUMN_VALUE_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <ReplaceValueOpForm
       node={node}
       operation={operation}
       sx={sx}
