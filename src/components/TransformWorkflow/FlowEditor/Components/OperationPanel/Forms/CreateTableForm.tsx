@@ -67,7 +67,7 @@ const CreateTableForm = ({
           name="dest_schema"
           render={({ field }) => (
             <Autocomplete
-              options={['Intermediate', 'Production']}
+              options={['intermediate', 'production']}
               value={field.value}
               onChange={(e, data) => {
                 field.onChange(data);
