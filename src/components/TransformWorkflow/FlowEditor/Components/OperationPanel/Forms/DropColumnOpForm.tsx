@@ -74,16 +74,10 @@ const DropColumnOp = ({
         op_type: operation.slug,
         source_columns: srcColumns,
         other_inputs: [],
-        config: { columns: {} as { [key: string]: string } },
+        config: { columns: selectedColumns },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData.target_model_id || '',
       };
-
-      srcColumns.forEach((col: string) => {
-        if (selectedColumns.includes(col)) {
-          postData.config.columns[col] = col;
-        }
-      });
 
       // validations
       if (selectedColumns.length === 0) {
