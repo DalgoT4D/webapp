@@ -1,13 +1,22 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Autocomplete, Box, Button, Grid, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Grid,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { GlobalContext } from '@/contexts/ContextProvider';
-
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
+import InputAdornment from '@mui/material/InputAdornment';
 import {
   errorToast,
   successToast,
@@ -23,6 +32,7 @@ const DropColumnOp = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -48,12 +58,18 @@ const DropColumnOp = ({
     }
   };
 
-  const handleSave = async (data: any) => {
-    try {
-      const columnsToDrop = Array.isArray(data.columnsToDrop)
-        ? data.columnsToDrop
-        : [data.columnsToDrop];
+  const handleAddColumn = (column: string) => {
+    setSelectedColumns((prevColumns) => [...prevColumns, column]);
+  };
 
+  const handleRemoveColumn = (column: string) => {
+    setSelectedColumns((prevColumns) =>
+      prevColumns.filter((col) => col !== column)
+    );
+  };
+
+  const handleSave = async () => {
+    try {
       const postData = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -64,20 +80,19 @@ const DropColumnOp = ({
       };
 
       srcColumns.forEach((col: string) => {
-        if (columnsToDrop.includes(col)) {
+        if (selectedColumns.includes(col)) {
           postData.config.columns[col] = col;
         }
       });
 
       // validations
-      if (columnsToDrop.length === 0) {
+      if (selectedColumns.length === 0) {
         console.log('Please select columns to drop');
         errorToast('Please select columns to drop', [], globalContext);
         return;
       }
 
       // api call
-      console.log(postData, 'post data');
       const operationNode = await httpPost(
         session,
         `transform/dbt_project/model/`,
@@ -96,28 +111,56 @@ const DropColumnOp = ({
 
   return (
     <Box sx={{ ...sx, marginTop: '17px', padding: '20px' }}>
-      <form onSubmit={handleSave}>
-        <Grid container>
-          <Grid item xs={12}>
-            <Autocomplete
-              options={srcColumns}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Select Columns to Drop"
-                />
-              )}
-              onChange={(e, value) => handleSave({ columnsToDrop: value })}
-            />
-          </Grid>
-          <Grid item xs={12} sx={{ marginTop: '40px' }}>
-            <Button variant="outlined" type="submit" fullWidth>
-              Save
-            </Button>
-          </Grid>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Typography variant="h6">Select Columns to Drop</Typography>
         </Grid>
-      </form>
+        {[...selectedColumns].reverse().map((column, index) => (
+          <Grid item xs={12} key={index}>
+            <Grid container spacing={1}>
+              <Grid item xs={12}>
+                <TextField
+                  disabled
+                  variant="outlined"
+                  value={column}
+                  fullWidth
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => handleRemoveColumn(column)}>
+                          <CloseIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Grid>
+        ))}
+        <Grid item xs={12}>
+          <Autocomplete
+            options={srcColumns.filter((col) => !selectedColumns.includes(col))}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="outlined"
+                label="Select Column to Drop"
+              />
+            )}
+            onChange={(e, value) => {
+              if (value) {
+                handleAddColumn(value);
+              }
+            }}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <Button onClick={handleSave} variant="outlined">
+            Save
+          </Button>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
