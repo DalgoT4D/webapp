@@ -27,7 +27,6 @@ import {
   REPLACE_COLUMN_VALUE_OP,
   DROP_COLUMNS_OP,
   COALESCE_COLUMNS_OP,
-  DROP_COLUMNS_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import DropColumnOpForm from './OperationPanel/Forms/DropColumnOpForm';
