@@ -13,7 +13,6 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-import { filter } from 'cypress/types/bluebird';
 
 const DropColumnOp = ({
   node,
@@ -96,7 +95,7 @@ const DropColumnOp = ({
   }, [session]);
 
   return (
-    <Box sx={{ ...sx, marginTop: '17px' }}>
+    <Box sx={{ ...sx, marginTop: '17px', padding: '20px' }}>
       <form onSubmit={handleSave}>
         <Grid container>
           <Grid item xs={12}>
@@ -112,9 +111,9 @@ const DropColumnOp = ({
               onChange={(e, value) => handleSave({ columnsToDrop: value })}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} sx={{ marginTop: '40px' }}>
             <Button variant="outlined" type="submit" fullWidth>
-              Drop Columns
+              Save
             </Button>
           </Grid>
         </Grid>
