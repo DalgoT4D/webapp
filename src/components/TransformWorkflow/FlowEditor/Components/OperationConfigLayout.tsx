@@ -25,9 +25,11 @@ import {
   SRC_MODEL_NODE,
   JOIN_OP,
   REPLACE_COLUMN_VALUE_OP,
+  DROP_COLUMNS_OP,
   COALESCE_COLUMNS_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
+import DropColumnOpForm from './OperationPanel/Forms/DropColumnOpForm';
 import { operations } from '../constant';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CreateTableOrAddFunction from './OperationPanel/CreateTableOrAddFunction';
@@ -117,6 +119,23 @@ const operationComponentMapping: any = {
     dummyNodeId,
   }: OperationFormProps) => (
     <CoalesceOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
+  [DROP_COLUMNS_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <DropColumnOpForm
       node={node}
       operation={operation}
       sx={sx}
