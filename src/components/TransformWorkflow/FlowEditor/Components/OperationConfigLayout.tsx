@@ -27,6 +27,7 @@ import {
   REPLACE_COLUMN_VALUE_OP,
   DROP_COLUMNS_OP,
   COALESCE_COLUMNS_OP,
+  ARITHMETIC_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import DropColumnOpForm from './OperationPanel/Forms/DropColumnOpForm';
@@ -42,6 +43,7 @@ import { useReactFlow } from 'reactflow';
 import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
 import ReplaceValueOpForm from './OperationPanel/Forms/ReplaceValueOpForm';
 import CoalesceOpForm from './OperationPanel/Forms/CoalesceOpForm';
+import ArithmeticOpForm from './OperationPanel/Forms/ArithmeticOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -127,7 +129,7 @@ const operationComponentMapping: any = {
       dummyNodeId={dummyNodeId}
     />
   ),
-  [DROP_COLUMNS_OP]: ({
+  [ARITHMETIC_OP]: ({
     node,
     operation,
     sx,
@@ -135,7 +137,7 @@ const operationComponentMapping: any = {
     clearAndClosePanel,
     dummyNodeId,
   }: OperationFormProps) => (
-    <DropColumnOpForm
+    <ArithmeticOpForm
       node={node}
       operation={operation}
       sx={sx}
