@@ -192,7 +192,7 @@ const ArithmeticOpForm = ({
           {fields.map((field, index) => {
             const radioValue = watch(`operands.${index}.type`);
             return (
-              <Box>
+              <Box key={`field-${index}`}>
                 <Box sx={{ m: 2 }} />
                 <Controller
                   name={`operands.${index}.type`}
