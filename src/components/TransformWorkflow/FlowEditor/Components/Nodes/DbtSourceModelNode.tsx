@@ -19,6 +19,7 @@ import {
   useCanvasAction,
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
+import { trimString } from '@/utils/common';
 
 export interface ColumnData {
   name: string;
@@ -170,7 +171,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
         >
           <Box>
             <Typography variant="subtitle2" fontWeight={700}>
-              {`${node.data.input_name}`}
+              {trimString(node.data.input_name, 25)}
             </Typography>
           </Box>
           <Box sx={{ marginLeft: 'auto' }}>
@@ -185,7 +186,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
           </Box>
         </Box>
         <Box
-          sx={{
+          style={{
             background: '#F8F8F8',
             display: 'flex',
             flexDirection: 'column',
@@ -196,6 +197,9 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
             width: '100%',
           }}
           onClick={handleSelectNode}
+          onWheelCapture={(event) => {
+            event.stopPropagation();
+          }}
         >
           {columns.length > 0 ? (
             <Box>

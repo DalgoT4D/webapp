@@ -7,10 +7,14 @@ import TocIcon from '@mui/icons-material/Toc';
 import { DbtSourceModel } from './Canvas';
 import { NodeApi } from 'react-arborist';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
+import useResizeObserver from 'use-resize-observer';
+import { trimString } from '@/utils/common';
 
 const Node = ({ node, style, dragHandle }: any) => {
   /* This node instance can do many things. See the API reference. */
   const data: DbtSourceModel = node.data;
+  let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
+  name = trimString(name, 25);
 
   return (
     <Box
@@ -31,9 +35,7 @@ const Node = ({ node, style, dragHandle }: any) => {
       ) : (
         <FolderIcon />
       )}
-      <Typography sx={{ wordWrap: 'break-word', minWidth: 0 }}>
-        {!node.isLeaf ? data.schema : data.input_name}
-      </Typography>
+      <Typography sx={{ minWidth: 0 }}>{name}</Typography>
     </Box>
   );
 };
@@ -46,6 +48,7 @@ interface ProjectTreeProps {
 
 const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
   const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
 
   const constructAndSetProjectTreeData = (
@@ -159,13 +162,14 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
   // ];
 
   return (
-    <Box sx={{ padding: '10px' }}>
+    <Box sx={{ p: '10px', pr: 0, pb: 0, height: '100%' }} ref={ref}>
       <Tree
         childrenAccessor={(d: any) => d.children}
         openByDefault={true}
         data={projectTreeData}
+        height={height}
+        width={width}
         rowHeight={30}
-        height={1000}
         onSelect={handleNodeClick}
       >
         {Node}
