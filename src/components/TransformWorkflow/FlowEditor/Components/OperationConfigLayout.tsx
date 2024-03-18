@@ -28,8 +28,10 @@ import {
   DROP_COLUMNS_OP,
   COALESCE_COLUMNS_OP,
   ARITHMETIC_OP,
+  CAST_DATA_TYPES_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
+import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
 import DropColumnOpForm from './OperationPanel/Forms/DropColumnOpForm';
 import { operations } from '../constant';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -155,6 +157,23 @@ const operationComponentMapping: any = {
     dummyNodeId,
   }: OperationFormProps) => (
     <DropColumnOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
+  [CAST_DATA_TYPES_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <CastColumnOpForm
       node={node}
       operation={operation}
       sx={sx}
