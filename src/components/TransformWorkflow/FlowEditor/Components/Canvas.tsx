@@ -436,11 +436,24 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         height: '100%',
       }}
     >
-      <Box sx={{ height: '10%', background: 'lightgrey' }}>
+      <Box
+        sx={{
+          height: '44px',
+          background: '#F5FAFA',
+          border: '#CCD6E2 solid',
+          borderWidth: '1px 0px 1px 0px',
+        }}
+      >
         <CanvasHeader runWorkflow={handleRunWorkflow} />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
-      <Box sx={{ display: 'flex', height: '90%' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          height: 'calc(100% - 44px)',
+          background: 'white',
+        }}
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}
