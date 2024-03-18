@@ -186,7 +186,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
           </Box>
         </Box>
         <Box
-          style={{
+          sx={{
             background: '#F8F8F8',
             display: 'flex',
             flexDirection: 'column',
