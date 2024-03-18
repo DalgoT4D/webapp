@@ -146,6 +146,23 @@ const operationComponentMapping: any = {
       dummyNodeId={dummyNodeId}
     />
   ),
+  [DROP_COLUMNS_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <DropColumnOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
 };
 
 const OperationForm = ({
