@@ -112,11 +112,7 @@ const Transform = () => {
                 justifyContent="space-between"
                 sx={{ padding: '30px' }}
               >
-                <Image
-                  src={UI}
-                  alt="ui_transform"
-                  style={{ width: 'auto', height: '300px' }}
-                />
+                <Image src={UI} alt="ui_transform" style={{ width: 'auto' }} />
                 <Typography
                   sx={{ fontWeight: 600 }}
                   variant="h5"
@@ -161,7 +157,7 @@ const Transform = () => {
                 <Image
                   src={Github}
                   alt="github_transform"
-                  style={{ width: 'auto', height: '300px' }}
+                  style={{ width: 'auto' }}
                 />
                 <Typography
                   sx={{ fontWeight: 550 }}
