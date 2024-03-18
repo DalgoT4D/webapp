@@ -3,12 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import TocIcon from '@mui/icons-material/Toc';
+import TocIcon from '@/assets/icons/datatable.svg';
 import { DbtSourceModel } from './Canvas';
 import { NodeApi } from 'react-arborist';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import useResizeObserver from 'use-resize-observer';
 import { trimString } from '@/utils/common';
+import Image from 'next/image';
 
 const Node = ({ node, style, dragHandle }: any) => {
   /* This node instance can do many things. See the API reference. */
@@ -29,13 +30,13 @@ const Node = ({ node, style, dragHandle }: any) => {
       onClick={() => node.toggle()}
     >
       {node.isLeaf ? (
-        <TocIcon />
+        <Image src={TocIcon} alt="delete icon" />
       ) : node.isOpen ? (
         <FolderOpenIcon />
       ) : (
         <FolderIcon />
       )}
-      <Typography sx={{ minWidth: 0 }}>{name}</Typography>
+      <Typography sx={{ ml: 1, minWidth: 0 }}>{name}</Typography>
     </Box>
   );
 };
@@ -162,18 +163,42 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
   // ];
 
   return (
-    <Box sx={{ p: '10px', pr: 0, pb: 0, height: '100%' }} ref={ref}>
-      <Tree
-        childrenAccessor={(d: any) => d.children}
-        openByDefault={true}
-        data={projectTreeData}
-        height={height}
-        width={width}
-        rowHeight={30}
-        onSelect={handleNodeClick}
+    <Box
+      sx={{
+        height: '100%',
+      }}
+    >
+      <Box
+        sx={{
+          height: '44px',
+          background: '#F5FAFA',
+          border: '#CCD6E2 solid',
+          borderWidth: '1px 1px 1px 0px',
+        }}
+      ></Box>
+      <Box
+        sx={{
+          p: '10px',
+          pr: 0,
+          pb: 0,
+          height: 'calc(100% - 44px)',
+          border: '#CCD6E2 solid',
+          borderWidth: '0px 1px 0px 0px',
+        }}
+        ref={ref}
       >
-        {Node}
-      </Tree>
+        <Tree
+          childrenAccessor={(d: any) => d.children}
+          openByDefault={true}
+          data={projectTreeData}
+          height={height}
+          width={width}
+          rowHeight={30}
+          onSelect={handleNodeClick}
+        >
+          {Node}
+        </Tree>
+      </Box>
     </Box>
   );
 };
