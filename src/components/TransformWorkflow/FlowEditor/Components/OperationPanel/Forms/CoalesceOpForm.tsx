@@ -152,7 +152,6 @@ const CoalesceOpForm = ({
 
           {fields.map((field, index) => (
             <>
-              {console.log('fields', fields)}
               <Grid
                 key={field + '_1'}
                 item
