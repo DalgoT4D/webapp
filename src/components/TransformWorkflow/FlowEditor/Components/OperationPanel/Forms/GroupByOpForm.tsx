@@ -128,10 +128,6 @@ const GroupByOpForm = ({
       if (dimensionColumns.length === 0) {
         errorToast('Please select dimensions to groupby', [], globalContext);
       }
-      //   aggregate_on:
-      //             - column: <column name from source column>
-      //               operation: <"sum" or "avg" or "count" or "min" or "max" or "countdistinct">
-      //               output_col_name: <output col name></output>
       const postData: any = {
         op_type: operation.slug,
         source_columns: dimensionColumns,
