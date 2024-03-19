@@ -28,6 +28,7 @@ import {
   DROP_COLUMNS_OP,
   COALESCE_COLUMNS_OP,
   ARITHMETIC_OP,
+  GROUPBY_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import DropColumnOpForm from './OperationPanel/Forms/DropColumnOpForm';
@@ -44,6 +45,7 @@ import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
 import ReplaceValueOpForm from './OperationPanel/Forms/ReplaceValueOpForm';
 import CoalesceOpForm from './OperationPanel/Forms/CoalesceOpForm';
 import ArithmeticOpForm from './OperationPanel/Forms/ArithmeticOpForm';
+import GroupByOpForm from './OperationPanel/Forms/GroupByOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -155,6 +157,23 @@ const operationComponentMapping: any = {
     dummyNodeId,
   }: OperationFormProps) => (
     <DropColumnOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
+  [GROUPBY_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <GroupByOpForm
       node={node}
       operation={operation}
       sx={sx}
