@@ -204,18 +204,17 @@ const CastColumnOp = ({
               </Grid>
             </React.Fragment>
           ))}
-
-          <Box>
-            <Button
-              variant="outlined"
-              type="submit"
-              data-testid="savebutton"
-              fullWidth
-            >
-              Save
-            </Button>
-          </Box>
         </Grid>
+        <Box sx={{ ...sx, padding: '16px 16px 0px 16px' }}>
+          <Button
+            variant="outlined"
+            type="submit"
+            data-testid="savebutton"
+            fullWidth
+          >
+            Save
+          </Button>
+        </Box>
       </form>
     </Box>
   );
