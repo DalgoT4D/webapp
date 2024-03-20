@@ -109,7 +109,7 @@ const CastColumnOp = ({
       };
 
       formData.config.forEach((data: any) => {
-        if (data.column) {
+        if (data.column && data.dataType) {
           postData.config.columns.push({
             columnname: data.column,
             columntype: data.dataType,
