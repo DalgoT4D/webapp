@@ -142,7 +142,6 @@ const PreviewPane = () => {
     <Box sx={{ height: '100%' }}>
       <Box
         sx={{
-          height: '100%',
           alignItems: 'center',
         }}
       >
