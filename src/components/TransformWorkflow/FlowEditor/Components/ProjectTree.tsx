@@ -6,6 +6,7 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@/assets/icons/datatable.svg';
 import { DbtSourceModel } from './Canvas';
 import { NodeApi } from 'react-arborist';
+import AddIcon from '@mui/icons-material/Add';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import useResizeObserver from 'use-resize-observer';
 import { trimString } from '@/utils/common';
@@ -24,10 +25,9 @@ const Node = ({ node, style, dragHandle }: any) => {
       sx={{
         alignItems: 'center',
         display: 'flex',
-        background: node.isSelected ? 'grey' : '',
-        maxWidth: '70%',
+        mr: 2,
       }}
-      onClick={() => node.toggle()}
+      onClick={() => (node.isLeaf ? undefined : node.toggle())}
     >
       {node.isLeaf ? (
         <Image src={TocIcon} alt="delete icon" />
@@ -36,7 +36,17 @@ const Node = ({ node, style, dragHandle }: any) => {
       ) : (
         <FolderIcon />
       )}
-      <Typography sx={{ ml: 1, minWidth: 0 }}>{name}</Typography>
+      <Box sx={{ display: 'flex', width: '1000px' }}>
+        <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>
+          {name}
+        </Typography>
+        {node.isLeaf && (
+          <AddIcon
+            sx={{ ml: 'auto', cursor: 'pointer' }}
+            onClick={() => node.toggle()}
+          />
+        )}
+      </Box>
     </Box>
   );
 };
@@ -172,8 +182,9 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
         sx={{
           height: '44px',
           background: '#F5FAFA',
-          border: '#CCD6E2 solid',
-          borderWidth: '1px 1px 1px 0px',
+          border: '1px #CCD6E2 solid',
+          borderLeft: 0,
+          borderRight: 0,
         }}
       ></Box>
       <Box
@@ -182,8 +193,6 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
           pr: 0,
           pb: 0,
           height: 'calc(100% - 44px)',
-          border: '#CCD6E2 solid',
-          borderWidth: '0px 1px 0px 0px',
         }}
         ref={ref}
       >
