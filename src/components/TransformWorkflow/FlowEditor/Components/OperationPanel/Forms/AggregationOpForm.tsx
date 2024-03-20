@@ -151,11 +151,7 @@ const AggregationOpForm = ({
                 }
               }}
               renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Select Column to Aggregate"
-                />
+                <Input {...params} label="Select Column to Aggregate" />
               )}
             />
 
