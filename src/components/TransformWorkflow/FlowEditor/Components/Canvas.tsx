@@ -440,8 +440,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         sx={{
           height: '44px',
           background: '#F5FAFA',
-          border: '#CCD6E2 solid',
-          borderWidth: '1px 0px 1px 0px',
+          borderTop: '1px #CCD6E2 solid',
         }}
       >
         <CanvasHeader runWorkflow={handleRunWorkflow} />
