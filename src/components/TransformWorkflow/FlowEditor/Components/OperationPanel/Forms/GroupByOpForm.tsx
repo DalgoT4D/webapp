@@ -242,7 +242,7 @@ const GroupByOpForm = ({
 
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
           {aggregateFields.map((field, index) => (
-            <Box>
+            <Box key={`${field.id}_box`}>
               <Box>
                 <Typography fontWeight="600" color="#888888">
                   ADD AGGREGATION {(index + 1).toString().padStart(2, '0')}
