@@ -136,7 +136,7 @@ const TransformWorkflowLayout = ({ children }: any) => {
         },
       }}
     >
-      <Header hideMenu={true} />
+      <Header hideMenu />
       {children}
     </SWRConfig>
   );
