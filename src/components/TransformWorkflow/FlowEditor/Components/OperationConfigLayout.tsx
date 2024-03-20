@@ -28,7 +28,6 @@ import {
   DROP_COLUMNS_OP,
   COALESCE_COLUMNS_OP,
   ARITHMETIC_OP,
-  CAST_DATA_TYPES_OP,
   GROUPBY_OP,
   WHERE_OP,
   CAST_DATA_TYPES_OP,
@@ -213,23 +212,6 @@ const operationComponentMapping: any = {
     dummyNodeId,
   }: OperationFormProps) => (
     <WhereFilterOpForm
-      node={node}
-      operation={operation}
-      sx={sx}
-      continueOperationChain={continueOperationChain}
-      clearAndClosePanel={clearAndClosePanel}
-      dummyNodeId={dummyNodeId}
-    />
-  ),
-  [CAST_DATA_TYPES_OP]: ({
-    node,
-    operation,
-    sx,
-    continueOperationChain,
-    clearAndClosePanel,
-    dummyNodeId,
-  }: OperationFormProps) => (
-    <CastColumnOpForm
       node={node}
       operation={operation}
       sx={sx}
