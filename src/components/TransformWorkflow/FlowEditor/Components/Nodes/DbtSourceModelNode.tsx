@@ -99,17 +99,27 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   const edges = useEdges();
   const nodeId: string | null = useNodeId();
 
-  // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
-  const isDeletable: boolean = edges.find(
+  const edgesGoingIntoNode: Edge[] = edges.filter(
+    (edge: Edge) => edge.target === nodeId
+  );
+  const edgesEmanatingOutOfNode: Edge[] = edges.filter(
     (edge: Edge) => edge.source === nodeId
-  )
-    ? false
-    : true;
+  );
+  // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
+  const isDeletable: boolean =
+    edgesEmanatingOutOfNode.length > 0 ? false : true;
 
   const handleDeleteAction = () => {
     setCanvasAction({
       type: 'delete-node',
-      data: { nodeId: nodeId, nodeType: node.type },
+      data: {
+        nodeId: nodeId,
+        nodeType: node.type,
+        shouldRefreshGraph:
+          edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0
+            ? false
+            : true,
+      },
     });
   };
 
