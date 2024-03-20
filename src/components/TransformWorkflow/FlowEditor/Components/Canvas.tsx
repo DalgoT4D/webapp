@@ -267,7 +267,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const handleDeleteNode = async (
     nodeId: string,
     type: string,
-    shouldRefreshGraph: boolean = true
+    shouldRefreshGraph = true
   ) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
