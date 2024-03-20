@@ -11,6 +11,7 @@ export const REPLACE_COLUMN_VALUE_OP = 'replace';
 export const JOIN_OP = 'join';
 export const WHERE_OP = 'where';
 export const GROUPBY_OP = 'groupby';
+export const CASEWHEN_OP = 'casewhen';
 
 export const operations = [
   { label: 'Flatten', slug: FLATTEN_OP },
@@ -26,6 +27,7 @@ export const operations = [
   { label: 'Filter', slug: WHERE_OP },
   { label: 'Group By', slug: GROUPBY_OP },
   { label: 'Replace', slug: REPLACE_COLUMN_VALUE_OP },
+  { label: 'Case', slug: CASEWHEN_OP },
 ];
 
 // Node types

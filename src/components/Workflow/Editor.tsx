@@ -8,12 +8,12 @@ import {
   CanvasNodeProvider,
 } from '@/contexts/FlowEditorCanvasContext';
 import { PreviewActionProvider } from '@/contexts/FlowEditorPreviewContext';
+
 export default function WorkflowEditor() {
   return (
     <>
       <PageHead title="FlowEditors" />
       <main className={styles.floweditor}>
-        {/* <FlowEditorContextProvider> */}
         <CanvasNodeProvider>
           <CanvasActionProvider>
             <PreviewActionProvider>
@@ -23,7 +23,6 @@ export default function WorkflowEditor() {
             </PreviewActionProvider>
           </CanvasActionProvider>
         </CanvasNodeProvider>
-        {/* </FlowEditorContextProvider> */}
       </main>
     </>
   );
