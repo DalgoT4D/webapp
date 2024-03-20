@@ -29,6 +29,7 @@ import {
   COALESCE_COLUMNS_OP,
   ARITHMETIC_OP,
   CAST_DATA_TYPES_OP,
+  AGGREGATE_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -46,6 +47,7 @@ import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
 import ReplaceValueOpForm from './OperationPanel/Forms/ReplaceValueOpForm';
 import CoalesceOpForm from './OperationPanel/Forms/CoalesceOpForm';
 import ArithmeticOpForm from './OperationPanel/Forms/ArithmeticOpForm';
+import AggregationOpForm from './OperationPanel/Forms/AggregationOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -174,6 +176,23 @@ const operationComponentMapping: any = {
     dummyNodeId,
   }: OperationFormProps) => (
     <CastColumnOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
+  [AGGREGATE_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <AggregationOpForm
       node={node}
       operation={operation}
       sx={sx}
