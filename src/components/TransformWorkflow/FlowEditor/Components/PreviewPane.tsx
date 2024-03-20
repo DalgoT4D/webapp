@@ -139,7 +139,7 @@ const PreviewPane = () => {
   });
 
   return (
-    <Box sx={{ height: '100%' }}>
+    <Box sx={{ height: '100%', overflow: 'auto', pb: 8 }}>
       <Box
         sx={{
           alignItems: 'center',

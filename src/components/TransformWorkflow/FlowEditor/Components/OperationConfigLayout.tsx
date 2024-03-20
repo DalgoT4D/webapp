@@ -31,6 +31,7 @@ import {
   GROUPBY_OP,
   WHERE_OP,
   CAST_DATA_TYPES_OP,
+  CASEWHEN_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -50,6 +51,7 @@ import CoalesceOpForm from './OperationPanel/Forms/CoalesceOpForm';
 import ArithmeticOpForm from './OperationPanel/Forms/ArithmeticOpForm';
 import GroupByOpForm from './OperationPanel/Forms/GroupByOpForm';
 import WhereFilterOpForm from './OperationPanel/Forms/WhereFilterOpForm';
+import CaseWhenOpForm from './OperationPanel/Forms/CaseWhenOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -212,6 +214,23 @@ const operationComponentMapping: any = {
     dummyNodeId,
   }: OperationFormProps) => (
     <WhereFilterOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
+  [CASEWHEN_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <CaseWhenOpForm
       node={node}
       operation={operation}
       sx={sx}
