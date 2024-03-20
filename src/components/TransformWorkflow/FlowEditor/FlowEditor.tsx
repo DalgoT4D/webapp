@@ -33,7 +33,6 @@ const UpperSection = ({
         flexGrow: 1,
         display: 'flex',
         overflow: 'inherit',
-        marginTop: '3.5rem',
       }}
     >
       <ResizableBox
@@ -120,19 +119,17 @@ const FlowEditor = ({}) => {
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
 
-  const onResize = (event: any, { node, size, handle }: any) => {
+  const onResize = (_event: any, { size }: any) => {
     setLowerSectionHeight(size.height);
   };
-  const fetchSourcesModels = async () => {
-    try {
-      const response: DbtSourceModel[] = await httpGet(
-        session,
-        'transform/dbt_project/sources_models/'
-      );
-      setSourcesModels(response);
-    } catch (error) {
-      console.log(error);
-    }
+  const fetchSourcesModels = () => {
+    httpGet(session, 'transform/dbt_project/sources_models/')
+      .then((response: DbtSourceModel[]) => {
+        setSourcesModels(response);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   useEffect(() => {
@@ -145,7 +142,7 @@ const FlowEditor = ({}) => {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
+        height: 'calc(100vh - 56px)',
       }}
     >
       <UpperSection
