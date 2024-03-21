@@ -105,18 +105,7 @@ const UnionTablesOpForm = ({
     }
   };
 
-  const clearAndAddDummyModelNode = (model: DbtSourceModel) => {
-    const edges: Edge[] = getEdges();
-    if (
-      modelDummyNodeId.current &&
-      edges.filter(
-        (edge: Edge) =>
-          edge.source === modelDummyNodeId.current ||
-          edge.target === modelDummyNodeId.current
-      ).length <= 1
-    ) {
-      deleteElements({ nodes: [{ id: modelDummyNodeId.current }] });
-    }
+  const addDummyNodeAndEdge = (model: DbtSourceModel) => {
     const dummySourceNodeData: any = {
       id: model.id,
       type: SRC_MODEL_NODE,
@@ -135,7 +124,10 @@ const UnionTablesOpForm = ({
     };
     addNodes([dummySourceNodeData]);
     addEdges([newEdge]);
-    modelDummyNodeId.current = model.id;
+  };
+
+  const removeDummyNodeAndEdge = (nodeId: string) => {
+    deleteElements({ nodes: [{ id: nodeId }] });
   };
 
   const handleSave = async (data: {
@@ -229,12 +221,20 @@ const UnionTablesOpForm = ({
                   }}
                   value={field.value}
                   onChange={(e, data) => {
+                    console.log('removing', field.value);
+                    // remove dummy node if present
+                    if (!data) {
+                      removeDummyNodeAndEdge(field.value?.id);
+                    }
                     field.onChange(data);
-                    const model: DbtSourceModel | undefined =
-                      sourcesModels.find(
-                        (model: DbtSourceModel) => model.id === data?.id
-                      );
-                    // if (model) clearAndAddDummyModelNode(model);
+                    // add dummy node
+                    if (data?.id) {
+                      const model: DbtSourceModel | undefined =
+                        sourcesModels.find(
+                          (model: DbtSourceModel) => model.id === data?.id
+                        );
+                      if (model) addDummyNodeAndEdge(model);
+                    }
                   }}
                   renderInput={(params) => (
                     <Input
