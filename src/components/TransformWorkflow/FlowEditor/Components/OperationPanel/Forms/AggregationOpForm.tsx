@@ -1,15 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Autocomplete, Box, Button, SxProps } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -17,31 +9,8 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-
-const renameGridStyles: {
-  container: SxProps;
-  headerItem: SxProps;
-  item: SxProps;
-} = {
-  container: {
-    border: '1px solid #F9F9F9',
-    color: '#5E5E5E',
-  },
-  headerItem: {
-    background: '#F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-  item: {
-    background: '#F9F9F9',
-    border: '1px solid #F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-};
 
 const AggregationOpForm = ({
   node,
@@ -71,7 +40,7 @@ const AggregationOpForm = ({
     },
   });
   // Include this for multi-row input
-  const { fields, append, remove } = useFieldArray({
+  const { fields } = useFieldArray({
     control,
     name: 'columns',
   });
