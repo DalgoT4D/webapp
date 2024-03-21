@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Autocomplete, Box, Button, SxProps } from '@mui/material';
+import { Autocomplete, Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -111,6 +111,7 @@ const AggregationOpForm = ({
         {fields.map((field, index) => (
           <>
             <Autocomplete
+              key={index}
               options={srcColumns.filter(
                 (col) => !selectedColumns.includes(col)
               )}
