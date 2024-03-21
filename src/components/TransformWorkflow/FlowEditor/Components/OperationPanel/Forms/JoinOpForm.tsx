@@ -153,10 +153,6 @@ const JoinOpForm = ({
 
   const handleSave = async (data: any) => {
     console.log('data', data);
-    console.log('options', {
-      id: nodeData?.type === SRC_MODEL_NODE ? nodeData?.id : '',
-      label: 'Target Model',
-    });
     try {
       const postData: any = {
         op_type: operation.slug,
