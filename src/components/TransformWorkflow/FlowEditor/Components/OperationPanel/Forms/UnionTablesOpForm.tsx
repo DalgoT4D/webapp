@@ -36,6 +36,7 @@ const UnionTablesOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
+  const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const { deleteElements, addEdges, addNodes, getEdges } = useReactFlow();
   const modelDummyNodeId: any = useRef('');
   const nodeData: any =
@@ -67,6 +68,40 @@ const UnionTablesOpForm = ({
       setSourcesModels(response);
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const fetchWareohuseTableColumns = async (
+    schema: string,
+    input_name: string
+  ) => {
+    try {
+      const data: ColumnData[] = await httpGet(
+        session,
+        `warehouse/table_columns/${schema}/${input_name}`
+      );
+      return data.map((col: ColumnData) => col.name);
+    } catch (error) {
+      console.log(error);
+    }
+    return [];
+  };
+
+  const fetchAndSetSourceColumns = async () => {
+    if (node?.type === SRC_MODEL_NODE) {
+      try {
+        const data: Array<string> = await fetchWareohuseTableColumns(
+          nodeData?.schema,
+          nodeData?.input_name
+        );
+        setNodeSrcColumns(data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    if (node?.type === OPERATION_NODE) {
+      setNodeSrcColumns(nodeData.output_cols);
     }
   };
 
@@ -103,46 +138,48 @@ const UnionTablesOpForm = ({
     modelDummyNodeId.current = model.id;
   };
 
-  const handleSave = async (data: any) => {
-    try {
-      console.log('saving', data);
+  const handleSave = async (data: {
+    tables: { id: string; label: string }[];
+  }) => {
+    if (data.tables.length < 2) {
+      errorToast(
+        'Please select atleast two tables to union',
+        [],
+        globalContext
+      );
       return;
-      const output_col_name = data.column_name;
+    }
 
-      if (!output_col_name) {
-        errorToast('Please select a column', [], globalContext);
-      }
+    const otherInputPromises = data.tables
+      .slice(1)
+      .map(async (table: any, index: number) => {
+        const srcModel = sourcesModels.find(
+          (model: DbtSourceModel) => model.id === table.id
+        );
+        let srcColumns: string[] = [];
 
-      const postData: any = {
-        op_type: operation.slug,
-        source_columns: srcColumns.filter((col) => col !== output_col_name),
-        other_inputs: [],
-        config: {
-          columns: [
-            {
-              col_name: output_col_name,
-              output_column_name: output_col_name,
-              replace_ops: [],
-            },
-          ],
-        },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
-      };
-      data.config.forEach((item: any) => {
-        if (item.old && item.new)
-          postData.config.columns[0].replace_ops.push({
-            find: item.old,
-            replace: item.new,
-          });
+        if (srcModel) {
+          srcColumns = await fetchWareohuseTableColumns(
+            srcModel.schema,
+            srcModel.input_name
+          );
+        }
+        return {
+          uuid: table.id,
+          columns: srcColumns,
+          seq: index,
+        };
       });
 
-      // validations
-      if (Object.keys(postData.config.columns).length === 0) {
-        console.log('Please add values to replace');
-        errorToast('Please add values to replace', [], globalContext);
-        return;
-      }
+    try {
+      const postData: any = {
+        op_type: operation.slug,
+        input_uuid: data.tables[0].id,
+        source_columns: nodeSrcColumns,
+        other_inputs: await Promise.all(otherInputPromises),
+        config: {},
+        target_model_uuid: nodeData?.target_model_id || '',
+      };
 
       // api call
       const operationNode: any = await httpPost(
@@ -159,6 +196,7 @@ const UnionTablesOpForm = ({
   };
 
   useEffect(() => {
+    fetchAndSetSourceColumns();
     fetchSourcesModels();
     if (nodeData?.type === SRC_MODEL_NODE) {
       setValue(`tables.${0}`, {
@@ -167,8 +205,6 @@ const UnionTablesOpForm = ({
       });
     }
   }, [session]);
-
-  console.log('FIELDS', fields);
 
   return (
     <Box sx={{ ...sx, padding: '0px 16px 0px 16px' }}>
