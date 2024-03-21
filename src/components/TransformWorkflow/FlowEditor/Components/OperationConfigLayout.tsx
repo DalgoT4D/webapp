@@ -31,6 +31,7 @@ import {
   GROUPBY_OP,
   WHERE_OP,
   CAST_DATA_TYPES_OP,
+  AGGREGATE_OP,
   CASEWHEN_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
@@ -49,6 +50,7 @@ import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
 import ReplaceValueOpForm from './OperationPanel/Forms/ReplaceValueOpForm';
 import CoalesceOpForm from './OperationPanel/Forms/CoalesceOpForm';
 import ArithmeticOpForm from './OperationPanel/Forms/ArithmeticOpForm';
+import AggregationOpForm from './OperationPanel/Forms/AggregationOpForm';
 import GroupByOpForm from './OperationPanel/Forms/GroupByOpForm';
 import WhereFilterOpForm from './OperationPanel/Forms/WhereFilterOpForm';
 import CaseWhenOpForm from './OperationPanel/Forms/CaseWhenOpForm';
@@ -180,6 +182,23 @@ const operationComponentMapping: any = {
     dummyNodeId,
   }: OperationFormProps) => (
     <CastColumnOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
+  [AGGREGATE_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <AggregationOpForm
       node={node}
       operation={operation}
       sx={sx}
