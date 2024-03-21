@@ -4,8 +4,10 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
   TableRow,
   Typography,
+  tableCellClasses,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useMemo, useState } from 'react';
@@ -19,16 +21,41 @@ import {
   useCanvasAction,
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
+import { trimString } from '@/utils/common';
+import styled from '@emotion/styled';
 
 export interface ColumnData {
   name: string;
   data_type: string;
 }
 
+const StyledTableCell = styled(TableCell)(() => ({
+  padding: '4px 0px 4px 10px',
+  fontSize: '11px',
+  [`&.${tableCellClasses.head}`]: {
+    fontWeight: 600,
+    backgroundColor: '#EEF3F3',
+  },
+  [`&.${tableCellClasses.body}`]: {
+    fontWeight: 500,
+    color: '#212121',
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(() => ({
+  borderRadius: 0,
+  '&:nth-of-type(odd)': {
+    backgroundColor: '#F7F7F7',
+  },
+  '&:last-child td, &:last-child th': {
+    borderBottom: 0,
+  },
+}));
+
 const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
   return (
     <Table sx={{ borderSpacing: '0px' }}>
-      <TableBody>
+      <TableHead>
         <TableRow
           sx={{
             boxShadow: 'none',
@@ -36,61 +63,26 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
           }}
           key={'NAME'}
         >
-          <TableCell
-            sx={{
-              padding: '4px 0px 4px 10px',
-              fontWeight: 600,
-              color: '#212121',
-            }}
+          <StyledTableCell
             align="left"
+            sx={{ borderRight: '1px solid #E8E8E8' }}
           >
             NAME
-          </TableCell>
-          <TableCell
-            sx={{
-              padding: '4px 0px 4px 10px',
-              width: '40%',
-              borderLeft: '1px solid #F8F8F8',
-              fontWeight: 600,
-              color: '#212121',
-            }}
-            align="left"
-          >
-            DATA
-          </TableCell>
+          </StyledTableCell>
+          <StyledTableCell align="left">TYPE</StyledTableCell>
         </TableRow>
+      </TableHead>
+      <TableBody>
         {columns.map((row: ColumnData, idx: number) => (
-          <TableRow
-            sx={{
-              boxShadow: 'none',
-              background: idx % 2 === 0 ? '#E1E1E1' : '#F5F5F5',
-              fontSize: '11px',
-            }}
-            key={row.name}
-          >
-            <TableCell
-              sx={{
-                padding: '4px 0px 4px 10px',
-                color: '#212121',
-                fontWeight: 500,
-              }}
+          <StyledTableRow key={row.name}>
+            <StyledTableCell
               align="left"
+              sx={{ borderRight: '1px solid #E8E8E8' }}
             >
               {row.name}
-            </TableCell>
-            <TableCell
-              sx={{
-                padding: '4px 0px 4px 10px',
-                width: '40%',
-                borderLeft: '1px solid #F8F8F8',
-                color: '#212121',
-                fontWeight: 500,
-              }}
-              align="left"
-            >
-              {row.data_type}
-            </TableCell>
-          </TableRow>
+            </StyledTableCell>
+            <StyledTableCell align="left">{row.data_type}</StyledTableCell>
+          </StyledTableRow>
         ))}
       </TableBody>
     </Table>
@@ -107,17 +99,27 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   const edges = useEdges();
   const nodeId: string | null = useNodeId();
 
-  // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
-  const isDeletable: boolean = edges.find(
+  const edgesGoingIntoNode: Edge[] = edges.filter(
+    (edge: Edge) => edge.target === nodeId
+  );
+  const edgesEmanatingOutOfNode: Edge[] = edges.filter(
     (edge: Edge) => edge.source === nodeId
-  )
-    ? false
-    : true;
+  );
+  // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
+  const isDeletable: boolean =
+    edgesEmanatingOutOfNode.length > 0 ? false : true;
 
   const handleDeleteAction = () => {
     setCanvasAction({
       type: 'delete-node',
-      data: { nodeId: nodeId, nodeType: node.type },
+      data: {
+        nodeId: nodeId,
+        nodeType: node.type,
+        shouldRefreshGraph:
+          edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0
+            ? false
+            : true,
+      },
     });
   };
 
@@ -160,22 +162,23 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
       >
         <Box
           sx={{
-            background: '#C3C3C3',
+            background: '#00897B',
             display: 'flex',
-            borderRadius: '4px 4px 0px 0px',
+            borderRadius: '5px 5px 0px 0px',
             alignItems: 'center',
-            padding: '10px 10px',
+            padding: '8px 12px',
             gap: '30px',
           }}
         >
           <Box>
-            <Typography variant="subtitle2" fontWeight={700}>
-              {`${node.data.input_name}`}
+            <Typography variant="subtitle2" fontWeight={700} color="white">
+              {trimString(node.data.input_name, 25)}
             </Typography>
           </Box>
           <Box sx={{ marginLeft: 'auto' }}>
             {isDeletable && (
               <IconButton
+                sx={{ color: 'white' }}
                 onClick={handleDeleteAction}
                 data-testid="closebutton"
               >
@@ -190,12 +193,15 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
             display: 'flex',
             flexDirection: 'column',
             borderRadius: '0px 0px 4px 4px',
-            height: '120px',
+            maxHeight: '120px',
             boxShadow: '0px 2px 4px 0px rgba(0, 0, 0, 0.16)',
             overflow: 'auto',
             width: '100%',
           }}
           onClick={handleSelectNode}
+          onWheelCapture={(event) => {
+            event.stopPropagation();
+          }}
         >
           {columns.length > 0 ? (
             <Box>

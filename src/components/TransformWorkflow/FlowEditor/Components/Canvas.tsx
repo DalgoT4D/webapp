@@ -264,7 +264,11 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
   };
 
-  const handleDeleteNode = async (nodeId: string, type: string) => {
+  const handleDeleteNode = async (
+    nodeId: string,
+    type: string,
+    shouldRefreshGraph = true
+  ) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
     // console.log('compare with', previewNodeRef.current?.id);
@@ -293,7 +297,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
 
     handleNodesChange([{ type: 'remove', id: nodeId }]);
-    setRedrawGraph(!redrawGraph);
+    if (shouldRefreshGraph) setRedrawGraph(!redrawGraph);
   };
 
   const addSrcModelNodeToCanvas = (
@@ -344,7 +348,11 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
 
     if (canvasAction.type === 'delete-node') {
-      handleDeleteNode(canvasAction.data.nodeId, canvasAction.data.nodeType);
+      handleDeleteNode(
+        canvasAction.data.nodeId,
+        canvasAction.data.nodeType,
+        canvasAction.data.shouldRefreshGraph // by default always refresh canvas
+      );
     }
 
     if (canvasAction.type === 'open-opconfig-panel') {
@@ -436,11 +444,23 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         height: '100%',
       }}
     >
-      <Box sx={{ height: '10%', background: 'lightgrey' }}>
+      <Box
+        sx={{
+          height: '44px',
+          background: '#F5FAFA',
+          borderTop: '1px #CCD6E2 solid',
+        }}
+      >
         <CanvasHeader runWorkflow={handleRunWorkflow} />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
-      <Box sx={{ display: 'flex', height: '90%' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          height: 'calc(100% - 44px)',
+          background: 'white',
+        }}
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}

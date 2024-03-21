@@ -3,14 +3,20 @@ import React, { useEffect, useState } from 'react';
 import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import TocIcon from '@mui/icons-material/Toc';
+import TocIcon from '@/assets/icons/datatable.svg';
 import { DbtSourceModel } from './Canvas';
 import { NodeApi } from 'react-arborist';
+import AddIcon from '@mui/icons-material/Add';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
+import useResizeObserver from 'use-resize-observer';
+import { trimString } from '@/utils/common';
+import Image from 'next/image';
 
 const Node = ({ node, style, dragHandle }: any) => {
   /* This node instance can do many things. See the API reference. */
   const data: DbtSourceModel = node.data;
+  let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
+  name = trimString(name, 25);
 
   return (
     <Box
@@ -19,21 +25,28 @@ const Node = ({ node, style, dragHandle }: any) => {
       sx={{
         alignItems: 'center',
         display: 'flex',
-        background: node.isSelected ? 'grey' : '',
-        maxWidth: '70%',
+        mr: 2,
       }}
-      onClick={() => node.toggle()}
+      onClick={() => (node.isLeaf ? undefined : node.toggle())}
     >
       {node.isLeaf ? (
-        <TocIcon />
+        <Image src={TocIcon} alt="delete icon" />
       ) : node.isOpen ? (
         <FolderOpenIcon />
       ) : (
         <FolderIcon />
       )}
-      <Typography sx={{ wordWrap: 'break-word', minWidth: 0 }}>
-        {!node.isLeaf ? data.schema : data.input_name}
-      </Typography>
+      <Box sx={{ display: 'flex', width: '1000px' }}>
+        <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>
+          {name}
+        </Typography>
+        {node.isLeaf && (
+          <AddIcon
+            sx={{ ml: 'auto', cursor: 'pointer' }}
+            onClick={() => node.toggle()}
+          />
+        )}
+      </Box>
     </Box>
   );
 };
@@ -46,6 +59,7 @@ interface ProjectTreeProps {
 
 const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
   const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
 
   const constructAndSetProjectTreeData = (
@@ -159,17 +173,41 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
   // ];
 
   return (
-    <Box sx={{ padding: '10px' }}>
-      <Tree
-        childrenAccessor={(d: any) => d.children}
-        openByDefault={true}
-        data={projectTreeData}
-        rowHeight={30}
-        height={1000}
-        onSelect={handleNodeClick}
+    <Box
+      sx={{
+        height: '100%',
+      }}
+    >
+      <Box
+        sx={{
+          height: '44px',
+          background: '#F5FAFA',
+          border: '1px #CCD6E2 solid',
+          borderLeft: 0,
+          borderRight: 0,
+        }}
+      ></Box>
+      <Box
+        sx={{
+          p: '10px',
+          pr: 0,
+          pb: 0,
+          height: 'calc(100% - 44px)',
+        }}
+        ref={ref}
       >
-        {Node}
-      </Tree>
+        <Tree
+          childrenAccessor={(d: any) => d.children}
+          openByDefault={true}
+          data={projectTreeData}
+          height={height}
+          width={width}
+          rowHeight={30}
+          onSelect={handleNodeClick}
+        >
+          {Node}
+        </Tree>
+      </Box>
     </Box>
   );
 };

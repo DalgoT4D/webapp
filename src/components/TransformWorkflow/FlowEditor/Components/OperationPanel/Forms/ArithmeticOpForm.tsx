@@ -262,7 +262,7 @@ const ArithmeticOpForm = ({
                 index === fields.length - 1 ? (
                   <Button
                     variant="outlined"
-                    type="submit"
+                    type="button"
                     data-testid="addoperand"
                     sx={{ marginTop: '17px' }}
                     onClick={(event) =>
@@ -274,7 +274,7 @@ const ArithmeticOpForm = ({
                 ) : index < fields.length - 1 ? (
                   <Button
                     variant="outlined"
-                    type="submit"
+                    type="button"
                     data-testid="removeoperand"
                     sx={{ marginTop: '17px' }}
                     onClick={(event) => remove(index)}
