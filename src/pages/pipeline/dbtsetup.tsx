@@ -13,6 +13,9 @@ import {
   Tab,
   Typography,
   CircularProgress,
+  Dialog,
+  Slide,
+  IconButton,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import React, { useContext, useEffect, useState } from 'react';
@@ -25,6 +28,46 @@ import { DBTDocs } from '@/components/DBT/DBTDocs';
 import { delay } from '@/utils/common';
 import { LogCard } from '@/components/Logs/LogCard';
 import { useRouter } from 'next/router';
+import { TransitionProps } from '@mui/material/transitions';
+import WorkflowEditor from '@/components/Workflow/Editor';
+import Close from '@mui/icons-material/Close';
+import Logo from '@/assets/images/logo.svg';
+
+const Transition = React.forwardRef(function Transition(
+  props: TransitionProps & {
+    children: React.ReactElement;
+  },
+  ref: React.Ref<unknown>
+) {
+  return <Slide direction="up" ref={ref} {...props} timeout={400} />;
+});
+
+const TopNavBar = ({ handleClose }: any) => (
+  <Box sx={{ display: 'flex' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        ml: 1.8,
+        height: '56px',
+      }}
+    >
+      <Image src={Logo} alt="ddp logo" />
+    </Box>
+    <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
+      <IconButton
+        edge="start"
+        color="inherit"
+        onClick={handleClose}
+        sx={{ mr: 1 }}
+        aria-label="close"
+      >
+        <Close />
+      </IconButton>
+    </Box>
+  </Box>
+);
 
 type Tasks = TransformTask[];
 
@@ -62,6 +105,8 @@ const Transform = () => {
     handleClose();
   };
 
+  const [showWorkFlow, setShowWorkflow] = useState(false);
+
   type TransformType = 'github' | 'ui';
 
   const [transformType, setTransformType] = useState<TransformType | null>(
@@ -92,8 +137,15 @@ const Transform = () => {
     fetchTransformType();
   }, [router.query, session]);
 
+  const dialog = (
+    <Dialog fullScreen open={showWorkFlow} TransitionComponent={Transition}>
+      <TopNavBar handleClose={() => setShowWorkflow(false)} />
+      {showWorkFlow && <WorkflowEditor />}
+    </Dialog>
+  );
+
   const handleGoToWorkflow = () => {
-    router.push('/workflow/editor');
+    setShowWorkflow(true);
   };
 
   const setupDBTUI = async () => {
@@ -349,16 +401,14 @@ const Transform = () => {
                 )}
 
                 {dbtSetupStage === 'complete' && transformType === 'ui' && (
-                  <Link href="/workflow/editor">
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      sx={{ width: 'auto' }}
-                      onClick={handleGoToWorkflow}
-                    >
-                      Go to workflow
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ width: 'auto' }}
+                    onClick={handleGoToWorkflow}
+                  >
+                    Go to workflow
+                  </Button>
                 )}
 
                 {dbtSetupStage === 'complete' ? (
@@ -421,6 +471,7 @@ const Transform = () => {
               workspace && <DBTDocs />}
           </>
         )}
+        {dialog}
       </main>
     </>
   );

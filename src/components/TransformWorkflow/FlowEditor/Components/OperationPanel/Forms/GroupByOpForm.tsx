@@ -43,7 +43,7 @@ const renameGridStyles: {
   },
 };
 
-const CoalesceOpForm = ({
+const GroupByOpForm = ({
   node,
   operation,
   sx,
@@ -61,17 +61,43 @@ const CoalesceOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, watch } = useForm({
+  type FormProps = {
+    columns: { col: string }[];
+    aggregate_on: {
+      metric: string;
+      aggregate_func: { id: string; label: string };
+      output_col_name: string;
+    }[];
+  };
+
+  const { control, register, handleSubmit, reset, watch } = useForm<FormProps>({
     defaultValues: {
       columns: [{ col: '' }],
-      default_value: '',
-      output_col_name: '',
+      aggregate_on: [
+        {
+          metric: '',
+          aggregate_func: { id: '', label: '' },
+          output_col_name: '',
+        },
+      ],
     },
   });
   // Include this for multi-row input
-  const { fields, append, remove } = useFieldArray({
+  const {
+    fields: dimensionFields,
+    append: appendDimension,
+    remove: removeDimension,
+  } = useFieldArray({
     control,
     name: 'columns',
+  });
+  const {
+    fields: aggregateFields,
+    append: appendAggregate,
+    remove: removeAggregate,
+  } = useFieldArray({
+    control,
+    name: 'aggregate_on',
   });
 
   const columns = watch('columns'); // Get the current form values
@@ -94,22 +120,24 @@ const CoalesceOpForm = ({
     }
   };
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: FormProps) => {
     try {
-      const coalesceColumns = data.columns
+      const dimensionColumns = data.columns
         .map((col: any) => col.col)
         .filter((col: string) => col);
-      if (coalesceColumns.length === 0) {
-        errorToast('Please select columns to coalesce', [], globalContext);
+      if (dimensionColumns.length === 0) {
+        errorToast('Please select dimensions to groupby', [], globalContext);
       }
       const postData: any = {
         op_type: operation.slug,
-        source_columns: srcColumns,
+        source_columns: dimensionColumns,
         other_inputs: [],
         config: {
-          columns: coalesceColumns,
-          default_value: data.default_value,
-          output_column_name: data.output_col_name,
+          aggregate_on: data.aggregate_on.map((item: any) => ({
+            column: item.metric,
+            operation: item.aggregate_func.id,
+            output_col_name: item.output_col_name,
+          })),
         },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
@@ -146,11 +174,11 @@ const CoalesceOpForm = ({
                 letterSpacing: '2%',
               }}
             >
-              Columns
+              Select dimensios
             </Typography>
           </Grid>
 
-          {fields.map((field, index) => (
+          {dimensionFields.map((field, index) => (
             <>
               <Grid
                 key={field + '_1'}
@@ -198,8 +226,8 @@ const CoalesceOpForm = ({
                       //   value={field.value}
                       onChange={(e, data) => {
                         field.onChange(data);
-                        if (data) append({ col: '' });
-                        else remove(index + 1);
+                        if (data) appendDimension({ col: '' });
+                        else removeDimension(index + 1);
                       }}
                       renderInput={(params) => (
                         <Input {...params} sx={{ width: '100%' }} />
@@ -211,22 +239,126 @@ const CoalesceOpForm = ({
             </>
           ))}
         </Grid>
+
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
-          <Input
-            label="Default Value"
-            sx={{ padding: '0' }}
-            name="default_value"
-            register={register}
-            required
-          />
-          <Box sx={{ m: 2 }} />
-          <Input
-            label="Output Column Name"
-            sx={{ padding: '0' }}
-            name="output_col_name"
-            register={register}
-            required
-          />
+          {aggregateFields.map((field, index) => (
+            <Box key={`${field.id}_box`}>
+              <Box>
+                <Typography fontWeight="600" color="#888888">
+                  ADD AGGREGATION {(index + 1).toString().padStart(2, '0')}
+                </Typography>
+              </Box>
+              <Controller
+                key={`${field.id}_metric`}
+                control={control}
+                name={`aggregate_on.${index}.metric`}
+                render={({ field }) => (
+                  <Autocomplete
+                    sx={{ paddingTop: '15px' }}
+                    options={srcColumns}
+                    //   value={field.value}
+                    onChange={(e, data) => {
+                      field.onChange(data);
+                    }}
+                    renderInput={(params) => (
+                      <Input
+                        {...params}
+                        sx={{ width: '100%' }}
+                        label="Select metric"
+                      />
+                    )}
+                  />
+                )}
+              />
+              <Box sx={{ m: 2 }} />
+              <Controller
+                key={`${field.id}_aggregate_func`}
+                control={control}
+                name={`aggregate_on.${index}.aggregate_func`}
+                render={({ field }) => (
+                  <Autocomplete
+                    options={[
+                      {
+                        id: 'sum',
+                        label: 'Sum',
+                      },
+                      {
+                        id: 'avg',
+                        label: 'Average',
+                      },
+                      {
+                        id: 'count',
+                        label: 'Count values',
+                      },
+                      {
+                        id: 'min',
+                        label: 'Minimum',
+                      },
+                      {
+                        id: 'max',
+                        label: 'Maximum',
+                      },
+                      {
+                        id: 'countdistinct',
+                        label: 'Count distinct values',
+                      },
+                    ]}
+                    isOptionEqualToValue={(option: any, value: any) =>
+                      option?.id === value?.id
+                    }
+                    value={field.value}
+                    onChange={(e, data) => {
+                      if (data) field.onChange(data);
+                    }}
+                    renderInput={(params) => (
+                      <Input
+                        {...params}
+                        sx={{ width: '100%' }}
+                        label="Select aggregation"
+                      />
+                    )}
+                  />
+                )}
+              />
+              <Box sx={{ m: 2 }} />
+              <Input
+                label="Output Column Name"
+                name={`aggregate_on.${index}.output_col_name`}
+                register={register}
+                required
+              />
+              <Box sx={{ m: 2 }} />
+              {index === aggregateFields.length - 1 ? (
+                <Button
+                  variant="outlined"
+                  type="button"
+                  data-testid="addoperand"
+                  sx={{ marginTop: '17px' }}
+                  onClick={(event) =>
+                    appendAggregate({
+                      metric: 'col',
+                      aggregate_func: { id: '', label: '' },
+                      output_col_name: '',
+                    })
+                  }
+                >
+                  Add aggregation
+                </Button>
+              ) : (
+                <Button
+                  variant="outlined"
+                  type="button"
+                  data-testid="removeoperand"
+                  sx={{ marginTop: '17px' }}
+                  onClick={(event) => removeAggregate(index)}
+                >
+                  Remove aggregation
+                </Button>
+              )}
+              <Box sx={{ m: 2 }} />
+            </Box>
+          ))}
+
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
@@ -245,4 +377,4 @@ const CoalesceOpForm = ({
   );
 };
 
-export default CoalesceOpForm;
+export default GroupByOpForm;

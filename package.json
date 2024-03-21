@@ -22,6 +22,7 @@
     "@superset-ui/embedded-sdk": "^0.1.0-alpha.10",
     "@tanstack/react-table": "^8.13.2",
     "@types/d3": "^7.4.2",
+    "@types/react-resizable": "^3.0.7",
     "ag-grid-react": "^31.1.0",
     "cronstrue": "^2.48.0",
     "d3": "^7.8.5",
@@ -35,10 +36,12 @@
     "react-dom": "18.2.0",
     "react-hook-form": "^7.50.1",
     "react-joyride": "^2.7.3",
+    "react-resizable": "^3.0.5",
     "reactflow": "^11.10.4",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.2.4",
-    "typescript": "5.3.3"
+    "typescript": "5.3.3",
+    "use-resize-observer": "^9.1.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
