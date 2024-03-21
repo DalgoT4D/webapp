@@ -32,6 +32,7 @@ import {
   WHERE_OP,
   CAST_DATA_TYPES_OP,
   CASEWHEN_OP,
+  UNION_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -52,6 +53,7 @@ import ArithmeticOpForm from './OperationPanel/Forms/ArithmeticOpForm';
 import GroupByOpForm from './OperationPanel/Forms/GroupByOpForm';
 import WhereFilterOpForm from './OperationPanel/Forms/WhereFilterOpForm';
 import CaseWhenOpForm from './OperationPanel/Forms/CaseWhenOpForm';
+import UnionTablesOpForm from './OperationPanel/Forms/UnionTablesOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -239,6 +241,23 @@ const operationComponentMapping: any = {
       dummyNodeId={dummyNodeId}
     />
   ),
+  [UNION_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <UnionTablesOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
 };
 
 const OperationForm = ({
@@ -401,7 +420,7 @@ const OperationConfigLayout = ({
     return (
       <Table sx={{ borderSpacing: '0px', ...sx }}>
         <TableBody>
-          {operations.map((op) => (
+          {operations.map((op, index) => (
             <TableRow
               sx={{
                 boxShadow: 'none',
