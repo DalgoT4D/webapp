@@ -1,15 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Autocomplete, Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -17,12 +9,9 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-import { Edge, useReactFlow } from 'reactflow';
+import { useReactFlow } from 'reactflow';
 
 const UnionTablesOpForm = ({
   node,
@@ -37,8 +26,7 @@ const UnionTablesOpForm = ({
   const globalContext = useContext(GlobalContext);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
-  const { deleteElements, addEdges, addNodes, getEdges } = useReactFlow();
-  const modelDummyNodeId: any = useRef('');
+  const { deleteElements, addEdges, addNodes } = useReactFlow();
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -46,7 +34,7 @@ const UnionTablesOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, watch, setValue } = useForm<{
+  const { control, handleSubmit, reset, setValue } = useForm<{
     tables: Array<{ id: string; label: string }>;
   }>({
     defaultValues: {
@@ -202,7 +190,7 @@ const UnionTablesOpForm = ({
     <Box sx={{ ...sx, padding: '0px 16px 0px 16px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
         {fields.map((field, index) => (
-          <Box>
+          <Box key={field.id}>
             <Controller
               key={`${field.id}_${index}`}
               control={control}
