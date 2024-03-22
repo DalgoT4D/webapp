@@ -13,6 +13,7 @@ export const WHERE_OP = 'where';
 export const GROUPBY_OP = 'groupby';
 export const AGGREGATE_OP = 'aggregate';
 export const CASEWHEN_OP = 'casewhen';
+export const UNION_OP = 'unionall';
 
 export const operations = [
   { label: 'Flatten', slug: FLATTEN_OP },
@@ -30,6 +31,7 @@ export const operations = [
   { label: 'Replace', slug: REPLACE_COLUMN_VALUE_OP },
   { label: 'Aggregate', slug: AGGREGATE_OP },
   { label: 'Case', slug: CASEWHEN_OP },
+  { label: 'Table union', slug: UNION_OP },
 ];
 
 // Node types

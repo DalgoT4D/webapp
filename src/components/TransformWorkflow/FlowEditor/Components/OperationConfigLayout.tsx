@@ -7,6 +7,7 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import React, { useRef, useState } from 'react';
@@ -33,6 +34,7 @@ import {
   CAST_DATA_TYPES_OP,
   AGGREGATE_OP,
   CASEWHEN_OP,
+  UNION_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -54,6 +56,7 @@ import AggregationOpForm from './OperationPanel/Forms/AggregationOpForm';
 import GroupByOpForm from './OperationPanel/Forms/GroupByOpForm';
 import WhereFilterOpForm from './OperationPanel/Forms/WhereFilterOpForm';
 import CaseWhenOpForm from './OperationPanel/Forms/CaseWhenOpForm';
+import UnionTablesOpForm from './OperationPanel/Forms/UnionTablesOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -258,6 +261,23 @@ const operationComponentMapping: any = {
       dummyNodeId={dummyNodeId}
     />
   ),
+  [UNION_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <UnionTablesOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
 };
 
 const OperationForm = ({
@@ -417,31 +437,54 @@ const OperationConfigLayout = ({
   };
 
   const OperationList = ({ sx }: { sx: SxProps }) => {
+    // These are the operations that can't be chained
+    const cantChainOperations: string[] = [UNION_OP];
+
     return (
       <Table sx={{ borderSpacing: '0px', ...sx }}>
         <TableBody>
-          {operations.map((op) => (
-            <TableRow
-              sx={{
-                boxShadow: 'none',
-                fontSize: '13px',
-              }}
-              key={op.slug}
-            >
-              <TableCell
+          {operations.map((op, index) => {
+            const canSelectOperation = !(
+              cantChainOperations.includes(op.slug) &&
+              canvasNode?.type === OPERATION_NODE
+            );
+            return (
+              <TableRow
                 sx={{
-                  padding: '10px 4px 10px 10px',
-                  color: '#7D8998',
-                  fontWeight: 600,
-                  ':hover': { background: '#F5F5F5' },
+                  boxShadow: 'none',
+                  fontSize: '13px',
                 }}
-                align="left"
-                onClick={() => handleSelectOp(op)}
+                key={op.slug}
               >
-                {op.label}
-              </TableCell>
-            </TableRow>
-          ))}
+                <TableCell
+                  sx={{
+                    padding: '10px 4px 10px 10px',
+                    color: '#7D8998',
+                    fontWeight: 600,
+                    ':hover': {
+                      background: '#F5F5F5',
+                      cursor: canSelectOperation ? 'pointer' : 'default',
+                    },
+                  }}
+                  align="left"
+                  onClick={
+                    canSelectOperation ? () => handleSelectOp(op) : undefined
+                  }
+                >
+                  {canSelectOperation ? (
+                    op.label
+                  ) : (
+                    <Tooltip
+                      title={'Please create a table to use this function'}
+                      placement="top"
+                    >
+                      <span>{op.label}</span>
+                    </Tooltip>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     );
@@ -503,7 +546,6 @@ const OperationConfigLayout = ({
             <OperationList
               sx={{
                 marginTop: '5px',
-                ':hover': { cursor: 'pointer' },
               }}
             />
           ) : (
