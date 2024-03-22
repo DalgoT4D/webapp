@@ -26,10 +26,12 @@ export const Input: React.FC<InputProps> = ({
   }
   return (
     <Box sx={sx}>
-      <InputLabel htmlFor={name}>
-        {label}
-        {required && '*'}
-      </InputLabel>
+      {label && (
+        <InputLabel htmlFor={name}>
+          {label}
+          {required && '*'}
+        </InputLabel>
+      )}
       {register && name ? (
         <TextField
           {...register(name, {

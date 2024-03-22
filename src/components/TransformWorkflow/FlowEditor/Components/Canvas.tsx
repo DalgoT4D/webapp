@@ -282,7 +282,11 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
   };
 
-  const handleDeleteNode = async (nodeId: string, type: string) => {
+  const handleDeleteNode = async (
+    nodeId: string,
+    type: string,
+    shouldRefreshGraph = true
+  ) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
     // console.log('compare with', previewNodeRef.current?.id);
@@ -311,7 +315,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
 
     handleNodesChange([{ type: 'remove', id: nodeId }]);
-    setRedrawGraph(!redrawGraph);
+    if (shouldRefreshGraph) setRedrawGraph(!redrawGraph);
   };
 
   const addSrcModelNodeToCanvas = (
@@ -363,7 +367,11 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
 
     if (canvasAction.type === 'delete-node') {
-      handleDeleteNode(canvasAction.data.nodeId, canvasAction.data.nodeType);
+      handleDeleteNode(
+        canvasAction.data.nodeId,
+        canvasAction.data.nodeType,
+        canvasAction.data.shouldRefreshGraph // by default always refresh canvas
+      );
     }
 
     if (canvasAction.type === 'open-opconfig-panel') {

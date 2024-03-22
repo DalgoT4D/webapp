@@ -7,7 +7,6 @@ import {
   Button,
   Grid,
   SxProps,
-  TextField,
   Typography,
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
@@ -61,7 +60,7 @@ const ReplaceValueOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, watch } = useForm<{
+  const { control, register, handleSubmit, reset } = useForm<{
     config: Array<{ old: string; new: string }>;
     column_name: '';
   }>({
@@ -71,8 +70,7 @@ const ReplaceValueOpForm = ({
     },
   });
   // Include this for multi-row input
-  const { fields, append, remove } = useFieldArray({ control, name: 'config' });
-  const selectedColumnName = watch('column_name');
+  const { fields, append } = useFieldArray({ control, name: 'config' });
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -94,21 +92,21 @@ const ReplaceValueOpForm = ({
 
   const handleSave = async (data: any) => {
     try {
-      const output_col_name = data.column_name;
+      const output_column_name = data.column_name;
 
-      if (!output_col_name) {
+      if (!output_column_name) {
         errorToast('Please select a column', [], globalContext);
       }
 
       const postData: any = {
         op_type: operation.slug,
-        source_columns: srcColumns.filter((col) => col !== output_col_name),
+        source_columns: srcColumns.filter((col) => col !== output_column_name),
         other_inputs: [],
         config: {
           columns: [
             {
-              col_name: output_col_name,
-              output_column_name: output_col_name,
+              col_name: output_column_name,
+              output_column_name: output_column_name,
               replace_ops: [],
             },
           ],
