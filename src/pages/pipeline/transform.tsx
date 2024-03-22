@@ -77,11 +77,11 @@ const Transform = () => {
           default_schema: 'intermediate',
         });
 
-        // hit sync sources api
-        await httpPost(session, `transform/dbt_project/sync_sources/`, {});
-
         // create system transform tasks
         await httpPost(session, `prefect/tasks/transform/`, {});
+
+        // hit sync sources api
+        await httpPost(session, `transform/dbt_project/sync_sources/`, {});
 
         setSelectedTransform('ui');
       } catch (err: any) {
