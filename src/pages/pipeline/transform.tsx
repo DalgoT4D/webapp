@@ -19,7 +19,6 @@ const Transform = () => {
   const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
   const [selectedTransform, setSelectedTransform] =
     useState<TransformType>(null);
-  const router = useRouter();
   const { data: session } = useSession();
 
   const open = Boolean(anchorEl);
@@ -32,8 +31,6 @@ const Transform = () => {
     setSelectedTransform(transformType);
     setConfirmationOpen(true);
   };
-
-  console.log('selectedTransform:', selectedTransform);
 
   useEffect(() => {
     const fetchTransformType = async () => {
