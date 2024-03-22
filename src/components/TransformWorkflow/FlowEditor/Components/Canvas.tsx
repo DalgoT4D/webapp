@@ -42,8 +42,6 @@ type CanvasProps = {
   setRedrawGraph: (...args: any) => void;
 };
 
-const nodeWidth = 250;
-const nodeHeight = 172;
 const nodeGap = 30;
 
 export interface OperationNodeData {
@@ -104,8 +102,8 @@ const getNextNodePosition = (nodes: any) => {
   const y = 0;
 
   for (const node of nodes) {
-    if (node.position.x + nodeWidth + nodeGap > x) {
-      x = node.position.x + nodeWidth + nodeGap;
+    if (node.position.x + node.width + nodeGap > x) {
+      x = node.position.x + node.width + nodeGap;
     }
   }
 
@@ -426,13 +424,18 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
 
       const xOverlap = Math.max(
         0,
-        nodeWidth - Math.abs(x - otherNode.position.x)
+        Math.min(
+          node.position.x + node.width,
+          otherNode.position.x + (otherNode.width || 0)
+        ) - Math.max(node.position.x, otherNode.position.x)
       );
       const yOverlap = Math.max(
         0,
-        nodeHeight - Math.abs(y - otherNode.position.y)
+        Math.min(
+          node.position.y + node.height,
+          otherNode.position.y + (otherNode.height || 0)
+        ) - Math.max(node.position.y, otherNode.position.y)
       );
-
       if (xOverlap > 0 && yOverlap > 0) {
         // Prevent overlap by adjusting position
         if (x < otherNode.position.x) {
