@@ -17,10 +17,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import InputAdornment from '@mui/material/InputAdornment';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 
 const DropColumnOp = ({
