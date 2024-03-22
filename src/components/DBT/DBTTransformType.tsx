@@ -10,7 +10,6 @@ import {
   Tabs,
   Tab,
   Typography,
-  CircularProgress,
   Dialog,
   Slide,
   IconButton,
@@ -93,7 +92,6 @@ const DBTTransformType = ({
     setActiveTab(newTab);
   };
   const [anyTaskLocked, setAnyTaskLocked] = useState<boolean>(false);
-  const [setupInProgress, setSetupInProgress] = useState<boolean>(false);
 
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -119,23 +117,6 @@ const DBTTransformType = ({
 
   const handleGoToWorkflow = () => {
     setShowWorkflow(true);
-  };
-
-  const setupDBTUI = async () => {
-    try {
-      setSetupInProgress(true);
-      await httpPost(session, 'transform/dbt_project/', {
-        default_schema: 'intermediate',
-      });
-      setDbtSetupStage('complete');
-      createProfile();
-      fetchDbtTasks();
-    } catch (error: any) {
-      console.error(error);
-      errorToast(error.message, [], globalContext);
-    } finally {
-      setSetupInProgress(false);
-    }
   };
 
   const fetchDbtWorkspace = async () => {
@@ -206,21 +187,11 @@ const DBTTransformType = ({
     }
   };
 
-  const syncSources = async () => {
-    try {
-      await httpPost(session, `transform/dbt_project/sync_sources/`, {});
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], globalContext);
-    }
-  };
-
   const createProfile = async () => {
     try {
       await httpPost(session, `prefect/tasks/transform/`, {});
       setDbtSetupStage('complete');
       fetchDbtTasks();
-      syncSources();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
@@ -263,20 +234,7 @@ const DBTTransformType = ({
                 <Box>
                   {transformType === 'ui' ? (
                     <Box>
-                      {dbtSetupStage === 'create-workspace' ? (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          sx={{ width: 'auto' }}
-                          onClick={setupDBTUI}
-                        >
-                          {setupInProgress ? (
-                            <CircularProgress size={24} />
-                          ) : (
-                            'Setup DBT UI'
-                          )}
-                        </Button>
-                      ) : dbtSetupStage === 'complete' ? (
+                      {dbtSetupStage === 'complete' ? (
                         <Button
                           variant="contained"
                           color="primary"

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
-import { httpGet } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
 import { Box, Grid, Typography, Button } from '@mui/material';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
@@ -10,24 +10,30 @@ import UI from '@/assets/images/ui_transform.png';
 import { useSession } from 'next-auth/react';
 import ConfirmationDialogTransform from '@/components/Dialog/ConfirmationDialogTransform';
 import DBTTransformType from '@/components/DBT/DBTTransformType';
+import ConfirmationDialog from '@/components/Dialog/ConfirmationDialog';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 export type TransformType = 'github' | 'ui' | 'none' | null;
 
 const Transform = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
+  const [transformClickedOn, setTransformClickedOn] =
+    useState<TransformType>('none');
   const [selectedTransform, setSelectedTransform] =
     useState<TransformType>(null);
+  const [dialogLoader, setDialogLoader] = useState<boolean>(false);
   const { data: session } = useSession();
+  const globalContext = useContext(GlobalContext);
 
   const open = Boolean(anchorEl);
-
   const handleClose = () => {
     setAnchorEl(null);
   };
 
   const handleSetup = (transformType: TransformType) => {
-    setSelectedTransform(transformType);
+    setTransformClickedOn(transformType);
     setConfirmationOpen(true);
   };
 
@@ -62,6 +68,38 @@ const Transform = () => {
     }
   }, [session]);
 
+  const handleSelectTransformTypeConfirm = async () => {
+    setDialogLoader(true);
+    if (transformClickedOn === 'ui') {
+      try {
+        // setup local project
+        await httpPost(session, 'transform/dbt_project/', {
+          default_schema: 'intermediate',
+        });
+
+        // hit sync sources api
+        await httpPost(session, `transform/dbt_project/sync_sources/`, {});
+
+        // create system transform tasks
+        await httpPost(session, `prefect/tasks/transform/`, {});
+
+        setSelectedTransform('ui');
+      } catch (err: any) {
+        console.error('Error occurred while setting up:', err);
+        if (err.cause) {
+          errorToast(err.cause.detail, [], globalContext);
+        } else {
+          errorToast(err.message, [], globalContext);
+        }
+      }
+    } else if (transformClickedOn === 'github') {
+      setSelectedTransform('github');
+    }
+    // close the dialogx
+    setConfirmationOpen(false);
+    setDialogLoader(false);
+  };
+
   return (
     <>
       <ActionsMenu
@@ -70,10 +108,20 @@ const Transform = () => {
         open={open}
         handleClose={handleClose}
       />
-      <ConfirmationDialogTransform
+      {/* <ConfirmationDialogTransform
         open={confirmationOpen}
         handleClose={() => setConfirmationOpen(false)}
         transformType={selectedTransform}
+      /> */}
+      <ConfirmationDialog
+        loading={dialogLoader}
+        show={confirmationOpen}
+        handleClose={() => setConfirmationOpen(false)}
+        handleConfirm={handleSelectTransformTypeConfirm}
+        message={`You have opted to continue using the ${
+          selectedTransform === 'ui' ? 'UI' : 'GitHub'
+        } method to
+        set up your transformation`}
       />
 
       <PageHead title="DDP: Transform" />
