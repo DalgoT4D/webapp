@@ -13,6 +13,10 @@ import ConfirmationDialogTransform from '@/components/Dialog/ConfirmationDialogT
 
 type TransformType = 'github' | 'ui';
 
+interface TransformTypeResponse {
+  transform_type: TransformType;
+}
+
 const Transform = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
@@ -37,7 +41,6 @@ const Transform = () => {
       try {
         const res = await httpGet(session, 'dbt/dbt_transform/');
         const { transform_type } = await res;
-        console.log(transform_type);
 
         return { transform_type: transform_type as TransformType };
       } catch (error) {
@@ -45,10 +48,6 @@ const Transform = () => {
         throw error;
       }
     };
-
-    interface TransformTypeResponse {
-      transform_type: TransformType;
-    }
 
     if (session) {
       fetchTransformType()
