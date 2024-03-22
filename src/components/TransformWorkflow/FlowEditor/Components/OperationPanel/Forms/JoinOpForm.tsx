@@ -8,8 +8,7 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { Controller, useForm } from 'react-hook-form';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
-import { Autocomplete, Box, Button, Grid, Typography } from '@mui/material';
+import { Autocomplete, Box, Button } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import { Edge, useReactFlow } from 'reactflow';
 

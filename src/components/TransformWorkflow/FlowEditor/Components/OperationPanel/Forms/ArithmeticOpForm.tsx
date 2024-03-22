@@ -12,12 +12,9 @@ import {
   Box,
   Button,
   FormControlLabel,
-  FormLabel,
-  Grid,
   Radio,
   RadioGroup,
   SxProps,
-  Typography,
 } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';

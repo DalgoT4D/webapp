@@ -12,8 +12,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useMemo, useState } from 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { SrcModelNodeType, UIOperationType } from '../Canvas';
+import { SrcModelNodeType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
