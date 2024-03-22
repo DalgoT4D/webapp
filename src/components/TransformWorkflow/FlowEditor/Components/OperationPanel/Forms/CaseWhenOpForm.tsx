@@ -200,7 +200,7 @@ const CaseWhenOpForm = ({
       col_val: string;
       const_val: string;
     };
-    output_col_name: string;
+    output_column_name: string;
     advanceFilter: string;
     sql_snippet: string;
   };
@@ -227,7 +227,7 @@ const CaseWhenOpForm = ({
         col_val: '',
         const_val: '',
       },
-      output_col_name: '',
+      output_column_name: '',
       advanceFilter: 'no',
       sql_snippet: '',
     },
@@ -616,7 +616,7 @@ const CaseWhenOpForm = ({
           <Box sx={{ m: 2 }} />
           <Input
             label="Output Column Name"
-            name={`output_col_name`}
+            name={`output_column_name`}
             placeholder="Enter column name"
             register={register}
             required

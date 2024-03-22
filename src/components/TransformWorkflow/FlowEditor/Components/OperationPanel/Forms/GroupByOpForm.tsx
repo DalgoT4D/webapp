@@ -66,7 +66,7 @@ const GroupByOpForm = ({
     aggregate_on: {
       metric: string;
       aggregate_func: { id: string; label: string };
-      output_col_name: string;
+      output_column_name: string;
     }[];
   };
 
@@ -77,7 +77,7 @@ const GroupByOpForm = ({
         {
           metric: '',
           aggregate_func: { id: '', label: '' },
-          output_col_name: '',
+          output_column_name: '',
         },
       ],
     },
@@ -136,7 +136,7 @@ const GroupByOpForm = ({
           aggregate_on: data.aggregate_on.map((item: any) => ({
             column: item.metric,
             operation: item.aggregate_func.id,
-            output_col_name: item.output_col_name,
+            output_column_name: item.output_column_name,
           })),
         },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
@@ -323,7 +323,7 @@ const GroupByOpForm = ({
               <Box sx={{ m: 2 }} />
               <Input
                 label="Output Column Name"
-                name={`aggregate_on.${index}.output_col_name`}
+                name={`aggregate_on.${index}.output_column_name`}
                 register={register}
                 required
               />
@@ -338,7 +338,7 @@ const GroupByOpForm = ({
                     appendAggregate({
                       metric: 'col',
                       aggregate_func: { id: '', label: '' },
-                      output_col_name: '',
+                      output_column_name: '',
                     })
                   }
                 >
