@@ -60,7 +60,7 @@ const ReplaceValueOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, watch } = useForm<{
+  const { control, register, handleSubmit, reset } = useForm<{
     config: Array<{ old: string; new: string }>;
     column_name: '';
   }>({

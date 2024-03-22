@@ -11,7 +11,6 @@ import {
   RadioGroup,
   Stack,
   Switch,
-  SxProps,
   Typography,
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';

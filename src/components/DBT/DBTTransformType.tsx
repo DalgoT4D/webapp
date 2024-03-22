@@ -25,7 +25,6 @@ import { DBTTaskList } from '@/components/DBT/DBTTaskList';
 import { DBTDocs } from '@/components/DBT/DBTDocs';
 import { delay } from '@/utils/common';
 import { LogCard } from '@/components/Logs/LogCard';
-import { useRouter } from 'next/router';
 import { TransitionProps } from '@mui/material/transitions';
 import WorkflowEditor from '@/components/Workflow/Editor';
 import Close from '@mui/icons-material/Close';
