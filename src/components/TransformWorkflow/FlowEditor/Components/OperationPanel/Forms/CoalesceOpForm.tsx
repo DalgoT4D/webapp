@@ -7,7 +7,6 @@ import {
   Button,
   Grid,
   SxProps,
-  TextField,
   Typography,
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
@@ -17,10 +16,7 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 
 const renameGridStyles: {
@@ -65,7 +61,7 @@ const CoalesceOpForm = ({
     defaultValues: {
       columns: [{ col: '' }],
       default_value: '',
-      output_col_name: '',
+      output_column_name: '',
     },
   });
   // Include this for multi-row input
@@ -109,7 +105,7 @@ const CoalesceOpForm = ({
         config: {
           columns: coalesceColumns,
           default_value: data.default_value,
-          output_column_name: data.output_col_name,
+          output_column_name: data.output_column_name,
         },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
@@ -223,7 +219,7 @@ const CoalesceOpForm = ({
           <Input
             label="Output Column Name"
             sx={{ padding: '0' }}
-            name="output_col_name"
+            name="output_column_name"
             register={register}
             required
           />
