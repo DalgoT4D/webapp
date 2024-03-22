@@ -67,14 +67,14 @@ const ArithmeticOpForm = ({
       col_val: string;
       const_val: number | undefined;
     }[];
-    output_col_name: string;
+    output_column_name: string;
   };
 
   const { control, register, handleSubmit, reset, watch } = useForm<FormProps>({
     defaultValues: {
       arithmeticOp: { id: '', label: '' },
       operands: [{ type: 'col', col_val: '', const_val: 0 }],
-      output_col_name: '',
+      output_column_name: '',
     },
   });
   // Include this for multi-row input
@@ -128,7 +128,7 @@ const ArithmeticOpForm = ({
               value: op.type === 'col' ? op.col_val : op.const_val,
             })
           ),
-          output_column_name: data.output_col_name,
+          output_column_name: data.output_column_name,
         },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
@@ -292,7 +292,7 @@ const ArithmeticOpForm = ({
           <Input
             label="Output Column Name"
             sx={{ padding: '0' }}
-            name="output_col_name"
+            name="output_column_name"
             register={register}
             required
           />
