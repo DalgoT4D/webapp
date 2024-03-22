@@ -161,7 +161,7 @@ const Transform = () => {
                   <Image
                     src={UI}
                     alt="ui_transform"
-                    style={{ width: 'auto' }}
+                    style={{ height: '80%', width: 'auto' }}
                   />
                   <Typography
                     sx={{ fontWeight: 600 }}
@@ -207,7 +207,7 @@ const Transform = () => {
                   <Image
                     src={Github}
                     alt="github_transform"
-                    style={{ width: 'auto' }}
+                    style={{ height: '80%', width: 'auto' }}
                   />
                   <Typography
                     sx={{ fontWeight: 550 }}
