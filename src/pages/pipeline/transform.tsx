@@ -3,7 +3,6 @@ import { PageHead } from '@/components/PageHead';
 import { httpGet } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
 import { Box, Grid, Typography, Button } from '@mui/material';
-import { useRouter } from 'next/router';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
 import Image from 'next/image';
 import Github from '@/assets/images/github_transform.png';
