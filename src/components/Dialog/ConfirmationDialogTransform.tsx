@@ -10,8 +10,7 @@ import {
 import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-
-type TransformType = 'github' | 'ui';
+import { TransformType } from '@/pages/pipeline/transform';
 
 interface ConfirmationDialogProps {
   open: boolean;

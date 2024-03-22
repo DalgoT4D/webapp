@@ -10,14 +10,15 @@ import Github from '@/assets/images/github_transform.png';
 import UI from '@/assets/images/ui_transform.png';
 import { useSession } from 'next-auth/react';
 import ConfirmationDialogTransform from '@/components/Dialog/ConfirmationDialogTransform';
+import DBTTransformType from '@/components/DBT/DBTTransformType';
 
-type TransformType = 'github' | 'ui';
+export type TransformType = 'github' | 'ui' | 'none' | null;
 
 const Transform = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
   const [selectedTransform, setSelectedTransform] =
-    useState<TransformType | null>(null);
+    useState<TransformType>(null);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -32,12 +33,12 @@ const Transform = () => {
     setConfirmationOpen(true);
   };
 
+  console.log('selectedTransform:', selectedTransform);
+
   useEffect(() => {
     const fetchTransformType = async () => {
       try {
-        const res = await httpGet(session, 'dbt/dbt_transform/');
-        const { transform_type } = await res;
-        console.log(transform_type);
+        const { transform_type } = await httpGet(session, 'dbt/dbt_transform/');
 
         return { transform_type: transform_type as TransformType };
       } catch (error) {
@@ -54,12 +55,12 @@ const Transform = () => {
       fetchTransformType()
         .then((response: TransformTypeResponse) => {
           const transformType = response.transform_type;
-
-          if (transformType === 'github' || transformType === 'ui') {
-            router.push(`/pipeline/dbtsetup?transform_type=${transformType}`);
-          }
+          if (transformType === 'ui' || transformType === 'github')
+            setSelectedTransform(transformType);
+          else setSelectedTransform('none');
         })
         .catch((error) => {
+          setSelectedTransform('none');
           console.error('Error fetching transform type:', error);
         });
     }
@@ -80,116 +81,129 @@ const Transform = () => {
       />
 
       <PageHead title="DDP: Transform" />
-      {!selectedTransform && (
-        <main className={styles.main}>
-          <Typography
-            sx={{ fontWeight: 700 }}
-            variant="h4"
-            gutterBottom
-            color="#000"
-          >
-            Transformation
-          </Typography>
-          <Typography
-            sx={{ fontWeight: 400, marginBottom: '60px' }}
-            variant="h6"
-            gutterBottom
-            color="#808080"
-          >
-            Please select one method you would like to proceed with to setup
-          </Typography>
+      <main className={styles.main}>
+        {selectedTransform === 'none' ? (
+          <Box>
+            <Typography
+              sx={{ fontWeight: 700 }}
+              variant="h4"
+              gutterBottom
+              color="#000"
+            >
+              Transformation
+            </Typography>
+            <Typography
+              sx={{ fontWeight: 400, marginBottom: '60px' }}
+              variant="h6"
+              gutterBottom
+              color="#808080"
+            >
+              Please select one method you would like to proceed with to setup
+            </Typography>
 
-          <Grid container spacing={2} columns={12}>
-            <Grid item xs={6}>
-              <Box
-                height={550}
-                bgcolor="white"
-                color="grey"
-                textAlign="left"
-                lineHeight={2}
-                display="flex"
-                flexDirection="column"
-                justifyContent="space-between"
-                sx={{ padding: '30px' }}
-              >
-                <Image src={UI} alt="ui_transform" style={{ width: 'auto' }} />
-                <Typography
-                  sx={{ fontWeight: 600 }}
-                  variant="h5"
-                  gutterBottom
-                  align="left"
-                  color="#000"
+            <Grid container spacing={2} columns={12}>
+              <Grid item xs={6}>
+                <Box
+                  height={550}
+                  bgcolor="white"
+                  color="grey"
+                  textAlign="left"
+                  lineHeight={2}
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="space-between"
+                  sx={{ padding: '30px' }}
                 >
-                  UI Users <span>(for Non technical users)</span>
-                </Typography>
-                <Typography
-                  sx={{ fontWeight: 400 }}
-                  variant="h6"
-                  gutterBottom
-                  color="#808080"
+                  <Image
+                    src={UI}
+                    alt="ui_transform"
+                    style={{ width: 'auto' }}
+                  />
+                  <Typography
+                    sx={{ fontWeight: 600 }}
+                    variant="h5"
+                    gutterBottom
+                    align="left"
+                    color="#000"
+                  >
+                    UI Users <span>(for Non technical users)</span>
+                  </Typography>
+                  <Typography
+                    sx={{ fontWeight: 400 }}
+                    variant="h6"
+                    gutterBottom
+                    color="#808080"
+                  >
+                    Create a project to effortlessly integrate your dbt
+                    repository by providing your repository URL and
+                    authentication details in further steps
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ width: '100%' }}
+                    onClick={() => handleSetup('ui')}
+                  >
+                    Setup using UI
+                  </Button>
+                </Box>
+              </Grid>
+              <Grid item xs={6}>
+                <Box
+                  height={550}
+                  bgcolor="white"
+                  color="grey"
+                  textAlign="left"
+                  lineHeight={2}
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="space-between"
+                  sx={{ padding: '30px', marginRight: '20px' }}
                 >
-                  Create a project to effortlessly integrate your dbt repository
-                  by providing your repository URL and authentication details in
-                  further steps
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  sx={{ width: '100%' }}
-                  onClick={() => handleSetup('ui')}
-                >
-                  Setup using UI
-                </Button>
-              </Box>
+                  <Image
+                    src={Github}
+                    alt="github_transform"
+                    style={{ width: 'auto' }}
+                  />
+                  <Typography
+                    sx={{ fontWeight: 550 }}
+                    variant="h5"
+                    align="left"
+                    color="#000"
+                  >
+                    Github Users <span>(for advanced users)</span>
+                  </Typography>
+                  <Typography
+                    sx={{ fontWeight: 400 }}
+                    variant="h6"
+                    gutterBottom
+                    color="#808080"
+                  >
+                    Create a project to effortlessly integrate your dbt
+                    repository by providing your repository URL and
+                    authentication details in further steps
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ width: '100%' }}
+                    onClick={() => handleSetup('github')}
+                  >
+                    Setup using Github
+                  </Button>
+                </Box>
+              </Grid>
             </Grid>
-            <Grid item xs={6}>
-              <Box
-                height={550}
-                bgcolor="white"
-                color="grey"
-                textAlign="left"
-                lineHeight={2}
-                display="flex"
-                flexDirection="column"
-                justifyContent="space-between"
-                sx={{ padding: '30px', marginRight: '20px' }}
-              >
-                <Image
-                  src={Github}
-                  alt="github_transform"
-                  style={{ width: 'auto' }}
-                />
-                <Typography
-                  sx={{ fontWeight: 550 }}
-                  variant="h5"
-                  align="left"
-                  color="#000"
-                >
-                  Github Users <span>(for advanced users)</span>
-                </Typography>
-                <Typography
-                  sx={{ fontWeight: 400 }}
-                  variant="h6"
-                  gutterBottom
-                  color="#808080"
-                >
-                  Create a project to effortlessly integrate your dbt repository
-                  by providing your repository URL and authentication details in
-                  further steps
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  sx={{ width: '100%' }}
-                  onClick={() => handleSetup('github')}
-                >
-                  Setup using Github
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </main>
-      )}
+          </Box>
+        ) : selectedTransform &&
+          ['ui', 'github'].includes(selectedTransform) ? (
+          <DBTTransformType
+            transformType={selectedTransform}
+          ></DBTTransformType>
+        ) : (
+          ''
+        )}
+      </main>
     </>
   );
 };
