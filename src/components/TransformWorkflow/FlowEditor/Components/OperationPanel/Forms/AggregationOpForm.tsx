@@ -36,7 +36,7 @@ const AggregationOpForm = ({
     defaultValues: {
       columns: [{ col: '' }],
       operation: '',
-      output_col_name: '',
+      output_column_name: '',
     },
   });
   // Include this for multi-row input
@@ -79,7 +79,7 @@ const AggregationOpForm = ({
             {
               operation: selectedOperation,
               column: selectedColumns[0],
-              output_col_name: data.output_col_name,
+              output_column_name: data.output_column_name,
             },
           ],
         },
@@ -154,7 +154,7 @@ const AggregationOpForm = ({
             <Input
               label="Output Column Name"
               sx={{ padding: '0', marginTop: '16px' }}
-              name="output_col_name"
+              name="output_column_name"
               register={register}
               required
             />
