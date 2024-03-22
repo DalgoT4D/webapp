@@ -7,13 +7,11 @@ import {
   Button,
   FormControlLabel,
   FormLabel,
-  Grid,
   Radio,
   RadioGroup,
   Stack,
   Switch,
   SxProps,
-  TextField,
   Typography,
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
@@ -23,31 +21,8 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-
-const renameGridStyles: {
-  container: SxProps;
-  headerItem: SxProps;
-  item: SxProps;
-} = {
-  container: {
-    border: '1px solid #F9F9F9',
-    color: '#5E5E5E',
-  },
-  headerItem: {
-    background: '#F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-  item: {
-    background: '#F9F9F9',
-    border: '1px solid #F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-};
 
 const ClauseOperands = ({
   clauseField,
@@ -68,11 +43,7 @@ const ClauseOperands = ({
     logicalOp: { id: string; label: string };
   };
 }) => {
-  const {
-    fields: operandFields,
-    append: appendOperand,
-    remove: removeOperand,
-  } = useFieldArray({
+  const { fields: operandFields } = useFieldArray({
     control,
     name: `clauses.${clauseIndex}.operands`,
   });

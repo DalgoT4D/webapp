@@ -109,7 +109,7 @@ const AggregationOpForm = ({
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
         {fields.map((field, index) => (
-          <>
+          <Box key={field.id}>
             <Autocomplete
               key={index}
               options={srcColumns.filter(
@@ -158,7 +158,7 @@ const AggregationOpForm = ({
               register={register}
               required
             />
-          </>
+          </Box>
         ))}
         <Box>
           <Box sx={{ m: 2 }} />
