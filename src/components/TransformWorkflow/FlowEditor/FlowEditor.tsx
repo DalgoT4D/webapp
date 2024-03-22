@@ -1,4 +1,11 @@
-import { Box, Divider, Tab, Tabs } from '@mui/material';
+import {
+  Backdrop,
+  Box,
+  CircularProgress,
+  Divider,
+  Tab,
+  Tabs,
+} from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
@@ -33,8 +40,30 @@ const UpperSection = ({
         flexGrow: 1,
         display: 'flex',
         overflow: 'inherit',
+        position: 'relative',
+        pointerEvents: 'none', // Disable user interaction
+        '::after': {
+          content: '""',
+          display: 'block',
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          backgroundColor: 'rgba(255, 255, 255, 0.8)', // white overlay
+          zIndex: 1,
+        },
       }}
     >
+      <CircularProgress
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 2,
+        }}
+      />
       <ResizableBox
         axis="x"
         width={width}
@@ -46,7 +75,7 @@ const UpperSection = ({
         <ProjectTree dbtSourceModels={sourcesModels} />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />
-      <Box sx={{ width: '100%' }}>
+      <Box sx={{ width: '100%', pointerEvents: 'none' }}>
         <ReactFlowProvider>
           <Canvas
             redrawGraph={refreshEditor}
