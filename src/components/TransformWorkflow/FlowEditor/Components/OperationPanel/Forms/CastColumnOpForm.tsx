@@ -13,13 +13,13 @@ import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 
-const renameGridStyles: {
+const castGridStyles: {
   container: SxProps;
   headerItem: SxProps;
   item: SxProps;
@@ -39,7 +39,7 @@ const renameGridStyles: {
   },
 };
 
-const RenameColumnOp = ({
+const CastColumnOp = ({
   node,
   operation,
   sx,
@@ -47,7 +47,8 @@ const RenameColumnOp = ({
   clearAndClosePanel,
 }: OperationFormProps) => {
   const { data: session } = useSession();
-  const [srcColumns, setSrcColumns] = useState<string[]>([]);
+  const [srcColumns, setSrcColumns] = useState<ColumnData[]>([]);
+  const [dataTypes, setDataTypes] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -56,60 +57,79 @@ const RenameColumnOp = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset } = useForm({
+  const { control, handleSubmit, register, reset } = useForm({
     defaultValues: {
-      config: [{ old: '', new: '' }],
+      config: srcColumns.map(() => ({ column: '', dataType: '' })),
     },
   });
-  // Include this for multi-row input
-  const { fields, append, remove } = useFieldArray({ control, name: 'config' });
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
       try {
-        const data: ColumnData[] = await httpGet(
+        const columnData: ColumnData[] = await httpGet(
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(columnData);
+
+        // Fetch data types from the other API
+        const response = await httpGet(
+          session,
+          `transform/dbt_project/data_type/`
+        );
+        setDataTypes(response);
       } catch (error) {
         console.log(error);
       }
     }
 
     if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols);
+      console.log(nodeData, 'node data');
+      setSrcColumns(
+        nodeData.output_cols.map((column: any) => ({ name: column }))
+      );
     }
   };
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (formData: any) => {
     try {
+      const sourceColumnsNames = srcColumns.map((column) => column.name);
+
       const postData: any = {
         op_type: operation.slug,
-        source_columns: srcColumns,
+        source_columns: sourceColumnsNames,
         other_inputs: [],
-        config: { columns: {} },
+        config: { columns: [] },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
       };
-      data.config.forEach((item: any) => {
-        if (item.old && item.new) postData.config.columns[item.old] = item.new;
+
+      formData.config.forEach((data: any) => {
+        if (data.column && data.dataType) {
+          postData.config.columns.push({
+            columnname: data.column,
+            columntype: data.dataType,
+          });
+        }
       });
 
       // validations
       if (Object.keys(postData.config.columns).length === 0) {
-        console.log('Please add columns to rename');
-        errorToast('Please add columns to rename', [], globalContext);
+        console.log('Please add columns to cast');
+        errorToast('Please add columns to cast', [], globalContext);
         return;
       }
 
-      // api call
+      // Make the API call
       const operationNode: any = await httpPost(
         session,
         `transform/dbt_project/model/`,
         postData
       );
 
+      console.log(operationNode, 'operation node');
+
+      // Handle the response
       continueOperationChain(operationNode);
       reset();
     } catch (error) {
@@ -124,8 +144,8 @@ const RenameColumnOp = ({
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
-        <Grid container sx={{ ...renameGridStyles.container }}>
-          <Grid item xs={6} sx={{ ...renameGridStyles.headerItem }}>
+        <Grid container sx={{ ...castGridStyles.container }}>
+          <Grid item xs={6} sx={{ ...castGridStyles.headerItem }}>
             <Typography
               sx={{
                 fontWeight: '600',
@@ -134,10 +154,10 @@ const RenameColumnOp = ({
                 letterSpacing: '2%',
               }}
             >
-              Current Name
+              Column
             </Typography>
           </Grid>
-          <Grid item xs={6} sx={{ ...renameGridStyles.headerItem }}>
+          <Grid item xs={6} sx={{ ...castGridStyles.headerItem }}>
             <Typography
               sx={{
                 fontWeight: '600',
@@ -146,24 +166,30 @@ const RenameColumnOp = ({
                 letterSpacing: '2%',
               }}
             >
-              New Name
+              Data Type
             </Typography>
           </Grid>
 
-          {fields.map((field, index) => (
-            <>
-              <Grid item xs={6} sx={{ ...renameGridStyles.item }}>
+          {srcColumns.map((column, index) => (
+            <React.Fragment key={index}>
+              <Grid item xs={6} sx={{ ...castGridStyles.item }}>
+                <Input
+                  sx={{ padding: '0' }}
+                  name={`config.${index}.column`}
+                  register={register}
+                  value={column.name}
+                />
+              </Grid>
+              <Grid item xs={6} sx={{ ...castGridStyles.item }}>
                 <Controller
                   control={control}
-                  name={`config.${index}.old`}
+                  name={`config.${index}.dataType`}
                   render={({ field }) => (
                     <Autocomplete
-                      options={srcColumns}
-                      value={field.value}
+                      options={dataTypes}
+                      value={column.data_type}
                       onChange={(e, data) => {
                         field.onChange(data);
-                        if (data) append({ old: '', new: '' });
-                        else remove(index + 1);
                       }}
                       renderInput={(params) => (
                         <Input {...params} sx={{ width: '100%' }} />
@@ -172,29 +198,22 @@ const RenameColumnOp = ({
                   )}
                 />
               </Grid>
-              <Grid item xs={6} sx={{ ...renameGridStyles.item }}>
-                <Input
-                  sx={{ padding: '0' }}
-                  name={`config.${index}.new`}
-                  register={register}
-                />
-              </Grid>
-            </>
+            </React.Fragment>
           ))}
-          <Box>
-            <Button
-              variant="outlined"
-              type="submit"
-              data-testid="savebutton"
-              fullWidth
-            >
-              Save
-            </Button>
-          </Box>
         </Grid>
+        <Box sx={{ ...sx, padding: '16px 16px 0px 16px' }}>
+          <Button
+            variant="outlined"
+            type="submit"
+            data-testid="savebutton"
+            fullWidth
+          >
+            Save
+          </Button>
+        </Box>
       </form>
     </Box>
   );
 };
 
-export default RenameColumnOp;
+export default CastColumnOp;
