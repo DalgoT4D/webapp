@@ -16,7 +16,7 @@ const Node = ({ node, style, dragHandle }: any) => {
   /* This node instance can do many things. See the API reference. */
   const data: DbtSourceModel = node.data;
   let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
-  name = trimString(name, 25);
+  name = trimString(name, 15);
 
   return (
     <Box
@@ -26,11 +26,12 @@ const Node = ({ node, style, dragHandle }: any) => {
         alignItems: 'center',
         display: 'flex',
         mr: 2,
+        width: '250px',
       }}
       onClick={() => (node.isLeaf ? undefined : node.toggle())}
     >
       {node.isLeaf ? (
-        <Image src={TocIcon} alt="delete icon" />
+        <Image src={TocIcon} alt="Toc icon" />
       ) : node.isOpen ? (
         <FolderOpenIcon />
       ) : (
@@ -87,8 +88,6 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
       }
     );
 
-    console.log('tree data', treeData);
-
     setProjectTreeData([{ id: '0', schema: 'Store', children: treeData }]);
   };
 
@@ -108,69 +107,6 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
       setCanvasAction({ type: 'add-srcmodel-node', data: nodes[0].data });
     }
   };
-
-  // const projectTreeData = [
-  //   {
-  //     id: '1',
-  //     schema: 'Store',
-  //     children: [
-  //       {
-  //         id: '2',
-  //         schema: 'staging',
-  //         children: [
-  //           {
-  //             id: 'c1',
-  //             schema: 'staging',
-  //             input_name: 'table1',
-  //             source_name: 'source',
-  //             input_type: 'source',
-  //           },
-  //           {
-  //             id: 'c2',
-  //             schema: 'staging',
-  //             input_name: 'table2',
-  //             source_name: 'source',
-  //             input_type: 'source',
-  //           },
-  //           {
-  //             id: 'c3',
-  //             schema: 'staging',
-  //             input_name: 'table3',
-  //             source_name: 'source',
-  //             input_type: 'source',
-  //           },
-  //         ],
-  //       },
-  //       {
-  //         id: '3',
-  //         schema: 'intermediate',
-  //         children: [
-  //           {
-  //             id: 'd1',
-  //             schema: 'staging',
-  //             input_name: 'table4',
-  //             source_name: 'source',
-  //             input_type: 'source',
-  //           },
-  //           {
-  //             id: 'd2',
-  //             schema: 'staging',
-  //             input_name: 'table5',
-  //             source_name: 'source',
-  //             input_type: 'source',
-  //           },
-  //           {
-  //             id: 'd3',
-  //             schema: 'staging',
-  //             input_name: 'table6',
-  //             source_name: 'source',
-  //             input_type: 'source',
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //   },
-  // ];
 
   return (
     <Box
