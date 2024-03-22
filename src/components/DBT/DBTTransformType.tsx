@@ -32,6 +32,7 @@ import { TransitionProps } from '@mui/material/transitions';
 import WorkflowEditor from '@/components/Workflow/Editor';
 import Close from '@mui/icons-material/Close';
 import Logo from '@/assets/images/logo.svg';
+import { TransformType } from '@/pages/pipeline/transform';
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -71,7 +72,11 @@ const TopNavBar = ({ handleClose }: any) => (
 
 type Tasks = TransformTask[];
 
-const Transform = () => {
+const DBTTransformType = ({
+  transformType,
+}: {
+  transformType: TransformType;
+}) => {
   const [workspace, setWorkspace] = useState({
     status: '',
     gitrepo_url: '',
@@ -106,36 +111,6 @@ const Transform = () => {
   };
 
   const [showWorkFlow, setShowWorkflow] = useState(false);
-
-  type TransformType = 'github' | 'ui';
-
-  const [transformType, setTransformType] = useState<TransformType | null>(
-    null
-  );
-
-  useEffect(() => {
-    const fetchTransformType = async () => {
-      try {
-        const res = await httpGet(session, 'dbt/dbt_transform/');
-        const { transform_type } = await res;
-
-        if (transform_type) {
-          setTransformType(transform_type as TransformType);
-        } else {
-          const { transform_type: type } = router.query;
-          if (type) {
-            setTransformType(type as TransformType);
-          } else {
-            router.push('/pipeline/transform');
-          }
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchTransformType();
-  }, [router.query, session]);
 
   const dialog = (
     <Dialog fullScreen open={showWorkFlow} TransitionComponent={Transition}>
@@ -267,8 +242,7 @@ const Transform = () => {
         handleClose={handleClose}
         handleEdit={handleEdit}
       />
-      <PageHead title="DDP: Transform" />
-      <main className={styles.main}>
+      <Box>
         <Typography
           sx={{ fontWeight: 700 }}
           variant="h4"
@@ -472,9 +446,9 @@ const Transform = () => {
           </>
         )}
         {dialog}
-      </main>
+      </Box>
     </>
   );
 };
 
-export default Transform;
+export default DBTTransformType;
