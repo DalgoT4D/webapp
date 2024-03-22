@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
+import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
 
 const renameGridStyles: {
   container: SxProps;
@@ -305,6 +306,7 @@ const ArithmeticOpForm = ({
               Save
             </Button>
           </Box>
+          <InfoBox text="Please select only numeric columns" />
         </Box>
       </form>
     </Box>
