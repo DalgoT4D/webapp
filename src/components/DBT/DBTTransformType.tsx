@@ -72,6 +72,8 @@ const TopNavBar = ({ handleClose }: any) => (
 
 type Tasks = TransformTask[];
 
+type DBTSetupStage = 'create-workspace' | 'complete' | '';
+
 const DBTTransformType = ({
   transformType,
 }: {
@@ -83,7 +85,7 @@ const DBTTransformType = ({
     default_schema: '',
   });
   const [tasks, setTasks] = useState<Tasks>([]);
-  const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, complete
+  const [dbtSetupStage, setDbtSetupStage] = useState<DBTSetupStage>(''); // create-workspace, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
   const [showConnectRepoDialog, setShowConnectRepoDialog] =
     useState<boolean>(false);
@@ -255,179 +257,183 @@ const DBTTransformType = ({
           <Typography variant="h4" sx={{ alignContent: 'center' }}>
             dbt not available for snowflake warehouses at this time
           </Typography>
-        ) : (
+        ) : ['complete', 'create-workspace'].includes(dbtSetupStage) ? (
           <>
             <Tabs value={activeTab} onChange={handleChangeTab} sx={{ mb: 3 }}>
               <Tab value="setup" label="Setup"></Tab>
             </Tabs>
             {activeTab === 'setup' && (
-              <>
-                {transformType === 'github' && (
-                  <Card
-                    sx={{
-                      background: 'white',
-                      display: 'flex',
-                      borderRadius: '8px',
-                      padding: '16px',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '20px',
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: '10px',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Image
-                        src={Dbt}
-                        alt="Banner"
-                        style={{ width: '46px', height: '46px' }}
-                      />
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '5px',
-                        }}
-                      >
-                        <Typography
-                          sx={{ fontWeight: 700 }}
-                          variant="h4"
-                          color="#000"
-                        >
-                          DBT REPOSITORY
-                        </Typography>
-                        {workspace && workspace.gitrepo_url ? (
-                          <>
-                            <Link
-                              sx={{
-                                backgroundColor: '#F2F2EB',
-                                borderRadius: '6px',
-                                padding: '3px 6px 3px 6px',
-                                width: 'min-content',
-                                display: 'inline-flex',
-                                textDecoration: 'none',
-                                ':hover': { cursor: 'pointer' },
-                              }}
-                              target="_blank"
-                              rel="noopener"
-                              href={workspace.gitrepo_url}
-                            >
-                              <Typography
-                                sx={{ fontWeight: 600, color: '#0F2440' }}
-                              >
-                                {workspace.gitrepo_url}
-                              </Typography>
-                            </Link>
-                            <Box
-                              sx={{
-                                backgroundColor: '#F2F2EB',
-                                borderRadius: '6px',
-                                padding: '3px 6px 3px 6px',
-                                width: 'min-content',
-                                display: 'inline-flex',
-                              }}
-                            >
-                              <Typography
-                                sx={{ fontWeight: 600, color: '#0F2440' }}
-                              >
-                                {workspace?.default_schema}
-                              </Typography>
-                            </Box>
-                          </>
-                        ) : (
-                          ''
-                        )}
-                      </Box>
-                    </Box>
+              <Box>
+                <Box>
+                  {transformType === 'ui' ? (
                     <Box>
                       {dbtSetupStage === 'create-workspace' ? (
                         <Button
                           variant="contained"
-                          onClick={() => setShowConnectRepoDialog(true)}
+                          color="primary"
+                          sx={{ width: 'auto' }}
+                          onClick={setupDBTUI}
                         >
-                          Connect & Setup Repo{' '}
+                          {setupInProgress ? (
+                            <CircularProgress size={24} />
+                          ) : (
+                            'Setup DBT UI'
+                          )}
+                        </Button>
+                      ) : dbtSetupStage === 'complete' ? (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          sx={{ width: 'auto' }}
+                          onClick={handleGoToWorkflow}
+                        >
+                          Go to workflow
                         </Button>
                       ) : (
                         ''
                       )}
                     </Box>
-                  </Card>
-                )}
-
-                {dbtSetupStage !== 'complete' && transformType === 'ui' && (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ width: 'auto' }}
-                    onClick={setupDBTUI}
-                  >
-                    {setupInProgress ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      'Setup DBT UI'
-                    )}
-                  </Button>
-                )}
-
-                {dbtSetupStage === 'complete' && transformType === 'ui' && (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ width: 'auto' }}
-                    onClick={handleGoToWorkflow}
-                  >
-                    Go to workflow
-                  </Button>
-                )}
-
-                {dbtSetupStage === 'complete' ? (
-                  <DBTTaskList
-                    setExpandLogs={setExpandLogs}
-                    setDbtRunLogs={(logs: string[]) => {
-                      setDbtSetupLogs(logs);
-                    }}
-                    tasks={tasks}
-                    isAnyTaskLocked={anyTaskLocked}
-                    fetchDbtTasks={fetchDbtTasks}
-                  />
-                ) : (
-                  ''
-                )}
-
-                <Box>
-                  {dbtSetupStage === 'create-workspace' ? (
-                    <DBTSetup
-                      setLogs={setDbtSetupLogs}
+                  ) : transformType === 'github' ? (
+                    <Box>
+                      <Card
+                        sx={{
+                          background: 'white',
+                          display: 'flex',
+                          borderRadius: '8px',
+                          padding: '16px',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '20px',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: '10px',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Image
+                            src={Dbt}
+                            alt="Banner"
+                            style={{ width: '46px', height: '46px' }}
+                          />
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '5px',
+                            }}
+                          >
+                            <Typography
+                              sx={{ fontWeight: 700 }}
+                              variant="h4"
+                              color="#000"
+                            >
+                              DBT REPOSITORY
+                            </Typography>
+                            {workspace && workspace.gitrepo_url ? (
+                              <>
+                                <Link
+                                  sx={{
+                                    backgroundColor: '#F2F2EB',
+                                    borderRadius: '6px',
+                                    padding: '3px 6px 3px 6px',
+                                    width: 'min-content',
+                                    display: 'inline-flex',
+                                    textDecoration: 'none',
+                                    ':hover': { cursor: 'pointer' },
+                                  }}
+                                  target="_blank"
+                                  rel="noopener"
+                                  href={workspace.gitrepo_url}
+                                >
+                                  <Typography
+                                    sx={{ fontWeight: 600, color: '#0F2440' }}
+                                  >
+                                    {workspace.gitrepo_url}
+                                  </Typography>
+                                </Link>
+                                <Box
+                                  sx={{
+                                    backgroundColor: '#F2F2EB',
+                                    borderRadius: '6px',
+                                    padding: '3px 6px 3px 6px',
+                                    width: 'min-content',
+                                    display: 'inline-flex',
+                                  }}
+                                >
+                                  <Typography
+                                    sx={{ fontWeight: 600, color: '#0F2440' }}
+                                  >
+                                    {workspace?.default_schema}
+                                  </Typography>
+                                </Box>
+                              </>
+                            ) : (
+                              ''
+                            )}
+                          </Box>
+                        </Box>
+                        <Box>
+                          {dbtSetupStage === 'create-workspace' ? (
+                            <Button
+                              variant="contained"
+                              onClick={() => setShowConnectRepoDialog(true)}
+                            >
+                              Connect & Setup Repo{' '}
+                            </Button>
+                          ) : (
+                            ''
+                          )}
+                        </Box>
+                      </Card>
+                      {dbtSetupStage === 'create-workspace' ? (
+                        <DBTSetup
+                          setLogs={setDbtSetupLogs}
+                          setExpandLogs={setExpandLogs}
+                          onCreateWorkspace={() => {
+                            createProfile();
+                            setRerender(!rerender);
+                          }}
+                          showDialog={showConnectRepoDialog}
+                          setShowDialog={setShowConnectRepoDialog}
+                          gitrepoUrl=""
+                          schema=""
+                          mode="create"
+                          setWorkspace={setWorkspace}
+                        />
+                      ) : dbtSetupStage === 'complete' && workspace ? (
+                        <DBTSetup
+                          setLogs={setDbtSetupLogs}
+                          setExpandLogs={setExpandLogs}
+                          onCreateWorkspace={async () => {
+                            await fetchDbtWorkspace();
+                          }}
+                          showDialog={showConnectRepoDialog}
+                          setShowDialog={setShowConnectRepoDialog}
+                          gitrepoUrl={workspace?.gitrepo_url}
+                          schema={workspace?.default_schema}
+                          mode="edit"
+                          setWorkspace={setWorkspace}
+                        />
+                      ) : (
+                        ''
+                      )}
+                    </Box>
+                  ) : (
+                    ''
+                  )}
+                  {dbtSetupStage === 'complete' ? (
+                    <DBTTaskList
                       setExpandLogs={setExpandLogs}
-                      onCreateWorkspace={() => {
-                        createProfile();
-                        setRerender(!rerender);
+                      setDbtRunLogs={(logs: string[]) => {
+                        setDbtSetupLogs(logs);
                       }}
-                      showDialog={showConnectRepoDialog}
-                      setShowDialog={setShowConnectRepoDialog}
-                      gitrepoUrl=""
-                      schema=""
-                      mode="create"
-                      setWorkspace={setWorkspace}
-                    />
-                  ) : dbtSetupStage === 'complete' && workspace ? (
-                    <DBTSetup
-                      setLogs={setDbtSetupLogs}
-                      setExpandLogs={setExpandLogs}
-                      onCreateWorkspace={async () => {
-                        await fetchDbtWorkspace();
-                      }}
-                      showDialog={showConnectRepoDialog}
-                      setShowDialog={setShowConnectRepoDialog}
-                      gitrepoUrl={workspace?.gitrepo_url}
-                      schema={workspace?.default_schema}
-                      mode="edit"
-                      setWorkspace={setWorkspace}
+                      tasks={tasks}
+                      isAnyTaskLocked={anyTaskLocked}
+                      fetchDbtTasks={fetchDbtTasks}
                     />
                   ) : (
                     ''
@@ -438,12 +444,14 @@ const DBTTransformType = ({
                     setExpand={setExpandLogs}
                   />
                 </Box>
-              </>
+              </Box>
             )}
             {activeTab === 'docs' &&
               dbtSetupStage === 'complete' &&
               workspace && <DBTDocs />}
           </>
+        ) : (
+          ''
         )}
         {dialog}
       </Box>
