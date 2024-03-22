@@ -1,9 +1,7 @@
 import { DBTSetup } from '@/components/DBT/DBTSetup';
-import { PageHead } from '@/components/PageHead';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost } from '@/helpers/http';
-import styles from '@/styles/Home.module.css';
 import {
   Box,
   Button,
@@ -99,7 +97,6 @@ const DBTTransformType = ({
   const [setupInProgress, setSetupInProgress] = useState<boolean>(false);
 
   const { data: session }: any = useSession();
-  const router = useRouter();
   const globalContext = useContext(GlobalContext);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
