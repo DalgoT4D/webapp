@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -18,6 +11,7 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const castGridStyles: {
   container: SxProps;
@@ -186,14 +180,12 @@ const CastColumnOp = ({
                   name={`config.${index}.dataType`}
                   render={({ field }) => (
                     <Autocomplete
+                      fieldStyle="transformation"
                       options={dataTypes}
                       value={column.data_type}
                       onChange={(e, data) => {
                         field.onChange(data);
                       }}
-                      renderInput={(params) => (
-                        <Input {...params} sx={{ width: '100%' }} />
-                      )}
                     />
                   )}
                 />

@@ -24,7 +24,7 @@ const UpperSection = ({
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(280);
 
-  const onResize = (event: any, { node, size, handle }: any) => {
+  const onResize = (event: any, { size }: any) => {
     setWidth(size.width);
   };
   return (
