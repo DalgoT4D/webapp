@@ -17,12 +17,15 @@ import { DbtSourceModel } from './Components/Canvas';
 import { useDbtRunLogs } from '@/contexts/DbtRunLogsContext';
 import { ReactFlowProvider } from 'reactflow';
 import { ResizableBox } from 'react-resizable';
+import { TransformTask } from '@/components/DBT/DBTTarget';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
   refreshEditor: boolean;
   setRefreshEditor: any;
   changeLowerSectionTabTo: (value: LowerSectionTabValues) => void;
+  lockUpperSection: boolean;
+  setLockUpperSection: (value: boolean) => void;
 };
 
 const UpperSection = ({
@@ -30,9 +33,10 @@ const UpperSection = ({
   refreshEditor,
   setRefreshEditor,
   changeLowerSectionTabTo,
+  lockUpperSection,
+  setLockUpperSection,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
-  const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
 
   const onResize = (event: any, { node, size, handle }: any) => {
     setWidth(size.width);
@@ -165,6 +169,7 @@ const FlowEditor = ({}) => {
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
+  const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] =
     useState<LowerSectionTabValues>('preview');
 
@@ -181,8 +186,29 @@ const FlowEditor = ({}) => {
       });
   };
 
+  const checkForAnyRunningDbtJob = async () => {
+    try {
+      const response = await httpGet(session, 'prefect/tasks/transform/');
+
+      let isAnyLocked = false;
+      response?.forEach((task: TransformTask) => {
+        if (task.lock) isAnyLocked = true;
+      });
+
+      if (isAnyLocked) {
+        setLockUpperSection(true);
+        setSelectedTab('logs');
+        // calling polling logic here
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
   useEffect(() => {
-    if (session) fetchSourcesModels();
+    if (session) {
+      checkForAnyRunningDbtJob();
+      fetchSourcesModels();
+    }
   }, [session, refreshEditor]);
 
   return (
@@ -199,6 +225,8 @@ const FlowEditor = ({}) => {
         sourcesModels={sourcesModels}
         refreshEditor={refreshEditor}
         changeLowerSectionTabTo={setSelectedTab}
+        lockUpperSection={lockUpperSection}
+        setLockUpperSection={setLockUpperSection}
       />
 
       <ResizableBox
