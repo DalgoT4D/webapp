@@ -212,7 +212,7 @@ const FlowEditor = ({}) => {
     useState<LowerSectionTabValues>('preview');
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
-  const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { canvasAction } = useCanvasAction();
 
   const onResize = (_event: any, { size }: any) => {
     setLowerSectionHeight(size.height);
