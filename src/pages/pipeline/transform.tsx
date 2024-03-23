@@ -15,6 +15,10 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 
 export type TransformType = 'github' | 'ui' | 'none' | null;
 
+interface TransformTypeResponse {
+  transform_type: TransformType;
+}
+
 const Transform = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
@@ -47,10 +51,6 @@ const Transform = () => {
         throw error;
       }
     };
-
-    interface TransformTypeResponse {
-      transform_type: TransformType;
-    }
 
     if (session) {
       fetchTransformType()

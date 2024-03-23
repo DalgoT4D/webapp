@@ -43,6 +43,8 @@ type CanvasProps = {
   setLockUpperSection: (value: boolean) => void;
 };
 
+const nodeGap = 30;
+
 export interface OperationNodeData {
   id: string;
   output_cols: Array<string>;
@@ -94,6 +96,20 @@ export interface UIOperationType {
 const nodeTypes: NodeTypes = {
   [`${SRC_MODEL_NODE}`]: DbtSourceModelNode,
   [`${OPERATION_NODE}`]: OperationNode,
+};
+
+const getNextNodePosition = (nodes: any) => {
+  let x = 0;
+  const y = 0;
+
+  for (const node of nodes) {
+    if (node.position.x + node.width + nodeGap > x) {
+      x = node.position.x + node.width + nodeGap;
+    }
+  }
+
+  // Return the calculated position for the new node
+  return { x, y };
 };
 
 const CanvasHeader = ({
@@ -177,7 +193,7 @@ const Canvas = ({
   const [openOperationConfig, setOpenOperationConfig] =
     useState<boolean>(false);
   const { canvasNode, setCanvasNode } = useCanvasNode();
-  const { addNodes, addEdges } = useReactFlow();
+  const { addNodes, addEdges, setCenter, getZoom } = useReactFlow();
 
   const [operationSelectedForConfig, setOperationSelectedForConfig] = useState<{
     slug: string;
@@ -309,15 +325,16 @@ const Canvas = ({
     dbtSourceModel: DbtSourceModel | null | undefined
   ) => {
     if (dbtSourceModel) {
-      console.log('adding a source or a model to canvas', dbtSourceModel);
+      const position = getNextNodePosition(nodes);
       const newNode = {
         id: dbtSourceModel.id,
         type: SRC_MODEL_NODE,
         data: dbtSourceModel,
-        position: { x: 100, y: 125 },
+        position,
       };
       // handleNodesChange([{ type: 'add', item: newNode }]);
       addNodes([newNode]);
+      setCenter(position.x, position.y, { zoom: getZoom(), duration: 500 });
     }
   };
 
@@ -403,6 +420,63 @@ const Canvas = ({
       console.error(err);
     }
   };
+  const onNodeDragStop = (event: any, node: any) => {
+    let x = node.position.x;
+    let y = node.position.y;
+
+    nodes.forEach((otherNode) => {
+      if (otherNode.id === node.id) return;
+
+      const xOverlap = Math.max(
+        0,
+        Math.min(
+          node.position.x + node.width,
+          otherNode.position.x + (otherNode.width || 0)
+        ) - Math.max(node.position.x, otherNode.position.x)
+      );
+      const yOverlap = Math.max(
+        0,
+        Math.min(
+          node.position.y + node.height,
+          otherNode.position.y + (otherNode.height || 0)
+        ) - Math.max(node.position.y, otherNode.position.y)
+      );
+      if (xOverlap > 0 && yOverlap > 0) {
+        // Prevent overlap by adjusting position
+        if (x < otherNode.position.x) {
+          x -= xOverlap + nodeGap;
+        } else {
+          x += xOverlap + nodeGap;
+        }
+
+        if (y < otherNode.position.y) {
+          y -= yOverlap + nodeGap;
+        } else {
+          y += yOverlap + nodeGap;
+        }
+      }
+    });
+
+    setNodes((nds) =>
+      nds.map((nd) => {
+        if (nd.id === node.id) {
+          // Update the position of the node being dragged
+          return {
+            ...nd,
+            position: {
+              x,
+              y,
+            },
+          };
+        }
+        return nd;
+      })
+    );
+  };
+
+  const handlePaneClick = () => {
+    setPreviewAction({ type: 'clear-preview', data: null });
+  };
 
   const handleRunWorkflow = async () => {
     console.log('running the workflow');
@@ -472,10 +546,13 @@ const Canvas = ({
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          onNodeDragStop={onNodeDragStop}
+          onPaneClick={handlePaneClick}
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={handleNewConnection}
           nodeTypes={nodeTypes}
+          minZoom={0.1}
           proOptions={{ hideAttribution: true }}
           defaultViewport={defaultViewport}
           fitView

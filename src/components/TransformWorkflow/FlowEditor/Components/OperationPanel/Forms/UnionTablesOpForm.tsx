@@ -12,6 +12,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { useReactFlow } from 'reactflow';
+import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
 
 const UnionTablesOpForm = ({
   node,
@@ -270,6 +271,7 @@ const UnionTablesOpForm = ({
             Save
           </Button>
         </Box>
+        <InfoBox text="Columns not belonging to both tables will yield NULLs in the union" />
       </form>
     </Box>
   );
