@@ -432,6 +432,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   };
 
   const handlePaneClick = () => {
+    setOpenOperationConfig(false);
     setPreviewAction({ type: 'clear-preview', data: null });
   };
 
