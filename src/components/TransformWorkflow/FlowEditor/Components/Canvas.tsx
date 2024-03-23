@@ -22,19 +22,12 @@ import 'reactflow/dist/style.css';
 import { OperationNode } from './Nodes/OperationNode';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
-import { httpDelete, httpGet, httpPost } from '@/helpers/http';
+import { httpDelete, httpGet } from '@/helpers/http';
 import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
 import OperationConfigLayout from './OperationConfigLayout';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
-import { delay } from '@/utils/common';
-import { PrefectFlowRun, PrefectFlowRunLog } from '@/components/DBT/DBTTarget';
-import { useDbtRunLogsUpdate } from '@/contexts/DbtRunLogsContext';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
 type CanvasProps = {
@@ -112,9 +105,9 @@ const getNextNodePosition = (nodes: any) => {
 };
 
 const CanvasHeader = ({
-  runWorkflow,
+  setCanvasAction,
 }: {
-  runWorkflow: (...args: any) => void;
+  setCanvasAction: (...args: any) => void;
 }) => {
   return (
     <Box
@@ -133,7 +126,11 @@ const CanvasHeader = ({
       </Typography>
 
       <Box sx={{ marginLeft: 'auto', display: 'flex', gap: '20px' }}>
-        <Button variant="contained" type="button" onClick={runWorkflow}>
+        <Button
+          variant="contained"
+          type="button"
+          onClick={() => setCanvasAction({ type: 'run-workflow', data: null })}
+        >
           Run
         </Button>
       </Box>
@@ -187,13 +184,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [openOperationConfig, setOpenOperationConfig] =
     useState<boolean>(false);
-  const { canvasNode, setCanvasNode } = useCanvasNode();
   const { addNodes, addEdges, setCenter, getZoom } = useReactFlow();
 
-  const [operationSelectedForConfig, setOperationSelectedForConfig] = useState<{
-    slug: string;
-    label: string;
-  } | null>(null);
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { previewAction, setPreviewAction } = usePreviewAction();
   const previewNodeRef = useRef<DbtSourceModel | null>();
@@ -206,7 +198,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       color: 'black',
     },
   };
-  const setDbtRunLogs = useDbtRunLogsUpdate();
+  // const setDbtRunLogs = useDbtRunLogsUpdate();
 
   const fetchDbtProjectGraph = async () => {
     try {
@@ -351,7 +343,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
 
   const handleRefreshCanvas = () => {
     setRedrawGraph(!redrawGraph);
-    setOperationSelectedForConfig(null);
   };
 
   useEffect(() => {
@@ -375,46 +366,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     if (canvasAction.type === 'open-opconfig-panel') {
       setOpenOperationConfig(true);
     }
-
-    if (canvasAction.type === 'run-workflow') {
-      handleRunWorkflow();
-    }
   }, [canvasAction]);
 
-  const fetchFlowRunStatus = async (flow_run_id: string) => {
-    try {
-      const flowRun: PrefectFlowRun = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}`
-      );
-
-      if (!flowRun.state_type) return 'FAILED';
-
-      return flowRun.state_type;
-    } catch (err: any) {
-      console.error(err);
-      return 'FAILED';
-    }
-  };
-
-  const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
-    try {
-      const response = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}/logs`
-      );
-      if (response?.logs?.logs && response.logs.logs.length > 0) {
-        const logsArray: PrefectFlowRunLog[] = response.logs.logs.map(
-          // eslint-disable-next-line
-          (logObject: PrefectFlowRunLog, idx: number) => logObject
-        );
-
-        setDbtRunLogs(logsArray);
-      }
-    } catch (err: any) {
-      console.error(err);
-    }
-  };
   const onNodeDragStop = (event: any, node: any) => {
     let x = node.position.x;
     let y = node.position.y;
@@ -470,44 +423,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   };
 
   const handlePaneClick = () => {
+    setOpenOperationConfig(false);
     setPreviewAction({ type: 'clear-preview', data: null });
-  };
-
-  const handleRunWorkflow = async () => {
-    console.log('running the workflow');
-    try {
-      const tasks: any = await httpGet(session, `prefect/tasks/transform/`);
-
-      const dbtDepsTask = tasks.find((task: any) => task.slug === TASK_DBTDEPS);
-
-      if (dbtDepsTask) {
-        successToast('Installing dependencies', [], globalContext);
-        await httpPost(session, `prefect/tasks/${dbtDepsTask.uuid}/run/`, {});
-      }
-
-      const dbtRunTask = tasks.find((task: any) => task.slug === TASK_DBTRUN);
-
-      if (dbtRunTask) {
-        const response = await httpPost(
-          session,
-          `prefect/v1/flows/${dbtRunTask.deploymentId}/flow_run/`,
-          {}
-        );
-        successToast('Dbt run initiated', [], globalContext);
-        let flowRunStatus: string = await fetchFlowRunStatus(
-          response.flow_run_id
-        );
-        await fetchAndSetFlowRunLogs(response.flow_run_id);
-        while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
-          await delay(5000);
-          await fetchAndSetFlowRunLogs(response.flow_run_id);
-          flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
-        }
-        handleRefreshCanvas();
-      }
-    } catch (error) {
-      console.log(error);
-    }
   };
 
   return (
@@ -525,7 +442,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           borderTop: '1px #CCD6E2 solid',
         }}
       >
-        <CanvasHeader runWorkflow={handleRunWorkflow} />
+        <CanvasHeader setCanvasAction={setCanvasAction} />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box
