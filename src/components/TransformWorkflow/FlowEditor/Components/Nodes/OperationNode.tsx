@@ -56,7 +56,7 @@ export function OperationNode(node: OperationNodeType) {
         sx={{
           width: '90px',
           height: '100px',
-          background: '#F8F8F8',
+          background: 'white',
           boxShadow: '0px 2px 4px 0px rgba(0, 0, 0, 0.16)',
           borderRadius: '5px 5px 5px 5px',
         }}
@@ -64,13 +64,12 @@ export function OperationNode(node: OperationNodeType) {
         <Box
           sx={{
             padding: '8px',
-            height: '70%',
           }}
         >
           <Box
             sx={{
-              height: '100%',
-              background: '#D9D9D9',
+              height: '48px',
+              background: '#F5FAFA',
               borderRadius: '4px',
             }}
           >
@@ -93,7 +92,12 @@ export function OperationNode(node: OperationNodeType) {
               overflow: 'hidden',
             }}
           >
-            <Typography fontWeight="600" fontSize="12px" padding="8px">
+            <Typography
+              fontWeight="600"
+              fontSize="12px"
+              padding="8px"
+              sx={{ textAlign: 'center' }}
+            >
               {operations.find((op) => op.slug === node.data.config?.type)
                 ?.label || 'Not found'}
             </Typography>
