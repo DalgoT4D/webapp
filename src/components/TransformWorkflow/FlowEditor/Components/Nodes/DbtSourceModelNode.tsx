@@ -217,9 +217,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
                 width: '100%',
               }}
             >
-              <Typography>
-                Please click run to materialize your model
-              </Typography>
+              <Typography>Please check logs</Typography>
             </Box>
           )}
         </Box>
