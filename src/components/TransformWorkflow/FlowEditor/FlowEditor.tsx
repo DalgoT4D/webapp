@@ -110,9 +110,14 @@ export type LowerSectionTabValues = 'preview' | 'logs';
 type LowerSectionProps = {
   selectedTab: LowerSectionTabValues;
   setSelectedTab: (value: LowerSectionTabValues) => void;
+  workflowInProgress: boolean;
 };
 
-const LowerSection = ({ selectedTab, setSelectedTab }: LowerSectionProps) => {
+const LowerSection = ({
+  selectedTab,
+  setSelectedTab,
+  workflowInProgress,
+}: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
   const handleTabChange = (
     event: React.SyntheticEvent,
@@ -139,7 +144,10 @@ const LowerSection = ({ selectedTab, setSelectedTab }: LowerSectionProps) => {
           <Tab label="Logs" value="logs" />
         </Tabs>
       </Box>
-      <Box height={'calc(100% - 50px)'} sx={{ overflow: 'auto' }}>
+      <Box
+        height={'calc(100% - 50px)'}
+        sx={{ overflow: 'auto', position: 'relative' }}
+      >
         {selectedTab === 'preview' && <PreviewPane />}
         {selectedTab === 'logs' && (
           <Box height={'100%'} sx={{ padding: '1rem' }}>
@@ -160,6 +168,30 @@ const LowerSection = ({ selectedTab, setSelectedTab }: LowerSectionProps) => {
                   </Box>
                 </Box>
               ))
+            ) : workflowInProgress ? (
+              <Backdrop
+                sx={{
+                  background: 'white',
+                  position: 'absolute', // Position the Backdrop over the Box
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0, // Cover the entire Box
+                  zIndex: (theme) => theme.zIndex.drawer + 1,
+                }}
+                open={workflowInProgress}
+                onClick={() => {}}
+              >
+                <CircularProgress
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 2,
+                  }}
+                />
+              </Backdrop>
             ) : (
               <Box>No logs available</Box>
             )}
@@ -272,7 +304,6 @@ const FlowEditor = ({}) => {
   };
 
   const handleRunWorkflow = async () => {
-    console.log('running the workflow');
     try {
       setLockUpperSection(true);
       // tab to logs
@@ -352,6 +383,7 @@ const FlowEditor = ({}) => {
         <LowerSection
           setSelectedTab={setSelectedTab}
           selectedTab={selectedTab}
+          workflowInProgress={lockUpperSection}
         />
       </ResizableBox>
     </Box>
