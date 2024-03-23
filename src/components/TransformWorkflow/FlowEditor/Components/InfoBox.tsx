@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 const InfoBox = ({ text }: { text: string }) => {
   return (
@@ -7,7 +7,7 @@ const InfoBox = ({ text }: { text: string }) => {
         marginTop: '17px',
         border: '1px solid #999999',
         backgroundColor: '#F4F4F4',
-        borderRadius: 1,
+        borderRadius: '6px',
         padding: '10px',
         width: '100%',
       }}
@@ -50,7 +50,11 @@ const InfoBox = ({ text }: { text: string }) => {
           </svg>
         </Box>
       </Box>
-      <Box sx={{ paddingLeft: '20px', paddingRight: '20px' }}>{text}</Box>
+      <Box sx={{ paddingLeft: '20px', paddingRight: '20px' }}>
+        <Typography color="#777777" fontWeight={600} lineHeight="18px">
+          {text}
+        </Typography>
+      </Box>
     </Box>
   );
 };
