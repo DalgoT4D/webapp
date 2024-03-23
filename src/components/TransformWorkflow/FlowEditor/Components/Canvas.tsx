@@ -190,10 +190,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     useState<boolean>(false);
   const { addNodes, addEdges, setCenter, getZoom } = useReactFlow();
 
-  const [operationSelectedForConfig, setOperationSelectedForConfig] = useState<{
-    slug: string;
-    label: string;
-  } | null>(null);
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { previewAction, setPreviewAction } = usePreviewAction();
   const previewNodeRef = useRef<DbtSourceModel | null>();
@@ -351,7 +347,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
 
   const handleRefreshCanvas = () => {
     setRedrawGraph(!redrawGraph);
-    setOperationSelectedForConfig(null);
   };
 
   useEffect(() => {
