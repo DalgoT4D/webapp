@@ -27,12 +27,8 @@ import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
-import { LowerSectionTabValues } from '../FlowEditor';
 
 type CanvasProps = {
   redrawGraph: boolean;
