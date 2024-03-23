@@ -13,10 +13,13 @@ import { trimString } from '@/utils/common';
 import Image from 'next/image';
 
 const Node = ({ node, style, dragHandle }: any) => {
+  const width = node.tree.props.width;
+
+  const stringLengthWithWidth = Math.abs(width / 15);
   /* This node instance can do many things. See the API reference. */
   const data: DbtSourceModel = node.data;
   let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
-  name = trimString(name, 15);
+  name = trimString(name, stringLengthWithWidth);
 
   return (
     <Box
@@ -26,7 +29,7 @@ const Node = ({ node, style, dragHandle }: any) => {
         alignItems: 'center',
         display: 'flex',
         mr: 2,
-        width: '250px',
+        width: (250 * width) / 270 + 'px',
       }}
       onClick={() => (node.isLeaf ? undefined : node.toggle())}
     >
@@ -37,7 +40,7 @@ const Node = ({ node, style, dragHandle }: any) => {
       ) : (
         <FolderIcon />
       )}
-      <Box sx={{ display: 'flex', width: '1000px' }}>
+      <Box sx={{ display: 'flex', width: '100%' }}>
         <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>
           {name}
         </Typography>

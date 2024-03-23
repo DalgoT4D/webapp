@@ -2,11 +2,9 @@ import {
   Box,
   Divider,
   IconButton,
+  List,
+  ListItemButton,
   SxProps,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -19,7 +17,7 @@ import {
   UIOperationType,
 } from './Canvas';
 // import { operations } from './OperationConfigForms/constant';
-import InfoIcon from '@mui/icons-material/Info';
+import InfoIcon from '@mui/icons-material/InfoOutlined';
 import {
   OPERATION_NODE,
   RENAME_COLUMNS_OP,
@@ -392,13 +390,13 @@ const OperationConfigLayout = ({
             <Typography
               fontWeight={600}
               fontSize="15px"
-              color="#5E5E5E"
+              color="#0F2440"
               lineHeight={'21px'}
             >
               {selectedOp ? selectedOp.label : 'Functions'}
             </Typography>
-            <Box sx={{ width: '16px', height: '16px' }}>
-              <InfoIcon sx={{ color: '#D9D9D9' }} />
+            <Box sx={{ width: '1px', height: '12px' }}>
+              <InfoIcon fontSize="small" sx={{ color: '#888888' }} />
             </Box>
           </Box>
           <IconButton
@@ -441,52 +439,43 @@ const OperationConfigLayout = ({
     const cantChainOperations: string[] = [UNION_OP];
 
     return (
-      <Table sx={{ borderSpacing: '0px', ...sx }}>
-        <TableBody>
+      <Box sx={{ borderSpacing: '0px', ...sx }}>
+        <List>
           {operations.map((op, index) => {
             const canSelectOperation = !(
               cantChainOperations.includes(op.slug) &&
               canvasNode?.type === OPERATION_NODE
             );
             return (
-              <TableRow
-                sx={{
-                  boxShadow: 'none',
-                  fontSize: '13px',
-                }}
+              <ListItemButton
                 key={op.slug}
+                sx={{
+                  padding: '10px 20px',
+                  color: '#0F2440',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: '#F5FAFA',
+                  },
+                }}
+                onClick={
+                  canSelectOperation ? () => handleSelectOp(op) : undefined
+                }
               >
-                <TableCell
-                  sx={{
-                    padding: '10px 4px 10px 10px',
-                    color: '#7D8998',
-                    fontWeight: 600,
-                    ':hover': {
-                      background: '#F5F5F5',
-                      cursor: canSelectOperation ? 'pointer' : 'default',
-                    },
-                  }}
-                  align="left"
-                  onClick={
-                    canSelectOperation ? () => handleSelectOp(op) : undefined
-                  }
-                >
-                  {canSelectOperation ? (
-                    op.label
-                  ) : (
-                    <Tooltip
-                      title={'Please create a table to use this function'}
-                      placement="top"
-                    >
-                      <span>{op.label}</span>
-                    </Tooltip>
-                  )}
-                </TableCell>
-              </TableRow>
+                {canSelectOperation ? (
+                  op.label
+                ) : (
+                  <Tooltip
+                    title={'Please create a table to use this function'}
+                    placement="top"
+                  >
+                    <span>{op.label}</span>
+                  </Tooltip>
+                )}
+              </ListItemButton>
             );
           })}
-        </TableBody>
-      </Table>
+        </List>
+      </Box>
     );
   };
 
