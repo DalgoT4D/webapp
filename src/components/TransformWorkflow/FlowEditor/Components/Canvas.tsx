@@ -36,11 +36,13 @@ import {
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
+import { LowerSectionTabValues } from '../FlowEditor';
 
 type CanvasProps = {
   redrawGraph: boolean;
   setRedrawGraph: (...args: any) => void;
   setLockUpperSection: (value: boolean) => void;
+  changeLowerSectionTabTo: (value: LowerSectionTabValues) => void;
 };
 
 const nodeGap = 30;
@@ -186,6 +188,7 @@ const Canvas = ({
   redrawGraph,
   setRedrawGraph,
   setLockUpperSection,
+  changeLowerSectionTabTo,
 }: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -481,6 +484,7 @@ const Canvas = ({
   const handleRunWorkflow = async () => {
     console.log('running the workflow');
     setLockUpperSection(true);
+    changeLowerSectionTabTo('logs');
     try {
       const tasks: any = await httpGet(session, `prefect/tasks/transform/`);
 
