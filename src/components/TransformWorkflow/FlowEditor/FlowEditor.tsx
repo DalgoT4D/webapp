@@ -30,6 +30,7 @@ const UpperSection = ({
   setRefreshEditor,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
+  const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
 
   const onResize = (event: any, { node, size, handle }: any) => {
     setWidth(size.width);
@@ -41,29 +42,32 @@ const UpperSection = ({
         display: 'flex',
         overflow: 'inherit',
         position: 'relative',
-        pointerEvents: 'none', // Disable user interaction
-        '::after': {
-          content: '""',
-          display: 'block',
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.8)', // white overlay
-          zIndex: 1,
-        },
       }}
     >
-      <CircularProgress
+      <Backdrop
         sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 2,
+          background: 'rgba(255, 255, 255, 0.8)',
+          position: 'absolute', // Position the Backdrop over the Box
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0, // Cover the entire Box
+          zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
-      />
+        open={lockUpperSection}
+        onClick={() => {}}
+      >
+        <CircularProgress
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 2,
+          }}
+        />
+      </Backdrop>
+
       <ResizableBox
         axis="x"
         width={width}
@@ -75,11 +79,12 @@ const UpperSection = ({
         <ProjectTree dbtSourceModels={sourcesModels} />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />
-      <Box sx={{ width: '100%', pointerEvents: 'none' }}>
+      <Box sx={{ width: '100%' }}>
         <ReactFlowProvider>
           <Canvas
             redrawGraph={refreshEditor}
             setRedrawGraph={setRefreshEditor}
+            setLockUpperSection={setLockUpperSection}
           />
         </ReactFlowProvider>
       </Box>
