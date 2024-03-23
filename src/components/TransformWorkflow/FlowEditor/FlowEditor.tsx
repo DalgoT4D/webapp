@@ -6,35 +6,43 @@ import {
   Tab,
   Tabs,
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/PreviewPane';
-import { httpGet } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { SRC_MODEL_NODE } from './constant';
 import { DbtSourceModel } from './Components/Canvas';
-import { useDbtRunLogs } from '@/contexts/DbtRunLogsContext';
+import {
+  useDbtRunLogs,
+  useDbtRunLogsUpdate,
+} from '@/contexts/DbtRunLogsContext';
 import { ReactFlowProvider } from 'reactflow';
 import { ResizableBox } from 'react-resizable';
-import { TransformTask } from '@/components/DBT/DBTTarget';
+import {
+  PrefectFlowRun,
+  PrefectFlowRunLog,
+  TransformTask,
+} from '@/components/DBT/DBTTarget';
+import { successToast } from '@/components/ToastMessage/ToastHelper';
+import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { delay } from '@/utils/common';
+import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
   refreshEditor: boolean;
   setRefreshEditor: any;
-  changeLowerSectionTabTo: (value: LowerSectionTabValues) => void;
   lockUpperSection: boolean;
-  setLockUpperSection: (value: boolean) => void;
 };
 
 const UpperSection = ({
   sourcesModels,
   refreshEditor,
   setRefreshEditor,
-  changeLowerSectionTabTo,
   lockUpperSection,
-  setLockUpperSection,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
 
@@ -90,8 +98,6 @@ const UpperSection = ({
           <Canvas
             redrawGraph={refreshEditor}
             setRedrawGraph={setRefreshEditor}
-            setLockUpperSection={setLockUpperSection}
-            changeLowerSectionTabTo={changeLowerSectionTabTo}
           />
         </ReactFlowProvider>
       </Box>
@@ -172,6 +178,9 @@ const FlowEditor = ({}) => {
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] =
     useState<LowerSectionTabValues>('preview');
+  const globalContext = useContext(GlobalContext);
+  const setDbtRunLogs = useDbtRunLogsUpdate();
+  const { canvasAction, setCanvasAction } = useCanvasAction();
 
   const onResize = (_event: any, { size }: any) => {
     setLowerSectionHeight(size.height);
@@ -186,30 +195,134 @@ const FlowEditor = ({}) => {
       });
   };
 
-  const checkForAnyRunningDbtJob = async () => {
+  const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
-      const response = await httpGet(session, 'prefect/tasks/transform/');
+      const flowRun: PrefectFlowRun = await httpGet(
+        session,
+        `prefect/flow_runs/${flow_run_id}`
+      );
 
-      let isAnyLocked = false;
-      response?.forEach((task: TransformTask) => {
-        if (task.lock) isAnyLocked = true;
-      });
+      if (!flowRun.state_type) return 'FAILED';
 
-      if (isAnyLocked) {
-        setLockUpperSection(true);
-        setSelectedTab('logs');
-        // calling polling logic here
+      return flowRun.state_type;
+    } catch (err: any) {
+      console.error(err);
+      return 'FAILED';
+    }
+  };
+
+  const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
+    try {
+      const response = await httpGet(
+        session,
+        `prefect/flow_runs/${flow_run_id}/logs`
+      );
+      if (response?.logs?.logs && response.logs.logs.length > 0) {
+        const logsArray: PrefectFlowRunLog[] = response.logs.logs.map(
+          // eslint-disable-next-line
+          (logObject: PrefectFlowRunLog, idx: number) => logObject
+        );
+
+        setDbtRunLogs(logsArray);
       }
     } catch (err: any) {
       console.error(err);
     }
   };
+
+  const pollForFlowRun = async (flow_run_id: string) => {
+    let flowRunStatus: string = await fetchFlowRunStatus(flow_run_id);
+
+    await fetchAndSetFlowRunLogs(flow_run_id);
+    while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
+      await delay(5000);
+      await fetchAndSetFlowRunLogs(flow_run_id);
+      flowRunStatus = await fetchFlowRunStatus(flow_run_id);
+    }
+  };
+
+  const checkForAnyRunningDbtJob = async () => {
+    setLockUpperSection(true);
+    let isAnyLocked = true;
+    let flow_run_id: string | undefined = '';
+    try {
+      while (isAnyLocked) {
+        isAnyLocked = false;
+
+        const response = await httpGet(session, 'prefect/tasks/transform/');
+        response?.forEach((task: TransformTask) => {
+          if (task.lock) {
+            isAnyLocked = true;
+            flow_run_id = task.lock?.flowRunId;
+          }
+        });
+
+        if (flow_run_id) {
+          setSelectedTab('logs');
+          await pollForFlowRun(flow_run_id);
+        }
+
+        if (isAnyLocked) await delay(5000);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLockUpperSection(false);
+    }
+  };
+
+  const handleRunWorkflow = async () => {
+    console.log('running the workflow');
+    try {
+      setLockUpperSection(true);
+      // tab to logs
+      setSelectedTab('logs');
+      // Clear previous logs
+      setDbtRunLogs([]);
+
+      const tasks: any = await httpGet(session, `prefect/tasks/transform/`);
+
+      const dbtDepsTask = tasks.find((task: any) => task.slug === TASK_DBTDEPS);
+
+      if (dbtDepsTask) {
+        successToast('Installing dependencies', [], globalContext);
+        await httpPost(session, `prefect/tasks/${dbtDepsTask.uuid}/run/`, {});
+      }
+
+      const dbtRunTask = tasks.find((task: any) => task.slug === TASK_DBTRUN);
+
+      if (dbtRunTask) {
+        const response = await httpPost(
+          session,
+          `prefect/v1/flows/${dbtRunTask.deploymentId}/flow_run/`,
+          {}
+        );
+        successToast('Dbt run initiated', [], globalContext);
+
+        if (response.flow_run_id) await pollForFlowRun(response.flow_run_id);
+
+        // refresh canvas
+        setRefreshEditor(!refreshEditor);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLockUpperSection(false);
+    }
+  };
+
   useEffect(() => {
     if (session) {
       checkForAnyRunningDbtJob();
       fetchSourcesModels();
     }
   }, [session, refreshEditor]);
+
+  useEffect(() => {
+    if (canvasAction.type === 'run-workflow') {
+      handleRunWorkflow();
+    }
+  }, [canvasAction]);
 
   return (
     <Box
@@ -224,9 +337,7 @@ const FlowEditor = ({}) => {
         setRefreshEditor={setRefreshEditor}
         sourcesModels={sourcesModels}
         refreshEditor={refreshEditor}
-        changeLowerSectionTabTo={setSelectedTab}
         lockUpperSection={lockUpperSection}
-        setLockUpperSection={setLockUpperSection}
       />
 
       <ResizableBox
