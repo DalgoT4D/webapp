@@ -22,12 +22,14 @@ type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
   refreshEditor: boolean;
   setRefreshEditor: any;
+  changeLowerSectionTabTo: (value: LowerSectionTabValues) => void;
 };
 
 const UpperSection = ({
   sourcesModels,
   refreshEditor,
   setRefreshEditor,
+  changeLowerSectionTabTo,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
@@ -85,6 +87,7 @@ const UpperSection = ({
             redrawGraph={refreshEditor}
             setRedrawGraph={setRefreshEditor}
             setLockUpperSection={setLockUpperSection}
+            changeLowerSectionTabTo={changeLowerSectionTabTo}
           />
         </ReactFlowProvider>
       </Box>
@@ -92,10 +95,19 @@ const UpperSection = ({
   );
 };
 
-const LowerSection = () => {
+export type LowerSectionTabValues = 'preview' | 'logs';
+
+type LowerSectionProps = {
+  selectedTab: LowerSectionTabValues;
+  setSelectedTab: (value: LowerSectionTabValues) => void;
+};
+
+const LowerSection = ({ selectedTab, setSelectedTab }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
-  const [selectedTab, setSelectedTab] = useState(0);
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (
+    event: React.SyntheticEvent,
+    newValue: LowerSectionTabValues
+  ) => {
     setSelectedTab(newValue);
   };
   return (
@@ -113,13 +125,13 @@ const LowerSection = () => {
           onChange={handleTabChange}
           sx={{ display: 'flex', alignItems: 'center', height: '100%' }}
         >
-          <Tab label="Preview" />
-          <Tab label="Logs" />
+          <Tab label="Preview" value="preview" />
+          <Tab label="Logs" value="logs" />
         </Tabs>
       </Box>
       <Box height={'calc(100% - 50px)'} sx={{ overflow: 'auto' }}>
-        {selectedTab === 0 && <PreviewPane />}
-        {selectedTab === 1 && (
+        {selectedTab === 'preview' && <PreviewPane />}
+        {selectedTab === 'logs' && (
           <Box height={'100%'} sx={{ padding: '1rem' }}>
             {dbtRunLogs.length > 0 ? (
               dbtRunLogs.map((log, index) => (
@@ -147,11 +159,14 @@ const LowerSection = () => {
     </Box>
   );
 };
+
 const FlowEditor = ({}) => {
   const { data: session } = useSession();
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
+  const [selectedTab, setSelectedTab] =
+    useState<LowerSectionTabValues>('preview');
 
   const onResize = (_event: any, { size }: any) => {
     setLowerSectionHeight(size.height);
@@ -183,6 +198,7 @@ const FlowEditor = ({}) => {
         setRefreshEditor={setRefreshEditor}
         sourcesModels={sourcesModels}
         refreshEditor={refreshEditor}
+        changeLowerSectionTabTo={setSelectedTab}
       />
 
       <ResizableBox
@@ -194,7 +210,10 @@ const FlowEditor = ({}) => {
         minConstraints={[Infinity, 100]}
         maxConstraints={[Infinity, 500]}
       >
-        <LowerSection />
+        <LowerSection
+          setSelectedTab={setSelectedTab}
+          selectedTab={selectedTab}
+        />
       </ResizableBox>
     </Box>
   );
