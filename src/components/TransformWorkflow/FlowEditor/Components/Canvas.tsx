@@ -22,15 +22,11 @@ import 'reactflow/dist/style.css';
 import { OperationNode } from './Nodes/OperationNode';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
-import { httpDelete, httpGet, httpPost } from '@/helpers/http';
+import { httpDelete, httpGet } from '@/helpers/http';
 import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
 import OperationConfigLayout from './OperationConfigLayout';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
-import { delay } from '@/utils/common';
-import { PrefectFlowRun, PrefectFlowRunLog } from '@/components/DBT/DBTTarget';
-import { useDbtRunLogsUpdate } from '@/contexts/DbtRunLogsContext';
 import {
   useCanvasAction,
   useCanvasNode,
@@ -192,7 +188,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [openOperationConfig, setOpenOperationConfig] =
     useState<boolean>(false);
-  const { canvasNode, setCanvasNode } = useCanvasNode();
   const { addNodes, addEdges, setCenter, getZoom } = useReactFlow();
 
   const [operationSelectedForConfig, setOperationSelectedForConfig] = useState<{
@@ -439,47 +434,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const handlePaneClick = () => {
     setPreviewAction({ type: 'clear-preview', data: null });
   };
-
-  // const handleRunWorkflow = async () => {
-  //   console.log('running the workflow');
-  //   setLockUpperSection(true);
-  //   changeLowerSectionTabTo('logs');
-  //   try {
-  //     const tasks: any = await httpGet(session, `prefect/tasks/transform/`);
-
-  //     const dbtDepsTask = tasks.find((task: any) => task.slug === TASK_DBTDEPS);
-
-  //     if (dbtDepsTask) {
-  //       successToast('Installing dependencies', [], globalContext);
-  //       await httpPost(session, `prefect/tasks/${dbtDepsTask.uuid}/run/`, {});
-  //     }
-
-  //     const dbtRunTask = tasks.find((task: any) => task.slug === TASK_DBTRUN);
-
-  //     if (dbtRunTask) {
-  //       const response = await httpPost(
-  //         session,
-  //         `prefect/v1/flows/${dbtRunTask.deploymentId}/flow_run/`,
-  //         {}
-  //       );
-  //       successToast('Dbt run initiated', [], globalContext);
-  //       let flowRunStatus: string = await fetchFlowRunStatus(
-  //         response.flow_run_id
-  //       );
-  //       await fetchAndSetFlowRunLogs(response.flow_run_id);
-  //       while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
-  //         await delay(5000);
-  //         await fetchAndSetFlowRunLogs(response.flow_run_id);
-  //         flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
-  //       }
-  //       handleRefreshCanvas();
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   } finally {
-  //     setLockUpperSection(false);
-  //   }
-  // };
 
   return (
     <Box
