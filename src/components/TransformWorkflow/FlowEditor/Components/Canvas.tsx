@@ -40,6 +40,7 @@ import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 type CanvasProps = {
   redrawGraph: boolean;
   setRedrawGraph: (...args: any) => void;
+  setLockUpperSection: (value: boolean) => void;
 };
 
 export interface OperationNodeData {
@@ -165,7 +166,11 @@ const getLayoutedElements = ({
   };
 };
 
-const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
+const Canvas = ({
+  redrawGraph,
+  setRedrawGraph,
+  setLockUpperSection,
+}: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -401,6 +406,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
 
   const handleRunWorkflow = async () => {
     console.log('running the workflow');
+    setLockUpperSection(true);
     try {
       const tasks: any = await httpGet(session, `prefect/tasks/transform/`);
 
@@ -433,6 +439,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setLockUpperSection(false);
     }
   };
 
