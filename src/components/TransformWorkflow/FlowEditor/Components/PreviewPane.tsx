@@ -138,7 +138,7 @@ const PreviewPane = () => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  return (
+  return modelToPreview ? (
     <Box sx={{ height: '100%', overflow: 'auto', pb: 8 }}>
       <Box
         sx={{
@@ -270,7 +270,7 @@ const PreviewPane = () => {
         )}
       </Box>
     </Box>
-  );
+  ) : null;
 };
 
 export default PreviewPane;

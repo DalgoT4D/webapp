@@ -72,7 +72,7 @@ const UpperSection = ({
         axis="x"
         width={width}
         onResize={onResize}
-        minConstraints={[260, Infinity]}
+        minConstraints={[280, Infinity]}
         maxConstraints={[550, Infinity]}
         resizeHandles={['e']}
       >
@@ -117,7 +117,7 @@ const LowerSection = () => {
           <Tab label="Logs" />
         </Tabs>
       </Box>
-      <Box height={'100%'}>
+      <Box height={'calc(100% - 50px)'} sx={{ overflow: 'auto' }}>
         {selectedTab === 0 && <PreviewPane />}
         {selectedTab === 1 && (
           <Box height={'100%'} sx={{ padding: '1rem' }}>
