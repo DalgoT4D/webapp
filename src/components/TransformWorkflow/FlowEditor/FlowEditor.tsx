@@ -193,7 +193,16 @@ const LowerSection = ({
                 />
               </Backdrop>
             ) : (
-              <Box>No logs available</Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%',
+                }}
+              >
+                Please press run
+              </Box>
             )}
           </Box>
         )}
