@@ -26,7 +26,11 @@ export function OperationNode(node: OperationNodeType) {
   const handleDeleteAction = () => {
     setCanvasAction({
       type: 'delete-node',
-      data: { nodeId: nodeId, nodeType: node.type },
+      data: {
+        nodeId: nodeId,
+        nodeType: node.type,
+        isDummy: node.data?.isDummy,
+      },
     });
   };
 

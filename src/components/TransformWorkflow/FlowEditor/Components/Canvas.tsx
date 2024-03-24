@@ -27,7 +27,10 @@ import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
-import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
+import {
+  useCanvasAction,
+  useCanvasNode,
+} from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
 type CanvasProps = {
@@ -43,6 +46,7 @@ export interface OperationNodeData {
   type: typeof OPERATION_NODE;
   target_model_id: string;
   config?: any;
+  isDummy?: boolean;
 }
 
 export type DbtSourceModel = {
@@ -52,6 +56,7 @@ export type DbtSourceModel = {
   schema: string;
   id: string;
   type: typeof SRC_MODEL_NODE;
+  isDummy?: boolean;
 };
 
 export interface OperationNodeType extends NodeProps {
@@ -187,6 +192,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const { addNodes, addEdges, setCenter, getZoom } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { canvasNode, setCanvasNode } = useCanvasNode();
   const { previewAction, setPreviewAction } = usePreviewAction();
   const previewNodeRef = useRef<DbtSourceModel | null>();
   const globalContext = useContext(GlobalContext);
@@ -275,36 +281,41 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const handleDeleteNode = async (
     nodeId: string,
     type: string,
-    shouldRefreshGraph = true
+    shouldRefreshGraph = true,
+    isDummy = false
   ) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
-    // console.log('compare with', previewNodeRef.current?.id);
-    // if (nodeId === previewNodeRef.current?.id) {
-    //   setPreviewAction({ type: 'clear-preview', data: null });
-    // }
 
-    // remove node from canvas
-    if (type === SRC_MODEL_NODE) {
-      // hit the backend api to remove the node in a try catch
-      try {
-        await httpDelete(session, `transform/dbt_project/model/${nodeId}/`);
-      } catch (error) {
-        console.log(error);
-      }
-    } else if (type === OPERATION_NODE) {
-      // hit the backend api to remove the node in a try catch
-      try {
-        await httpDelete(
-          session,
-          `transform/dbt_project/model/operations/${nodeId}/`
-        );
-      } catch (error) {
-        console.log(error);
+    if (!isDummy) {
+      // remove node from canvas
+      if (type === SRC_MODEL_NODE) {
+        // hit the backend api to remove the node in a try catch
+        try {
+          await httpDelete(session, `transform/dbt_project/model/${nodeId}/`);
+        } catch (error) {
+          console.log(error);
+        }
+      } else if (type === OPERATION_NODE) {
+        // hit the backend api to remove the node in a try catch
+        try {
+          await httpDelete(
+            session,
+            `transform/dbt_project/model/operations/${nodeId}/`
+          );
+        } catch (error) {
+          console.log(error);
+        }
       }
     }
 
     handleNodesChange([{ type: 'remove', id: nodeId }]);
+    if (nodeId === canvasNode?.id || isDummy) {
+      setCanvasAction({
+        type: 'close-reset-opconfig-panel',
+        data: null,
+      });
+    }
     if (shouldRefreshGraph) setRedrawGraph(!redrawGraph);
   };
 
@@ -359,12 +370,11 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       handleDeleteNode(
         canvasAction.data.nodeId,
         canvasAction.data.nodeType,
-        canvasAction.data.shouldRefreshGraph // by default always refresh canvas
+        canvasAction.data.shouldRefreshGraph, // by default always refresh canvas
+        canvasAction.data?.isDummy !== undefined
+          ? canvasAction.data.isDummy
+          : false
       );
-    }
-
-    if (canvasAction.type === 'open-opconfig-panel') {
-      setOpenOperationConfig(true);
     }
   }, [canvasAction]);
 
@@ -423,7 +433,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   };
 
   const handlePaneClick = () => {
-    setOpenOperationConfig(false);
+    setCanvasAction({ type: 'close-reset-opconfig-panel', data: null });
     setPreviewAction({ type: 'clear-preview', data: null });
   };
 
