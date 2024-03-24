@@ -351,16 +351,97 @@ const FlowEditor = ({}) => {
     }
   };
 
+  const syncSources = async () => {
+    try {
+      setLockUpperSection(true);
+      // tab to logs
+      setSelectedTab('logs');
+      // Clear previous logs
+      setDbtRunLogs([]);
+
+      const syncSourcesTaskId = globalContext?.CurrentOrg.state.slug;
+      const syncSourcesHashKey = `syncsources-${syncSourcesTaskId}`;
+
+      const response: any = await httpPost(
+        session,
+        `transform/dbt_project/sync_sources/`,
+        {}
+      );
+      await delay(1000);
+
+      if (response?.task_progress_id && syncSourcesTaskId) {
+        await pollForSyncSourcesTask(syncSourcesTaskId, syncSourcesHashKey);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLockUpperSection(false);
+    }
+  };
+
+  const pollForSyncSourcesTask = async (
+    taskId: string,
+    hashKey: string = 'taskprogress'
+  ) => {
+    console.log('polling for sync sources task', taskId);
+    try {
+      const response: any = await httpGet(
+        session,
+        `tasks/${taskId}?hashkey=${hashKey}`
+      );
+      setDbtRunLogs(
+        response?.progress.map((resp: { status: string; message: string }) => ({
+          level: 0,
+          timestamp: new Date(),
+          message: resp.status,
+        }))
+      );
+      await delay(3000);
+      await pollForSyncSourcesTask(taskId, hashKey);
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
+  const checkForSyncSourcesTask = async () => {
+    const syncSourcesTaskId = globalContext?.CurrentOrg.state.slug;
+    const syncSourcesHashKey = `syncsources-${syncSourcesTaskId}`;
+    try {
+      setLockUpperSection(true);
+      setSelectedTab('logs');
+      if (syncSourcesTaskId)
+        await pollForSyncSourcesTask(syncSourcesTaskId, syncSourcesHashKey);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLockUpperSection(false);
+    }
+  };
+
+  const checkForAnyRunningProcess = async () => {
+    await checkForAnyRunningDbtJob();
+    await checkForSyncSourcesTask();
+  };
+
   useEffect(() => {
     if (session) {
-      checkForAnyRunningDbtJob();
-      fetchSourcesModels();
+      (async () => {
+        await checkForAnyRunningProcess();
+        fetchSourcesModels();
+      })();
     }
   }, [session, refreshEditor]);
 
   useEffect(() => {
     if (canvasAction.type === 'run-workflow') {
       handleRunWorkflow();
+    }
+
+    if (canvasAction.type === 'sync-sources') {
+      (async () => {
+        await syncSources();
+        fetchSourcesModels();
+      })();
     }
   }, [canvasAction]);
 
