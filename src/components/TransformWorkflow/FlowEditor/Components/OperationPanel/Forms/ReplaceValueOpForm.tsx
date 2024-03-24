@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
+import { Box, Button, SxProps } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -16,27 +16,6 @@ import {
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
-
-const renameGridStyles: {
-  container: SxProps;
-  headerItem: SxProps;
-  item: SxProps;
-} = {
-  container: {
-    border: '1px solid #F9F9F9',
-    color: '#5E5E5E',
-    alignItems: 'center',
-    marginTop: '16px',
-  },
-  headerItem: {
-    background: '#F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-  item: {
-    border: '1px solid #F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-};
 
 const ReplaceValueOpForm = ({
   node,
@@ -181,7 +160,6 @@ const ReplaceValueOpForm = ({
             />,
             <Input
               fieldStyle="none"
-             
               key={`config.${idx}.new`}
               name={`config.${idx}.new`}
               register={register}
