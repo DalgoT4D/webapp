@@ -8,13 +8,14 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
   OperationNodeType,
   SrcModelNodeType,
   UIOperationType,
+  getNextNodePosition,
 } from './Canvas';
 // import { operations } from './OperationConfigForms/constant';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
@@ -336,6 +337,9 @@ const OperationConfigLayout = ({
     // Create the dummy node on canvas
     // For multi input operation we might have to do it inside the operation once they select the other inputs
     const nodeId = String(Date.now());
+    const { x: xnew, y: ynew } = getNextNodePosition([
+      { position: { x: canvasNode?.xPos, y: canvasNode?.yPos } },
+    ]);
     const dummyTargetNodeData: any = {
       id: nodeId,
       type: OPERATION_NODE,
@@ -345,10 +349,11 @@ const OperationConfigLayout = ({
         output_cols: [],
         target_model_id: '',
         config: { type: op.slug },
+        isDummy: true,
       },
       position: {
-        x: canvasNode ? canvasNode?.xPos + 150 : 100,
-        y: canvasNode?.yPos,
+        x: xnew,
+        y: ynew,
       },
     };
     const newEdge: any = {
@@ -363,6 +368,16 @@ const OperationConfigLayout = ({
     addEdges([newEdge]);
     setSelectedOp(op);
   };
+
+  useEffect(() => {
+    if (canvasAction.type === 'open-opconfig-panel') {
+      setOpenPanel(true);
+    }
+
+    if (canvasAction.type === 'close-reset-opconfig-panel') {
+      handleClosePanel();
+    }
+  }, [canvasAction]);
 
   if (!openPanel) return null;
 
