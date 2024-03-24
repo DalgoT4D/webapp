@@ -121,10 +121,6 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
     }
   };
 
-  const syncSources = () => {
-    console.log('sync sources');
-  };
-
   return (
     <Box
       sx={{
