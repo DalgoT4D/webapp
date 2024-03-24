@@ -10,7 +10,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
@@ -347,6 +347,7 @@ const OperationConfigLayout = ({
         output_cols: [],
         target_model_id: '',
         config: { type: op.slug },
+        isDummy: true,
       },
       position: {
         x: canvasNode ? canvasNode?.xPos + 150 : 100,
@@ -365,6 +366,16 @@ const OperationConfigLayout = ({
     addEdges([newEdge]);
     setSelectedOp(op);
   };
+
+  useEffect(() => {
+    if (canvasAction.type === 'open-opconfig-panel') {
+      setOpenPanel(true);
+    }
+
+    if (canvasAction.type === 'close-reset-opconfig-panel') {
+      handleClosePanel();
+    }
+  }, [canvasAction]);
 
   if (!openPanel) return null;
 
