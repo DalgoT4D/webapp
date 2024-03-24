@@ -11,7 +11,7 @@ interface AutocompleteProps
     'renderInput'
   > {
   label?: string;
-  fieldStyle?: 'normal' | 'transformation';
+  fieldStyle?: 'normal' | 'transformation' | 'none';
 }
 
 export const Autocomplete = ({

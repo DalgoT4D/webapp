@@ -21,6 +21,19 @@ const StyledTextField = styled(TextField)(() => ({
   },
 }));
 
+const NoStyleTextField = styled(TextField)(() => ({
+  '& .MuiOutlinedInput-root': {
+    border: 'unset',
+    background: 'white',
+    padding: '1px 1px',
+    fontSize: '14px',
+    fontWeight: 600,
+  },
+  '& .MuiInputBase-input': {
+    padding: '8px 0px',
+  },
+}));
+
 const StyledInputLabel = styled(InputLabel)(() => ({
   color: '#0F2440',
 }));
@@ -30,7 +43,7 @@ interface InputProps extends Omit<TextFieldProps, 'variant'> {
   name?: string;
   variant?: 'standard' | 'outlined' | 'filled';
   hookFormValidations?: any;
-  fieldStyle?: 'normal' | 'transformation';
+  fieldStyle?: 'normal' | 'transformation' | 'none';
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -43,8 +56,24 @@ export const Input: React.FC<InputProps> = ({
   fieldStyle = 'normal',
   ...rest
 }) => {
-  const InputBox = fieldStyle === 'normal' ? TextField : StyledTextField;
-  const Label = fieldStyle === 'normal' ? InputLabel : StyledInputLabel;
+  let InputBox, Label;
+  switch (fieldStyle) {
+    case 'normal':
+      InputBox = TextField;
+      Label = InputLabel;
+      break;
+    case 'transformation':
+      InputBox = StyledTextField;
+      Label = StyledInputLabel;
+      break;
+    case 'none':
+      InputBox = NoStyleTextField;
+      Label = InputLabel;
+      break;
+    default:
+      InputBox = TextField;
+      Label = InputLabel;
+  }
 
   const registerValues: any = {
     required: required ? `${label} is required` : false,
