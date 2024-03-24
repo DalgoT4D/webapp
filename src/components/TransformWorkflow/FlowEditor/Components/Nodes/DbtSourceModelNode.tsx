@@ -118,6 +118,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
           edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0
             ? false
             : true,
+        isDummy: node.data?.isDummy,
       },
     });
   };
