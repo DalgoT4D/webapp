@@ -13,20 +13,32 @@ import {
 export function OperationNode(node: OperationNodeType) {
   const edges = useEdges();
   const nodeId = useNodeId();
-  const { canvasAction, setCanvasAction } = useCanvasAction();
-  const { canvasNode, setCanvasNode } = useCanvasNode();
+  const { setCanvasAction } = useCanvasAction();
+  const { setCanvasNode } = useCanvasNode();
+
+  const edgesGoingIntoNode: Edge[] = edges.filter(
+    (edge: Edge) => edge.target === nodeId
+  );
+  const edgesEmanatingOutOfNode: Edge[] = edges.filter(
+    (edge: Edge) => edge.source === nodeId
+  );
 
   // can only delete/chain more ops if this node doesn't have anything emanating edge from it i.e. leaf node
-  const isDeletable: boolean = edges.find(
-    (edge: Edge) => edge.source === nodeId
-  )
-    ? false
-    : true;
+  const isDeletable: boolean =
+    edgesEmanatingOutOfNode.length > 0 ? false : true;
 
   const handleDeleteAction = () => {
     setCanvasAction({
       type: 'delete-node',
-      data: { nodeId: nodeId, nodeType: node.type },
+      data: {
+        nodeId: nodeId,
+        nodeType: node.type,
+        shouldRefreshGraph:
+          edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0
+            ? false
+            : true,
+        isDummy: node.data?.isDummy,
+      },
     });
   };
 

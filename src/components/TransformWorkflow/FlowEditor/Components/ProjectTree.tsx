@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -11,6 +11,7 @@ import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import useResizeObserver from 'use-resize-observer';
 import { trimString } from '@/utils/common';
 import Image from 'next/image';
+import ReplayIcon from '@mui/icons-material/Replay';
 
 const Node = ({ node, style, dragHandle }: any) => {
   const width = node.tree.props.width;
@@ -20,6 +21,7 @@ const Node = ({ node, style, dragHandle }: any) => {
   const data: DbtSourceModel = node.data;
   let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
   name = trimString(name, stringLengthWithWidth);
+  const { setCanvasAction } = useCanvasAction();
 
   return (
     <Box
@@ -50,6 +52,17 @@ const Node = ({ node, style, dragHandle }: any) => {
             onClick={() => node.toggle()}
           />
         )}
+        {!node.isLeaf && node.level === 0 && (
+          <Tooltip title="Sync Sources">
+            <ReplayIcon
+              sx={{ ml: 'auto', cursor: 'pointer' }}
+              onClick={(event) => {
+                event.stopPropagation();
+                setCanvasAction({ type: 'sync-sources', data: null });
+              }}
+            />
+          </Tooltip>
+        )}
       </Box>
     </Box>
   );
@@ -62,7 +75,7 @@ interface ProjectTreeProps {
 // type TreeData = Partial<DbtSourceModel> & { children: TreeData[] };
 
 const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
-  const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { setCanvasAction } = useCanvasAction();
   const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
 
