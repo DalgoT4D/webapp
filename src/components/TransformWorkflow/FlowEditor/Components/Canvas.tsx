@@ -95,7 +95,7 @@ const nodeTypes: NodeTypes = {
   [`${OPERATION_NODE}`]: OperationNode,
 };
 
-const getNextNodePosition = (nodes: any) => {
+export const getNextNodePosition = (nodes: any) => {
   let x = 0;
   const y = 0;
 
