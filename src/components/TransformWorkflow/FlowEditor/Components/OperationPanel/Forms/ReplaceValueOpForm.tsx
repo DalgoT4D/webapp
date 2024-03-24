@@ -15,6 +15,7 @@ import {
 } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { GridTable } from '@/components/UI/GridTable/GridTable';
 
 const renameGridStyles: {
   container: SxProps;
@@ -142,7 +143,7 @@ const ReplaceValueOpForm = ({
   }, [session]);
 
   return (
-    <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
+    <Box>
       <form
         onSubmit={handleSubmit(handleSave)}
         onKeyDown={(event) => {
@@ -151,7 +152,7 @@ const ReplaceValueOpForm = ({
           }
         }}
       >
-        <Box>
+        <Box sx={{ ...sx, padding: '32px 16px 0px 16px', mb: 2 }}>
           <Controller
             control={control}
             name="column_name"
@@ -168,69 +169,34 @@ const ReplaceValueOpForm = ({
             )}
           />
         </Box>
-        <Grid container sx={{ ...renameGridStyles.container }}>
-          <Grid item xs={6} sx={{ ...renameGridStyles.headerItem }}>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontSize: '12px',
-                lineHeight: '19.2px',
-                letterSpacing: '2%',
+
+        <GridTable
+          headers={['Column value', 'Replace with']}
+          data={fields.map((field, idx) => [
+            <Input
+              fieldStyle="none"
+              key={`config.${idx}.old`}
+              name={`config.${idx}.old`}
+              register={register}
+            />,
+            <Input
+              fieldStyle="none"
+             
+              key={`config.${idx}.new`}
+              name={`config.${idx}.new`}
+              register={register}
+              onKeyDown={(e) => {
+                // if the key is enter append
+                if (e.key === 'Enter') {
+                  append({ old: '', new: '' });
+                }
               }}
-            >
-              Column value
-            </Typography>
-          </Grid>
-          <Grid item xs={6} sx={{ ...renameGridStyles.headerItem }}>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontSize: '12px',
-                lineHeight: '19.2px',
-                letterSpacing: '2%',
-              }}
-            >
-              Replace with
-            </Typography>
-          </Grid>
-          {fields.map((field, idx) => (
-            <>
-              <Grid
-                item
-                key={field.id + '_1'}
-                xs={6}
-                sx={{ ...renameGridStyles.item }}
-              >
-                <Input
-                  sx={{ padding: '0' }}
-                  name={`config.${idx}.old`}
-                  register={register}
-                />
-              </Grid>
-              <Grid
-                item
-                key={field.id + '_2'}
-                xs={6}
-                sx={{ ...renameGridStyles.item }}
-              >
-                <Input
-                  sx={{ padding: '0' }}
-                  name={`config.${idx}.new`}
-                  register={register}
-                  onKeyDown={(e) => {
-                    // if the key is enter append
-                    if (e.key === 'Enter') {
-                      append({ old: '', new: '' });
-                    }
-                  }}
-                />
-              </Grid>
-            </>
-          ))}
-        </Grid>
-        <Box>
+            />,
+          ])}
+        ></GridTable>
+        <Box sx={{ m: 2 }}>
           <Button
-            variant="outlined"
+            variant="contained"
             type="submit"
             data-testid="savebutton"
             fullWidth
