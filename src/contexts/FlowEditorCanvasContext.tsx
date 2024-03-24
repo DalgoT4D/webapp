@@ -42,6 +42,7 @@ interface Action {
     | 'delete-node'
     | 'refresh-canvas'
     | 'open-opconfig-panel'
+    | 'close-reset-opconfig-panel'
     | 'run-workflow'
     | ''
     | undefined

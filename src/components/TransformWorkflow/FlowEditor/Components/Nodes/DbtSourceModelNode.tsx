@@ -90,9 +90,9 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
 
 export function DbtSourceModelNode(node: SrcModelNodeType) {
   const { data: session } = useSession();
-  const { previewAction, setPreviewAction } = usePreviewAction();
-  const { canvasAction, setCanvasAction } = useCanvasAction();
-  const { canvasNode, setCanvasNode } = useCanvasNode();
+  const { setPreviewAction } = usePreviewAction();
+  const { setCanvasAction } = useCanvasAction();
+  const { setCanvasNode } = useCanvasNode();
   const [columns, setColumns] = useState<Array<any>>([]);
 
   const edges = useEdges();
@@ -118,6 +118,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
           edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0
             ? false
             : true,
+        isDummy: node.data?.isDummy,
       },
     });
   };
