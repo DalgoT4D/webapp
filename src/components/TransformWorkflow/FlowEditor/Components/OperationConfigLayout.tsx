@@ -17,6 +17,7 @@ import {
   OperationNodeType,
   SrcModelNodeType,
   UIOperationType,
+  getNextNodePosition,
 } from './Canvas';
 // import { operations } from './OperationConfigForms/constant';
 import InfoIcon from '@mui/icons-material/Info';
@@ -338,6 +339,9 @@ const OperationConfigLayout = ({
     // Create the dummy node on canvas
     // For multi input operation we might have to do it inside the operation once they select the other inputs
     const nodeId = String(Date.now());
+    const { x: xnew, y: ynew } = getNextNodePosition([
+      { position: { x: canvasNode?.xPos, y: canvasNode?.yPos } },
+    ]);
     const dummyTargetNodeData: any = {
       id: nodeId,
       type: OPERATION_NODE,
@@ -350,8 +354,8 @@ const OperationConfigLayout = ({
         isDummy: true,
       },
       position: {
-        x: canvasNode ? canvasNode?.xPos + 150 : 100,
-        y: canvasNode?.yPos,
+        x: xnew,
+        y: ynew,
       },
     };
     const newEdge: any = {
