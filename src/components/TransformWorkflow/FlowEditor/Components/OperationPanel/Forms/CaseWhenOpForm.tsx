@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import {
-  Autocomplete,
   Box,
   Button,
   FormControlLabel,
@@ -22,6 +21,7 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const ClauseOperands = ({
   clauseField,
@@ -102,19 +102,15 @@ const ClauseOperands = ({
                       onChange={(e, data) => {
                         field.onChange(data);
                       }}
-                      renderInput={(params) => (
-                        <Input
-                          {...params}
-                          sx={{ width: '100%' }}
-                          placeholder="Select column"
-                        />
-                      )}
+                      placeholder="Select column"
+                      fieldStyle="transformation"
                     />
                   )}
                 />
               ) : (
                 <Input
                   label=""
+                  fieldStyle="transformation"
                   name={`clauses.${clauseIndex}.operands.${operandIndex}.const_val`}
                   register={register}
                   sx={{ padding: '0' }}
@@ -324,21 +320,15 @@ const CaseWhenOpForm = ({
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Autocomplete
-                      sx={{ paddingTop: '15px' }}
                       options={srcColumns}
                       disabled={advanceFilter === 'yes'}
                       //   value={field.value}
                       onChange={(e, data) => {
                         field.onChange(data);
                       }}
-                      renderInput={(params) => (
-                        <Input
-                          {...params}
-                          sx={{ width: '100%' }}
-                          label="When"
-                          placeholder="Select column to condition on"
-                        />
-                      )}
+                      label="When"
+                      placeholder="Select column to condition on"
+                      fieldStyle="transformation"
                     />
                   )}
                 />
@@ -387,14 +377,8 @@ const CaseWhenOpForm = ({
                       onChange={(e, data) => {
                         if (data) field.onChange(data);
                       }}
-                      renderInput={(params) => (
-                        <Input
-                          {...params}
-                          sx={{ width: '100%' }}
-                          label=""
-                          placeholder="Select operation"
-                        />
-                      )}
+                      placeholder="Select operation"
+                      fieldStyle="transformation"
                     />
                   )}
                 />
@@ -455,19 +439,15 @@ const CaseWhenOpForm = ({
                           onChange={(e, data) => {
                             field.onChange(data);
                           }}
-                          renderInput={(params) => (
-                            <Input
-                              {...params}
-                              sx={{ width: '100%' }}
-                              placeholder="Select column"
-                            />
-                          )}
+                          placeholder="Select column"
+                          fieldStyle="transformation"
                         />
                       )}
                     />
                   ) : (
                     <Input
                       label=""
+                      fieldStyle="transformation"
                       name={`clauses.${clauseIndex}.then.const_val`}
                       register={register}
                       sx={{ padding: '0' }}
@@ -562,18 +542,14 @@ const CaseWhenOpForm = ({
                     onChange={(e, data) => {
                       field.onChange(data);
                     }}
-                    renderInput={(params) => (
-                      <Input
-                        {...params}
-                        sx={{ width: '100%' }}
-                        placeholder="Select column"
-                      />
-                    )}
+                    placeholder="Select column"
+                    fieldStyle="transformation"
                   />
                 )}
               />
             ) : (
               <Input
+                fieldStyle="transformation"
                 label=""
                 name={`else.const_val`}
                 register={register}
@@ -585,6 +561,7 @@ const CaseWhenOpForm = ({
           </Box>
           <Box sx={{ m: 2 }} />
           <Input
+            fieldStyle="transformation"
             label="Output Column Name"
             name={`output_column_name`}
             placeholder="Enter column name"
@@ -620,6 +597,7 @@ const CaseWhenOpForm = ({
           </Box>
           {advanceFilter === 'yes' && (
             <Input
+              fieldStyle="transformation"
               label=""
               name="sql_snippet"
               register={register}
@@ -634,7 +612,7 @@ const CaseWhenOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
-              variant="outlined"
+              variant="contained"
               type="submit"
               data-testid="savebutton"
               fullWidth

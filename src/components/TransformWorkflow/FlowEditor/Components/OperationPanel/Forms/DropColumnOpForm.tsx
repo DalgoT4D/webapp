@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -19,6 +12,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import InputAdornment from '@mui/material/InputAdornment';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import Input from '@/components/UI/Input/Input';
 
 const DropColumnOp = ({
   node,
@@ -110,7 +105,8 @@ const DropColumnOp = ({
           <Grid item xs={12} key={index}>
             <Grid container spacing={1}>
               <Grid item xs={12}>
-                <TextField
+                <Input
+                  fieldStyle="transformation"
                   disabled
                   variant="outlined"
                   value={column}
@@ -131,14 +127,9 @@ const DropColumnOp = ({
         ))}
         <Grid item xs={12}>
           <Autocomplete
+            fieldStyle="transformation"
             options={srcColumns.filter((col) => !selectedColumns.includes(col))}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="outlined"
-                label="Select Column to Drop"
-              />
-            )}
+            label="Select Column to Drop"
             onChange={(e, value) => {
               if (value) {
                 handleAddColumn(value);
@@ -147,7 +138,7 @@ const DropColumnOp = ({
           />
         </Grid>
         <Grid item xs={12}>
-          <Button onClick={handleSave} variant="outlined">
+          <Button onClick={handleSave} variant="contained">
             Save
           </Button>
         </Grid>

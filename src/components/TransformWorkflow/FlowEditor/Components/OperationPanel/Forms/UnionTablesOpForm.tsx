@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Autocomplete, Box, Button } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -13,6 +13,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { useReactFlow } from 'reactflow';
 import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const UnionTablesOpForm = ({
   node,
@@ -191,7 +192,7 @@ const UnionTablesOpForm = ({
     <Box sx={{ ...sx, padding: '0px 16px 0px 16px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
         {fields.map((field, index) => (
-          <Box key={field.id}>
+          <Box key={field.id} sx={{ mt: '17px' }}>
             <Controller
               key={`${field.id}_${index}`}
               control={control}
@@ -200,7 +201,6 @@ const UnionTablesOpForm = ({
                 <Autocomplete
                   key={`${index}`}
                   disabled={index === 0}
-                  sx={{ marginTop: '17px' }}
                   options={sourcesModels.map((model: DbtSourceModel) => ({
                     id: model.id,
                     label: model.input_name,
@@ -210,7 +210,6 @@ const UnionTablesOpForm = ({
                   }}
                   value={field.value}
                   onChange={(e, data) => {
-                    console.log('removing', field.value);
                     // remove dummy node if present
                     if (!data) {
                       removeDummyNodeAndEdge(field.value?.id);
@@ -225,13 +224,8 @@ const UnionTablesOpForm = ({
                       if (model) addDummyNodeAndEdge(model);
                     }
                   }}
-                  renderInput={(params) => (
-                    <Input
-                      {...params}
-                      sx={{ width: '100%' }}
-                      label={`Select the table no ${index + 1}`}
-                    />
-                  )}
+                  label={`Select the table no ${index + 1}`}
+                  fieldStyle="transformation"
                 />
               )}
             />
@@ -262,7 +256,7 @@ const UnionTablesOpForm = ({
         ))}
         <Box>
           <Button
-            variant="outlined"
+            variant="contained"
             type="submit"
             data-testid="savebutton"
             fullWidth

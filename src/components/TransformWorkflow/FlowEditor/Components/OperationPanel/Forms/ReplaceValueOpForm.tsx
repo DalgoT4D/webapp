@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -21,6 +14,7 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const renameGridStyles: {
   container: SxProps;
@@ -168,13 +162,8 @@ const ReplaceValueOpForm = ({
                 onChange={(e, data) => {
                   field.onChange(data);
                 }}
-                renderInput={(params) => (
-                  <Input
-                    {...params}
-                    sx={{ width: '100%' }}
-                    label="Select a column"
-                  />
-                )}
+                label="Select a column"
+                fieldStyle="transformation"
               />
             )}
           />
