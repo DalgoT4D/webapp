@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -18,6 +11,7 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const renameGridStyles: {
   container: SxProps;
@@ -187,6 +181,7 @@ const CoalesceOpForm = ({
                   name={`columns.${index}.col`}
                   render={({ field }) => (
                     <Autocomplete
+                      fieldStyle="transformation"
                       options={srcColumns.filter(
                         (option) =>
                           !columns.map((col) => col.col).includes(option)
@@ -197,9 +192,6 @@ const CoalesceOpForm = ({
                         if (data) append({ col: '' });
                         else remove(index + 1);
                       }}
-                      renderInput={(params) => (
-                        <Input {...params} sx={{ width: '100%' }} />
-                      )}
                     />
                   )}
                 />
@@ -209,6 +201,7 @@ const CoalesceOpForm = ({
         </Grid>
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
           <Input
+            fieldStyle="transformation"
             label="Default Value"
             sx={{ padding: '0' }}
             name="default_value"
@@ -217,6 +210,7 @@ const CoalesceOpForm = ({
           />
           <Box sx={{ m: 2 }} />
           <Input
+            fieldStyle="transformation"
             label="Output Column Name"
             sx={{ padding: '0' }}
             name="output_column_name"
@@ -226,7 +220,7 @@ const CoalesceOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
-              variant="outlined"
+              variant="contained"
               type="submit"
               data-testid="savebutton"
               fullWidth

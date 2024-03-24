@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import {
-  Autocomplete,
   Box,
   Button,
   FormControlLabel,
@@ -22,6 +21,7 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const renameGridStyles: {
   container: SxProps;
@@ -190,18 +190,13 @@ const WhereFilterOpForm = ({
               render={({ field }) => (
                 <Autocomplete
                   options={srcColumns}
+                  fieldStyle="transformation"
                   disabled={advanceFilter === 'yes'}
                   //   value={field.value}
                   onChange={(e, data) => {
                     field.onChange(data);
                   }}
-                  renderInput={(params) => (
-                    <Input
-                      {...params}
-                      sx={{ width: '100%' }}
-                      label="Select column"
-                    />
-                  )}
+                  label="Select column"
                 />
               )}
             />
@@ -245,13 +240,8 @@ const WhereFilterOpForm = ({
                   onChange={(e, data) => {
                     if (data) field.onChange(data);
                   }}
-                  renderInput={(params) => (
-                    <Input
-                      {...params}
-                      sx={{ width: '100%' }}
-                      label="Select operation"
-                    />
-                  )}
+                  label="Select operation"
+                  fieldStyle="transformation"
                 />
               )}
             />
@@ -292,24 +282,20 @@ const WhereFilterOpForm = ({
                 name="operand.col_val"
                 render={({ field }) => (
                   <Autocomplete
+                    fieldStyle="transformation"
                     options={srcColumns}
                     disabled={advanceFilter === 'yes'}
                     value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
                     }}
-                    renderInput={(params) => (
-                      <Input
-                        {...params}
-                        sx={{ width: '100%' }}
-                        placeholder="Select column"
-                      />
-                    )}
+                    placeholder="Select column"
                   />
                 )}
               />
             ) : (
               <Input
+                fieldStyle="transformation"
                 label=""
                 name="operand.const_val"
                 register={register}
@@ -348,6 +334,7 @@ const WhereFilterOpForm = ({
             <Box sx={{ m: 2 }} />
             {advanceFilter === 'yes' && (
               <Input
+                fieldStyle="transformation"
                 label=""
                 name="sql_snippet"
                 register={register}
@@ -363,7 +350,7 @@ const WhereFilterOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
-              variant="outlined"
+              variant="contained"
               type="submit"
               data-testid="savebutton"
               fullWidth

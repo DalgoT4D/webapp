@@ -8,9 +8,10 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { Controller, useForm } from 'react-hook-form';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
-import { Autocomplete, Box, Button } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import { Edge, useReactFlow } from 'reactflow';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const JoinOpForm = ({
   node,
@@ -203,6 +204,7 @@ const JoinOpForm = ({
           name={`table1.uuid`}
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={[
                 {
                   label:
@@ -221,13 +223,7 @@ const JoinOpForm = ({
               onChange={(e, data) => {
                 field.onChange(data?.id);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the first table"
-                />
-              )}
+              label="Select the first table"
             />
           )}
         />
@@ -237,18 +233,13 @@ const JoinOpForm = ({
           name={`table1.key`}
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={nodeSrcColumns}
               value={field.value}
               onChange={(e, data) => {
                 field.onChange(data);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the column"
-                />
-              )}
+              label="Select the column"
             />
           )}
         />
@@ -258,6 +249,7 @@ const JoinOpForm = ({
           name={`table2.uuid`}
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={sourcesModels.map((model) => {
                 return {
                   id: model.id,
@@ -268,13 +260,7 @@ const JoinOpForm = ({
                 field.onChange(data ? data.id : null);
                 handleSelectSecondTable(data ? data.id : null);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the second table"
-                />
-              )}
+              label="Select the second table"
             />
           )}
         />
@@ -284,18 +270,13 @@ const JoinOpForm = ({
           name={`table2.key`}
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={table2Columns}
               value={field.value}
               onChange={(e, data) => {
                 field.onChange(data);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the column"
-                />
-              )}
+              label="Select the column"
             />
           )}
         />
@@ -305,25 +286,20 @@ const JoinOpForm = ({
           name="join_type"
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={['left', 'right', 'inner']}
               value={field.value}
               onChange={(e, data) => {
                 field.onChange(data);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the join type"
-                />
-              )}
+              label="Select the join type"
             />
           )}
         />
 
         <Box>
           <Button
-            variant="outlined"
+            variant="contained"
             type="submit"
             data-testid="savebutton"
             fullWidth
