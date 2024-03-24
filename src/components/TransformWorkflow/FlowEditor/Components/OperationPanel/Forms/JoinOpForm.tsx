@@ -9,7 +9,6 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { Controller, useForm } from 'react-hook-form';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Box, Button } from '@mui/material';
-import Input from '@/components/UI/Input/Input';
 import { Edge, useReactFlow } from 'reactflow';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
