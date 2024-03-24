@@ -192,7 +192,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const { addNodes, addEdges, setCenter, getZoom } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
-  const { canvasNode, setCanvasNode } = useCanvasNode();
+  const { canvasNode } = useCanvasNode();
   const { previewAction, setPreviewAction } = usePreviewAction();
   const previewNodeRef = useRef<DbtSourceModel | null>();
   const globalContext = useContext(GlobalContext);
@@ -371,7 +371,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         canvasAction.data.nodeId,
         canvasAction.data.nodeType,
         canvasAction.data.shouldRefreshGraph, // by default always refresh canvas
-        canvasAction.data?.isDummy !== undefined
+        canvasAction.data.isDummy !== undefined
           ? canvasAction.data.isDummy
           : false
       );
