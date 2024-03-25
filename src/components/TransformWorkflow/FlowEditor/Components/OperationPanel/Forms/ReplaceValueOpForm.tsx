@@ -145,7 +145,7 @@ const ReplaceValueOpForm = ({
                 onChange={(e, data) => {
                   field.onChange(data);
                 }}
-                label="Select a column"
+                label="Select a column*"
                 fieldStyle="transformation"
               />
             )}
