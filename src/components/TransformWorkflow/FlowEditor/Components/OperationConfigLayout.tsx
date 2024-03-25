@@ -338,7 +338,7 @@ const OperationConfigLayout = ({
     // For multi input operation we might have to do it inside the operation once they select the other inputs
     const nodeId = String(Date.now());
     const { x: xnew, y: ynew } = getNextNodePosition([
-      { position: { x: canvasNode?.xPos, y: canvasNode?.yPos } },
+      { position: { x: canvasNode?.xPos, y: canvasNode?.yPos }, height: 200 },
     ]);
     const dummyTargetNodeData: any = {
       id: nodeId,
