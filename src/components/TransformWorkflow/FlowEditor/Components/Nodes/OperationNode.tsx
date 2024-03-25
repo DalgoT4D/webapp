@@ -95,7 +95,12 @@ export function OperationNode(node: OperationNodeType) {
           </Box>
         </Box>
         <Divider orientation="horizontal" sx={{ color: '#EEEEEE' }} />
-        <Box sx={{ display: 'flex' }} onClick={handleSelectNode}>
+        <Box
+          sx={{ display: 'flex' }}
+          onClick={
+            edgesEmanatingOutOfNode.length === 0 ? handleSelectNode : undefined
+          }
+        >
           <Box
             sx={{
               flex: '1',
