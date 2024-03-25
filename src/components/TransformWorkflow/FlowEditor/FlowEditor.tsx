@@ -155,7 +155,10 @@ const LowerSection = ({
       <Box>
         {selectedTab === 'preview' && <PreviewPane height={height} />}
         {selectedTab === 'logs' && (
-          <Box height={height - 50}>
+          <Box
+            height={height - 50}
+            sx={{ overflow: 'auto', position: 'relative' }}
+          >
             {dbtRunLogs.length > 0 ? (
               <Table
                 stickyHeader
