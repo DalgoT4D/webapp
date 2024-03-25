@@ -380,7 +380,7 @@ const FlowEditor = ({}) => {
 
   const pollForSyncSourcesTask = async (
     taskId: string,
-    hashKey: string = 'taskprogress'
+    hashKey = 'taskprogress'
   ) => {
     console.log('polling for sync sources task', taskId);
     try {

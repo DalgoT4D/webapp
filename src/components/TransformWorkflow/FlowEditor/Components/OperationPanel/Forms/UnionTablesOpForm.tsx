@@ -210,7 +210,7 @@ const UnionTablesOpForm = ({
                     return option?.id === value?.id;
                   }}
                   value={field.value}
-                  onChange={(e, data) => {
+                  onChange={(e, data: any) => {
                     // remove dummy node if present
                     if (!data) {
                       removeDummyNodeAndEdge(field.value?.id);
