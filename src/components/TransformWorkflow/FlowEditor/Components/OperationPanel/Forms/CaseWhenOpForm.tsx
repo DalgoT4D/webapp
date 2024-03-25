@@ -276,6 +276,7 @@ const CaseWhenOpForm = ({
             is_col: data.else.type === 'col',
           },
           sql_snippet: data.sql_snippet,
+          output_column_name: data.output_column_name,
         },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
