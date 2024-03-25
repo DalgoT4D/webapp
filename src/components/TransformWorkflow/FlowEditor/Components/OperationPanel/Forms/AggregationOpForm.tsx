@@ -139,8 +139,10 @@ const AggregationOpForm = ({
                       { value: 'min', label: 'Minimum' },
                       { value: 'sum', label: 'Sum' },
                     ]}
-                    onChange={(e, data) => {
-                      setSelectedOperation(data ? data.value : '');
+                    onChange={(e, data: any) => {
+                      if (data?.value) {
+                        setSelectedOperation(data.value);
+                      }
                     }}
                     label="Aggregate"
                     fieldStyle="transformation"

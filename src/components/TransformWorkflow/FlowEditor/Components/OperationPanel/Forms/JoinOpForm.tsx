@@ -221,7 +221,7 @@ const JoinOpForm = ({
                   ? nodeData?.input_name
                   : 'Target Model'
               }
-              onChange={(e, data) => {
+              onChange={(e, data: any) => {
                 field.onChange(data?.id);
               }}
               label="Select the first table"
@@ -259,9 +259,9 @@ const JoinOpForm = ({
                   };
                 })
                 .sort((a, b) => a.label.localeCompare(b.label))}
-              onChange={(e, data) => {
-                field.onChange(data ? data.id : null);
-                handleSelectSecondTable(data ? data.id : null);
+              onChange={(e, data: any) => {
+                field.onChange(data?.id ? data.id : null);
+                handleSelectSecondTable(data?.id ? data.id : null);
               }}
               label="Select the second table"
             />

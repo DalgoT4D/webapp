@@ -135,7 +135,7 @@ const DropColumnOp = ({
               .filter((col) => !selectedColumns.includes(col))
               .sort((a, b) => a.localeCompare(b))}
             label="Select Column to Drop"
-            onChange={(e, value) => {
+            onChange={(e, value: any) => {
               if (value) {
                 handleAddColumn(value);
                 setColumn('');
