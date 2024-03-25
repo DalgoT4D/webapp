@@ -231,7 +231,9 @@ const CaseWhenOpForm = ({
     }
 
     if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols.sort((a, b) => a.localeCompare(b)));
+      setSrcColumns(
+        nodeData.output_cols.sort((a: string, b: string) => a.localeCompare(b))
+      );
     }
   };
 
