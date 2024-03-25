@@ -459,14 +459,17 @@ const OperationConfigLayout = ({
 
   const OperationList = ({ sx }: { sx: SxProps }) => {
     // These are the operations that can't be chained
-    const cantChainOperations: string[] = [UNION_OP];
+    const cantChainOperationsInMiddle: string[] = [
+      UNION_OP,
+      CAST_DATA_TYPES_OP,
+    ];
 
     return (
       <Box sx={{ borderSpacing: '0px', ...sx }}>
         <List>
           {operations.map((op, index) => {
             const canSelectOperation = !(
-              cantChainOperations.includes(op.slug) &&
+              cantChainOperationsInMiddle.includes(op.slug) &&
               canvasNode?.type === OPERATION_NODE
             );
             return (
