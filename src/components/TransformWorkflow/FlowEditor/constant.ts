@@ -16,7 +16,6 @@ export const CASEWHEN_OP = 'casewhen';
 export const UNION_OP = 'unionall';
 
 export const operations = [
-  // { label: 'Flatten', slug: FLATTEN_OP },
   { label: 'Flatten json', slug: FLATTEN_JSON_OP },
   { label: 'Cast', slug: CAST_DATA_TYPES_OP },
   { label: 'Coalesce', slug: COALESCE_COLUMNS_OP },
@@ -32,7 +31,7 @@ export const operations = [
   { label: 'Aggregate', slug: AGGREGATE_OP },
   { label: 'Case', slug: CASEWHEN_OP },
   { label: 'Table union', slug: UNION_OP },
-];
+].sort((a, b) => a.label.localeCompare(b.label));
 
 // Node types
 export const SRC_MODEL_NODE = 'src_model_node';
