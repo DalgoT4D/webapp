@@ -12,7 +12,6 @@ import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/PreviewPane';
 import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-import { SRC_MODEL_NODE } from './constant';
 import { DbtSourceModel } from './Components/Canvas';
 import {
   useDbtRunLogs,
