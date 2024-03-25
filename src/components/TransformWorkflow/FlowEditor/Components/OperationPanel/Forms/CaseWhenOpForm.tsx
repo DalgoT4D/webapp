@@ -315,164 +315,193 @@ const CaseWhenOpForm = ({
           {clauseFields.map((clauseField, clauseIndex) => {
             const thenRadioValue = watch(`clauses.${clauseIndex}.then.type`);
             const logicalOpVal = watch(`clauses.${clauseIndex}.logicalOp`);
+            const isZerothIndex = clauseIndex === 0;
 
             return (
               <Box key={clauseField.id}>
-                <Box sx={{ paddingTop: '16px' }}>
-                  <Typography fontWeight="600" color="#888888">
-                    CASE {(clauseIndex + 1).toString().padStart(2, '0')}
-                  </Typography>
-                </Box>
-                <Controller
-                  control={control}
-                  name={`clauses.${clauseIndex}.filterCol`}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Autocomplete
-                      options={srcColumns}
-                      disabled={advanceFilter === 'yes'}
-                      //   value={field.value}
-                      onChange={(e, data) => {
-                        field.onChange(data);
-                      }}
-                      label="When"
-                      placeholder="Select column to condition on"
-                      fieldStyle="transformation"
-                    />
-                  )}
-                />
-                <Box sx={{ m: 2 }} />
-                <Controller
-                  control={control}
-                  name={`clauses.${clauseIndex}.logicalOp`}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Autocomplete
-                      options={[
-                        {
-                          id: 'between',
-                          label: 'Between',
-                        },
-                        {
-                          id: '=',
-                          label: 'Equal To =',
-                        },
-                        {
-                          id: '>=',
-                          label: 'Greater Than or Equal To >=',
-                        },
-                        {
-                          id: '>',
-                          label: 'Greater Than >',
-                        },
-                        {
-                          id: '<',
-                          label: 'Less Than <',
-                        },
-                        {
-                          id: '<=',
-                          label: 'Less Than or Equal To <=',
-                        },
-                        {
-                          id: '!=',
-                          label: 'Not Equal To !=',
-                        },
-                      ]}
-                      isOptionEqualToValue={(option: any, value: any) =>
-                        option?.id === value?.id
-                      }
-                      disabled={advanceFilter === 'yes'}
-                      value={field.value}
-                      onChange={(e, data) => {
-                        if (data) field.onChange(data);
-                      }}
-                      placeholder="Select operation"
-                      fieldStyle="transformation"
-                    />
-                  )}
-                />
-                <Box sx={{ m: 2 }} />
-                <ClauseOperands
-                  watch={watch}
-                  register={register}
-                  control={control}
-                  clauseField={clauseField}
-                  clauseIndex={clauseIndex}
-                  data={{ srcColumns, advanceFilter, logicalOp: logicalOpVal }}
-                />
-                <Box sx={{ m: 2 }} />
-                <Box>
+                <Box
+                  sx={
+                    !isZerothIndex
+                      ? {
+                          borderBottom: '1px solid #DDDDDD',
+                          pb: 2,
+                        }
+                      : undefined
+                  }
+                >
+                  <Box sx={{ paddingTop: '16px' }}>
+                    <Typography fontWeight="600" color="#888888">
+                      CASE {(clauseIndex + 1).toString().padStart(2, '0')}
+                    </Typography>
+                  </Box>
                   <Controller
-                    name={`clauses.${clauseIndex}.then.type`}
                     control={control}
-                    render={({ field }) => {
-                      return (
-                        <Box>
-                          <FormLabel component="legend">Then</FormLabel>
-                          <RadioGroup
-                            {...field}
-                            defaultValue="col"
-                            sx={{
-                              display: 'flex',
-                              flexDirection: 'row',
-                              gap: '20px',
-                            }}
-                          >
-                            <FormControlLabel
-                              value="col"
-                              control={<Radio />}
-                              label="Column"
-                              disabled={advanceFilter === 'yes'}
-                            />
-                            <FormControlLabel
-                              value="val"
-                              control={<Radio />}
-                              label="Value"
-                              disabled={advanceFilter === 'yes'}
-                            />
-                          </RadioGroup>
-                        </Box>
-                      );
+                    name={`clauses.${clauseIndex}.filterCol`}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <Autocomplete
+                        options={srcColumns}
+                        disabled={advanceFilter === 'yes'}
+                        onChange={(e, data) => {
+                          field.onChange(data);
+                        }}
+                        label="When"
+                        placeholder="Select column to condition on"
+                        fieldStyle="transformation"
+                      />
+                    )}
+                  />
+                  <Box sx={{ m: 2 }} />
+                  <Controller
+                    control={control}
+                    name={`clauses.${clauseIndex}.logicalOp`}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <Autocomplete
+                        options={[
+                          {
+                            id: 'between',
+                            label: 'Between',
+                          },
+                          {
+                            id: '=',
+                            label: 'Equal To =',
+                          },
+                          {
+                            id: '>=',
+                            label: 'Greater Than or Equal To >=',
+                          },
+                          {
+                            id: '>',
+                            label: 'Greater Than >',
+                          },
+                          {
+                            id: '<',
+                            label: 'Less Than <',
+                          },
+                          {
+                            id: '<=',
+                            label: 'Less Than or Equal To <=',
+                          },
+                          {
+                            id: '!=',
+                            label: 'Not Equal To !=',
+                          },
+                        ]}
+                        isOptionEqualToValue={(option: any, value: any) =>
+                          option?.id === value?.id
+                        }
+                        disabled={advanceFilter === 'yes'}
+                        value={field.value}
+                        onChange={(e, data) => {
+                          if (data) field.onChange(data);
+                        }}
+                        placeholder="Select operation"
+                        fieldStyle="transformation"
+                      />
+                    )}
+                  />
+                  <Box sx={{ m: 2 }} />
+                  <ClauseOperands
+                    watch={watch}
+                    register={register}
+                    control={control}
+                    clauseField={clauseField}
+                    clauseIndex={clauseIndex}
+                    data={{
+                      srcColumns,
+                      advanceFilter,
+                      logicalOp: logicalOpVal,
                     }}
                   />
-                  {thenRadioValue === 'col' ? (
+                  <Box sx={{ m: 2 }} />
+                  <Box>
                     <Controller
+                      name={`clauses.${clauseIndex}.then.type`}
                       control={control}
-                      name={`clauses.${clauseIndex}.then.col_val`}
-                      rules={{ required: true }}
-                      render={({ field }) => (
-                        <Autocomplete
-                          options={srcColumns}
-                          disabled={advanceFilter === 'yes'}
-                          value={field.value}
-                          onChange={(e, data) => {
-                            field.onChange(data);
-                          }}
-                          placeholder="Select column"
-                          fieldStyle="transformation"
-                        />
-                      )}
+                      render={({ field }) => {
+                        return (
+                          <Box>
+                            <FormLabel component="legend">Then</FormLabel>
+                            <RadioGroup
+                              {...field}
+                              defaultValue="col"
+                              sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                gap: '20px',
+                              }}
+                            >
+                              <FormControlLabel
+                                value="col"
+                                control={<Radio />}
+                                label="Column"
+                                disabled={advanceFilter === 'yes'}
+                              />
+                              <FormControlLabel
+                                value="val"
+                                control={<Radio />}
+                                label="Value"
+                                disabled={advanceFilter === 'yes'}
+                              />
+                            </RadioGroup>
+                          </Box>
+                        );
+                      }}
                     />
-                  ) : (
-                    <Input
-                      label=""
-                      fieldStyle="transformation"
-                      name={`clauses.${clauseIndex}.then.const_val`}
-                      register={register}
-                      sx={{ padding: '0' }}
-                      placeholder="Enter the value"
+                    {thenRadioValue === 'col' ? (
+                      <Controller
+                        control={control}
+                        name={`clauses.${clauseIndex}.then.col_val`}
+                        rules={{ required: true }}
+                        render={({ field }) => (
+                          <Autocomplete
+                            options={srcColumns}
+                            disabled={advanceFilter === 'yes'}
+                            value={field.value}
+                            onChange={(e, data) => {
+                              field.onChange(data);
+                            }}
+                            placeholder="Select column"
+                            fieldStyle="transformation"
+                          />
+                        )}
+                      />
+                    ) : (
+                      <Input
+                        label=""
+                        fieldStyle="transformation"
+                        name={`clauses.${clauseIndex}.then.const_val`}
+                        register={register}
+                        sx={{ padding: '0' }}
+                        placeholder="Enter the value"
+                        disabled={advanceFilter === 'yes'}
+                        required
+                      />
+                    )}
+                  </Box>
+                  <Box sx={{ m: 2 }} />
+                  {clauseFields.length > 1 && (
+                    <Button
+                      variant="shadow"
+                      color="error"
+                      type="button"
+                      data-testid="removecase"
+                      sx={{}}
                       disabled={advanceFilter === 'yes'}
-                      required
-                    />
+                      onClick={(event) => removeClause(clauseIndex)}
+                    >
+                      Remove case {clauseIndex + 1}
+                    </Button>
                   )}
                 </Box>
-                <Box sx={{ m: 2 }} />
+
                 {clauseIndex === clauseFields.length - 1 ? (
                   <Button
-                    variant="outlined"
+                    variant="shadow"
                     type="button"
                     data-testid="addcase"
-                    sx={{}}
+                    sx={{ mt: 2 }}
                     disabled={advanceFilter === 'yes'}
                     onClick={(event) =>
                       appendClause({
@@ -487,20 +516,9 @@ const CaseWhenOpForm = ({
                       })
                     }
                   >
-                    Add case
+                    + Add case {clauseIndex + 2}
                   </Button>
-                ) : (
-                  <Button
-                    variant="outlined"
-                    type="button"
-                    data-testid="removecase"
-                    sx={{}}
-                    disabled={advanceFilter === 'yes'}
-                    onClick={(event) => removeClause(clauseIndex)}
-                  >
-                    Remove case
-                  </Button>
-                )}
+                ) : null}
               </Box>
             );
           })}

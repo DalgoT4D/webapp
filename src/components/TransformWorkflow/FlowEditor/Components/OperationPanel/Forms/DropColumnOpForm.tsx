@@ -102,7 +102,7 @@ const DropColumnOp = ({
         <Grid item xs={12}>
           <Typography variant="h6">Select Columns to Drop</Typography>
         </Grid>
-        {[...selectedColumns].reverse().map((column, index) => (
+        {[...selectedColumns].map((column, index) => (
           <Grid item xs={12} key={index}>
             <Grid container spacing={1}>
               <Grid item xs={12}>

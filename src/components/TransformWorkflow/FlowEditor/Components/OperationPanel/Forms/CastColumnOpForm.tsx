@@ -79,7 +79,7 @@ const CastColumnOp = ({
 
   const handleSave = async (formData: any) => {
     try {
-      const sourceColumnsNames = srcColumns.map((column) => column.name);
+      const sourceColumnsNames = config.map((column) => column.name);
 
       const postData: any = {
         op_type: operation.slug,
