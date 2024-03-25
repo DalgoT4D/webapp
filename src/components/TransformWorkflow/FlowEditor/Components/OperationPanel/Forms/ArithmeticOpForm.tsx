@@ -13,7 +13,6 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  SxProps,
 } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
