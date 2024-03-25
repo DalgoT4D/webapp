@@ -25,6 +25,7 @@ const DropColumnOp = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+  const [column, setColumn] = useState('');
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -127,12 +128,17 @@ const DropColumnOp = ({
         ))}
         <Grid item xs={12}>
           <Autocomplete
+            value={column}
+            inputValue={column}
             fieldStyle="transformation"
-            options={srcColumns.filter((col) => !selectedColumns.includes(col))}
+            options={srcColumns
+              .filter((col) => !selectedColumns.includes(col))
+              .sort((a, b) => a.localeCompare(b))}
             label="Select Column to Drop"
             onChange={(e, value: any) => {
               if (value) {
                 handleAddColumn(value);
+                setColumn('');
               }
             }}
           />

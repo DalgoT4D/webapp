@@ -200,10 +200,12 @@ const UnionTablesOpForm = ({
                 <Autocomplete
                   key={`${index}`}
                   disabled={index === 0}
-                  options={sourcesModels.map((model: DbtSourceModel) => ({
-                    id: model.id,
-                    label: model.input_name,
-                  }))}
+                  options={sourcesModels
+                    .map((model: DbtSourceModel) => ({
+                      id: model.id,
+                      label: model.input_name,
+                    }))
+                    .sort((a, b) => a.label.localeCompare(b.label))}
                   isOptionEqualToValue={(option: any, value: any) => {
                     return option?.id === value?.id;
                   }}

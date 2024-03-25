@@ -70,7 +70,11 @@ const ArithmeticOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -143,9 +147,9 @@ const ArithmeticOpForm = ({
                   placeholder="Select the operation"
                   options={[
                     { id: 'add', label: 'Addition +' },
+                    { id: 'div', label: 'Division /' },
                     { id: 'sub', label: 'Subtraction -' },
                     { id: 'mul', label: 'Multiplication *' },
-                    { id: 'div', label: 'Division /' },
                   ]}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
