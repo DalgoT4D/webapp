@@ -456,39 +456,46 @@ const OperationConfigLayout = ({
     return (
       <Box sx={{ borderSpacing: '0px', ...sx }}>
         <List>
-          {operations.map((op, index) => {
-            const canSelectOperation = !(
-              cantChainOperations.includes(op.slug) &&
-              canvasNode?.type === OPERATION_NODE
-            );
-            return (
-              <ListItemButton
-                key={op.slug}
-                sx={{
-                  padding: '10px 20px',
-                  color: '#0F2440',
-                  fontWeight: 600,
-                  '&:hover': {
-                    backgroundColor: '#F5FAFA',
-                  },
-                }}
-                onClick={
-                  canSelectOperation ? () => handleSelectOp(op) : undefined
-                }
-              >
-                {canSelectOperation ? (
-                  op.label
-                ) : (
-                  <Tooltip
-                    title={'Please create a table to use this function'}
-                    placement="top"
-                  >
-                    <span>{op.label}</span>
-                  </Tooltip>
-                )}
-              </ListItemButton>
-            );
-          })}
+          {operations
+            .sort(
+              (
+                a: { slug: string; label: string },
+                b: { slug: string; label: string }
+              ) => a.label.localeCompare(b.label)
+            )
+            .map((op, index) => {
+              const canSelectOperation = !(
+                cantChainOperations.includes(op.slug) &&
+                canvasNode?.type === OPERATION_NODE
+              );
+              return (
+                <ListItemButton
+                  key={op.slug}
+                  sx={{
+                    padding: '10px 20px',
+                    color: '#0F2440',
+                    fontWeight: 600,
+                    '&:hover': {
+                      backgroundColor: '#F5FAFA',
+                    },
+                  }}
+                  onClick={
+                    canSelectOperation ? () => handleSelectOp(op) : undefined
+                  }
+                >
+                  {canSelectOperation ? (
+                    op.label
+                  ) : (
+                    <Tooltip
+                      title={'Please create a table to use this function'}
+                      placement="top"
+                    >
+                      <span>{op.label}</span>
+                    </Tooltip>
+                  )}
+                </ListItemButton>
+              );
+            })}
         </List>
       </Box>
     );
