@@ -84,7 +84,7 @@ const JoinOpForm = ({
           nodeData?.schema,
           nodeData?.input_name
         );
-        setNodeSrcColumns(data);
+        setNodeSrcColumns(data.sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -142,7 +142,7 @@ const JoinOpForm = ({
           model.schema,
           model.input_name
         );
-        setTable2Columns(data);
+        setTable2Columns(data.sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -212,7 +212,9 @@ const JoinOpForm = ({
                       : 'Target Model',
                   id: nodeData?.id,
                 },
-              ].map((option) => option.label)}
+              ]
+                .map((option) => option.label)
+                .sort((a, b) => a.localeCompare(b))}
               disabled={true}
               defaultValue={
                 nodeData?.type === SRC_MODEL_NODE
@@ -249,12 +251,14 @@ const JoinOpForm = ({
           render={({ field }) => (
             <Autocomplete
               fieldStyle="transformation"
-              options={sourcesModels.map((model) => {
-                return {
-                  id: model.id,
-                  label: model.input_name,
-                };
-              })}
+              options={sourcesModels
+                .map((model) => {
+                  return {
+                    id: model.id,
+                    label: model.input_name,
+                  };
+                })
+                .sort((a, b) => a.label.localeCompare(b.label))}
               onChange={(e, data) => {
                 field.onChange(data ? data.id : null);
                 handleSelectSecondTable(data ? data.id : null);
