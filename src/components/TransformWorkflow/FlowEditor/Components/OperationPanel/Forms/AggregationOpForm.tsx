@@ -139,8 +139,10 @@ const AggregationOpForm = ({
                       { value: 'max', label: 'Maximum' },
                       { value: 'countdistinct', label: 'Count Distinct' },
                     ]}
-                    onChange={(e, data) => {
-                      setSelectedOperation(data ? data.value : '');
+                    onChange={(e, data: any) => {
+                      if (data?.value) {
+                        setSelectedOperation(data.value);
+                      }
                     }}
                     label="Aggregate"
                     fieldStyle="transformation"
