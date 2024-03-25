@@ -22,7 +22,6 @@ const CastColumnOp = ({
   clearAndClosePanel,
 }: OperationFormProps) => {
   const { data: session } = useSession();
-  const [srcColumns, setSrcColumns] = useState<ColumnData[]>([]);
   const [dataTypes, setDataTypes] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
@@ -32,11 +31,19 @@ const CastColumnOp = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, handleSubmit, register, reset } = useForm({
-    defaultValues: {
-      config: srcColumns.map(() => ({ column: '', dataType: '' })),
-    },
-  });
+  const { control, handleSubmit, register, reset, getValues, setValue } =
+    useForm({
+      defaultValues: {
+        config: [
+          {
+            name: '',
+            data_type: '',
+          },
+        ] as ColumnData[],
+      },
+    });
+
+  const { config } = getValues();
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -45,7 +52,8 @@ const CastColumnOp = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(columnData);
+
+        setValue('config', columnData);
 
         // Fetch data types from the other API
         const response = await httpGet(
@@ -62,7 +70,8 @@ const CastColumnOp = ({
 
     if (node?.type === OPERATION_NODE) {
       console.log(nodeData, 'node data');
-      setSrcColumns(
+      setValue(
+        'config',
         nodeData.output_cols.map((column: any) => ({ name: column }))
       );
     }
@@ -82,10 +91,10 @@ const CastColumnOp = ({
       };
 
       formData.config.forEach((data: any) => {
-        if (data.column && data.dataType) {
+        if (data.name && data.data_type) {
           postData.config.columns.push({
-            columnname: data.column,
-            columntype: data.dataType,
+            columnname: data.name,
+            columntype: data.data_type,
           });
         }
       });
@@ -123,19 +132,19 @@ const CastColumnOp = ({
       <form onSubmit={handleSubmit(handleSave)}>
         <GridTable
           headers={['Column name', 'Type']}
-          data={srcColumns.map((column, index) => [
+          data={config.map((column, index) => [
             <Input
-              key={`config.${index}.column`}
+              key={`config.${index}.name`}
               fieldStyle="none"
               sx={{ padding: '0' }}
-              name={`config.${index}.column`}
+              name={`config.${index}.name`}
               register={register}
               value={column.name}
             />,
             <Controller
-              key={`config.${index}.dataType`}
+              key={`config.${index}.data_type`}
               control={control}
-              name={`config.${index}.dataType`}
+              name={`config.${index}.data_type`}
               render={({ field }) => (
                 <Autocomplete
                   disableClearable
