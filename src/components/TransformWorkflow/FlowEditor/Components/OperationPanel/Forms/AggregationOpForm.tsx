@@ -71,11 +71,15 @@ const AggregationOpForm = ({
         return;
       }
 
+      if (!selectedOperation) {
+        errorToast('Please select an operation', [], globalContext);
+        return;
+      }
+
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
         config: {
-          //   columns: selectedColumns,
           aggregate_on: [
             {
               operation: selectedOperation,
@@ -121,7 +125,7 @@ const AggregationOpForm = ({
                   setSelectedColumns([...selectedColumns, data]);
                 }
               }}
-              label="Select Column to Aggregate"
+              label="Select Column to Aggregate*"
               fieldStyle="transformation"
             />
 
@@ -144,7 +148,7 @@ const AggregationOpForm = ({
                         setSelectedOperation(data.value);
                       }
                     }}
-                    label="Aggregate"
+                    label="Aggregate*"
                     fieldStyle="transformation"
                   />
                 )}
