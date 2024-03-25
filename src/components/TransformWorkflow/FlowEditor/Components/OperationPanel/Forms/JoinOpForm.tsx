@@ -1,11 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { httpGet, httpPost } from '@/helpers/http';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { DbtSourceModel, OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { GlobalContext } from '@/contexts/ContextProvider';
 import { Controller, useForm } from 'react-hook-form';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Box, Button } from '@mui/material';
