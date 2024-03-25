@@ -130,7 +130,7 @@ const DropColumnOp = ({
             fieldStyle="transformation"
             options={srcColumns.filter((col) => !selectedColumns.includes(col))}
             label="Select Column to Drop"
-            onChange={(e, value) => {
+            onChange={(e, value: any) => {
               if (value) {
                 handleAddColumn(value);
               }
