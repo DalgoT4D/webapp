@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -16,32 +9,10 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-
-const renameGridStyles: {
-  container: SxProps;
-  headerItem: SxProps;
-  item: SxProps;
-} = {
-  container: {
-    border: '1px solid #F9F9F9',
-    color: '#5E5E5E',
-    alignItems: 'center',
-    marginTop: '16px',
-  },
-  headerItem: {
-    background: '#F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-  item: {
-    border: '1px solid #F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-};
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { GridTable } from '@/components/UI/GridTable/GridTable';
 
 const ReplaceValueOpForm = ({
   node,
@@ -79,7 +50,11 @@ const ReplaceValueOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -148,7 +123,7 @@ const ReplaceValueOpForm = ({
   }, [session]);
 
   return (
-    <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
+    <Box>
       <form
         onSubmit={handleSubmit(handleSave)}
         onKeyDown={(event) => {
@@ -157,7 +132,7 @@ const ReplaceValueOpForm = ({
           }
         }}
       >
-        <Box>
+        <Box sx={{ ...sx, padding: '32px 16px 0px 16px', mb: 2 }}>
           <Controller
             control={control}
             name="column_name"
@@ -168,80 +143,39 @@ const ReplaceValueOpForm = ({
                 onChange={(e, data) => {
                   field.onChange(data);
                 }}
-                renderInput={(params) => (
-                  <Input
-                    {...params}
-                    sx={{ width: '100%' }}
-                    label="Select a column"
-                  />
-                )}
+                label="Select a column"
+                fieldStyle="transformation"
               />
             )}
           />
         </Box>
-        <Grid container sx={{ ...renameGridStyles.container }}>
-          <Grid item xs={6} sx={{ ...renameGridStyles.headerItem }}>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontSize: '12px',
-                lineHeight: '19.2px',
-                letterSpacing: '2%',
+
+        <GridTable
+          headers={['Column value', 'Replace with']}
+          data={fields.map((field, idx) => [
+            <Input
+              fieldStyle="none"
+              key={`config.${idx}.old`}
+              name={`config.${idx}.old`}
+              register={register}
+            />,
+            <Input
+              fieldStyle="none"
+              key={`config.${idx}.new`}
+              name={`config.${idx}.new`}
+              register={register}
+              onKeyDown={(e) => {
+                // if the key is enter append
+                if (e.key === 'Enter') {
+                  append({ old: '', new: '' });
+                }
               }}
-            >
-              Column value
-            </Typography>
-          </Grid>
-          <Grid item xs={6} sx={{ ...renameGridStyles.headerItem }}>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontSize: '12px',
-                lineHeight: '19.2px',
-                letterSpacing: '2%',
-              }}
-            >
-              Replace with
-            </Typography>
-          </Grid>
-          {fields.map((field, idx) => (
-            <>
-              <Grid
-                item
-                key={field.id + '_1'}
-                xs={6}
-                sx={{ ...renameGridStyles.item }}
-              >
-                <Input
-                  sx={{ padding: '0' }}
-                  name={`config.${idx}.old`}
-                  register={register}
-                />
-              </Grid>
-              <Grid
-                item
-                key={field.id + '_2'}
-                xs={6}
-                sx={{ ...renameGridStyles.item }}
-              >
-                <Input
-                  sx={{ padding: '0' }}
-                  name={`config.${idx}.new`}
-                  register={register}
-                  onKeyDown={(e) => {
-                    // if the key is enter append
-                    if (e.key === 'Enter') {
-                      append({ old: '', new: '' });
-                    }
-                  }}
-                />
-              </Grid>
-            </>
-          ))}
-        </Grid>
-        <Box>
+            />,
+          ])}
+        ></GridTable>
+        <Box sx={{ m: 2 }}>
           <Button
-            variant="outlined"
+            variant="contained"
             type="submit"
             data-testid="savebutton"
             fullWidth

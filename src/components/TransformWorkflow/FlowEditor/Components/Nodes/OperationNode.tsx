@@ -3,7 +3,6 @@ import 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { OperationNodeType } from '../Canvas';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { operations } from '../../constant';
 import {
   useCanvasAction,

@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -18,26 +11,8 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-
-const castGridStyles: {
-  container: SxProps;
-  headerItem: SxProps;
-  item: SxProps;
-} = {
-  container: {
-    border: '1px solid #F9F9F9',
-    color: '#5E5E5E',
-    alignItems: 'center',
-  },
-  headerItem: {
-    background: '#F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-  item: {
-    border: '1px solid #F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-};
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { GridTable } from '@/components/UI/GridTable/GridTable';
 
 const CastColumnOp = ({
   node,
@@ -77,7 +52,9 @@ const CastColumnOp = ({
           session,
           `transform/dbt_project/data_type/`
         );
-        setDataTypes(response);
+        setDataTypes(
+          response.sort((a: string, b: string) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -144,66 +121,38 @@ const CastColumnOp = ({
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
-        <Grid container sx={{ ...castGridStyles.container }}>
-          <Grid item xs={6} sx={{ ...castGridStyles.headerItem }}>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontSize: '12px',
-                lineHeight: '19.2px',
-                letterSpacing: '2%',
-              }}
-            >
-              Column
-            </Typography>
-          </Grid>
-          <Grid item xs={6} sx={{ ...castGridStyles.headerItem }}>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontSize: '12px',
-                lineHeight: '19.2px',
-                letterSpacing: '2%',
-              }}
-            >
-              Data Type
-            </Typography>
-          </Grid>
-
-          {srcColumns.map((column, index) => (
-            <React.Fragment key={index}>
-              <Grid item xs={6} sx={{ ...castGridStyles.item }}>
-                <Input
-                  sx={{ padding: '0' }}
-                  name={`config.${index}.column`}
-                  register={register}
-                  value={column.name}
+        <GridTable
+          headers={['Column name', 'Type']}
+          data={srcColumns.map((column, index) => [
+            <Input
+              key={`config.${index}.column`}
+              fieldStyle="none"
+              sx={{ padding: '0' }}
+              name={`config.${index}.column`}
+              register={register}
+              value={column.name}
+            />,
+            <Controller
+              key={`config.${index}.dataType`}
+              control={control}
+              name={`config.${index}.dataType`}
+              render={({ field }) => (
+                <Autocomplete
+                  disableClearable
+                  fieldStyle="none"
+                  options={dataTypes}
+                  value={column.data_type}
+                  onChange={(e, data) => {
+                    field.onChange(data);
+                  }}
                 />
-              </Grid>
-              <Grid item xs={6} sx={{ ...castGridStyles.item }}>
-                <Controller
-                  control={control}
-                  name={`config.${index}.dataType`}
-                  render={({ field }) => (
-                    <Autocomplete
-                      options={dataTypes}
-                      value={column.data_type}
-                      onChange={(e, data) => {
-                        field.onChange(data);
-                      }}
-                      renderInput={(params) => (
-                        <Input {...params} sx={{ width: '100%' }} />
-                      )}
-                    />
-                  )}
-                />
-              </Grid>
-            </React.Fragment>
-          ))}
-        </Grid>
+              )}
+            />,
+          ])}
+        ></GridTable>
         <Box sx={{ ...sx, padding: '16px 16px 0px 16px' }}>
           <Button
-            variant="outlined"
+            variant="contained"
             type="submit"
             data-testid="savebutton"
             fullWidth
