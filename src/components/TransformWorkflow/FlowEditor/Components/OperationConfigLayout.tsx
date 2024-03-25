@@ -324,6 +324,8 @@ const OperationConfigLayout = ({
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
   const dummyNodeIdRef: any = useRef(null);
+  const contentRef: any = useRef(null);
+
   const { addEdges, addNodes, deleteElements } = useReactFlow();
 
   const handleClosePanel = () => {
@@ -378,6 +380,12 @@ const OperationConfigLayout = ({
       handleClosePanel();
     }
   }, [canvasAction]);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [selectedOp]);
 
   if (!openPanel) return null;
 
@@ -532,6 +540,7 @@ const OperationConfigLayout = ({
       >
         <PanelHeader />
         <Box
+          ref={contentRef}
           sx={{
             flex: '1 1 auto',
             overflowY: 'auto',

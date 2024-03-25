@@ -234,12 +234,11 @@ const ArithmeticOpForm = ({
                   ['add', 'mul'].includes(arithmeticOp?.id)) &&
                 index === fields.length - 1 ? (
                   <Button
-                    variant="text"
+                    variant="shadow"
                     type="button"
                     data-testid="addoperand"
                     sx={{
                       marginTop: '17px',
-                      boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.16)',
                     }}
                     onClick={(event) =>
                       append({ type: 'col', col_val: '', const_val: 0 })
