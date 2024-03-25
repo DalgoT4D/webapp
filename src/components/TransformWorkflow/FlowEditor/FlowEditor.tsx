@@ -4,6 +4,11 @@ import {
   CircularProgress,
   Divider,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
   Tabs,
 } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
@@ -29,6 +34,7 @@ import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { delay } from '@/utils/common';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
+import moment from 'moment';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
@@ -107,17 +113,20 @@ const UpperSection = ({
 export type LowerSectionTabValues = 'preview' | 'logs';
 
 type LowerSectionProps = {
+  height: number;
   selectedTab: LowerSectionTabValues;
   setSelectedTab: (value: LowerSectionTabValues) => void;
   workflowInProgress: boolean;
 };
 
 const LowerSection = ({
+  height,
   selectedTab,
   setSelectedTab,
   workflowInProgress,
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
+
   const handleTabChange = (
     event: React.SyntheticEvent,
     newValue: LowerSectionTabValues
@@ -125,11 +134,11 @@ const LowerSection = ({
     setSelectedTab(newValue);
   };
   return (
-    <Box height={'100%'}>
+    <Box sx={{ height: 'unset' }}>
       <Box
         sx={{
           height: '50px',
-          background: '#F8F8F8',
+          background: '#F5FAFA',
           borderTop: '1px solid #CCCCCC',
           borderBottom: '1px solid #CCCCCC',
         }}
@@ -143,30 +152,70 @@ const LowerSection = ({
           <Tab label="Logs" value="logs" />
         </Tabs>
       </Box>
-      <Box
-        height={'calc(100% - 50px)'}
-        sx={{ overflow: 'auto', position: 'relative' }}
-      >
-        {selectedTab === 'preview' && <PreviewPane />}
+      <Box>
+        {selectedTab === 'preview' && <PreviewPane height={height} />}
         {selectedTab === 'logs' && (
-          <Box height={'100%'} sx={{ padding: '1rem' }}>
+          <Box height={height - 50}>
             {dbtRunLogs.length > 0 ? (
-              dbtRunLogs.map((log, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Box sx={{ fontWeight: 700, minWidth: '25%' }}>
-                    {new Date(log.timestamp).toTimeString()}
-                  </Box>
-                  <Box sx={{ color: 'blue', textAlign: 'left', width: '100%' }}>
-                    {log.message}
-                  </Box>
-                </Box>
-              ))
+              <Table
+                stickyHeader
+                sx={{ borderCollapse: 'collapse', width: '100%' }}
+              >
+                <TableHead>
+                  <TableRow>
+                    {['Last Run', 'Description'].map((header: any) => (
+                      <TableCell
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        sx={{
+                          backgroundColor: '#F5FAFA',
+                          padding: '10px 20px',
+                          textAlign: 'left',
+                          fontWeight: 700,
+                          minWidth: '200px',
+                        }}
+                      >
+                        {header}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody sx={{ borderColor: '#dddddd' }}>
+                  {dbtRunLogs.map((log: any) => {
+                    return (
+                      <TableRow
+                        key={log.timestamp}
+                        sx={{
+                          boxShadow: 'none',
+                          borderRadius: '0',
+                          borderBottom: '1px solid rgba(238, 238, 238, 1)',
+                          textAlign: 'left',
+                          fontSize: '0.8rem',
+                        }}
+                      >
+                        <TableCell
+                          sx={{
+                            padding: '10px 20px',
+                            fontWeight: 500,
+                          }}
+                        >
+                          {moment(log.timestamp).format('YYYY/MM/DD')}{' '}
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          {moment(log.timestamp).format('hh:mm:ss A ')}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            padding: '10px 20px',
+                            fontWeight: 500,
+                          }}
+                        >
+                          {log.message}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             ) : workflowInProgress ? (
               <Backdrop
                 sx={{
@@ -470,6 +519,7 @@ const FlowEditor = ({}) => {
         maxConstraints={[Infinity, 500]}
       >
         <LowerSection
+          height={lowerSectionHeight}
           setSelectedTab={setSelectedTab}
           selectedTab={selectedTab}
           workflowInProgress={lockUpperSection}

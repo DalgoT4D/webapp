@@ -128,6 +128,7 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
     <Box
       sx={{
         height: '100%',
+        background: '#F5FAFA',
       }}
     >
       <Box
