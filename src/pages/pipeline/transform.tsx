@@ -118,7 +118,7 @@ const Transform = () => {
         handleClose={() => setConfirmationOpen(false)}
         handleConfirm={handleSelectTransformTypeConfirm}
         message={`You have opted to continue using the ${
-          selectedTransform === 'ui' ? 'UI' : 'GitHub'
+          transformClickedOn === 'ui' ? 'UI' : 'GitHub'
         } method to
         set up your transformation`}
       />
