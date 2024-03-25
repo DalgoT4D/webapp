@@ -24,7 +24,7 @@ const JoinOpForm = ({
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const [table2Columns, setTable2Columns] = useState<string[]>([]);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
-  const globalContext = useContext(GlobalContext);
+
   const modelDummyNodeId: any = useRef('');
   const { deleteElements, addEdges, addNodes, getEdges } = useReactFlow();
   const nodeData: any =
@@ -34,7 +34,7 @@ const JoinOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, setValue } = useForm({
+  const { control, handleSubmit, reset, setValue } = useForm({
     defaultValues: {
       table1: {
         uuid: '',

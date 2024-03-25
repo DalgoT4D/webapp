@@ -31,7 +31,7 @@ const PreviewPane = () => {
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
   // const flowEditorContext = useContext(FlowEditorContext);
-  const { previewAction, setPreviewAction } = usePreviewAction();
+  const { previewAction } = usePreviewAction();
 
   const [columns, setColumns] = useState<any[]>([]);
 

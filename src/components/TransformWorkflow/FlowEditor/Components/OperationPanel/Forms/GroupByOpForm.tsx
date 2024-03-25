@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
@@ -169,7 +169,7 @@ const GroupByOpForm = ({
           </Grid>
 
           {dimensionFields.map((field, index) => (
-            <>
+            <Fragment key={field + '_1'}>
               <Grid
                 key={field + '_1'}
                 item
@@ -224,7 +224,7 @@ const GroupByOpForm = ({
                   )}
                 />
               </Grid>
-            </>
+            </Fragment>
           ))}
         </Grid>
 

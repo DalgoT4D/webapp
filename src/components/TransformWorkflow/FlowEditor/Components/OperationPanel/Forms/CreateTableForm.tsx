@@ -20,8 +20,8 @@ const CreateTableForm = ({
   clearAndClosePanel,
 }: OperationFormProps) => {
   const { data: session } = useSession();
-  const { canvasNode, setCanvasNode } = useCanvasNode();
-  const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { canvasNode } = useCanvasNode();
+  const { setCanvasAction } = useCanvasAction();
   const { control, register, handleSubmit, reset } = useForm({
     defaultValues: {
       output_name: '',

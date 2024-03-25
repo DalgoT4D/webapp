@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
@@ -141,7 +141,7 @@ const CoalesceOpForm = ({
           </Grid>
 
           {fields.map((field, index) => (
-            <>
+            <Fragment key={field + '_1'}>
               <Grid
                 key={field + '_1'}
                 item
@@ -196,7 +196,7 @@ const CoalesceOpForm = ({
                   )}
                 />
               </Grid>
-            </>
+            </Fragment>
           ))}
         </Grid>
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
