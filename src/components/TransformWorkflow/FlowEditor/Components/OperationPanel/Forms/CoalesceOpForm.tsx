@@ -1,14 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -18,6 +11,7 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const renameGridStyles: {
   container: SxProps;
@@ -29,12 +23,12 @@ const renameGridStyles: {
     color: '#5E5E5E',
   },
   headerItem: {
-    background: '#F9F9F9',
+    background: '#EEF3F3',
     padding: '9px 16px 9px 16px',
   },
   item: {
-    background: '#F9F9F9',
-    border: '1px solid #F9F9F9',
+    background: '#EEF3F3',
+    border: '1px solid #EEF3F3',
     padding: '9px 16px 9px 16px',
   },
 };
@@ -147,7 +141,7 @@ const CoalesceOpForm = ({
           </Grid>
 
           {fields.map((field, index) => (
-            <>
+            <Fragment key={field + '_1'}>
               <Grid
                 key={field + '_1'}
                 item
@@ -187,28 +181,29 @@ const CoalesceOpForm = ({
                   name={`columns.${index}.col`}
                   render={({ field }) => (
                     <Autocomplete
-                      options={srcColumns.filter(
-                        (option) =>
-                          !columns.map((col) => col.col).includes(option)
-                      )}
+                      fieldStyle="transformation"
+                      options={srcColumns
+                        .filter(
+                          (option) =>
+                            !columns.map((col) => col.col).includes(option)
+                        )
+                        .sort((a, b) => a.localeCompare(b))}
                       //   value={field.value}
                       onChange={(e, data) => {
                         field.onChange(data);
                         if (data) append({ col: '' });
                         else remove(index + 1);
                       }}
-                      renderInput={(params) => (
-                        <Input {...params} sx={{ width: '100%' }} />
-                      )}
                     />
                   )}
                 />
               </Grid>
-            </>
+            </Fragment>
           ))}
         </Grid>
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
           <Input
+            fieldStyle="transformation"
             label="Default Value"
             sx={{ padding: '0' }}
             name="default_value"
@@ -217,6 +212,7 @@ const CoalesceOpForm = ({
           />
           <Box sx={{ m: 2 }} />
           <Input
+            fieldStyle="transformation"
             label="Output Column Name"
             sx={{ padding: '0' }}
             name="output_column_name"
@@ -226,7 +222,7 @@ const CoalesceOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
-              variant="outlined"
+              variant="contained"
               type="submit"
               data-testid="savebutton"
               fullWidth

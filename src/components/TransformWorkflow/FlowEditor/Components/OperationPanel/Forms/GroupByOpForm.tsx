@@ -1,14 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -18,6 +11,7 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const renameGridStyles: {
   container: SxProps;
@@ -105,7 +99,11 @@ const GroupByOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -175,7 +173,7 @@ const GroupByOpForm = ({
           </Grid>
 
           {dimensionFields.map((field, index) => (
-            <>
+            <Fragment key={field + '_1'}>
               <Grid
                 key={field + '_1'}
                 item
@@ -215,6 +213,7 @@ const GroupByOpForm = ({
                   name={`columns.${index}.col`}
                   render={({ field }) => (
                     <Autocomplete
+                      fieldStyle="transformation"
                       options={srcColumns.filter(
                         (option) =>
                           !columns.map((col) => col.col).includes(option)
@@ -225,14 +224,11 @@ const GroupByOpForm = ({
                         if (data) appendDimension({ col: '' });
                         else removeDimension(index + 1);
                       }}
-                      renderInput={(params) => (
-                        <Input {...params} sx={{ width: '100%' }} />
-                      )}
                     />
                   )}
                 />
               </Grid>
-            </>
+            </Fragment>
           ))}
         </Grid>
 
@@ -250,19 +246,13 @@ const GroupByOpForm = ({
                 name={`aggregate_on.${index}.metric`}
                 render={({ field }) => (
                   <Autocomplete
-                    sx={{ paddingTop: '15px' }}
                     options={srcColumns}
                     //   value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
                     }}
-                    renderInput={(params) => (
-                      <Input
-                        {...params}
-                        sx={{ width: '100%' }}
-                        label="Select metric"
-                      />
-                    )}
+                    label="Select metric"
+                    fieldStyle="transformation"
                   />
                 )}
               />
@@ -275,16 +265,16 @@ const GroupByOpForm = ({
                   <Autocomplete
                     options={[
                       {
-                        id: 'sum',
-                        label: 'Sum',
-                      },
-                      {
                         id: 'avg',
                         label: 'Average',
                       },
                       {
                         id: 'count',
                         label: 'Count values',
+                      },
+                      {
+                        id: 'countdistinct',
+                        label: 'Count distinct values',
                       },
                       {
                         id: 'min',
@@ -295,8 +285,8 @@ const GroupByOpForm = ({
                         label: 'Maximum',
                       },
                       {
-                        id: 'countdistinct',
-                        label: 'Count distinct values',
+                        id: 'sum',
+                        label: 'Sum',
                       },
                     ]}
                     isOptionEqualToValue={(option: any, value: any) =>
@@ -306,18 +296,14 @@ const GroupByOpForm = ({
                     onChange={(e, data) => {
                       if (data) field.onChange(data);
                     }}
-                    renderInput={(params) => (
-                      <Input
-                        {...params}
-                        sx={{ width: '100%' }}
-                        label="Select aggregation"
-                      />
-                    )}
+                    label="Select aggregation"
+                    fieldStyle="transformation"
                   />
                 )}
               />
               <Box sx={{ m: 2 }} />
               <Input
+                fieldStyle="transformation"
                 label="Output Column Name"
                 name={`aggregate_on.${index}.output_column_name`}
                 register={register}
@@ -342,7 +328,7 @@ const GroupByOpForm = ({
                 </Button>
               ) : (
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   type="button"
                   data-testid="removeoperand"
                   sx={{ marginTop: '17px' }}

@@ -96,16 +96,22 @@ const nodeTypes: NodeTypes = {
 };
 
 export const getNextNodePosition = (nodes: any) => {
-  let x = 0;
-  const y = 0;
+  let rightMostX = nodes && nodes.length > 0 ? Number.NEGATIVE_INFINITY : 0;
+  let rightMostY = 0;
+  let rightMostHeight = 0;
 
   for (const node of nodes) {
-    if (node.position.x + node.width + nodeGap > x) {
-      x = node.position.x + node.width + nodeGap;
+    if (node.position.x > rightMostX) {
+      rightMostX = node.position.x;
+      rightMostY = node.position.y;
+      rightMostHeight = node.height;
     }
   }
 
-  // Return the calculated position for the new node
+  // Position the new node below the right-most element with a gap
+  const x = rightMostX;
+  const y = rightMostY + rightMostHeight + nodeGap;
+
   return { x, y };
 };
 
@@ -189,7 +195,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [openOperationConfig, setOpenOperationConfig] =
     useState<boolean>(false);
-  const { addNodes, addEdges, setCenter, getZoom } = useReactFlow();
+  const { addNodes, setCenter, getZoom } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { canvasNode } = useCanvasNode();
@@ -332,7 +338,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       };
       // handleNodesChange([{ type: 'add', item: newNode }]);
       addNodes([newNode]);
-      setCenter(position.x, position.y, { zoom: getZoom(), duration: 500 });
+      setCenter(position.x, position.y, {
+        zoom: getZoom(),
+        duration: 500,
+      });
     }
   };
 

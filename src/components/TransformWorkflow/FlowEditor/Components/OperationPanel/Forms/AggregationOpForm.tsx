@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Autocomplete, Box, Button } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -11,6 +11,7 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const AggregationOpForm = ({
   node,
@@ -112,46 +113,45 @@ const AggregationOpForm = ({
           <Box key={field.id}>
             <Autocomplete
               key={index}
-              options={srcColumns.filter(
-                (col) => !selectedColumns.includes(col)
-              )}
+              options={srcColumns
+                .filter((col) => !selectedColumns.includes(col))
+                .sort((a, b) => a.localeCompare(b))}
               onChange={(e, data) => {
                 if (data && typeof data === 'string') {
                   setSelectedColumns([...selectedColumns, data]);
                 }
               }}
-              renderInput={(params) => (
-                <Input {...params} label="Select Column to Aggregate" />
-              )}
+              label="Select Column to Aggregate"
+              fieldStyle="transformation"
             />
 
-            <Controller
-              control={control}
-              name={`columns.${index}.col`}
-              render={({ field }) => (
-                <Autocomplete
-                  options={[
-                    { value: 'sum', label: 'Sum' },
-                    { value: 'avg', label: 'Average' },
-                    { value: 'count', label: 'Count' },
-                    { value: 'min', label: 'Minimum' },
-                    { value: 'max', label: 'Maximum' },
-                    { value: 'countdistinct', label: 'Count Distinct' },
-                  ]}
-                  onChange={(e, data) => {
-                    setSelectedOperation(data ? data.value : '');
-                  }}
-                  renderInput={(params) => (
-                    <Input
-                      {...params}
-                      sx={{ width: '100%', marginTop: '16px' }}
-                      label="Aggregate"
-                    />
-                  )}
-                />
-              )}
-            />
+            <Box sx={{ mt: 2 }}>
+              <Controller
+                control={control}
+                name={`columns.${index}.col`}
+                render={({ field }) => (
+                  <Autocomplete
+                    options={[
+                      { value: 'avg', label: 'Average' },
+                      { value: 'count', label: 'Count' },
+                      { value: 'countdistinct', label: 'Count Distinct' },
+                      { value: 'max', label: 'Maximum' },
+                      { value: 'min', label: 'Minimum' },
+                      { value: 'sum', label: 'Sum' },
+                    ]}
+                    onChange={(e, data: any) => {
+                      if (data?.value) {
+                        setSelectedOperation(data.value);
+                      }
+                    }}
+                    label="Aggregate"
+                    fieldStyle="transformation"
+                  />
+                )}
+              />
+            </Box>
             <Input
+              fieldStyle="transformation"
               label="Output Column Name"
               sx={{ padding: '0', marginTop: '16px' }}
               name="output_column_name"
@@ -164,7 +164,7 @@ const AggregationOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
-              variant="outlined"
+              variant="contained"
               type="submit"
               data-testid="savebutton"
               fullWidth

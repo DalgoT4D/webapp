@@ -8,9 +8,9 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { Controller, useForm } from 'react-hook-form';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
-import { Autocomplete, Box, Button } from '@mui/material';
-import Input from '@/components/UI/Input/Input';
+import { Box, Button } from '@mui/material';
 import { Edge, useReactFlow } from 'reactflow';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const JoinOpForm = ({
   node,
@@ -24,7 +24,7 @@ const JoinOpForm = ({
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const [table2Columns, setTable2Columns] = useState<string[]>([]);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
-  const globalContext = useContext(GlobalContext);
+
   const modelDummyNodeId: any = useRef('');
   const { deleteElements, addEdges, addNodes, getEdges } = useReactFlow();
   const nodeData: any =
@@ -34,7 +34,7 @@ const JoinOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, setValue } = useForm({
+  const { control, handleSubmit, reset, setValue } = useForm({
     defaultValues: {
       table1: {
         uuid: '',
@@ -84,7 +84,7 @@ const JoinOpForm = ({
           nodeData?.schema,
           nodeData?.input_name
         );
-        setNodeSrcColumns(data);
+        setNodeSrcColumns(data.sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -142,7 +142,7 @@ const JoinOpForm = ({
           model.schema,
           model.input_name
         );
-        setTable2Columns(data);
+        setTable2Columns(data.sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -203,6 +203,7 @@ const JoinOpForm = ({
           name={`table1.uuid`}
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={[
                 {
                   label:
@@ -211,23 +212,19 @@ const JoinOpForm = ({
                       : 'Target Model',
                   id: nodeData?.id,
                 },
-              ].map((option) => option.label)}
+              ]
+                .map((option) => option.label)
+                .sort((a, b) => a.localeCompare(b))}
               disabled={true}
               defaultValue={
                 nodeData?.type === SRC_MODEL_NODE
                   ? nodeData?.input_name
                   : 'Target Model'
               }
-              onChange={(e, data) => {
+              onChange={(e, data: any) => {
                 field.onChange(data?.id);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the first table"
-                />
-              )}
+              label="Select the first table"
             />
           )}
         />
@@ -237,18 +234,13 @@ const JoinOpForm = ({
           name={`table1.key`}
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={nodeSrcColumns}
               value={field.value}
               onChange={(e, data) => {
                 field.onChange(data);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the column"
-                />
-              )}
+              label="Select the column"
             />
           )}
         />
@@ -258,23 +250,20 @@ const JoinOpForm = ({
           name={`table2.uuid`}
           render={({ field }) => (
             <Autocomplete
-              options={sourcesModels.map((model) => {
-                return {
-                  id: model.id,
-                  label: model.input_name,
-                };
-              })}
-              onChange={(e, data) => {
-                field.onChange(data ? data.id : null);
-                handleSelectSecondTable(data ? data.id : null);
+              fieldStyle="transformation"
+              options={sourcesModels
+                .map((model) => {
+                  return {
+                    id: model.id,
+                    label: model.input_name,
+                  };
+                })
+                .sort((a, b) => a.label.localeCompare(b.label))}
+              onChange={(e, data: any) => {
+                field.onChange(data?.id ? data.id : null);
+                handleSelectSecondTable(data?.id ? data.id : null);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the second table"
-                />
-              )}
+              label="Select the second table"
             />
           )}
         />
@@ -284,18 +273,13 @@ const JoinOpForm = ({
           name={`table2.key`}
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={table2Columns}
               value={field.value}
               onChange={(e, data) => {
                 field.onChange(data);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the column"
-                />
-              )}
+              label="Select the column"
             />
           )}
         />
@@ -305,25 +289,20 @@ const JoinOpForm = ({
           name="join_type"
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={['left', 'right', 'inner']}
               value={field.value}
               onChange={(e, data) => {
                 field.onChange(data);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Select the join type"
-                />
-              )}
+              label="Select the join type"
             />
           )}
         />
 
         <Box>
           <Button
-            variant="outlined"
+            variant="contained"
             type="submit"
             data-testid="savebutton"
             fullWidth

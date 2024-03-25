@@ -8,7 +8,6 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpGet, httpPost } from '@/helpers/http';
 import {
-  Autocomplete,
   Box,
   Button,
   FormControlLabel,
@@ -19,26 +18,7 @@ import {
 import Input from '@/components/UI/Input/Input';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
-
-const renameGridStyles: {
-  container: SxProps;
-  headerItem: SxProps;
-  item: SxProps;
-} = {
-  container: {
-    border: '1px solid #F9F9F9',
-    color: '#5E5E5E',
-  },
-  headerItem: {
-    background: '#F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-  item: {
-    background: '#F9F9F9',
-    border: '1px solid #F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-};
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const ArithmeticOpForm = ({
   node,
@@ -90,7 +70,11 @@ const ArithmeticOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -160,29 +144,24 @@ const ArithmeticOpForm = ({
             render={({ field }) => {
               return (
                 <Autocomplete
+                  placeholder="Select the operation"
                   options={[
                     { id: 'add', label: 'Addition +' },
+                    { id: 'div', label: 'Division /' },
                     { id: 'sub', label: 'Subtraction -' },
                     { id: 'mul', label: 'Multiplication *' },
-                    { id: 'div', label: 'Division /' },
                   ]}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
                   }
+                  label="Operation"
+                  fieldStyle="transformation"
                   value={field.value}
                   onChange={(e, data: any) => {
                     console.log(data);
                     if (data) field.onChange(data);
                     replace([{ type: 'col', col_val: '', const_val: 0 }]);
                   }}
-                  renderInput={(params) => (
-                    <Input
-                      {...params}
-                      sx={{ width: '100%' }}
-                      label="Select the operation"
-                      required
-                    />
-                  )}
                 />
               );
             }}
@@ -228,24 +207,20 @@ const ArithmeticOpForm = ({
                     name={`operands.${index}.col_val`}
                     render={({ field }) => (
                       <Autocomplete
+                        fieldStyle="transformation"
+                        placeholder="Select column"
                         options={srcColumns}
                         value={field.value}
                         onChange={(e, data) => {
                           field.onChange(data);
                         }}
-                        renderInput={(params) => (
-                          <Input
-                            {...params}
-                            sx={{ width: '100%' }}
-                            placeholder="Select column"
-                          />
-                        )}
                       />
                     )}
                   />
                 ) : (
                   <Input
                     label=""
+                    fieldStyle="transformation"
                     name={`operands.${index}.const_val`}
                     register={register}
                     sx={{ padding: '0' }}
@@ -259,15 +234,18 @@ const ArithmeticOpForm = ({
                   ['add', 'mul'].includes(arithmeticOp?.id)) &&
                 index === fields.length - 1 ? (
                   <Button
-                    variant="outlined"
+                    variant="text"
                     type="button"
                     data-testid="addoperand"
-                    sx={{ marginTop: '17px' }}
+                    sx={{
+                      marginTop: '17px',
+                      boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.16)',
+                    }}
                     onClick={(event) =>
                       append({ type: 'col', col_val: '', const_val: 0 })
                     }
                   >
-                    Add operand
+                    + Add operand
                   </Button>
                 ) : index < fields.length - 1 ? (
                   <Button
@@ -288,6 +266,7 @@ const ArithmeticOpForm = ({
 
           <Box sx={{ m: 2 }} />
           <Input
+            fieldStyle="transformation"
             label="Output Column Name"
             sx={{ padding: '0' }}
             name="output_column_name"
@@ -297,7 +276,7 @@ const ArithmeticOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
-              variant="outlined"
+              variant="contained"
               type="submit"
               data-testid="savebutton"
               fullWidth

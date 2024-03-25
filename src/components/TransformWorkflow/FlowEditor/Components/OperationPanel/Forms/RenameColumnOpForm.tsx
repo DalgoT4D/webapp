@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -18,26 +11,8 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-
-const renameGridStyles: {
-  container: SxProps;
-  headerItem: SxProps;
-  item: SxProps;
-} = {
-  container: {
-    border: '1px solid #F9F9F9',
-    color: '#5E5E5E',
-    alignItems: 'center',
-  },
-  headerItem: {
-    background: '#F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-  item: {
-    border: '1px solid #F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-};
+import { GridTable } from '@/components/UI/GridTable/GridTable';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const RenameColumnOp = ({
   node,
@@ -71,7 +46,11 @@ const RenameColumnOp = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -124,74 +103,47 @@ const RenameColumnOp = ({
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
-        <Grid container sx={{ ...renameGridStyles.container }}>
-          <Grid item xs={6} sx={{ ...renameGridStyles.headerItem }}>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontSize: '12px',
-                lineHeight: '19.2px',
-                letterSpacing: '2%',
-              }}
-            >
-              Current Name
-            </Typography>
-          </Grid>
-          <Grid item xs={6} sx={{ ...renameGridStyles.headerItem }}>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontSize: '12px',
-                lineHeight: '19.2px',
-                letterSpacing: '2%',
-              }}
-            >
-              New Name
-            </Typography>
-          </Grid>
+        <GridTable
+          headers={['Current Name', 'New Name']}
+          data={fields.map((field, index) => [
+            <Controller
+              key={`config.${index}.old`}
+              control={control}
+              name={`config.${index}.old`}
+              render={({ field }) => (
+                <Autocomplete
+                  fieldStyle="none"
+                  options={srcColumns}
+                  value={field.value}
+                  placeholder="Select column"
+                  onChange={(e, data) => {
+                    field.onChange(data);
+                    if (data) append({ old: '', new: '' });
+                    else remove(index + 1);
+                  }}
+                />
+              )}
+            />,
+            <Input
+              fieldStyle="none"
+              key={`config.${index}.new`}
+              sx={{ padding: '0' }}
+              name={`config.${index}.new`}
+              register={register}
+            />,
+          ])}
+        ></GridTable>
 
-          {fields.map((field, index) => (
-            <>
-              <Grid item xs={6} sx={{ ...renameGridStyles.item }}>
-                <Controller
-                  control={control}
-                  name={`config.${index}.old`}
-                  render={({ field }) => (
-                    <Autocomplete
-                      options={srcColumns}
-                      value={field.value}
-                      onChange={(e, data) => {
-                        field.onChange(data);
-                        if (data) append({ old: '', new: '' });
-                        else remove(index + 1);
-                      }}
-                      renderInput={(params) => (
-                        <Input {...params} sx={{ width: '100%' }} />
-                      )}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={6} sx={{ ...renameGridStyles.item }}>
-                <Input
-                  sx={{ padding: '0' }}
-                  name={`config.${index}.new`}
-                  register={register}
-                />
-              </Grid>
-            </>
-          ))}
-          <Box>
-            <Button
-              variant="outlined"
-              type="submit"
-              data-testid="savebutton"
-              fullWidth
-            >
-              Save
-            </Button>
-          </Box>
-        </Grid>
+        <Box sx={{ m: 2 }}>
+          <Button
+            variant="contained"
+            type="submit"
+            data-testid="savebutton"
+            fullWidth
+          >
+            Save
+          </Button>
+        </Box>
       </form>
     </Box>
   );

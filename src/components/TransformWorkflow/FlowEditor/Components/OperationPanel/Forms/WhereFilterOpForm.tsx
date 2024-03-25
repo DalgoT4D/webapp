@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import {
-  Autocomplete,
   Box,
   Button,
   FormControlLabel,
@@ -22,26 +21,7 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-
-const renameGridStyles: {
-  container: SxProps;
-  headerItem: SxProps;
-  item: SxProps;
-} = {
-  container: {
-    border: '1px solid #F9F9F9',
-    color: '#5E5E5E',
-  },
-  headerItem: {
-    background: '#F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-  item: {
-    background: '#F9F9F9',
-    border: '1px solid #F9F9F9',
-    padding: '9px 16px 9px 16px',
-  },
-};
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const WhereFilterOpForm = ({
   node,
@@ -93,7 +73,11 @@ const WhereFilterOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -190,18 +174,13 @@ const WhereFilterOpForm = ({
               render={({ field }) => (
                 <Autocomplete
                   options={srcColumns}
+                  fieldStyle="transformation"
                   disabled={advanceFilter === 'yes'}
                   //   value={field.value}
                   onChange={(e, data) => {
                     field.onChange(data);
                   }}
-                  renderInput={(params) => (
-                    <Input
-                      {...params}
-                      sx={{ width: '100%' }}
-                      label="Select column"
-                    />
-                  )}
+                  label="Select column"
                 />
               )}
             />
@@ -216,10 +195,7 @@ const WhereFilterOpForm = ({
                       id: '=',
                       label: 'Equal To =',
                     },
-                    {
-                      id: '!=',
-                      label: 'Not Equal To !=',
-                    },
+
                     {
                       id: '>=',
                       label: 'Greater Than or Equal To >=',
@@ -236,6 +212,10 @@ const WhereFilterOpForm = ({
                       id: '<=',
                       label: 'Less Than or Equal To <=',
                     },
+                    {
+                      id: '!=',
+                      label: 'Not Equal To !=',
+                    },
                   ]}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
@@ -245,13 +225,8 @@ const WhereFilterOpForm = ({
                   onChange={(e, data) => {
                     if (data) field.onChange(data);
                   }}
-                  renderInput={(params) => (
-                    <Input
-                      {...params}
-                      sx={{ width: '100%' }}
-                      label="Select operation"
-                    />
-                  )}
+                  label="Select operation"
+                  fieldStyle="transformation"
                 />
               )}
             />
@@ -292,24 +267,20 @@ const WhereFilterOpForm = ({
                 name="operand.col_val"
                 render={({ field }) => (
                   <Autocomplete
+                    fieldStyle="transformation"
                     options={srcColumns}
                     disabled={advanceFilter === 'yes'}
                     value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
                     }}
-                    renderInput={(params) => (
-                      <Input
-                        {...params}
-                        sx={{ width: '100%' }}
-                        placeholder="Select column"
-                      />
-                    )}
+                    placeholder="Select column"
                   />
                 )}
               />
             ) : (
               <Input
+                fieldStyle="transformation"
                 label=""
                 name="operand.const_val"
                 register={register}
@@ -348,6 +319,7 @@ const WhereFilterOpForm = ({
             <Box sx={{ m: 2 }} />
             {advanceFilter === 'yes' && (
               <Input
+                fieldStyle="transformation"
                 label=""
                 name="sql_snippet"
                 register={register}
@@ -363,7 +335,7 @@ const WhereFilterOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
-              variant="outlined"
+              variant="contained"
               type="submit"
               data-testid="savebutton"
               fullWidth
