@@ -182,10 +182,12 @@ const CoalesceOpForm = ({
                   render={({ field }) => (
                     <Autocomplete
                       fieldStyle="transformation"
-                      options={srcColumns.filter(
-                        (option) =>
-                          !columns.map((col) => col.col).includes(option)
-                      )}
+                      options={srcColumns
+                        .filter(
+                          (option) =>
+                            !columns.map((col) => col.col).includes(option)
+                        )
+                        .sort((a, b) => a.localeCompare(b))}
                       //   value={field.value}
                       onChange={(e, data) => {
                         field.onChange(data);

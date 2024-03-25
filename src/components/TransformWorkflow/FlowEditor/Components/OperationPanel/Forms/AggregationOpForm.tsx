@@ -113,9 +113,9 @@ const AggregationOpForm = ({
           <Box key={field.id}>
             <Autocomplete
               key={index}
-              options={srcColumns.filter(
-                (col) => !selectedColumns.includes(col)
-              )}
+              options={srcColumns
+                .filter((col) => !selectedColumns.includes(col))
+                .sort((a, b) => a.localeCompare(b))}
               onChange={(e, data) => {
                 if (data && typeof data === 'string') {
                   setSelectedColumns([...selectedColumns, data]);
@@ -132,12 +132,12 @@ const AggregationOpForm = ({
                 render={({ field }) => (
                   <Autocomplete
                     options={[
-                      { value: 'sum', label: 'Sum' },
                       { value: 'avg', label: 'Average' },
                       { value: 'count', label: 'Count' },
-                      { value: 'min', label: 'Minimum' },
-                      { value: 'max', label: 'Maximum' },
                       { value: 'countdistinct', label: 'Count Distinct' },
+                      { value: 'max', label: 'Maximum' },
+                      { value: 'min', label: 'Minimum' },
+                      { value: 'sum', label: 'Sum' },
                     ]}
                     onChange={(e, data) => {
                       setSelectedOperation(data ? data.value : '');

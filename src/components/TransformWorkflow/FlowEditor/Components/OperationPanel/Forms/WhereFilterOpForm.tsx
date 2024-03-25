@@ -73,7 +73,11 @@ const WhereFilterOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -191,10 +195,7 @@ const WhereFilterOpForm = ({
                       id: '=',
                       label: 'Equal To =',
                     },
-                    {
-                      id: '!=',
-                      label: 'Not Equal To !=',
-                    },
+
                     {
                       id: '>=',
                       label: 'Greater Than or Equal To >=',
@@ -210,6 +211,10 @@ const WhereFilterOpForm = ({
                     {
                       id: '<=',
                       label: 'Less Than or Equal To <=',
+                    },
+                    {
+                      id: '!=',
+                      label: 'Not Equal To !=',
                     },
                   ]}
                   isOptionEqualToValue={(option: any, value: any) =>
