@@ -8,8 +8,7 @@ import {
   TableRow,
   TableCell,
   TableSortLabel,
-  Button,
-  ButtonGroup,
+  TablePagination,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -25,8 +24,7 @@ import { httpGet } from '@/helpers/http';
 import { DbtSourceModel } from './Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
-const pageSize = 5;
-const PreviewPane = () => {
+const PreviewPane = ({ height }: { height: number }) => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
@@ -37,6 +35,7 @@ const PreviewPane = () => {
 
   // Row Data: The data to be displayed.
   const [data, setData] = useState<any[]>([]);
+  const [pageSize, setPageSize] = useState(5);
   const [totalCount, setTotalCount] = useState(0); // Total count of rows
   const [pageCount, setPageCount] = useState(0); // Total number of pages
   const [currentPageIndex, setCurrentPageIndex] = useState(1); // Page index
@@ -120,14 +119,6 @@ const PreviewPane = () => {
     };
   }, [columns, data]);
 
-  const handleNextPage = () => {
-    setCurrentPageIndex((currentPageIndex) => currentPageIndex + 1);
-  };
-
-  const handlePreviousPage = () => {
-    setCurrentPageIndex((currentPageIndex) => currentPageIndex - 1);
-  };
-
   // Update useTable hook
   const { getHeaderGroups, getRowModel } = useReactTable({
     columns: tableData.columns,
@@ -139,135 +130,100 @@ const PreviewPane = () => {
   });
 
   return modelToPreview ? (
-    <Box sx={{ height: '100%', overflow: 'auto', pb: 8 }}>
+    <Box>
       <Box
         sx={{
           alignItems: 'center',
         }}
       >
-        <Typography
-          variant="body1"
-          fontWeight="bold"
-          padding="10px"
-          color="grey"
-        >
+        <Typography variant="body1" fontWeight="bold" padding="10px">
           {modelToPreview?.input_name}
         </Typography>
       </Box>
       <Box>
-        <Table sx={{ borderCollapse: 'collapse', width: '100%' }}>
-          <TableHead>
-            {getHeaderGroups().map((headerGroup: any) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header: any) => (
-                  <TableCell
-                    key={header.id}
-                    colSpan={header.colSpan}
-                    sx={{
-                      backgroundColor: '#f2f2f2',
-                      border: '1px solid #dddddd',
-                      padding: '8px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <Box display="flex" alignItems="center">
-                      <TableSortLabel
-                        active={sortedColumn === header.id}
-                        direction={
-                          sortedColumn === header.id
-                            ? sortOrder === 1
-                              ? 'asc'
-                              : 'desc'
-                            : 'asc'
-                        }
-                        onClick={() => handleSort(header.id)}
-                        sx={{ marginLeft: '4px' }}
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </TableSortLabel>
-                    </Box>
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableHead>
-          <TableBody sx={{ borderColor: '#dddddd' }}>
-            {getRowModel().rows.map((row: any) => {
-              return (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell: any) => (
+        <Box sx={{ height: height - 150, overflow: 'auto' }}>
+          <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
+            <TableHead>
+              {getHeaderGroups().map((headerGroup: any) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header: any) => (
                     <TableCell
-                      key={cell.id}
+                      key={header.id}
+                      colSpan={header.colSpan}
                       sx={{
+                        backgroundColor: '#F5FAFA',
                         border: '1px solid #dddddd',
-                        padding: '4px',
+                        padding: '8px',
                         textAlign: 'left',
-                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        color: 'rgba(15, 36, 64, 0.57)',
                       }}
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      <Box display="flex" alignItems="center">
+                        <TableSortLabel
+                          active={sortedColumn === header.id}
+                          direction={
+                            sortedColumn === header.id
+                              ? sortOrder === 1
+                                ? 'asc'
+                                : 'desc'
+                              : 'asc'
+                          }
+                          onClick={() => handleSort(header.id)}
+                          sx={{ marginLeft: '4px' }}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                        </TableSortLabel>
+                      </Box>
                     </TableCell>
                   ))}
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-        {data.length > 0 && (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginTop: '1rem',
+              ))}
+            </TableHead>
+            <TableBody sx={{ borderColor: '#dddddd' }}>
+              {getRowModel().rows.map((row: any) => {
+                return (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell: any) => (
+                      <TableCell
+                        key={cell.id}
+                        sx={{
+                          fontWeight: 600,
+                          border: '1px solid #dddddd',
+                          textAlign: 'left',
+                          fontSize: '0.8rem',
+                        }}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Box>
+
+        {
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, 100]}
+            component="div"
+            count={totalCount}
+            rowsPerPage={pageSize}
+            page={currentPageIndex - 1}
+            onPageChange={(e, newPage) => setCurrentPageIndex(newPage + 1)}
+            onRowsPerPageChange={(e: any) => {
+              setPageSize(e.target.value);
+              setCurrentPageIndex(1);
             }}
-          >
-            <ButtonGroup
-              variant="outlined"
-              color="primary"
-              aria-label="pagination"
-            >
-              <Button
-                onClick={() => handlePreviousPage()}
-                disabled={currentPageIndex === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                onClick={() => handleNextPage()}
-                disabled={currentPageIndex >= pageCount}
-              >
-                Next
-              </Button>
-            </ButtonGroup>
-            <Typography
-              variant="body1"
-              component="span"
-              sx={{ marginLeft: '1rem' }}
-            >
-              Page <strong>{currentPageIndex}</strong> of{' '}
-              <strong>{pageCount}</strong>
-            </Typography>
-          </Box>
-        )}
-        {totalCount > 0 && (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginTop: '1rem',
-            }}
-          >
-            <Typography variant="body1" component="div">
-              Total rows: {totalCount}
-            </Typography>
-          </Box>
-        )}
+          />
+        }
       </Box>
     </Box>
   ) : null;
