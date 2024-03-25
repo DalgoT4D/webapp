@@ -52,7 +52,9 @@ const CastColumnOp = ({
           session,
           `transform/dbt_project/data_type/`
         );
-        setDataTypes(response);
+        setDataTypes(
+          response.sort((a: string, b: string) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }

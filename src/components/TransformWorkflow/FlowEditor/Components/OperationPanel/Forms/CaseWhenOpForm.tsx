@@ -96,7 +96,9 @@ const ClauseOperands = ({
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Autocomplete
-                      options={data.srcColumns}
+                      options={data.srcColumns.sort((a, b) =>
+                        a.localeCompare(b)
+                      )}
                       disabled={data.advanceFilter === 'yes'}
                       value={field.value}
                       onChange={(e, data) => {
@@ -218,14 +220,18 @@ const CaseWhenOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
     }
 
     if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols);
+      setSrcColumns(nodeData.output_cols.sort((a, b) => a.localeCompare(b)));
     }
   };
 
@@ -342,12 +348,12 @@ const CaseWhenOpForm = ({
                     <Autocomplete
                       options={[
                         {
-                          id: '=',
-                          label: 'Equal To =',
+                          id: 'between',
+                          label: 'Between',
                         },
                         {
-                          id: '!=',
-                          label: 'Not Equal To !=',
+                          id: '=',
+                          label: 'Equal To =',
                         },
                         {
                           id: '>=',
@@ -366,8 +372,8 @@ const CaseWhenOpForm = ({
                           label: 'Less Than or Equal To <=',
                         },
                         {
-                          id: 'between',
-                          label: 'Between',
+                          id: '!=',
+                          label: 'Not Equal To !=',
                         },
                       ]}
                       isOptionEqualToValue={(option: any, value: any) =>

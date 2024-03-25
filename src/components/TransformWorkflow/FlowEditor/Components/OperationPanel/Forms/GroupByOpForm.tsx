@@ -99,7 +99,11 @@ const GroupByOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -261,16 +265,16 @@ const GroupByOpForm = ({
                   <Autocomplete
                     options={[
                       {
-                        id: 'sum',
-                        label: 'Sum',
-                      },
-                      {
                         id: 'avg',
                         label: 'Average',
                       },
                       {
                         id: 'count',
                         label: 'Count values',
+                      },
+                      {
+                        id: 'countdistinct',
+                        label: 'Count distinct values',
                       },
                       {
                         id: 'min',
@@ -281,8 +285,8 @@ const GroupByOpForm = ({
                         label: 'Maximum',
                       },
                       {
-                        id: 'countdistinct',
-                        label: 'Count distinct values',
+                        id: 'sum',
+                        label: 'Sum',
                       },
                     ]}
                     isOptionEqualToValue={(option: any, value: any) =>
