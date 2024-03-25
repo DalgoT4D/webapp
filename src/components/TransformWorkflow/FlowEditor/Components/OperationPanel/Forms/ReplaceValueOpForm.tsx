@@ -71,6 +71,7 @@ const ReplaceValueOpForm = ({
 
       if (!output_column_name) {
         errorToast('Please select a column', [], globalContext);
+        return;
       }
 
       const postData: any = {
@@ -89,6 +90,7 @@ const ReplaceValueOpForm = ({
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
       };
+
       data.config.forEach((item: any) => {
         if (item.old && item.new)
           postData.config.columns[0].replace_ops.push({
@@ -98,7 +100,7 @@ const ReplaceValueOpForm = ({
       });
 
       // validations
-      if (Object.keys(postData.config.columns).length === 0) {
+      if (postData.config.columns[0].replace_ops.length === 0) {
         console.log('Please add values to replace');
         errorToast('Please add values to replace', [], globalContext);
         return;
