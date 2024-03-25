@@ -117,25 +117,41 @@ const GroupByOpForm = ({
   const handleSave = async (data: FormProps) => {
     try {
       const dimensionColumns = data.columns
-        .map((col: any) => col.col)
-        .filter((col: string) => col);
+        .filter((col: any) => (col.col ? true : false))
+        .map((col: any) => col.col);
       if (dimensionColumns.length === 0) {
         errorToast('Please select dimensions to groupby', [], globalContext);
+        return;
       }
+      console.log('data', data);
       const postData: any = {
         op_type: operation.slug,
         source_columns: dimensionColumns,
         other_inputs: [],
         config: {
-          aggregate_on: data.aggregate_on.map((item: any) => ({
-            column: item.metric,
-            operation: item.aggregate_func.id,
-            output_column_name: item.output_column_name,
-          })),
+          aggregate_on: data.aggregate_on
+            .filter(
+              (item: any) =>
+                item.metric && item.aggregate_func.id && item.output_column_name
+            )
+            .map((item: any) => ({
+              column: item.metric,
+              operation: item.aggregate_func.id,
+              output_column_name: item.output_column_name,
+            })),
         },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
       };
+
+      if (postData.config.aggregate_on.length === 0) {
+        errorToast(
+          'Please fill all fields while adding aggregation',
+          [],
+          globalContext
+        );
+        return;
+      }
 
       // api call
       const operationNode: any = await httpPost(
@@ -251,7 +267,7 @@ const GroupByOpForm = ({
                     onChange={(e, data) => {
                       field.onChange(data);
                     }}
-                    label="Select metric"
+                    label="Select metric*"
                     fieldStyle="transformation"
                   />
                 )}
@@ -296,7 +312,7 @@ const GroupByOpForm = ({
                     onChange={(e, data) => {
                       if (data) field.onChange(data);
                     }}
-                    label="Select aggregation"
+                    label="Select aggregation*"
                     fieldStyle="transformation"
                   />
                 )}
