@@ -177,31 +177,6 @@ const UnionTablesOpForm = ({
     modelDummyNodeIds.current = currentModelDummyNodeIds;
   };
 
-  const addDummyNodeAndEdge = (model: DbtSourceModel) => {
-    const dummySourceNodeData: any = {
-      id: model.id,
-      type: SRC_MODEL_NODE,
-      data: model,
-      position: {
-        x: node ? node?.xPos + 150 : 100,
-        y: node?.yPos,
-      },
-    };
-    const newEdge: any = {
-      id: `${dummySourceNodeData.id}_${dummyNodeId}`,
-      source: dummySourceNodeData.id,
-      target: dummyNodeId,
-      sourceHandle: null,
-      targetHandle: null,
-    };
-    addNodes([dummySourceNodeData]);
-    addEdges([newEdge]);
-  };
-
-  const removeDummyNodeAndEdge = (nodeId: string) => {
-    deleteElements({ nodes: [{ id: nodeId }] });
-  };
-
   const handleSave = async (data: {
     tables: { id: string; label: string }[];
   }) => {
