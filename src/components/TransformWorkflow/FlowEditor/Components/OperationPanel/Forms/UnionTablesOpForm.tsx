@@ -23,7 +23,6 @@ const UnionTablesOpForm = ({
   dummyNodeId,
 }: OperationFormProps) => {
   const { data: session } = useSession();
-  const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
@@ -269,19 +268,12 @@ const UnionTablesOpForm = ({
                   }}
                   value={field.value}
                   onChange={(e, data: any) => {
-                    // remove dummy node if present
-                    // if (!data) {
-                    //   removeDummyNodeAndEdge(field.value?.id);
-                    // }
                     field.onChange(data);
-                    // add dummy node
-                    // if (data?.id) {
                     const model: DbtSourceModel | undefined =
                       sourcesModels.find(
                         (model: DbtSourceModel) => model.id === data?.id
                       );
                     clearAndAddDummyModelNode(model, index);
-                    // }
                   }}
                   label={`Select the table no ${index + 1}`}
                   fieldStyle="transformation"
