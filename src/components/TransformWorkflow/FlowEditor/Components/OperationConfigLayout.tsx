@@ -403,7 +403,10 @@ const OperationConfigLayout = ({
         >
           {selectedOp && (
             <IconButton
-              onClick={() => setSelectedOp(null)}
+              onClick={() => {
+                deleteElements({ nodes: [{ id: dummyNodeIdRef.current }] });
+                setSelectedOp(null);
+              }}
               data-testid="openoperationlist"
             >
               <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
