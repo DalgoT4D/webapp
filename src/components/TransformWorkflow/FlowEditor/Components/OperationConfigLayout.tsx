@@ -326,7 +326,7 @@ const OperationConfigLayout = ({
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
 
-  const { addEdges, addNodes, deleteElements } = useReactFlow();
+  const { addEdges, addNodes, deleteElements, getNodes } = useReactFlow();
 
   const handleClosePanel = () => {
     deleteElements({ nodes: [{ id: dummyNodeIdRef.current }] });
@@ -390,6 +390,20 @@ const OperationConfigLayout = ({
   if (!openPanel) return null;
 
   const PanelHeader = () => {
+    const handleBackbuttonAction = () => {
+      let dummyNodeIds: string[] = [dummyNodeIdRef.current];
+      getNodes().forEach((node) => {
+        if (node.data.isDummy) {
+          dummyNodeIds.push(node.id);
+        }
+      });
+      deleteElements({
+        nodes: dummyNodeIds.map((nodeId: any) => ({
+          id: nodeId,
+        })),
+      });
+      setSelectedOp(null);
+    };
     return (
       <Box>
         <Box
@@ -403,10 +417,7 @@ const OperationConfigLayout = ({
         >
           {selectedOp && (
             <IconButton
-              onClick={() => {
-                deleteElements({ nodes: [{ id: dummyNodeIdRef.current }] });
-                setSelectedOp(null);
-              }}
+              onClick={handleBackbuttonAction}
               data-testid="openoperationlist"
             >
               <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
