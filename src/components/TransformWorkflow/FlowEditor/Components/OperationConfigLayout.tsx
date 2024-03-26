@@ -15,7 +15,6 @@ import {
   OperationNodeType,
   SrcModelNodeType,
   UIOperationType,
-  getNextNodePosition,
 } from './Canvas';
 // import { operations } from './OperationConfigForms/constant';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
@@ -58,6 +57,7 @@ import WhereFilterOpForm from './OperationPanel/Forms/WhereFilterOpForm';
 import CaseWhenOpForm from './OperationPanel/Forms/CaseWhenOpForm';
 import UnionTablesOpForm from './OperationPanel/Forms/UnionTablesOpForm';
 import FlattenJsonOpForm from './OperationPanel/Forms/FlattenJsonOpForm';
+import { generateDummyOperationlNode } from './dummynodes';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -345,7 +345,7 @@ const OperationConfigLayout = ({
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
 
-  const { addEdges, addNodes, deleteElements } = useReactFlow();
+  const { addEdges, addNodes, deleteElements, getNodes } = useReactFlow();
 
   const handleClosePanel = () => {
     deleteElements({ nodes: [{ id: dummyNodeIdRef.current }] });
@@ -357,34 +357,18 @@ const OperationConfigLayout = ({
   const handleSelectOp = (op: UIOperationType) => {
     // Create the dummy node on canvas
     // For multi input operation we might have to do it inside the operation once they select the other inputs
-    const nodeId = String(Date.now());
-    const { x: xnew, y: ynew } = getNextNodePosition([
-      { position: { x: canvasNode?.xPos, y: canvasNode?.yPos }, height: 200 },
-    ]);
-    const dummyTargetNodeData: any = {
-      id: nodeId,
-      type: OPERATION_NODE,
-      data: {
-        id: nodeId,
-        type: OPERATION_NODE,
-        output_cols: [],
-        target_model_id: '',
-        config: { type: op.slug },
-        isDummy: true,
-      },
-      position: {
-        x: xnew,
-        y: ynew,
-      },
-    };
+    const dummyTargetNodeData: any = generateDummyOperationlNode(
+      canvasNode,
+      op
+    );
     const newEdge: any = {
-      id: `${canvasNode ? canvasNode.id : ''}_${nodeId}`,
+      id: `${canvasNode ? canvasNode.id : ''}_${dummyTargetNodeData.id}`,
       source: canvasNode ? canvasNode.id : '',
-      target: nodeId,
+      target: dummyTargetNodeData.id,
       sourceHandle: null,
       targetHandle: null,
     };
-    dummyNodeIdRef.current = nodeId;
+    dummyNodeIdRef.current = dummyTargetNodeData.id;
     addNodes([dummyTargetNodeData]);
     addEdges([newEdge]);
     setSelectedOp(op);
@@ -409,6 +393,20 @@ const OperationConfigLayout = ({
   if (!openPanel) return null;
 
   const PanelHeader = () => {
+    const handleBackbuttonAction = () => {
+      let dummyNodeIds: string[] = [dummyNodeIdRef.current];
+      getNodes().forEach((node) => {
+        if (node.data.isDummy) {
+          dummyNodeIds.push(node.id);
+        }
+      });
+      deleteElements({
+        nodes: dummyNodeIds.map((nodeId: any) => ({
+          id: nodeId,
+        })),
+      });
+      setSelectedOp(null);
+    };
     return (
       <Box>
         <Box
@@ -422,7 +420,7 @@ const OperationConfigLayout = ({
         >
           {selectedOp && (
             <IconButton
-              onClick={() => setSelectedOp(null)}
+              onClick={handleBackbuttonAction}
               data-testid="openoperationlist"
             >
               <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
