@@ -14,6 +14,7 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Box, Button } from '@mui/material';
 import { Edge, useReactFlow } from 'reactflow';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { generateDummySrcModelNode } from '../../dummynodes';
 
 const JoinOpForm = ({
   node,
@@ -134,23 +135,7 @@ const JoinOpForm = ({
       );
 
       if (!dummySourceNodeData) {
-        // create a new dummy node if its not on the canvas
-        const { x: xnew, y: ynew } = getNextNodePosition([
-          {
-            position: { x: node?.xPos, y: node?.yPos },
-            height: 400,
-          },
-        ]);
-
-        dummySourceNodeData = {
-          id: model.id,
-          type: SRC_MODEL_NODE,
-          data: { ...model, isDummy: true },
-          position: {
-            x: xnew,
-            y: ynew,
-          },
-        };
+        dummySourceNodeData = generateDummySrcModelNode(node, model, 400);
         addNodes([dummySourceNodeData]);
       }
       const newEdge: any = {
