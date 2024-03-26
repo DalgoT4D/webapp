@@ -104,35 +104,41 @@ const FlattenJsonOpForm = ({
 
   const handleSave = async (formData: any) => {
     try {
-      const inputUuid = node?.type === SRC_MODEL_NODE ? node?.data.id : '';
-      console.log('input_uuid:', inputUuid);
       const sourceSchema = nodeData?.schema;
 
       // Get the selected JSON column value from the form data
       const selectedJsonColumn = formData.json_column;
 
-      // Fetch JSON columns based on the selected JSON column
-      await fetchJsonColumns(selectedJsonColumn);
+      const postData: any = {
+        op_type: operation.slug,
+        source_columns: srcColumns.map((column) => column.name),
+        other_inputs: [],
+        config: {
+          json_column: selectedJsonColumn,
+          source_schema: sourceSchema,
+          json_columns_to_copy: jsonColumns,
+        },
+        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
+        target_model_uuid: nodeData?.target_model_id || '',
+      };
 
-      // Make the API call
+      // validations
+      if (Object.keys(postData.config.json_column).length === 0) {
+        console.log('Please select the json column to flatten');
+        errorToast(
+          'Please select the json column to flatten',
+          [],
+          globalContext
+        );
+        return;
+      }
+
+      // api call
       const operationNode: any = await httpPost(
         session,
         `transform/dbt_project/model/`,
-        {
-          op_type: operation.slug,
-          source_columns: srcColumns.map((column) => column.name),
-          other_inputs: [],
-          config: {
-            json_column: selectedJsonColumn,
-            source_schema: sourceSchema,
-            json_columns_to_copy: jsonColumns,
-          },
-          input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-          target_model_uuid: nodeData?.target_model_id || '',
-        }
+        postData
       );
-
-      console.log(operationNode, 'operation node');
 
       // Handle the response
       continueOperationChain(operationNode);
