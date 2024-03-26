@@ -90,9 +90,7 @@ const FlattenJsonOpForm = ({
         session,
         `warehouse/dbt_project/json_columnspec/?source_schema=${nodeData.schema}&input_name=${nodeData.input_name}&json_column=${selectedColumn}`
       );
-      // Rename JSON columns to avoid name clashes
-      const renamedColumns = response.map((column: string) => `_${column}`);
-      setJsonColumns(renamedColumns);
+      setJsonColumns(response);
     } catch (error) {
       console.log(error);
     }
