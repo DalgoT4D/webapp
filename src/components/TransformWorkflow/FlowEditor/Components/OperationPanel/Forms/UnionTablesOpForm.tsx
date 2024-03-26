@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
@@ -10,9 +10,10 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
-import { useReactFlow } from 'reactflow';
+import { Edge, useReactFlow } from 'reactflow';
 import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { generateDummySrcModelNode } from '../../dummynodes';
 
 const UnionTablesOpForm = ({
   node,
@@ -23,11 +24,12 @@ const UnionTablesOpForm = ({
   dummyNodeId,
 }: OperationFormProps) => {
   const { data: session } = useSession();
-  const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
-  const { deleteElements, addEdges, addNodes } = useReactFlow();
+  const { deleteElements, addEdges, addNodes, getEdges, getNodes } =
+    useReactFlow();
+  const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -94,29 +96,79 @@ const UnionTablesOpForm = ({
     }
   };
 
-  const addDummyNodeAndEdge = (model: DbtSourceModel) => {
-    const dummySourceNodeData: any = {
-      id: model.id,
-      type: SRC_MODEL_NODE,
-      data: model,
-      position: {
-        x: node ? node?.xPos + 150 : 100,
-        y: node?.yPos,
-      },
-    };
-    const newEdge: any = {
-      id: `${dummySourceNodeData.id}_${dummyNodeId}`,
-      source: dummySourceNodeData.id,
-      target: dummyNodeId,
-      sourceHandle: null,
-      targetHandle: null,
-    };
-    addNodes([dummySourceNodeData]);
-    addEdges([newEdge]);
-  };
+  const clearAndAddDummyModelNode = (
+    model: DbtSourceModel | undefined | null,
+    index: number
+  ) => {
+    index = index - 1;
+    let currentModelDummyNodeIds = modelDummyNodeIds.current;
+    const edges: Edge[] = getEdges();
 
-  const removeDummyNodeAndEdge = (nodeId: string) => {
-    deleteElements({ nodes: [{ id: nodeId }] });
+    // make sure the arry is of correct length
+    if (currentModelDummyNodeIds.length < index + 1) {
+      currentModelDummyNodeIds = currentModelDummyNodeIds.concat(
+        Array(index + 1 - currentModelDummyNodeIds.length).fill(null)
+      );
+    }
+
+    if (currentModelDummyNodeIds[index]) {
+      // remove edges to this dummy node
+      let removeEdges: Edge[] = edges.filter(
+        (edge: Edge) =>
+          edge.source === currentModelDummyNodeIds[index] &&
+          edge.target === dummyNodeId
+      );
+
+      // remove the node if it has exactly one dummy edge
+      let removeNode = false;
+      if (
+        edges.filter(
+          (edge: Edge) =>
+            edge.source == currentModelDummyNodeIds[index] &&
+            edge.target == dummyNodeId
+        ).length === 1 &&
+        edges.filter(
+          (edge: Edge) =>
+            edge.source == currentModelDummyNodeIds[index] ||
+            edge.target == currentModelDummyNodeIds[index]
+        ).length === 1
+      )
+        removeNode = true;
+
+      deleteElements({
+        nodes: removeNode ? [{ id: currentModelDummyNodeIds[index] }] : [],
+        edges: removeEdges.map((edge: Edge) => ({ id: edge.id })),
+      });
+      currentModelDummyNodeIds[index] = null;
+    }
+
+    // create and update the new dummy node at same index
+    if (model) {
+      let dummySourceNodeData: any = getNodes().find(
+        (node) => node.id === model.id
+      );
+
+      if (!dummySourceNodeData) {
+        // create a new dummy node if its not on the canvas
+        dummySourceNodeData = generateDummySrcModelNode(
+          node,
+          model,
+          400 * (index + 1)
+        );
+        addNodes([dummySourceNodeData]);
+      }
+      const newEdge: any = {
+        id: `${dummySourceNodeData.id}_${dummyNodeId}`,
+        source: dummySourceNodeData.id,
+        target: dummyNodeId,
+        sourceHandle: null,
+        targetHandle: null,
+      };
+      addEdges([newEdge]);
+      currentModelDummyNodeIds[index] = dummySourceNodeData.id;
+    }
+
+    modelDummyNodeIds.current = currentModelDummyNodeIds;
   };
 
   const handleSave = async (data: {
@@ -211,19 +263,12 @@ const UnionTablesOpForm = ({
                   }}
                   value={field.value}
                   onChange={(e, data: any) => {
-                    // remove dummy node if present
-                    if (!data) {
-                      removeDummyNodeAndEdge(field.value?.id);
-                    }
                     field.onChange(data);
-                    // add dummy node
-                    if (data?.id) {
-                      const model: DbtSourceModel | undefined =
-                        sourcesModels.find(
-                          (model: DbtSourceModel) => model.id === data?.id
-                        );
-                      if (model) addDummyNodeAndEdge(model);
-                    }
+                    const model: DbtSourceModel | undefined =
+                      sourcesModels.find(
+                        (model: DbtSourceModel) => model.id === data?.id
+                      );
+                    clearAndAddDummyModelNode(model, index);
                   }}
                   label={`Select the table no ${index + 1}`}
                   fieldStyle="transformation"

@@ -10,6 +10,7 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Box, Button } from '@mui/material';
 import { Edge, useReactFlow } from 'reactflow';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { generateDummySrcModelNode } from '../../dummynodes';
 
 const JoinOpForm = ({
   node,
@@ -24,8 +25,9 @@ const JoinOpForm = ({
   const [table2Columns, setTable2Columns] = useState<string[]>([]);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
 
-  const modelDummyNodeId: any = useRef('');
-  const { deleteElements, addEdges, addNodes, getEdges } = useReactFlow();
+  const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
+  const { deleteElements, addEdges, addNodes, getEdges, getNodes } =
+    useReactFlow();
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -94,38 +96,54 @@ const JoinOpForm = ({
     }
   };
 
-  const clearAndAddDummyModelNode = (model: DbtSourceModel) => {
+  const clearAndAddDummyModelNode = (
+    model: DbtSourceModel | undefined | null
+  ) => {
     const edges: Edge[] = getEdges();
-    if (
-      modelDummyNodeId.current &&
-      edges.filter(
-        (edge: Edge) =>
-          edge.source === modelDummyNodeId.current ||
-          edge.target === modelDummyNodeId.current
-      ).length <= 1
-    ) {
-      deleteElements({ nodes: [{ id: modelDummyNodeId.current }] });
+
+    let removeNodeId = modelDummyNodeIds.current.pop();
+
+    // pop the last element
+    if (removeNodeId) {
+      if (
+        edges.filter(
+          (edge: Edge) =>
+            edge.source === removeNodeId || edge.target === removeNodeId
+        ).length <= 1
+      )
+        deleteElements({ nodes: [{ id: removeNodeId }] });
+      else {
+        // if removeNodeId has multiple edges, the remove the dummy one we just created
+        let removeEdges: Edge[] = edges.filter(
+          (edge: Edge) =>
+            edge.source === removeNodeId && edge.target === dummyNodeId
+        );
+        deleteElements({
+          edges: removeEdges.map((edge: Edge) => ({ id: edge.id })),
+        });
+      }
     }
 
-    const dummySourceNodeData: any = {
-      id: model.id,
-      type: SRC_MODEL_NODE,
-      data: model,
-      position: {
-        x: node ? node?.xPos + 150 : 100,
-        y: node?.yPos,
-      },
-    };
-    const newEdge: any = {
-      id: `${dummySourceNodeData.id}_${dummyNodeId}`,
-      source: dummySourceNodeData.id,
-      target: dummyNodeId,
-      sourceHandle: null,
-      targetHandle: null,
-    };
-    addNodes([dummySourceNodeData]);
-    addEdges([newEdge]);
-    modelDummyNodeId.current = model.id;
+    // push the new one
+    if (model) {
+      let dummySourceNodeData: any = getNodes().find(
+        (node) => node.id === model.id
+      );
+
+      if (!dummySourceNodeData) {
+        dummySourceNodeData = generateDummySrcModelNode(node, model, 400);
+        addNodes([dummySourceNodeData]);
+      }
+      const newEdge: any = {
+        id: `${dummySourceNodeData.id}_${dummyNodeId}`,
+        source: dummySourceNodeData.id,
+        target: dummyNodeId,
+        sourceHandle: null,
+        targetHandle: null,
+      };
+      addEdges([newEdge]);
+      modelDummyNodeIds.current.push(dummySourceNodeData.id);
+    }
   };
 
   const handleSelectSecondTable = async (id: string | null) => {
@@ -145,8 +163,8 @@ const JoinOpForm = ({
       } catch (error) {
         console.log(error);
       }
-      clearAndAddDummyModelNode(model);
     }
+    clearAndAddDummyModelNode(model);
   };
 
   const handleSave = async (data: any) => {
