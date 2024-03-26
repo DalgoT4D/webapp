@@ -13,6 +13,7 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Edge, useReactFlow } from 'reactflow';
 import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { generateDummySrcModelNode } from '../../dummynodes';
 
 const UnionTablesOpForm = ({
   node,
@@ -102,8 +103,6 @@ const UnionTablesOpForm = ({
     index = index - 1;
     let currentModelDummyNodeIds = modelDummyNodeIds.current;
     const edges: Edge[] = getEdges();
-    console.log('mnode', model);
-    console.log('index', index);
 
     // make sure the arry is of correct length
     if (currentModelDummyNodeIds.length < index + 1) {
@@ -112,27 +111,34 @@ const UnionTablesOpForm = ({
       );
     }
 
-    // remove dummy node if present
     if (currentModelDummyNodeIds[index]) {
+      // remove edges to this dummy node
+      let removeEdges: Edge[] = edges.filter(
+        (edge: Edge) =>
+          edge.source === currentModelDummyNodeIds[index] &&
+          edge.target === dummyNodeId
+      );
+
+      // remove the node if it has exactly one dummy edge
+      let removeNode = false;
       if (
         edges.filter(
           (edge: Edge) =>
-            edge.source === currentModelDummyNodeIds[index] &&
-            edge.target === dummyNodeId
-        ).length <= 1
-      )
-        deleteElements({ nodes: [{ id: currentModelDummyNodeIds[index] }] });
-      else {
-        // if removeNodeId has multiple edges, the remove the dummy one we just created
-        let removeEdges: Edge[] = edges.filter(
+            edge.source == currentModelDummyNodeIds[index] &&
+            edge.target == dummyNodeId
+        ).length === 1 &&
+        edges.filter(
           (edge: Edge) =>
-            edge.source === currentModelDummyNodeIds[index] &&
-            edge.target === dummyNodeId
-        );
-        deleteElements({
-          edges: removeEdges.map((edge: Edge) => ({ id: edge.id })),
-        });
-      }
+            edge.source == currentModelDummyNodeIds[index] ||
+            edge.target == currentModelDummyNodeIds[index]
+        ).length === 1
+      )
+        removeNode = true;
+
+      deleteElements({
+        nodes: removeNode ? [{ id: currentModelDummyNodeIds[index] }] : [],
+        edges: removeEdges.map((edge: Edge) => ({ id: edge.id })),
+      });
       currentModelDummyNodeIds[index] = null;
     }
 
@@ -144,22 +150,11 @@ const UnionTablesOpForm = ({
 
       if (!dummySourceNodeData) {
         // create a new dummy node if its not on the canvas
-        const { x: xnew, y: ynew } = getNextNodePosition([
-          {
-            position: { x: node?.xPos, y: node?.yPos },
-            height: 400 * (index + 1),
-          },
-        ]);
-
-        dummySourceNodeData = {
-          id: model.id,
-          type: SRC_MODEL_NODE,
-          data: { ...model, isDummy: true },
-          position: {
-            x: xnew,
-            y: ynew,
-          },
-        };
+        dummySourceNodeData = generateDummySrcModelNode(
+          node,
+          model,
+          400 * (index + 1)
+        );
         addNodes([dummySourceNodeData]);
       }
       const newEdge: any = {
