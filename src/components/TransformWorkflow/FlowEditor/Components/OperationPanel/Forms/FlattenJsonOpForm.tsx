@@ -104,18 +104,13 @@ const FlattenJsonOpForm = ({
 
   const handleSave = async (formData: any) => {
     try {
-      const sourceSchema = nodeData?.schema;
-
-      // Get the selected JSON column value from the form data
-      const selectedJsonColumn = formData.json_column;
-
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns.map((column) => column.name),
         other_inputs: [],
         config: {
-          json_column: selectedJsonColumn,
-          source_schema: sourceSchema,
+          json_column: formData.json_column,
+          source_schema: nodeData?.schema,
           json_columns_to_copy: jsonColumns,
         },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
