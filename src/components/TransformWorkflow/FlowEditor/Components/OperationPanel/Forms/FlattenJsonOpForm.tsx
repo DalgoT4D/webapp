@@ -124,7 +124,7 @@ const FlattenJsonOpForm = ({
           config: {
             json_column: selectedJsonColumn,
             source_schema: sourceSchema,
-            json_keys: jsonColumns,
+            json_columns_to_copy: jsonColumns,
           },
           input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
           target_model_uuid: nodeData?.target_model_id || '',
