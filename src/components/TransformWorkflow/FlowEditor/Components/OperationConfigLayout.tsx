@@ -375,7 +375,7 @@ const OperationConfigLayout = ({
 
   const PanelHeader = () => {
     const handleBackbuttonAction = () => {
-      let dummyNodeIds: string[] = [dummyNodeIdRef.current];
+      const dummyNodeIds: string[] = [dummyNodeIdRef.current];
       getNodes().forEach((node) => {
         if (node.data.isDummy) {
           dummyNodeIds.push(node.id);
