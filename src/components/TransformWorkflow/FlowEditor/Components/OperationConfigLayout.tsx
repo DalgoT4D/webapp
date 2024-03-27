@@ -373,7 +373,6 @@ const OperationConfigLayout = ({
     dummyNodeIdRef.current = dummyTargetNodeData.id;
 
     // unselect all nodes
-
     setNodes(
       getNodes().map((node) => {
         if (node.selected) {
