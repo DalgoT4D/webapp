@@ -45,7 +45,7 @@ export interface OperationNodeData {
   output_cols: Array<string>;
   type: typeof OPERATION_NODE;
   target_model_id: string;
-  config?: any;
+  config: any;
   isDummy?: boolean;
 }
 
@@ -59,13 +59,15 @@ export type DbtSourceModel = {
   isDummy?: boolean;
 };
 
-export interface OperationNodeType extends NodeProps {
-  data: OperationNodeData;
-}
+// export interface OperationNodeType extends NodeProps {
+//   data: OperationNodeData;
+// }
+export type OperationNodeType = NodeProps<OperationNodeData>;
 
-export interface SrcModelNodeType extends NodeProps {
-  data: DbtSourceModel;
-}
+// export interface SrcModelNodeType extends NodeProps {
+//   data: DbtSourceModel;
+// }
+export type SrcModelNodeType = NodeProps<DbtSourceModel>;
 
 type CustomNode = OperationNodeType | SrcModelNodeType;
 

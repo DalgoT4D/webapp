@@ -126,7 +126,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   const handleSelectNode = () => {
     setCanvasAction({
       type: 'open-opconfig-panel',
-      data: null,
+      data: 'create',
     });
     setCanvasNode(node);
     setPreviewAction({ type: 'preview', data: node.data });
