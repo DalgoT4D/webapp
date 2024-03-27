@@ -23,11 +23,11 @@ const renameGridStyles: {
     color: '#5E5E5E',
   },
   headerItem: {
-    background: '#F9F9F9',
+    background: '#EEF3F3',
     padding: '9px 16px 9px 16px',
   },
   item: {
-    background: '#F9F9F9',
+    background: '#EEF3F3',
     border: '1px solid #F9F9F9',
     padding: '9px 16px 9px 16px',
   },
@@ -234,7 +234,6 @@ const GroupByOpForm = ({
                         (option) =>
                           !columns.map((col) => col.col).includes(option)
                       )}
-                      //   value={field.value}
                       onChange={(e, data) => {
                         field.onChange(data);
                         if (data) appendDimension({ col: '' });
@@ -263,7 +262,6 @@ const GroupByOpForm = ({
                 render={({ field }) => (
                   <Autocomplete
                     options={srcColumns}
-                    //   value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
                     }}

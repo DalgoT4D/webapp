@@ -1,4 +1,5 @@
 import {
+  IconButton,
   SxProps,
   Table,
   TableBody,
@@ -7,10 +8,12 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface GridTableProps {
   headers: string[];
   data?: JSX.Element[][];
+  removeItem: any;
 }
 
 const castGridStyles: { [key: string]: SxProps } = {
@@ -25,7 +28,11 @@ const castGridStyles: { [key: string]: SxProps } = {
   },
 };
 
-export const GridTable = ({ headers, data = [[]] }: GridTableProps) => {
+export const GridTable = ({
+  headers,
+  data = [[]],
+  removeItem,
+}: GridTableProps) => {
   return (
     <Table sx={castGridStyles.container}>
       <TableHead sx={castGridStyles.headerItem}>
@@ -49,6 +56,15 @@ export const GridTable = ({ headers, data = [[]] }: GridTableProps) => {
               </Typography>
             </TableCell>
           ))}
+          {removeItem && data.length > 1 && (
+            <TableCell
+              sx={{
+                padding: '12px 16px',
+                width: `10px`,
+                borderRight: '1px solid #E8E8E8',
+              }}
+            ></TableCell>
+          )}
         </TableRow>
       </TableHead>
       <TableBody>
@@ -70,6 +86,20 @@ export const GridTable = ({ headers, data = [[]] }: GridTableProps) => {
                 {column}
               </TableCell>
             ))}
+            {removeItem && data.length > 1 && (
+              <TableCell
+                sx={{
+                  padding: '4px 8px',
+                  border: '1px solid #E8E8E8',
+                  width: `10px`,
+                  borderTop: 'unset',
+                }}
+              >
+                <IconButton onClick={() => removeItem(index)}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </TableCell>
+            )}
           </TableRow>
         ))}
       </TableBody>
