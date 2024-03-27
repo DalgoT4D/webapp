@@ -473,6 +473,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       >
         <ReactFlow
           nodes={nodes}
+          selectNodesOnDrag={false}
           edges={edges}
           onNodeDragStop={onNodeDragStop}
           onPaneClick={handlePaneClick}

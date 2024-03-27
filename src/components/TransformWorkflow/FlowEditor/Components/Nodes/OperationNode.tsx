@@ -58,7 +58,13 @@ export function OperationNode(node: OperationNodeType) {
   };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        border: node.selected ? '2px solid black' : '0px',
+        borderRadius: '5px',
+        borderStyle: 'dotted',
+      }}
+    >
       <>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />

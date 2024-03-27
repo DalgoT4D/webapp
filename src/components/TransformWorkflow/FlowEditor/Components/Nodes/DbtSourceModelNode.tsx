@@ -147,7 +147,14 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   }, [session, edges]);
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        border: node.selected ? '2px solid black' : '0px',
+        borderRadius: '5px',
+        borderStyle: 'dotted',
+      }}
+    >
       <>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />

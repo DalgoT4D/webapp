@@ -345,7 +345,8 @@ const OperationConfigLayout = ({
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
 
-  const { addEdges, addNodes, deleteElements, getNodes } = useReactFlow();
+  const { addEdges, addNodes, deleteElements, getNodes, setNodes } =
+    useReactFlow();
 
   const handleClosePanel = () => {
     deleteElements({ nodes: [{ id: dummyNodeIdRef.current }] });
@@ -368,9 +369,22 @@ const OperationConfigLayout = ({
       sourceHandle: null,
       targetHandle: null,
     };
+
     dummyNodeIdRef.current = dummyTargetNodeData.id;
+
+    // unselect all nodes
+
+    setNodes(
+      getNodes().map((node) => {
+        if (node.selected) {
+          node.selected = false;
+        }
+        return node;
+      })
+    );
     addNodes([dummyTargetNodeData]);
     addEdges([newEdge]);
+
     setSelectedOp(op);
   };
 
