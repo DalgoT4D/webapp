@@ -312,6 +312,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <FlattenJsonOpForm
       node={node}
@@ -373,7 +374,7 @@ const OperationConfigLayout = ({
   sx,
 }: OperationConfigProps) => {
   const { canvasAction, setCanvasAction } = useCanvasAction();
-  const { canvasNode } = useCanvasNode();
+  const { canvasNode, setCanvasNode } = useCanvasNode();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
   const dummyNodeIdRef: any = useRef(null);
@@ -388,6 +389,7 @@ const OperationConfigLayout = ({
     setOpenPanel(false);
     setShowFunctionsList(false);
     setSelectedOp(null);
+    setCanvasNode(null);
   };
 
   const handleSelectOp = (op: UIOperationType) => {
