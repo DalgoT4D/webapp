@@ -31,7 +31,7 @@ const ArithmeticOperations = [
   { id: 'div', label: 'Division /' },
   { id: 'sub', label: 'Subtraction -' },
   { id: 'mul', label: 'Multiplication *' },
-];
+].sort((a, b) => a.label.localeCompare(b.label));
 
 const ArithmeticOpForm = ({
   node,
@@ -102,8 +102,6 @@ const ArithmeticOpForm = ({
 
   const handleSave = async (data: FormProps) => {
     try {
-      console.log('data', data);
-
       if (!data.arithmeticOp.id) {
         errorToast('Please select an arithemtic operation', [], globalContext);
         return;
@@ -221,7 +219,6 @@ const ArithmeticOpForm = ({
                   fieldStyle="transformation"
                   value={field.value}
                   onChange={(e, data: any) => {
-                    console.log(data);
                     if (data) field.onChange(data);
                     replace([{ type: 'col', col_val: '', const_val: 0 }]);
                   }}
