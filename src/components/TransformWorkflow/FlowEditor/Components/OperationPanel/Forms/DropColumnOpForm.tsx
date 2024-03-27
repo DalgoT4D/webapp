@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { Box, Button, Grid, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import IconButton from '@mui/material/IconButton';
@@ -15,16 +15,24 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import Input from '@/components/UI/Input/Input';
 
+interface DropDataConfig {
+  columns: string[];
+  source_columns: string[];
+  other_inputs: any[];
+}
+
 const DropColumnOp = ({
   node,
   operation,
   sx,
   continueOperationChain,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [column, setColumn] = useState('');
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -80,11 +88,25 @@ const DropColumnOp = ({
       }
 
       // api call
-      const operationNode = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       continueOperationChain(operationNode);
     } catch (error) {
@@ -92,8 +114,32 @@ const DropColumnOp = ({
     }
   };
 
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let { source_columns, columns }: DropDataConfig = opConfig;
+      setSrcColumns(source_columns);
+
+      // pre-fill form
+      setSelectedColumns(columns);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    fetchAndSetSourceColumns();
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
   }, [session]);
 
   return (
@@ -115,7 +161,13 @@ const DropColumnOp = ({
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => handleRemoveColumn(column)}>
+                        <IconButton
+                          onClick={
+                            action !== 'view'
+                              ? () => handleRemoveColumn(column)
+                              : undefined
+                          }
+                        >
                           <CloseIcon />
                         </IconButton>
                       </InputAdornment>
@@ -128,6 +180,7 @@ const DropColumnOp = ({
         ))}
         <Grid item xs={12}>
           <Autocomplete
+            disabled={action === 'view'}
             value={column}
             inputValue={column}
             fieldStyle="transformation"
@@ -144,7 +197,11 @@ const DropColumnOp = ({
           />
         </Grid>
         <Grid item xs={12}>
-          <Button onClick={handleSave} variant="contained">
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            disabled={action === 'view'}
+          >
             Save
           </Button>
         </Grid>
