@@ -1,7 +1,7 @@
 import React from 'react';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Controller, useForm } from 'react-hook-form';
-import { Autocomplete, Box, Button } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import {
   useCanvasAction,
@@ -11,6 +11,7 @@ import { OPERATION_NODE } from '../../../constant';
 import { OperationNodeData } from '../../Canvas';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const CreateTableForm = ({
   operation,
@@ -55,6 +56,7 @@ const CreateTableForm = ({
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
       <form onSubmit={handleSubmit(handleCreateTableAndRun)}>
         <Input
+          fieldStyle="transformation"
           label="Output Name"
           sx={{ padding: '0' }}
           name="output_name"
@@ -67,25 +69,20 @@ const CreateTableForm = ({
           name="dest_schema"
           render={({ field }) => (
             <Autocomplete
+              fieldStyle="transformation"
               options={['intermediate', 'production']}
               value={field.value}
               onChange={(e, data) => {
                 field.onChange(data);
               }}
-              renderInput={(params) => (
-                <Input
-                  {...params}
-                  sx={{ width: '100%' }}
-                  label="Output Schema Name"
-                  required
-                />
-              )}
+              label="Output Schema Name"
+              required
             />
           )}
         />
         <Box sx={{ m: 2 }} />
         <Button
-          variant="outlined"
+          variant="contained"
           type="submit"
           data-testid="savebutton"
           fullWidth
