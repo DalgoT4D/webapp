@@ -39,6 +39,7 @@ export const generateDummyOperationlNode = (
   ]);
   const dummyTargetNodeData: any = {
     id: nodeId,
+    selected: true,
     type: OPERATION_NODE,
     data: {
       id: nodeId,
