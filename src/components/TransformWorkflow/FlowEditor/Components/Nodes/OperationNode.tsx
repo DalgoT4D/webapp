@@ -14,7 +14,7 @@ export function OperationNode(node: OperationNodeType) {
   const edges = useEdges();
   const nodeId = useNodeId();
   const { setCanvasAction, canvasAction } = useCanvasAction();
-  const { setCanvasNode } = useCanvasNode();
+  const { setCanvasNode, canvasNode } = useCanvasNode();
 
   const edgesGoingIntoNode: Edge[] = edges.filter(
     (edge: Edge) => edge.target === nodeId
@@ -65,7 +65,6 @@ export function OperationNode(node: OperationNodeType) {
       canvasAction.data?.type === OPERATION_NODE &&
       canvasAction.data?.id === node.id
     ) {
-      console.log('update selected canvas node action', node);
       setCanvasNode(node);
       setCanvasAction({ type: '', data: null });
     }
@@ -74,7 +73,10 @@ export function OperationNode(node: OperationNodeType) {
   return (
     <Box
       sx={{
-        border: node.selected ? '2px solid black' : '0px',
+        border:
+          node.id === canvasNode?.id || node.data?.isDummy
+            ? '2px solid black'
+            : '0px',
         borderRadius: '5px',
         borderStyle: 'dotted',
       }}

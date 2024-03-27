@@ -45,6 +45,7 @@ const FlattenJsonOpForm = ({
   sx,
   continueOperationChain,
   clearAndClosePanel,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<ColumnData[]>([]);
