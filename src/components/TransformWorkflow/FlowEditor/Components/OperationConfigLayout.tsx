@@ -17,7 +17,6 @@ import {
   UIOperationType,
 } from './Canvas';
 // import { operations } from './OperationConfigForms/constant';
-import InfoIcon from '@mui/icons-material/InfoOutlined';
 import {
   OPERATION_NODE,
   RENAME_COLUMNS_OP,

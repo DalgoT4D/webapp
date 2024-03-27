@@ -21,6 +21,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 
 const WhereFilterOpForm = ({
   node,
@@ -296,9 +297,16 @@ const WhereFilterOpForm = ({
                 justifyContent: 'space-between',
               }}
             >
-              <Typography fontWeight={600} fontSize="14px" color="#5E5E5E">
-                Advance Filter
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Typography fontWeight={600} fontSize="14px" color="#5E5E5E">
+                  Advance Filter
+                </Typography>
+                <InfoTooltip
+                  title={
+                    'Want to try something more complicated? Enter the SQL statement.'
+                  }
+                ></InfoTooltip>
+              </Box>
               <Controller
                 name="advanceFilter"
                 control={control}
