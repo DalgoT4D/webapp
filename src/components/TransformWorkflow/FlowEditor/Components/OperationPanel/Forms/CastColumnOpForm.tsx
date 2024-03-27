@@ -160,7 +160,7 @@ const CastColumnOp = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      let { source_columns, columns }: CastDataConfig = opConfig;
+      let { columns }: CastDataConfig = opConfig;
 
       // pre-fill form
       reset({
