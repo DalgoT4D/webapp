@@ -438,31 +438,31 @@ const OperationConfigLayout = ({
             <Box sx={{ width: '1px', height: '12px' }}>
               <InfoTooltip
                 title={
-                  selectedOp && selectedOp.label === 'Aggregate'
+                  selectedOp && selectedOp.slug === AGGREGATE_OP
                     ? 'Performs a calculation on multiple values in a column and returns a new column with that value in every row.'
-                    : selectedOp && selectedOp.label === 'Arithmetic'
+                    : selectedOp && selectedOp.slug === ARITHMETIC_OP
                     ? 'Perform arithmetic operations on or between one or more columns.'
-                    : selectedOp && selectedOp.label === 'Case'
+                    : selectedOp && selectedOp.slug === CASEWHEN_OP
                     ? 'Create one or more conditional statements (cases) on one or more columns.'
-                    : selectedOp && selectedOp.label === 'Cast'
+                    : selectedOp && selectedOp.slug === CAST_DATA_TYPES_OP
                     ? "Convert a column's values (of any type) into a specified datatype"
-                    : selectedOp && selectedOp.label === 'Coalesce'
+                    : selectedOp && selectedOp.slug === COALESCE_COLUMNS_OP
                     ? 'Reads columns in the order selected and returns the first non-NULL value from a series of columns'
-                    : selectedOp && selectedOp.label === 'Drop'
+                    : selectedOp && selectedOp.slug === DROP_COLUMNS_OP
                     ? 'Select the columns that you would like to remove from the table'
-                    : selectedOp && selectedOp.label === 'Filter'
+                    : selectedOp && selectedOp.slug === WHERE_OP
                     ? 'Filters all the row values in the selected column based on the defined condition.'
-                    : selectedOp && selectedOp.label === 'Flatten json'
+                    : selectedOp && selectedOp.slug === FLATTEN_JSON_OP
                     ? 'Transforms JSON formatted data into Tablular formatted data'
-                    : selectedOp && selectedOp.label === 'Group By'
+                    : selectedOp && selectedOp.slug === GROUPBY_OP
                     ? 'Group your data by one or more dimensions and analyse it.'
-                    : selectedOp && selectedOp.label === 'Join'
+                    : selectedOp && selectedOp.slug === JOIN_OP
                     ? 'Combine rows from two or more tables, based on a related (key) column between them'
-                    : selectedOp && selectedOp.label === 'Rename'
+                    : selectedOp && selectedOp.slug === RENAME_COLUMNS_OP
                     ? 'Select columns and rename them'
-                    : selectedOp && selectedOp.label === 'Replace'
+                    : selectedOp && selectedOp.slug === REPLACE_COLUMN_VALUE_OP
                     ? 'Replace all the row values in a column a specified string with a new value'
-                    : selectedOp && selectedOp.label === 'Table union'
+                    : selectedOp && selectedOp.slug === UNION_OP
                     ? 'Combine data for matching columns across two datasets'
                     : selectedOp && selectedOp.label === 'Create Output Table'
                     ? 'Generate a table which will be saved with a new name in your desired warehouse schema'
