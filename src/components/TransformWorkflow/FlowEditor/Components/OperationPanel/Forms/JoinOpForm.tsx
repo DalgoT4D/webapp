@@ -257,7 +257,7 @@ const JoinOpForm = ({
               onChange={(e, data) => {
                 field.onChange(data);
               }}
-              label="Select the column"
+              label="Select key column"
             />
           )}
         />
@@ -296,7 +296,7 @@ const JoinOpForm = ({
               onChange={(e, data) => {
                 field.onChange(data);
               }}
-              label="Select the column"
+              label="Select key column"
             />
           )}
         />
