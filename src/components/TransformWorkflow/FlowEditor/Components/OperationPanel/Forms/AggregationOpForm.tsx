@@ -13,7 +13,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
-interface AggregateOn {
+export interface AggregateOn {
   column: string;
   operation: 'sum' | 'avg' | 'count' | 'countdistinct' | 'max' | 'min';
   output_column_name: string;
@@ -24,7 +24,7 @@ interface AggregateDataConfig {
   other_inputs: any[];
 }
 
-const AggregateOperations = [
+export const AggregateOperations = [
   { id: 'avg', label: 'Average' },
   { id: 'count', label: 'Count' },
   { id: 'countdistinct', label: 'Count Distinct' },
@@ -45,7 +45,6 @@ const AggregationOpForm = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
-  const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -146,7 +145,7 @@ const AggregationOpForm = ({
           postData
         );
       } else if (action === 'edit') {
-        // need this input to be sent for the
+        // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid
             ? inputModels[0].uuid

@@ -138,7 +138,7 @@ const ArithmeticOpForm = ({
           postData
         );
       } else if (action === 'edit') {
-        // need this input to be sent for the
+        // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid
             ? inputModels[0].uuid
