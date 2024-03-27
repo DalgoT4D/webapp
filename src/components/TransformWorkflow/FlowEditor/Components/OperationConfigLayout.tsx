@@ -33,6 +33,7 @@ import {
   AGGREGATE_OP,
   CASEWHEN_OP,
   UNION_OP,
+  FLATTEN_JSON_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -55,6 +56,7 @@ import GroupByOpForm from './OperationPanel/Forms/GroupByOpForm';
 import WhereFilterOpForm from './OperationPanel/Forms/WhereFilterOpForm';
 import CaseWhenOpForm from './OperationPanel/Forms/CaseWhenOpForm';
 import UnionTablesOpForm from './OperationPanel/Forms/UnionTablesOpForm';
+import FlattenJsonOpForm from './OperationPanel/Forms/FlattenJsonOpForm';
 import { generateDummyOperationlNode } from './dummynodes';
 
 interface OperationConfigProps {
@@ -277,6 +279,23 @@ const operationComponentMapping: any = {
       dummyNodeId={dummyNodeId}
     />
   ),
+  [FLATTEN_JSON_OP]: ({
+    node,
+    operation,
+    sx,
+    continueOperationChain,
+    clearAndClosePanel,
+    dummyNodeId,
+  }: OperationFormProps) => (
+    <FlattenJsonOpForm
+      node={node}
+      operation={operation}
+      sx={sx}
+      continueOperationChain={continueOperationChain}
+      clearAndClosePanel={clearAndClosePanel}
+      dummyNodeId={dummyNodeId}
+    />
+  ),
 };
 
 const OperationForm = ({
@@ -460,6 +479,7 @@ const OperationConfigLayout = ({
     const cantChainOperationsInMiddle: string[] = [
       UNION_OP,
       CAST_DATA_TYPES_OP,
+      FLATTEN_JSON_OP,
     ];
 
     return (
