@@ -3,16 +3,17 @@ import 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { OperationNodeType } from '../Canvas';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { operations } from '../../constant';
+import { OPERATION_NODE, operations } from '../../constant';
 import {
   useCanvasAction,
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
+import { useEffect } from 'react';
 
 export function OperationNode(node: OperationNodeType) {
   const edges = useEdges();
   const nodeId = useNodeId();
-  const { setCanvasAction } = useCanvasAction();
+  const { setCanvasAction, canvasAction } = useCanvasAction();
   const { setCanvasNode } = useCanvasNode();
 
   const edgesGoingIntoNode: Edge[] = edges.filter(
@@ -42,20 +43,33 @@ export function OperationNode(node: OperationNodeType) {
   };
 
   const handleSelectNode = () => {
+    setCanvasNode(node);
     if (isDeletable) {
       setCanvasAction({
         type: 'open-opconfig-panel',
-        data: null,
+        data: 'edit',
       });
     } else {
-      // just view the config if its node in the middel of chain
+      // just view the config if its node in the middle of chain
       setCanvasAction({
         type: 'open-opconfig-panel',
         data: 'view',
       });
     }
-    setCanvasNode(node);
   };
+
+  useEffect(() => {
+    // This event is triggered via the ProjectTree component
+    if (
+      canvasAction.type === 'update-canvas-node' &&
+      canvasAction.data?.type === OPERATION_NODE &&
+      canvasAction.data?.id === node.id
+    ) {
+      console.log('update selected canvas node action', node);
+      setCanvasNode(node);
+      setCanvasAction({ type: '', data: null });
+    }
+  }, [canvasAction]);
 
   return (
     <Box>
@@ -95,12 +109,7 @@ export function OperationNode(node: OperationNodeType) {
           </Box>
         </Box>
         <Divider orientation="horizontal" sx={{ color: '#EEEEEE' }} />
-        <Box
-          sx={{ display: 'flex' }}
-          onClick={
-            edgesEmanatingOutOfNode.length === 0 ? handleSelectNode : undefined
-          }
-        >
+        <Box sx={{ display: 'flex' }} onClick={handleSelectNode}>
           <Box
             sx={{
               flex: '1',

@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
@@ -14,15 +14,22 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
+interface RenameDataConfig {
+  columns: { [key: string]: string };
+  source_columns: string[];
+}
+
 const RenameColumnOp = ({
   node,
   operation,
   sx,
   continueOperationChain,
   clearAndClosePanel,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -83,12 +90,25 @@ const RenameColumnOp = ({
       }
 
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
-
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
       continueOperationChain(operationNode);
       reset();
     } catch (error) {
@@ -96,8 +116,37 @@ const RenameColumnOp = ({
     }
   };
 
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let { columns, source_columns }: RenameDataConfig = opConfig;
+      setSrcColumns(source_columns);
+
+      // pre-fill form
+      const renamedColumnArray = Object.keys(columns).map((key) => ({
+        old: key,
+        new: columns[key],
+      }));
+      renamedColumnArray.push({ old: '', new: '' });
+      reset({ config: renamedColumnArray });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    fetchAndSetSourceColumns();
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
   }, [session]);
 
   return (
@@ -112,6 +161,7 @@ const RenameColumnOp = ({
               name={`config.${index}.old`}
               render={({ field }) => (
                 <Autocomplete
+                  disabled={action === 'view'}
                   fieldStyle="none"
                   options={srcColumns}
                   value={field.value}
@@ -130,16 +180,17 @@ const RenameColumnOp = ({
               sx={{ padding: '0' }}
               name={`config.${index}.new`}
               register={register}
+              disabled={action === 'view'}
             />,
           ])}
         ></GridTable>
-
         <Box sx={{ m: 2 }}>
           <Button
             variant="contained"
             type="submit"
             data-testid="savebutton"
             fullWidth
+            disabled={action === 'view'}
           >
             Save
           </Button>
