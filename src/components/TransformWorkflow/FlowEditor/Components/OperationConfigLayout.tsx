@@ -460,7 +460,7 @@ const OperationConfigLayout = ({
                     ? 'Select columns and rename them'
                     : selectedOp && selectedOp.label === 'Replace'
                     ? 'Replace all the row values in a column a specified string with a new value'
-                    : selectedOp && selectedOp.label === 'Union'
+                    : selectedOp && selectedOp.label === 'Table union'
                     ? 'Combine data for matching columns across two datasets'
                     : selectedOp && selectedOp.label === 'Create Output Table'
                     ? 'Generate a table which will be saved with a new name in your desired warehouse schema'
