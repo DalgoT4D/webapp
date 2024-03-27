@@ -16,7 +16,7 @@ export const CASEWHEN_OP = 'casewhen';
 export const UNION_OP = 'unionall';
 
 export const operations = [
-  { label: 'Flatten json', slug: FLATTEN_JSON_OP },
+  { label: 'Flatten JSON', slug: FLATTEN_JSON_OP },
   { label: 'Cast', slug: CAST_DATA_TYPES_OP },
   { label: 'Coalesce', slug: COALESCE_COLUMNS_OP },
   { label: 'Arithmetic', slug: ARITHMETIC_OP },
