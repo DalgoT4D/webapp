@@ -113,7 +113,7 @@ const UnionTablesOpForm = ({
 
     if (currentModelDummyNodeIds[index]) {
       // remove edges to this dummy node
-      let removeEdges: Edge[] = edges.filter(
+      const removeEdges: Edge[] = edges.filter(
         (edge: Edge) =>
           edge.source === currentModelDummyNodeIds[index] &&
           edge.target === dummyNodeId

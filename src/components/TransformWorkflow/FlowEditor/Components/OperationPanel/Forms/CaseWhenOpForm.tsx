@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   FormControlLabel,
-  FormLabel,
   Radio,
   RadioGroup,
   Stack,
@@ -22,6 +21,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 
 const ClauseOperands = ({
   clauseField,
@@ -334,6 +334,22 @@ const CaseWhenOpForm = ({
                       CASE {(clauseIndex + 1).toString().padStart(2, '0')}
                     </Typography>
                   </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      mr: '10px',
+                      mt: '10px',
+                      mb: '10px',
+                    }}
+                  >
+                    When&nbsp;
+                    <InfoTooltip
+                      title={
+                        'The first case- select the relevant column, operation, and comparison column or value.'
+                      }
+                    />
+                  </Box>
                   <Controller
                     control={control}
                     name={`clauses.${clauseIndex}.filterCol`}
@@ -345,7 +361,7 @@ const CaseWhenOpForm = ({
                         onChange={(e, data) => {
                           field.onChange(data);
                         }}
-                        label="When"
+                        // label="When"
                         placeholder="Select column to condition on"
                         fieldStyle="transformation"
                       />
@@ -421,8 +437,21 @@ const CaseWhenOpForm = ({
                       control={control}
                       render={({ field }) => {
                         return (
-                          <Box>
-                            <FormLabel component="legend">Then</FormLabel>
+                          <Box sx={{ alignItems: 'center' }}>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                mr: '10px',
+                              }}
+                            >
+                              Then&nbsp;
+                              <InfoTooltip
+                                title={
+                                  'The output when the case criterion is fullfilled'
+                                }
+                              />
+                            </Box>
                             <RadioGroup
                               {...field}
                               defaultValue="col"
@@ -529,8 +558,21 @@ const CaseWhenOpForm = ({
               control={control}
               render={({ field }) => {
                 return (
-                  <Box>
-                    <FormLabel component="legend">Else</FormLabel>
+                  <Box sx={{ alignItems: 'center' }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        mr: '10px',
+                      }}
+                    >
+                      Else&nbsp;
+                      <InfoTooltip
+                        title={
+                          'The output if none of the case statements entered above are fulfilled'
+                        }
+                      />
+                    </Box>
                     <RadioGroup
                       {...field}
                       defaultValue="col"
@@ -603,9 +645,16 @@ const CaseWhenOpForm = ({
               justifyContent: 'space-between',
             }}
           >
-            <Typography fontWeight={600} fontSize="14px" color="#5E5E5E">
-              Advance Filter
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <Typography fontWeight={600} fontSize="14px" color="#5E5E5E">
+                Advance Filter
+              </Typography>
+              <InfoTooltip
+                title={
+                  'Want to try something more complicated? Enter the SQL statement.'
+                }
+              ></InfoTooltip>
+            </Box>
             <Controller
               name="advanceFilter"
               control={control}

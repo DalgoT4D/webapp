@@ -44,7 +44,7 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
             ? '#C15E5E'
             : '#00897B';
         const lastRun = moment(new Date(run.startTime)).calendar();
-        const totalRunTime = run.totalRunTime;
+        const totalRunTime = Math.round(run.totalRunTime);
         return {
           id: run.id,
           name: run.name,

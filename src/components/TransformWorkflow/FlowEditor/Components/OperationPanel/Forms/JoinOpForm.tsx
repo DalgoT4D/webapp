@@ -101,7 +101,7 @@ const JoinOpForm = ({
   ) => {
     const edges: Edge[] = getEdges();
 
-    let removeNodeId = modelDummyNodeIds.current.pop();
+    const removeNodeId = modelDummyNodeIds.current.pop();
 
     // pop the last element
     if (removeNodeId) {
@@ -114,7 +114,7 @@ const JoinOpForm = ({
         deleteElements({ nodes: [{ id: removeNodeId }] });
       else {
         // if removeNodeId has multiple edges, the remove the dummy one we just created
-        let removeEdges: Edge[] = edges.filter(
+        const removeEdges: Edge[] = edges.filter(
           (edge: Edge) =>
             edge.source === removeNodeId && edge.target === dummyNodeId
         );
