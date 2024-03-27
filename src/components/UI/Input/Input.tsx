@@ -19,6 +19,13 @@ const StyledTextField = styled(TextField)(() => ({
   '& .MuiInputBase-input': {
     padding: '8px 10px',
   },
+  'input::-webkit-outer-spin-button, input::-webkit-inner-spin-button': {
+    '-webkit-appearance': 'none',
+    margin: 0,
+  },
+  'input[type=number]': {
+    '-moz-appearance': 'textfield',
+  },
 }));
 
 const NoStyleTextField = styled(TextField)(() => ({
@@ -96,6 +103,9 @@ export const Input: React.FC<InputProps> = ({
             ...registerValues,
             ...hookFormValidations,
           })}
+          InputProps={{
+            inputProps: { step: 'any' },
+          }}
           {...rest}
           id={name}
         />
