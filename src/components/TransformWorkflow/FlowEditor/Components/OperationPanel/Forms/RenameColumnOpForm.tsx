@@ -38,11 +38,13 @@ const RenameColumnOp = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset } = useForm({
+  const { control, register, handleSubmit, reset, getValues } = useForm({
     defaultValues: {
       config: [{ old: '', new: '' }],
     },
   });
+
+  const { config } = getValues();
   // Include this for multi-row input
   const { fields, append, remove } = useFieldArray({ control, name: 'config' });
 
@@ -150,41 +152,66 @@ const RenameColumnOp = ({
     }
   }, [session]);
 
+  const options = srcColumns.filter(
+    (column) => !config.map((con) => con.old).includes(column)
+  );
+
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
         <GridTable
+          removeItem={(index: number) => {
+            remove(index);
+          }}
           headers={['Current Name', 'New Name']}
           data={fields.map((field, index) => [
             <Controller
-              key={`config.${index}.old`}
+              key={field.old + index}
               control={control}
               name={`config.${index}.old`}
               render={({ field }) => (
                 <Autocomplete
                   disabled={action === 'view'}
+                  disableClearable
                   fieldStyle="none"
-                  options={srcColumns}
+                  options={options}
                   value={field.value}
                   placeholder="Select column"
                   onChange={(e, data) => {
                     field.onChange(data);
-                    if (data) append({ old: '', new: '' });
-                    else remove(index + 1);
                   }}
                 />
               )}
             />,
             <Input
               fieldStyle="none"
-              key={`config.${index}.new`}
+              key={field.new + index}
               sx={{ padding: '0' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  append({ old: '', new: '' });
+                }
+              }}
               name={`config.${index}.new`}
               register={register}
               disabled={action === 'view'}
             />,
           ])}
         ></GridTable>
+
+        <Button
+          variant="shadow"
+          type="button"
+          data-testid="addcase"
+          sx={{ m: 2 }}
+          onClick={(event) => {
+            append({ old: '', new: '' });
+          }}
+        >
+          Add column
+        </Button>
+
         <Box sx={{ m: 2 }}>
           <Button
             variant="contained"

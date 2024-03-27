@@ -12,12 +12,14 @@ interface AutocompleteProps
   > {
   label?: string;
   fieldStyle?: 'normal' | 'transformation' | 'none';
+  required?: boolean;
 }
 
 export const Autocomplete = ({
   placeholder,
   fieldStyle = 'normal',
   label,
+  required = false,
   ...rest
 }: AutocompleteProps) => {
   return (
@@ -26,6 +28,7 @@ export const Autocomplete = ({
       renderInput={(params) => (
         <Input
           {...params}
+          required={required}
           placeholder={placeholder}
           label={label}
           fieldStyle={fieldStyle}
