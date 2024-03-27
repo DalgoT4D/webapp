@@ -6,7 +6,7 @@ import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel, OperationNodeData } from '../../Canvas';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import {
   Box,
   Button,
@@ -19,6 +19,20 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
+interface ArithmeticDataConfig {
+  operands: { value: string | number; is_col: boolean }[];
+  operator: 'add' | 'sub' | 'mul' | 'div';
+  source_columns: string[];
+  output_column_name: string;
+}
+
+const ArithmeticOperations = [
+  { id: 'add', label: 'Addition +' },
+  { id: 'div', label: 'Division /' },
+  { id: 'sub', label: 'Subtraction -' },
+  { id: 'mul', label: 'Multiplication *' },
+];
+
 const ArithmeticOpForm = ({
   node,
   operation,
@@ -26,9 +40,11 @@ const ArithmeticOpForm = ({
   continueOperationChain,
   clearAndClosePanel,
   dummyNodeId,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -116,21 +132,73 @@ const ArithmeticOpForm = ({
       };
 
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       continueOperationChain(operationNode);
       reset();
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      errorToast(error?.message, [], globalContext);
+    }
+  };
+
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let {
+        operands,
+        source_columns,
+        operator,
+        output_column_name,
+      }: ArithmeticDataConfig = opConfig;
+      setSrcColumns(source_columns);
+
+      // pre-fill form
+      reset({
+        arithmeticOp: ArithmeticOperations.find((op) => op.id === operator),
+        output_column_name: output_column_name,
+        operands: operands.map((op: { value: any; is_col: boolean }) => ({
+          type: op.is_col ? 'col' : 'val',
+          col_val: op.is_col ? op.value : '',
+          const_val: op.is_col ? 0 : op.value,
+        })),
+      });
+    } catch (error) {
+      console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchAndSetSourceColumns();
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
   }, [session]);
 
   return (
@@ -143,13 +211,9 @@ const ArithmeticOpForm = ({
             render={({ field }) => {
               return (
                 <Autocomplete
+                  disabled={action === 'view'}
                   placeholder="Select the operation"
-                  options={[
-                    { id: 'add', label: 'Addition +' },
-                    { id: 'div', label: 'Division /' },
-                    { id: 'sub', label: 'Subtraction -' },
-                    { id: 'mul', label: 'Multiplication *' },
-                  ]}
+                  options={ArithmeticOperations}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
                   }
@@ -189,11 +253,13 @@ const ArithmeticOpForm = ({
                           value="col"
                           control={<Radio />}
                           label="Column"
+                          disabled={action === 'view'}
                         />
                         <FormControlLabel
                           value="val"
                           control={<Radio />}
                           label="Value"
+                          disabled={action === 'view'}
                         />
                       </RadioGroup>
                     );
@@ -206,6 +272,7 @@ const ArithmeticOpForm = ({
                     name={`operands.${index}.col_val`}
                     render={({ field }) => (
                       <Autocomplete
+                        disabled={action === 'view'}
                         fieldStyle="transformation"
                         placeholder="Select column"
                         options={srcColumns}
@@ -226,6 +293,7 @@ const ArithmeticOpForm = ({
                     placeholder="Enter the value"
                     type="number"
                     defaultValue="0"
+                    disabled={action === 'view'}
                   />
                 )}
                 {((['sub', 'div'].includes(arithmeticOp?.id) &&
@@ -233,6 +301,7 @@ const ArithmeticOpForm = ({
                   ['add', 'mul'].includes(arithmeticOp?.id)) &&
                 index === fields.length - 1 ? (
                   <Button
+                    disabled={action === 'view'}
                     variant="shadow"
                     type="button"
                     data-testid="addoperand"
@@ -247,6 +316,7 @@ const ArithmeticOpForm = ({
                   </Button>
                 ) : index < fields.length - 1 ? (
                   <Button
+                    disabled={action === 'view'}
                     variant="outlined"
                     type="button"
                     data-testid="removeoperand"
@@ -264,6 +334,7 @@ const ArithmeticOpForm = ({
 
           <Box sx={{ m: 2 }} />
           <Input
+            disabled={action === 'view'}
             fieldStyle="transformation"
             label="Output Column Name"
             sx={{ padding: '0' }}
@@ -274,6 +345,7 @@ const ArithmeticOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
+              disabled={action === 'view'}
               variant="contained"
               type="submit"
               data-testid="savebutton"

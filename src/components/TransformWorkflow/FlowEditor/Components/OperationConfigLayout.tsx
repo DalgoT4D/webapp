@@ -429,7 +429,10 @@ const OperationConfigLayout = ({
       setOpenPanel(true);
       panelOpFormState.current = canvasAction.data || 'view';
       if (panelOpFormState.current === 'view') {
-        setSelectedOp({ slug: 'renamecolumns', label: 'Rename Columns' });
+        const selectOp = canvasNode?.data as OperationNodeData;
+        setSelectedOp(
+          operations.find((op) => op.slug === selectOp.config?.type)
+        );
       }
     }
 

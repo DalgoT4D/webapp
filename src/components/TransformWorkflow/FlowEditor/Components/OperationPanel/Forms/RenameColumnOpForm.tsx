@@ -111,8 +111,9 @@ const RenameColumnOp = ({
       }
       continueOperationChain(operationNode);
       reset();
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      errorToast(error?.message, [], globalContext);
     }
   };
 
