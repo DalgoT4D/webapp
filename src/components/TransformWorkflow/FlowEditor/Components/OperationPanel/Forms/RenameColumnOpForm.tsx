@@ -160,9 +160,13 @@ const RenameColumnOp = ({
     <Box sx={{ ...sx, marginTop: '17px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
         <GridTable
-          removeItem={(index: number) => {
-            remove(index);
-          }}
+          removeItem={
+            action === 'view'
+              ? undefined
+              : (index: number) => {
+                  remove(index);
+                }
+          }
           headers={['Current Name', 'New Name']}
           data={fields.map((field, index) => [
             <Controller
@@ -201,6 +205,7 @@ const RenameColumnOp = ({
         ></GridTable>
 
         <Button
+          disabled={action === 'view'}
           variant="shadow"
           type="button"
           data-testid="addcase"
