@@ -1,7 +1,14 @@
 import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  FormLabel,
+  Grid,
+  SxProps,
+  Typography,
+} from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -12,6 +19,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 
 const renameGridStyles: {
   container: SxProps;
@@ -202,9 +210,15 @@ const CoalesceOpForm = ({
           ))}
         </Grid>
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <FormLabel sx={{ mr: 1, color: 'black' }}>Default Value</FormLabel>
+            <Box sx={{ display: 'inline-block' }}>
+              <InfoTooltip title={'Output if all values in a row are null'} />
+            </Box>
+          </Box>
           <Input
             fieldStyle="transformation"
-            label="Default Value"
+            label=""
             sx={{ padding: '0' }}
             name="default_value"
             register={register}
