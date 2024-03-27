@@ -58,6 +58,7 @@ import CaseWhenOpForm from './OperationPanel/Forms/CaseWhenOpForm';
 import UnionTablesOpForm from './OperationPanel/Forms/UnionTablesOpForm';
 import FlattenJsonOpForm from './OperationPanel/Forms/FlattenJsonOpForm';
 import { generateDummyOperationlNode } from './dummynodes';
+import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -436,7 +437,37 @@ const OperationConfigLayout = ({
               {selectedOp ? selectedOp.label : 'Functions'}
             </Typography>
             <Box sx={{ width: '1px', height: '12px' }}>
-              <InfoIcon fontSize="small" sx={{ color: '#888888' }} />
+              <InfoTooltip
+                title={
+                  selectedOp && selectedOp.label === 'Aggregate'
+                    ? 'Performs a calculation on multiple values in a column and returns a new column with that value in every row.'
+                    : selectedOp && selectedOp.label === 'Arithmetic'
+                    ? 'Perform arithmetic operations on or between one or more columns.'
+                    : selectedOp && selectedOp.label === 'Case'
+                    ? 'Create one or more conditional statements (cases) on one or more columns.'
+                    : selectedOp && selectedOp.label === 'Cast'
+                    ? "Convert a column's values (of any type) into a specified datatype"
+                    : selectedOp && selectedOp.label === 'Coalesce'
+                    ? 'Reads columns in the order selected and returns the first non-NULL value from a series of columns'
+                    : selectedOp && selectedOp.label === 'Drop'
+                    ? 'Select the columns that you would like to remove from the table'
+                    : selectedOp && selectedOp.label === 'Filter'
+                    ? 'Filters all the row values in the selected column based on the defined condition.'
+                    : selectedOp && selectedOp.label === 'Group By'
+                    ? 'Group your data by one or more dimensions and analyse it.'
+                    : selectedOp && selectedOp.label === 'Join'
+                    ? 'Combine rows from two or more tables, based on a related (key) column between them'
+                    : selectedOp && selectedOp.label === 'Rename'
+                    ? 'Select columns and rename them'
+                    : selectedOp && selectedOp.label === 'Replace'
+                    ? 'Replace all the row values in a column a specified string with a new value'
+                    : selectedOp && selectedOp.label === 'Union'
+                    ? 'Combine data for matching columns across two datasets'
+                    : selectedOp && selectedOp.label === 'Create Output Table'
+                    ? 'Generate a table which will be saved with a new name in your desired warehouse schema'
+                    : 'Select a function to learn how you can use it to transform your data.'
+                }
+              />
             </Box>
           </Box>
           <IconButton
