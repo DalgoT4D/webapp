@@ -452,6 +452,8 @@ const OperationConfigLayout = ({
                     ? 'Select the columns that you would like to remove from the table'
                     : selectedOp && selectedOp.label === 'Filter'
                     ? 'Filters all the row values in the selected column based on the defined condition.'
+                    : selectedOp && selectedOp.label === 'Flatten json'
+                    ? 'Transforms JSON formatted data into Tablular formatted data'
                     : selectedOp && selectedOp.label === 'Group By'
                     ? 'Group your data by one or more dimensions and analyse it.'
                     : selectedOp && selectedOp.label === 'Join'
