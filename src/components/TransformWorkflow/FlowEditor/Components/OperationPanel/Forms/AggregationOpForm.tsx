@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
@@ -13,6 +13,26 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
+interface AggregateOn {
+  column: string;
+  operation: 'sum' | 'avg' | 'count' | 'countdistinct' | 'max' | 'min';
+  output_column_name: string;
+}
+interface AggregateDataConfig {
+  aggregate_on: AggregateOn[];
+  source_columns: string[];
+  other_inputs: any[];
+}
+
+const AggregateOperations = [
+  { id: 'avg', label: 'Average' },
+  { id: 'count', label: 'Count' },
+  { id: 'countdistinct', label: 'Count Distinct' },
+  { id: 'max', label: 'Maximum' },
+  { id: 'min', label: 'Minimum' },
+  { id: 'sum', label: 'Sum' },
+].sort((a, b) => a.label.localeCompare(b.label));
+
 const AggregationOpForm = ({
   node,
   operation,
@@ -20,12 +40,13 @@ const AggregationOpForm = ({
   continueOperationChain,
   clearAndClosePanel,
   dummyNodeId,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
-  const [selectedOperation, setSelectedOperation] = useState<string>('');
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -33,17 +54,29 @@ const AggregationOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset } = useForm({
+  type FormProps = {
+    aggregate_on: {
+      column: string;
+      operation: { id: string; label: string };
+      output_column_name: string;
+    }[];
+  };
+
+  const { control, register, handleSubmit, reset } = useForm<FormProps>({
     defaultValues: {
-      columns: [{ col: '' }],
-      operation: '',
-      output_column_name: '',
+      aggregate_on: [
+        {
+          column: '',
+          operation: { id: '', label: '' },
+          output_column_name: '',
+        },
+      ],
     },
   });
   // Include this for multi-row input
   const { fields } = useFieldArray({
     control,
-    name: 'columns',
+    name: 'aggregate_on',
   });
 
   const fetchAndSetSourceColumns = async () => {
@@ -64,15 +97,29 @@ const AggregationOpForm = ({
     }
   };
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: FormProps) => {
     try {
-      if (selectedColumns.length === 0) {
+      if (data.aggregate_on.length === 0) {
         errorToast('Please select columns to aggregate', [], globalContext);
         return;
       }
 
-      if (!selectedOperation) {
+      if (!data.aggregate_on[0].column) {
+        errorToast(
+          'Please select the column to aggregate on',
+          [],
+          globalContext
+        );
+        return;
+      }
+
+      if (!data.aggregate_on[0].operation) {
         errorToast('Please select an operation', [], globalContext);
+        return;
+      }
+
+      if (!data.aggregate_on[0].output_column_name) {
+        errorToast('Please enter the output name', [], globalContext);
         return;
       }
 
@@ -80,34 +127,77 @@ const AggregationOpForm = ({
         op_type: operation.slug,
         source_columns: srcColumns,
         config: {
-          aggregate_on: [
-            {
-              operation: selectedOperation,
-              column: selectedColumns[0],
-              output_column_name: data.output_column_name,
-            },
-          ],
+          aggregate_on: data.aggregate_on.map((item) => ({
+            operation: item.operation.id,
+            column: item.column,
+            output_column_name: item.output_column_name,
+          })),
         },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
       };
 
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       continueOperationChain(operationNode);
       reset();
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      errorToast(error?.message, [], globalContext);
+    }
+  };
+
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let { source_columns, aggregate_on }: AggregateDataConfig = opConfig;
+      setSrcColumns(source_columns);
+
+      // pre-fill form
+      reset({
+        aggregate_on: aggregate_on.map((item: AggregateOn) => ({
+          column: item.column,
+          operation: AggregateOperations.find((op) => op.id === item.operation),
+          output_column_name: item.output_column_name,
+        })),
+      });
+    } catch (error) {
+      console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchAndSetSourceColumns();
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
   }, [session]);
 
   return (
@@ -115,38 +205,37 @@ const AggregationOpForm = ({
       <form onSubmit={handleSubmit(handleSave)}>
         {fields.map((field, index) => (
           <Box key={field.id}>
-            <Autocomplete
-              key={index}
-              options={srcColumns
-                .filter((col) => !selectedColumns.includes(col))
-                .sort((a, b) => a.localeCompare(b))}
-              onChange={(e, data) => {
-                if (data && typeof data === 'string') {
-                  setSelectedColumns([...selectedColumns, data]);
-                }
-              }}
-              label="Select Column to Aggregate*"
-              fieldStyle="transformation"
+            <Controller
+              control={control}
+              name={`aggregate_on.${index}.column`}
+              render={({ field }) => (
+                <Autocomplete
+                  disabled={action === 'view'}
+                  fieldStyle="transformation"
+                  options={srcColumns.sort((a, b) => a.localeCompare(b))}
+                  value={field.value}
+                  onChange={(e, data) => {
+                    if (data) field.onChange(data);
+                  }}
+                  label="Select Column to Aggregate*"
+                />
+              )}
             />
 
             <Box sx={{ mt: 2 }}>
               <Controller
                 control={control}
-                name={`columns.${index}.col`}
+                name={`aggregate_on.${index}.operation`}
                 render={({ field }) => (
                   <Autocomplete
-                    options={[
-                      { value: 'avg', label: 'Average' },
-                      { value: 'count', label: 'Count' },
-                      { value: 'countdistinct', label: 'Count Distinct' },
-                      { value: 'max', label: 'Maximum' },
-                      { value: 'min', label: 'Minimum' },
-                      { value: 'sum', label: 'Sum' },
-                    ]}
+                    disabled={action === 'view'}
+                    options={AggregateOperations}
+                    isOptionEqualToValue={(option: any, value: any) =>
+                      option?.id === value?.id
+                    }
+                    value={field.value}
                     onChange={(e, data: any) => {
-                      if (data?.value) {
-                        setSelectedOperation(data.value);
-                      }
+                      if (data) field.onChange(data);
                     }}
                     label="Aggregate*"
                     fieldStyle="transformation"
@@ -156,11 +245,11 @@ const AggregationOpForm = ({
             </Box>
             <Input
               fieldStyle="transformation"
-              label="Output Column Name"
+              label="Output Column Name*"
               sx={{ padding: '0', marginTop: '16px' }}
-              name="output_column_name"
+              name={`aggregate_on.${index}.output_column_name`}
               register={register}
-              required
+              disabled={action === 'view'}
             />
           </Box>
         ))}
@@ -168,6 +257,7 @@ const AggregationOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
+              disabled={action === 'view'}
               variant="contained"
               type="submit"
               data-testid="savebutton"
