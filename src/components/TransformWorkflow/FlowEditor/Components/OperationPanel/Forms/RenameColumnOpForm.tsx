@@ -136,6 +136,12 @@ const RenameColumnOp = ({
               fieldStyle="none"
               key={field.new + index}
               sx={{ padding: '0' }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  append({ old: '', new: '' });
+                }
+              }}
               name={`config.${index}.new`}
               register={register}
             />,
