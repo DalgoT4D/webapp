@@ -13,7 +13,7 @@ export const generateDummySrcModelNode = (
     },
   ]);
 
-  let dummyNode: any = {
+  const dummyNode: any = {
     id: model.id,
     type: SRC_MODEL_NODE,
     data: {},
@@ -39,6 +39,7 @@ export const generateDummyOperationlNode = (
   ]);
   const dummyTargetNodeData: any = {
     id: nodeId,
+    selected: true,
     type: OPERATION_NODE,
     data: {
       id: nodeId,
