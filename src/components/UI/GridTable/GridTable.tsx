@@ -13,7 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 interface GridTableProps {
   headers: string[];
   data?: JSX.Element[][];
-  removeItem: any;
+  removeItem?: any;
 }
 
 const castGridStyles: { [key: string]: SxProps } = {
