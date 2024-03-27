@@ -395,7 +395,6 @@ const OperationConfigLayout = ({
   const handleSelectOp = (op: UIOperationType) => {
     // Create the dummy node on canvas
     // For multi input operation we might have to do it inside the operation once they select the other inputs
-    // console.log('select op', op, canvasNode);
     const dummyTargetNodeData: any = generateDummyOperationlNode(
       canvasNode,
       op
