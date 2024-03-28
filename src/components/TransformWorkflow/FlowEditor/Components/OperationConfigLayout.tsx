@@ -46,7 +46,7 @@ import {
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
 import CreateTableForm from './OperationPanel/Forms/CreateTableForm';
-import { useReactFlow } from 'reactflow';
+import { Edge, useReactFlow } from 'reactflow';
 import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
 import ReplaceValueOpForm from './OperationPanel/Forms/ReplaceValueOpForm';
 import CoalesceOpForm from './OperationPanel/Forms/CoalesceOpForm';
@@ -381,7 +381,7 @@ const OperationConfigLayout = ({
   const contentRef: any = useRef(null);
   const panelOpFormState = useRef<'create' | 'view' | 'edit'>('view');
 
-  const { addEdges, addNodes, deleteElements, getNodes, setNodes } =
+  const { addEdges, addNodes, deleteElements, getNodes, setNodes, getEdges } =
     useReactFlow();
 
   const handleClosePanel = () => {
@@ -652,35 +652,51 @@ const OperationConfigLayout = ({
   };
 
   const prepareForNextOperation = async (opNodeData: OperationNodeData) => {
-    deleteElements({
-      nodes: [{ id: dummyNodeIdRef.current }],
-    });
     if (opNodeData.id !== canvasNode?.id) {
+      let dummyNodeId: string = dummyNodeIdRef.current;
+      // get all edges of this dummy node and save
+      const dummyNodeEdges = getEdges().filter(
+        (edge: Edge) =>
+          edge.source === dummyNodeId || edge.target === dummyNodeId
+      );
+
+      // convert this dummy node to a real node from backend. basically create a new one
       const { x: xnew, y: ynew } = getNextNodePosition([
         {
           position: { x: canvasNode?.xPos, y: canvasNode?.yPos },
           height: 200,
         },
       ]);
+      const dummyToRealNode = {
+        id: opNodeData.id,
+        type: OPERATION_NODE,
+        data: opNodeData,
+        position: { x: xnew, y: ynew },
+      };
 
-      addNodes([
-        {
-          id: opNodeData.id,
-          type: OPERATION_NODE,
-          data: opNodeData,
-          position: { x: xnew, y: ynew },
-        },
-      ]);
-      addEdges([
-        {
-          id: `${canvasNode ? canvasNode.id : ''}_${opNodeData.id}`,
-          source: canvasNode ? canvasNode.id : '',
-          target: opNodeData.id,
-          sourceHandle: null,
-          targetHandle: null,
-        },
-      ]);
+      // recreate the saved edges but this time to the real node
+      const edgesToCreate: Edge[] = dummyNodeEdges.map((edge: Edge) => {
+        let source =
+          edge.source === dummyNodeId ? dummyToRealNode.id : edge.source;
+
+        let target =
+          edge.target === dummyNodeId ? dummyToRealNode.id : edge.target;
+
+        return {
+          id: `${source}_${target}`,
+          source: source,
+          target: target,
+          sourceHandle: edge.sourceHandle,
+          targetHandle: edge.targetHandle,
+        };
+      });
+
+      addNodes([dummyToRealNode]);
+      addEdges(edgesToCreate);
     }
+    deleteElements({
+      nodes: [{ id: dummyNodeIdRef.current }],
+    });
     setSelectedOp(null);
     setCanvasAction({
       type: 'update-canvas-node',

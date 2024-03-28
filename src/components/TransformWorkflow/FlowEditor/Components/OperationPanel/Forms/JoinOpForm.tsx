@@ -197,6 +197,7 @@ const JoinOpForm = ({
         `transform/dbt_project/model/`,
         postData
       );
+
       continueOperationChain(operationNode);
       reset();
     } catch (error) {
