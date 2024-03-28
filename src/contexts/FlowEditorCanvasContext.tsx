@@ -45,6 +45,7 @@ interface Action {
     | 'close-reset-opconfig-panel'
     | 'sync-sources'
     | 'run-workflow'
+    | 'update-canvas-node'
     | ''
     | undefined
     | null;

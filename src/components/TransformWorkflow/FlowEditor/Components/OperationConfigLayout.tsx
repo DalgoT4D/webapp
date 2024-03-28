@@ -15,6 +15,7 @@ import {
   OperationNodeType,
   SrcModelNodeType,
   UIOperationType,
+  getNextNodePosition,
 } from './Canvas';
 // import { operations } from './OperationConfigForms/constant';
 import {
@@ -45,7 +46,7 @@ import {
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
 import CreateTableForm from './OperationPanel/Forms/CreateTableForm';
-import { useReactFlow } from 'reactflow';
+import { Edge, useReactFlow } from 'reactflow';
 import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
 import ReplaceValueOpForm from './OperationPanel/Forms/ReplaceValueOpForm';
 import CoalesceOpForm from './OperationPanel/Forms/CoalesceOpForm';
@@ -72,6 +73,7 @@ export interface OperationFormProps {
   continueOperationChain: (...args: any) => void;
   clearAndClosePanel: (...args: any) => void;
   dummyNodeId: string;
+  action: 'create' | 'view' | 'edit';
 }
 
 const operationComponentMapping: any = {
@@ -82,6 +84,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <RenameColumnOpForm
       node={node}
@@ -90,6 +93,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [JOIN_OP]: ({
@@ -99,6 +103,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <JoinOpForm
       node={node}
@@ -107,6 +112,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [REPLACE_COLUMN_VALUE_OP]: ({
@@ -116,6 +122,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <ReplaceValueOpForm
       node={node}
@@ -124,6 +131,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [COALESCE_COLUMNS_OP]: ({
@@ -133,6 +141,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <CoalesceOpForm
       node={node}
@@ -141,6 +150,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [ARITHMETIC_OP]: ({
@@ -150,6 +160,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <ArithmeticOpForm
       node={node}
@@ -158,6 +169,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [DROP_COLUMNS_OP]: ({
@@ -167,6 +179,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <DropColumnOpForm
       node={node}
@@ -175,6 +188,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [CAST_DATA_TYPES_OP]: ({
@@ -184,6 +198,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <CastColumnOpForm
       node={node}
@@ -192,6 +207,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [AGGREGATE_OP]: ({
@@ -201,6 +217,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <AggregationOpForm
       node={node}
@@ -209,6 +226,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [GROUPBY_OP]: ({
@@ -218,6 +236,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <GroupByOpForm
       node={node}
@@ -226,6 +245,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [WHERE_OP]: ({
@@ -235,6 +255,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <WhereFilterOpForm
       node={node}
@@ -243,6 +264,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [CASEWHEN_OP]: ({
@@ -252,6 +274,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <CaseWhenOpForm
       node={node}
@@ -260,6 +283,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [UNION_OP]: ({
@@ -269,6 +293,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <UnionTablesOpForm
       node={node}
@@ -277,6 +302,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
   [FLATTEN_JSON_OP]: ({
@@ -286,6 +312,7 @@ const operationComponentMapping: any = {
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   }: OperationFormProps) => (
     <FlattenJsonOpForm
       node={node}
@@ -294,6 +321,7 @@ const operationComponentMapping: any = {
       continueOperationChain={continueOperationChain}
       clearAndClosePanel={clearAndClosePanel}
       dummyNodeId={dummyNodeId}
+      action={action}
     />
   ),
 };
@@ -305,7 +333,12 @@ const OperationForm = ({
   continueOperationChain,
   clearAndClosePanel,
   dummyNodeId,
+  action,
 }: OperationFormProps) => {
+  if (operation === null || operation === undefined) {
+    return null;
+  }
+
   if (operation.slug === 'create-table') {
     return (
       <CreateTableForm
@@ -315,6 +348,7 @@ const OperationForm = ({
         continueOperationChain={continueOperationChain}
         clearAndClosePanel={clearAndClosePanel}
         dummyNodeId={dummyNodeId}
+        action={action}
       />
     );
   }
@@ -330,6 +364,7 @@ const OperationForm = ({
     continueOperationChain,
     clearAndClosePanel,
     dummyNodeId,
+    action,
   });
 };
 
@@ -344,8 +379,9 @@ const OperationConfigLayout = ({
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
+  const panelOpFormState = useRef<'create' | 'view' | 'edit'>('view');
 
-  const { addEdges, addNodes, deleteElements, getNodes, setNodes } =
+  const { addEdges, addNodes, deleteElements, getNodes, setNodes, getEdges } =
     useReactFlow();
 
   const handleClosePanel = () => {
@@ -353,6 +389,7 @@ const OperationConfigLayout = ({
     setOpenPanel(false);
     setShowFunctionsList(false);
     setSelectedOp(null);
+    setCanvasNode(null);
   };
 
   const handleSelectOp = (op: UIOperationType) => {
@@ -390,6 +427,13 @@ const OperationConfigLayout = ({
   useEffect(() => {
     if (canvasAction.type === 'open-opconfig-panel') {
       setOpenPanel(true);
+      panelOpFormState.current = canvasAction.data || 'view';
+      if (panelOpFormState.current === 'view') {
+        const selectOp = canvasNode?.data as OperationNodeData;
+        setSelectedOp(
+          operations.find((op) => op.slug === selectOp.config?.type)
+        );
+      }
     }
 
     if (canvasAction.type === 'close-reset-opconfig-panel') {
@@ -407,19 +451,39 @@ const OperationConfigLayout = ({
 
   const PanelHeader = () => {
     const handleBackbuttonAction = () => {
-      const dummyNodeIds: string[] = [dummyNodeIdRef.current];
-      getNodes().forEach((node) => {
-        if (node.data.isDummy) {
-          dummyNodeIds.push(node.id);
-        }
-      });
-      deleteElements({
-        nodes: dummyNodeIds.map((nodeId: any) => ({
-          id: nodeId,
-        })),
-      });
-      setSelectedOp(null);
+      //dummy nodes are generate only while creating & not updating
+      if (panelOpFormState.current === 'create') {
+        let dummyNodeIds: string[] = [dummyNodeIdRef.current];
+        getNodes().forEach((node) => {
+          if (node.data.isDummy) {
+            dummyNodeIds.push(node.id);
+          }
+        });
+        deleteElements({
+          nodes: dummyNodeIds.map((nodeId: any) => ({
+            id: nodeId,
+          })),
+        });
+        setSelectedOp(null);
+      }
     };
+
+    const handleBackButtonOnCreateTableAddFunction = () => {
+      // show the form
+      let { config } = canvasNode?.data as OperationNodeData;
+      if (config && config.type) {
+        const editingOperation = operations.find(
+          (op) => op.slug === config.type
+        );
+        setSelectedOp({
+          slug: editingOperation?.slug || '',
+          label: editingOperation?.label || '',
+        });
+      }
+      // set the state to edit
+      panelOpFormState.current = 'edit';
+    };
+
     return (
       <Box>
         <Box
@@ -431,9 +495,14 @@ const OperationConfigLayout = ({
             alignItems: 'center',
           }}
         >
-          {selectedOp && (
+          {((selectedOp && panelOpFormState.current !== 'view') ||
+            panelState === 'create-table-or-add-function') && (
             <IconButton
-              onClick={handleBackbuttonAction}
+              onClick={
+                panelState === 'create-table-or-add-function'
+                  ? handleBackButtonOnCreateTableAddFunction
+                  : handleBackbuttonAction
+              }
               data-testid="openoperationlist"
             >
               <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
@@ -547,7 +616,11 @@ const OperationConfigLayout = ({
                   },
                 }}
                 onClick={
-                  canSelectOperation ? () => handleSelectOp(op) : undefined
+                  canSelectOperation
+                    ? () => {
+                        handleSelectOp(op);
+                      }
+                    : undefined
                 }
               >
                 {canSelectOperation ? (
@@ -574,20 +647,70 @@ const OperationConfigLayout = ({
   };
 
   const handleAddFunction = () => {
-    console.log('add function');
     setShowFunctionsList(true);
+    panelOpFormState.current = 'create';
   };
 
-  const prepareForNextOperation = (opNodeData: OperationNodeData) => {
-    setCanvasAction({ type: 'refresh-canvas', data: null });
+  const prepareForNextOperation = async (opNodeData: OperationNodeData) => {
+    if (opNodeData.id !== canvasNode?.id) {
+      let dummyNodeId: string = dummyNodeIdRef.current;
+      // get all edges of this dummy node and save
+      const dummyNodeEdges = getEdges().filter(
+        (edge: Edge) =>
+          edge.source === dummyNodeId || edge.target === dummyNodeId
+      );
+
+      // convert this dummy node to a real node from backend. basically create a new one
+      const { x: xnew, y: ynew } = getNextNodePosition([
+        {
+          position: { x: canvasNode?.xPos, y: canvasNode?.yPos },
+          height: 200,
+        },
+      ]);
+      const dummyToRealNode = {
+        id: opNodeData.id,
+        type: OPERATION_NODE,
+        data: opNodeData,
+        position: { x: xnew, y: ynew },
+      };
+
+      // recreate the saved edges but this time to the real node
+      const edgesToCreate: Edge[] = dummyNodeEdges.map((edge: Edge) => {
+        let source =
+          edge.source === dummyNodeId ? dummyToRealNode.id : edge.source;
+
+        let target =
+          edge.target === dummyNodeId ? dummyToRealNode.id : edge.target;
+
+        return {
+          id: `${source}_${target}`,
+          source: source,
+          target: target,
+          sourceHandle: edge.sourceHandle,
+          targetHandle: edge.targetHandle,
+        };
+      });
+
+      addNodes([dummyToRealNode]);
+      addEdges(edgesToCreate);
+    }
+    deleteElements({
+      nodes: [{ id: dummyNodeIdRef.current }],
+    });
     setSelectedOp(null);
-    setCanvasNode({
-      id: opNodeData.id,
-      type: OPERATION_NODE,
-      data: opNodeData,
-    } as OperationNodeType);
+    setCanvasAction({
+      type: 'update-canvas-node',
+      data: { id: opNodeData.id, type: OPERATION_NODE },
+    });
     setShowFunctionsList(false);
+    panelOpFormState.current = 'edit';
   };
+
+  const panelState = selectedOp
+    ? 'op-form'
+    : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE
+    ? 'op-list'
+    : 'create-table-or-add-function';
 
   return (
     <Box
@@ -612,16 +735,17 @@ const OperationConfigLayout = ({
             overflowY: 'auto',
           }}
         >
-          {selectedOp ? (
+          {panelState === 'op-form' ? (
             <OperationForm
               sx={{}}
-              operation={selectedOp}
+              operation={selectedOp ? selectedOp : { slug: '', label: '' }}
               node={canvasNode}
               continueOperationChain={prepareForNextOperation}
               clearAndClosePanel={handleClosePanel}
               dummyNodeId={dummyNodeIdRef.current || ''}
+              action={panelOpFormState.current}
             />
-          ) : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE ? (
+          ) : panelState === 'op-list' ? (
             <OperationList
               sx={{
                 marginTop: '5px',
@@ -634,7 +758,6 @@ const OperationConfigLayout = ({
             />
           )}
         </Box>
-        <PanelFooter />
       </Box>
     </Box>
   );

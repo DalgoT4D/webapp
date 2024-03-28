@@ -126,7 +126,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   const handleSelectNode = () => {
     setCanvasAction({
       type: 'open-opconfig-panel',
-      data: null,
+      data: 'create',
     });
     setCanvasNode(node);
     setPreviewAction({ type: 'preview', data: node.data });
@@ -150,7 +150,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     <Box
       sx={{
         display: 'flex',
-        border: node.selected ? '2px solid black' : '0px',
+        border: node.selected || node.data?.isDummy ? '2px solid black' : '0px',
         borderRadius: '5px',
         borderStyle: 'dotted',
       }}
