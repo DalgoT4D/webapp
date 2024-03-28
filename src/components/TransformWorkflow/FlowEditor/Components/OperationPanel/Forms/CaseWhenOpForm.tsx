@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
@@ -22,6 +22,59 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
+
+interface GenericOperand {
+  value: string;
+  is_col: boolean;
+}
+
+interface WhenClause {
+  column: string;
+  operands: GenericOperand[];
+  operator: string;
+  then: GenericOperand;
+}
+
+interface CasewheneDataConfig {
+  case_type: 'simple' | 'advance';
+  else_clause: GenericOperand;
+  when_clauses: WhenClause[];
+  sql_snippet: string;
+  output_column_name: string;
+  source_columns: string[];
+  other_inputs: any[];
+}
+
+const LogicalOperators = [
+  {
+    id: 'between',
+    label: 'Between',
+  },
+  {
+    id: '=',
+    label: 'Equal To =',
+  },
+  {
+    id: '>=',
+    label: 'Greater Than or Equal To >=',
+  },
+  {
+    id: '>',
+    label: 'Greater Than >',
+  },
+  {
+    id: '<',
+    label: 'Less Than <',
+  },
+  {
+    id: '<=',
+    label: 'Less Than or Equal To <=',
+  },
+  {
+    id: '!=',
+    label: 'Not Equal To !=',
+  },
+].sort((a, b) => a.label.localeCompare(b.label));
 
 const ClauseOperands = ({
   clauseField,
@@ -40,6 +93,7 @@ const ClauseOperands = ({
     srcColumns: string[];
     advanceFilter: string;
     logicalOp: { id: string; label: string };
+    action: string;
   };
 }) => {
   const { fields: operandFields } = useFieldArray({
@@ -61,7 +115,6 @@ const ClauseOperands = ({
               <Controller
                 name={`clauses.${clauseIndex}.operands.${operandIndex}.type`}
                 control={control}
-                rules={{ required: true }}
                 render={({ field }) => {
                   return (
                     <RadioGroup
@@ -77,13 +130,19 @@ const ClauseOperands = ({
                         value="col"
                         control={<Radio />}
                         label="Column"
-                        disabled={data.advanceFilter === 'yes'}
+                        disabled={
+                          data.advanceFilter === 'yes' || data.action === 'view'
+                        }
+                        required={data.advanceFilter === 'no'}
                       />
                       <FormControlLabel
                         value="val"
                         control={<Radio />}
                         label="Value"
-                        disabled={data.advanceFilter === 'yes'}
+                        disabled={
+                          data.advanceFilter === 'yes' || data.action === 'view'
+                        }
+                        required={data.advanceFilter === 'no'}
                       />
                     </RadioGroup>
                   );
@@ -93,13 +152,15 @@ const ClauseOperands = ({
                 <Controller
                   control={control}
                   name={`clauses.${clauseIndex}.operands.${operandIndex}.col_val`}
-                  rules={{ required: true }}
+                  rules={{ required: data.advanceFilter === 'no' }}
                   render={({ field }) => (
                     <Autocomplete
                       options={data.srcColumns.sort((a, b) =>
                         a.localeCompare(b)
                       )}
-                      disabled={data.advanceFilter === 'yes'}
+                      disabled={
+                        data.advanceFilter === 'yes' || data.action === 'view'
+                      }
                       value={field.value}
                       onChange={(e, data) => {
                         field.onChange(data);
@@ -117,8 +178,10 @@ const ClauseOperands = ({
                   register={register}
                   sx={{ padding: '0' }}
                   placeholder="Enter the value"
-                  disabled={data.advanceFilter === 'yes'}
-                  required
+                  disabled={
+                    data.advanceFilter === 'yes' || data.action === 'view'
+                  }
+                  required={data.advanceFilter === 'no'}
                 />
               )}
             </Box>
@@ -135,9 +198,11 @@ const CaseWhenOpForm = ({
   continueOperationChain,
   clearAndClosePanel,
   dummyNodeId,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -173,7 +238,14 @@ const CaseWhenOpForm = ({
     sql_snippet: string;
   };
 
-  const { control, register, handleSubmit, reset, watch } = useForm<FormProps>({
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<FormProps>({
     defaultValues: {
       clauses: [
         {
@@ -200,6 +272,8 @@ const CaseWhenOpForm = ({
       sql_snippet: '',
     },
   });
+
+  console.log(errors);
 
   const {
     fields: clauseFields,
@@ -239,7 +313,6 @@ const CaseWhenOpForm = ({
 
   const handleSave = async (data: FormProps) => {
     try {
-      console.log('saving', data);
       if (data.advanceFilter === 'yes' && data.sql_snippet.length < 4) {
         errorToast('Please enter the SQL snippet', [], globalContext);
         return;
@@ -291,11 +364,25 @@ const CaseWhenOpForm = ({
       };
 
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the first step in chain
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       continueOperationChain(operationNode);
       reset();
@@ -304,8 +391,66 @@ const CaseWhenOpForm = ({
     }
   };
 
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let {
+        source_columns,
+        when_clauses,
+        else_clause,
+        sql_snippet,
+        case_type,
+        output_column_name,
+      }: CasewheneDataConfig = opConfig;
+      setSrcColumns(source_columns);
+
+      // pre-fill form
+      const clauses = when_clauses.map((clause: WhenClause) => ({
+        filterCol: clause.column,
+        logicalOp: LogicalOperators.find((op) => op.id === clause.operator) || {
+          id: '',
+          label: '',
+        },
+        operands: clause.operands.map((op: GenericOperand) => ({
+          type: op.is_col ? 'col' : 'val',
+          col_val: op.value,
+          const_val: op.value,
+        })),
+        then: {
+          type: clause.then.is_col ? 'col' : 'val',
+          col_val: clause.then.value,
+          const_val: clause.then.value,
+        },
+      }));
+      reset({
+        clauses: clauses,
+        else: {
+          type: else_clause.is_col ? 'col' : 'val',
+          col_val: else_clause.value,
+          const_val: else_clause.value,
+        },
+        output_column_name: output_column_name,
+        advanceFilter: case_type === 'advance' ? 'yes' : 'no',
+        sql_snippet: sql_snippet,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    fetchAndSetSourceColumns();
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
   }, [session]);
 
   return (
@@ -353,14 +498,15 @@ const CaseWhenOpForm = ({
                   <Controller
                     control={control}
                     name={`clauses.${clauseIndex}.filterCol`}
-                    rules={{ required: true }}
+                    rules={{ required: advanceFilter === 'no' }}
                     render={({ field }) => (
                       <Autocomplete
                         options={srcColumns}
-                        disabled={advanceFilter === 'yes'}
+                        disabled={advanceFilter === 'yes' || action === 'view'}
                         onChange={(e, data) => {
                           field.onChange(data);
                         }}
+                        value={field.value}
                         // label="When"
                         placeholder="Select column to condition on"
                         fieldStyle="transformation"
@@ -371,43 +517,14 @@ const CaseWhenOpForm = ({
                   <Controller
                     control={control}
                     name={`clauses.${clauseIndex}.logicalOp`}
-                    rules={{ required: true }}
+                    rules={{ required: advanceFilter === 'no' }}
                     render={({ field }) => (
                       <Autocomplete
-                        options={[
-                          {
-                            id: 'between',
-                            label: 'Between',
-                          },
-                          {
-                            id: '=',
-                            label: 'Equal To =',
-                          },
-                          {
-                            id: '>=',
-                            label: 'Greater Than or Equal To >=',
-                          },
-                          {
-                            id: '>',
-                            label: 'Greater Than >',
-                          },
-                          {
-                            id: '<',
-                            label: 'Less Than <',
-                          },
-                          {
-                            id: '<=',
-                            label: 'Less Than or Equal To <=',
-                          },
-                          {
-                            id: '!=',
-                            label: 'Not Equal To !=',
-                          },
-                        ]}
+                        options={LogicalOperators}
                         isOptionEqualToValue={(option: any, value: any) =>
                           option?.id === value?.id
                         }
-                        disabled={advanceFilter === 'yes'}
+                        disabled={advanceFilter === 'yes' || action === 'view'}
                         value={field.value}
                         onChange={(e, data) => {
                           if (data) field.onChange(data);
@@ -428,6 +545,7 @@ const CaseWhenOpForm = ({
                       srcColumns,
                       advanceFilter,
                       logicalOp: logicalOpVal,
+                      action: action,
                     }}
                   />
                   <Box sx={{ m: 2 }} />
@@ -435,6 +553,7 @@ const CaseWhenOpForm = ({
                     <Controller
                       name={`clauses.${clauseIndex}.then.type`}
                       control={control}
+                      rules={{ required: advanceFilter === 'no' }}
                       render={({ field }) => {
                         return (
                           <Box sx={{ alignItems: 'center' }}>
@@ -465,13 +584,17 @@ const CaseWhenOpForm = ({
                                 value="col"
                                 control={<Radio />}
                                 label="Column"
-                                disabled={advanceFilter === 'yes'}
+                                disabled={
+                                  advanceFilter === 'yes' || action === 'view'
+                                }
                               />
                               <FormControlLabel
                                 value="val"
                                 control={<Radio />}
                                 label="Value"
-                                disabled={advanceFilter === 'yes'}
+                                disabled={
+                                  advanceFilter === 'yes' || action === 'view'
+                                }
                               />
                             </RadioGroup>
                           </Box>
@@ -482,11 +605,13 @@ const CaseWhenOpForm = ({
                       <Controller
                         control={control}
                         name={`clauses.${clauseIndex}.then.col_val`}
-                        rules={{ required: true }}
+                        rules={{ required: advanceFilter === 'no' }}
                         render={({ field }) => (
                           <Autocomplete
                             options={srcColumns}
-                            disabled={advanceFilter === 'yes'}
+                            disabled={
+                              advanceFilter === 'yes' || action === 'view'
+                            }
                             value={field.value}
                             onChange={(e, data) => {
                               field.onChange(data);
@@ -504,8 +629,8 @@ const CaseWhenOpForm = ({
                         register={register}
                         sx={{ padding: '0' }}
                         placeholder="Enter the value"
-                        disabled={advanceFilter === 'yes'}
-                        required
+                        disabled={advanceFilter === 'yes' || action === 'view'}
+                        required={advanceFilter === 'no'}
                       />
                     )}
                   </Box>
@@ -517,7 +642,7 @@ const CaseWhenOpForm = ({
                       type="button"
                       data-testid="removecase"
                       sx={{}}
-                      disabled={advanceFilter === 'yes'}
+                      disabled={advanceFilter === 'yes' || action === 'view'}
                       onClick={(event) => removeClause(clauseIndex)}
                     >
                       Remove case {clauseIndex + 1}
@@ -531,7 +656,7 @@ const CaseWhenOpForm = ({
                     type="button"
                     data-testid="addcase"
                     sx={{ mt: 2 }}
-                    disabled={advanceFilter === 'yes'}
+                    disabled={advanceFilter === 'yes' || action === 'view'}
                     onClick={(event) =>
                       appendClause({
                         filterCol: '',
@@ -586,13 +711,13 @@ const CaseWhenOpForm = ({
                         value="col"
                         control={<Radio />}
                         label="Column"
-                        disabled={advanceFilter === 'yes'}
+                        disabled={advanceFilter === 'yes' || action === 'view'}
                       />
                       <FormControlLabel
                         value="val"
                         control={<Radio />}
                         label="Value"
-                        disabled={advanceFilter === 'yes'}
+                        disabled={advanceFilter === 'yes' || action === 'view'}
                       />
                     </RadioGroup>
                   </Box>
@@ -606,7 +731,7 @@ const CaseWhenOpForm = ({
                 render={({ field }) => (
                   <Autocomplete
                     options={srcColumns}
-                    disabled={advanceFilter === 'yes'}
+                    disabled={advanceFilter === 'yes' || action === 'view'}
                     value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
@@ -624,12 +749,13 @@ const CaseWhenOpForm = ({
                 register={register}
                 sx={{ padding: '0' }}
                 placeholder="Enter the value"
-                disabled={advanceFilter === 'yes'}
+                disabled={advanceFilter === 'yes' || action === 'view'}
               />
             )}
           </Box>
           <Box sx={{ m: 2 }} />
           <Input
+            disabled={action === 'view'}
             fieldStyle="transformation"
             label="Output Column Name"
             name={`output_column_name`}
@@ -661,6 +787,7 @@ const CaseWhenOpForm = ({
               render={({ field: { value, onChange } }) => (
                 <Stack direction={'row'} alignItems="center" gap={'10%'}>
                   <Switch
+                    disabled={action === 'view'}
                     checked={value === 'yes'}
                     value={value}
                     onChange={(event, value) => {
@@ -682,12 +809,14 @@ const CaseWhenOpForm = ({
               type="text"
               multiline
               rows={4}
+              disabled={action === 'view'}
             />
           )}
 
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
+              disabled={action === 'view'}
               variant="contained"
               type="submit"
               data-testid="savebutton"
