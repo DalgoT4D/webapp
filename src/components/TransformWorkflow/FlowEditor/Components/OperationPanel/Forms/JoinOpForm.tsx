@@ -360,7 +360,6 @@ const JoinOpForm = ({
           control={control}
           name={`table2.tab`}
           render={({ field }) => {
-            console.log('table2 field', field);
             return (
               <Autocomplete
                 fieldStyle="transformation"
