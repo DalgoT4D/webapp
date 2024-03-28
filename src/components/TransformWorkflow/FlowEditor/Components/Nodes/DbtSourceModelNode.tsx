@@ -150,7 +150,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     <Box
       sx={{
         display: 'flex',
-        border: node.selected ? '2px solid black' : '0px',
+        border: node.selected || node.data?.isDummy ? '2px solid black' : '0px',
         borderRadius: '5px',
         borderStyle: 'dotted',
       }}
