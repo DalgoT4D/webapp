@@ -45,7 +45,7 @@ interface CasewheneDataConfig {
   other_inputs: any[];
 }
 
-const LogicalOperators = [
+export const LogicalOperators = [
   {
     id: 'between',
     label: 'Between',
