@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
@@ -39,6 +39,14 @@ const castGridStyles: {
   },
 };
 
+interface FlattejsonDataConfig {
+  source_columns: string[];
+  other_inputs: any[];
+  json_column: string;
+  json_columns_to_copy: string[];
+  source_schema: string;
+}
+
 const FlattenJsonOpForm = ({
   node,
   operation,
@@ -48,8 +56,9 @@ const FlattenJsonOpForm = ({
   action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
-  const [srcColumns, setSrcColumns] = useState<ColumnData[]>([]);
+  const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [jsonColumns, setJsonColumns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -67,45 +76,50 @@ const FlattenJsonOpForm = ({
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
       try {
-        const columnData: ColumnData[] = await httpGet(
+        const data: ColumnData[] = await httpGet(
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(columnData);
+        setSrcColumns(
+          data
+            .map((col: ColumnData) => col.name)
+            .sort((a, b) => a.localeCompare(b))
+        );
       } catch (error) {
         console.log(error);
       }
     }
 
     if (node?.type === OPERATION_NODE) {
-      console.log(nodeData, 'node data');
       setSrcColumns(
-        nodeData.output_cols.map((column: any) => ({ name: column }))
+        nodeData.output_cols.sort((a: string, b: string) => a.localeCompare(b))
       );
     }
   };
 
   const fetchJsonColumns = async (selectedColumn: string) => {
+    // while edit fetch schema and input name from input models
     try {
       const response = await httpGet(
         session,
-        `warehouse/dbt_project/json_columnspec/?source_schema=${nodeData.schema}&input_name=${nodeData.input_name}&json_column=${selectedColumn}`
+        `warehouse/dbt_project/json_columnspec/?source_schema=${
+          action !== 'edit' ? nodeData.schema : inputModels[0].schema
+        }&input_name=${
+          action !== 'edit' ? nodeData.input_name : inputModels[0].name
+        }&json_column=${selectedColumn}`
       );
       setJsonColumns(response);
     } catch (error) {
+      setJsonColumns([]);
       console.log(error);
     }
   };
-
-  useEffect(() => {
-    fetchAndSetSourceColumns();
-  }, [session]);
 
   const handleSave = async (formData: any) => {
     try {
       const postData: any = {
         op_type: operation.slug,
-        source_columns: srcColumns.map((column) => column.name),
+        source_columns: srcColumns,
         other_inputs: [],
         config: {
           json_column: formData.json_column,
@@ -118,7 +132,6 @@ const FlattenJsonOpForm = ({
 
       // validations
       if (Object.keys(postData.config.json_column).length === 0) {
-        console.log('Please select the json column to flatten');
         errorToast(
           'Please select the json column to flatten',
           [],
@@ -127,12 +140,31 @@ const FlattenJsonOpForm = ({
         return;
       }
 
+      if (jsonColumns.length === 0) {
+        errorToast('Json column has no keys to flatten', [], globalContext);
+        return;
+      }
+
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the first step in chain
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       // Handle the response
       continueOperationChain(operationNode);
@@ -141,6 +173,41 @@ const FlattenJsonOpForm = ({
       console.log(error);
     }
   };
+
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let {
+        source_columns,
+        json_column,
+        json_columns_to_copy,
+      }: FlattejsonDataConfig = opConfig;
+      setSrcColumns(source_columns);
+      setJsonColumns(json_columns_to_copy);
+
+      // pre-fill form
+      reset({
+        json_column: json_column,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
+  }, [session]);
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
@@ -165,7 +232,8 @@ const FlattenJsonOpForm = ({
               name="json_column"
               render={({ field }) => (
                 <Autocomplete
-                  options={srcColumns.map((column) => column.name)}
+                  disabled={action === 'view'}
+                  options={srcColumns}
                   value={field.value}
                   onChange={(event, value) => {
                     field.onChange(value);
@@ -211,6 +279,7 @@ const FlattenJsonOpForm = ({
             type="submit"
             data-testid="savebutton"
             fullWidth
+            disabled={action === 'view'}
           >
             Save
           </Button>

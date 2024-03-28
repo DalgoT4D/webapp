@@ -238,14 +238,7 @@ const CaseWhenOpForm = ({
     sql_snippet: string;
   };
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    formState: { errors },
-  } = useForm<FormProps>({
+  const { control, register, handleSubmit, reset, watch } = useForm<FormProps>({
     defaultValues: {
       clauses: [
         {
@@ -272,8 +265,6 @@ const CaseWhenOpForm = ({
       sql_snippet: '',
     },
   });
-
-  console.log(errors);
 
   const {
     fields: clauseFields,
