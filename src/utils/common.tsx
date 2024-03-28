@@ -1,5 +1,6 @@
 import moment from 'moment';
 import cronstrue from 'cronstrue';
+import { Tooltip } from '@mui/material';
 
 export const lastRunTime = (startTime: string) => {
   return startTime ? moment(new Date(startTime)).fromNow() : '-';
@@ -78,9 +79,6 @@ const cronToLocalTZ = (expression: string) => {
   return newFields.join(' ');
 };
 
-// console.log(cronToLocalTZ('0 0 * * 0'));
-// console.log(cronToLocalTZ('0 20 * * 1'));
-
 export const cronToString = (expression: string) => {
   return cronstrue.toString(cronToLocalTZ(expression), { verbose: true });
 };
@@ -101,4 +99,14 @@ export const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const trimEmail = (email: string) => {
   return email.split('@')[0];
+};
+
+export const trimString = (string: string, length: number) => {
+  return string.length > length ? (
+    <Tooltip title={string} placement="top">
+      <span>{string.slice(0, length) + '...'}</span>
+    </Tooltip>
+  ) : (
+    string
+  );
 };

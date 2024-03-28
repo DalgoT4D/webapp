@@ -2,6 +2,12 @@ import { createTheme } from '@mui/material/styles';
 import { red } from '@mui/material/colors';
 import { Rajdhani } from 'next/font/google';
 
+declare module '@mui/material/Button' {
+  interface ButtonPropsVariantOverrides {
+    shadow: true;
+  }
+}
+
 export const rajdhani = Rajdhani({
   weight: ['300', '400', '500', '600', '700'],
   subsets: ['devanagari'],
@@ -108,6 +114,24 @@ const theme = createTheme({
       },
     },
     MuiButton: {
+      variants: [
+        {
+          props: { variant: 'shadow' },
+          style: {
+            color: primaryColor,
+            boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.16)',
+            border: `unset`,
+          },
+        },
+        {
+          props: { variant: 'shadow', color: 'error' },
+          style: {
+            color: '#ff1744',
+            boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.16)',
+            border: `unset`,
+          },
+        },
+      ],
       styleOverrides: {
         root: {
           '&.MuiButton-contained.Mui-disabled': {

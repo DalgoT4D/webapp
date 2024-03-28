@@ -1,137 +1,103 @@
-import { DBTSetup } from '@/components/DBT/DBTSetup';
+import React, { useContext, useEffect, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
-import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
-import { Box, Button, Card, Link, Tabs, Tab, Typography } from '@mui/material';
-import { useSession } from 'next-auth/react';
-import React, { useContext, useEffect, useState } from 'react';
-import Dbt from '@/assets/images/dbt.png';
-import Image from 'next/image';
+import { Box, Grid, Typography, Button } from '@mui/material';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
-import { TransformTask } from '@/components/DBT/DBTTarget';
-import { DBTTaskList } from '@/components/DBT/DBTTaskList';
-import { DBTDocs } from '@/components/DBT/DBTDocs';
-import { delay } from '@/utils/common';
-import { LogCard } from '@/components/Logs/LogCard';
+import Image from 'next/image';
+import Github from '@/assets/images/github_transform.png';
+import UI from '@/assets/images/ui_transform.png';
+import { useSession } from 'next-auth/react';
+import DBTTransformType from '@/components/DBT/DBTTransformType';
+import ConfirmationDialog from '@/components/Dialog/ConfirmationDialog';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
-type Tasks = TransformTask[];
+export type TransformType = 'github' | 'ui' | 'none' | null;
+
+interface TransformTypeResponse {
+  transform_type: TransformType;
+}
 
 const Transform = () => {
-  const [workspace, setWorkspace] = useState({
-    status: '',
-    gitrepo_url: '',
-    default_schema: '',
-  });
-  const [tasks, setTasks] = useState<Tasks>([]);
-  const [dbtSetupStage, setDbtSetupStage] = useState<string>(''); // create-workspace, complete
-  const [expandLogs, setExpandLogs] = useState<boolean>(false);
-  const [showConnectRepoDialog, setShowConnectRepoDialog] =
-    useState<boolean>(false);
-  const [rerender, setRerender] = useState<boolean>(false);
-  const [dbtSetupLogs, setDbtSetupLogs] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('setup');
-  const handleChangeTab = (event: React.SyntheticEvent, newTab: string) => {
-    setActiveTab(newTab);
-  };
-  const [anyTaskLocked, setAnyTaskLocked] = useState<boolean>(false);
-
-  const { data: session }: any = useSession();
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
+  const [transformClickedOn, setTransformClickedOn] =
+    useState<TransformType>('none');
+  const [selectedTransform, setSelectedTransform] =
+    useState<TransformType>(null);
+  const [dialogLoader, setDialogLoader] = useState<boolean>(false);
+  const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const handleEdit = () => {
-    setShowConnectRepoDialog(true);
-    handleClose();
-  };
 
-  const fetchDbtWorkspace = async () => {
-    if (!session) return;
-
-    try {
-      const response = await httpGet(session, 'dbt/dbt_workspace');
-      setDbtSetupStage('create-workspace');
-      if (response.error === 'no dbt workspace has been configured') {
-        setWorkspace({ ...workspace, status: 'fetched' });
-        // do nothing
-      } else if (response.error) {
-        errorToast(response.error, [], globalContext);
-      } else {
-        response.status = 'fetched';
-        setWorkspace(response);
-        fetchDbtTasks();
-      }
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], globalContext);
-    }
-  };
-
-  const pollDbtTasksLock = async () => {
-    try {
-      let isLocked = true;
-      while (isLocked) {
-        const response = await httpGet(session, 'prefect/tasks/transform/');
-
-        isLocked = response?.some((task: TransformTask) =>
-          task.lock ? true : false
-        );
-        await delay(3000);
-      }
-      setAnyTaskLocked(false);
-    } catch (error) {
-      setAnyTaskLocked(false);
-    }
-  };
-
-  const fetchDbtTasks = async () => {
-    if (!session) return;
-    try {
-      const response = await httpGet(session, 'prefect/tasks/transform/');
-
-      const tasks: TransformTask[] = [];
-
-      let isAnyLocked = false;
-      response?.forEach((task: TransformTask) => {
-        if (task.lock) isAnyLocked = true;
-        tasks.push(task);
-      });
-
-      setTasks(tasks);
-
-      if (response && response?.length > 0) {
-        setDbtSetupStage('complete');
-      }
-
-      if (isAnyLocked) {
-        setAnyTaskLocked(true);
-        pollDbtTasksLock();
-      }
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], globalContext);
-    }
-  };
-
-  const createProfile = async () => {
-    try {
-      await httpPost(session, `prefect/tasks/transform/`, {});
-      setDbtSetupStage('complete');
-      fetchDbtTasks();
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], globalContext);
-    }
+  const handleSetup = (transformType: TransformType) => {
+    setTransformClickedOn(transformType);
+    setConfirmationOpen(true);
   };
 
   useEffect(() => {
-    fetchDbtWorkspace();
-  }, [session, rerender]);
+    const fetchTransformType = async () => {
+      try {
+        const { transform_type } = await httpGet(session, 'dbt/dbt_transform/');
+
+        return { transform_type: transform_type as TransformType };
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    };
+
+    if (session) {
+      fetchTransformType()
+        .then((response: TransformTypeResponse) => {
+          const transformType = response.transform_type;
+          if (transformType === 'ui' || transformType === 'github')
+            setSelectedTransform(transformType);
+          else setSelectedTransform('none');
+        })
+        .catch((error) => {
+          setSelectedTransform('none');
+          console.error('Error fetching transform type:', error);
+        });
+    }
+  }, [session]);
+
+  const handleSelectTransformTypeConfirm = async () => {
+    setDialogLoader(true);
+    if (transformClickedOn === 'ui') {
+      try {
+        // setup local project
+        await httpPost(session, 'transform/dbt_project/', {
+          default_schema: 'intermediate',
+        });
+
+        // create system transform tasks
+        await httpPost(session, `prefect/tasks/transform/`, {});
+
+        // hit sync sources api
+        await httpPost(session, `transform/dbt_project/sync_sources/`, {});
+
+        setSelectedTransform('ui');
+      } catch (err: any) {
+        console.error('Error occurred while setting up:', err);
+        if (err.cause) {
+          errorToast(err.cause.detail, [], globalContext);
+        } else {
+          errorToast(err.message, [], globalContext);
+        }
+      }
+    } else if (transformClickedOn === 'github') {
+      setSelectedTransform('github');
+    }
+    // close the dialogx
+    setConfirmationOpen(false);
+    setDialogLoader(false);
+  };
 
   return (
     <>
@@ -140,182 +106,145 @@ const Transform = () => {
         anchorEl={anchorEl}
         open={open}
         handleClose={handleClose}
-        handleEdit={handleEdit}
       />
+      {/* <ConfirmationDialogTransform
+        open={confirmationOpen}
+        handleClose={() => setConfirmationOpen(false)}
+        transformType={selectedTransform}
+      /> */}
+      <ConfirmationDialog
+        loading={dialogLoader}
+        show={confirmationOpen}
+        handleClose={() => setConfirmationOpen(false)}
+        handleConfirm={handleSelectTransformTypeConfirm}
+        message={`You have opted to continue using the ${
+          transformClickedOn === 'ui' ? 'UI' : 'GitHub'
+        } method to
+        set up your transformation`}
+      />
+
       <PageHead title="DDP: Transform" />
       <main className={styles.main}>
-        <Typography
-          sx={{ fontWeight: 700 }}
-          variant="h4"
-          gutterBottom
-          color="#000"
-        >
-          Transformation
-        </Typography>
-        {globalContext?.CurrentOrg.state.wtype === 'snowflake' ? (
-          <Typography variant="h4" sx={{ alignContent: 'center' }}>
-            dbt not available for snowflake warehouses at this time
-          </Typography>
-        ) : (
-          <>
-            <Tabs value={activeTab} onChange={handleChangeTab} sx={{ mb: 3 }}>
-              <Tab value="setup" label="Setup"></Tab>
-            </Tabs>
-            {activeTab === 'setup' && (
-              <>
-                <Card
-                  sx={{
-                    background: 'white',
-                    display: 'flex',
-                    borderRadius: '8px',
-                    padding: '16px',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '20px',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      gap: '10px',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Image
-                      src={Dbt}
-                      alt="Banner"
-                      style={{ width: '46px', height: '46px' }}
-                    />
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '5px',
-                      }}
-                    >
-                      <Typography
-                        sx={{ fontWeight: 700 }}
-                        variant="h4"
-                        color="#000"
-                      >
-                        DBT REPOSITORY
-                      </Typography>
-                      {workspace && workspace.gitrepo_url ? (
-                        <>
-                          <Link
-                            sx={{
-                              backgroundColor: '#F2F2EB',
-                              borderRadius: '6px',
-                              padding: '3px 6px 3px 6px',
-                              width: 'min-content',
-                              display: 'inline-flex',
-                              textDecoration: 'none',
-                              ':hover': { cursor: 'pointer' },
-                            }}
-                            target="_blank"
-                            rel="noopener"
-                            href={workspace.gitrepo_url}
-                          >
-                            <Typography
-                              sx={{ fontWeight: 600, color: '#0F2440' }}
-                            >
-                              {workspace.gitrepo_url}
-                            </Typography>
-                          </Link>
-                          <Box
-                            sx={{
-                              backgroundColor: '#F2F2EB',
-                              borderRadius: '6px',
-                              padding: '3px 6px 3px 6px',
-                              width: 'min-content',
-                              display: 'inline-flex',
-                            }}
-                          >
-                            <Typography
-                              sx={{ fontWeight: 600, color: '#0F2440' }}
-                            >
-                              {workspace?.default_schema}
-                            </Typography>
-                          </Box>
-                        </>
-                      ) : (
-                        ''
-                      )}
-                    </Box>
-                  </Box>
-                  <Box>
-                    {dbtSetupStage === 'create-workspace' ? (
-                      <Button
-                        variant="contained"
-                        onClick={() => setShowConnectRepoDialog(true)}
-                      >
-                        Connect & Setup Repo{' '}
-                      </Button>
-                    ) : (
-                      ''
-                    )}
-                  </Box>
-                </Card>
-                {dbtSetupStage === 'complete' ? (
-                  <DBTTaskList
-                    setExpandLogs={setExpandLogs}
-                    setDbtRunLogs={(logs: string[]) => {
-                      setDbtSetupLogs(logs);
-                    }}
-                    tasks={tasks}
-                    isAnyTaskLocked={anyTaskLocked}
-                    fetchDbtTasks={fetchDbtTasks}
-                  />
-                ) : (
-                  ''
-                )}
+        {selectedTransform === 'none' ? (
+          <Box>
+            <Typography
+              sx={{ fontWeight: 700 }}
+              variant="h4"
+              gutterBottom
+              color="#000"
+            >
+              Transformation
+            </Typography>
+            <Typography
+              sx={{ fontWeight: 400, marginBottom: '60px' }}
+              variant="h6"
+              gutterBottom
+              color="#808080"
+            >
+              Please select one method you would like to proceed with to setup
+            </Typography>
 
-                <Box>
-                  {dbtSetupStage === 'create-workspace' ? (
-                    <DBTSetup
-                      setLogs={setDbtSetupLogs}
-                      setExpandLogs={setExpandLogs}
-                      onCreateWorkspace={() => {
-                        createProfile();
-                        setRerender(!rerender);
-                      }}
-                      showDialog={showConnectRepoDialog}
-                      setShowDialog={setShowConnectRepoDialog}
-                      gitrepoUrl=""
-                      schema=""
-                      mode="create"
-                      setWorkspace={setWorkspace}
-                    />
-                  ) : dbtSetupStage === 'complete' && workspace ? (
-                    <DBTSetup
-                      setLogs={setDbtSetupLogs}
-                      setExpandLogs={setExpandLogs}
-                      onCreateWorkspace={async () => {
-                        await fetchDbtWorkspace();
-                      }}
-                      showDialog={showConnectRepoDialog}
-                      setShowDialog={setShowConnectRepoDialog}
-                      gitrepoUrl={workspace?.gitrepo_url}
-                      schema={workspace?.default_schema}
-                      mode="edit"
-                      setWorkspace={setWorkspace}
-                    />
-                  ) : (
-                    ''
-                  )}
-                  <LogCard
-                    logs={dbtSetupLogs}
-                    expand={expandLogs}
-                    setExpand={setExpandLogs}
+            <Grid container spacing={2} columns={12}>
+              <Grid item xs={6}>
+                <Box
+                  height={550}
+                  bgcolor="white"
+                  color="grey"
+                  textAlign="left"
+                  lineHeight={2}
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="space-between"
+                  sx={{ padding: '30px' }}
+                >
+                  <Image
+                    src={UI}
+                    alt="ui_transform"
+                    style={{ height: '80%', width: 'auto' }}
                   />
+                  <Typography
+                    sx={{ fontWeight: 600 }}
+                    variant="h5"
+                    gutterBottom
+                    align="left"
+                    color="#000"
+                  >
+                    UI Users <span>(for Non technical users)</span>
+                  </Typography>
+                  <Typography
+                    sx={{ fontWeight: 400 }}
+                    variant="h6"
+                    gutterBottom
+                    color="#808080"
+                  >
+                    Create a project to effortlessly integrate your dbt
+                    repository by providing your repository URL and
+                    authentication details in further steps
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ width: '100%' }}
+                    onClick={() => handleSetup('ui')}
+                  >
+                    Setup using UI
+                  </Button>
                 </Box>
-              </>
-            )}
-            {activeTab === 'docs' &&
-              dbtSetupStage === 'complete' &&
-              workspace && <DBTDocs />}
-          </>
+              </Grid>
+              <Grid item xs={6}>
+                <Box
+                  height={550}
+                  bgcolor="white"
+                  color="grey"
+                  textAlign="left"
+                  lineHeight={2}
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="space-between"
+                  sx={{ padding: '30px', marginRight: '20px' }}
+                >
+                  <Image
+                    src={Github}
+                    alt="github_transform"
+                    style={{ height: '80%', width: 'auto' }}
+                  />
+                  <Typography
+                    sx={{ fontWeight: 550 }}
+                    variant="h5"
+                    align="left"
+                    color="#000"
+                  >
+                    Github Users <span>(for advanced users)</span>
+                  </Typography>
+                  <Typography
+                    sx={{ fontWeight: 400 }}
+                    variant="h6"
+                    gutterBottom
+                    color="#808080"
+                  >
+                    Create a project to effortlessly integrate your dbt
+                    repository by providing your repository URL and
+                    authentication details in further steps
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ width: '100%' }}
+                    onClick={() => handleSetup('github')}
+                  >
+                    Setup using Github
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+        ) : selectedTransform &&
+          ['ui', 'github'].includes(selectedTransform) ? (
+          <DBTTransformType
+            transformType={selectedTransform}
+          ></DBTTransformType>
+        ) : (
+          ''
         )}
       </main>
     </>
