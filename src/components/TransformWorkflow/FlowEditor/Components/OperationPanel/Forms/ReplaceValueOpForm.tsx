@@ -41,7 +41,7 @@ const ReplaceValueOpForm = ({
     },
   });
   // Include this for multi-row input
-  const { fields, append } = useFieldArray({ control, name: 'config' });
+  const { fields, append, remove } = useFieldArray({ control, name: 'config' });
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -154,16 +154,17 @@ const ReplaceValueOpForm = ({
 
         <GridTable
           headers={['Column value', 'Replace with']}
+          removeItem={(index: number) => remove(index)}
           data={fields.map((field, idx) => [
             <Input
               fieldStyle="none"
-              key={`config.${idx}.old`}
+              key={field.old + idx}
               name={`config.${idx}.old`}
               register={register}
             />,
             <Input
               fieldStyle="none"
-              key={`config.${idx}.new`}
+              key={field.new + idx}
               name={`config.${idx}.new`}
               register={register}
               onKeyDown={(e) => {
@@ -175,6 +176,19 @@ const ReplaceValueOpForm = ({
             />,
           ])}
         ></GridTable>
+
+        <Button
+          variant="shadow"
+          type="button"
+          data-testid="addcase"
+          sx={{ m: 2 }}
+          onClick={(event) => {
+            append({ old: '', new: '' });
+          }}
+        >
+          Add row
+        </Button>
+
         <Box sx={{ m: 2 }}>
           <Button
             variant="contained"
