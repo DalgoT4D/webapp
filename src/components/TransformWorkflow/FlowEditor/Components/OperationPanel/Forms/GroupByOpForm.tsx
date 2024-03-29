@@ -38,7 +38,6 @@ interface GroupbyDataConfig {
   aggregate_on: AggregateOn[];
   source_columns: string[];
   other_inputs: any[];
-  all_columns: string[];
 }
 
 const GroupByOpForm = ({
@@ -202,8 +201,7 @@ const GroupByOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      let { source_columns, aggregate_on, all_columns }: GroupbyDataConfig =
-        opConfig;
+      let { source_columns, aggregate_on }: GroupbyDataConfig = opConfig;
       if (prev_source_columns) setSrcColumns(prev_source_columns);
 
       // pre-fill form
