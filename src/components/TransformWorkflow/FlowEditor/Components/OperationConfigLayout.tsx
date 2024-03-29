@@ -197,8 +197,10 @@ const OperationConfigLayout = ({
     if (canvasAction.type === 'open-opconfig-panel') {
       setOpenPanel(true);
       setSelectedOp(null);
+      console.log('here panel op form state', panelOpFormState.current);
+      console.log('here canvas action data', canvasAction.data);
       panelOpFormState.current = canvasAction.data || 'view';
-      if (panelOpFormState.current === 'view') {
+      if (['view', 'edit'].includes(panelOpFormState.current)) {
         const selectOp = canvasNode?.data as OperationNodeData;
         setSelectedOp(
           operations.find((op) => op.slug === selectOp.config?.type)
@@ -412,7 +414,6 @@ const OperationConfigLayout = ({
   };
 
   const handleCreateTable = async () => {
-    console.log('create table', canvasNode);
     setSelectedOp({ slug: 'create-table', label: 'Create Output Table' });
   };
 
@@ -481,6 +482,8 @@ const OperationConfigLayout = ({
     : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE
     ? 'op-list'
     : 'create-table-or-add-function';
+
+  console.log('canvasNode', canvasNode);
 
   return (
     <Box

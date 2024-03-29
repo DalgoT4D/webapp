@@ -188,7 +188,7 @@ const CoalesceOpForm = ({
     } else {
       fetchAndSetSourceColumns();
     }
-  }, [session]);
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx }}>

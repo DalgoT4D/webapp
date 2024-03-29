@@ -140,7 +140,7 @@ const DropColumnOp = ({
     } else {
       fetchAndSetSourceColumns();
     }
-  }, [session]);
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx, marginTop: '17px', padding: '20px' }}>

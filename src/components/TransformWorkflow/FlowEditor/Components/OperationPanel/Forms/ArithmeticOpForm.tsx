@@ -197,7 +197,7 @@ const ArithmeticOpForm = ({
     } else {
       fetchAndSetSourceColumns();
     }
-  }, [session]);
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
@@ -235,7 +235,6 @@ const ArithmeticOpForm = ({
                   name={`operands.${index}.type`}
                   control={control}
                   render={({ field }) => {
-                    console.log(field);
                     return (
                       <RadioGroup
                         {...field}
