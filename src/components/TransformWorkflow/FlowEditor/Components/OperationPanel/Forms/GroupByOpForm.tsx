@@ -54,6 +54,7 @@ const GroupByOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
+  const [isLoading, setIsLoading] = useState(true);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -232,7 +233,7 @@ const GroupByOpForm = ({
     } else {
       fetchAndSetSourceColumns();
     }
-  }, [session]);
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx }}>
@@ -294,7 +295,7 @@ const GroupByOpForm = ({
                     <Autocomplete
                       disabled={action === 'view'}
                       fieldStyle="transformation"
-                      options={srcColumns.filter(
+                      options={srcColumns?.filter(
                         (option) =>
                           !columns.map((col) => col.col).includes(option)
                       )}

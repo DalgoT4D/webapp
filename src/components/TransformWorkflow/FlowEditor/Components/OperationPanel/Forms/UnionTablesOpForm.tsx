@@ -287,7 +287,7 @@ const UnionTablesOpForm = ({
         label: nodeData?.input_name,
       });
     }
-  }, [session]);
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx, padding: '0px 16px 0px 16px' }}>

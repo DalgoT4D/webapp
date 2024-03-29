@@ -197,7 +197,7 @@ const AggregationOpForm = ({
     } else {
       fetchAndSetSourceColumns();
     }
-  }, [session]);
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>

@@ -150,7 +150,7 @@ const RenameColumnOp = ({
     } else {
       fetchAndSetSourceColumns();
     }
-  }, [session]);
+  }, [session, node]);
 
   const options = srcColumns.filter(
     (column) => !config.map((con) => con.old).includes(column)

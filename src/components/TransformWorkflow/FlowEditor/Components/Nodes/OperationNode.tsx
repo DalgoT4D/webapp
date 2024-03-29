@@ -44,18 +44,10 @@ export function OperationNode(node: OperationNodeType) {
 
   const handleSelectNode = () => {
     setCanvasNode(node);
-    if (isDeletable) {
-      setCanvasAction({
-        type: 'open-opconfig-panel',
-        data: 'edit',
-      });
-    } else {
-      // just view the config if its node in the middle of chain
-      setCanvasAction({
-        type: 'open-opconfig-panel',
-        data: 'view',
-      });
-    }
+    setCanvasAction({
+      type: 'open-opconfig-panel',
+      data: isDeletable ? 'edit' : 'view',
+    });
   };
 
   useEffect(() => {
