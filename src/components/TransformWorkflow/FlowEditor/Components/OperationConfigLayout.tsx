@@ -341,29 +341,6 @@ const OperationConfigLayout = ({
     );
   };
 
-  const PanelFooter = () => {
-    return (
-      <Box
-        sx={{
-          padding: '6px 16px 6px 16px',
-          borderTop: '1px solid #F9F9F9',
-          marginBottom: '0px',
-          height: '32px',
-        }}
-      >
-        <Typography
-          fontWeight={500}
-          fontSize="12px"
-          color="#BBBBBB"
-          lineHeight="19.2px"
-          letterSpacing={'2%'}
-        >
-          Select Functions
-        </Typography>
-      </Box>
-    );
-  };
-
   const OperationList = ({ sx }: { sx: SxProps }) => {
     // These are the operations that can't be chained
     const cantChainOperationsInMiddle: string[] = [
