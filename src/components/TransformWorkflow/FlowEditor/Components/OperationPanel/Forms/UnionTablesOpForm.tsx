@@ -341,7 +341,10 @@ const UnionTablesOpForm = ({
                 type="button"
                 data-testid="removeoperand"
                 sx={{ marginTop: '17px' }}
-                onClick={(event) => remove(index)}
+                onClick={(event) => {
+                  remove(index);
+                  clearAndAddDummyModelNode(null, index);
+                }}
               >
                 Remove
               </Button>

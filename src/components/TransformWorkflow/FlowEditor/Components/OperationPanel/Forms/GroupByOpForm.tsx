@@ -194,7 +194,7 @@ const GroupByOpForm = ({
 
   const fetchAndSetConfigForEdit = async () => {
     try {
-      const { config }: OperationNodeData = await httpGet(
+      const { config, prev_source_columns }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
       );
@@ -204,7 +204,7 @@ const GroupByOpForm = ({
       // form data; will differ based on operations in progress
       let { source_columns, aggregate_on, all_columns }: GroupbyDataConfig =
         opConfig;
-      if (all_columns) setSrcColumns(all_columns);
+      if (prev_source_columns) setSrcColumns(prev_source_columns);
 
       // pre-fill form
       const dimensionColumns = source_columns.map((col: string) => ({

@@ -47,6 +47,7 @@ export interface OperationNodeData {
   target_model_id: string;
   config: any;
   isDummy?: boolean;
+  prev_source_columns?: string[];
 }
 
 export type DbtSourceModel = {

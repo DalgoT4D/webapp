@@ -154,7 +154,11 @@ const OperationConfigLayout = ({
     useReactFlow();
 
   const handleClosePanel = () => {
-    deleteElements({ nodes: [{ id: dummyNodeIdRef.current }] });
+    let dummyNodesArr: { id: string }[] = getNodes()
+      .filter((node) => node.data.isDummy)
+      .map((node) => ({ id: node.id }));
+    dummyNodesArr.push({ id: dummyNodeIdRef.current });
+    deleteElements({ nodes: dummyNodesArr });
     setOpenPanel(false);
     setShowFunctionsList(false);
     setSelectedOp(null);
@@ -482,8 +486,6 @@ const OperationConfigLayout = ({
     : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE
     ? 'op-list'
     : 'create-table-or-add-function';
-
-  console.log('canvasNode', canvasNode);
 
   return (
     <Box
