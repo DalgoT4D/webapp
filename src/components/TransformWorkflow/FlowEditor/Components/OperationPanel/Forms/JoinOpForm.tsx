@@ -12,7 +12,7 @@ import { Edge, useReactFlow } from 'reactflow';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { generateDummySrcModelNode } from '../../dummynodes';
 
-interface SecondaryInput {
+export interface SecondaryInput {
   input: { input_name: string; input_type: string; source_name: string };
   seq: number;
   source_columns: string[];
