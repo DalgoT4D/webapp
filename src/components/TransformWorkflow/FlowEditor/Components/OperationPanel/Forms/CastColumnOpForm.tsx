@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
@@ -14,15 +14,23 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 
+interface CastDataConfig {
+  source_columns: string[];
+  other_inputs: any[];
+  columns: { columnname: string; columntype: string }[];
+}
+
 const CastColumnOp = ({
   node,
   operation,
   sx,
   continueOperationChain,
   clearAndClosePanel,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [dataTypes, setDataTypes] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -31,8 +39,12 @@ const CastColumnOp = ({
       ? (node?.data as OperationNodeData)
       : {};
 
+  type FormData = {
+    config: { name: string; data_type: string }[];
+  };
+
   const { control, handleSubmit, register, reset, getValues, setValue } =
-    useForm({
+    useForm<FormData>({
       defaultValues: {
         config: [
           {
@@ -45,6 +57,18 @@ const CastColumnOp = ({
 
   const { config } = getValues();
 
+  const fetchDataTypes = async () => {
+    try {
+      const response = await httpGet(
+        session,
+        `transform/dbt_project/data_type/`
+      );
+      setDataTypes(response.sort((a: string, b: string) => a.localeCompare(b)));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
       try {
@@ -54,22 +78,12 @@ const CastColumnOp = ({
         );
 
         setValue('config', columnData);
-
-        // Fetch data types from the other API
-        const response = await httpGet(
-          session,
-          `transform/dbt_project/data_type/`
-        );
-        setDataTypes(
-          response.sort((a: string, b: string) => a.localeCompare(b))
-        );
       } catch (error) {
         console.log(error);
       }
     }
 
     if (node?.type === OPERATION_NODE) {
-      console.log(nodeData, 'node data');
       setValue(
         'config',
         nodeData.output_cols.map((column: any) => ({ name: column }))
@@ -77,7 +91,7 @@ const CastColumnOp = ({
     }
   };
 
-  const handleSave = async (formData: any) => {
+  const handleSave = async (formData: FormData) => {
     try {
       const sourceColumnsNames = config.map((column) => column.name);
 
@@ -107,25 +121,69 @@ const CastColumnOp = ({
       }
 
       // Make the API call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
-
-      console.log(operationNode, 'operation node');
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the first step in chain
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       // Handle the response
       continueOperationChain(operationNode);
       reset();
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      errorToast(error?.message, [], globalContext);
+    }
+  };
+
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let { columns }: CastDataConfig = opConfig;
+
+      // pre-fill form
+      reset({
+        config: columns.map(
+          (column: { columnname: string; columntype: string }) => ({
+            name: column.columnname,
+            data_type: column.columntype,
+          })
+        ),
+      });
+    } catch (error) {
+      console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchAndSetSourceColumns();
-  }, [session]);
+    fetchDataTypes();
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
@@ -140,6 +198,7 @@ const CastColumnOp = ({
               name={`config.${index}.name`}
               register={register}
               value={column.name}
+              disabled={action === 'view'}
             />,
             <Controller
               key={`config.${index}.data_type`}
@@ -147,6 +206,7 @@ const CastColumnOp = ({
               name={`config.${index}.data_type`}
               render={({ field }) => (
                 <Autocomplete
+                  disabled={action === 'view'}
                   disableClearable
                   fieldStyle="none"
                   options={dataTypes}
@@ -165,6 +225,7 @@ const CastColumnOp = ({
             type="submit"
             data-testid="savebutton"
             fullWidth
+            disabled={action === 'view'}
           >
             Save
           </Button>

@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
@@ -41,6 +41,14 @@ const renameGridStyles: {
   },
 };
 
+interface CoalesceDataConfig {
+  columns: string[];
+  source_columns: string[];
+  default_value: string;
+  other_inputs: any[];
+  output_column_name: string;
+}
+
 const CoalesceOpForm = ({
   node,
   operation,
@@ -48,9 +56,11 @@ const CoalesceOpForm = ({
   continueOperationChain,
   clearAndClosePanel,
   dummyNodeId,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -114,11 +124,25 @@ const CoalesceOpForm = ({
       };
 
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the first step in chain
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       continueOperationChain(operationNode);
       reset();
@@ -127,9 +151,44 @@ const CoalesceOpForm = ({
     }
   };
 
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let {
+        source_columns,
+        columns,
+        output_column_name,
+        default_value,
+      }: CoalesceDataConfig = opConfig;
+      setSrcColumns(source_columns);
+
+      // pre-fill form
+      const coalesceColumns = columns.map((col: string) => ({ col: col }));
+      coalesceColumns.push({ col: '' });
+      reset({
+        columns: coalesceColumns,
+        default_value: default_value,
+        output_column_name: output_column_name,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    fetchAndSetSourceColumns();
-  }, [session]);
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx }}>
@@ -189,6 +248,7 @@ const CoalesceOpForm = ({
                   name={`columns.${index}.col`}
                   render={({ field }) => (
                     <Autocomplete
+                      disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns
                         .filter(
@@ -196,7 +256,7 @@ const CoalesceOpForm = ({
                             !columns.map((col) => col.col).includes(option)
                         )
                         .sort((a, b) => a.localeCompare(b))}
-                      //   value={field.value}
+                      value={field.value}
                       onChange={(e, data) => {
                         field.onChange(data);
                         if (data) append({ col: '' });
@@ -217,6 +277,7 @@ const CoalesceOpForm = ({
             </Box>
           </Box>
           <Input
+            disabled={action === 'view'}
             fieldStyle="transformation"
             label=""
             sx={{ padding: '0' }}
@@ -226,6 +287,7 @@ const CoalesceOpForm = ({
           />
           <Box sx={{ m: 2 }} />
           <Input
+            disabled={action === 'view'}
             fieldStyle="transformation"
             label="Output Column Name"
             sx={{ padding: '0' }}
@@ -236,6 +298,7 @@ const CoalesceOpForm = ({
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
+              disabled={action === 'view'}
               variant="contained"
               type="submit"
               data-testid="savebutton"

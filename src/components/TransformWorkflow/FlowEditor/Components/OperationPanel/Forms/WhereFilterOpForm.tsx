@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
@@ -22,6 +22,26 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
+import { LogicalOperators } from './CaseWhenOpForm';
+
+interface GenericOperand {
+  value: string;
+  is_col: boolean;
+}
+
+interface WhereClause {
+  column: string;
+  operand: GenericOperand;
+  operator: string;
+}
+
+interface WherefilterDataConfig {
+  where_type: 'and' | 'or' | 'sql';
+  clauses: WhereClause[];
+  sql_snippet: string;
+  source_columns: string[];
+  other_inputs: any[];
+}
 
 const WhereFilterOpForm = ({
   node,
@@ -30,9 +50,11 @@ const WhereFilterOpForm = ({
   continueOperationChain,
   clearAndClosePanel,
   dummyNodeId,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -146,11 +168,25 @@ const WhereFilterOpForm = ({
       };
 
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the first step in chain
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       continueOperationChain(operationNode);
       reset();
@@ -159,9 +195,64 @@ const WhereFilterOpForm = ({
     }
   };
 
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let {
+        source_columns,
+        clauses,
+        sql_snippet,
+        where_type,
+      }: WherefilterDataConfig = opConfig;
+      setSrcColumns(source_columns);
+
+      let clauseFields = {};
+      if (clauses.length === 1) {
+        const { column, operator, operand } = clauses[0];
+
+        clauseFields = {
+          filterCol: column,
+          logicalOp: LogicalOperators.find((op) => op.id === operator),
+          operand: operand
+            ? {
+                type: operand.is_col ? 'col' : 'val',
+                col_val: operand.is_col ? operand.value : '',
+                const_val: !operand.is_col ? operand.value : '',
+              }
+            : { type: 'col', col_val: '', const_val: '' },
+        };
+      }
+
+      // pre-fill form
+      reset({
+        ...clauseFields,
+        advanceFilter: where_type === 'sql' ? 'yes' : 'no',
+        sql_snippet: sql_snippet,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    fetchAndSetSourceColumns();
-  }, [session]);
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
+  }, [session, node]);
+
+  const isNonAdancedFieldsDisabled =
+    advanceFilter === 'yes' || action === 'view';
+
+  const isAdvanceFieldsDisabled = action === 'view';
 
   return (
     <Box sx={{ ...sx }}>
@@ -170,13 +261,13 @@ const WhereFilterOpForm = ({
           <Box>
             <Controller
               control={control}
-              name={`filterCol`}
+              name="filterCol"
               render={({ field }) => (
                 <Autocomplete
                   options={srcColumns}
                   fieldStyle="transformation"
-                  disabled={advanceFilter === 'yes'}
-                  //   value={field.value}
+                  disabled={isNonAdancedFieldsDisabled}
+                  value={field.value}
                   onChange={(e, data) => {
                     field.onChange(data);
                   }}
@@ -190,37 +281,11 @@ const WhereFilterOpForm = ({
               name="logicalOp"
               render={({ field }) => (
                 <Autocomplete
-                  options={[
-                    {
-                      id: '=',
-                      label: 'Equal To =',
-                    },
-
-                    {
-                      id: '>=',
-                      label: 'Greater Than or Equal To >=',
-                    },
-                    {
-                      id: '>',
-                      label: 'Greater Than >',
-                    },
-                    {
-                      id: '<',
-                      label: 'Less Than <',
-                    },
-                    {
-                      id: '<=',
-                      label: 'Less Than or Equal To <=',
-                    },
-                    {
-                      id: '!=',
-                      label: 'Not Equal To !=',
-                    },
-                  ]}
+                  options={LogicalOperators.filter((op) => op.id !== 'between')}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
                   }
-                  disabled={advanceFilter === 'yes'}
+                  disabled={isNonAdancedFieldsDisabled}
                   value={field.value}
                   onChange={(e, data) => {
                     if (data) field.onChange(data);
@@ -249,13 +314,13 @@ const WhereFilterOpForm = ({
                       value="col"
                       control={<Radio />}
                       label="Column"
-                      disabled={advanceFilter === 'yes'}
+                      disabled={isNonAdancedFieldsDisabled}
                     />
                     <FormControlLabel
                       value="val"
                       control={<Radio />}
                       label="Value"
-                      disabled={advanceFilter === 'yes'}
+                      disabled={isNonAdancedFieldsDisabled}
                     />
                   </RadioGroup>
                 );
@@ -269,7 +334,7 @@ const WhereFilterOpForm = ({
                   <Autocomplete
                     fieldStyle="transformation"
                     options={srcColumns}
-                    disabled={advanceFilter === 'yes'}
+                    disabled={isNonAdancedFieldsDisabled}
                     value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
@@ -286,7 +351,7 @@ const WhereFilterOpForm = ({
                 register={register}
                 sx={{ padding: '0' }}
                 placeholder="Enter the value"
-                disabled={advanceFilter === 'yes'}
+                disabled={isNonAdancedFieldsDisabled}
               />
             )}
             <Box sx={{ m: 2 }} />
@@ -313,6 +378,7 @@ const WhereFilterOpForm = ({
                 render={({ field: { value, onChange } }) => (
                   <Stack direction={'row'} alignItems="center" gap={'10%'}>
                     <Switch
+                      disabled={isAdvanceFieldsDisabled}
                       checked={value === 'yes'}
                       value={value}
                       onChange={(event, value) => {
@@ -335,6 +401,7 @@ const WhereFilterOpForm = ({
                 type="text"
                 multiline
                 rows={4}
+                disabled={isAdvanceFieldsDisabled}
               />
             )}
           </Box>
@@ -347,6 +414,7 @@ const WhereFilterOpForm = ({
               data-testid="savebutton"
               fullWidth
               sx={{ marginTop: '17px' }}
+              disabled={isAdvanceFieldsDisabled}
             >
               Save
             </Button>
