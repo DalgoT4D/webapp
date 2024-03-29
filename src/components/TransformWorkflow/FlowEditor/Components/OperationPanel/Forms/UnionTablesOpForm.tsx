@@ -256,11 +256,11 @@ const UnionTablesOpForm = ({
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
       );
-      let { config: opConfig, input_models } = config;
+      const { config: opConfig, input_models } = config;
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      let { source_columns }: UnionDataConfig = opConfig;
+      const { source_columns }: UnionDataConfig = opConfig;
       setNodeSrcColumns(source_columns);
 
       // pre-fill form

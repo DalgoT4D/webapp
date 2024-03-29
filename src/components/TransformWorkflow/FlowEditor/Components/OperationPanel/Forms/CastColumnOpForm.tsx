@@ -156,11 +156,11 @@ const CastColumnOp = ({
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
       );
-      let { config: opConfig, input_models } = config;
+      const { config: opConfig, input_models } = config;
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      let { columns }: CastDataConfig = opConfig;
+      const { columns }: CastDataConfig = opConfig;
 
       // pre-fill form
       reset({
