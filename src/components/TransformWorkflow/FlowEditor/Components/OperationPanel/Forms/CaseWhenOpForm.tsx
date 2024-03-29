@@ -83,17 +83,18 @@ const ClauseOperands = ({
   watch,
   register,
   data,
+  disableFields,
 }: {
   clauseField: any;
   clauseIndex: number;
   control: any;
   watch: (...args: any) => any;
   register: (...args: any) => any;
+  disableFields: boolean;
   data: {
     srcColumns: string[];
     advanceFilter: string;
     logicalOp: { id: string; label: string };
-    action: string;
   };
 }) => {
   const { fields: operandFields } = useFieldArray({
@@ -130,18 +131,14 @@ const ClauseOperands = ({
                         value="col"
                         control={<Radio />}
                         label="Column"
-                        disabled={
-                          data.advanceFilter === 'yes' || data.action === 'view'
-                        }
+                        disabled={disableFields}
                         required={data.advanceFilter === 'no'}
                       />
                       <FormControlLabel
                         value="val"
                         control={<Radio />}
                         label="Value"
-                        disabled={
-                          data.advanceFilter === 'yes' || data.action === 'view'
-                        }
+                        disabled={disableFields}
                         required={data.advanceFilter === 'no'}
                       />
                     </RadioGroup>
@@ -158,9 +155,7 @@ const ClauseOperands = ({
                       options={data.srcColumns.sort((a, b) =>
                         a.localeCompare(b)
                       )}
-                      disabled={
-                        data.advanceFilter === 'yes' || data.action === 'view'
-                      }
+                      disabled={disableFields}
                       value={field.value}
                       onChange={(e, data) => {
                         field.onChange(data);
@@ -178,9 +173,7 @@ const ClauseOperands = ({
                   register={register}
                   sx={{ padding: '0' }}
                   placeholder="Enter the value"
-                  disabled={
-                    data.advanceFilter === 'yes' || data.action === 'view'
-                  }
+                  disabled={disableFields}
                   required={data.advanceFilter === 'no'}
                 />
               )}
@@ -444,6 +437,10 @@ const CaseWhenOpForm = ({
     }
   }, [session, node]);
 
+  const isDisabled = advanceFilter === 'yes' || action === 'view';
+
+  const isAdvanceFieldsDisabled = action === 'view';
+
   return (
     <Box sx={{ ...sx }}>
       <form onSubmit={handleSubmit(handleSave)}>
@@ -493,7 +490,7 @@ const CaseWhenOpForm = ({
                     render={({ field }) => (
                       <Autocomplete
                         options={srcColumns}
-                        disabled={advanceFilter === 'yes' || action === 'view'}
+                        disabled={isDisabled}
                         onChange={(e, data) => {
                           field.onChange(data);
                         }}
@@ -515,7 +512,7 @@ const CaseWhenOpForm = ({
                         isOptionEqualToValue={(option: any, value: any) =>
                           option?.id === value?.id
                         }
-                        disabled={advanceFilter === 'yes' || action === 'view'}
+                        disabled={isDisabled}
                         value={field.value}
                         onChange={(e, data) => {
                           if (data) field.onChange(data);
@@ -532,11 +529,11 @@ const CaseWhenOpForm = ({
                     control={control}
                     clauseField={clauseField}
                     clauseIndex={clauseIndex}
+                    disableFields={isDisabled}
                     data={{
                       srcColumns,
                       advanceFilter,
                       logicalOp: logicalOpVal,
-                      action: action,
                     }}
                   />
                   <Box sx={{ m: 2 }} />
@@ -575,17 +572,13 @@ const CaseWhenOpForm = ({
                                 value="col"
                                 control={<Radio />}
                                 label="Column"
-                                disabled={
-                                  advanceFilter === 'yes' || action === 'view'
-                                }
+                                disabled={isDisabled}
                               />
                               <FormControlLabel
                                 value="val"
                                 control={<Radio />}
                                 label="Value"
-                                disabled={
-                                  advanceFilter === 'yes' || action === 'view'
-                                }
+                                disabled={isDisabled}
                               />
                             </RadioGroup>
                           </Box>
@@ -600,9 +593,7 @@ const CaseWhenOpForm = ({
                         render={({ field }) => (
                           <Autocomplete
                             options={srcColumns}
-                            disabled={
-                              advanceFilter === 'yes' || action === 'view'
-                            }
+                            disabled={isDisabled}
                             value={field.value}
                             onChange={(e, data) => {
                               field.onChange(data);
@@ -620,7 +611,7 @@ const CaseWhenOpForm = ({
                         register={register}
                         sx={{ padding: '0' }}
                         placeholder="Enter the value"
-                        disabled={advanceFilter === 'yes' || action === 'view'}
+                        disabled={isDisabled}
                         required={advanceFilter === 'no'}
                       />
                     )}
@@ -633,7 +624,7 @@ const CaseWhenOpForm = ({
                       type="button"
                       data-testid="removecase"
                       sx={{}}
-                      disabled={advanceFilter === 'yes' || action === 'view'}
+                      disabled={isDisabled}
                       onClick={(event) => removeClause(clauseIndex)}
                     >
                       Remove case {clauseIndex + 1}
@@ -647,7 +638,7 @@ const CaseWhenOpForm = ({
                     type="button"
                     data-testid="addcase"
                     sx={{ mt: 2 }}
-                    disabled={advanceFilter === 'yes' || action === 'view'}
+                    disabled={isDisabled}
                     onClick={(event) =>
                       appendClause({
                         filterCol: '',
@@ -702,13 +693,13 @@ const CaseWhenOpForm = ({
                         value="col"
                         control={<Radio />}
                         label="Column"
-                        disabled={advanceFilter === 'yes' || action === 'view'}
+                        disabled={isDisabled}
                       />
                       <FormControlLabel
                         value="val"
                         control={<Radio />}
                         label="Value"
-                        disabled={advanceFilter === 'yes' || action === 'view'}
+                        disabled={isDisabled}
                       />
                     </RadioGroup>
                   </Box>
@@ -722,7 +713,7 @@ const CaseWhenOpForm = ({
                 render={({ field }) => (
                   <Autocomplete
                     options={srcColumns}
-                    disabled={advanceFilter === 'yes' || action === 'view'}
+                    disabled={isDisabled}
                     value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
@@ -740,7 +731,7 @@ const CaseWhenOpForm = ({
                 register={register}
                 sx={{ padding: '0' }}
                 placeholder="Enter the value"
-                disabled={advanceFilter === 'yes' || action === 'view'}
+                disabled={isDisabled}
               />
             )}
           </Box>
@@ -800,14 +791,14 @@ const CaseWhenOpForm = ({
               type="text"
               multiline
               rows={4}
-              disabled={action === 'view'}
+              disabled={isAdvanceFieldsDisabled}
             />
           )}
 
           <Box sx={{ m: 2 }} />
           <Box>
             <Button
-              disabled={action === 'view'}
+              disabled={isAdvanceFieldsDisabled}
               variant="contained"
               type="submit"
               data-testid="savebutton"

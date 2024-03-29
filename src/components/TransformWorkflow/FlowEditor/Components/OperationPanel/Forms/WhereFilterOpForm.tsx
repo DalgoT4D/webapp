@@ -249,6 +249,11 @@ const WhereFilterOpForm = ({
     }
   }, [session, node]);
 
+  const isNonAdancedFieldsDisabled =
+    advanceFilter === 'yes' || action === 'view';
+
+  const isAdvanceFieldsDisabled = action === 'view';
+
   return (
     <Box sx={{ ...sx }}>
       <form onSubmit={handleSubmit(handleSave)}>
@@ -261,7 +266,7 @@ const WhereFilterOpForm = ({
                 <Autocomplete
                   options={srcColumns}
                   fieldStyle="transformation"
-                  disabled={advanceFilter === 'yes' || action === 'view'}
+                  disabled={isNonAdancedFieldsDisabled}
                   value={field.value}
                   onChange={(e, data) => {
                     field.onChange(data);
@@ -280,7 +285,7 @@ const WhereFilterOpForm = ({
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
                   }
-                  disabled={advanceFilter === 'yes' || action === 'view'}
+                  disabled={isNonAdancedFieldsDisabled}
                   value={field.value}
                   onChange={(e, data) => {
                     if (data) field.onChange(data);
@@ -309,13 +314,13 @@ const WhereFilterOpForm = ({
                       value="col"
                       control={<Radio />}
                       label="Column"
-                      disabled={advanceFilter === 'yes' || action === 'view'}
+                      disabled={isNonAdancedFieldsDisabled}
                     />
                     <FormControlLabel
                       value="val"
                       control={<Radio />}
                       label="Value"
-                      disabled={advanceFilter === 'yes' || action === 'view'}
+                      disabled={isNonAdancedFieldsDisabled}
                     />
                   </RadioGroup>
                 );
@@ -329,7 +334,7 @@ const WhereFilterOpForm = ({
                   <Autocomplete
                     fieldStyle="transformation"
                     options={srcColumns}
-                    disabled={advanceFilter === 'yes' || action === 'view'}
+                    disabled={isNonAdancedFieldsDisabled}
                     value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
@@ -346,7 +351,7 @@ const WhereFilterOpForm = ({
                 register={register}
                 sx={{ padding: '0' }}
                 placeholder="Enter the value"
-                disabled={advanceFilter === 'yes' || action === 'view'}
+                disabled={isNonAdancedFieldsDisabled}
               />
             )}
             <Box sx={{ m: 2 }} />
@@ -373,7 +378,7 @@ const WhereFilterOpForm = ({
                 render={({ field: { value, onChange } }) => (
                   <Stack direction={'row'} alignItems="center" gap={'10%'}>
                     <Switch
-                      disabled={action === 'view'}
+                      disabled={isAdvanceFieldsDisabled}
                       checked={value === 'yes'}
                       value={value}
                       onChange={(event, value) => {
@@ -396,7 +401,7 @@ const WhereFilterOpForm = ({
                 type="text"
                 multiline
                 rows={4}
-                disabled={action === 'view'}
+                disabled={isAdvanceFieldsDisabled}
               />
             )}
           </Box>
@@ -409,7 +414,7 @@ const WhereFilterOpForm = ({
               data-testid="savebutton"
               fullWidth
               sx={{ marginTop: '17px' }}
-              disabled={action === 'view'}
+              disabled={isAdvanceFieldsDisabled}
             >
               Save
             </Button>
