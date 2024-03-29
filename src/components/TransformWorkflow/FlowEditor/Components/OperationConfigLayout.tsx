@@ -123,7 +123,8 @@ const OperationForm = ({
     return <>Operation not yet supported</>;
   }
 
-  return operationComponentMapping[operation.slug]({
+  const Form = operationComponentMapping[operation.slug];
+  const FormProps = {
     operation,
     node,
     sx,
@@ -131,7 +132,9 @@ const OperationForm = ({
     clearAndClosePanel,
     dummyNodeId,
     action,
-  });
+  };
+
+  return <Form {...FormProps} />;
 };
 
 const OperationConfigLayout = ({
