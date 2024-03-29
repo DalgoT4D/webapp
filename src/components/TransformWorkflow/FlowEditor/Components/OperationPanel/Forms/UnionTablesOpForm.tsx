@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -14,6 +14,12 @@ import { Edge, useReactFlow } from 'reactflow';
 import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { generateDummySrcModelNode } from '../../dummynodes';
+import { SecondaryInput } from './JoinOpForm';
+
+interface UnionDataConfig {
+  other_inputs: SecondaryInput[];
+  source_columns: string[];
+}
 
 const UnionTablesOpForm = ({
   node,
@@ -22,10 +28,12 @@ const UnionTablesOpForm = ({
   continueOperationChain,
   clearAndClosePanel,
   dummyNodeId,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const { deleteElements, addEdges, addNodes, getEdges, getNodes } =
     useReactFlow();
@@ -215,11 +223,25 @@ const UnionTablesOpForm = ({
       };
 
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the first step in chain
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       continueOperationChain(operationNode);
       reset();
@@ -228,16 +250,44 @@ const UnionTablesOpForm = ({
     }
   };
 
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      let { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      let { source_columns }: UnionDataConfig = opConfig;
+      setNodeSrcColumns(source_columns);
+
+      // pre-fill form
+      reset({
+        tables: input_models.map((model: any) => ({
+          id: model.uuid,
+          label: model.name,
+        })),
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    fetchAndSetSourceColumns();
     fetchSourcesModels();
-    if (nodeData?.type === SRC_MODEL_NODE) {
+    if (['edit', 'view'].includes(action)) {
+      // do things when in edit state
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
       setValue(`tables.${0}`, {
         id: nodeData?.id || '',
         label: nodeData?.input_name,
       });
     }
-  }, [session]);
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx, padding: '0px 16px 0px 16px' }}>
@@ -291,7 +341,10 @@ const UnionTablesOpForm = ({
                 type="button"
                 data-testid="removeoperand"
                 sx={{ marginTop: '17px' }}
-                onClick={(event) => remove(index)}
+                onClick={(event) => {
+                  remove(index);
+                  clearAndAddDummyModelNode(null, index);
+                }}
               >
                 Remove
               </Button>
