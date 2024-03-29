@@ -149,7 +149,6 @@ const GroupByOpForm = ({
               operation: item.aggregate_func.id,
               output_column_name: item.output_column_name,
             })),
-          all_columns: srcColumns,
         },
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
@@ -205,7 +204,7 @@ const GroupByOpForm = ({
       // form data; will differ based on operations in progress
       let { source_columns, aggregate_on, all_columns }: GroupbyDataConfig =
         opConfig;
-      setSrcColumns(all_columns);
+      if (all_columns) setSrcColumns(all_columns);
 
       // pre-fill form
       const dimensionColumns = source_columns.map((col: string) => ({
