@@ -196,6 +196,7 @@ const OperationConfigLayout = ({
   useEffect(() => {
     if (canvasAction.type === 'open-opconfig-panel') {
       setOpenPanel(true);
+      setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
       if (panelOpFormState.current === 'view') {
         const selectOp = canvasNode?.data as OperationNodeData;
