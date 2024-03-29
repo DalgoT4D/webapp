@@ -154,7 +154,7 @@ const OperationConfigLayout = ({
     useReactFlow();
 
   const handleClosePanel = () => {
-    let dummyNodesArr: { id: string }[] = getNodes()
+    const dummyNodesArr: { id: string }[] = getNodes()
       .filter((node) => node.data.isDummy)
       .map((node) => ({ id: node.id }));
     dummyNodesArr.push({ id: dummyNodeIdRef.current });
@@ -229,7 +229,7 @@ const OperationConfigLayout = ({
     const handleBackbuttonAction = () => {
       //dummy nodes are generate only while creating & not updating
       if (panelOpFormState.current === 'create') {
-        let dummyNodeIds: string[] = [dummyNodeIdRef.current];
+        const dummyNodeIds: string[] = [dummyNodeIdRef.current];
         getNodes().forEach((node) => {
           if (node.data.isDummy) {
             dummyNodeIds.push(node.id);
@@ -246,7 +246,7 @@ const OperationConfigLayout = ({
 
     const handleBackButtonOnCreateTableAddFunction = () => {
       // show the form
-      let { config } = canvasNode?.data as OperationNodeData;
+      const { config } = canvasNode?.data as OperationNodeData;
       if (config && config.type) {
         const editingOperation = operations.find(
           (op) => op.slug === config.type
@@ -405,7 +405,7 @@ const OperationConfigLayout = ({
 
   const prepareForNextOperation = async (opNodeData: OperationNodeData) => {
     if (opNodeData.id !== canvasNode?.id) {
-      let dummyNodeId: string = dummyNodeIdRef.current;
+      const dummyNodeId: string = dummyNodeIdRef.current;
       // get all edges of this dummy node and save
       const dummyNodeEdges = getEdges().filter(
         (edge: Edge) =>
@@ -428,10 +428,10 @@ const OperationConfigLayout = ({
 
       // recreate the saved edges but this time to the real node
       const edgesToCreate: Edge[] = dummyNodeEdges.map((edge: Edge) => {
-        let source =
+        const source =
           edge.source === dummyNodeId ? dummyToRealNode.id : edge.source;
 
-        let target =
+        const target =
           edge.target === dummyNodeId ? dummyToRealNode.id : edge.target;
 
         return {

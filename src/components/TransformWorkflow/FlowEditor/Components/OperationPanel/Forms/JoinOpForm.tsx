@@ -251,16 +251,20 @@ const JoinOpForm = ({
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
       );
-      let { config: opConfig, input_models } = config;
+      const { config: opConfig, input_models } = config;
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      let { source_columns, join_on, join_type, other_inputs }: JoinDataConfig =
-        opConfig;
+      const {
+        source_columns,
+        join_on,
+        join_type,
+        other_inputs,
+      }: JoinDataConfig = opConfig;
       setNodeSrcColumns(source_columns);
 
       // pre-fill form
-      let lengthInputModels: number = input_models.length;
+      const lengthInputModels: number = input_models.length;
       let jointype: string = join_type;
       if (other_inputs.length === 1) {
         jointype =
