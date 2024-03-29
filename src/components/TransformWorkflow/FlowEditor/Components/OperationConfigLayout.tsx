@@ -475,11 +475,12 @@ const OperationConfigLayout = ({
     panelOpFormState.current = 'edit';
   };
 
-  const panelState = selectedOp
-    ? 'op-form'
-    : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE
-    ? 'op-list'
-    : 'create-table-or-add-function';
+  const panelState =
+    showFunctionsList || canvasNode?.type === SRC_MODEL_NODE
+      ? 'op-list'
+      : selectedOp
+      ? 'op-form'
+      : 'create-table-or-add-function';
 
   return (
     <Box
