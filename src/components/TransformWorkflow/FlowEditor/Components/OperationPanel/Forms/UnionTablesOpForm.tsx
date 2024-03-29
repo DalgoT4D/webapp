@@ -260,7 +260,7 @@ const UnionTablesOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      let { source_columns, other_inputs }: UnionDataConfig = opConfig;
+      let { source_columns }: UnionDataConfig = opConfig;
       setNodeSrcColumns(source_columns);
 
       // pre-fill form
