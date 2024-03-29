@@ -409,6 +409,7 @@ const WhereFilterOpForm = ({
               data-testid="savebutton"
               fullWidth
               sx={{ marginTop: '17px' }}
+              disabled={action === 'view'}
             >
               Save
             </Button>
