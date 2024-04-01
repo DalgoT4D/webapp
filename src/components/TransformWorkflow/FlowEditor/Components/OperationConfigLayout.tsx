@@ -359,6 +359,7 @@ const OperationConfigLayout = ({
             );
             return (
               <Tooltip
+                key={op.slug}
                 title={
                   canSelectOperation
                     ? ''
@@ -368,7 +369,6 @@ const OperationConfigLayout = ({
                 disableHoverListener={canSelectOperation}
               >
                 <ListItemButton
-                  key={op.slug}
                   sx={{
                     padding: '10px 20px',
                     color: '#0F2440',
