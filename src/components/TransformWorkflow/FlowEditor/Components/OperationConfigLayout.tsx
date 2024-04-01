@@ -358,35 +358,36 @@ const OperationConfigLayout = ({
               canvasNode?.type === OPERATION_NODE
             );
             return (
-              <ListItemButton
-                key={op.slug}
-                sx={{
-                  padding: '10px 20px',
-                  color: '#0F2440',
-                  fontWeight: 600,
-                  '&:hover': {
-                    backgroundColor: '#F5FAFA',
-                  },
-                }}
-                onClick={
+              <Tooltip
+                title={
                   canSelectOperation
-                    ? () => {
-                        handleSelectOp(op);
-                      }
-                    : undefined
+                    ? ''
+                    : 'Please create a table to use this function'
                 }
+                placement="top"
+                disableHoverListener={canSelectOperation}
               >
-                {canSelectOperation ? (
-                  op.label
-                ) : (
-                  <Tooltip
-                    title={'Please create a table to use this function'}
-                    placement="top"
-                  >
-                    <span>{op.label}</span>
-                  </Tooltip>
-                )}
-              </ListItemButton>
+                <ListItemButton
+                  key={op.slug}
+                  sx={{
+                    padding: '10px 20px',
+                    color: '#0F2440',
+                    fontWeight: 600,
+                    '&:hover': {
+                      backgroundColor: '#F5FAFA',
+                    },
+                  }}
+                  onClick={
+                    canSelectOperation
+                      ? () => {
+                          handleSelectOp(op);
+                        }
+                      : undefined
+                  }
+                >
+                  {op.label}
+                </ListItemButton>
+              </Tooltip>
             );
           })}
         </List>
