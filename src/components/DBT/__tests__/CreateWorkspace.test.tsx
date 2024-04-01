@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { DBTSetup } from '../DBTSetup';
@@ -104,7 +104,7 @@ describe('Create workspace', () => {
     await userEvent.type(dbttargetschema, 'dest-schema');
 
     await act(() => savebutton.click());
-    expect(createWorkspaceFetch).toHaveBeenCalledTimes(1);
+    waitFor(() => expect(createWorkspaceFetch).toHaveBeenCalledTimes(1));
   });
 
   it('submit form to create workspace - check progress failed', async () => {
