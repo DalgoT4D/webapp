@@ -184,7 +184,7 @@ describe('Sync connection suite', () => {
       );
     });
 
-    look at only the first row of connection
+    // look at only the first row of connection
     const connectionsTable = screen.getByRole('table');
     const connectionsTableRows = within(connectionsTable).getAllByRole('row');
     const connCells = within(connectionsTableRows[1]).getAllByRole('cell');
