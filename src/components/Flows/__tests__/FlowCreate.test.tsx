@@ -252,7 +252,11 @@ describe('Flow Creation', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <FlowCreate updateCrudVal={updateCrudValMock} mutate={mutateMock} />
+          <FlowCreate
+            tasks={[]}
+            updateCrudVal={updateCrudValMock}
+            mutate={mutateMock}
+          />
         </SessionProvider>
       );
     });
