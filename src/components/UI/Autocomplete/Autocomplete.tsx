@@ -11,14 +11,22 @@ interface AutocompleteProps
     'renderInput'
   > {
   label?: string;
+  register?: any;
   fieldStyle?: 'normal' | 'transformation' | 'none';
   required?: boolean;
+  error?: boolean;
+  helperText?: string;
+  name?: string;
 }
 
 export const Autocomplete = ({
   placeholder,
   fieldStyle = 'normal',
   label,
+  error,
+  register,
+  helperText,
+  name,
   required = false,
   ...rest
 }: AutocompleteProps) => {
@@ -28,7 +36,11 @@ export const Autocomplete = ({
       renderInput={(params) => (
         <Input
           {...params}
+          name={name}
+          register={register}
           required={required}
+          error={error}
+          helperText={helperText}
           placeholder={placeholder}
           label={label}
           fieldStyle={fieldStyle}

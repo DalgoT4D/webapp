@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -18,6 +11,7 @@ import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const castGridStyles: {
   container: SxProps;
@@ -67,7 +61,7 @@ const FlattenJsonOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, handleSubmit, reset } = useForm({
+  const { control, handleSubmit, reset, register } = useForm({
     defaultValues: {
       json_column: '',
     },
@@ -129,21 +123,6 @@ const FlattenJsonOpForm = ({
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
       };
-
-      // validations
-      if (Object.keys(postData.config.json_column).length === 0) {
-        errorToast(
-          'Please select the json column to flatten',
-          [],
-          globalContext
-        );
-        return;
-      }
-
-      if (jsonColumns.length === 0) {
-        errorToast('Json column has no keys to flatten', [], globalContext);
-        return;
-      }
 
       // api call
       let operationNode: any;
@@ -230,8 +209,14 @@ const FlattenJsonOpForm = ({
             <Controller
               control={control}
               name="json_column"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <Autocomplete
+                  name={field.name}
+                  required
+                  error={!!fieldState.error}
+                  helperText={fieldState.error && 'JSON column is required'}
+                  register={register}
+                  fieldStyle="transformation"
                   disabled={action === 'view'}
                   options={srcColumns}
                   value={field.value}
@@ -241,9 +226,6 @@ const FlattenJsonOpForm = ({
                       fetchJsonColumns(value);
                     }
                   }}
-                  renderInput={(params) => (
-                    <Input {...params} sx={{ width: '100%' }} />
-                  )}
                 />
               )}
             />

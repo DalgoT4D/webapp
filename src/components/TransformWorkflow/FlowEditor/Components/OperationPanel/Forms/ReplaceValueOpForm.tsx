@@ -86,11 +86,6 @@ const ReplaceValueOpForm = ({
     try {
       const output_column_name = data.column_name;
 
-      if (!output_column_name) {
-        errorToast('Please select a column', [], globalContext);
-        return;
-      }
-
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns.filter((col) => col !== output_column_name),
@@ -204,15 +199,20 @@ const ReplaceValueOpForm = ({
           <Controller
             control={control}
             name="column_name"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <Autocomplete
+                name={field.name}
+                required
+                error={!!fieldState.error}
+                helperText={fieldState.error && 'Column is required'}
+                register={register}
                 disabled={action === 'view'}
                 options={srcColumns}
                 value={field.value}
                 onChange={(e, data) => {
                   field.onChange(data);
                 }}
-                label="Select a column*"
+                label="Select a column"
                 fieldStyle="transformation"
               />
             )}

@@ -69,7 +69,7 @@ const CoalesceOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, watch } = useForm({
+  const { control, register, handleSubmit, reset, getValues } = useForm({
     defaultValues: {
       columns: [{ col: '' }],
       default_value: '',
@@ -82,7 +82,7 @@ const CoalesceOpForm = ({
     name: 'columns',
   });
 
-  const columns = watch('columns'); // Get the current form values
+  const { columns } = getValues();
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -276,24 +276,40 @@ const CoalesceOpForm = ({
               <InfoTooltip title={'Output if all values in a row are null'} />
             </Box>
           </Box>
-          <Input
-            disabled={action === 'view'}
-            fieldStyle="transformation"
-            label=""
-            sx={{ padding: '0' }}
+          <Controller
+            control={control}
             name="default_value"
-            register={register}
-            required
+            render={({ field, fieldState }) => (
+              <Input
+                name={field.name}
+                helperText={fieldState.error && 'Default value is required'}
+                error={!!fieldState.error}
+                required
+                disabled={action === 'view'}
+                fieldStyle="transformation"
+                label=""
+                sx={{ padding: '0' }}
+                register={register}
+              />
+            )}
           />
           <Box sx={{ m: 2 }} />
-          <Input
-            disabled={action === 'view'}
-            fieldStyle="transformation"
-            label="Output Column Name"
-            sx={{ padding: '0' }}
+          <Controller
+            control={control}
             name="output_column_name"
-            register={register}
-            required
+            render={({ field, fieldState }) => (
+              <Input
+                name={field.name}
+                helperText={fieldState.error?.message}
+                error={!!fieldState.error}
+                required
+                disabled={action === 'view'}
+                fieldStyle="transformation"
+                label="Output Column Name"
+                sx={{ padding: '0' }}
+                register={register}
+              />
+            )}
           />
           <Box sx={{ m: 2 }} />
           <Box>
