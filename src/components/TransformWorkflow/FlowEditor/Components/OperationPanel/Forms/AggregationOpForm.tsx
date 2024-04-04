@@ -98,30 +98,6 @@ const AggregationOpForm = ({
 
   const handleSave = async (data: FormProps) => {
     try {
-      if (data.aggregate_on.length === 0) {
-        errorToast('Please select columns to aggregate', [], globalContext);
-        return;
-      }
-
-      if (!data.aggregate_on[0].column) {
-        errorToast(
-          'Please select the column to aggregate on',
-          [],
-          globalContext
-        );
-        return;
-      }
-
-      if (!data.aggregate_on[0].operation) {
-        errorToast('Please select an operation', [], globalContext);
-        return;
-      }
-
-      if (!data.aggregate_on[0].output_column_name) {
-        errorToast('Please enter the output name', [], globalContext);
-        return;
-      }
-
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -207,8 +183,9 @@ const AggregationOpForm = ({
             <Controller
               control={control}
               name={`aggregate_on.${index}.column`}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <Autocomplete
+                  name={field.name}
                   disabled={action === 'view'}
                   fieldStyle="transformation"
                   options={srcColumns.sort((a, b) => a.localeCompare(b))}
@@ -216,7 +193,11 @@ const AggregationOpForm = ({
                   onChange={(e, data) => {
                     if (data) field.onChange(data);
                   }}
-                  label="Select Column to Aggregate*"
+                  register={register}
+                  required
+                  label="Select Column to Aggregate"
+                  helperText={fieldState.error?.message}
+                  error={!!fieldState.error}
                 />
               )}
             />
@@ -225,30 +206,44 @@ const AggregationOpForm = ({
               <Controller
                 control={control}
                 name={`aggregate_on.${index}.operation`}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Autocomplete
+                    required
+                    name={field.name}
                     disabled={action === 'view'}
                     options={AggregateOperations}
                     isOptionEqualToValue={(option: any, value: any) =>
                       option?.id === value?.id
                     }
                     value={field.value}
+                    register={register}
                     onChange={(e, data: any) => {
                       if (data) field.onChange(data);
                     }}
-                    label="Aggregate*"
+                    helperText={fieldState.error?.message}
+                    error={!!fieldState.error}
+                    label="Aggregate"
                     fieldStyle="transformation"
                   />
                 )}
               />
             </Box>
-            <Input
-              fieldStyle="transformation"
-              label="Output Column Name*"
-              sx={{ padding: '0', marginTop: '16px' }}
+            <Controller
+              control={control}
               name={`aggregate_on.${index}.output_column_name`}
-              register={register}
-              disabled={action === 'view'}
+              render={({ field, fieldState }) => (
+                <Input
+                  name={field.name}
+                  fieldStyle="transformation"
+                  label="Output Column Name"
+                  sx={{ padding: '0', marginTop: '16px' }}
+                  register={register}
+                  required
+                  helperText={fieldState.error?.message}
+                  error={!!fieldState.error}
+                  disabled={action === 'view'}
+                />
+              )}
             />
           </Box>
         ))}

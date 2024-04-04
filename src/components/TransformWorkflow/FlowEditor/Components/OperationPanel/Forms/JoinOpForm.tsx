@@ -62,19 +62,20 @@ const JoinOpForm = ({
     join_type: string;
   };
 
-  const { control, handleSubmit, reset, setValue } = useForm<FormProps>({
-    defaultValues: {
-      table1: {
-        tab: { id: '', label: '' },
-        key: '',
+  const { control, handleSubmit, reset, setValue, register } =
+    useForm<FormProps>({
+      defaultValues: {
+        table1: {
+          tab: { id: '', label: '' },
+          key: '',
+        },
+        table2: {
+          tab: { id: '', label: '' },
+          key: '',
+        },
+        join_type: '',
       },
-      table2: {
-        tab: { id: '', label: '' },
-        key: '',
-      },
-      join_type: '',
-    },
-  });
+    });
   // Include this for multi-row input
 
   const fetchSourcesModels = async () => {
@@ -319,8 +320,13 @@ const JoinOpForm = ({
         <Controller
           control={control}
           name="table1.tab"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <Autocomplete
+              name={field.name}
+              required
+              error={!!fieldState.error}
+              helperText={fieldState.error && 'First table is required'}
+              register={register}
               fieldStyle="transformation"
               isOptionEqualToValue={(option: any, value: any) => {
                 return option?.id === value?.id;
@@ -346,8 +352,13 @@ const JoinOpForm = ({
         <Controller
           control={control}
           name={`table1.key`}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <Autocomplete
+              name={field.name}
+              required
+              error={!!fieldState.error}
+              helperText={fieldState.error && 'Key column is required'}
+              register={register}
               disabled={action === 'view'}
               fieldStyle="transformation"
               options={nodeSrcColumns}
@@ -363,9 +374,14 @@ const JoinOpForm = ({
         <Controller
           control={control}
           name={`table2.tab`}
-          render={({ field }) => {
+          render={({ field, fieldState }) => {
             return (
               <Autocomplete
+                name={field.name}
+                required
+                error={!!fieldState.error}
+                helperText={fieldState.error && 'Second table is required'}
+                register={register}
                 fieldStyle="transformation"
                 disabled={action === 'view'}
                 value={field.value}
@@ -393,8 +409,13 @@ const JoinOpForm = ({
         <Controller
           control={control}
           name={`table2.key`}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <Autocomplete
+              name={field.name}
+              required
+              error={!!fieldState.error}
+              helperText={fieldState.error && 'Key column is required'}
+              register={register}
               fieldStyle="transformation"
               disabled={action === 'view'}
               options={table2Columns}
@@ -410,8 +431,13 @@ const JoinOpForm = ({
         <Controller
           control={control}
           name="join_type"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <Autocomplete
+              name={field.name}
+              required
+              error={!!fieldState.error}
+              helperText={fieldState.error && 'Join type is required'}
+              register={register}
               fieldStyle="transformation"
               disabled={action === 'view'}
               options={['left', 'right', 'inner']}

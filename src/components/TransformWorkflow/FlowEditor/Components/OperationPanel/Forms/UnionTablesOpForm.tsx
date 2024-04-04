@@ -45,7 +45,7 @@ const UnionTablesOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, handleSubmit, reset, setValue } = useForm<{
+  const { control, handleSubmit, reset, setValue, register } = useForm<{
     tables: Array<{ id: string; label: string }>;
   }>({
     defaultValues: {
@@ -298,8 +298,15 @@ const UnionTablesOpForm = ({
               key={`${field.id}_${index}`}
               control={control}
               name={`tables.${index}`}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <Autocomplete
+                  name={field.name}
+                  required
+                  error={!!fieldState.error}
+                  helperText={
+                    fieldState.error && `Table ${index + 1} is required`
+                  }
+                  register={register}
                   key={`${index}`}
                   disabled={index === 0}
                   options={sourcesModels

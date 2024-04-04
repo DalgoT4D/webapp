@@ -153,15 +153,6 @@ const GroupByOpForm = ({
         target_model_uuid: nodeData?.target_model_id || '',
       };
 
-      if (postData.config.aggregate_on.length === 0) {
-        errorToast(
-          'Please fill all fields while adding aggregation',
-          [],
-          globalContext
-        );
-        return;
-      }
-
       // api call
       let operationNode: any;
       if (action === 'create') {
@@ -322,15 +313,20 @@ const GroupByOpForm = ({
                 key={`${field.id}_metric`}
                 control={control}
                 name={`aggregate_on.${index}.metric`}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Autocomplete
+                    name={field.name}
+                    required
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    register={register}
                     disabled={action === 'view'}
                     options={srcColumns}
                     value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
                     }}
-                    label="Select metric*"
+                    label="Select metric"
                     fieldStyle="transformation"
                   />
                 )}
@@ -340,8 +336,13 @@ const GroupByOpForm = ({
                 key={`${field.id}_aggregate_func`}
                 control={control}
                 name={`aggregate_on.${index}.aggregate_func`}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Autocomplete
+                    name={field.name}
+                    required
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    register={register}
                     disabled={action === 'view'}
                     options={AggregateOperations}
                     isOptionEqualToValue={(option: any, value: any) =>
@@ -351,19 +352,27 @@ const GroupByOpForm = ({
                     onChange={(e, data) => {
                       if (data) field.onChange(data);
                     }}
-                    label="Select aggregation*"
+                    label="Select aggregation"
                     fieldStyle="transformation"
                   />
                 )}
               />
               <Box sx={{ m: 2 }} />
-              <Input
-                fieldStyle="transformation"
-                label="Output Column Name"
+              <Controller
+                control={control}
                 name={`aggregate_on.${index}.output_column_name`}
-                register={register}
-                disabled={action === 'view'}
-                required
+                render={({ field, fieldState }) => (
+                  <Input
+                    name={field.name}
+                    required
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    register={register}
+                    fieldStyle="transformation"
+                    label="Output Column Name"
+                    disabled={action === 'view'}
+                  />
+                )}
               />
               <Box sx={{ m: 2 }} />
               {index === aggregateFields.length - 1 ? (

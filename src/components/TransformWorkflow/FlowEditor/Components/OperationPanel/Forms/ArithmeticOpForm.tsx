@@ -102,11 +102,6 @@ const ArithmeticOpForm = ({
 
   const handleSave = async (data: FormProps) => {
     try {
-      if (!data.arithmeticOp.id) {
-        errorToast('Please select an arithemtic operation', [], globalContext);
-        return;
-      }
-
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -202,13 +197,14 @@ const ArithmeticOpForm = ({
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
-        <Box sx={{}}>
+        <Box>
           <Controller
             control={control}
             name="arithmeticOp"
-            render={({ field }) => {
+            render={({ field, fieldState }) => {
               return (
                 <Autocomplete
+                  name={field.name}
                   disabled={action === 'view'}
                   placeholder="Select the operation"
                   options={ArithmeticOperations}
@@ -218,6 +214,10 @@ const ArithmeticOpForm = ({
                   label="Operation"
                   fieldStyle="transformation"
                   value={field.value}
+                  helperText={fieldState.error?.message}
+                  error={!!fieldState.error}
+                  required
+                  register={register}
                   onChange={(e, data: any) => {
                     if (data) field.onChange(data);
                     replace([{ type: 'col', col_val: '', const_val: 0 }]);
@@ -266,8 +266,13 @@ const ArithmeticOpForm = ({
                   <Controller
                     control={control}
                     name={`operands.${index}.col_val`}
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <Autocomplete
+                        name={field.name}
+                        helperText={'Column is required'}
+                        error={!!fieldState.error}
+                        required
+                        register={register}
                         disabled={action === 'view'}
                         fieldStyle="transformation"
                         placeholder="Select column"
@@ -280,16 +285,25 @@ const ArithmeticOpForm = ({
                     )}
                   />
                 ) : (
-                  <Input
-                    label=""
-                    fieldStyle="transformation"
+                  <Controller
+                    control={control}
                     name={`operands.${index}.const_val`}
-                    register={register}
-                    sx={{ padding: '0' }}
-                    placeholder="Enter the value"
-                    type="number"
-                    defaultValue="0"
-                    disabled={action === 'view'}
+                    render={({ field, fieldState }) => (
+                      <Input
+                        helperText={fieldState.error?.message}
+                        error={!!fieldState.error}
+                        label=""
+                        required
+                        register={register}
+                        fieldStyle="transformation"
+                        name={field.name}
+                        sx={{ padding: '0' }}
+                        placeholder="Enter the value"
+                        type="number"
+                        defaultValue="0"
+                        disabled={action === 'view'}
+                      />
+                    )}
                   />
                 )}
                 {((['sub', 'div'].includes(arithmeticOp?.id) &&
@@ -329,14 +343,22 @@ const ArithmeticOpForm = ({
           })}
 
           <Box sx={{ m: 2 }} />
-          <Input
-            disabled={action === 'view'}
-            fieldStyle="transformation"
-            label="Output Column Name"
-            sx={{ padding: '0' }}
+          <Controller
+            control={control}
             name="output_column_name"
-            register={register}
-            required
+            render={({ field, fieldState }) => (
+              <Input
+                helperText={fieldState.error?.message}
+                error={!!fieldState.error}
+                required
+                register={register}
+                disabled={action === 'view'}
+                fieldStyle="transformation"
+                label="Output Column Name"
+                sx={{ padding: '0' }}
+                name={field.name}
+              />
+            )}
           />
           <Box sx={{ m: 2 }} />
           <Box>

@@ -11,6 +11,11 @@ const StyledTextField = styled(TextField)(() => ({
     fontWeight: 600,
     borderRadius: '6px',
   },
+
+  '& .MuiOutlinedInput-root.Mui-error': {
+    border: '1px solid red',
+  },
+
   '& .MuiInputBase-input::placeholder': {
     color: '#97A2B1',
     opacity: 1,
@@ -89,6 +94,7 @@ export const Input: React.FC<InputProps> = ({
   if (rest.type === 'number') {
     registerValues.valueAsNumber = true;
   }
+  
   return (
     <Box sx={sx}>
       {label && (

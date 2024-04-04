@@ -262,8 +262,13 @@ const WhereFilterOpForm = ({
             <Controller
               control={control}
               name="filterCol"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <Autocomplete
+                  name={field.name}
+                  required
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                  register={register}
                   options={srcColumns}
                   fieldStyle="transformation"
                   disabled={isNonAdancedFieldsDisabled}
@@ -279,8 +284,13 @@ const WhereFilterOpForm = ({
             <Controller
               control={control}
               name="logicalOp"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <Autocomplete
+                  name={field.name}
+                  required
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                  register={register}
                   options={LogicalOperators.filter((op) => op.id !== 'between')}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
@@ -330,8 +340,13 @@ const WhereFilterOpForm = ({
               <Controller
                 control={control}
                 name="operand.col_val"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Autocomplete
+                    name={field.name}
+                    required
+                    error={!!fieldState.error}
+                    helperText={fieldState.error && 'Column is required'}
+                    register={register}
                     fieldStyle="transformation"
                     options={srcColumns}
                     disabled={isNonAdancedFieldsDisabled}
@@ -344,14 +359,23 @@ const WhereFilterOpForm = ({
                 )}
               />
             ) : (
-              <Input
-                fieldStyle="transformation"
-                label=""
+              <Controller
+                control={control}
                 name="operand.const_val"
-                register={register}
-                sx={{ padding: '0' }}
-                placeholder="Enter the value"
-                disabled={isNonAdancedFieldsDisabled}
+                render={({ field, fieldState }) => (
+                  <Input
+                    name={field.name}
+                    required
+                    error={!!fieldState.error}
+                    helperText={fieldState.error && 'Value is required'}
+                    fieldStyle="transformation"
+                    label=""
+                    register={register}
+                    sx={{ padding: '0' }}
+                    placeholder="Enter the value"
+                    disabled={isNonAdancedFieldsDisabled}
+                  />
+                )}
               />
             )}
             <Box sx={{ m: 2 }} />

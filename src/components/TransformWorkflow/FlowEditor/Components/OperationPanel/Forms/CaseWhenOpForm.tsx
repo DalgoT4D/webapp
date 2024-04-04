@@ -150,8 +150,13 @@ const ClauseOperands = ({
                   control={control}
                   name={`clauses.${clauseIndex}.operands.${operandIndex}.col_val`}
                   rules={{ required: data.advanceFilter === 'no' }}
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <Autocomplete
+                      name={field.name}
+                      helperText={fieldState.error?.message}
+                      error={!!fieldState.error}
+                      required={data.advanceFilter === 'no'}
+                      register={register}
                       options={data.srcColumns.sort((a, b) =>
                         a.localeCompare(b)
                       )}
@@ -166,15 +171,23 @@ const ClauseOperands = ({
                   )}
                 />
               ) : (
-                <Input
-                  label=""
-                  fieldStyle="transformation"
+                <Controller
+                  control={control}
                   name={`clauses.${clauseIndex}.operands.${operandIndex}.const_val`}
-                  register={register}
-                  sx={{ padding: '0' }}
-                  placeholder="Enter the value"
-                  disabled={disableFields}
-                  required={data.advanceFilter === 'no'}
+                  rules={{ required: data.advanceFilter === 'no' }}
+                  render={({ field, fieldState }) => (
+                    <Input
+                      helperText={fieldState.error && 'Value is required'}
+                      error={!!fieldState.error}
+                      required={data.advanceFilter === 'no'}
+                      register={register}
+                      fieldStyle="transformation"
+                      name={field.name}
+                      sx={{ padding: '0' }}
+                      placeholder="Enter the value"
+                      disabled={disableFields}
+                    />
+                  )}
                 />
               )}
             </Box>
@@ -297,11 +310,6 @@ const CaseWhenOpForm = ({
 
   const handleSave = async (data: FormProps) => {
     try {
-      if (data.advanceFilter === 'yes' && data.sql_snippet.length < 4) {
-        errorToast('Please enter the SQL snippet', [], globalContext);
-        return;
-      }
-
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -486,16 +494,19 @@ const CaseWhenOpForm = ({
                   <Controller
                     control={control}
                     name={`clauses.${clauseIndex}.filterCol`}
-                    rules={{ required: advanceFilter === 'no' }}
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <Autocomplete
+                        name={field.name}
+                        helperText={fieldState.error && 'Required'}
+                        error={!!fieldState.error}
+                        required={advanceFilter === 'no'}
+                        register={register}
                         options={srcColumns}
                         disabled={isDisabled}
                         onChange={(e, data) => {
                           field.onChange(data);
                         }}
                         value={field.value}
-                        // label="When"
                         placeholder="Select column to condition on"
                         fieldStyle="transformation"
                       />
@@ -505,9 +516,13 @@ const CaseWhenOpForm = ({
                   <Controller
                     control={control}
                     name={`clauses.${clauseIndex}.logicalOp`}
-                    rules={{ required: advanceFilter === 'no' }}
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <Autocomplete
+                        name={field.name}
+                        helperText={fieldState.error && 'Required'}
+                        error={!!fieldState.error}
+                        required={advanceFilter === 'no'}
+                        register={register}
                         options={LogicalOperators}
                         isOptionEqualToValue={(option: any, value: any) =>
                           option?.id === value?.id
@@ -590,8 +605,13 @@ const CaseWhenOpForm = ({
                         control={control}
                         name={`clauses.${clauseIndex}.then.col_val`}
                         rules={{ required: advanceFilter === 'no' }}
-                        render={({ field }) => (
+                        render={({ field, fieldState }) => (
                           <Autocomplete
+                            name={field.name}
+                            helperText={fieldState.error?.message}
+                            error={!!fieldState.error}
+                            required={advanceFilter === 'no'}
+                            register={register}
                             options={srcColumns}
                             disabled={isDisabled}
                             value={field.value}
@@ -604,15 +624,23 @@ const CaseWhenOpForm = ({
                         )}
                       />
                     ) : (
-                      <Input
-                        label=""
-                        fieldStyle="transformation"
+                      <Controller
+                        control={control}
                         name={`clauses.${clauseIndex}.then.const_val`}
-                        register={register}
-                        sx={{ padding: '0' }}
-                        placeholder="Enter the value"
-                        disabled={isDisabled}
-                        required={advanceFilter === 'no'}
+                        render={({ field, fieldState }) => (
+                          <Input
+                            label=""
+                            fieldStyle="transformation"
+                            name={field.name}
+                            register={register}
+                            helperText={fieldState.error?.message}
+                            error={!!fieldState.error}
+                            required={advanceFilter === 'no'}
+                            sx={{ padding: '0' }}
+                            placeholder="Enter the value"
+                            disabled={isDisabled}
+                          />
+                        )}
                       />
                     )}
                   </Box>
@@ -781,17 +809,26 @@ const CaseWhenOpForm = ({
             />
           </Box>
           {advanceFilter === 'yes' && (
-            <Input
-              fieldStyle="transformation"
-              label=""
+            <Controller
+              control={control}
               name="sql_snippet"
-              register={register}
-              sx={{ padding: '0' }}
-              placeholder="Enter the value"
-              type="text"
-              multiline
-              rows={4}
-              disabled={isAdvanceFieldsDisabled}
+              render={({ field, fieldState }) => (
+                <Input
+                  helperText={fieldState.error && 'Required'}
+                  error={!!fieldState.error}
+                  required={advanceFilter === 'yes'}
+                  register={register}
+                  fieldStyle="transformation"
+                  label=""
+                  name={field.name}
+                  sx={{ padding: '0' }}
+                  placeholder="Enter the value"
+                  type="text"
+                  multiline
+                  rows={4}
+                  disabled={isAdvanceFieldsDisabled}
+                />
+              )}
             />
           )}
 
