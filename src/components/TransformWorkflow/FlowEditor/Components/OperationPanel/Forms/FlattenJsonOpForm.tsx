@@ -7,9 +7,7 @@ import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
-import Input from '@/components/UI/Input/Input';
-import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
+
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
@@ -53,7 +51,6 @@ const FlattenJsonOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [jsonColumns, setJsonColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
