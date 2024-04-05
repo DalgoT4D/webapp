@@ -165,9 +165,6 @@ export const Connections = () => {
 
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
 
-  console.log('connections', data);
-  console.log('sources', data);
-
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
       const flowRun: PrefectFlowRun = await httpGet(
