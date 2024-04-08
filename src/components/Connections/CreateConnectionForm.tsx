@@ -620,7 +620,7 @@ const CreateConnectionForm = ({
       <CustomDialog
         maxWidth={false}
         data-testid="dialog"
-        title={'Add a new connection'}
+        title={connectionId ? 'Edit this connection' : 'Add a new connection'}
         show={showForm}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
