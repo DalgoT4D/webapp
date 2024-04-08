@@ -45,7 +45,7 @@ const UnionTablesOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, handleSubmit, reset, setValue, register } = useForm<{
+  const { control, handleSubmit, reset, setValue } = useForm<{
     tables: Array<{ id: string; label: string }>;
   }>({
     defaultValues: {
@@ -297,16 +297,17 @@ const UnionTablesOpForm = ({
             <Controller
               key={`${field.id}_${index}`}
               control={control}
+              rules={{
+                validate: (value) =>
+                  (value && value.id !== '') ||
+                  `Table ${index + 1} is required`,
+              }}
               name={`tables.${index}`}
               render={({ field, fieldState }) => (
                 <Autocomplete
-                  name={field.name}
-                  required
+                  {...field}
                   error={!!fieldState.error}
-                  helperText={
-                    fieldState.error && `Table ${index + 1} is required`
-                  }
-                  register={register}
+                  helperText={fieldState.error?.message}
                   key={`${index}`}
                   disabled={index === 0}
                   options={sourcesModels
@@ -318,8 +319,7 @@ const UnionTablesOpForm = ({
                   isOptionEqualToValue={(option: any, value: any) => {
                     return option?.id === value?.id;
                   }}
-                  value={field.value}
-                  onChange={(e, data: any) => {
+                  onChange={(data: any) => {
                     field.onChange(data);
                     const model: DbtSourceModel | undefined =
                       sourcesModels.find(

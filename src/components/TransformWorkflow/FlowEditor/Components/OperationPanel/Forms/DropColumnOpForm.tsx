@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button, Grid, Typography } from '@mui/material';
+import { Box, Button, FormHelperText, Grid, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -10,7 +10,6 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import InputAdornment from '@mui/material/InputAdornment';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import Input from '@/components/UI/Input/Input';
@@ -79,13 +78,6 @@ const DropColumnOp = ({
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData.target_model_id || '',
       };
-
-      // validations
-      if (selectedColumns.length === 0) {
-        console.log('Please select columns to drop');
-        errorToast('Please select columns to drop', [], globalContext);
-        return;
-      }
 
       // api call
       let operationNode: any;
@@ -188,7 +180,7 @@ const DropColumnOp = ({
               .filter((col) => !selectedColumns.includes(col))
               .sort((a, b) => a.localeCompare(b))}
             label="Select Column to Drop"
-            onChange={(e, value: any) => {
+            onChange={(value: any) => {
               if (value) {
                 handleAddColumn(value);
                 setColumn('');
@@ -196,6 +188,11 @@ const DropColumnOp = ({
             }}
           />
         </Grid>
+        {selectedColumns.length < 1 && (
+          <FormHelperText sx={{ color: 'red', ml: 3 }}>
+            Please select atleast 1 column
+          </FormHelperText>
+        )}
         <Grid item xs={12}>
           <Button
             onClick={handleSave}

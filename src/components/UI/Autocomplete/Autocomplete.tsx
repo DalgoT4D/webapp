@@ -8,15 +8,14 @@ import {
 interface AutocompleteProps
   extends Omit<
     AutocompleteElementProps<unknown, boolean, boolean, boolean>,
-    'renderInput'
+    'renderInput' | 'onChange'
   > {
   label?: string;
-  register?: any;
   fieldStyle?: 'normal' | 'transformation' | 'none';
-  required?: boolean;
   error?: boolean;
   helperText?: string;
   name?: string;
+  onChange: any;
 }
 
 export const Autocomplete = ({
@@ -24,21 +23,21 @@ export const Autocomplete = ({
   fieldStyle = 'normal',
   label,
   error,
-  register,
   helperText,
   name,
-  required = false,
+  onChange,
   ...rest
 }: AutocompleteProps) => {
   return (
     <AutocompleteElement
       {...rest}
+      onChange={(e, data) => {
+        onChange(data);
+      }}
       renderInput={(params) => (
         <Input
           {...params}
           name={name}
-          register={register}
-          required={required}
           error={error}
           helperText={helperText}
           placeholder={placeholder}

@@ -112,36 +112,6 @@ const WhereFilterOpForm = ({
 
   const handleSave = async (data: FormProps) => {
     try {
-      if (data.advanceFilter === 'yes' && data.sql_snippet.length < 4) {
-        errorToast('Please enter the SQL snippet', [], globalContext);
-        return;
-      }
-
-      if (data.advanceFilter === 'no') {
-        if (!data.filterCol) {
-          errorToast(
-            'Please select the column to filter on',
-            [],
-            globalContext
-          );
-          return;
-        }
-
-        if (!data.logicalOp.id) {
-          errorToast('Please select the operation', [], globalContext);
-          return;
-        }
-
-        if (!data.operand.col_val && !data.operand.const_val) {
-          errorToast(
-            'Please select either a column or a value',
-            [],
-            globalContext
-          );
-          return;
-        }
-      }
-
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -262,20 +232,17 @@ const WhereFilterOpForm = ({
             <Controller
               control={control}
               name="filterCol"
+              rules={{
+                required: advanceFilter === 'no' && 'Column is required',
+              }}
               render={({ field, fieldState }) => (
                 <Autocomplete
-                  name={field.name}
-                  required
+                  {...field}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
-                  register={register}
                   options={srcColumns}
                   fieldStyle="transformation"
                   disabled={isNonAdancedFieldsDisabled}
-                  value={field.value}
-                  onChange={(e, data) => {
-                    field.onChange(data);
-                  }}
                   label="Select column"
                 />
               )}
@@ -284,22 +251,22 @@ const WhereFilterOpForm = ({
             <Controller
               control={control}
               name="logicalOp"
+              rules={{
+                validate: (value) =>
+                  advanceFilter !== 'no' ||
+                  value.id !== '' ||
+                  'Operation is required',
+              }}
               render={({ field, fieldState }) => (
                 <Autocomplete
-                  name={field.name}
-                  required
+                  {...field}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
-                  register={register}
                   options={LogicalOperators.filter((op) => op.id !== 'between')}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
                   }
                   disabled={isNonAdancedFieldsDisabled}
-                  value={field.value}
-                  onChange={(e, data) => {
-                    if (data) field.onChange(data);
-                  }}
                   label="Select operation"
                   fieldStyle="transformation"
                 />
@@ -339,21 +306,18 @@ const WhereFilterOpForm = ({
             {radioValue === 'col' ? (
               <Controller
                 control={control}
+                rules={{
+                  required: advanceFilter === 'no' && 'Column is required',
+                }}
                 name="operand.col_val"
                 render={({ field, fieldState }) => (
                   <Autocomplete
-                    name={field.name}
-                    required
+                    {...field}
                     error={!!fieldState.error}
-                    helperText={fieldState.error && 'Column is required'}
-                    register={register}
+                    helperText={fieldState.error?.message}
                     fieldStyle="transformation"
                     options={srcColumns}
                     disabled={isNonAdancedFieldsDisabled}
-                    value={field.value}
-                    onChange={(e, data) => {
-                      field.onChange(data);
-                    }}
                     placeholder="Select column"
                   />
                 )}
@@ -362,15 +326,16 @@ const WhereFilterOpForm = ({
               <Controller
                 control={control}
                 name="operand.const_val"
+                rules={{
+                  required: advanceFilter === 'no' && 'Value is required',
+                }}
                 render={({ field, fieldState }) => (
                   <Input
-                    name={field.name}
-                    required
+                    {...field}
                     error={!!fieldState.error}
-                    helperText={fieldState.error && 'Value is required'}
+                    helperText={fieldState.error?.message}
                     fieldStyle="transformation"
                     label=""
-                    register={register}
                     sx={{ padding: '0' }}
                     placeholder="Enter the value"
                     disabled={isNonAdancedFieldsDisabled}
@@ -415,17 +380,27 @@ const WhereFilterOpForm = ({
             </Box>
             <Box sx={{ m: 2 }} />
             {advanceFilter === 'yes' && (
-              <Input
-                fieldStyle="transformation"
-                label=""
+              <Controller
+                control={control}
                 name="sql_snippet"
-                register={register}
-                sx={{ padding: '0' }}
-                placeholder="Enter the value"
-                type="text"
-                multiline
-                rows={4}
-                disabled={isAdvanceFieldsDisabled}
+                rules={{
+                  required: advanceFilter === 'yes' && 'Value is required',
+                }}
+                render={({ field, fieldState }) => (
+                  <Input
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    fieldStyle="transformation"
+                    label=""
+                    {...field}
+                    sx={{ padding: '0' }}
+                    placeholder="Enter the value"
+                    type="text"
+                    multiline
+                    rows={4}
+                    disabled={isAdvanceFieldsDisabled}
+                  />
+                )}
               />
             )}
           </Box>

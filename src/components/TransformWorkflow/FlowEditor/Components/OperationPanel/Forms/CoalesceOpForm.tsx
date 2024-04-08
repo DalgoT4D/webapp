@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import {
   Box,
   Button,
+  FormHelperText,
   FormLabel,
   Grid,
   SxProps,
@@ -69,7 +70,7 @@ const CoalesceOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, getValues } = useForm({
+  const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
       columns: [{ col: '' }],
       default_value: '',
@@ -80,6 +81,12 @@ const CoalesceOpForm = ({
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'columns',
+    rules: {
+      minLength: {
+        value: 2,
+        message: 'Atleast 1 column is required',
+      },
+    },
   });
 
   const { columns } = getValues();
@@ -107,9 +114,7 @@ const CoalesceOpForm = ({
       const coalesceColumns = data.columns
         .map((col: any) => col.col)
         .filter((col: string) => col);
-      if (coalesceColumns.length === 0) {
-        errorToast('Please select columns to coalesce', [], globalContext);
-      }
+
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -208,7 +213,7 @@ const CoalesceOpForm = ({
           </Grid>
 
           {fields.map((field, index) => (
-            <Fragment key={field + '_1'}>
+            <Fragment key={field.id}>
               <Grid
                 key={field + '_1'}
                 item
@@ -248,6 +253,7 @@ const CoalesceOpForm = ({
                   name={`columns.${index}.col`}
                   render={({ field }) => (
                     <Autocomplete
+                      {...field}
                       disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns
@@ -256,8 +262,7 @@ const CoalesceOpForm = ({
                             !columns.map((col) => col.col).includes(option)
                         )
                         .sort((a, b) => a.localeCompare(b))}
-                      value={field.value}
-                      onChange={(e, data) => {
+                      onChange={(data: any) => {
                         field.onChange(data);
                         if (data) append({ col: '' });
                         else remove(index + 1);
@@ -269,6 +274,12 @@ const CoalesceOpForm = ({
             </Fragment>
           ))}
         </Grid>
+
+        {formState.errors.columns && (
+          <FormHelperText sx={{ color: 'red', ml: 3 }}>
+            {formState.errors.columns.root?.message}
+          </FormHelperText>
+        )}
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <FormLabel sx={{ mr: 1, color: 'black' }}>Default Value</FormLabel>
@@ -278,36 +289,34 @@ const CoalesceOpForm = ({
           </Box>
           <Controller
             control={control}
+            rules={{ required: 'Default value is required' }}
             name="default_value"
             render={({ field, fieldState }) => (
               <Input
-                name={field.name}
-                helperText={fieldState.error && 'Default value is required'}
+                {...field}
+                helperText={fieldState.error?.message}
                 error={!!fieldState.error}
-                required
                 disabled={action === 'view'}
                 fieldStyle="transformation"
                 label=""
                 sx={{ padding: '0' }}
-                register={register}
               />
             )}
           />
           <Box sx={{ m: 2 }} />
           <Controller
             control={control}
+            rules={{ required: 'Output column name is required' }}
             name="output_column_name"
             render={({ field, fieldState }) => (
               <Input
-                name={field.name}
                 helperText={fieldState.error?.message}
                 error={!!fieldState.error}
-                required
+                {...field}
                 disabled={action === 'view'}
                 fieldStyle="transformation"
                 label="Output Column Name"
                 sx={{ padding: '0' }}
-                register={register}
               />
             )}
           />

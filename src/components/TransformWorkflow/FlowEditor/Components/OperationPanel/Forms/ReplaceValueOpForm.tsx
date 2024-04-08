@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, FormHelperText } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -9,7 +9,6 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
@@ -48,7 +47,7 @@ const ReplaceValueOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset } = useForm<{
+  const { control, register, handleSubmit, reset, formState } = useForm<{
     config: Array<{ old: string; new: string }>;
     column_name: string;
   }>({
@@ -58,7 +57,16 @@ const ReplaceValueOpForm = ({
     },
   });
   // Include this for multi-row input
-  const { fields, append, remove } = useFieldArray({ control, name: 'config' });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'config',
+    rules: {
+      minLength: {
+        value: 2,
+        message: 'Atleast one value is required',
+      },
+    },
+  });
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -110,13 +118,6 @@ const ReplaceValueOpForm = ({
             replace: item.new,
           });
       });
-
-      // validations
-      if (postData.config.columns[0].replace_ops.length === 0) {
-        console.log('Please add values to replace');
-        errorToast('Please add values to replace', [], globalContext);
-        return;
-      }
 
       // api call
       let operationNode: any;
@@ -199,19 +200,14 @@ const ReplaceValueOpForm = ({
           <Controller
             control={control}
             name="column_name"
+            rules={{ required: 'Column is required' }}
             render={({ field, fieldState }) => (
               <Autocomplete
-                name={field.name}
-                required
+                {...field}
                 error={!!fieldState.error}
-                helperText={fieldState.error && 'Column is required'}
-                register={register}
+                helperText={fieldState.error?.message}
                 disabled={action === 'view'}
                 options={srcColumns}
-                value={field.value}
-                onChange={(e, data) => {
-                  field.onChange(data);
-                }}
                 label="Select a column"
                 fieldStyle="transformation"
               />
@@ -245,6 +241,11 @@ const ReplaceValueOpForm = ({
             />,
           ])}
         ></GridTable>
+        {formState.errors.config && (
+          <FormHelperText sx={{ color: 'red', ml: 2 }}>
+            {formState.errors.config.root?.message}
+          </FormHelperText>
+        )}
 
         <Button
           variant="shadow"
