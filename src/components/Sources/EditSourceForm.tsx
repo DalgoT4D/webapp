@@ -15,6 +15,9 @@ interface EditSourceFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
   sourceId: string;
+  loading: boolean;
+  setLoading: (...args: any) => any;
+  sourceDefs: any;
 }
 
 interface SourceApiResponse {
@@ -55,6 +58,9 @@ const EditSourceForm = ({
   showForm,
   setShowForm,
   sourceId,
+  loading,
+  setLoading,
+  sourceDefs
 }: EditSourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -76,10 +82,9 @@ const EditSourceForm = ({
     },
   });
   const watchSelectedSourceDef = watch('sourceDef');
-  const [loading, setLoading] = useState<boolean>(false);
   const [logs, setLogs] = useState<Array<any>>([]);
   const [source, setSource] = useState<any>(null);
-  const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
+  // const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
   const lastRenderedSpecRef = useRef([]);
 
@@ -87,16 +92,16 @@ const EditSourceForm = ({
     reset();
     setShowForm(false);
     setSource(null);
-    setSourceDefs([]);
+    // setSourceDefs([]);
     setSourceDefSpecs([]);
     setLogs([]);
   };
 
-  useEffect(() => {
-    (async () => {
-      await fetchSourceDefinitions();
-    })();
-  }, [showForm]);
+  // useEffect(() => {
+  //   (async () => {
+  //     await fetchSourceDefinitions();
+  //   })();
+  // }, [showForm]);
 
   useEffect(() => {
     if (showForm && sourceId && sourceDefs.length > 0) {
@@ -124,30 +129,30 @@ const EditSourceForm = ({
       setLoading(false);
     }
     setLoading(false);
-  }, [sourceDefs]);
+  }, [sourceDefs, showForm]);
 
-  const fetchSourceDefinitions = async () => {
-    setLoading(true);
-    try {
-      const data: Array<SourceDefinitionsApiResponse> = await httpGet(
-        session,
-        'airbyte/source_definitions'
-      );
-      const sourceDefRows: AutoCompleteOption[] = data?.map(
-        (element: SourceDefinitionsApiResponse) => {
-          return {
-            label: element.name,
-            id: element.sourceDefinitionId,
-          } as AutoCompleteOption;
-        }
-      );
-      setSourceDefs(sourceDefRows);
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], globalContext);
-    }
-    setLoading(false);
-  };
+  // const fetchSourceDefinitions = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const data: Array<SourceDefinitionsApiResponse> = await httpGet(
+  //       session,
+  //       'airbyte/source_definitions'
+  //     );
+  //     const sourceDefRows: AutoCompleteOption[] = data?.map(
+  //       (element: SourceDefinitionsApiResponse) => {
+  //         return {
+  //           label: element.name,
+  //           id: element.sourceDefinitionId,
+  //         } as AutoCompleteOption;
+  //       }
+  //     );
+  //     setSourceDefs(sourceDefRows);
+  //   } catch (err: any) {
+  //     console.error(err);
+  //     errorToast(err.message, [], globalContext);
+  //   }
+  //   setLoading(false);
+  // };
 
   useEffect(() => {
     if (watchSelectedSourceDef?.id) {
