@@ -94,7 +94,6 @@ export const Input: React.FC<InputProps> = ({
   if (rest.type === 'number') {
     registerValues.valueAsNumber = true;
   }
-  
   return (
     <Box sx={sx}>
       {label && (

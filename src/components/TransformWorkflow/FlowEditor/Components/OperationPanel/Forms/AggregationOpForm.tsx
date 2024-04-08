@@ -61,7 +61,7 @@ const AggregationOpForm = ({
     }[];
   };
 
-  const { control, register, handleSubmit, reset } = useForm<FormProps>({
+  const { control, handleSubmit, reset } = useForm<FormProps>({
     defaultValues: {
       aggregate_on: [
         {
@@ -182,19 +182,14 @@ const AggregationOpForm = ({
           <Box key={field.id}>
             <Controller
               control={control}
+              rules={{ required: 'Column to aggregate is required' }}
               name={`aggregate_on.${index}.column`}
               render={({ field, fieldState }) => (
                 <Autocomplete
-                  name={field.name}
+                  {...field}
                   disabled={action === 'view'}
                   fieldStyle="transformation"
                   options={srcColumns.sort((a, b) => a.localeCompare(b))}
-                  value={field.value}
-                  onChange={(e, data) => {
-                    if (data) field.onChange(data);
-                  }}
-                  register={register}
-                  required
                   label="Select Column to Aggregate"
                   helperText={fieldState.error?.message}
                   error={!!fieldState.error}
@@ -205,21 +200,20 @@ const AggregationOpForm = ({
             <Box sx={{ mt: 2 }}>
               <Controller
                 control={control}
+                rules={{
+                  validate: (value) => {
+                    return value.id !== '' || 'Operation is required';
+                  },
+                }}
                 name={`aggregate_on.${index}.operation`}
                 render={({ field, fieldState }) => (
                   <Autocomplete
-                    required
-                    name={field.name}
                     disabled={action === 'view'}
                     options={AggregateOperations}
                     isOptionEqualToValue={(option: any, value: any) =>
                       option?.id === value?.id
                     }
-                    value={field.value}
-                    register={register}
-                    onChange={(e, data: any) => {
-                      if (data) field.onChange(data);
-                    }}
+                    {...field}
                     helperText={fieldState.error?.message}
                     error={!!fieldState.error}
                     label="Aggregate"
@@ -230,18 +224,17 @@ const AggregationOpForm = ({
             </Box>
             <Controller
               control={control}
+              rules={{ required: 'Output column name is required' }}
               name={`aggregate_on.${index}.output_column_name`}
               render={({ field, fieldState }) => (
                 <Input
-                  name={field.name}
                   fieldStyle="transformation"
                   label="Output Column Name"
                   sx={{ padding: '0', marginTop: '16px' }}
-                  register={register}
-                  required
                   helperText={fieldState.error?.message}
                   error={!!fieldState.error}
                   disabled={action === 'view'}
+                  {...field}
                 />
               )}
             />

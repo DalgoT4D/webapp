@@ -206,18 +206,16 @@ const FlattenJsonOpForm = ({
             <Controller
               control={control}
               name="json_column"
+              rules={{ required: 'JSON column is required' }}
               render={({ field, fieldState }) => (
                 <Autocomplete
-                  name={field.name}
-                  required
+                  {...field}
                   error={!!fieldState.error}
-                  helperText={fieldState.error && 'JSON column is required'}
-                  register={register}
+                  helperText={fieldState.error?.message}
                   fieldStyle="transformation"
                   disabled={action === 'view'}
                   options={srcColumns}
-                  value={field.value}
-                  onChange={(event, value) => {
+                  onChange={(value: any) => {
                     field.onChange(value);
                     if (value !== null) {
                       fetchJsonColumns(value);
