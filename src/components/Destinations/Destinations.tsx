@@ -133,7 +133,13 @@ export const Destinations = () => {
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ minWidth: 300 }}>{warehouse?.airbyteDockerRepository}</TableCell>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.airbyteDockerRepository}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Version</TableCell>
                 <TableCell align="right" data-testid="abworkspace">
                   {warehouse.tag}
                 </TableCell>
@@ -214,7 +220,13 @@ export const Destinations = () => {
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ minWidth: 300 }}>{warehouse?.airbyteDockerRepository}</TableCell>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.airbyteDockerRepository}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Version</TableCell>
                 <TableCell align="right" data-testid="abworkspace">
                   {warehouse.tag}
                 </TableCell>
@@ -280,7 +292,13 @@ export const Destinations = () => {
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ minWidth: 300 }}>{warehouse?.airbyteDockerRepository}</TableCell>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.airbyteDockerRepository}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Version</TableCell>
                 <TableCell align="right" data-testid="abworkspace">
                   {warehouse.tag}
                 </TableCell>
