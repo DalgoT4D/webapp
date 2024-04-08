@@ -89,7 +89,7 @@ export const Sources = () => {
           {source.sourceName}
           <br />
           <Typography variant='subtitle2' fontWeight={400}>
-            {sourceDefs?.map((item) => item?.id == source?.sourceDefinitionId ? `${item.dockerRepository}: ${item?.tag}` : "")}
+            {sourceDefs?.map((item) => item?.id == source?.sourceDefinitionId ? `${item.dockerRepository}:${item?.tag}` : "")}
           </Typography>
         </Typography>,
         <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
