@@ -1,10 +1,10 @@
-import { useState, useContext, useMemo } from 'react';
+import { useState, useContext, useMemo, useEffect } from 'react';
 import useSWR from 'swr';
 import { CircularProgress, Box, Button, Typography } from '@mui/material';
 import { List } from '../List/List';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useSession } from 'next-auth/react';
-import { httpDelete } from '@/helpers/http';
+import { httpDelete, httpGet } from '@/helpers/http';
 import CreateSourceForm from './CreateSourceForm';
 import EditSourceForm from './EditSourceForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
@@ -16,9 +16,30 @@ import { ActionsMenu } from '../UI/Menu/Menu';
 
 const headers = ['Source details', 'Type'];
 
+interface SourceDefinitionsApiResponse {
+  sourceDefinitionId: string;
+  name: string;
+  sourceType: string;
+  releaseStage: string;
+  protocolVersion: string;
+  maxSecondsBetweenMessages: number;
+  documentationUrl: string;
+  dockerRepository: string;
+  dockerImageTag: string;
+}
+
+type AutoCompleteOption = {
+  id: string;
+  label: string;
+  dockerRepository: string;
+  tag: string;
+};
+
 export const Sources = () => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/sources`);
   const [showCreateSourceDialog, setShowCreateSourceDialog] =
@@ -66,6 +87,10 @@ export const Sources = () => {
           fontWeight={600}
         >
           {source.sourceName}
+          <br />
+          <Typography variant='subtitle2' fontWeight={400}>
+            {sourceDefs?.map((item) => item?.id == source?.sourceDefinitionId ? `${item.dockerRepository}: ${item?.tag}` : "")}
+          </Typography>
         </Typography>,
         <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
           <Button
@@ -86,7 +111,7 @@ export const Sources = () => {
       ]);
     }
     return [];
-  }, [data]);
+  }, [data, sourceDefs]);
 
   const handleClickOpen = () => {
     setShowCreateSourceDialog(true);
@@ -122,6 +147,35 @@ export const Sources = () => {
     return <CircularProgress />;
   }
 
+  const fetchSourceDefinitions = async () => {
+    setLoading(true);
+    try {
+      const data: Array<SourceDefinitionsApiResponse> = await httpGet(
+        session,
+        'airbyte/source_definitions'
+      );
+      const sourceDefRows: AutoCompleteOption[] = data?.map(
+        (element: SourceDefinitionsApiResponse) => {
+          return {
+            label: element.name,
+            id: element.sourceDefinitionId,
+            dockerRepository: element.dockerRepository,
+            tag: element?.dockerImageTag
+          } as AutoCompleteOption;
+        }
+      );
+      setSourceDefs(sourceDefRows);
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchSourceDefinitions();
+  }, [])
+
   return (
     <>
       <ActionsMenu
@@ -134,11 +188,15 @@ export const Sources = () => {
       />
       <CreateSourceForm
         mutate={mutate}
+        sourceDefs={sourceDefs}
         showForm={showCreateSourceDialog}
         setShowForm={setShowCreateSourceDialog}
       />
       <EditSourceForm
         mutate={mutate}
+        loading={loading}
+        setLoading={setLoading}
+        sourceDefs={sourceDefs}
         showForm={showEditSourceDialog}
         setShowForm={setShowEditSourceDialog}
         sourceId={sourceIdToEdit}

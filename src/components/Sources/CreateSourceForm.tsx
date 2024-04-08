@@ -14,6 +14,7 @@ interface CreateSourceFormProps {
   mutate: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
+  sourceDefs: any;
 }
 
 type AutoCompleteOption = {
@@ -31,9 +32,10 @@ const CreateSourceForm = ({
   mutate,
   showForm,
   setShowForm,
+  sourceDefs,
 }: CreateSourceFormProps) => {
   const { data: session }: any = useSession();
-  const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
+  // const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
   const [checking, setChecking] = useState<boolean>(false);
@@ -60,26 +62,26 @@ const CreateSourceForm = ({
 
   const watchSelectedSourceDef = watch('sourceDef');
 
-  useEffect(() => {
-    if (showForm && sourceDefs.length === 0) {
-      (async () => {
-        try {
-          const data = await httpGet(session, 'airbyte/source_definitions');
-          const sourceDefRows: Array<AutoCompleteOption> = data?.map(
-            (element: any) =>
-              ({
-                label: element.name,
-                id: element.sourceDefinitionId,
-              } as AutoCompleteOption)
-          );
-          setSourceDefs(sourceDefRows);
-        } catch (err: any) {
-          console.error(err);
-          errorToast(err.message, [], toastContext);
-        }
-      })();
-    }
-  }, [showForm]);
+  // useEffect(() => {
+  //   if (showForm && sourceDefs.length === 0) {
+  //     (async () => {
+  //       try {
+  //         const data = await httpGet(session, 'airbyte/source_definitions');
+  //         const sourceDefRows: Array<AutoCompleteOption> = data?.map(
+  //           (element: any) =>
+  //           ({
+  //             label: element.name,
+  //             id: element.sourceDefinitionId,
+  //           } as AutoCompleteOption)
+  //         );
+  //         setSourceDefs(sourceDefRows);
+  //       } catch (err: any) {
+  //         console.error(err);
+  //         errorToast(err.message, [], toastContext);
+  //       }
+  //     })();
+  //   }
+  // }, [showForm]);
 
   useEffect(() => {
     if (watchSelectedSourceDef?.id) {
