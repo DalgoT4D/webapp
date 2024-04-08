@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
@@ -12,6 +12,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { AggregateOn, AggregateOperations } from './AggregationOpForm';
 
 const renameGridStyles: {
   container: SxProps;
@@ -33,6 +34,12 @@ const renameGridStyles: {
   },
 };
 
+interface GroupbyDataConfig {
+  aggregate_on: AggregateOn[];
+  source_columns: string[];
+  other_inputs: any[];
+}
+
 const GroupByOpForm = ({
   node,
   operation,
@@ -40,10 +47,13 @@ const GroupByOpForm = ({
   continueOperationChain,
   clearAndClosePanel,
   dummyNodeId,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
+  const [isLoading, setIsLoading] = useState(true);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -123,7 +133,6 @@ const GroupByOpForm = ({
         errorToast('Please select dimensions to groupby', [], globalContext);
         return;
       }
-      console.log('data', data);
       const postData: any = {
         op_type: operation.slug,
         source_columns: dimensionColumns,
@@ -154,22 +163,74 @@ const GroupByOpForm = ({
       }
 
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the first step in chain
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       continueOperationChain(operationNode);
       reset();
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      errorToast(error?.message, [], globalContext);
+    }
+  };
+
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config, prev_source_columns }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      const { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      const { source_columns, aggregate_on }: GroupbyDataConfig = opConfig;
+      if (prev_source_columns) setSrcColumns(prev_source_columns);
+
+      // pre-fill form
+      const dimensionColumns = source_columns.map((col: string) => ({
+        col: col,
+      }));
+      dimensionColumns.push({ col: '' });
+      reset({
+        columns: dimensionColumns,
+        aggregate_on: aggregate_on.map((item: AggregateOn) => ({
+          metric: item.column,
+          aggregate_func: AggregateOperations.find(
+            (op) => op.id === item.operation
+          ),
+          output_column_name: item.output_column_name,
+        })),
+      });
+    } catch (error) {
+      console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchAndSetSourceColumns();
-  }, [session]);
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx }}>
@@ -229,11 +290,13 @@ const GroupByOpForm = ({
                   name={`columns.${index}.col`}
                   render={({ field }) => (
                     <Autocomplete
+                      disabled={action === 'view'}
                       fieldStyle="transformation"
-                      options={srcColumns.filter(
+                      options={srcColumns?.filter(
                         (option) =>
                           !columns.map((col) => col.col).includes(option)
                       )}
+                      value={field.value}
                       onChange={(e, data) => {
                         field.onChange(data);
                         if (data) appendDimension({ col: '' });
@@ -261,7 +324,9 @@ const GroupByOpForm = ({
                 name={`aggregate_on.${index}.metric`}
                 render={({ field }) => (
                   <Autocomplete
+                    disabled={action === 'view'}
                     options={srcColumns}
+                    value={field.value}
                     onChange={(e, data) => {
                       field.onChange(data);
                     }}
@@ -277,32 +342,8 @@ const GroupByOpForm = ({
                 name={`aggregate_on.${index}.aggregate_func`}
                 render={({ field }) => (
                   <Autocomplete
-                    options={[
-                      {
-                        id: 'avg',
-                        label: 'Average',
-                      },
-                      {
-                        id: 'count',
-                        label: 'Count values',
-                      },
-                      {
-                        id: 'countdistinct',
-                        label: 'Count distinct values',
-                      },
-                      {
-                        id: 'min',
-                        label: 'Minimum',
-                      },
-                      {
-                        id: 'max',
-                        label: 'Maximum',
-                      },
-                      {
-                        id: 'sum',
-                        label: 'Sum',
-                      },
-                    ]}
+                    disabled={action === 'view'}
+                    options={AggregateOperations}
                     isOptionEqualToValue={(option: any, value: any) =>
                       option?.id === value?.id
                     }
@@ -321,6 +362,7 @@ const GroupByOpForm = ({
                 label="Output Column Name"
                 name={`aggregate_on.${index}.output_column_name`}
                 register={register}
+                disabled={action === 'view'}
                 required
               />
               <Box sx={{ m: 2 }} />
@@ -330,6 +372,7 @@ const GroupByOpForm = ({
                   type="button"
                   data-testid="addoperand"
                   sx={{ marginTop: '17px' }}
+                  disabled={action === 'view'}
                   onClick={(event) =>
                     appendAggregate({
                       metric: 'col',
@@ -347,6 +390,7 @@ const GroupByOpForm = ({
                   data-testid="removeoperand"
                   sx={{ marginTop: '17px' }}
                   onClick={(event) => removeAggregate(index)}
+                  disabled={action === 'view'}
                 >
                   Remove aggregation
                 </Button>
@@ -363,6 +407,7 @@ const GroupByOpForm = ({
               data-testid="savebutton"
               fullWidth
               sx={{ marginTop: '17px' }}
+              disabled={action === 'view'}
             >
               Save
             </Button>

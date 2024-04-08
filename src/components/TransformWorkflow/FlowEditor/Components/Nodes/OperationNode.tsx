@@ -3,17 +3,18 @@ import 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { OperationNodeType } from '../Canvas';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { operations } from '../../constant';
+import { OPERATION_NODE, operations } from '../../constant';
 import {
   useCanvasAction,
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
+import { useEffect } from 'react';
 
 export function OperationNode(node: OperationNodeType) {
   const edges = useEdges();
   const nodeId = useNodeId();
-  const { setCanvasAction } = useCanvasAction();
-  const { setCanvasNode } = useCanvasNode();
+  const { setCanvasAction, canvasAction } = useCanvasAction();
+  const { setCanvasNode, canvasNode } = useCanvasNode();
 
   const edgesGoingIntoNode: Edge[] = edges.filter(
     (edge: Edge) => edge.target === nodeId
@@ -42,25 +43,32 @@ export function OperationNode(node: OperationNodeType) {
   };
 
   const handleSelectNode = () => {
-    if (isDeletable) {
-      setCanvasAction({
-        type: 'open-opconfig-panel',
-        data: null,
-      });
-    } else {
-      // just view the config if its node in the middel of chain
-      setCanvasAction({
-        type: 'open-opconfig-panel',
-        data: 'view',
-      });
-    }
     setCanvasNode(node);
+    setCanvasAction({
+      type: 'open-opconfig-panel',
+      data: isDeletable ? 'edit' : 'view',
+    });
   };
+
+  useEffect(() => {
+    // This event is triggered via the ProjectTree component
+    if (
+      canvasAction.type === 'update-canvas-node' &&
+      canvasAction.data?.type === OPERATION_NODE &&
+      canvasAction.data?.id === node.id
+    ) {
+      setCanvasNode(node);
+      setCanvasAction({ type: '', data: null });
+    }
+  }, [canvasAction]);
 
   return (
     <Box
       sx={{
-        border: node.selected ? '2px solid black' : '0px',
+        border:
+          node.id === canvasNode?.id || node.data?.isDummy
+            ? '2px solid black'
+            : '0px',
         borderRadius: '5px',
         borderStyle: 'dotted',
       }}
@@ -101,12 +109,7 @@ export function OperationNode(node: OperationNodeType) {
           </Box>
         </Box>
         <Divider orientation="horizontal" sx={{ color: '#EEEEEE' }} />
-        <Box
-          sx={{ display: 'flex' }}
-          onClick={
-            edgesEmanatingOutOfNode.length === 0 ? handleSelectNode : undefined
-          }
-        >
+        <Box sx={{ display: 'flex' }} onClick={handleSelectNode}>
           <Box
             sx={{
               flex: '1',
