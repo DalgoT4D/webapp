@@ -39,29 +39,55 @@ const ItemButton: React.FC<ItemButtonProps> = ({
   openMenu,
   children,
 }: ItemButtonProps) => (
-  <Tooltip title={item.title} placement="right">
-    <ListItemButton
-      sx={openMenu ? {} : { pl: '8px' }}
-      disableRipple
-      data-testid="listButton"
-      onClick={() => onClick(item)}
-      selected={isSelected}
-    >
-      <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>
-        {item.icon(isSelected)}
-      </ListItemIcon>
-      {openMenu && (
-        <ListItemText
-          primaryTypographyProps={{
-            color: isSelected ? 'primary' : 'inherit',
-          }}
-          primary={item.title}
-        />
-      )}
-      {children}
-    </ListItemButton>
-  </Tooltip>
+  <Fragment>
+    {openMenu ? (
+      <ListItemButton
+        sx={openMenu ? {} : { pl: '8px' }}
+        disableRipple
+        data-testid="listButton"
+        onClick={() => onClick(item)}
+        selected={isSelected}
+      >
+        <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>
+          {item.icon(isSelected)}
+        </ListItemIcon>
+        {openMenu && (
+          <ListItemText
+            primaryTypographyProps={{
+              color: isSelected ? 'primary' : 'inherit',
+            }}
+            primary={item.title}
+          />
+        )}
+        {children}
+      </ListItemButton>
+    ) : (
+      <Tooltip title={item.title} placement="right">
+        <ListItemButton
+          sx={openMenu ? {} : { pl: '8px' }}
+          disableRipple
+          data-testid="listButton"
+          onClick={() => onClick(item)}
+          selected={isSelected}
+        >
+          <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>
+            {item.icon(isSelected)}
+          </ListItemIcon>
+          {openMenu && (
+            <ListItemText
+              primaryTypographyProps={{
+                color: isSelected ? 'primary' : 'inherit',
+              }}
+              primary={item.title}
+            />
+          )}
+          {children}
+        </ListItemButton>
+      </Tooltip>
+    )}
+  </Fragment>
 );
+
 
 // const DrawerHeader = styled('div')(({ theme }) => ({
 //   display: 'flex',
