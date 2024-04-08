@@ -11,6 +11,7 @@ import {
   Box,
   Link,
   Typography,
+  Tooltip,
 } from '@mui/material';
 import MuiDrawer from '@mui/material/Drawer';
 import { styled, Theme, CSSObject } from '@mui/material/styles';
@@ -38,26 +39,28 @@ const ItemButton: React.FC<ItemButtonProps> = ({
   openMenu,
   children,
 }: ItemButtonProps) => (
-  <ListItemButton
-    sx={openMenu ? {} : { pl: '8px' }}
-    disableRipple
-    data-testid="listButton"
-    onClick={() => onClick(item)}
-    selected={isSelected}
-  >
-    <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>
-      {item.icon(isSelected)}
-    </ListItemIcon>
-    {openMenu && (
-      <ListItemText
-        primaryTypographyProps={{
-          color: isSelected ? 'primary' : 'inherit',
-        }}
-        primary={item.title}
-      />
-    )}
-    {children}
-  </ListItemButton>
+  <Tooltip title={item.title} placement="right">
+    <ListItemButton
+      sx={openMenu ? {} : { pl: '8px' }}
+      disableRipple
+      data-testid="listButton"
+      onClick={() => onClick(item)}
+      selected={isSelected}
+    >
+      <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>
+        {item.icon(isSelected)}
+      </ListItemIcon>
+      {openMenu && (
+        <ListItemText
+          primaryTypographyProps={{
+            color: isSelected ? 'primary' : 'inherit',
+          }}
+          primary={item.title}
+        />
+      )}
+      {children}
+    </ListItemButton>
+  </Tooltip>
 );
 
 // const DrawerHeader = styled('div')(({ theme }) => ({
