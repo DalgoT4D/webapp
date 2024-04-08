@@ -1,11 +1,4 @@
-name: C4GT Community Program
-description: The template for including issues into the C4GT Community Program
-
-body:
-- type: markdown
-  attributes:
-    value: |
-      ---
+---
 name: C4GT
 about: C4GT Community Issues Template
 title: "[C4GT] Button for likes"
