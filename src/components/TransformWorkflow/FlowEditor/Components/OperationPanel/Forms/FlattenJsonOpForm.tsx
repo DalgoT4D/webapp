@@ -58,7 +58,7 @@ const FlattenJsonOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, handleSubmit, reset, register } = useForm({
+  const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       json_column: '',
     },

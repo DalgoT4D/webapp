@@ -226,7 +226,7 @@ const ArithmeticOpForm = ({
                 <Autocomplete
                   {...field}
                   disabled={action === 'view'}
-                  placeholder="Select the operation"
+                  placeholder="Select the operation*"
                   options={ArithmeticOperations}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id

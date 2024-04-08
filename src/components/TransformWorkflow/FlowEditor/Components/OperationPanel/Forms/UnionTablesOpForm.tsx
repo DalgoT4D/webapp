@@ -327,7 +327,7 @@ const UnionTablesOpForm = ({
                       );
                     clearAndAddDummyModelNode(model, index);
                   }}
-                  label={`Select the table no ${index + 1}`}
+                  label={`Select the table no ${index + 1}*`}
                   fieldStyle="transformation"
                 />
               )}

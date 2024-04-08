@@ -524,7 +524,7 @@ const CaseWhenOpForm = ({
                           option?.id === value?.id
                         }
                         disabled={isDisabled}
-                        placeholder="Select operation"
+                        placeholder="Select operation*"
                         fieldStyle="transformation"
                       />
                     )}
@@ -768,7 +768,7 @@ const CaseWhenOpForm = ({
                 error={!!fieldState.error}
                 disabled={action === 'view'}
                 fieldStyle="transformation"
-                label="Output Column Name"
+                label="Output Column Name*"
                 placeholder="Enter column name"
               />
             )}
@@ -813,7 +813,7 @@ const CaseWhenOpForm = ({
               control={control}
               name="sql_snippet"
               rules={{
-                required: advanceFilter === 'yes' && 'Value is required',
+                required: 'Value is required',
               }}
               render={({ field, fieldState }) => (
                 <Input

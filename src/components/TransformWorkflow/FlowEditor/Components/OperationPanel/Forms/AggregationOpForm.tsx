@@ -190,7 +190,7 @@ const AggregationOpForm = ({
                   disabled={action === 'view'}
                   fieldStyle="transformation"
                   options={srcColumns.sort((a, b) => a.localeCompare(b))}
-                  label="Select Column to Aggregate"
+                  label="Select Column to Aggregate*"
                   helperText={fieldState.error?.message}
                   error={!!fieldState.error}
                 />
@@ -216,7 +216,7 @@ const AggregationOpForm = ({
                     {...field}
                     helperText={fieldState.error?.message}
                     error={!!fieldState.error}
-                    label="Aggregate"
+                    label="Aggregate*"
                     fieldStyle="transformation"
                   />
                 )}
@@ -229,7 +229,7 @@ const AggregationOpForm = ({
               render={({ field, fieldState }) => (
                 <Input
                   fieldStyle="transformation"
-                  label="Output Column Name"
+                  label="Output Column Name*"
                   sx={{ padding: '0', marginTop: '16px' }}
                   helperText={fieldState.error?.message}
                   error={!!fieldState.error}

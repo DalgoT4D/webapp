@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, FormHelperText, Grid, Typography } from '@mui/material';
@@ -6,7 +6,7 @@ import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
-import { GlobalContext } from '@/contexts/ContextProvider';
+
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -29,7 +29,7 @@ const DropColumnOp = ({
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
-  const globalContext = useContext(GlobalContext);
+  const [valid, setValid] = useState(true);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [column, setColumn] = useState('');
@@ -70,6 +70,10 @@ const DropColumnOp = ({
 
   const handleSave = async () => {
     try {
+      if (selectedColumns.length < 1) {
+        setValid(false);
+        return;
+      }
       const postData = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -184,11 +188,12 @@ const DropColumnOp = ({
               if (value) {
                 handleAddColumn(value);
                 setColumn('');
+                setValid(true);
               }
             }}
           />
         </Grid>
-        {selectedColumns.length < 1 && (
+        {!valid && (
           <FormHelperText sx={{ color: 'red', ml: 3 }}>
             Please select atleast 1 column
           </FormHelperText>

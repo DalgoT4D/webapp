@@ -1,4 +1,4 @@
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import {
@@ -16,8 +16,6 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
-import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
@@ -62,7 +60,6 @@ const CoalesceOpForm = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -282,7 +279,7 @@ const CoalesceOpForm = ({
         )}
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <FormLabel sx={{ mr: 1, color: 'black' }}>Default Value</FormLabel>
+            <FormLabel sx={{ mr: 1, color: 'black' }}>Default Value*</FormLabel>
             <Box sx={{ display: 'inline-block' }}>
               <InfoTooltip title={'Output if all values in a row are null'} />
             </Box>
@@ -315,7 +312,7 @@ const CoalesceOpForm = ({
                 {...field}
                 disabled={action === 'view'}
                 fieldStyle="transformation"
-                label="Output Column Name"
+                label="Output Column Name*"
                 sx={{ padding: '0' }}
               />
             )}

@@ -335,7 +335,7 @@ const GroupByOpForm = ({
                     helperText={fieldState.error?.message}
                     disabled={action === 'view'}
                     options={srcColumns}
-                    label="Select metric"
+                    label="Select metric*"
                     fieldStyle="transformation"
                   />
                 )}
@@ -359,7 +359,7 @@ const GroupByOpForm = ({
                     isOptionEqualToValue={(option: any, value: any) =>
                       option?.id === value?.id
                     }
-                    label="Select aggregation"
+                    label="Select aggregation*"
                     fieldStyle="transformation"
                   />
                 )}
@@ -375,7 +375,7 @@ const GroupByOpForm = ({
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                     fieldStyle="transformation"
-                    label="Output Column Name"
+                    label="Output Column Name*"
                     disabled={action === 'view'}
                   />
                 )}

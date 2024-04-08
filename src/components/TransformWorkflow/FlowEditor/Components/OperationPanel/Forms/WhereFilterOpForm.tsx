@@ -17,8 +17,6 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
-import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
@@ -55,7 +53,6 @@ const WhereFilterOpForm = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -75,7 +72,7 @@ const WhereFilterOpForm = ({
     sql_snippet: string;
   };
 
-  const { control, register, handleSubmit, reset, watch } = useForm<FormProps>({
+  const { control, handleSubmit, reset, watch } = useForm<FormProps>({
     defaultValues: {
       filterCol: '',
       logicalOp: { id: '', label: '' },
@@ -243,7 +240,7 @@ const WhereFilterOpForm = ({
                   options={srcColumns}
                   fieldStyle="transformation"
                   disabled={isNonAdancedFieldsDisabled}
-                  label="Select column"
+                  label="Select column*"
                 />
               )}
             />
@@ -267,7 +264,7 @@ const WhereFilterOpForm = ({
                     option?.id === value?.id
                   }
                   disabled={isNonAdancedFieldsDisabled}
-                  label="Select operation"
+                  label="Select operation*"
                   fieldStyle="transformation"
                 />
               )}
@@ -318,7 +315,7 @@ const WhereFilterOpForm = ({
                     fieldStyle="transformation"
                     options={srcColumns}
                     disabled={isNonAdancedFieldsDisabled}
-                    placeholder="Select column"
+                    placeholder="Select column*"
                   />
                 )}
               />
@@ -384,7 +381,7 @@ const WhereFilterOpForm = ({
                 control={control}
                 name="sql_snippet"
                 rules={{
-                  required: advanceFilter === 'yes' && 'Value is required',
+                  required: 'Value is required',
                 }}
                 render={({ field, fieldState }) => (
                   <Input

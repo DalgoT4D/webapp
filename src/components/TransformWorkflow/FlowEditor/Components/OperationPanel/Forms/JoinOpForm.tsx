@@ -62,20 +62,19 @@ const JoinOpForm = ({
     join_type: string;
   };
 
-  const { control, handleSubmit, reset, setValue, register } =
-    useForm<FormProps>({
-      defaultValues: {
-        table1: {
-          tab: { id: '', label: '' },
-          key: '',
-        },
-        table2: {
-          tab: { id: '', label: '' },
-          key: '',
-        },
-        join_type: '',
+  const { control, handleSubmit, reset, setValue } = useForm<FormProps>({
+    defaultValues: {
+      table1: {
+        tab: { id: '', label: '' },
+        key: '',
       },
-    });
+      table2: {
+        tab: { id: '', label: '' },
+        key: '',
+      },
+      join_type: '',
+    },
+  });
   // Include this for multi-row input
 
   const fetchSourcesModels = async () => {
@@ -339,7 +338,7 @@ const JoinOpForm = ({
                 })
                 .sort((a, b) => a.label.localeCompare(b.label))}
               disabled={true}
-              label="Select the first table"
+              label="Select the first table*"
             />
           )}
         />
@@ -356,7 +355,7 @@ const JoinOpForm = ({
               disabled={action === 'view'}
               fieldStyle="transformation"
               options={nodeSrcColumns}
-              label="Select key column"
+              label="Select key column*"
             />
           )}
         />
@@ -390,7 +389,7 @@ const JoinOpForm = ({
                   field.onChange(data);
                   handleSelectSecondTable(data?.id ? data.id : null);
                 }}
-                label="Select the second table"
+                label="Select the second table*"
               />
             );
           }}
@@ -408,7 +407,7 @@ const JoinOpForm = ({
               fieldStyle="transformation"
               disabled={action === 'view'}
               options={table2Columns}
-              label="Select key column"
+              label="Select key column*"
             />
           )}
         />
@@ -425,7 +424,7 @@ const JoinOpForm = ({
               fieldStyle="transformation"
               disabled={action === 'view'}
               options={['left', 'right', 'inner']}
-              label="Select the join type"
+              label="Select the join type*"
             />
           )}
         />
