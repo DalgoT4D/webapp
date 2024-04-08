@@ -197,9 +197,13 @@ export const Flows = ({
         flowStatus(flow.status),
 
         flowLastRun(flow),
-        flow.isRunning ? 
-        <CircularProgress /> :
-        flow.lock ? <LockIcon /> : flowState(flow),
+        flow.isRunning ? (
+          <CircularProgress />
+        ) : flow.lock ? (
+          <LockIcon />
+        ) : (
+          flowState(flow)
+        ),
 
         <Box key={idx}>
           <Button
@@ -215,14 +219,26 @@ export const Flows = ({
             last logs
           </Button>
           {flow.lock ? (
-            <>
-              <Typography variant="body2" fontWeight={600}>
-                Triggered by: {trimEmail(flow.lock.lockedBy)}
-              </Typography>
-              <Typography variant="body2" fontWeight={600}>
-                {lastRunTime(flow.lock.lockedAt)}
-              </Typography>
-            </>
+            flow.isRunning ? (
+              <>
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                  sx={{ textAlign: 'center' }}
+                >
+                  Triggered by: {trimEmail(flow.lock.lockedBy)}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                  sx={{ textAlign: 'center' }}
+                >
+                  {lastRunTime(flow.lock.lockedAt)}
+                </Typography>
+              </>
+            ) : (
+              ''
+            )
           ) : (
             <>
               <Button
@@ -342,7 +358,10 @@ export const Flows = ({
         handleClose={handleClose}
         handleDelete={handleDeleteConnection}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'space-between' }}
+        className="pipelinelist_walkthrough"
+      >
         <Typography
           sx={{ fontWeight: 700 }}
           variant="h4"

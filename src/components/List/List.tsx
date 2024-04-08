@@ -31,6 +31,7 @@ export const List = ({
             data-testid={`add-new-${title}`.toLowerCase()}
             variant="contained"
             onClick={() => openDialog()}
+            className={`${title}add_walkthrough`.toLowerCase()}
           >
             + New {title}
           </Button>

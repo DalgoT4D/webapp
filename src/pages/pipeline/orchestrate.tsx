@@ -8,12 +8,14 @@ import { CircularProgress } from '@mui/material';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
+import { TransformTask } from '@/components/DBT/DBTTarget';
 
 export default function Orchestrate() {
   const [crudVal, setCrudVal] = useState<string>('index'); // can be index or create
   const [flows, setFlows] = useState<Array<any>>([]);
   const [selectedFlowId, setSelectedFlowId] = useState('');
   const { data: session }: any = useSession();
+  const [tasks, setTasks] = useState<Array<TransformTask>>([]);
 
   const updateCrudVal = (crudState: string) => {
     setCrudVal(crudState);
@@ -48,6 +50,19 @@ export default function Orchestrate() {
     if (isLocked) pollFlowsLock();
   }, [data]);
 
+  useEffect(() => {
+    if (session) {
+      (async () => {
+        try {
+          const response = await httpGet(session, 'prefect/tasks/transform/');
+          setTasks(response);
+        } catch (error) {
+          console.error(error);
+        }
+      })();
+    }
+  }, [session]);
+
   return (
     <>
       <PageHead title="Orchestrate" />
@@ -64,7 +79,11 @@ export default function Orchestrate() {
             />
           ))}
         {crudVal === 'create' && (
-          <FlowCreate updateCrudVal={updateCrudVal} mutate={mutate} />
+          <FlowCreate
+            updateCrudVal={updateCrudVal}
+            mutate={mutate}
+            tasks={tasks}
+          />
         )}
         {crudVal === 'update' && (
           <FlowCreate
@@ -72,6 +91,7 @@ export default function Orchestrate() {
             flowId={selectedFlowId}
             updateCrudVal={updateCrudVal}
             mutate={mutate}
+            tasks={tasks}
           />
         )}
       </main>
