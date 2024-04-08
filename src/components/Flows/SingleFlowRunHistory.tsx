@@ -4,7 +4,7 @@ import { errorToast } from '../ToastMessage/ToastHelper';
 import { useSession } from 'next-auth/react';
 import React, { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { flowRunLogsOffsetLimit } from '@/config/constant';
+import { flowRunLogsOffsetLimit, enableLogSummaries } from '@/config/constant';
 import { LogCard } from '../Logs/LogCard';
 import { LogSummaryCard, LogSummary } from '../Logs/LogSummaryCard';
 
@@ -95,7 +95,7 @@ export const SingleFlowRunHistory = ({
 
   useEffect(() => {
     if (flowRun?.id) {
-      if (process.env.ENABLE_LOG_SUMMARIES) {
+      if (enableLogSummaries) {
         fetchLogSummaries();
         if (logsummary.length === 0) {
           fetchLogs();
@@ -119,32 +119,35 @@ export const SingleFlowRunHistory = ({
 
       {logsummary.length > 0 && (
         <>
-        <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
-          <Box sx={{width: '50%', margin: '5px'}}>
-            <LogSummaryCard logsummary={logsummary} setLogsummaryLogs={setLogsummaryLogs} />
-          </Box>
-          <Box sx={{width: '50%', margin: '5px'}}>
-            {logsummarylogs.length > 0 && (
-              <LogCard
-                logs={logsummarylogs}
-                expand={true}
-                setExpand={() => {}}
-                fetchMore={false}
-                fetchMoreLogs={() => {}}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Box sx={{ width: '50%', margin: '5px' }}>
+              <LogSummaryCard
+                logsummary={logsummary}
+                setLogsummaryLogs={setLogsummaryLogs}
               />
-            )}
+            </Box>
+            <Box sx={{ width: '50%', margin: '5px' }}>
+              {logsummarylogs.length > 0 && (
+                <LogCard
+                  logs={logsummarylogs}
+                  expand={true}
+                  setExpand={() => {}}
+                  fetchMore={false}
+                  fetchMoreLogs={() => {}}
+                />
+              )}
+            </Box>
           </Box>
-        </Box>
         </>
       )}
       {logsummary.length === 0 && (
-      <LogCard
-        logs={logs}
-        expand={expandLogs}
-        setExpand={setExpandLogs}
-        fetchMore={flowRunOffset > 0}
-        fetchMoreLogs={() => fetchLogs()}
-      />
+        <LogCard
+          logs={logs}
+          expand={expandLogs}
+          setExpand={setExpandLogs}
+          fetchMore={flowRunOffset > 0}
+          fetchMoreLogs={() => fetchLogs()}
+        />
       )}
     </Box>
   );

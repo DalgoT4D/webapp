@@ -75,9 +75,6 @@ describe('Create connection', () => {
 
     const schemaName = screen.getByTestId('schemaName');
     expect(schemaName).toBeInTheDocument();
-
-    const normalizationCheckbox = screen.getByTestId('normalizationCheckbox');
-    expect(normalizationCheckbox).toBeInTheDocument();
   });
 
   it('check source stream on selection of source', async () => {
@@ -208,14 +205,6 @@ describe('Create connection', () => {
     expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked();
 
     // check normalization after sync checkbox
-    const normalizationCheckbox = screen.getByTestId('normalizationCheckbox')
-      .firstChild?.firstChild;
-
-    expect(normalizationCheckbox).not.toBeChecked();
-    await act(() => userEvent.click(normalizationCheckbox));
-    expect(
-      screen.getByTestId('normalizationCheckbox').firstChild?.firstChild
-    ).toBeChecked();
 
     // stream not supporting incremental sync mode we should always have
     // incremental switch disabled

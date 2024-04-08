@@ -18,3 +18,10 @@ export const TASK_DOCSGENERATE = 'dbt-docs-generate';
 // Demo account
 export const demoAccDestSchema =
   process.env.NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA;
+
+// Product walkthrough for demo account
+export const demoProductWalkthrough =
+  process.env.NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED || false;
+
+// alpha features
+export const enableLogSummaries = process.env.NEXT_PUBLIC_ENABLE_LOG_SUMMARIES;
