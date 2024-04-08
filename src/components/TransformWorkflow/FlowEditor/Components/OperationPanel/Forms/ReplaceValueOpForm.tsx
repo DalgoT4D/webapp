@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, FormHelperText } from '@mui/material';
@@ -8,7 +8,6 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
-import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
@@ -39,7 +38,7 @@ const ReplaceValueOpForm = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const globalContext = useContext(GlobalContext);
+
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -208,7 +207,7 @@ const ReplaceValueOpForm = ({
                 helperText={fieldState.error?.message}
                 disabled={action === 'view'}
                 options={srcColumns}
-                label="Select a column"
+                label="Select a column*"
                 fieldStyle="transformation"
               />
             )}
