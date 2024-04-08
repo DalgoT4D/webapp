@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { DbtSourceModel, OperationNodeData } from '../../Canvas';
@@ -12,6 +12,19 @@ import { Edge, useReactFlow } from 'reactflow';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { generateDummySrcModelNode } from '../../dummynodes';
 
+export interface SecondaryInput {
+  input: { input_name: string; input_type: string; source_name: string };
+  seq: number;
+  source_columns: string[];
+}
+
+interface JoinDataConfig {
+  join_type: 'left' | 'inner';
+  join_on: { key1: string; key2: string; compare_with: string };
+  other_inputs: SecondaryInput[];
+  source_columns: string[];
+}
+
 const JoinOpForm = ({
   node,
   operation,
@@ -19,10 +32,12 @@ const JoinOpForm = ({
   continueOperationChain,
   clearAndClosePanel,
   dummyNodeId,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const [table2Columns, setTable2Columns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
 
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
@@ -35,14 +50,26 @@ const JoinOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, handleSubmit, reset, setValue } = useForm({
+  type FormProps = {
+    table1: {
+      tab: { id: string; label: string };
+      key: string;
+    };
+    table2: {
+      tab: { id: string; label: string };
+      key: string;
+    };
+    join_type: string;
+  };
+
+  const { control, handleSubmit, reset, setValue } = useForm<FormProps>({
     defaultValues: {
       table1: {
-        uuid: '',
+        tab: { id: '', label: '' },
         key: '',
       },
       table2: {
-        uuid: '',
+        tab: { id: '', label: '' },
         key: '',
       },
       join_type: '',
@@ -167,16 +194,15 @@ const JoinOpForm = ({
     clearAndAddDummyModelNode(model);
   };
 
-  const handleSave = async (data: any) => {
-    console.log('data', data);
+  const handleSave = async (data: FormProps) => {
     try {
       const postData: any = {
         op_type: operation.slug,
-        input_uuid: data.table1.uuid,
+        input_uuid: data.table1.tab.id,
         source_columns: nodeSrcColumns,
         other_inputs: [
           {
-            uuid: data.table2.uuid,
+            uuid: data.table2.tab.id,
             columns: table2Columns,
             seq: data.join_type === 'right' ? 0 : 2,
           },
@@ -192,11 +218,26 @@ const JoinOpForm = ({
         target_model_uuid: nodeData?.target_model_id || '',
       };
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the first step in chain
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
+
       continueOperationChain(operationNode);
       reset();
     } catch (error) {
@@ -204,42 +245,98 @@ const JoinOpForm = ({
     }
   };
 
-  useEffect(() => {
-    fetchAndSetSourceColumns();
-    fetchSourcesModels();
-    if (nodeData?.type === SRC_MODEL_NODE) {
-      setValue('table1.uuid', nodeData?.id || '');
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      const { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      const {
+        source_columns,
+        join_on,
+        join_type,
+        other_inputs,
+      }: JoinDataConfig = opConfig;
+      setNodeSrcColumns(source_columns);
+
+      // pre-fill form
+      const lengthInputModels: number = input_models.length;
+      let jointype: string = join_type;
+      if (other_inputs.length === 1) {
+        jointype =
+          other_inputs[0].seq === 0 && jointype == 'left' ? 'right' : jointype;
+        setTable2Columns(other_inputs[0].source_columns);
+      }
+      reset({
+        table1: {
+          tab:
+            input_models.length == 2
+              ? { id: input_models[0].uuid, label: input_models[0].name }
+              : { id: '', label: 'Chained Model' },
+          key: join_on.key1,
+        },
+        table2: {
+          tab:
+            input_models.length >= 1
+              ? {
+                  id: input_models[lengthInputModels - 1].uuid,
+                  label: input_models[lengthInputModels - 1].name,
+                }
+              : { id: '', label: '' },
+          key: join_on.key2,
+        },
+        join_type: jointype,
+      });
+    } catch (error) {
+      console.error(error);
     }
-  }, [session]);
+  };
+
+  useEffect(() => {
+    fetchSourcesModels();
+    if (['edit', 'view'].includes(action)) {
+      // do things when in edit state
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+      setValue('table1.tab', {
+        id: nodeData?.id,
+        label:
+          nodeData?.type === SRC_MODEL_NODE
+            ? nodeData?.input_name
+            : 'Chained Model',
+      });
+    }
+  }, [session, node]);
 
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
         <Controller
           control={control}
-          name={`table1.uuid`}
+          name="table1.tab"
           render={({ field }) => (
             <Autocomplete
               fieldStyle="transformation"
-              options={[
-                {
-                  label:
-                    nodeData?.type === SRC_MODEL_NODE
-                      ? nodeData?.input_name
-                      : 'Target Model',
-                  id: nodeData?.id,
-                },
-              ]
-                .map((option) => option.label)
-                .sort((a, b) => a.localeCompare(b))}
+              isOptionEqualToValue={(option: any, value: any) => {
+                return option?.id === value?.id;
+              }}
+              value={field.value}
+              options={sourcesModels
+                .map((model) => {
+                  return {
+                    id: model.id,
+                    label: model.input_name,
+                  };
+                })
+                .sort((a, b) => a.label.localeCompare(b.label))}
               disabled={true}
-              defaultValue={
-                nodeData?.type === SRC_MODEL_NODE
-                  ? nodeData?.input_name
-                  : 'Target Model'
-              }
               onChange={(e, data: any) => {
-                field.onChange(data?.id);
+                field.onChange(data);
               }}
               label="Select the first table"
             />
@@ -251,6 +348,7 @@ const JoinOpForm = ({
           name={`table1.key`}
           render={({ field }) => (
             <Autocomplete
+              disabled={action === 'view'}
               fieldStyle="transformation"
               options={nodeSrcColumns}
               value={field.value}
@@ -264,25 +362,32 @@ const JoinOpForm = ({
         <Box sx={{ m: 2 }} />
         <Controller
           control={control}
-          name={`table2.uuid`}
-          render={({ field }) => (
-            <Autocomplete
-              fieldStyle="transformation"
-              options={sourcesModels
-                .map((model) => {
-                  return {
-                    id: model.id,
-                    label: model.input_name,
-                  };
-                })
-                .sort((a, b) => a.label.localeCompare(b.label))}
-              onChange={(e, data: any) => {
-                field.onChange(data?.id ? data.id : null);
-                handleSelectSecondTable(data?.id ? data.id : null);
-              }}
-              label="Select the second table"
-            />
-          )}
+          name={`table2.tab`}
+          render={({ field }) => {
+            return (
+              <Autocomplete
+                fieldStyle="transformation"
+                disabled={action === 'view'}
+                value={field.value}
+                isOptionEqualToValue={(option: any, value: any) => {
+                  return option?.id === value?.id;
+                }}
+                options={sourcesModels
+                  .map((model) => {
+                    return {
+                      id: model.id,
+                      label: model.input_name,
+                    };
+                  })
+                  .sort((a, b) => a.label.localeCompare(b.label))}
+                onChange={(e, data: any) => {
+                  field.onChange(data);
+                  handleSelectSecondTable(data?.id ? data.id : null);
+                }}
+                label="Select the second table"
+              />
+            );
+          }}
         />
         <Box sx={{ m: 2 }} />
         <Controller
@@ -291,6 +396,7 @@ const JoinOpForm = ({
           render={({ field }) => (
             <Autocomplete
               fieldStyle="transformation"
+              disabled={action === 'view'}
               options={table2Columns}
               value={field.value}
               onChange={(e, data) => {
@@ -307,6 +413,7 @@ const JoinOpForm = ({
           render={({ field }) => (
             <Autocomplete
               fieldStyle="transformation"
+              disabled={action === 'view'}
               options={['left', 'right', 'inner']}
               value={field.value}
               onChange={(e, data) => {
@@ -319,6 +426,7 @@ const JoinOpForm = ({
 
         <Box>
           <Button
+            disabled={action === 'view'}
             variant="contained"
             type="submit"
             data-testid="savebutton"

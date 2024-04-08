@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
@@ -14,15 +14,32 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 
+interface ReplaceOp {
+  find: string;
+  replace: string;
+}
+
+interface ReplaceDataConfig {
+  source_columns: string[];
+  other_inputs: any[];
+  columns: {
+    col_name: string;
+    output_column_name: string;
+    replace_ops: ReplaceOp[];
+  }[];
+}
+
 const ReplaceValueOpForm = ({
   node,
   operation,
   sx,
   continueOperationChain,
   clearAndClosePanel,
+  action,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
+  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -33,7 +50,7 @@ const ReplaceValueOpForm = ({
 
   const { control, register, handleSubmit, reset } = useForm<{
     config: Array<{ old: string; new: string }>;
-    column_name: '';
+    column_name: string;
   }>({
     defaultValues: {
       column_name: '',
@@ -107,11 +124,25 @@ const ReplaceValueOpForm = ({
       }
 
       // api call
-      const operationNode: any = await httpPost(
-        session,
-        `transform/dbt_project/model/`,
-        postData
-      );
+      let operationNode: any;
+      if (action === 'create') {
+        operationNode = await httpPost(
+          session,
+          `transform/dbt_project/model/`,
+          postData
+        );
+      } else if (action === 'edit') {
+        // need this input to be sent for the first step in chain
+        postData.input_uuid =
+          inputModels.length > 0 && inputModels[0]?.uuid
+            ? inputModels[0].uuid
+            : '';
+        operationNode = await httpPut(
+          session,
+          `transform/dbt_project/model/operations/${node?.id}/`,
+          postData
+        );
+      }
 
       continueOperationChain(operationNode);
       reset();
@@ -120,9 +151,44 @@ const ReplaceValueOpForm = ({
     }
   };
 
+  const fetchAndSetConfigForEdit = async () => {
+    try {
+      const { config }: OperationNodeData = await httpGet(
+        session,
+        `transform/dbt_project/model/operations/${node?.id}/`
+      );
+      const { config: opConfig, input_models } = config;
+      setInputModels(input_models);
+
+      // form data; will differ based on operations in progress
+      const { source_columns, columns }: ReplaceDataConfig = opConfig;
+      setSrcColumns(source_columns);
+
+      // pre-fill form
+      if (columns.length === 1) {
+        const replaceValArray: { old: string; new: string }[] =
+          columns[0].replace_ops.map((item: ReplaceOp) => ({
+            old: item.find,
+            new: item.replace,
+          }));
+        replaceValArray.push({ old: '', new: '' });
+        reset({
+          column_name: columns[0].col_name,
+          config: replaceValArray,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    fetchAndSetSourceColumns();
-  }, [session]);
+    if (['edit', 'view'].includes(action)) {
+      fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
+    }
+  }, [session, node]);
 
   return (
     <Box>
@@ -140,6 +206,7 @@ const ReplaceValueOpForm = ({
             name="column_name"
             render={({ field }) => (
               <Autocomplete
+                disabled={action === 'view'}
                 options={srcColumns}
                 value={field.value}
                 onChange={(e, data) => {
@@ -157,12 +224,14 @@ const ReplaceValueOpForm = ({
           removeItem={(index: number) => remove(index)}
           data={fields.map((field, idx) => [
             <Input
+              disabled={action === 'view'}
               fieldStyle="none"
               key={field.old + idx}
               name={`config.${idx}.old`}
               register={register}
             />,
             <Input
+              disabled={action === 'view'}
               fieldStyle="none"
               key={field.new + idx}
               name={`config.${idx}.new`}
@@ -196,6 +265,7 @@ const ReplaceValueOpForm = ({
             data-testid="savebutton"
             fullWidth
             sx={{ marginTop: '17px' }}
+            disabled={action === 'view'}
           >
             Save
           </Button>
