@@ -37,6 +37,6 @@ yarn dev
 
 Open `http://localhost:<port>` with your browser to see the result.
 
-## Development conventions
+## Development convention
 
 Refer to this [guide](https://github.com/airbnb/javascript/tree/master/react)

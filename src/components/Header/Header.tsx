@@ -1,4 +1,11 @@
-import { Box, Menu, MenuItem, Paper, Typography, IconButton } from '@mui/material';
+import {
+  Box,
+  Menu,
+  MenuItem,
+  Paper,
+  Typography,
+  IconButton,
+} from '@mui/material';
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
 import LogoutIcon from '@/assets/icons/logout.svg';
@@ -11,7 +18,7 @@ import CreateOrgForm from '../Org/CreateOrgForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
 // assets
-import HamburgerIcon from "../../assets/icons/hamburger.svg";
+import HamburgerIcon from '../../assets/icons/hamburger.svg';
 
 type Org = {
   name: string;
@@ -35,7 +42,17 @@ type AutoCompleteOption = {
   label: string;
 };
 
-export const Header = ({ openMenu, setOpenMenu }: any) => {
+type HeaderProps = {
+  openMenu: boolean;
+  setOpenMenu: (...args: any) => any;
+  hideMenu: boolean;
+};
+
+export const Header = ({
+  openMenu = false,
+  setOpenMenu = () => {},
+  hideMenu = false,
+}: HeaderProps | any) => {
   const handleSignout = () => {
     // Hit backend api to invalidate the token
     localStorage.clear();
@@ -123,26 +140,26 @@ export const Header = ({ openMenu, setOpenMenu }: any) => {
 
   return (
     <Paper className={styles.Header}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 4, ml: 1.8 }}>
-        <IconButton onClick={() => setOpenMenu(!openMenu)}
-          sx={{
-            borderRadius: "50%",
-            lineHeight: 0,
-            transition: (theme) =>
-              theme.transitions.create('transform', {
-                duration: theme.transitions.duration.shorter,
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, ml: 1.8 }}>
+        {!hideMenu && (
+          <IconButton
+            onClick={() => setOpenMenu(!openMenu)}
+            sx={{
+              borderRadius: '50%',
+              lineHeight: 0,
+              transition: (theme) =>
+                theme.transitions.create('transform', {
+                  duration: theme.transitions.duration.shorter,
+                }),
+              ...(!openMenu && {
+                transform: 'rotate(180deg)',
               }),
-            ...(!openMenu && {
-              transform: 'rotate(180deg)',
-            }),
-          }}
-        >
-          <Image src={HamburgerIcon} alt="Hamburger-icon" />
-        </IconButton>
-        <Image
-          src={Logo}
-          alt="ddp logo"
-        />
+            }}
+          >
+            <Image src={HamburgerIcon} alt="Hamburger-icon" />
+          </IconButton>
+        )}
+        <Image src={Logo} alt="ddp logo" />
       </Box>
       <Box
         display="flex"
