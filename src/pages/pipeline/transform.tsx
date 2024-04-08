@@ -160,7 +160,7 @@ const Transform = () => {
                   <Image
                     src={UI}
                     alt="ui_transform"
-                    style={{ height: '80%', width: 'auto' }}
+                    style={{ height: '73%', width: 'auto' }}
                   />
                   <Typography
                     sx={{ fontWeight: 600 }}
@@ -169,7 +169,7 @@ const Transform = () => {
                     align="left"
                     color="#000"
                   >
-                    UI Users <span>(for Non technical users)</span>
+                    UI Users <span>(Click and Configure)</span>
                   </Typography>
                   <Typography
                     sx={{ fontWeight: 400 }}
@@ -177,9 +177,8 @@ const Transform = () => {
                     gutterBottom
                     color="#808080"
                   >
-                    Create a project to effortlessly integrate your dbt
-                    repository by providing your repository URL and
-                    authentication details in further steps
+                    Use the UI to build your transformation workflow using an
+                    simple and intuitive user interface.
                   </Typography>
                   <Button
                     variant="contained"
@@ -206,7 +205,7 @@ const Transform = () => {
                   <Image
                     src={Github}
                     alt="github_transform"
-                    style={{ height: '80%', width: 'auto' }}
+                    style={{ height: '73%', width: 'auto' }}
                   />
                   <Typography
                     sx={{ fontWeight: 550 }}
@@ -214,7 +213,7 @@ const Transform = () => {
                     align="left"
                     color="#000"
                   >
-                    Github Users <span>(for advanced users)</span>
+                    Github Users <span>(Code)</span>
                   </Typography>
                   <Typography
                     sx={{ fontWeight: 400 }}
@@ -224,7 +223,7 @@ const Transform = () => {
                   >
                     Create a project to effortlessly integrate your dbt
                     repository by providing your repository URL and
-                    authentication details in further steps
+                    authentication details in further steps.
                   </Typography>
                   <Button
                     variant="contained"
