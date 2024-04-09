@@ -187,7 +187,7 @@ const Transform = () => {
                   <Button
                     variant="contained"
                     color="primary"
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%', marginTop: '5px' }}
                     onClick={() => handleSetup('ui')}
                   >
                     Setup using UI
@@ -237,7 +237,7 @@ const Transform = () => {
                   <Button
                     variant="contained"
                     color="primary"
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%', marginTop: '5px' }}
                     onClick={() => handleSetup('github')}
                   >
                     Setup using Github
