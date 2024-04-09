@@ -145,9 +145,9 @@ const Transform = () => {
             </Typography>
 
             <Grid container spacing={2} columns={12}>
-              <Grid item xs={6}>
+              <Grid item xs={12} md={6}>
                 <Box
-                  height={550}
+                  height="550px"
                   bgcolor="white"
                   color="grey"
                   textAlign="left"
@@ -160,7 +160,11 @@ const Transform = () => {
                   <Image
                     src={UI}
                     alt="ui_transform"
-                    style={{ height: '73%', width: 'auto' }}
+                    style={{
+                      height: '73%',
+                      width: 'auto',
+                      marginBottom: '10px',
+                    }}
                   />
                   <Typography
                     sx={{ fontWeight: 600 }}
@@ -173,11 +177,11 @@ const Transform = () => {
                   </Typography>
                   <Typography
                     sx={{ fontWeight: 400 }}
-                    variant="h6"
+                    variant="body1"
                     gutterBottom
                     color="#808080"
                   >
-                    Use the UI to build your transformation workflow using an
+                    Use the UI to build your transformation workflow using a
                     simple and intuitive user interface.
                   </Typography>
                   <Button
@@ -190,9 +194,9 @@ const Transform = () => {
                   </Button>
                 </Box>
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={12} md={6}>
                 <Box
-                  height={550}
+                  height="550px"
                   bgcolor="white"
                   color="grey"
                   textAlign="left"
@@ -200,16 +204,21 @@ const Transform = () => {
                   display="flex"
                   flexDirection="column"
                   justifyContent="space-between"
-                  sx={{ padding: '30px', marginRight: '20px' }}
+                  sx={{ padding: '30px' }}
                 >
                   <Image
                     src={Github}
                     alt="github_transform"
-                    style={{ height: '73%', width: 'auto' }}
+                    style={{
+                      height: '73%',
+                      width: 'auto',
+                      marginBottom: '10px',
+                    }}
                   />
                   <Typography
-                    sx={{ fontWeight: 550 }}
+                    sx={{ fontWeight: 600 }}
                     variant="h5"
+                    gutterBottom
                     align="left"
                     color="#000"
                   >
@@ -217,13 +226,13 @@ const Transform = () => {
                   </Typography>
                   <Typography
                     sx={{ fontWeight: 400 }}
-                    variant="h6"
+                    variant="body1"
                     gutterBottom
                     color="#808080"
+                    style={{ maxHeight: '40%', overflowY: 'auto' }}
                   >
-                    Create a project to effortlessly integrate your dbt
-                    repository by providing your repository URL and
-                    authentication details in further steps.
+                    Create a project to integrate your dbt repository by
+                    providing your repository URL and authentication details.
                   </Typography>
                   <Button
                     variant="contained"
