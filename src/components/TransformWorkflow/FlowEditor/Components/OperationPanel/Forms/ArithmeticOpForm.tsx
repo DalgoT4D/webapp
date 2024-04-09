@@ -68,7 +68,7 @@ const ArithmeticOpForm = ({
     {
       defaultValues: {
         arithmeticOp: { id: '', label: '' },
-        operands: [{ type: 'col', col_val: '', const_val: 0 }],
+        operands: [{ type: 'col', col_val: '', const_val: undefined }],
         output_column_name: '',
       },
     }
@@ -86,7 +86,7 @@ const ArithmeticOpForm = ({
   const opera = watch('operands');
 
   useEffect(() => {
-    replace([{ type: 'col', col_val: '', const_val: 0 }]);
+    replace([{ type: 'col', col_val: '', const_val: undefined }]);
   }, [arithmeticOp, replace]);
 
   const fetchAndSetSourceColumns = async () => {
@@ -213,7 +213,8 @@ const ArithmeticOpForm = ({
             control={control}
             name="arithmeticOp"
             rules={{
-              validate: (value) => value.id !== '' || 'Operation is required',
+              validate: (value) =>
+                (value && value?.id !== '') || 'Operation is required',
             }}
             render={({ field, fieldState }) => {
               return (
@@ -299,9 +300,8 @@ const ArithmeticOpForm = ({
                         label=""
                         fieldStyle="transformation"
                         sx={{ padding: '0' }}
-                        placeholder="Enter the value"
+                        placeholder="Enter a numeric value"
                         type="number"
-                        defaultValue="0"
                         disabled={action === 'view'}
                       />
                     )}
@@ -320,7 +320,7 @@ const ArithmeticOpForm = ({
                       marginTop: '17px',
                     }}
                     onClick={(event) =>
-                      append({ type: 'col', col_val: '', const_val: 0 })
+                      append({ type: 'col', col_val: '', const_val: undefined })
                     }
                   >
                     + Add operand
