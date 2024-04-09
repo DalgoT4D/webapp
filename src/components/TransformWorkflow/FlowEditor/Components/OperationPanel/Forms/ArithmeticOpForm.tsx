@@ -84,10 +84,6 @@ const ArithmeticOpForm = ({
 
   const arithmeticOp = watch('arithmeticOp');
 
-  useEffect(() => {
-    replace([{ type: 'col', col_val: '', const_val: undefined }]);
-  }, [arithmeticOp, replace]);
-
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
       try {
@@ -188,7 +184,7 @@ const ArithmeticOpForm = ({
         operands: operands.map((op: { value: any; is_col: boolean }) => ({
           type: op.is_col ? 'col' : 'val',
           col_val: op.is_col ? op.value : '',
-          const_val: op.is_col ? 0 : op.value,
+          const_val: op.is_col ? undefined : op.value,
         })),
       });
     } catch (error) {
@@ -229,6 +225,12 @@ const ArithmeticOpForm = ({
                   fieldStyle="transformation"
                   helperText={fieldState.error?.message}
                   error={!!fieldState.error}
+                  onChange={(data: any) => {
+                    if (data) field.onChange(data);
+                    replace([
+                      { type: 'col', col_val: '', const_val: undefined },
+                    ]);
+                  }}
                 />
               );
             }}
