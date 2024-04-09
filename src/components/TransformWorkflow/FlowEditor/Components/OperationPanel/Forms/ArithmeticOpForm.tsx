@@ -82,12 +82,8 @@ const ArithmeticOpForm = ({
     },
   });
 
-  console.log(fields);
-
   const arithmeticOp = watch('arithmeticOp');
   const opera = watch('operands');
-
-  console.log(opera);
 
   useEffect(() => {
     replace([{ type: 'col', col_val: '', const_val: 0 }]);
@@ -200,8 +196,6 @@ const ArithmeticOpForm = ({
       console.error(error);
     }
   };
-
-
 
   useEffect(() => {
     if (['edit', 'view'].includes(action)) {
