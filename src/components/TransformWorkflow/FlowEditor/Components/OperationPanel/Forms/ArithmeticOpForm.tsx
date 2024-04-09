@@ -83,7 +83,6 @@ const ArithmeticOpForm = ({
   });
 
   const arithmeticOp = watch('arithmeticOp');
-  const opera = watch('operands');
 
   useEffect(() => {
     replace([{ type: 'col', col_val: '', const_val: undefined }]);
