@@ -64,15 +64,14 @@ const ArithmeticOpForm = ({
     output_column_name: string;
   };
 
-  const { control, handleSubmit, reset, watch, formState } = useForm<FormProps>(
-    {
+  const { control, handleSubmit, reset, watch, formState, register } =
+    useForm<FormProps>({
       defaultValues: {
         arithmeticOp: { id: '', label: '' },
         operands: [{ type: 'col', col_val: '', const_val: undefined }],
         output_column_name: '',
       },
-    }
-  );
+    });
   // Include this for multi-row input
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -289,23 +288,15 @@ const ArithmeticOpForm = ({
                     )}
                   />
                 ) : (
-                  <Controller
-                    control={control}
-                    rules={{ required: 'Value is required' }}
+                  <Input
+                    label=""
+                    fieldStyle="transformation"
                     name={`operands.${index}.const_val`}
-                    render={({ field, fieldState }) => (
-                      <Input
-                        {...field}
-                        helperText={fieldState.error?.message}
-                        error={!!fieldState.error}
-                        label=""
-                        fieldStyle="transformation"
-                        sx={{ padding: '0' }}
-                        placeholder="Enter a numeric value"
-                        type="number"
-                        disabled={action === 'view'}
-                      />
-                    )}
+                    register={register}
+                    sx={{ padding: '0' }}
+                    placeholder="Enter the value"
+                    type="number"
+                    disabled={action === 'view'}
                   />
                 )}
                 {((['sub', 'div'].includes(arithmeticOp?.id) &&
