@@ -390,7 +390,7 @@ const GroupByOpForm = ({
                   disabled={action === 'view'}
                   onClick={(event) =>
                     appendAggregate({
-                      metric: 'col',
+                      metric: '',
                       aggregate_func: { id: '', label: '' },
                       output_column_name: '',
                     })
