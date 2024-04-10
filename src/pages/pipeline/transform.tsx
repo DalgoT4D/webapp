@@ -136,18 +136,18 @@ const Transform = () => {
               Transformation
             </Typography>
             <Typography
-              sx={{ fontWeight: 400, marginBottom: '60px' }}
+              sx={{ fontWeight: 400, marginBottom: '40px' }}
               variant="h6"
               gutterBottom
               color="#808080"
             >
-              Please select one method you would like to proceed with to setup
+              Please select one method you would like to proceed with:
             </Typography>
 
             <Grid container spacing={2} columns={12}>
               <Grid item xs={12} md={6}>
                 <Box
-                  height="550px"
+                  height="450px"
                   bgcolor="white"
                   color="grey"
                   textAlign="left"
@@ -161,24 +161,22 @@ const Transform = () => {
                     src={UI}
                     alt="ui_transform"
                     style={{
-                      height: '73%',
+                      height: '60%',
                       width: 'auto',
-                      marginBottom: '10px',
                     }}
                   />
                   <Typography
                     sx={{ fontWeight: 600 }}
                     variant="h5"
-                    gutterBottom
                     align="left"
                     color="#000"
                   >
-                    UI Users <span>(Click and Configure)</span>
+                    UI Users{' '}
+                    <span style={{ color: 'grey' }}>(Click and Configure)</span>
                   </Typography>
                   <Typography
-                    sx={{ fontWeight: 400 }}
+                    sx={{ fontWeight: 400, marginBottom: '10px' }}
                     variant="body1"
-                    gutterBottom
                     color="#808080"
                   >
                     Use the UI to build your transformation workflow using a
@@ -187,7 +185,7 @@ const Transform = () => {
                   <Button
                     variant="contained"
                     color="primary"
-                    sx={{ width: '100%', marginTop: '5px' }}
+                    sx={{ width: '100%' }}
                     onClick={() => handleSetup('ui')}
                   >
                     Setup using UI
@@ -196,7 +194,7 @@ const Transform = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <Box
-                  height="550px"
+                  height="450px"
                   bgcolor="white"
                   color="grey"
                   textAlign="left"
@@ -210,26 +208,27 @@ const Transform = () => {
                     src={Github}
                     alt="github_transform"
                     style={{
-                      height: '73%',
+                      height: '60%',
                       width: 'auto',
-                      marginBottom: '10px',
                     }}
                   />
                   <Typography
                     sx={{ fontWeight: 600 }}
                     variant="h5"
-                    gutterBottom
                     align="left"
                     color="#000"
                   >
-                    Github Users <span>(Code)</span>
+                    Github Users <span style={{ color: 'grey' }}>(Code)</span>
                   </Typography>
                   <Typography
                     sx={{ fontWeight: 400 }}
                     variant="body1"
-                    gutterBottom
                     color="#808080"
-                    style={{ maxHeight: '40%', overflowY: 'auto' }}
+                    style={{
+                      maxHeight: '40%',
+                      overflowY: 'auto',
+                      marginBottom: '10px',
+                    }}
                   >
                     Create a project to integrate your dbt repository by
                     providing your repository URL and authentication details.
@@ -237,7 +236,7 @@ const Transform = () => {
                   <Button
                     variant="contained"
                     color="primary"
-                    sx={{ width: '100%', marginTop: '5px' }}
+                    sx={{ width: '100%' }}
                     onClick={() => handleSetup('github')}
                   >
                     Setup using Github
