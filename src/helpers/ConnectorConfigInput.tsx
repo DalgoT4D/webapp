@@ -288,7 +288,7 @@ class ConnectorConfigInput {
           // Check if the child has another level or not
           if (ele.specs && ele.enum && ele.enum.length === 0) {
             ele.specs.forEach((childEle: ConnectorSpec) => {
-              filteredChildSpecs.push({ ...childEle, parent: childEle?.parent && childEle?.parent?.length > 0 ? childEle.parent : ele.parent, order: ele.order });
+              filteredChildSpecs.push({ ...childEle, parent: childEle?.parent ? childEle.parent : ele.parent, order: ele.order });
             });
           } else {
             filteredChildSpecs.push(ele);
