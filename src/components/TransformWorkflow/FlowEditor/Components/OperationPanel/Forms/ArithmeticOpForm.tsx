@@ -67,7 +67,10 @@ const ArithmeticOpForm = ({
   const { control, register, handleSubmit, reset, watch } = useForm<FormProps>({
     defaultValues: {
       arithmeticOp: { id: '', label: '' },
-      operands: [{ type: 'col', col_val: '', const_val: 0 }],
+      operands: [
+        { type: 'col', col_val: '', const_val: 0 },
+        { type: 'col', col_val: '', const_val: 0 },
+      ],
       output_column_name: '',
     },
   });
@@ -227,7 +230,10 @@ const ArithmeticOpForm = ({
                   value={field.value}
                   onChange={(e, data: any) => {
                     if (data) field.onChange(data);
-                    replace([{ type: 'col', col_val: '', const_val: 0 }]);
+                    replace([
+                      { type: 'col', col_val: '', const_val: 0 },
+                      { type: 'col', col_val: '', const_val: 0 },
+                    ]);
                   }}
                 />
               );
