@@ -41,6 +41,7 @@ const AggregationOpForm = ({
   clearAndClosePanel,
   dummyNodeId,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
@@ -136,6 +137,7 @@ const AggregationOpForm = ({
         target_model_uuid: nodeData?.target_model_id || '',
       };
 
+      setLoading(true);
       // api call
       let operationNode: any;
       if (action === 'create') {
@@ -162,11 +164,14 @@ const AggregationOpForm = ({
     } catch (error: any) {
       console.log(error);
       errorToast(error?.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -188,6 +193,8 @@ const AggregationOpForm = ({
       });
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
