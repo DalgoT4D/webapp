@@ -354,6 +354,7 @@ const OperationConfigLayout = ({
             );
             return (
               <Tooltip
+                key={op.slug}
                 title={
                   canSelectOperation
                     ? ''
