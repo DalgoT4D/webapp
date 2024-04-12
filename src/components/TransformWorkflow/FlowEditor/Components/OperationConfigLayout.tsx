@@ -203,10 +203,12 @@ const OperationConfigLayout = ({
       setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
       if (['view', 'edit'].includes(panelOpFormState.current)) {
-        const selectOp = canvasNode?.data as OperationNodeData;
-        setSelectedOp(
-          operations.find((op) => op.slug === selectOp.config?.type)
-        );
+        const nodeData = canvasNode?.data as OperationNodeData;
+        if (!nodeData?.is_last_in_chain) {
+          setSelectedOp(
+            operations.find((op) => op.slug === nodeData.config?.type)
+          );
+        }
       }
     }
 
@@ -440,8 +442,13 @@ const OperationConfigLayout = ({
       type: 'update-canvas-node',
       data: { id: opNodeData.id, type: OPERATION_NODE },
     });
-    setShowFunctionsList(false);
-    panelOpFormState.current = 'edit';
+    // if its end of the chain continue to chain more or just close the operation panel
+    if (opNodeData?.is_last_in_chain) {
+      setShowFunctionsList(false);
+      panelOpFormState.current = 'edit';
+    } else {
+      handleClosePanel();
+    }
   };
 
   const panelState = selectedOp
