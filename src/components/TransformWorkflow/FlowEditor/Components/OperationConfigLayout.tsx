@@ -1,7 +1,10 @@
 import {
+  Backdrop,
   Box,
+  CircularProgress,
   Divider,
   IconButton,
+  LinearProgress,
   List,
   ListItemButton,
   SxProps,
@@ -74,6 +77,7 @@ export interface OperationFormProps {
   clearAndClosePanel: (...args: any) => void;
   dummyNodeId: string;
   action: 'create' | 'view' | 'edit';
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const operationComponentMapping: any = {
@@ -100,6 +104,7 @@ const OperationForm = ({
   clearAndClosePanel,
   dummyNodeId,
   action,
+  setLoading,
 }: OperationFormProps) => {
   if (operation === null || operation === undefined) {
     return null;
@@ -115,6 +120,7 @@ const OperationForm = ({
         clearAndClosePanel={clearAndClosePanel}
         dummyNodeId={dummyNodeId}
         action={action}
+        setLoading={setLoading}
       />
     );
   }
@@ -132,6 +138,7 @@ const OperationForm = ({
     clearAndClosePanel,
     dummyNodeId,
     action,
+    setLoading,
   };
 
   return <Form {...FormProps} />;
@@ -146,6 +153,7 @@ const OperationConfigLayout = ({
   const { canvasNode, setCanvasNode } = useCanvasNode();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
+  const [isPanelLoading, setIsPanelLoading] = useState<boolean>(false);
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
   const panelOpFormState = useRef<'create' | 'view' | 'edit'>('view');
@@ -469,10 +477,23 @@ const OperationConfigLayout = ({
           flexDirection: 'column',
           justifyContent: 'space-between',
           height: '100%',
-          gap: '5px',
+          // gap: '5px',
         }}
       >
-        <PanelHeader />
+        <Box>
+          <PanelHeader />
+          {isPanelLoading && (
+            <LinearProgress
+              sx={{
+                position: 'sticky',
+                top: '0%',
+                width: '100%',
+                color: '#33A195',
+                overflow: 'none',
+              }}
+            />
+          )}
+        </Box>
         <Box
           ref={contentRef}
           sx={{
@@ -481,15 +502,35 @@ const OperationConfigLayout = ({
           }}
         >
           {panelState === 'op-form' ? (
-            <OperationForm
-              sx={{}}
-              operation={selectedOp ? selectedOp : { slug: '', label: '' }}
-              node={canvasNode}
-              continueOperationChain={prepareForNextOperation}
-              clearAndClosePanel={handleClosePanel}
-              dummyNodeId={dummyNodeIdRef.current || ''}
-              action={panelOpFormState.current}
-            />
+            <Box
+              sx={{
+                position: 'relative', // Add this line
+              }}
+            >
+              <Backdrop
+                sx={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  position: 'absolute', // Position the Backdrop over the Box
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0, // Cover the entire Box
+                  zIndex: (theme) => theme.zIndex.drawer + 1,
+                }}
+                open={isPanelLoading}
+                onClick={() => {}}
+              ></Backdrop>
+              <OperationForm
+                sx={{ marginBottom: '10px' }}
+                operation={selectedOp ? selectedOp : { slug: '', label: '' }}
+                node={canvasNode}
+                continueOperationChain={prepareForNextOperation}
+                clearAndClosePanel={handleClosePanel}
+                dummyNodeId={dummyNodeIdRef.current || ''}
+                action={panelOpFormState.current}
+                setLoading={setIsPanelLoading}
+              />
+            </Box>
           ) : panelState === 'op-list' ? (
             <OperationList
               sx={{
