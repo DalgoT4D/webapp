@@ -88,8 +88,12 @@ export const Sources = () => {
         >
           {source.sourceName}
           <br />
-          <Typography variant='subtitle2' fontWeight={400}>
-            {sourceDefs?.map((item) => item?.id == source?.sourceDefinitionId ? `${item.dockerRepository}:${item?.tag}` : "")}
+          <Typography variant="subtitle2" fontWeight={400}>
+            {sourceDefs?.map((item) =>
+              item?.id == source?.sourceDefinitionId
+                ? `${item.dockerRepository}:${item?.tag}`
+                : ''
+            )}
           </Typography>
         </Typography>,
         <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'box-' + idx}>
@@ -98,7 +102,9 @@ export const Sources = () => {
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
             onClick={(event) =>
-              globalContext?.CurrentOrg.state.is_demo ? {} : handleClick(source.sourceId, event.currentTarget)
+              globalContext?.CurrentOrg.state.is_demo
+                ? {}
+                : handleClick(source.sourceId, event.currentTarget)
             }
             variant="contained"
             key={'menu-' + idx}
@@ -143,10 +149,6 @@ export const Sources = () => {
     handleCancelDeleteSource();
   };
 
-  if (isLoading) {
-    return <CircularProgress />;
-  }
-
   const fetchSourceDefinitions = async () => {
     setLoading(true);
     try {
@@ -160,7 +162,7 @@ export const Sources = () => {
             label: element.name,
             id: element.sourceDefinitionId,
             dockerRepository: element.dockerRepository,
-            tag: element?.dockerImageTag
+            tag: element?.dockerImageTag,
           } as AutoCompleteOption;
         }
       );
@@ -174,7 +176,11 @@ export const Sources = () => {
 
   useEffect(() => {
     fetchSourceDefinitions();
-  }, [])
+  }, []);
+
+  if (isLoading) {
+    return <CircularProgress />;
+  }
 
   return (
     <>
