@@ -122,7 +122,7 @@ class ConnectorConfigInput {
       if (exclude[0] in data?.properties) {
         dropdownEnums.push(
           data?.properties[exclude[0]]?.const ||
-            data?.properties[exclude[0]]?.enum[0]
+          data?.properties[exclude[0]]?.enum[0]
         );
       }
     }
@@ -288,7 +288,7 @@ class ConnectorConfigInput {
           // Check if the child has another level or not
           if (ele.specs && ele.enum && ele.enum.length === 0) {
             ele.specs.forEach((childEle: ConnectorSpec) => {
-              filteredChildSpecs.push({ ...childEle, order: ele.order });
+              filteredChildSpecs.push({ ...childEle, parent: childEle?.parent && childEle?.parent?.length > 0 ? childEle.parent : ele.parent, order: ele.order });
             });
           } else {
             filteredChildSpecs.push(ele);
