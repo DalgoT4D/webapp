@@ -14,6 +14,7 @@ interface ListProps {
   rows: Array<any>;
   openDialog: any;
   onlyList?: boolean;
+  height? : number ;
 }
 
 export const List = ({
@@ -22,6 +23,7 @@ export const List = ({
   headers,
   rows,
   onlyList,
+  height
 }: ListProps) => {
   return (
     <>
@@ -62,7 +64,7 @@ export const List = ({
               {rows.map((row: any, idx: number) => (
                 <TableRow
                   key={idx}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } , height : 120 }}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } , height : height }}
                 >
                   {row.map(
                     // if action is sent render with right align

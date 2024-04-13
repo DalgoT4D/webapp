@@ -333,6 +333,7 @@ export const DBTTaskList = ({
         title="Task"
         headers={['Command']}
         rows={rows}
+        height={75}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
