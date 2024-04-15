@@ -183,16 +183,28 @@ const PivotOpForm = ({
         pivot_column_name,
         pivot_column_values,
       }: PivotDataConfig = opConfig;
-      if (prev_source_columns)
-        setSrcColumns(prev_source_columns.sort((a, b) => a.localeCompare(b)));
-      //   setSelectedColumns(source_columns);
+      let orginalSrcColumns: string[] = [];
+      if (prev_source_columns) {
+        orginalSrcColumns = prev_source_columns.sort((a, b) =>
+          a.localeCompare(b)
+        );
+      }
+      setSrcColumns(orginalSrcColumns);
+
+      let groupbySourceColumns = orginalSrcColumns.map((col) => ({
+        col: col,
+        is_checked: source_columns.includes(col),
+      }));
 
       // pre-fill form
       reset({
         pivot_column_name: pivot_column_name,
-        pivot_column_values: pivot_column_values.map((col: string) => ({
-          col: col,
-        })),
+        pivot_column_values: pivot_column_values
+          .map((col: string) => ({
+            col: col,
+          }))
+          .concat([{ col: '' }]),
+        source_columns: groupbySourceColumns,
       });
     } catch (error) {
       console.error(error);
