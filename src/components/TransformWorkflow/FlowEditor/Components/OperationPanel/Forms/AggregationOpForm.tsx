@@ -209,7 +209,9 @@ const AggregationOpForm = ({
                 control={control}
                 rules={{
                   validate: (value) => {
-                    return value.id !== '' || 'Operation is required';
+                    return (
+                      (value && value?.id !== '') || 'Operation is required'
+                    );
                   },
                 }}
                 name={`aggregate_on.${index}.operation`}
