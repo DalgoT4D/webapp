@@ -228,6 +228,7 @@ const WhereFilterOpForm = ({
           <Box>
             <Controller
               control={control}
+              key="filterCol"
               name="filterCol"
               rules={{
                 required: advanceFilter === 'no' && 'Column is required',
@@ -306,6 +307,7 @@ const WhereFilterOpForm = ({
                 rules={{
                   required: advanceFilter === 'no' && 'Column is required',
                 }}
+                key="operand.col_val"
                 name="operand.col_val"
                 render={({ field, fieldState }) => (
                   <Autocomplete
@@ -322,6 +324,7 @@ const WhereFilterOpForm = ({
             ) : (
               <Controller
                 control={control}
+                key="operand.const_val"
                 name="operand.const_val"
                 rules={{
                   required: advanceFilter === 'no' && 'Value is required',

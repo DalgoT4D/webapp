@@ -201,8 +201,6 @@ const ArithmeticOpForm = ({
     }
   };
 
-
-
   useEffect(() => {
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
@@ -277,6 +275,7 @@ const ArithmeticOpForm = ({
                 <Box sx={{ m: 2 }} />
                 {radioValue === 'col' ? (
                   <Controller
+                    key={`operands.${index}.col_val`}
                     control={control}
                     rules={{ required: 'Column is required' }}
                     name={`operands.${index}.col_val`}
@@ -294,6 +293,7 @@ const ArithmeticOpForm = ({
                   />
                 ) : (
                   <Controller
+                    key={`operands.${index}.const_val`}
                     control={control}
                     rules={{ required: 'Value is required' }}
                     name={`operands.${index}.const_val`}

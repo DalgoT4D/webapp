@@ -144,6 +144,7 @@ const ClauseOperands = ({
               />
               {operandRadioValue === 'col' ? (
                 <Controller
+                  key={`clauses.${clauseIndex}.operands.${operandIndex}.col_val`}
                   control={control}
                   name={`clauses.${clauseIndex}.operands.${operandIndex}.col_val`}
                   rules={{
@@ -167,6 +168,7 @@ const ClauseOperands = ({
               ) : (
                 <Controller
                   control={control}
+                  key={`clauses.${clauseIndex}.operands.${operandIndex}.const_val`}
                   name={`clauses.${clauseIndex}.operands.${operandIndex}.const_val`}
                   rules={{
                     required:
@@ -487,6 +489,7 @@ const CaseWhenOpForm = ({
                     />
                   </Box>
                   <Controller
+                    key={`clauses.${clauseIndex}.filterCol`}
                     control={control}
                     rules={{
                       required: advanceFilter === 'no' && 'Column is required',
@@ -506,6 +509,7 @@ const CaseWhenOpForm = ({
                   />
                   <Box sx={{ m: 2 }} />
                   <Controller
+                    key={`clauses.${clauseIndex}.logicalOp`}
                     control={control}
                     rules={{
                       validate: (value) =>
@@ -594,6 +598,7 @@ const CaseWhenOpForm = ({
                     {thenRadioValue === 'col' ? (
                       <Controller
                         control={control}
+                        key={`clauses.${clauseIndex}.then.col_val`}
                         name={`clauses.${clauseIndex}.then.col_val`}
                         rules={{
                           required:
@@ -615,6 +620,7 @@ const CaseWhenOpForm = ({
                     ) : (
                       <Controller
                         control={control}
+                        key={`clauses.${clauseIndex}.then.const_val`}
                         rules={{
                           required:
                             advanceFilter === 'no' && 'Value is required',
@@ -727,6 +733,7 @@ const CaseWhenOpForm = ({
             />
             {elseRadioValue === 'col' ? (
               <Controller
+                key={`else.col_val`}
                 control={control}
                 name={`else.col_val`}
                 render={({ field }) => (
@@ -741,6 +748,7 @@ const CaseWhenOpForm = ({
               />
             ) : (
               <Controller
+                key={`else.const_val`}
                 control={control}
                 name={`else.const_val`}
                 render={({ field }) => (
