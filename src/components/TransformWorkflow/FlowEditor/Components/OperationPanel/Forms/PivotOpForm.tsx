@@ -1,7 +1,21 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button } from '@mui/material';
+import {
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  FormHelperText,
+  SxProps,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -13,6 +27,13 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
+import { GridTableCheckBox } from '@/components/UI/GridTable/GridCheckBox';
+
+interface PivotDataConfig {
+  source_columns: string[];
+  pivot_column_name: string;
+  pivot_column_values: string[];
+}
 
 const PivotOpForm = ({
   node,
@@ -28,6 +49,7 @@ const PivotOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -42,21 +64,30 @@ const PivotOpForm = ({
     }[];
   };
 
-  const { control, register, handleSubmit, reset } = useForm<FormProps>({
-    defaultValues: {
-      pivot_column_name: '',
-      pivot_column_values: [
-        {
-          col: '',
-        },
-      ],
-    },
-  });
+  const { control, register, handleSubmit, reset, watch, formState } =
+    useForm<FormProps>({
+      defaultValues: {
+        pivot_column_name: '',
+        pivot_column_values: [
+          {
+            col: '',
+          },
+        ],
+      },
+    });
+
+  const pivotColumn: string = watch('pivot_column_name');
 
   // Include this for multi-row input
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'pivot_column_values',
+    rules: {
+      minLength: {
+        value: 2,
+        message: 'Atleast one value is required',
+      },
+    },
   });
 
   const fetchAndSetSourceColumns = async () => {
@@ -81,7 +112,7 @@ const PivotOpForm = ({
     try {
       const postData: any = {
         op_type: operation.slug,
-        source_columns: srcColumns,
+        source_columns: selectedColumns.filter((col) => col !== pivotColumn),
         config: {
           pivot_column_name: data.pivot_column_name,
           pivot_column_values: data.pivot_column_values
@@ -127,7 +158,7 @@ const PivotOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const { config, prev_source_columns }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
       );
@@ -135,17 +166,22 @@ const PivotOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      //   const { source_columns, aggregate_on }: AggregateDataConfig = opConfig;
-      //   setSrcColumns(source_columns);
+      const {
+        source_columns,
+        pivot_column_name,
+        pivot_column_values,
+      }: PivotDataConfig = opConfig;
+      if (prev_source_columns)
+        setSrcColumns(prev_source_columns.sort((a, b) => a.localeCompare(b)));
+      setSelectedColumns(source_columns);
 
-      //   // pre-fill form
-      //   reset({
-      //     aggregate_on: aggregate_on.map((item: AggregateOn) => ({
-      //       column: item.column,
-      //       operation: AggregateOperations.find((op) => op.id === item.operation),
-      //       output_column_name: item.output_column_name,
-      //     })),
-      //   });
+      // pre-fill form
+      reset({
+        pivot_column_name: pivot_column_name,
+        pivot_column_values: pivot_column_values.map((col: string) => ({
+          col: col,
+        })),
+      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -168,16 +204,16 @@ const PivotOpForm = ({
           <Controller
             control={control}
             name={`pivot_column_name`}
-            render={({ field }) => (
+            rules={{ required: 'Pivot Column is required' }}
+            render={({ field, fieldState }) => (
               <Autocomplete
+                {...field}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
                 disabled={action === 'view'}
-                fieldStyle="transformation"
                 options={srcColumns.sort((a, b) => a.localeCompare(b))}
-                value={field.value}
-                onChange={(e, data) => {
-                  if (data) field.onChange(data);
-                }}
                 label="Select Column to pivot on*"
+                fieldStyle="transformation"
               />
             )}
           />
@@ -195,6 +231,12 @@ const PivotOpForm = ({
             />,
           ])}
         ></GridTable>
+        {formState.errors.pivot_column_values && (
+          <FormHelperText sx={{ color: 'red', ml: 2 }}>
+            {formState.errors.pivot_column_values.root?.message}
+          </FormHelperText>
+        )}
+
         <Button
           variant="shadow"
           type="button"
@@ -206,12 +248,18 @@ const PivotOpForm = ({
         >
           Add row
         </Button>
+        <GridTableCheckBox
+          entities={srcColumns.filter((col) => col !== pivotColumn)}
+          selectedEntities={selectedColumns}
+          onSelect={setSelectedColumns}
+          title={'Columns to group by'}
+        />
         <Box>
           <Box>
             <Button
               disabled={action === 'view'}
               variant="contained"
-              type="button"
+              type="submit"
               data-testid="savebutton"
               fullWidth
               sx={{ marginTop: '17px' }}
