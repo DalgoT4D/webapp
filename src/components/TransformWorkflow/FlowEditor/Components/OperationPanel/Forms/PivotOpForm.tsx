@@ -304,7 +304,12 @@ const PivotOpForm = ({
             ...[
               [
                 <Box
-                  sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '0px 16px',
+                  }}
                 >
                   <FormControlLabel
                     key={'select_all'}
@@ -339,7 +344,12 @@ const PivotOpForm = ({
             ...srcColFields.map((field, idx) => [
               <Box
                 key={field.col + idx}
-                sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '0px 16px',
+                }}
               >
                 <FormControlLabel
                   key={field.id}
