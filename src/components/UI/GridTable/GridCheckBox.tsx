@@ -56,7 +56,10 @@ export const GridTableCheckBox = ({
             <FormControlLabel
               control={
                 <Checkbox
-                  checked={selectedEntities.length === entities.length}
+                  checked={
+                    selectedEntities.length === entities.length &&
+                    entities.length > 0
+                  }
                   onChange={handleSelectAll}
                 />
               }
