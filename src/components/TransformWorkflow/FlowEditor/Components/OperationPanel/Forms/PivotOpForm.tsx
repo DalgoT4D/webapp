@@ -1,7 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button, FormHelperText } from '@mui/material';
+import {
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  FormHelperText,
+  Typography,
+} from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -13,7 +20,6 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
-import { GridTableCheckBox } from '@/components/UI/GridTable/GridCheckBox';
 
 interface PivotDataConfig {
   source_columns: string[];
@@ -35,7 +41,6 @@ const PivotOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -48,9 +53,10 @@ const PivotOpForm = ({
     pivot_column_values: {
       col: string;
     }[];
+    source_columns: { col: string; is_checked: boolean }[];
   };
 
-  const { control, register, handleSubmit, reset, watch, formState } =
+  const { control, register, handleSubmit, reset, watch, formState, setValue } =
     useForm<FormProps>({
       defaultValues: {
         pivot_column_name: '',
@@ -59,6 +65,7 @@ const PivotOpForm = ({
             col: '',
           },
         ],
+        source_columns: [],
       },
     });
 
@@ -76,6 +83,15 @@ const PivotOpForm = ({
     },
   });
 
+  const {
+    fields: srcColFields,
+    replace,
+    update,
+  } = useFieldArray({
+    control,
+    name: 'source_columns',
+  });
+
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
       try {
@@ -84,6 +100,12 @@ const PivotOpForm = ({
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
         setSrcColumns(data.map((col: ColumnData) => col.name));
+        setValue(
+          'source_columns',
+          data
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((col: ColumnData) => ({ col: col.name, is_checked: false }))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -98,7 +120,11 @@ const PivotOpForm = ({
     try {
       const postData: any = {
         op_type: operation.slug,
-        source_columns: selectedColumns.filter((col) => col !== pivotColumn),
+        source_columns: data.source_columns
+          .filter(
+            (src_col) => src_col.is_checked && src_col.col !== pivotColumn
+          )
+          .map((src_col) => src_col.col),
         config: {
           pivot_column_name: data.pivot_column_name,
           pivot_column_values: data.pivot_column_values
@@ -159,7 +185,7 @@ const PivotOpForm = ({
       }: PivotDataConfig = opConfig;
       if (prev_source_columns)
         setSrcColumns(prev_source_columns.sort((a, b) => a.localeCompare(b)));
-      setSelectedColumns(source_columns);
+      //   setSelectedColumns(source_columns);
 
       // pre-fill form
       reset({
@@ -185,7 +211,14 @@ const PivotOpForm = ({
 
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
-      <form onSubmit={handleSubmit(handleSave)}>
+      <form
+        onSubmit={handleSubmit(handleSave)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+          }
+        }}
+      >
         <Box sx={{ mb: 2 }}>
           <Controller
             control={control}
@@ -202,10 +235,15 @@ const PivotOpForm = ({
                 fieldStyle="transformation"
                 onChange={(data: any) => {
                   field.onChange(data);
-                  if (data)
-                    setSelectedColumns(
-                      selectedColumns.filter((col) => col !== data)
+                  if (data) {
+                    let findIndex: number = srcColFields.findIndex(
+                      (field) => field.col === data
                     );
+                    update(findIndex, {
+                      col: srcColFields[findIndex].col,
+                      is_checked: false,
+                    });
+                  }
                 }}
               />
             )}
@@ -221,6 +259,12 @@ const PivotOpForm = ({
               key={field.col + idx}
               name={`pivot_column_values.${idx}.col`}
               register={register}
+              onKeyDown={(e) => {
+                // if the key is enter append
+                if (e.key === 'Enter') {
+                  append({ col: '' });
+                }
+              }}
             />,
           ])}
         ></GridTable>
@@ -241,12 +285,80 @@ const PivotOpForm = ({
         >
           Add row
         </Button>
-        <GridTableCheckBox
-          entities={srcColumns.filter((col) => col !== pivotColumn)}
-          selectedEntities={selectedColumns}
-          onSelect={setSelectedColumns}
-          title={'Columns to group by'}
-        />
+
+        <GridTable
+          headers={['Columns to groupby']}
+          data={[
+            ...[
+              [
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+                >
+                  <FormControlLabel
+                    key={'select_all'}
+                    control={
+                      <Checkbox
+                        disabled={action === 'view'}
+                        onChange={(
+                          event: React.ChangeEvent<HTMLInputElement>
+                        ) => {
+                          replace(
+                            srcColFields.map((field) => ({
+                              col: field.col,
+                              is_checked: event.target.checked,
+                            }))
+                          );
+                        }}
+                      />
+                    }
+                    label=""
+                  />
+                  <Typography
+                    sx={{
+                      fontWeight: '600',
+                      fontSize: '14px',
+                    }}
+                  >
+                    Select all
+                  </Typography>
+                </Box>,
+              ],
+            ],
+            ...srcColFields.map((field, idx) => [
+              <Box
+                key={field.col + idx}
+                sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+              >
+                <FormControlLabel
+                  key={field.id}
+                  control={
+                    <Checkbox
+                      disabled={field.col === pivotColumn || action === 'view'}
+                      checked={field.is_checked}
+                      onChange={(
+                        event: React.ChangeEvent<HTMLInputElement>
+                      ) => {
+                        update(idx, {
+                          col: field.col,
+                          is_checked: event.target.checked,
+                        });
+                      }}
+                    />
+                  }
+                  label=""
+                />
+                <Typography
+                  sx={{
+                    fontWeight: '600',
+                    fontSize: '14px',
+                  }}
+                >
+                  {field.col}
+                </Typography>
+              </Box>,
+            ]),
+          ]}
+        ></GridTable>
         <Box>
           <Box>
             <Button
