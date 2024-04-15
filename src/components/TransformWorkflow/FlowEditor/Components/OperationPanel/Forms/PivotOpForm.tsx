@@ -200,6 +200,13 @@ const PivotOpForm = ({
                 options={srcColumns.sort((a, b) => a.localeCompare(b))}
                 label="Select Column to pivot on*"
                 fieldStyle="transformation"
+                onChange={(data: any) => {
+                  field.onChange(data);
+                  if (data)
+                    setSelectedColumns(
+                      selectedColumns.filter((col) => col !== data)
+                    );
+                }}
               />
             )}
           />
