@@ -15,6 +15,7 @@ export const AGGREGATE_OP = 'aggregate';
 export const CASEWHEN_OP = 'casewhen';
 export const UNION_OP = 'unionall';
 export const PIVOT_OP = 'pivot';
+export const UNPIVOT_OP = 'unpivot';
 
 export const operations = [
   {
@@ -96,6 +97,16 @@ export const operations = [
     label: 'Pivot',
     slug: PIVOT_OP,
     infoToolTip: 'Pivot table data based on values of selected column',
+  },
+  {
+    label: 'Pivot',
+    slug: PIVOT_OP,
+    infoToolTip: 'Pivot table data based on values of selected column',
+  },
+  {
+    label: 'Unpivot',
+    slug: UNPIVOT_OP,
+    infoToolTip: 'Unpivot columns & values of a table into rows',
   },
 ].sort((a, b) => a.label.localeCompare(b.label));
 
