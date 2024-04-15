@@ -326,13 +326,16 @@ const JoinOpForm = ({
         <Controller
           control={control}
           name="table1.tab"
-          render={({ field }) => (
+          rules={{ required: 'First table is required' }}
+          render={({ field, fieldState }) => (
             <Autocomplete
+              {...field}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
               fieldStyle="transformation"
               isOptionEqualToValue={(option: any, value: any) => {
                 return option?.id === value?.id;
               }}
-              value={field.value}
               options={sourcesModels
                 .map((model) => {
                   return {
@@ -342,10 +345,7 @@ const JoinOpForm = ({
                 })
                 .sort((a, b) => a.label.localeCompare(b.label))}
               disabled={true}
-              onChange={(e, data: any) => {
-                field.onChange(data);
-              }}
-              label="Select the first table"
+              label="Select the first table*"
             />
           )}
         />
@@ -353,29 +353,35 @@ const JoinOpForm = ({
         <Controller
           control={control}
           name={`table1.key`}
-          render={({ field }) => (
+          rules={{ required: 'Key column is required' }}
+          render={({ field, fieldState }) => (
             <Autocomplete
+              {...field}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
               disabled={action === 'view'}
               fieldStyle="transformation"
               options={nodeSrcColumns}
-              value={field.value}
-              onChange={(e, data) => {
-                field.onChange(data);
-              }}
-              label="Select key column"
+              label="Select key column*"
             />
           )}
         />
         <Box sx={{ m: 2 }} />
         <Controller
           control={control}
+          rules={{
+            validate: (value) =>
+              (value && value?.id !== '') || 'Second table is required',
+          }}
           name={`table2.tab`}
-          render={({ field }) => {
+          render={({ field, fieldState }) => {
             return (
               <Autocomplete
+                {...field}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
                 fieldStyle="transformation"
                 disabled={action === 'view'}
-                value={field.value}
                 isOptionEqualToValue={(option: any, value: any) => {
                   return option?.id === value?.id;
                 }}
@@ -387,11 +393,11 @@ const JoinOpForm = ({
                     };
                   })
                   .sort((a, b) => a.label.localeCompare(b.label))}
-                onChange={(e, data: any) => {
+                onChange={(data: any) => {
                   field.onChange(data);
                   handleSelectSecondTable(data?.id ? data.id : null);
                 }}
-                label="Select the second table"
+                label="Select the second table*"
               />
             );
           }}
@@ -400,33 +406,33 @@ const JoinOpForm = ({
         <Controller
           control={control}
           name={`table2.key`}
-          render={({ field }) => (
+          rules={{ required: 'Key column is required' }}
+          render={({ field, fieldState }) => (
             <Autocomplete
+              {...field}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
               fieldStyle="transformation"
               disabled={action === 'view'}
               options={table2Columns}
-              value={field.value}
-              onChange={(e, data) => {
-                field.onChange(data);
-              }}
-              label="Select key column"
+              label="Select key column*"
             />
           )}
         />
         <Box sx={{ m: 2 }} />
         <Controller
+          rules={{ required: 'Join type is required' }}
           control={control}
           name="join_type"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <Autocomplete
+              {...field}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
               fieldStyle="transformation"
               disabled={action === 'view'}
               options={['left', 'right', 'inner']}
-              value={field.value}
-              onChange={(e, data) => {
-                field.onChange(data);
-              }}
-              label="Select the join type"
+              label="Select the join type*"
             />
           )}
         />
