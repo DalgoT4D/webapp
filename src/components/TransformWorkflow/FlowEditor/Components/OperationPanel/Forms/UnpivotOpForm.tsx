@@ -59,18 +59,6 @@ const UnpivotOpForm = ({
       },
     });
 
-  // Include this for multi-row input
-  // const { fields, append, remove } = useFieldArray({
-  //   control,
-  //   name: 'unpivot_columns',
-  //   rules: {
-  //     minLength: {
-  //       value: 2,
-  //       message: 'Atleast one value is required',
-  //     },
-  //   },
-  // });
-
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
       try {
