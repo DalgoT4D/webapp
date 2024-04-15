@@ -48,6 +48,8 @@ export interface OperationNodeData {
   config: any;
   isDummy?: boolean;
   prev_source_columns?: string[];
+  is_last_in_chain?: boolean;
+  seq?: number;
 }
 
 export type DbtSourceModel = {

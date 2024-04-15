@@ -26,6 +26,7 @@ const RenameColumnOp = ({
   continueOperationChain,
   clearAndClosePanel,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
@@ -92,6 +93,7 @@ const RenameColumnOp = ({
       });
 
       // api call
+      setLoading(true);
       let operationNode: any;
       if (action === 'create') {
         operationNode = await httpPost(
@@ -116,11 +118,14 @@ const RenameColumnOp = ({
     } catch (error: any) {
       console.log(error);
       errorToast(error?.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -141,6 +146,8 @@ const RenameColumnOp = ({
       reset({ config: renamedColumnArray });
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 

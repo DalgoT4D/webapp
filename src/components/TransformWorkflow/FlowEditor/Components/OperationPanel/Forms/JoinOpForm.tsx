@@ -33,6 +33,7 @@ const JoinOpForm = ({
   clearAndClosePanel,
   dummyNodeId,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
@@ -218,6 +219,7 @@ const JoinOpForm = ({
         target_model_uuid: nodeData?.target_model_id || '',
       };
       // api call
+      setLoading(true);
       let operationNode: any;
       if (action === 'create') {
         operationNode = await httpPost(
@@ -242,11 +244,14 @@ const JoinOpForm = ({
       reset();
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -293,6 +298,8 @@ const JoinOpForm = ({
       });
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 

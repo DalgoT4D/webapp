@@ -56,6 +56,7 @@ const CoalesceOpForm = ({
   clearAndClosePanel,
   dummyNodeId,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
@@ -126,6 +127,7 @@ const CoalesceOpForm = ({
       };
 
       // api call
+      setLoading(true);
       let operationNode: any;
       if (action === 'create') {
         operationNode = await httpPost(
@@ -150,11 +152,14 @@ const CoalesceOpForm = ({
       reset();
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -181,6 +186,8 @@ const CoalesceOpForm = ({
       });
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
