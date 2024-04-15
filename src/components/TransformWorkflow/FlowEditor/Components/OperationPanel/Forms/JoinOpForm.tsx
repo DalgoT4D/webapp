@@ -341,6 +341,7 @@ const JoinOpForm = ({
                   return {
                     id: model.id,
                     label: model.input_name,
+                    schema: model.schema,
                   };
                 })
                 .sort((a, b) => a.label.localeCompare(b.label))}
@@ -385,11 +386,29 @@ const JoinOpForm = ({
                 isOptionEqualToValue={(option: any, value: any) => {
                   return option?.id === value?.id;
                 }}
+                renderGroup={(params) => (
+                  <li key={params.key}>
+                    <Box
+                      sx={{
+                        fontWeight: 600,
+                        position: 'sticky',
+                        top: '-8px',
+                        padding: '4px 10px',
+                        background: 'white',
+                      }}
+                    >
+                      {params.group}
+                    </Box>
+                    <Box>{params.children}</Box>
+                  </li>
+                )}
+                groupBy={(option: any) => option.schema}
                 options={sourcesModels
                   .map((model) => {
                     return {
                       id: model.id,
                       label: model.input_name,
+                      schema: model.schema,
                     };
                   })
                   .sort((a, b) => a.label.localeCompare(b.label))}
