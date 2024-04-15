@@ -74,7 +74,7 @@ export const GridTableCheckBox = ({
         </TableRow>
       </TableHead>
       <TableBody>
-        {entities?.map((entity, index) => (
+        {entities.map((entity, index) => (
           <TableRow key={index} sx={{ boxShadow: 'none' }}>
             <TableCell
               sx={{
