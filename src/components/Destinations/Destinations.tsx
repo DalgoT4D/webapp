@@ -38,17 +38,13 @@ interface Warehouse {
 }
 
 export const Destinations = () => {
-  const { data, isLoading, mutate } = useSWR(`organizations/warehouses`, {
-    revalidateOnFocus: false,
-  });
+  const { data, isLoading, mutate } = useSWR(`organizations/warehouses`, { revalidateOnFocus: false });
   const { data: session }: any = useSession();
   const [warehouse, setWarehouse] = useState<Warehouse>();
   const globalContext = useContext(GlobalContext);
-  const [showCreateWarehouseDialog, setShowCreateWarehouseDialog] =
-    useState(false);
+  const [showCreateWarehouseDialog, setShowCreateWarehouseDialog] = useState(false);
   const [showEditWarehouseDialog, setShowEditWarehouseDialog] = useState(false);
-  const [showDeleteWarehouseDialog, setShowDeleteWarehouseDialog] =
-    useState(false);
+  const [showDeleteWarehouseDialog, setShowDeleteWarehouseDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
@@ -69,8 +65,6 @@ export const Destinations = () => {
       } as Warehouse);
     }
   }, [data]);
-
-  console.log('current org', globalContext?.CurrentOrg.state);
 
   if (isLoading) {
     return <CircularProgress />;
