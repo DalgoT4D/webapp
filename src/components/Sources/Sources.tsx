@@ -212,7 +212,6 @@ export const Sources = () => {
         title="Source"
         headers={headers}
         rows={rows}
-        height={90}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
