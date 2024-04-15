@@ -304,9 +304,17 @@ const UnionTablesOpForm = ({
             <Controller
               key={`${field.id}_${index}`}
               control={control}
+              rules={{
+                validate: (value) =>
+                  (value && value.id !== '') ||
+                  `Table ${index + 1} is required`,
+              }}
               name={`tables.${index}`}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <Autocomplete
+                  {...field}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
                   key={`${index}`}
                   disabled={index === 0}
                   options={sourcesModels
@@ -318,8 +326,7 @@ const UnionTablesOpForm = ({
                   isOptionEqualToValue={(option: any, value: any) => {
                     return option?.id === value?.id;
                   }}
-                  value={field.value}
-                  onChange={(e, data: any) => {
+                  onChange={(data: any) => {
                     field.onChange(data);
                     const model: DbtSourceModel | undefined =
                       sourcesModels.find(
@@ -327,7 +334,7 @@ const UnionTablesOpForm = ({
                       );
                     clearAndAddDummyModelNode(model, index);
                   }}
-                  label={`Select the table no ${index + 1}`}
+                  label={`Select the table no ${index + 1}*`}
                   fieldStyle="transformation"
                 />
               )}
