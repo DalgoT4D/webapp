@@ -242,12 +242,6 @@ const ArithmeticOpForm = ({
                   fieldStyle="transformation"
                   helperText={fieldState.error?.message}
                   error={!!fieldState.error}
-                  onChange={(data: any) => {
-                    if (data) field.onChange(data);
-                    replace([
-                      { type: 'col', col_val: '', const_val: undefined },
-                    ]);
-                  }}
                 />
               );
             }}
