@@ -37,6 +37,7 @@ import {
   CASEWHEN_OP,
   UNION_OP,
   FLATTEN_JSON_OP,
+  PIVOT_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -62,6 +63,7 @@ import UnionTablesOpForm from './OperationPanel/Forms/UnionTablesOpForm';
 import FlattenJsonOpForm from './OperationPanel/Forms/FlattenJsonOpForm';
 import { generateDummyOperationlNode } from './dummynodes';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
+import PivotOpForm from './OperationPanel/Forms/PivotOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -94,6 +96,7 @@ const operationComponentMapping: any = {
   [CASEWHEN_OP]: CaseWhenOpForm,
   [UNION_OP]: UnionTablesOpForm,
   [FLATTEN_JSON_OP]: FlattenJsonOpForm,
+  [PIVOT_OP]: PivotOpForm,
 };
 
 const OperationForm = ({
