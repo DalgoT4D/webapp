@@ -55,12 +55,12 @@ const GroupByOpForm = ({
   clearAndClosePanel,
   dummyNodeId,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
-  const [isLoading, setIsLoading] = useState(true);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -163,6 +163,7 @@ const GroupByOpForm = ({
       };
 
       // api call
+      setLoading(true);
       let operationNode: any;
       if (action === 'create') {
         operationNode = await httpPost(
@@ -188,11 +189,14 @@ const GroupByOpForm = ({
     } catch (error: any) {
       console.log(error);
       errorToast(error?.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config, prev_source_columns }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -221,6 +225,8 @@ const GroupByOpForm = ({
       });
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 

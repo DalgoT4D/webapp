@@ -26,6 +26,7 @@ const DropColumnOp = ({
   sx,
   continueOperationChain,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
@@ -84,6 +85,7 @@ const DropColumnOp = ({
       };
 
       // api call
+      setLoading(true);
       let operationNode: any;
       if (action === 'create') {
         operationNode = await httpPost(
@@ -107,11 +109,14 @@ const DropColumnOp = ({
       continueOperationChain(operationNode);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -127,6 +132,8 @@ const DropColumnOp = ({
       setSelectedColumns(columns);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 

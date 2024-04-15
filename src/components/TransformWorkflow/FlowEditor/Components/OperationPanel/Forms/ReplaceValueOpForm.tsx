@@ -34,6 +34,7 @@ const ReplaceValueOpForm = ({
   continueOperationChain,
   clearAndClosePanel,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
@@ -119,6 +120,7 @@ const ReplaceValueOpForm = ({
       });
 
       // api call
+      setLoading(true);
       let operationNode: any;
       if (action === 'create') {
         operationNode = await httpPost(
@@ -143,11 +145,14 @@ const ReplaceValueOpForm = ({
       reset();
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -174,6 +179,8 @@ const ReplaceValueOpForm = ({
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 

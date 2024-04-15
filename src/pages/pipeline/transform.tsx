@@ -136,18 +136,18 @@ const Transform = () => {
               Transformation
             </Typography>
             <Typography
-              sx={{ fontWeight: 400, marginBottom: '60px' }}
+              sx={{ fontWeight: 400, marginBottom: '40px' }}
               variant="h6"
               gutterBottom
               color="#808080"
             >
-              Please select one method you would like to proceed with to setup
+              Please select one method you would like to proceed with:
             </Typography>
 
             <Grid container spacing={2} columns={12}>
-              <Grid item xs={6}>
+              <Grid item xs={12} md={6}>
                 <Box
-                  height={550}
+                  height="450px"
                   bgcolor="white"
                   color="grey"
                   textAlign="left"
@@ -160,26 +160,27 @@ const Transform = () => {
                   <Image
                     src={UI}
                     alt="ui_transform"
-                    style={{ height: '80%', width: 'auto' }}
+                    style={{
+                      height: '60%',
+                      width: 'auto',
+                    }}
                   />
                   <Typography
                     sx={{ fontWeight: 600 }}
                     variant="h5"
-                    gutterBottom
                     align="left"
                     color="#000"
                   >
-                    UI Users <span>(for Non technical users)</span>
+                    UI Users{' '}
+                    <span style={{ color: 'grey' }}>(Click and Configure)</span>
                   </Typography>
                   <Typography
-                    sx={{ fontWeight: 400 }}
-                    variant="h6"
-                    gutterBottom
+                    sx={{ fontWeight: 400, marginBottom: '10px' }}
+                    variant="body1"
                     color="#808080"
                   >
-                    Create a project to effortlessly integrate your dbt
-                    repository by providing your repository URL and
-                    authentication details in further steps
+                    Use the UI to build your transformation workflow using a
+                    simple and intuitive user interface.
                   </Typography>
                   <Button
                     variant="contained"
@@ -191,9 +192,9 @@ const Transform = () => {
                   </Button>
                 </Box>
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={12} md={6}>
                 <Box
-                  height={550}
+                  height="450px"
                   bgcolor="white"
                   color="grey"
                   textAlign="left"
@@ -201,30 +202,36 @@ const Transform = () => {
                   display="flex"
                   flexDirection="column"
                   justifyContent="space-between"
-                  sx={{ padding: '30px', marginRight: '20px' }}
+                  sx={{ padding: '30px' }}
                 >
                   <Image
                     src={Github}
                     alt="github_transform"
-                    style={{ height: '80%', width: 'auto' }}
+                    style={{
+                      height: '60%',
+                      width: 'auto',
+                    }}
                   />
                   <Typography
-                    sx={{ fontWeight: 550 }}
+                    sx={{ fontWeight: 600 }}
                     variant="h5"
                     align="left"
                     color="#000"
                   >
-                    Github Users <span>(for advanced users)</span>
+                    Github Users <span style={{ color: 'grey' }}>(Code)</span>
                   </Typography>
                   <Typography
                     sx={{ fontWeight: 400 }}
-                    variant="h6"
-                    gutterBottom
+                    variant="body1"
                     color="#808080"
+                    style={{
+                      maxHeight: '40%',
+                      overflowY: 'auto',
+                      marginBottom: '10px',
+                    }}
                   >
-                    Create a project to effortlessly integrate your dbt
-                    repository by providing your repository URL and
-                    authentication details in further steps
+                    Create a project to integrate your dbt repository by
+                    providing your repository URL and authentication details.
                   </Typography>
                   <Button
                     variant="contained"
