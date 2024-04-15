@@ -87,9 +87,6 @@ const ArithmeticOpForm = ({
   });
 
   const arithmeticOp = watch('arithmeticOp');
-  const opera = watch('operands');
-
-  console.log(opera);
 
   useEffect(() => {
     replace([
@@ -202,7 +199,7 @@ const ArithmeticOpForm = ({
         operands: operands.map((op: { value: any; is_col: boolean }) => ({
           type: op.is_col ? 'col' : 'val',
           col_val: op.is_col ? op.value : '',
-          const_val: op.is_col ? 0 : op.value,
+          const_val: op.is_col ? undefined : op.value,
         })),
       });
     } catch (error) {
@@ -228,7 +225,8 @@ const ArithmeticOpForm = ({
             control={control}
             name="arithmeticOp"
             rules={{
-              validate: (value) => value.id !== '' || 'Operation is required',
+              validate: (value) =>
+                (value && value?.id !== '') || 'Operation is required',
             }}
             render={({ field, fieldState }) => {
               return (
@@ -244,6 +242,12 @@ const ArithmeticOpForm = ({
                   fieldStyle="transformation"
                   helperText={fieldState.error?.message}
                   error={!!fieldState.error}
+                  onChange={(data: any) => {
+                    if (data) field.onChange(data);
+                    replace([
+                      { type: 'col', col_val: '', const_val: undefined },
+                    ]);
+                  }}
                 />
               );
             }}
@@ -316,9 +320,8 @@ const ArithmeticOpForm = ({
                         label=""
                         fieldStyle="transformation"
                         sx={{ padding: '0' }}
-                        placeholder="Enter the value"
+                        placeholder="Enter a numeric value"
                         type="number"
-                        defaultValue="0"
                         disabled={action === 'view'}
                       />
                     )}
@@ -337,7 +340,7 @@ const ArithmeticOpForm = ({
                       marginTop: '17px',
                     }}
                     onClick={(event) =>
-                      append({ type: 'col', col_val: '', const_val: 0 })
+                      append({ type: 'col', col_val: '', const_val: undefined })
                     }
                   >
                     + Add operand

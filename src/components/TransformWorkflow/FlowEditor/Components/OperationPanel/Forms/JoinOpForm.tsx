@@ -370,7 +370,8 @@ const JoinOpForm = ({
         <Controller
           control={control}
           rules={{
-            validate: (value) => value.id !== '' || 'Second table is required',
+            validate: (value) =>
+              (value && value?.id !== '') || 'Second table is required',
           }}
           name={`table2.tab`}
           render={({ field, fieldState }) => {

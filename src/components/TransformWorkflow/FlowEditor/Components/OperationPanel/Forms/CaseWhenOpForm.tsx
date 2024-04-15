@@ -414,13 +414,13 @@ const CaseWhenOpForm = ({
         },
         operands: clause.operands.map((op: GenericOperand) => ({
           type: op.is_col ? 'col' : 'val',
-          col_val: op.value,
-          const_val: op.value,
+          col_val: op.is_col ? op.value : '',
+          const_val: !op.is_col ? op.value : '',
         })),
         then: {
           type: clause.then.is_col ? 'col' : 'val',
-          col_val: clause.then.value,
-          const_val: clause.then.value,
+          col_val: clause.then.is_col ? clause.then.value : '',
+          const_val: !clause.then.is_col ? clause.then.value : '',
         },
       }));
       reset({
