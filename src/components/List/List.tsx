@@ -64,7 +64,7 @@ export const List = ({
               {rows.map((row: any, idx: number) => (
                 <TableRow
                   key={idx}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } , height : height }}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } , ...(height && { height }), }}
                 >
                   {row.map(
                     // if action is sent render with right align
