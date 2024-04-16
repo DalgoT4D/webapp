@@ -1,11 +1,13 @@
 import { ControllerRenderProps } from 'react-hook-form';
 import { Autocomplete } from '../UI/Autocomplete/Autocomplete';
 import { TransformTask } from '../DBT/DBTTarget';
-import { useState, useMemo, useRef } from 'react';
-import { DeleteOutlineOutlined } from '@mui/icons-material';
+import { useState, useRef } from 'react';
+import DeleteIcon from '@/assets/icons/delete.svg';
+import DragIcon from '@/assets/icons/drag.svg';
 
-import { Tree } from 'react-arborist';
+import { NodeApi, Tree } from 'react-arborist';
 import { Box } from '@mui/material';
+import Image from 'next/image';
 
 interface TaskSequenceProps {
   field: ControllerRenderProps<any, any>;
@@ -20,30 +22,32 @@ export const TaskSequence = ({
   const [selectedOptions, setSelectedOptions] = useState<TransformTask[]>(
     initialOptions
       .filter((option) => option.generated_by === 'system')
-      .map((option) => ({ id: option.seq, ...option }))
+      .map((option) => ({ ...option }))
+      .sort((a, b) => a.seq - b.seq)
   );
   const [autocompleteOptions, setAutocompleteOptions] = useState(
     initialOptions
       .filter((option) => option.generated_by !== 'system')
-      .map((option) => ({ id: option.seq, ...option }))
+      .map((option) => ({ ...option }))
   );
 
-  const handleSelect = (event, value) => {
+  const handleSelect = (_event: any, value: any) => {
     if (value) {
-      const newSelectedOptions = [...selectedOptions, value].sort(
-        (a, b) => a.seq - b.seq
+      const runNodeIndex = selectedOptions.findIndex(
+        (node) => node.slug === 'dbt-run'
       );
+      selectedOptions.splice(runNodeIndex + 1, 0, value);
+      const newSelectedOptions = [...selectedOptions];
       const newAutocompleteOptions = autocompleteOptions.filter(
         (option) => option !== value
       );
       setSelectedOptions(newSelectedOptions);
       setAutocompleteOptions(newAutocompleteOptions);
+      field.onChange(newSelectedOptions);
     }
   };
-  const removeNode = (node: any) => {
-    const newAutocompleteOptions = [...autocompleteOptions, node.data].sort(
-      (a, b) => a.seq - b.seq
-    );
+  const removeNode = (node: NodeApi<TransformTask>) => {
+    const newAutocompleteOptions = [...autocompleteOptions, node.data];
 
     const newSelectedOptions = selectedOptions.filter(
       (option) => option.uuid !== node.data.uuid
@@ -51,6 +55,7 @@ export const TaskSequence = ({
 
     setSelectedOptions(newSelectedOptions);
     setAutocompleteOptions(newAutocompleteOptions);
+    field.onChange(newSelectedOptions);
   };
 
   function Node({ node, dragHandle }: any) {
@@ -61,13 +66,26 @@ export const TaskSequence = ({
         sx={{
           maxWidth: '500px',
           display: 'flex',
-          borderRadius: '6px',
-          overflow: 'hidden',
+          alignItems: 'center',
+
           fontWeight: 600,
         }}
       >
+        {node.data.generated_by !== 'system' && (
+          <Image
+            src={DragIcon}
+            style={{
+              margin: '4px',
+              position: 'absolute',
+              left: '-20px',
+              cursor: 'grab',
+            }}
+            alt="drop icon"
+          />
+        )}
         <Box
           sx={{
+            borderRadius: '6px 0px 0px 6px',
             p: '4px 12px',
             width: '30px',
             background: '#33A195',
@@ -83,6 +101,7 @@ export const TaskSequence = ({
           sx={{
             p: '4px 12px',
             marginLeft: 'auto',
+            minWidth: '70px',
             width: '80px',
             background: '#33A195',
             color: 'white',
@@ -95,7 +114,11 @@ export const TaskSequence = ({
           sx={{ cursor: 'pointer', p: '2px' }}
           onClick={() => removeNode(node)}
         >
-          <DeleteOutlineOutlined />
+          <Image
+            src={DeleteIcon}
+            style={{ height: '18px', width: '18px', marginLeft: '4px' }}
+            alt="delete icon"
+          />
         </Box>
       </Box>
     );
@@ -114,14 +137,48 @@ export const TaskSequence = ({
         ref={treeRef}
         data={selectedOptions}
         idAccessor="uuid"
-        onMove={(node) => console.log(node, treeRef.current)}
+        onMove={(args) => {
+          const currentNodeIndex = args.dragNodes[0].rowIndex as number;
+
+          const data = treeRef.current.props.data;
+
+          const element = data[currentNodeIndex];
+
+          data.splice(currentNodeIndex, 1);
+          data.splice(args.index, 0, element);
+
+          setSelectedOptions([...data]);
+        }}
         disableDrag={(data) => data.generated_by === 'system'}
         width={'100%'}
         indent={32}
+        className="task-tree"
         rowHeight={50}
         overscanCount={1}
         paddingTop={30}
         paddingBottom={10}
+        disableDrop={(node) => {
+          const tree = node.parentNode.tree;
+          const nodes = tree.visibleNodes;
+
+          let runNodeIndex = 0;
+          let testNodeIndex = 0;
+          const runNode = nodes.find((node) => node.data.command === 'dbt run');
+          const testNode = nodes.find(
+            (node) => node.data.command === 'dbt test'
+          );
+
+          if (runNode) {
+            runNodeIndex = tree.idToIndex[runNode.id];
+          }
+          if (testNode) {
+            testNodeIndex = tree.idToIndex[testNode.id];
+          }
+          if (node.index > runNodeIndex && node.index < testNodeIndex)
+            return false;
+
+          return true;
+        }}
       >
         {Node}
       </Tree>
