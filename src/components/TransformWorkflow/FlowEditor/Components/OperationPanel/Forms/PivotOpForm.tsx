@@ -113,6 +113,12 @@ const PivotOpForm = ({
 
     if (node?.type === OPERATION_NODE) {
       setSrcColumns(nodeData.output_cols);
+      setValue(
+        'source_columns',
+        nodeData.output_cols
+          .sort((a: string, b: string) => a.localeCompare(b))
+          .map((col: string) => ({ col: col, is_checked: false }))
+      );
     }
   };
 
