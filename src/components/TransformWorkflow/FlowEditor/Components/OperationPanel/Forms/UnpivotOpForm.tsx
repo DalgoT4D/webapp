@@ -6,6 +6,7 @@ import {
   Button,
   Checkbox,
   FormControlLabel,
+  FormHelperText,
   Typography,
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
@@ -61,7 +62,7 @@ const UnpivotOpForm = ({
     }[];
   };
 
-  const { control, register, handleSubmit, reset, setValue, formState } =
+  const { control, handleSubmit, reset, setValue, setError, formState } =
     useForm<FormProps>({
       defaultValues: {
         unpivot_field_name: 'col_name',
@@ -77,6 +78,7 @@ const UnpivotOpForm = ({
   } = useFieldArray({
     control,
     name: 'unpivot_columns',
+    rules: {},
   });
 
   const fetchAndSetSourceColumns = async () => {
@@ -125,6 +127,15 @@ const UnpivotOpForm = ({
         input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
       };
+
+      // validate form errors
+      if (postData.config.unpivot_columns.length === 0) {
+        setError('unpivot_columns', {
+          type: 'manual',
+          message: 'Atleast one column required to unpivot',
+        });
+        return;
+      }
 
       setLoading(true);
       // api call
@@ -304,6 +315,11 @@ const UnpivotOpForm = ({
             ]),
           ]}
         ></GridTable>
+        {formState.errors?.unpivot_columns?.message && (
+          <FormHelperText sx={{ color: 'red', ml: 2 }}>
+            {formState.errors?.unpivot_columns?.message}
+          </FormHelperText>
+        )}
         <Box sx={{ mb: 2 }}></Box>
         <GridTable
           headers={['Columns to keep in output table']}
