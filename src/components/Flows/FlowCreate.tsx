@@ -42,7 +42,6 @@ type DispConnection = {
 type DeploymentDef = {
   active: boolean;
   name: string;
-  dbtTransform: string;
   tasks: Array<{ uuid: string; seq: string }>;
   connections: Array<any>;
   cron: string | object;
@@ -158,13 +157,13 @@ const FlowCreate = ({
             session,
             `prefect/v1/flows/${flowId}`
           );
+          console.log(data);
           const cronObject = convertCronToString(data.cron);
           reset({
             cron: {
               id: cronObject.schedule,
               label: cronObject.schedule,
             },
-            dbtTransform: data.dbtTransform,
             connections: data.connections
               .sort((c1: any, c2: any) => c1.seq - c2.seq)
               .map((conn: any) => ({
@@ -210,6 +209,7 @@ const FlowCreate = ({
   }, []);
 
   const onSubmit = async (data: any) => {
+    console.log(data);
     try {
       const cronExpression = convertToCronExpression(
         data.cron.id,
@@ -240,18 +240,10 @@ const FlowCreate = ({
           cron: cronExpression,
           name: data.name,
           connections: selectedConns,
-          dbtTransform: data.dbtTransform,
-          transformTasks:
-            tasks && data.dbtTransform === 'yes'
-              ? tasks
-                  .filter(
-                    (task: TransformTask) => task.generated_by === 'system'
-                  )
-                  .map((task: TransformTask) => ({
-                    uuid: task.uuid,
-                    seq: task.seq,
-                  }))
-              : [],
+          transformTasks: tasks.map((task: TransformTask, index) => ({
+            uuid: task.uuid,
+            seq: index + 1,
+          })),
         });
         successToast(
           `Pipeline ${data.name} updated successfully`,
@@ -264,19 +256,11 @@ const FlowCreate = ({
         const response = await httpPost(session, 'prefect/v1/flows/', {
           name: data.name,
           connections: selectedConns,
-          dbtTransform: data.dbtTransform,
           cron: cronExpression,
-          transformTasks:
-            tasks && data.dbtTransform === 'yes'
-              ? tasks
-                  .filter(
-                    (task: TransformTask) => task.generated_by === 'system'
-                  )
-                  .map((task: TransformTask) => ({
-                    uuid: task.uuid,
-                    seq: task.seq,
-                  }))
-              : [],
+          transformTasks: tasks.map((task: TransformTask, index) => ({
+            uuid: task.uuid,
+            seq: index + 1,
+          })),
         });
         successToast(
           `Pipeline ${response.name} created successfully`,
@@ -334,12 +318,12 @@ const FlowCreate = ({
           sx={{
             marginTop: '50px',
             backgroundColor: 'white',
-            padding: '33px 50px 33px 50px',
+            padding: '33px 50px 33px 30px',
             display: 'flex',
             height: '500px',
           }}
         >
-          <Box sx={{ width: '60%', overflow: 'auto' }}>
+          <Box sx={{ width: '60%', overflow: 'auto', pl: 4 }}>
             <Typography
               variant="h5"
               sx={{ marginBottom: '30px' }}
