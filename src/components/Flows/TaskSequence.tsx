@@ -150,6 +150,7 @@ export const TaskSequence = ({
         indent={32}
         className="task-tree"
         rowHeight={50}
+        height={field.value.length * 40}
         overscanCount={1}
         paddingTop={30}
         paddingBottom={10}
