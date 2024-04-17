@@ -39,12 +39,11 @@ const RenameColumnOp = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, getValues, formState } =
-    useForm({
-      defaultValues: {
-        config: [{ old: '', new: '' }],
-      },
-    });
+  const { control, handleSubmit, reset, getValues, formState } = useForm({
+    defaultValues: {
+      config: [{ old: '', new: '' }],
+    },
+  });
 
   const { config } = getValues();
   // Include this for multi-row input
@@ -55,6 +54,13 @@ const RenameColumnOp = ({
       minLength: { value: 2, message: 'Alteast one column is required' },
     },
   });
+
+  useEffect(() => {
+    if (fields.length > 0) {
+      const lastInputId = `#config${fields.length - 1}old`;
+      document.querySelector(lastInputId)?.focus();
+    }
+  }, [fields]);
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -183,6 +189,11 @@ const RenameColumnOp = ({
               render={({ field }) => (
                 <Autocomplete
                   {...field}
+                  id={`config${index}old`}
+                  onChange={(data: any) => {
+                    field.onChange(data);
+                    document.querySelector(`#config${index}new`)?.focus();
+                  }}
                   disabled={action === 'view'}
                   disableClearable
                   fieldStyle="none"
@@ -191,19 +202,25 @@ const RenameColumnOp = ({
                 />
               )}
             />,
-            <Input
-              fieldStyle="none"
+            <Controller
               key={field.new + index}
-              sx={{ padding: '0' }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  append({ old: '', new: '' });
-                }
-              }}
+              control={control}
               name={`config.${index}.new`}
-              register={register}
-              disabled={action === 'view'}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id={`config${index}new`}
+                  fieldStyle="none"
+                  sx={{ padding: '0' }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      append({ old: '', new: '' });
+                    }
+                  }}
+                  disabled={action === 'view'}
+                />
+              )}
             />,
           ])}
         ></GridTable>
