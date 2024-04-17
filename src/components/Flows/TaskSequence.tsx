@@ -24,6 +24,8 @@ export const TaskSequence = ({
     TransformTask[]
   >([]);
 
+  console.log(autocompleteOptions);
+
   useEffect(() => {
     const selectedUuids = field.value.map((task: TransformTask) => task.uuid);
     setAutocompleteOptions(
@@ -31,7 +33,7 @@ export const TaskSequence = ({
     );
   }, [field.value, initialOptions]);
 
-  const handleSelect = (_event: any, value: any) => {
+  const handleSelect = (value: any) => {
     if (value) {
       const selectedOptions = field.value;
       const newSelectedOptions = [...selectedOptions, value];
