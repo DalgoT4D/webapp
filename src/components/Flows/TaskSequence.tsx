@@ -34,28 +34,18 @@ export const TaskSequence = ({
   const handleSelect = (_event: any, value: any) => {
     if (value) {
       const selectedOptions = field.value;
-      const runNodeIndex = selectedOptions.findIndex(
-        (node) => node.slug === 'dbt-run'
-      );
-      selectedOptions.splice(runNodeIndex + 1, 0, value);
-      const newSelectedOptions = [...selectedOptions];
-      const newAutocompleteOptions = autocompleteOptions.filter(
-        (option) => option !== value
-      );
+      const newSelectedOptions = [...selectedOptions, value];
 
-      setAutocompleteOptions(newAutocompleteOptions);
       field.onChange(newSelectedOptions);
     }
   };
   const removeNode = (node: NodeApi<TransformTask>) => {
     const selectedOptions = field.value;
-    const newAutocompleteOptions = [...autocompleteOptions, node.data];
 
     const newSelectedOptions = selectedOptions.filter(
       (option) => option.uuid !== node.data.uuid
     );
 
-    setAutocompleteOptions(newAutocompleteOptions);
     field.onChange(newSelectedOptions);
   };
 
@@ -72,18 +62,17 @@ export const TaskSequence = ({
           fontWeight: 600,
         }}
       >
-        {node.data.generated_by !== 'system' && (
-          <Image
-            src={DragIcon}
-            style={{
-              margin: '4px',
-              position: 'absolute',
-              left: '-20px',
-              cursor: 'grab',
-            }}
-            alt="drop icon"
-          />
-        )}
+        <Image
+          src={DragIcon}
+          style={{
+            margin: '4px',
+            position: 'absolute',
+            left: '-20px',
+            cursor: 'grab',
+          }}
+          alt="drop icon"
+        />
+
         <Box
           sx={{
             borderRadius: '6px 0px 0px 6px',
@@ -139,18 +128,26 @@ export const TaskSequence = ({
         data={field.value}
         idAccessor="uuid"
         onMove={(args) => {
+          console.time('start');
           const currentNodeIndex = args.dragNodes[0].rowIndex as number;
-
           const data = treeRef.current.props.data;
-
           const element = data[currentNodeIndex];
 
-          data.splice(currentNodeIndex, 1);
-          data.splice(args.index, 0, element);
+          if (currentNodeIndex < args.index) {
+            for (let i = currentNodeIndex; i < args.index; i++) {
+              data[i] = data[i + 1];
+            }
+          } else {
+            for (let i = currentNodeIndex; i > args.index; i--) {
+              data[i] = data[i - 1];
+            }
+          }
 
-          field.onChange([...data]);
+          data[args.index] = element;
+
+          field.onChange(data);
+          console.timeEnd('start');
         }}
-        disableDrag={(data) => data.generated_by === 'system'}
         width={'100%'}
         indent={32}
         className="task-tree"
@@ -158,28 +155,6 @@ export const TaskSequence = ({
         overscanCount={1}
         paddingTop={30}
         paddingBottom={10}
-        disableDrop={(node) => {
-          const tree = node.parentNode.tree;
-          const nodes = tree.visibleNodes;
-
-          let runNodeIndex = 0;
-          let testNodeIndex = 0;
-          const runNode = nodes.find((node) => node.data.command === 'dbt run');
-          const testNode = nodes.find(
-            (node) => node.data.command === 'dbt test'
-          );
-
-          if (runNode) {
-            runNodeIndex = tree.idToIndex[runNode.id];
-          }
-          if (testNode) {
-            testNodeIndex = tree.idToIndex[testNode.id];
-          }
-          if (node.index > runNodeIndex && node.index < testNodeIndex)
-            return false;
-
-          return true;
-        }}
       >
         {Node}
       </Tree>
