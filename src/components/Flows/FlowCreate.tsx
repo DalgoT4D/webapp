@@ -217,7 +217,6 @@ const FlowCreate = ({
   }, []);
 
   const onSubmit = async (data: any) => {
-    console.log(data);
     try {
       const cronExpression = convertToCronExpression(
         data.cron.id,
