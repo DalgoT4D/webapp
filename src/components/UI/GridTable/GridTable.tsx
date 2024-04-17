@@ -16,7 +16,7 @@ interface GridTableProps {
   removeItem?: any;
 }
 
-const castGridStyles: { [key: string]: SxProps } = {
+export const castGridStyles: { [key: string]: SxProps } = {
   container: {
     color: '#5E5E5E',
     borderSpacing: '0px',
