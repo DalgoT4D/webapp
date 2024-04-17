@@ -24,8 +24,6 @@ export const TaskSequence = ({
     TransformTask[]
   >([]);
 
-  console.log(autocompleteOptions);
-
   useEffect(() => {
     const selectedUuids = field.value.map((task: TransformTask) => task.uuid);
     setAutocompleteOptions(
@@ -130,7 +128,6 @@ export const TaskSequence = ({
         data={field.value}
         idAccessor="uuid"
         onMove={(args) => {
-          console.time('start');
           const currentNodeIndex = args.dragNodes[0].rowIndex as number;
           const data = treeRef.current.props.data;
           const element = data[currentNodeIndex];
@@ -148,7 +145,6 @@ export const TaskSequence = ({
           data[args.index] = element;
 
           field.onChange(data);
-          console.timeEnd('start');
         }}
         width={'100%'}
         indent={32}
