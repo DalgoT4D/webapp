@@ -71,7 +71,7 @@ export const List = ({
                         key={idx}
                         align={
                           headers.length + 1 === row.length &&
-                          idx === row.length - 1
+                            idx === row.length - 1
                             ? 'right'
                             : 'left'
                         }

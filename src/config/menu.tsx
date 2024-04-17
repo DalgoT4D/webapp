@@ -1,4 +1,5 @@
 import AnalysisIcon from '@/assets/icons/analysis';
+import UsageIcon from '@/assets/icons/UsageIcon';
 import IngestIcon from '@/assets/icons/ingest';
 import TransformIcon from '@/assets/icons/transform';
 import PipelineIcon from '@/assets/icons/pipeline';
@@ -33,7 +34,7 @@ export const sideMenu: MenuOption[] = [
     index: 1.1,
     title: 'Usage',
     path: '/analysis/usage',
-    icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
+    icon: (selected: boolean) => <UsageIcon fill={getColor(selected)} />,
     parent: 1,
     className: 'usage_walkthrough',
   },

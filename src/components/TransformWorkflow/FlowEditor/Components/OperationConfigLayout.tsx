@@ -1,7 +1,10 @@
 import {
+  Backdrop,
   Box,
+  CircularProgress,
   Divider,
   IconButton,
+  LinearProgress,
   List,
   ListItemButton,
   SxProps,
@@ -34,6 +37,8 @@ import {
   CASEWHEN_OP,
   UNION_OP,
   FLATTEN_JSON_OP,
+  PIVOT_OP,
+  UNPIVOT_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -59,6 +64,8 @@ import UnionTablesOpForm from './OperationPanel/Forms/UnionTablesOpForm';
 import FlattenJsonOpForm from './OperationPanel/Forms/FlattenJsonOpForm';
 import { generateDummyOperationlNode } from './dummynodes';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
+import PivotOpForm from './OperationPanel/Forms/PivotOpForm';
+import UnpivotOpForm from './OperationPanel/Forms/UnpivotOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -74,6 +81,7 @@ export interface OperationFormProps {
   clearAndClosePanel: (...args: any) => void;
   dummyNodeId: string;
   action: 'create' | 'view' | 'edit';
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const operationComponentMapping: any = {
@@ -90,6 +98,8 @@ const operationComponentMapping: any = {
   [CASEWHEN_OP]: CaseWhenOpForm,
   [UNION_OP]: UnionTablesOpForm,
   [FLATTEN_JSON_OP]: FlattenJsonOpForm,
+  [PIVOT_OP]: PivotOpForm,
+  [UNPIVOT_OP]: UnpivotOpForm,
 };
 
 const OperationForm = ({
@@ -100,6 +110,7 @@ const OperationForm = ({
   clearAndClosePanel,
   dummyNodeId,
   action,
+  setLoading,
 }: OperationFormProps) => {
   if (operation === null || operation === undefined) {
     return null;
@@ -115,6 +126,7 @@ const OperationForm = ({
         clearAndClosePanel={clearAndClosePanel}
         dummyNodeId={dummyNodeId}
         action={action}
+        setLoading={setLoading}
       />
     );
   }
@@ -132,6 +144,7 @@ const OperationForm = ({
     clearAndClosePanel,
     dummyNodeId,
     action,
+    setLoading,
   };
 
   return <Form {...FormProps} />;
@@ -146,6 +159,7 @@ const OperationConfigLayout = ({
   const { canvasNode, setCanvasNode } = useCanvasNode();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
+  const [isPanelLoading, setIsPanelLoading] = useState<boolean>(false);
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
   const panelOpFormState = useRef<'create' | 'view' | 'edit'>('view');
@@ -203,10 +217,12 @@ const OperationConfigLayout = ({
       setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
       if (['view', 'edit'].includes(panelOpFormState.current)) {
-        const selectOp = canvasNode?.data as OperationNodeData;
-        setSelectedOp(
-          operations.find((op) => op.slug === selectOp.config?.type)
-        );
+        const nodeData = canvasNode?.data as OperationNodeData;
+        if (!nodeData?.is_last_in_chain) {
+          setSelectedOp(
+            operations.find((op) => op.slug === nodeData.config?.type)
+          );
+        }
       }
     }
 
@@ -344,6 +360,7 @@ const OperationConfigLayout = ({
             );
             return (
               <Tooltip
+                key={op.slug}
                 title={
                   canSelectOperation
                     ? ''
@@ -440,8 +457,13 @@ const OperationConfigLayout = ({
       type: 'update-canvas-node',
       data: { id: opNodeData.id, type: OPERATION_NODE },
     });
-    setShowFunctionsList(false);
-    panelOpFormState.current = 'edit';
+    // if its end of the chain continue to chain more or just close the operation panel
+    if (opNodeData?.is_last_in_chain) {
+      setShowFunctionsList(false);
+      panelOpFormState.current = 'edit';
+    } else {
+      handleClosePanel();
+    }
   };
 
   const panelState = selectedOp
@@ -462,10 +484,23 @@ const OperationConfigLayout = ({
           flexDirection: 'column',
           justifyContent: 'space-between',
           height: '100%',
-          gap: '5px',
+          // gap: '5px',
         }}
       >
-        <PanelHeader />
+        <Box>
+          <PanelHeader />
+          {isPanelLoading && (
+            <LinearProgress
+              sx={{
+                position: 'sticky',
+                top: '0%',
+                width: '100%',
+                color: '#33A195',
+                overflow: 'none',
+              }}
+            />
+          )}
+        </Box>
         <Box
           ref={contentRef}
           sx={{
@@ -474,15 +509,35 @@ const OperationConfigLayout = ({
           }}
         >
           {panelState === 'op-form' ? (
-            <OperationForm
-              sx={{}}
-              operation={selectedOp ? selectedOp : { slug: '', label: '' }}
-              node={canvasNode}
-              continueOperationChain={prepareForNextOperation}
-              clearAndClosePanel={handleClosePanel}
-              dummyNodeId={dummyNodeIdRef.current || ''}
-              action={panelOpFormState.current}
-            />
+            <Box
+              sx={{
+                position: 'relative', // Add this line
+              }}
+            >
+              <Backdrop
+                sx={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  position: 'absolute', // Position the Backdrop over the Box
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0, // Cover the entire Box
+                  zIndex: (theme) => theme.zIndex.drawer + 1,
+                }}
+                open={isPanelLoading}
+                onClick={() => {}}
+              ></Backdrop>
+              <OperationForm
+                sx={{ marginBottom: '10px' }}
+                operation={selectedOp ? selectedOp : { slug: '', label: '' }}
+                node={canvasNode}
+                continueOperationChain={prepareForNextOperation}
+                clearAndClosePanel={handleClosePanel}
+                dummyNodeId={dummyNodeIdRef.current || ''}
+                action={panelOpFormState.current}
+                setLoading={setIsPanelLoading}
+              />
+            </Box>
           ) : panelState === 'op-list' ? (
             <OperationList
               sx={{

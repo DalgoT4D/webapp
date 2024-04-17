@@ -1,11 +1,10 @@
 import { Box, Tooltip, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { Tree } from 'react-arborist';
+import { Tree, NodeApi } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@/assets/icons/datatable.svg';
 import { DbtSourceModel } from './Canvas';
-import { NodeApi } from 'react-arborist';
 import AddIcon from '@mui/icons-material/Add';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import useResizeObserver from 'use-resize-observer';
@@ -151,7 +150,7 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
       >
         <Tree
           childrenAccessor={(d: any) => d.children}
-          openByDefault={true}
+          openByDefault={false}
           data={projectTreeData}
           height={height}
           width={width}

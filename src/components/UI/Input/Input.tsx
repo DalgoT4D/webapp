@@ -11,6 +11,11 @@ const StyledTextField = styled(TextField)(() => ({
     fontWeight: 600,
     borderRadius: '6px',
   },
+
+  '& .MuiOutlinedInput-root.Mui-error': {
+    border: '1px solid red',
+  },
+
   '& .MuiInputBase-input::placeholder': {
     color: '#97A2B1',
     opacity: 1,
@@ -54,6 +59,7 @@ interface InputProps extends Omit<TextFieldProps, 'variant'> {
 }
 
 export const Input: React.FC<InputProps> = ({
+  id,
   label,
   register,
   name,
@@ -107,10 +113,10 @@ export const Input: React.FC<InputProps> = ({
             inputProps: { step: 'any' },
           }}
           {...rest}
-          id={name}
+          id={id ? id : name}
         />
       ) : (
-        <InputBox {...rest} id={name} />
+        <InputBox {...rest} id={id ? id : name} />
       )}
     </Box>
   );

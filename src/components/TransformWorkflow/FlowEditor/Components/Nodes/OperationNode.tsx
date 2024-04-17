@@ -46,7 +46,7 @@ export function OperationNode(node: OperationNodeType) {
     setCanvasNode(node);
     setCanvasAction({
       type: 'open-opconfig-panel',
-      data: isDeletable ? 'edit' : 'view',
+      data: 'edit',
     });
   };
 
