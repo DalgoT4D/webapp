@@ -59,6 +59,7 @@ interface InputProps extends Omit<TextFieldProps, 'variant'> {
 }
 
 export const Input: React.FC<InputProps> = ({
+  id,
   label,
   register,
   name,
@@ -112,10 +113,10 @@ export const Input: React.FC<InputProps> = ({
             inputProps: { step: 'any' },
           }}
           {...rest}
-          id={name}
+          id={id ? id : name}
         />
       ) : (
-        <InputBox {...rest} id={name} />
+        <InputBox {...rest} id={id ? id : name} />
       )}
     </Box>
   );
