@@ -1,7 +1,14 @@
 import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  FormHelperText,
+  Grid,
+  SxProps,
+  Typography,
+} from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -48,12 +55,12 @@ const GroupByOpForm = ({
   clearAndClosePanel,
   dummyNodeId,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
-  const [isLoading, setIsLoading] = useState(true);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -70,18 +77,20 @@ const GroupByOpForm = ({
     }[];
   };
 
-  const { control, register, handleSubmit, reset, watch } = useForm<FormProps>({
-    defaultValues: {
-      columns: [{ col: '' }],
-      aggregate_on: [
-        {
-          metric: '',
-          aggregate_func: { id: '', label: '' },
-          output_column_name: '',
-        },
-      ],
-    },
-  });
+  const { control, handleSubmit, reset, watch, formState } = useForm<FormProps>(
+    {
+      defaultValues: {
+        columns: [{ col: '' }],
+        aggregate_on: [
+          {
+            metric: '',
+            aggregate_func: { id: '', label: '' },
+            output_column_name: '',
+          },
+        ],
+      },
+    }
+  );
   // Include this for multi-row input
   const {
     fields: dimensionFields,
@@ -90,6 +99,9 @@ const GroupByOpForm = ({
   } = useFieldArray({
     control,
     name: 'columns',
+    rules: {
+      minLength: { value: 2, message: 'Atleast 1 column is required' },
+    },
   });
   const {
     fields: aggregateFields,
@@ -129,10 +141,7 @@ const GroupByOpForm = ({
       const dimensionColumns = data.columns
         .filter((col: any) => (col.col ? true : false))
         .map((col: any) => col.col);
-      if (dimensionColumns.length === 0) {
-        errorToast('Please select dimensions to groupby', [], globalContext);
-        return;
-      }
+
       const postData: any = {
         op_type: operation.slug,
         source_columns: dimensionColumns,
@@ -153,16 +162,8 @@ const GroupByOpForm = ({
         target_model_uuid: nodeData?.target_model_id || '',
       };
 
-      if (postData.config.aggregate_on.length === 0) {
-        errorToast(
-          'Please fill all fields while adding aggregation',
-          [],
-          globalContext
-        );
-        return;
-      }
-
       // api call
+      setLoading(true);
       let operationNode: any;
       if (action === 'create') {
         operationNode = await httpPost(
@@ -188,11 +189,14 @@ const GroupByOpForm = ({
     } catch (error: any) {
       console.log(error);
       errorToast(error?.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config, prev_source_columns }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -221,6 +225,8 @@ const GroupByOpForm = ({
       });
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -290,14 +296,14 @@ const GroupByOpForm = ({
                   name={`columns.${index}.col`}
                   render={({ field }) => (
                     <Autocomplete
+                      {...field}
                       disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns?.filter(
                         (option) =>
                           !columns.map((col) => col.col).includes(option)
                       )}
-                      value={field.value}
-                      onChange={(e, data) => {
+                      onChange={(data: any) => {
                         field.onChange(data);
                         if (data) appendDimension({ col: '' });
                         else removeDimension(index + 1);
@@ -309,6 +315,11 @@ const GroupByOpForm = ({
             </Fragment>
           ))}
         </Grid>
+        {formState.errors.columns && (
+          <FormHelperText sx={{ color: 'red', ml: 3 }}>
+            {formState.errors.columns.root?.message}
+          </FormHelperText>
+        )}
 
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
           {aggregateFields.map((field, index) => (
@@ -321,15 +332,15 @@ const GroupByOpForm = ({
               <Controller
                 key={`${field.id}_metric`}
                 control={control}
+                rules={{ required: 'Metric is required' }}
                 name={`aggregate_on.${index}.metric`}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Autocomplete
+                    {...field}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
                     disabled={action === 'view'}
                     options={srcColumns}
-                    value={field.value}
-                    onChange={(e, data) => {
-                      field.onChange(data);
-                    }}
                     label="Select metric*"
                     fieldStyle="transformation"
                   />
@@ -339,31 +350,41 @@ const GroupByOpForm = ({
               <Controller
                 key={`${field.id}_aggregate_func`}
                 control={control}
+                rules={{
+                  validate: (value) =>
+                    value.id !== '' || 'Aggregate function is required',
+                }}
                 name={`aggregate_on.${index}.aggregate_func`}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Autocomplete
+                    {...field}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
                     disabled={action === 'view'}
                     options={AggregateOperations}
                     isOptionEqualToValue={(option: any, value: any) =>
                       option?.id === value?.id
                     }
-                    value={field.value}
-                    onChange={(e, data) => {
-                      if (data) field.onChange(data);
-                    }}
                     label="Select aggregation*"
                     fieldStyle="transformation"
                   />
                 )}
               />
               <Box sx={{ m: 2 }} />
-              <Input
-                fieldStyle="transformation"
-                label="Output Column Name"
+              <Controller
+                control={control}
+                rules={{ required: 'Output column name is required' }}
                 name={`aggregate_on.${index}.output_column_name`}
-                register={register}
-                disabled={action === 'view'}
-                required
+                render={({ field, fieldState }) => (
+                  <Input
+                    {...field}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    fieldStyle="transformation"
+                    label="Output Column Name*"
+                    disabled={action === 'view'}
+                  />
+                )}
               />
               <Box sx={{ m: 2 }} />
               {index === aggregateFields.length - 1 ? (
@@ -375,7 +396,7 @@ const GroupByOpForm = ({
                   disabled={action === 'view'}
                   onClick={(event) =>
                     appendAggregate({
-                      metric: 'col',
+                      metric: '',
                       aggregate_func: { id: '', label: '' },
                       output_column_name: '',
                     })

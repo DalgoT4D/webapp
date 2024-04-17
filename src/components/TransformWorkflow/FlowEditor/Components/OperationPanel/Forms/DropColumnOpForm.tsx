@@ -1,16 +1,15 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button, Grid, Typography } from '@mui/material';
+import { Box, Button, FormHelperText, Grid, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
-import { GlobalContext } from '@/contexts/ContextProvider';
+
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import InputAdornment from '@mui/material/InputAdornment';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import Input from '@/components/UI/Input/Input';
@@ -27,10 +26,11 @@ const DropColumnOp = ({
   sx,
   continueOperationChain,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
-  const globalContext = useContext(GlobalContext);
+  const [valid, setValid] = useState(true);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [column, setColumn] = useState('');
@@ -71,6 +71,10 @@ const DropColumnOp = ({
 
   const handleSave = async () => {
     try {
+      if (selectedColumns.length < 1) {
+        setValid(false);
+        return;
+      }
       const postData = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -80,14 +84,8 @@ const DropColumnOp = ({
         target_model_uuid: nodeData.target_model_id || '',
       };
 
-      // validations
-      if (selectedColumns.length === 0) {
-        console.log('Please select columns to drop');
-        errorToast('Please select columns to drop', [], globalContext);
-        return;
-      }
-
       // api call
+      setLoading(true);
       let operationNode: any;
       if (action === 'create') {
         operationNode = await httpPost(
@@ -111,11 +109,14 @@ const DropColumnOp = ({
       continueOperationChain(operationNode);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -131,6 +132,8 @@ const DropColumnOp = ({
       setSelectedColumns(columns);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -188,14 +191,20 @@ const DropColumnOp = ({
               .filter((col) => !selectedColumns.includes(col))
               .sort((a, b) => a.localeCompare(b))}
             label="Select Column to Drop"
-            onChange={(e, value: any) => {
+            onChange={(value: any) => {
               if (value) {
                 handleAddColumn(value);
                 setColumn('');
+                setValid(true);
               }
             }}
           />
         </Grid>
+        {!valid && (
+          <FormHelperText sx={{ color: 'red', ml: 3 }}>
+            Please select atleast 1 column
+          </FormHelperText>
+        )}
         <Grid item xs={12}>
           <Button
             onClick={handleSave}

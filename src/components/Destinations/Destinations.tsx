@@ -33,20 +33,18 @@ interface Warehouse {
   wtype: string;
   icon: string;
   connectionConfiguration: ConnectionConfiguration;
+  airbyteDockerRepository: string;
+  tag: string
 }
 
 export const Destinations = () => {
-  const { data, isLoading, mutate } = useSWR(`organizations/warehouses`, {
-    revalidateOnFocus: false,
-  });
+  const { data, isLoading, mutate } = useSWR(`organizations/warehouses`, { revalidateOnFocus: false });
   const { data: session }: any = useSession();
   const [warehouse, setWarehouse] = useState<Warehouse>();
   const globalContext = useContext(GlobalContext);
-  const [showCreateWarehouseDialog, setShowCreateWarehouseDialog] =
-    useState(false);
+  const [showCreateWarehouseDialog, setShowCreateWarehouseDialog] = useState(false);
   const [showEditWarehouseDialog, setShowEditWarehouseDialog] = useState(false);
-  const [showDeleteWarehouseDialog, setShowDeleteWarehouseDialog] =
-    useState(false);
+  const [showDeleteWarehouseDialog, setShowDeleteWarehouseDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
@@ -54,6 +52,8 @@ export const Destinations = () => {
       const w_house = data.warehouses[0];
       setWarehouse({
         airbyteWorkspaceId: w_house.airbyte_destination.workspaceId,
+        airbyteDockerRepository: w_house.airbyte_docker_repository,
+        tag: w_house.airbyte_docker_image_tag,
         destinationId: w_house.airbyte_destination.destinationId,
         destinationDefinitionId:
           w_house.airbyte_destination.destinationDefinitionId,
@@ -65,8 +65,6 @@ export const Destinations = () => {
       } as Warehouse);
     }
   }, [data]);
-
-  console.log('current org', globalContext?.CurrentOrg.state);
 
   if (isLoading) {
     return <CircularProgress />;
@@ -128,6 +126,18 @@ export const Destinations = () => {
                   {warehouse.airbyteWorkspaceId}
                 </TableCell>
               </TableRow>
+              <TableRow>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.airbyteDockerRepository}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Version</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.tag}
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </>
@@ -161,36 +171,36 @@ export const Destinations = () => {
               </TableRow>
               {warehouse.connectionConfiguration.loading_method.method ===
                 'GCS Staging' && (
-                <>
-                  <TableRow>
-                    <TableCell>GCS Bucket &amp; Path</TableCell>
-                    <TableCell
-                      align="right"
-                      data-testid="gcs_bucket_name_and_path"
-                    >
-                      {
-                        warehouse.connectionConfiguration.loading_method
-                          .gcs_bucket_name
-                      }{' '}
-                      /{' '}
-                      {
-                        warehouse.connectionConfiguration.loading_method
-                          .gcs_bucket_path
-                      }
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>GCS Temp Files</TableCell>
-                    <TableCell align="right">
-                      {
-                        warehouse.connectionConfiguration.loading_method[
+                  <>
+                    <TableRow>
+                      <TableCell>GCS Bucket &amp; Path</TableCell>
+                      <TableCell
+                        align="right"
+                        data-testid="gcs_bucket_name_and_path"
+                      >
+                        {
+                          warehouse.connectionConfiguration.loading_method
+                            .gcs_bucket_name
+                        }{' '}
+                        /{' '}
+                        {
+                          warehouse.connectionConfiguration.loading_method
+                            .gcs_bucket_path
+                        }
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>GCS Temp Files</TableCell>
+                      <TableCell align="right">
+                        {
+                          warehouse.connectionConfiguration.loading_method[
                           'keep_files_in_gcs-bucket'
-                        ]
-                      }
-                    </TableCell>
-                  </TableRow>
-                </>
-              )}
+                          ]
+                        }
+                      </TableCell>
+                    </TableRow>
+                  </>
+                )}
               <TableRow>
                 <TableCell>Transformation Priority</TableCell>
                 <TableCell align="right">
@@ -201,6 +211,18 @@ export const Destinations = () => {
                 <TableCell>Airbyte Workspace ID</TableCell>
                 <TableCell align="right" data-testid="abworkspace">
                   {warehouse.airbyteWorkspaceId}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.airbyteDockerRepository}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Version</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.tag}
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -261,6 +283,18 @@ export const Destinations = () => {
                 <TableCell>Airbyte Workspace ID</TableCell>
                 <TableCell align="right" data-testid="abworkspace">
                   {warehouse.airbyteWorkspaceId}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.airbyteDockerRepository}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ minWidth: 300 }}>Docker Image Version</TableCell>
+                <TableCell align="right" data-testid="abworkspace">
+                  {warehouse.tag}
                 </TableCell>
               </TableRow>
             </TableBody>

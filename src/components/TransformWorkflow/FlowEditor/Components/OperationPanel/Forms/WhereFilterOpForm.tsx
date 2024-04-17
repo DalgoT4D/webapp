@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import {
@@ -17,8 +17,6 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
-import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
@@ -51,11 +49,11 @@ const WhereFilterOpForm = ({
   clearAndClosePanel,
   dummyNodeId,
   action,
+  setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -75,7 +73,7 @@ const WhereFilterOpForm = ({
     sql_snippet: string;
   };
 
-  const { control, register, handleSubmit, reset, watch } = useForm<FormProps>({
+  const { control, handleSubmit, reset, watch } = useForm<FormProps>({
     defaultValues: {
       filterCol: '',
       logicalOp: { id: '', label: '' },
@@ -112,36 +110,6 @@ const WhereFilterOpForm = ({
 
   const handleSave = async (data: FormProps) => {
     try {
-      if (data.advanceFilter === 'yes' && data.sql_snippet.length < 4) {
-        errorToast('Please enter the SQL snippet', [], globalContext);
-        return;
-      }
-
-      if (data.advanceFilter === 'no') {
-        if (!data.filterCol) {
-          errorToast(
-            'Please select the column to filter on',
-            [],
-            globalContext
-          );
-          return;
-        }
-
-        if (!data.logicalOp.id) {
-          errorToast('Please select the operation', [], globalContext);
-          return;
-        }
-
-        if (!data.operand.col_val && !data.operand.const_val) {
-          errorToast(
-            'Please select either a column or a value',
-            [],
-            globalContext
-          );
-          return;
-        }
-      }
-
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -168,6 +136,7 @@ const WhereFilterOpForm = ({
       };
 
       // api call
+      setLoading(true);
       let operationNode: any;
       if (action === 'create') {
         operationNode = await httpPost(
@@ -192,11 +161,14 @@ const WhereFilterOpForm = ({
       reset();
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAndSetConfigForEdit = async () => {
     try {
+      setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
@@ -238,6 +210,8 @@ const WhereFilterOpForm = ({
       });
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -261,17 +235,20 @@ const WhereFilterOpForm = ({
           <Box>
             <Controller
               control={control}
+              key="filterCol"
               name="filterCol"
-              render={({ field }) => (
+              rules={{
+                required: advanceFilter === 'no' && 'Column is required',
+              }}
+              render={({ field, fieldState }) => (
                 <Autocomplete
+                  {...field}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
                   options={srcColumns}
                   fieldStyle="transformation"
                   disabled={isNonAdancedFieldsDisabled}
-                  value={field.value}
-                  onChange={(e, data) => {
-                    field.onChange(data);
-                  }}
-                  label="Select column"
+                  label="Select column*"
                 />
               )}
             />
@@ -279,18 +256,23 @@ const WhereFilterOpForm = ({
             <Controller
               control={control}
               name="logicalOp"
-              render={({ field }) => (
+              rules={{
+                validate: (value) =>
+                  advanceFilter !== 'no' ||
+                  value.id !== '' ||
+                  'Operation is required',
+              }}
+              render={({ field, fieldState }) => (
                 <Autocomplete
+                  {...field}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
                   options={LogicalOperators.filter((op) => op.id !== 'between')}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
                   }
                   disabled={isNonAdancedFieldsDisabled}
-                  value={field.value}
-                  onChange={(e, data) => {
-                    if (data) field.onChange(data);
-                  }}
-                  label="Select operation"
+                  label="Select operation*"
                   fieldStyle="transformation"
                 />
               )}
@@ -329,29 +311,43 @@ const WhereFilterOpForm = ({
             {radioValue === 'col' ? (
               <Controller
                 control={control}
+                rules={{
+                  required: advanceFilter === 'no' && 'Column is required',
+                }}
+                key="operand.col_val"
                 name="operand.col_val"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Autocomplete
+                    {...field}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
                     fieldStyle="transformation"
                     options={srcColumns}
                     disabled={isNonAdancedFieldsDisabled}
-                    value={field.value}
-                    onChange={(e, data) => {
-                      field.onChange(data);
-                    }}
-                    placeholder="Select column"
+                    placeholder="Select column*"
                   />
                 )}
               />
             ) : (
-              <Input
-                fieldStyle="transformation"
-                label=""
+              <Controller
+                control={control}
+                key="operand.const_val"
                 name="operand.const_val"
-                register={register}
-                sx={{ padding: '0' }}
-                placeholder="Enter the value"
-                disabled={isNonAdancedFieldsDisabled}
+                rules={{
+                  required: advanceFilter === 'no' && 'Value is required',
+                }}
+                render={({ field, fieldState }) => (
+                  <Input
+                    {...field}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    fieldStyle="transformation"
+                    label=""
+                    sx={{ padding: '0' }}
+                    placeholder="Enter the value"
+                    disabled={isNonAdancedFieldsDisabled}
+                  />
+                )}
               />
             )}
             <Box sx={{ m: 2 }} />
@@ -391,17 +387,27 @@ const WhereFilterOpForm = ({
             </Box>
             <Box sx={{ m: 2 }} />
             {advanceFilter === 'yes' && (
-              <Input
-                fieldStyle="transformation"
-                label=""
+              <Controller
+                control={control}
                 name="sql_snippet"
-                register={register}
-                sx={{ padding: '0' }}
-                placeholder="Enter the value"
-                type="text"
-                multiline
-                rows={4}
-                disabled={isAdvanceFieldsDisabled}
+                rules={{
+                  required: 'Value is required',
+                }}
+                render={({ field, fieldState }) => (
+                  <Input
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    fieldStyle="transformation"
+                    label=""
+                    {...field}
+                    sx={{ padding: '0' }}
+                    placeholder="Enter the value"
+                    type="text"
+                    multiline
+                    rows={4}
+                    disabled={isAdvanceFieldsDisabled}
+                  />
+                )}
               />
             )}
           </Box>
