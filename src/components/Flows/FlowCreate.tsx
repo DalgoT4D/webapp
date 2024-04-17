@@ -42,7 +42,7 @@ type DispConnection = {
 type DeploymentDef = {
   active: boolean;
   name: string;
-  tasks: Array<{ uuid: string; seq: string }>;
+  tasks: Array<TransformTask>;
   connections: Array<any>;
   cron: string | object;
   cronDaysOfWeek: Array<AutoCompleteOption>;
@@ -91,7 +91,7 @@ const FlowCreate = ({
       active: true,
       name: '',
       connections: [],
-      tasks: [],
+      tasks: tasks.filter((task) => task.generated_by === 'system'),
       cron: '',
       cronDaysOfWeek: [],
       cronTimeOfDay: '',
@@ -156,8 +156,11 @@ const FlowCreate = ({
             session,
             `prefect/v1/flows/${flowId}`
           );
-          console.log(data);
-          const uuids = data.transformTasks.map((task) => task.uuid);
+
+          const uuidOrder = data.transformTasks.reduce((acc: any, obj: any) => {
+            acc[obj.uuid] = obj.seq;
+            return acc;
+          }, {});
 
           const cronObject = convertCronToString(data.cron);
 
@@ -174,7 +177,9 @@ const FlowCreate = ({
               })),
             active: data.isScheduleActive,
             name: data.name,
-            tasks: tasks.filter((obj) => uuids.includes(obj.uuid)),
+            tasks: tasks
+              .filter((obj) => uuidOrder.hasOwnProperty(obj.uuid))
+              .sort((a, b) => uuidOrder[a.uuid] - uuidOrder[b.uuid]),
             cronDaysOfWeek: cronObject.daysOfWeek.map((day: string) => ({
               id: day,
               label: WEEKDAYS[day],
@@ -327,7 +332,7 @@ const FlowCreate = ({
             backgroundColor: 'white',
             padding: '33px 50px 33px 30px',
             display: 'flex',
-            height: '500px',
+            height: '530px',
           }}
         >
           <Box sx={{ width: '60%', overflow: 'auto', pl: 4 }}>
