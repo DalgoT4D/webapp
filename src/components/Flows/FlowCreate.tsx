@@ -331,7 +331,6 @@ const FlowCreate = ({
             backgroundColor: 'white',
             padding: '33px 50px 33px 30px',
             display: 'flex',
-            height: '530px',
           }}
         >
           <Box sx={{ width: '60%', overflow: 'auto', pl: 4 }}>
@@ -430,7 +429,7 @@ const FlowCreate = ({
               </Box>
             </Stack>
           </Box>
-          <Divider orientation="vertical" />
+          <Divider orientation="vertical" sx={{ height: 'auto' }} />
           <Box sx={{ width: '40%' }}>
             <Box sx={{ ml: 4 }}>
               <Typography variant="h5" sx={{ marginBottom: '30px' }}>
