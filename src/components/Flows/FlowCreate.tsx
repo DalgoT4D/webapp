@@ -90,7 +90,6 @@ const FlowCreate = ({
     defaultValues: {
       active: true,
       name: '',
-      dbtTransform: 'no',
       connections: [],
       tasks: [],
       cron: '',
@@ -158,7 +157,10 @@ const FlowCreate = ({
             `prefect/v1/flows/${flowId}`
           );
           console.log(data);
+          const uuids = data.transformTasks.map((task) => task.uuid);
+
           const cronObject = convertCronToString(data.cron);
+
           reset({
             cron: {
               id: cronObject.schedule,
@@ -172,6 +174,7 @@ const FlowCreate = ({
               })),
             active: data.isScheduleActive,
             name: data.name,
+            tasks: tasks.filter((obj) => uuids.includes(obj.uuid)),
             cronDaysOfWeek: cronObject.daysOfWeek.map((day: string) => ({
               id: day,
               label: WEEKDAYS[day],
@@ -240,10 +243,12 @@ const FlowCreate = ({
           cron: cronExpression,
           name: data.name,
           connections: selectedConns,
-          transformTasks: tasks.map((task: TransformTask, index) => ({
-            uuid: task.uuid,
-            seq: index + 1,
-          })),
+          transformTasks: data.tasks.map(
+            (task: TransformTask, index: number) => ({
+              uuid: task.uuid,
+              seq: index + 1,
+            })
+          ),
         });
         successToast(
           `Pipeline ${data.name} updated successfully`,
@@ -257,10 +262,12 @@ const FlowCreate = ({
           name: data.name,
           connections: selectedConns,
           cron: cronExpression,
-          transformTasks: tasks.map((task: TransformTask, index) => ({
-            uuid: task.uuid,
-            seq: index + 1,
-          })),
+          transformTasks: data.tasks.map(
+            (task: TransformTask, index: number) => ({
+              uuid: task.uuid,
+              seq: index + 1,
+            })
+          ),
         });
         successToast(
           `Pipeline ${response.name} created successfully`,

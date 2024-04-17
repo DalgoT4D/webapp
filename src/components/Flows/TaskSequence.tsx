@@ -1,7 +1,7 @@
 import { ControllerRenderProps } from 'react-hook-form';
 import { Autocomplete } from '../UI/Autocomplete/Autocomplete';
 import { TransformTask } from '../DBT/DBTTarget';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import DeleteIcon from '@/assets/icons/delete.svg';
 import DragIcon from '@/assets/icons/drag.svg';
 
@@ -19,20 +19,21 @@ export const TaskSequence = ({
   options: initialOptions,
 }: TaskSequenceProps) => {
   const treeRef = useRef();
-  const [selectedOptions, setSelectedOptions] = useState<TransformTask[]>(
-    initialOptions
-      .filter((option) => option.generated_by === 'system')
-      .map((option) => ({ ...option }))
-      .sort((a, b) => a.seq - b.seq)
-  );
-  const [autocompleteOptions, setAutocompleteOptions] = useState(
-    initialOptions
-      .filter((option) => option.generated_by !== 'system')
-      .map((option) => ({ ...option }))
-  );
+
+  const [autocompleteOptions, setAutocompleteOptions] = useState<
+    TransformTask[]
+  >([]);
+
+  useEffect(() => {
+    const selectedUuids = field.value.map((task: TransformTask) => task.uuid);
+    setAutocompleteOptions(
+      initialOptions.filter((option) => !selectedUuids.includes(option.uuid))
+    );
+  }, [field.value, initialOptions]);
 
   const handleSelect = (_event: any, value: any) => {
     if (value) {
+      const selectedOptions = field.value;
       const runNodeIndex = selectedOptions.findIndex(
         (node) => node.slug === 'dbt-run'
       );
@@ -41,19 +42,19 @@ export const TaskSequence = ({
       const newAutocompleteOptions = autocompleteOptions.filter(
         (option) => option !== value
       );
-      setSelectedOptions(newSelectedOptions);
+
       setAutocompleteOptions(newAutocompleteOptions);
       field.onChange(newSelectedOptions);
     }
   };
   const removeNode = (node: NodeApi<TransformTask>) => {
+    const selectedOptions = field.value;
     const newAutocompleteOptions = [...autocompleteOptions, node.data];
 
     const newSelectedOptions = selectedOptions.filter(
       (option) => option.uuid !== node.data.uuid
     );
 
-    setSelectedOptions(newSelectedOptions);
     setAutocompleteOptions(newAutocompleteOptions);
     field.onChange(newSelectedOptions);
   };
@@ -135,7 +136,7 @@ export const TaskSequence = ({
       />
       <Tree
         ref={treeRef}
-        data={selectedOptions}
+        data={field.value}
         idAccessor="uuid"
         onMove={(args) => {
           const currentNodeIndex = args.dragNodes[0].rowIndex as number;
@@ -147,7 +148,7 @@ export const TaskSequence = ({
           data.splice(currentNodeIndex, 1);
           data.splice(args.index, 0, element);
 
-          setSelectedOptions([...data]);
+          field.onChange([...data]);
         }}
         disableDrag={(data) => data.generated_by === 'system'}
         width={'100%'}
