@@ -55,6 +55,7 @@ export const TaskSequence = ({
       <Box
         ref={dragHandle}
         sx={{
+          marginTop: '10px',
           maxWidth: '500px',
           display: 'flex',
           alignItems: 'center',
@@ -128,9 +129,14 @@ export const TaskSequence = ({
         data={field.value}
         idAccessor="uuid"
         onMove={(args) => {
+          if (args.index >= field.value.length) {
+            return;
+          }
           const currentNodeIndex = args.dragNodes[0].rowIndex as number;
           const data = treeRef.current.props.data;
+
           const element = data[currentNodeIndex];
+          console.log(data, element, currentNodeIndex, args.index);
 
           if (currentNodeIndex < args.index) {
             for (let i = currentNodeIndex; i < args.index; i++) {
@@ -153,7 +159,7 @@ export const TaskSequence = ({
         height={field.value.length * 40}
         overscanCount={1}
         paddingTop={30}
-        paddingBottom={10}
+        paddingBottom={30}
       >
         {Node}
       </Tree>
