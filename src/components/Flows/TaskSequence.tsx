@@ -136,7 +136,6 @@ export const TaskSequence = ({
           const data = treeRef.current.props.data;
 
           const element = data[currentNodeIndex];
-          console.log(data, element, currentNodeIndex, args.index);
 
           if (currentNodeIndex < args.index) {
             for (let i = currentNodeIndex; i < args.index; i++) {
