@@ -217,6 +217,10 @@ const FlowCreate = ({
   }, []);
 
   const onSubmit = async (data: any) => {
+    if (data.tasks.length === 0) {
+      errorToast('Atleast one transform task is required', [], toastContext);
+      return;
+    }
     try {
       const cronExpression = convertToCronExpression(
         data.cron.id,
