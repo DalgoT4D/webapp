@@ -129,25 +129,24 @@ export const TaskSequence = ({
         data={field.value}
         idAccessor="uuid"
         onMove={(args) => {
-          if (args.index >= field.value.length) {
-            return;
-          }
+          const finalIndex = args.index - 1;
+
           const currentNodeIndex = args.dragNodes[0].rowIndex as number;
           const data = treeRef.current.props.data;
 
           const element = data[currentNodeIndex];
 
-          if (currentNodeIndex < args.index) {
-            for (let i = currentNodeIndex; i < args.index; i++) {
+          if (currentNodeIndex <= finalIndex) {
+            for (let i = currentNodeIndex; i < finalIndex; i++) {
               data[i] = data[i + 1];
             }
+            data[finalIndex] = element;
           } else {
-            for (let i = currentNodeIndex; i > args.index; i--) {
+            for (let i = currentNodeIndex; i > finalIndex; i--) {
               data[i] = data[i - 1];
             }
+            data[finalIndex + 1] = element;
           }
-
-          data[args.index] = element;
 
           field.onChange(data);
         }}
@@ -159,6 +158,12 @@ export const TaskSequence = ({
         overscanCount={1}
         paddingTop={30}
         paddingBottom={30}
+        disableDrop={(args) => {
+          if (args.index === 0 || args.index >= field.value.length) {
+            return true;
+          }
+          return false;
+        }}
       >
         {Node}
       </Tree>
