@@ -14,19 +14,21 @@ interface TaskSequenceProps {
   options: TransformTask[];
 }
 
-const dbtCommands = ['git-pull', 'dbt-clean', 'dbt-deps'];
+const findNearest = (arr, target = 5) => {
+  let nearestSmaller = 0;
+  let nearestGreater = 7;
 
-const getInsertIndex = (array: any) => {
-  const slugArray = array.map((value: TransformTask) => value.slug);
-  let insertIndex = slugArray.indexOf('dbt-run');
-  if (insertIndex === -1) insertIndex = slugArray.indexOf('dbt-deps');
-  if (insertIndex === -1) insertIndex = slugArray.indexOf('dbt-clean');
-  if (insertIndex === -1) insertIndex = slugArray.indexOf('git-pull');
-  if (insertIndex === -1) insertIndex = 0;
+  for (let num of arr) {
+    if (num < target && num > nearestSmaller) {
+      nearestSmaller = num;
+    }
+    if (num > target && num < nearestGreater) {
+      nearestGreater = num;
+    }
+  }
 
-  return insertIndex;
+  return [nearestSmaller, nearestGreater];
 };
-
 export const TaskSequence = ({
   field,
   options: initialOptions,
@@ -49,17 +51,11 @@ export const TaskSequence = ({
       return;
     }
 
-    const selectedOptions = field.value;
+    const selectedOptions = [...field.value, value];
 
-    const insertIndex = getInsertIndex(field.value);
+    selectedOptions.sort((a, b) => a.order - b.order);
 
-    if (dbtCommands.includes(value.slug)) {
-      selectedOptions.splice(dbtCommands.indexOf(value.slug), 0, value);
-    } else {
-      selectedOptions.splice(insertIndex + 1, 0, value); // Insert after insert point
-    }
-
-    field.onChange(selectedOptions);
+    field.onChange([...selectedOptions]);
   };
 
   const removeNode = (node: NodeApi<TransformTask>) => {
@@ -191,11 +187,21 @@ export const TaskSequence = ({
           const tree = node.parentNode.tree;
           const nodes = tree.visibleNodes;
 
-          let testNodeIndex = 0;
-          const runNodeIndex = getInsertIndex(nodes.map((node) => node.data));
-          const testNode = nodes.find(
-            (node) => node.data.command === 'dbt test'
+          const [smallestOrder, largestOrder] = findNearest(
+            nodes.map((node) => node.data.order)
           );
+          let runNodeIndex = 0;
+          let testNodeIndex = nodes.length;
+          const runNode = nodes.find(
+            (node) => node.data.order === smallestOrder
+          );
+          const testNode = nodes.find(
+            (node) => node.data.order === largestOrder
+          );
+
+          if (runNode) {
+            runNodeIndex = tree.idToIndex[runNode.id];
+          }
 
           if (testNode) {
             testNodeIndex = tree.idToIndex[testNode.id];

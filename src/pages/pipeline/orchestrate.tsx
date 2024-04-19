@@ -10,6 +10,15 @@ import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
 import { TransformTask } from '@/components/DBT/DBTTarget';
 
+const dbtCommands = {
+  'git-pull': 1,
+  'dbt-clean': 2,
+  'dbt-deps': 3,
+  'dbt-run': 4,
+  'dbt-test': 6,
+  'dbt-docs-generate': 7,
+};
+
 export default function Orchestrate() {
   const [crudVal, setCrudVal] = useState<string>('index'); // can be index or create
   const [flows, setFlows] = useState<Array<any>>([]);
@@ -55,7 +64,13 @@ export default function Orchestrate() {
       (async () => {
         try {
           const response = await httpGet(session, 'prefect/tasks/transform/');
-          setTasks(response);
+          setTasks(
+            response.map((task: TransformTask) => ({
+              ...task,
+              order:
+                task.generated_by === 'system' ? dbtCommands[task.slug] : 5,
+            }))
+          );
         } catch (error) {
           console.error(error);
         }
