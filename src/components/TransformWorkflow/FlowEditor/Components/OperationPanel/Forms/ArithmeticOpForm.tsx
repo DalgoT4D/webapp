@@ -11,6 +11,7 @@ import {
   Box,
   Button,
   FormControlLabel,
+  FormHelperText,
   Radio,
   RadioGroup,
 } from '@mui/material';
@@ -64,23 +65,35 @@ const ArithmeticOpForm = ({
     output_column_name: string;
   };
 
-  const { control, register, handleSubmit, reset, watch } = useForm<FormProps>({
-    defaultValues: {
-      arithmeticOp: { id: '', label: '' },
-      operands: [
-        { type: 'col', col_val: '', const_val: 0 },
-        { type: 'col', col_val: '', const_val: 0 },
-      ],
-      output_column_name: '',
-    },
-  });
+  const { control, handleSubmit, reset, watch, formState } = useForm<FormProps>(
+    {
+      defaultValues: {
+        arithmeticOp: { id: '', label: '' },
+        operands: [
+          { type: 'col', col_val: '', const_val: 0 },
+          { type: 'col', col_val: '', const_val: 0 },
+        ],
+        output_column_name: '',
+      },
+    }
+  );
   // Include this for multi-row input
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'operands',
+    rules: {
+      minLength: { value: 2, message: 'Atleast two operands are required' },
+    },
   });
 
   const arithmeticOp = watch('arithmeticOp');
+
+  useEffect(() => {
+    replace([
+      { type: 'col', col_val: '', const_val: 0 },
+      { type: 'col', col_val: '', const_val: 0 },
+    ]);
+  }, [arithmeticOp, replace]);
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -106,11 +119,6 @@ const ArithmeticOpForm = ({
 
   const handleSave = async (data: FormProps) => {
     try {
-      if (!data.arithmeticOp.id) {
-        errorToast('Please select an arithemtic operation', [], globalContext);
-        return;
-      }
-
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -191,7 +199,7 @@ const ArithmeticOpForm = ({
         operands: operands.map((op: { value: any; is_col: boolean }) => ({
           type: op.is_col ? 'col' : 'val',
           col_val: op.is_col ? op.value : '',
-          const_val: op.is_col ? 0 : op.value,
+          const_val: op.is_col ? undefined : op.value,
         })),
       });
     } catch (error) {
@@ -212,29 +220,28 @@ const ArithmeticOpForm = ({
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
-        <Box sx={{}}>
+        <Box>
           <Controller
             control={control}
             name="arithmeticOp"
-            render={({ field }) => {
+            rules={{
+              validate: (value) =>
+                (value && value?.id !== '') || 'Operation is required',
+            }}
+            render={({ field, fieldState }) => {
               return (
                 <Autocomplete
+                  {...field}
                   disabled={action === 'view'}
-                  placeholder="Select the operation"
+                  placeholder="Select the operation*"
                   options={ArithmeticOperations}
                   isOptionEqualToValue={(option: any, value: any) =>
                     option?.id === value?.id
                   }
-                  label="Operation"
+                  label="Operation*"
                   fieldStyle="transformation"
-                  value={field.value}
-                  onChange={(e, data: any) => {
-                    if (data) field.onChange(data);
-                    replace([
-                      { type: 'col', col_val: '', const_val: 0 },
-                      { type: 'col', col_val: '', const_val: 0 },
-                    ]);
-                  }}
+                  helperText={fieldState.error?.message}
+                  error={!!fieldState.error}
                 />
               );
             }}
@@ -242,7 +249,7 @@ const ArithmeticOpForm = ({
           {fields.map((field, index) => {
             const radioValue = watch(`operands.${index}.type`);
             return (
-              <Box key={`field-${index}`}>
+              <Box key={field.id}>
                 <Box sx={{ m: 2 }} />
                 <Controller
                   name={`operands.${index}.type`}
@@ -277,32 +284,41 @@ const ArithmeticOpForm = ({
                 <Box sx={{ m: 2 }} />
                 {radioValue === 'col' ? (
                   <Controller
+                    key={`operands.${index}.col_val`}
                     control={control}
+                    rules={{ required: 'Column is required' }}
                     name={`operands.${index}.col_val`}
-                    render={({ field }) => (
+                    render={({ field, fieldState }) => (
                       <Autocomplete
+                        {...field}
+                        helperText={fieldState.error?.message}
+                        error={!!fieldState.error}
                         disabled={action === 'view'}
                         fieldStyle="transformation"
                         placeholder="Select column"
                         options={srcColumns}
-                        value={field.value}
-                        onChange={(e, data) => {
-                          field.onChange(data);
-                        }}
                       />
                     )}
                   />
                 ) : (
-                  <Input
-                    label=""
-                    fieldStyle="transformation"
+                  <Controller
+                    key={`operands.${index}.const_val`}
+                    control={control}
+                    rules={{ required: 'Value is required' }}
                     name={`operands.${index}.const_val`}
-                    register={register}
-                    sx={{ padding: '0' }}
-                    placeholder="Enter the value"
-                    type="number"
-                    defaultValue="0"
-                    disabled={action === 'view'}
+                    render={({ field, fieldState }) => (
+                      <Input
+                        {...field}
+                        helperText={fieldState.error?.message}
+                        error={!!fieldState.error}
+                        label=""
+                        fieldStyle="transformation"
+                        sx={{ padding: '0' }}
+                        placeholder="Enter a numeric value"
+                        type="number"
+                        disabled={action === 'view'}
+                      />
+                    )}
                   />
                 )}
                 {((['sub', 'div'].includes(arithmeticOp?.id) &&
@@ -318,7 +334,7 @@ const ArithmeticOpForm = ({
                       marginTop: '17px',
                     }}
                     onClick={(event) =>
-                      append({ type: 'col', col_val: '', const_val: 0 })
+                      append({ type: 'col', col_val: '', const_val: undefined })
                     }
                   >
                     + Add operand
@@ -342,14 +358,21 @@ const ArithmeticOpForm = ({
           })}
 
           <Box sx={{ m: 2 }} />
-          <Input
-            disabled={action === 'view'}
-            fieldStyle="transformation"
-            label="Output Column Name"
-            sx={{ padding: '0' }}
+          <Controller
+            control={control}
+            rules={{ required: 'Output column name is required' }}
             name="output_column_name"
-            register={register}
-            required
+            render={({ field, fieldState }) => (
+              <Input
+                helperText={fieldState.error?.message}
+                error={!!fieldState.error}
+                disabled={action === 'view'}
+                fieldStyle="transformation"
+                label="Output Column Name*"
+                sx={{ padding: '0' }}
+                {...field}
+              />
+            )}
           />
           <Box sx={{ m: 2 }} />
           <Box>
@@ -364,6 +387,13 @@ const ArithmeticOpForm = ({
               Save
             </Button>
           </Box>
+
+          {formState.errors.operands && formState.errors.operands.root && (
+            <FormHelperText sx={{ color: 'red' }}>
+              {formState.errors.operands.root.message}
+            </FormHelperText>
+          )}
+
           <InfoBox text="Please select only numeric columns" />
         </Box>
       </form>

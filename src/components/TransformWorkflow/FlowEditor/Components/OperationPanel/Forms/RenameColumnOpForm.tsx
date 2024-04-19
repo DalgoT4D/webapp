@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, FormHelperText } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -39,7 +39,7 @@ const RenameColumnOp = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, getValues } = useForm({
+  const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
       config: [{ old: '', new: '' }],
     },
@@ -47,7 +47,21 @@ const RenameColumnOp = ({
 
   const { config } = getValues();
   // Include this for multi-row input
-  const { fields, append, remove } = useFieldArray({ control, name: 'config' });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'config',
+    rules: {
+      minLength: { value: 2, message: 'Alteast one column is required' },
+    },
+  });
+
+  useEffect(() => {
+    if (fields.length > 0) {
+      const lastInputId = `#config${fields.length - 1}old`;
+      const lastInput = document.querySelector(lastInputId) as HTMLInputElement;
+      if (lastInput) lastInput.focus();
+    }
+  }, [fields]);
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -84,13 +98,6 @@ const RenameColumnOp = ({
       data.config.forEach((item: any) => {
         if (item.old && item.new) postData.config.columns[item.old] = item.new;
       });
-
-      // validations
-      if (Object.keys(postData.config.columns).length === 0) {
-        console.log('Please add columns to rename');
-        errorToast('Please add columns to rename', [], globalContext);
-        return;
-      }
 
       // api call
       setLoading(true);
@@ -182,34 +189,50 @@ const RenameColumnOp = ({
               name={`config.${index}.old`}
               render={({ field }) => (
                 <Autocomplete
+                  {...field}
+                  id={`config${index}old`}
+                  onChange={(data: any) => {
+                    field.onChange(data);
+                    const nextAutocompletIndex = document.querySelector(
+                      `#config${index}new`
+                    ) as HTMLInputElement;
+                    if (nextAutocompletIndex) nextAutocompletIndex?.focus();
+                  }}
                   disabled={action === 'view'}
                   disableClearable
                   fieldStyle="none"
                   options={options}
-                  value={field.value}
                   placeholder="Select column"
-                  onChange={(e, data) => {
-                    field.onChange(data);
-                  }}
                 />
               )}
             />,
-            <Input
-              fieldStyle="none"
+            <Controller
               key={field.new + index}
-              sx={{ padding: '0' }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  append({ old: '', new: '' });
-                }
-              }}
+              control={control}
               name={`config.${index}.new`}
-              register={register}
-              disabled={action === 'view'}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id={`config${index}new`}
+                  fieldStyle="none"
+                  sx={{ padding: '0' }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      append({ old: '', new: '' });
+                    }
+                  }}
+                  disabled={action === 'view'}
+                />
+              )}
             />,
           ])}
         ></GridTable>
+        {formState.errors.config && (
+          <FormHelperText sx={{ color: 'red', ml: 2 }}>
+            {formState.errors.config.root?.message}
+          </FormHelperText>
+        )}
 
         <Button
           disabled={action === 'view'}
