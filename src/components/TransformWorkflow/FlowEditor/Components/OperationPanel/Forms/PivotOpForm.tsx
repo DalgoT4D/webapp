@@ -197,7 +197,7 @@ const PivotOpForm = ({
       }
       setSrcColumns(orginalSrcColumns);
 
-      let groupbySourceColumns = orginalSrcColumns.map((col) => ({
+      const groupbySourceColumns = orginalSrcColumns.map((col) => ({
         col: col,
         is_checked: source_columns.includes(col),
       }));
@@ -254,7 +254,7 @@ const PivotOpForm = ({
                 onChange={(data: any) => {
                   field.onChange(data);
                   if (data) {
-                    let findIndex: number = srcColFields.findIndex(
+                    const findIndex: number = srcColFields.findIndex(
                       (field) => field.col === data
                     );
                     update(findIndex, {
@@ -310,6 +310,7 @@ const PivotOpForm = ({
             ...[
               [
                 <Box
+                  key={'select_all_box'}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
