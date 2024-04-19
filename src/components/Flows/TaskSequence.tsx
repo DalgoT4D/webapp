@@ -14,11 +14,12 @@ interface TaskSequenceProps {
   options: TransformTask[];
 }
 
-const findNearest = (arr, target = 5) => {
+const findNearest = (arr: number[], target = 5 /*order for custom tasks*/) => {
+  // bounded order for all dbt tasks
   let nearestSmaller = 0;
   let nearestGreater = 7;
 
-  for (let num of arr) {
+  for (const num of arr) {
     if (num < target && num > nearestSmaller) {
       nearestSmaller = num;
     }
