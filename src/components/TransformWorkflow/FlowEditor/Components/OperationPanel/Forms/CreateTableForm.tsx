@@ -71,12 +71,8 @@ const CreateTableForm = ({
             <Autocomplete
               fieldStyle="transformation"
               options={['intermediate', 'production']}
-              value={field.value}
-              onChange={(e, data) => {
-                field.onChange(data);
-              }}
+              {...field}
               label="Output Schema Name"
-              required
             />
           )}
         />

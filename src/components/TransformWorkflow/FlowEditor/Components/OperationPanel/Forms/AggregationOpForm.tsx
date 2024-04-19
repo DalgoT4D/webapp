@@ -62,7 +62,7 @@ const AggregationOpForm = ({
     }[];
   };
 
-  const { control, register, handleSubmit, reset } = useForm<FormProps>({
+  const { control, handleSubmit, reset } = useForm<FormProps>({
     defaultValues: {
       aggregate_on: [
         {
@@ -99,30 +99,6 @@ const AggregationOpForm = ({
 
   const handleSave = async (data: FormProps) => {
     try {
-      if (data.aggregate_on.length === 0) {
-        errorToast('Please select columns to aggregate', [], globalContext);
-        return;
-      }
-
-      if (!data.aggregate_on[0].column) {
-        errorToast(
-          'Please select the column to aggregate on',
-          [],
-          globalContext
-        );
-        return;
-      }
-
-      if (!data.aggregate_on[0].operation) {
-        errorToast('Please select an operation', [], globalContext);
-        return;
-      }
-
-      if (!data.aggregate_on[0].output_column_name) {
-        errorToast('Please enter the output name', [], globalContext);
-        return;
-      }
-
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -213,17 +189,17 @@ const AggregationOpForm = ({
           <Box key={field.id}>
             <Controller
               control={control}
+              rules={{ required: 'Column to aggregate is required' }}
               name={`aggregate_on.${index}.column`}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <Autocomplete
+                  {...field}
                   disabled={action === 'view'}
                   fieldStyle="transformation"
                   options={srcColumns.sort((a, b) => a.localeCompare(b))}
-                  value={field.value}
-                  onChange={(e, data) => {
-                    if (data) field.onChange(data);
-                  }}
                   label="Select Column to Aggregate*"
+                  helperText={fieldState.error?.message}
+                  error={!!fieldState.error}
                 />
               )}
             />
@@ -231,31 +207,45 @@ const AggregationOpForm = ({
             <Box sx={{ mt: 2 }}>
               <Controller
                 control={control}
+                rules={{
+                  validate: (value) => {
+                    return (
+                      (value && value?.id !== '') || 'Operation is required'
+                    );
+                  },
+                }}
                 name={`aggregate_on.${index}.operation`}
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Autocomplete
                     disabled={action === 'view'}
                     options={AggregateOperations}
                     isOptionEqualToValue={(option: any, value: any) =>
                       option?.id === value?.id
                     }
-                    value={field.value}
-                    onChange={(e, data: any) => {
-                      if (data) field.onChange(data);
-                    }}
+                    {...field}
+                    helperText={fieldState.error?.message}
+                    error={!!fieldState.error}
                     label="Aggregate*"
                     fieldStyle="transformation"
                   />
                 )}
               />
             </Box>
-            <Input
-              fieldStyle="transformation"
-              label="Output Column Name*"
-              sx={{ padding: '0', marginTop: '16px' }}
+            <Controller
+              control={control}
+              rules={{ required: 'Output column name is required' }}
               name={`aggregate_on.${index}.output_column_name`}
-              register={register}
-              disabled={action === 'view'}
+              render={({ field, fieldState }) => (
+                <Input
+                  fieldStyle="transformation"
+                  label="Output Column Name*"
+                  sx={{ padding: '0', marginTop: '16px' }}
+                  helperText={fieldState.error?.message}
+                  error={!!fieldState.error}
+                  disabled={action === 'view'}
+                  {...field}
+                />
+              )}
             />
           </Box>
         ))}

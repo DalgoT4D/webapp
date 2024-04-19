@@ -1,9 +1,10 @@
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import {
   Box,
   Button,
+  FormHelperText,
   FormLabel,
   Grid,
   SxProps,
@@ -15,8 +16,6 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
-import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
@@ -62,7 +61,6 @@ const CoalesceOpForm = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -70,7 +68,7 @@ const CoalesceOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-  const { control, register, handleSubmit, reset, watch } = useForm({
+  const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
       columns: [{ col: '' }],
       default_value: '',
@@ -81,9 +79,15 @@ const CoalesceOpForm = ({
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'columns',
+    rules: {
+      minLength: {
+        value: 2,
+        message: 'Atleast 1 column is required',
+      },
+    },
   });
 
-  const columns = watch('columns'); // Get the current form values
+  const { columns } = getValues();
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -108,9 +112,7 @@ const CoalesceOpForm = ({
       const coalesceColumns = data.columns
         .map((col: any) => col.col)
         .filter((col: string) => col);
-      if (coalesceColumns.length === 0) {
-        errorToast('Please select columns to coalesce', [], globalContext);
-      }
+
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
@@ -215,7 +217,7 @@ const CoalesceOpForm = ({
           </Grid>
 
           {fields.map((field, index) => (
-            <Fragment key={field + '_1'}>
+            <Fragment key={field.id}>
               <Grid
                 key={field + '_1'}
                 item
@@ -255,6 +257,7 @@ const CoalesceOpForm = ({
                   name={`columns.${index}.col`}
                   render={({ field }) => (
                     <Autocomplete
+                      {...field}
                       disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns
@@ -263,8 +266,7 @@ const CoalesceOpForm = ({
                             !columns.map((col) => col.col).includes(option)
                         )
                         .sort((a, b) => a.localeCompare(b))}
-                      value={field.value}
-                      onChange={(e, data) => {
+                      onChange={(data: any) => {
                         field.onChange(data);
                         if (data) append({ col: '' });
                         else remove(index + 1);
@@ -276,31 +278,51 @@ const CoalesceOpForm = ({
             </Fragment>
           ))}
         </Grid>
+
+        {formState.errors.columns && (
+          <FormHelperText sx={{ color: 'red', ml: 3 }}>
+            {formState.errors.columns.root?.message}
+          </FormHelperText>
+        )}
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <FormLabel sx={{ mr: 1, color: 'black' }}>Default Value</FormLabel>
+            <FormLabel sx={{ mr: 1, color: 'black' }}>Default Value*</FormLabel>
             <Box sx={{ display: 'inline-block' }}>
               <InfoTooltip title={'Output if all values in a row are null'} />
             </Box>
           </Box>
-          <Input
-            disabled={action === 'view'}
-            fieldStyle="transformation"
-            label=""
-            sx={{ padding: '0' }}
+          <Controller
+            control={control}
+            rules={{ required: 'Default value is required' }}
             name="default_value"
-            register={register}
-            required
+            render={({ field, fieldState }) => (
+              <Input
+                {...field}
+                helperText={fieldState.error?.message}
+                error={!!fieldState.error}
+                disabled={action === 'view'}
+                fieldStyle="transformation"
+                label=""
+                sx={{ padding: '0' }}
+              />
+            )}
           />
           <Box sx={{ m: 2 }} />
-          <Input
-            disabled={action === 'view'}
-            fieldStyle="transformation"
-            label="Output Column Name"
-            sx={{ padding: '0' }}
+          <Controller
+            control={control}
+            rules={{ required: 'Output column name is required' }}
             name="output_column_name"
-            register={register}
-            required
+            render={({ field, fieldState }) => (
+              <Input
+                helperText={fieldState.error?.message}
+                error={!!fieldState.error}
+                {...field}
+                disabled={action === 'view'}
+                fieldStyle="transformation"
+                label="Output Column Name*"
+                sx={{ padding: '0' }}
+              />
+            )}
           />
           <Box sx={{ m: 2 }} />
           <Box>

@@ -213,14 +213,11 @@ const CastColumnOp = ({
               name={`config.${index}.data_type`}
               render={({ field }) => (
                 <Autocomplete
+                  {...field}
                   disabled={action === 'view'}
                   disableClearable
                   fieldStyle="none"
                   options={dataTypes}
-                  value={column.data_type}
-                  onChange={(e, data) => {
-                    field.onChange(data);
-                  }}
                 />
               )}
             />,

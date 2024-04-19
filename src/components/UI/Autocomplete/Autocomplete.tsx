@@ -8,27 +8,38 @@ import {
 interface AutocompleteProps
   extends Omit<
     AutocompleteElementProps<unknown, boolean, boolean, boolean>,
-    'renderInput'
+    'renderInput' | 'onChange'
   > {
   label?: string;
   fieldStyle?: 'normal' | 'transformation' | 'none';
-  required?: boolean;
+  error?: boolean;
+  helperText?: string;
+  name?: string;
+  onChange: any;
 }
 
 export const Autocomplete = ({
   placeholder,
   fieldStyle = 'normal',
   label,
-  required = false,
+  error,
+  helperText,
+  name,
+  onChange,
   ...rest
 }: AutocompleteProps) => {
   return (
     <AutocompleteElement
       {...rest}
+      onChange={(e, data) => {
+        onChange(data);
+      }}
       renderInput={(params) => (
         <Input
           {...params}
-          required={required}
+          name={name}
+          error={error}
+          helperText={helperText}
           placeholder={placeholder}
           label={label}
           fieldStyle={fieldStyle}
