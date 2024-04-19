@@ -58,7 +58,8 @@ const RenameColumnOp = ({
   useEffect(() => {
     if (fields.length > 0) {
       const lastInputId = `#config${fields.length - 1}old`;
-      document.querySelector(lastInputId)?.focus();
+      const lastInput = document.querySelector(lastInputId) as HTMLInputElement;
+      if (lastInput) lastInput.focus();
     }
   }, [fields]);
 
@@ -192,7 +193,10 @@ const RenameColumnOp = ({
                   id={`config${index}old`}
                   onChange={(data: any) => {
                     field.onChange(data);
-                    document.querySelector(`#config${index}new`)?.focus();
+                    const nextAutocompletIndex = document.querySelector(
+                      `#config${index}new`
+                    ) as HTMLInputElement;
+                    if (nextAutocompletIndex) nextAutocompletIndex?.focus();
                   }}
                   disabled={action === 'view'}
                   disableClearable
