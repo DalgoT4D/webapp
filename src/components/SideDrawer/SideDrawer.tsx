@@ -249,7 +249,7 @@ export const SideDrawer = ({ openMenu }: any) => {
       variant="permanent"
     >
       {getList}
-      <Box
+      {openMenu && (<Box
         sx={{
           position: 'relative',
           bottom: 0,
@@ -300,7 +300,7 @@ export const SideDrawer = ({ openMenu }: any) => {
             </svg>
           </Box>
         </Link>
-      </Box>
+      </Box>)}
       {globalContext?.CurrentOrg.state.is_demo && demoProductWalkthrough && (
         <ProductWalk
           run={runWalkThrough}
