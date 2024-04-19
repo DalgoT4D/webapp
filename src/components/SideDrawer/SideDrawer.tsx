@@ -178,7 +178,7 @@ export const SideDrawer = ({ openMenu }: any) => {
                   isSelected={selectedIndex === item.index}
                   onClick={() => handleListItemClick(item)}
                 >
-                  {hasChildren.length > 0 && (
+                  {hasChildren.length > 0 && openMenu && (
                     <IconButton
                       sx={{ padding: 0 }}
                       onClick={() => handleCollpaseArrowClick(idx)}
