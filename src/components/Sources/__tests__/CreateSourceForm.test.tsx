@@ -26,48 +26,30 @@ describe('Connections Setup', () => {
     expires: '1',
     user: { email: 'a' },
   };
+  const user = userEvent.setup();
+  const setShowFormMock = jest.fn();
+  const createSourceForm = () => (
+    <SessionProvider session={mockSession}>
+      <CreateSourceForm
+        mutate={jest.fn()}
+        showForm
+        sourceDefs={[
+          {
+            label: 'Postgres',
+            id: 'MYSOURCEDEFID',
+            dockerRepository: 'airbyte/source-postgres',
+            tag: '3.3.1',
+          },
+        ]}
+        setShowForm={(x) => setShowFormMock(x)}
+      />
+    </SessionProvider>
+  );
 
   // ===========================================================================
   it('renders the form', async () => {
-    (global as any).fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce([
-          {
-            name: 'sourceDefElementName',
-            sourceDefinitionId: 'sourceDefId',
-          },
-        ]),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          properties: {
-            host: {
-              type: 'string',
-              title: 'Host',
-              field: 'host',
-              default: 'localhost',
-            },
-          },
-          required: ['host'],
-        }),
-      });
+    render(createSourceForm());
 
-    const setShowFormMock = jest.fn();
-
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <CreateSourceForm
-            mutate={() => {}}
-            showForm={true}
-            setShowForm={(x) => setShowFormMock(x)}
-          />
-        </SessionProvider>
-      );
-    });
     const savebutton = screen.getByTestId('savebutton');
     expect(savebutton).toBeInTheDocument();
 
@@ -77,7 +59,7 @@ describe('Connections Setup', () => {
     const sourceName = screen.getByLabelText('Name*');
     expect(sourceName).toBeInTheDocument();
 
-    await userEvent.click(cancelbutton);
+    await user.click(cancelbutton);
     expect(setShowFormMock).toHaveBeenCalledWith(false);
 
     const sourceType = screen.getByLabelText('Select source type');
@@ -86,58 +68,35 @@ describe('Connections Setup', () => {
 
   // ===========================================================================
   it('selects the source type and submits the form', async () => {
-    (global as any).fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce([
-          {
-            name: 'sourceDefElementName',
-            sourceDefinitionId: 'MYSOURCEDEFID',
+    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({
+        properties: {
+          host: {
+            type: 'string',
+            title: 'Host',
+            field: 'host',
+            default: 'localhost',
           },
-        ]),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          properties: {
-            host: {
-              type: 'string',
-              title: 'Host',
-              field: 'host',
-              default: 'localhost',
-            },
-          },
-          required: ['host'],
-        }),
-      });
-
-    const setShowFormMock = jest.fn();
-
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <CreateSourceForm
-            mutate={() => {}}
-            showForm={true}
-            setShowForm={(x) => setShowFormMock(x)}
-          />
-        </SessionProvider>
-      );
+        },
+        required: ['host'],
+      }),
     });
+
+    render(createSourceForm());
 
     const autocomplete = screen.getByTestId('autocomplete');
     const sourceTypeInput = screen.getByRole('combobox');
+    autocomplete.focus();
 
-    await waitFor(() => {
-      autocomplete.focus();
-      userEvent.click(sourceTypeInput);
-      fireEvent.change(sourceTypeInput, { value: 's' });
-      expect(screen.getAllByRole('presentation').length).toBe(3);
-    });
-
+    await user.type(sourceTypeInput, 's');
     fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('presentation').length).toBe(2);
+    });
+
     await waitFor(() => {
       const inputField: HTMLInputElement = screen.getByLabelText('Host*');
       expect(inputField).toBeInTheDocument();
@@ -154,15 +113,18 @@ describe('Connections Setup', () => {
     const savebutton = screen.getByTestId('savebutton');
 
     // first try with missing required field
-    await userEvent.click(savebutton);
+    await user.click(savebutton);
     expect(createSourceSubmit).not.toHaveBeenCalled();
 
     // now put in the required field
     const sourceName = screen.getByLabelText('Name*');
-    await userEvent.type(sourceName, 'MYSOURCENAME');
-    await userEvent.click(savebutton);
+    await user.type(sourceName, 'MYSOURCENAME');
+    await user.click(savebutton);
 
-    expect(createSourceSubmit).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(createSourceSubmit).toHaveBeenCalled();
+    });
+
     const request = createSourceSubmit.mock.calls[0][1];
     const requestBody = JSON.parse(request.body);
 
@@ -173,56 +135,32 @@ describe('Connections Setup', () => {
 
   // ===========================================================================
   it('selects the source type and submits the form with a missing field', async () => {
-    (global as any).fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce([
-          {
-            name: 'sourceDefElementName',
-            sourceDefinitionId: 'MYSOURCEDEFID',
+    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({
+        properties: {
+          host: {
+            type: 'string',
+            title: 'Host',
+            field: 'host',
           },
-        ]),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          properties: {
-            host: {
-              type: 'string',
-              title: 'Host',
-              field: 'host',
-            },
-          },
-          required: ['host'],
-        }),
-      });
-
-    const setShowFormMock = jest.fn();
-
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <CreateSourceForm
-            mutate={() => {}}
-            showForm={true}
-            setShowForm={(x) => setShowFormMock(x)}
-          />
-        </SessionProvider>
-      );
+        },
+        required: ['host'],
+      }),
     });
+
+    render(createSourceForm());
+
     const autocomplete = screen.getByTestId('autocomplete');
     const sourceTypeInput = screen.getByRole('combobox');
+    autocomplete.focus();
 
-    await waitFor(() => {
-      autocomplete.focus();
-      userEvent.click(sourceTypeInput);
-      fireEvent.change(sourceTypeInput, { value: 's' });
-      expect(screen.getAllByRole('presentation').length).toBe(3);
-    });
-
+    await user.type(sourceTypeInput, 's');
     fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
+    await waitFor(() => {
+      expect(screen.getAllByRole('presentation').length).toBe(2);
+    });
 
     await waitFor(() => {
       const inputField: HTMLInputElement = screen.getByLabelText('Host*');
@@ -244,15 +182,15 @@ describe('Connections Setup', () => {
 
     // put in the name
     const sourceName = screen.getByLabelText('Name*');
-    await userEvent.type(sourceName, 'MYSOURCENAME');
+    await user.type(sourceName, 'MYSOURCENAME');
 
     // but the "host" field is missing & required
-    await userEvent.click(savebutton);
+    await user.click(savebutton);
     expect(createSourceSubmit).not.toHaveBeenCalled();
     const inputField: HTMLInputElement = screen.getByLabelText('Host*');
     // now put in the required field
-    await userEvent.type(inputField, 'SOMEHOST');
-    await userEvent.click(savebutton);
+    await user.type(inputField, 'SOMEHOST');
+    await user.click(savebutton);
 
     expect(createSourceSubmit).toHaveBeenCalled();
     const request = createSourceSubmit.mock.calls[0][1];

@@ -43,7 +43,7 @@ type DeploymentDef = {
   name: string;
   dbtTransform: string;
   connections: Array<any>;
-  cron: string | object;
+  cron: string | object|null;
   cronDaysOfWeek: Array<AutoCompleteOption>;
   cronTimeOfDay: string;
 };
@@ -91,7 +91,7 @@ const FlowCreate = ({
       name: '',
       dbtTransform: 'no',
       connections: [],
-      cron: '',
+      cron: null,
       cronDaysOfWeek: [],
       cronTimeOfDay: '',
     },
