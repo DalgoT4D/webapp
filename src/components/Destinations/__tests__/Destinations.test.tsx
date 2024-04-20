@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Destinations } from '../Destinations';
 import { Session } from 'next-auth';
@@ -59,21 +59,33 @@ describe('Destinations', () => {
     json: jest.fn().mockResolvedValueOnce({
       warehouses: [
         {
-          airbyte_destination: {
-            workspaceId: 'WORKSPACE_ID',
-            destinationId: 'fake-dest-id',
-            destinationDefinitionId: 'fake-dest-def-id',
-            name: 'warehouse-name',
-            connectionConfiguration: {
-              host: 'HOSTNAME',
-              port: '9999',
-              database: 'MYDATABASE',
-              username: 'MYUSERNAME',
-            },
-          },
           wtype: 'postgres',
           name: 'PGWarehouse',
-          icon: null,
+          airbyte_destination: {
+            destinationDefinitionId: 'DESTINATION_DEF_ID',
+            destinationId: 'DESTINATION_ID',
+            workspaceId: 'WORKSPACE_ID',
+            connectionConfiguration: {
+              ssl: false,
+              host: 'HOSTNAME',
+              port: 5432,
+              schema: 'destinations_v2',
+              database: 'MYDATABASE',
+              password: '**********',
+              ssl_mode: {
+                mode: 'require',
+              },
+              username: 'MYUSERNAME',
+              tunnel_method: {
+                tunnel_method: 'NO_TUNNEL',
+              },
+            },
+            name: 'postgres-warehouse',
+            destinationName: 'Postgres',
+            icon: 'https://connectors.airbyte.com/files/metadata/airbyte/destination-postgres/latest/icon.svg',
+          },
+          airbyte_docker_repository: 'airbyte/destination-postgres',
+          airbyte_docker_image_tag: '2.0.9',
         },
       ],
     }),
@@ -108,61 +120,64 @@ describe('Destinations', () => {
   });
 
   it('fetches a postgres warehouse', async () => {
-    await act(() => {
-      render(
-        <SWRConfig
-          value={{
-            dedupingInterval: 0,
-            fetcher: (resource) =>
-              mockSWR_postgres(resource, {}).then((res: any) => res.json()),
-            provider: () => new Map(),
-          }}
-        >
-          <SessionProvider session={mockSession}>
-            <Destinations />
-          </SessionProvider>
-        </SWRConfig>
-      );
+    render(
+      <SWRConfig
+        value={{
+          dedupingInterval: 0,
+          fetcher: (resource) =>
+            mockSWR_postgres(resource, {}).then((res: any) => res.json()),
+          provider: () => new Map(),
+        }}
+      >
+        <SessionProvider session={mockSession}>
+          <Destinations />
+        </SessionProvider>
+      </SWRConfig>
+    );
+    await waitFor(() => {
+      const wtype = screen.getByTestId('wname');
+      expect(wtype).toHaveTextContent('PGWarehouse');
     });
-    const wtype = screen.getByTestId('wname');
-    expect(wtype).toHaveTextContent('PGWarehouse');
+
     const host = screen.getByTestId('host');
     expect(host).toHaveTextContent('HOSTNAME');
     const port = screen.getByTestId('port');
-    expect(port).toHaveTextContent('9999');
+    expect(port).toHaveTextContent('5432');
     const database = screen.getByTestId('database');
     expect(database).toHaveTextContent('MYDATABASE');
     const username = screen.getByTestId('username');
     expect(username).toHaveTextContent('MYUSERNAME');
-    const abworkspace = screen.getByTestId('abworkspace');
+    const abworkspace = screen.getByTestId('abworkspaceid');
     expect(abworkspace).toHaveTextContent('WORKSPACE_ID');
 
     // Check if edit button renders the mocked component
     const editWarehouseButton = screen.getByTestId('edit-destination');
-    await act(async () => await userEvent.click(editWarehouseButton));
+    await await userEvent.click(editWarehouseButton);
     const mockEditDestinationForm = screen.getByTestId('test-edit-dest-form');
     expect(mockEditDestinationForm).toBeInTheDocument();
   });
 
   it('fetches a bigquery warehouse', async () => {
-    await act(() => {
-      render(
-        <SWRConfig
-          value={{
-            dedupingInterval: 0,
-            fetcher: (resource) =>
-              mockSWR_bigquery(resource, {}).then((res: any) => res.json()),
-            provider: () => new Map(),
-          }}
-        >
-          <SessionProvider session={mockSession}>
-            <Destinations />
-          </SessionProvider>
-        </SWRConfig>
-      );
+    render(
+      <SWRConfig
+        value={{
+          dedupingInterval: 0,
+          fetcher: (resource) =>
+            mockSWR_bigquery(resource, {}).then((res: any) => res.json()),
+          provider: () => new Map(),
+        }}
+      >
+        <SessionProvider session={mockSession}>
+          <Destinations />
+        </SessionProvider>
+      </SWRConfig>
+    );
+
+    await waitFor(() => {
+      const wtype = screen.getByTestId('wname');
+      expect(wtype).toHaveTextContent('BQWarehouse');
     });
-    const wtype = screen.getByTestId('wname');
-    expect(wtype).toHaveTextContent('BQWarehouse');
+
     const project_id = screen.getByTestId('project_id');
     expect(project_id).toHaveTextContent('PROJECT_ID');
     const dataset_id = screen.getByTestId('dataset_id');
@@ -175,7 +190,7 @@ describe('Destinations', () => {
     expect(gcs_bucket_name_and_path).toHaveTextContent(
       'gcs_bucket_name / gcs_bucket_path'
     );
-    const abworkspace = screen.getByTestId('abworkspace');
+    const abworkspace = screen.getByTestId('abworkspaceid');
     expect(abworkspace).toHaveTextContent('WORKSPACE_ID');
 
     const edit_button = screen.getByTestId('edit-destination');
