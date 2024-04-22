@@ -576,6 +576,7 @@ export const Connections = () => {
         rows={rows}
         rowValues={rowValues}
         isSortable={isSortable}
+        height={115}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
