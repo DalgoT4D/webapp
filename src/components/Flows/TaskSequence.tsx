@@ -16,19 +16,16 @@ interface TaskSequenceProps {
 
 const findNearest = (arr: number[], target = 5 /*order for custom tasks*/) => {
   // bounded order for all dbt tasks
-  let nearestSmaller = 0;
-  let nearestGreater = 7;
+
+  let nearestGreater = 8;
 
   for (const num of arr) {
-    if (num < target && num > nearestSmaller) {
-      nearestSmaller = num;
-    }
     if (num > target && num < nearestGreater) {
       nearestGreater = num;
     }
   }
 
-  return [nearestSmaller, nearestGreater];
+  return nearestGreater;
 };
 export const TaskSequence = ({
   field,
@@ -187,9 +184,13 @@ export const TaskSequence = ({
           // only allow drop between run and test line item
           const tree = node.parentNode.tree;
           const nodes = tree.visibleNodes;
+          const draggedNode = node.dragNodes[0];
 
-          const [smallestOrder, largestOrder] = findNearest(
-            nodes.map((node) => node.data.order)
+          const smallestOrder = draggedNode.data.slug === 'dbt-run' ? 5 : 6;
+
+          const largestOrder = findNearest(
+            nodes.map((node) => node.data.order),
+            smallestOrder
           );
           let runNodeIndex = 0;
           let testNodeIndex = nodes.length;
@@ -207,7 +208,7 @@ export const TaskSequence = ({
           if (testNode) {
             testNodeIndex = tree.idToIndex[testNode.id];
           }
-          if (node.index > runNodeIndex && node.index <= testNodeIndex)
+          if (node.index >= runNodeIndex && node.index <= testNodeIndex)
             return false;
 
           return true;

@@ -10,13 +10,27 @@ import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
 import { TransformTask } from '@/components/DBT/DBTTarget';
 
-const dbtCommands = {
-  'git-pull': 1,
-  'dbt-clean': 2,
-  'dbt-deps': 3,
-  'dbt-run': 4,
-  'dbt-test': 6,
-  'dbt-docs-generate': 7,
+const command: any = {
+  systemCommands: {
+    'git-pull': 1,
+    'dbt-clean': 2,
+    'dbt-deps': 3,
+    'dbt-run': 4,
+    'dbt-test': 7,
+    'dbt-docs-generate': 8,
+  },
+  customCommands: {
+    'dbt-run': 5,
+    'dbt-test': 6,
+  },
+};
+
+const getOrder = (task: TransformTask) => {
+  if (task.generated_by === 'system') {
+    return command.systemCommands[task.slug];
+  } else {
+    return command.customCommands[task.slug] || 5;
+  }
 };
 
 export default function Orchestrate() {
@@ -67,8 +81,7 @@ export default function Orchestrate() {
           setTasks(
             response.map((task: TransformTask) => ({
               ...task,
-              order:
-                task.generated_by === 'system' ? dbtCommands[task.slug] : 5,
+              order: getOrder(task),
             }))
           );
         } catch (error) {
