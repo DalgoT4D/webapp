@@ -27,7 +27,7 @@
   background-repeat: no-repeat;
   background-origin: content-box;
   box-sizing: border-box;
-  background-color:rgb(128, 134, 139);
+  background-color: rgb(128, 134, 139);
   background-position: bottom right;
   padding: 0 3px 3px 0;
 }
@@ -82,4 +82,8 @@
 .react-resizable-handle-s {
   bottom: 0;
   transform: rotate(45deg);
+}
+
+.task-tree {
+  overflow: visible !important;
 }
