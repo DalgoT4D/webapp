@@ -84,7 +84,7 @@ const GenericColumnOpForm = ({
     },
   });
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: 'computed_columns.0.operands',
     rules: {
