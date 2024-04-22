@@ -13,3 +13,9 @@ services:
       - NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED=${NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED}
     ports:
       - '3000:3000'
+    networks:
+      - dalgo-network
+
+networks:
+  dalgo-network:
+    driver: bridge
