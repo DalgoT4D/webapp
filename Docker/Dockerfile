@@ -12,6 +12,13 @@ RUN yarn install --frozen-lockfile --network-timeout 1000000
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+ARG NEXT_PUBLIC_BACKEND_URL NEXT_PUBLIC_USAGE_DASHBOARD_ID NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED
+ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+ENV NEXT_PUBLIC_USAGE_DASHBOARD_ID=${NEXT_PUBLIC_USAGE_DASHBOARD_ID}
+ENV NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN=${NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN}
+ENV NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA=${NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA}
+ENV NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED=${NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED}
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/next.config.js ./
 COPY --from=deps /app/tsconfig.json ./
@@ -48,6 +55,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # You only need to copy next.config.js if you are NOT using the default configuration
 COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/tsconfig.json ./
 
 
 USER nextjs
