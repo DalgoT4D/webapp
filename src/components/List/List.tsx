@@ -5,9 +5,9 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import TableSortLabel from '@mui/material/TableSortLabel';
 import Paper from '@mui/material/Paper';
-import { Box, Button, Typography, IconButton } from '@mui/material';
-import { SwapVert } from '@mui/icons-material';
+import { Box, Button, Typography } from '@mui/material';
 
 interface ListProps {
   title: string;
@@ -15,7 +15,7 @@ interface ListProps {
   rows: Array<any>;
   openDialog: any;
   onlyList?: boolean;
-  rowValues?: Array<Array<any>>
+  rowValues?: Array<Array<any>>;
   isSortable?: Array<boolean>;
 }
 
@@ -28,13 +28,13 @@ export const List = ({
   rowValues,
   isSortable,
 }: ListProps) => {
-  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc' | 'none'>('none');
+  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>();
   const [sortColumn, setSortColumn] = React.useState<number | null>(null);
 
   const handleSort = (index: number) => {
     if (sortColumn === index) {
-      // Change sort direction if sorting the same column again:
-      setSortDirection(prev => prev === 'asc' ? 'desc' : prev === 'desc' ? 'none' : 'asc');
+      // Toggle sort direction if sorting the same column again:
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       // First time sorting the column:
       setSortColumn(index);
@@ -43,7 +43,7 @@ export const List = ({
   };
 
   const orderedRows = React.useMemo(() => {
-    if (sortColumn === null || sortDirection === 'none' || !rowValues) return rows; // no sorting needed
+    if (sortColumn === null || sortDirection === undefined || !rowValues) return rows; // no sorting needed
 
     // Sort row values lexicographically based on the sort column:
     const sorted = [...rowValues].sort((a, b) => {
@@ -80,12 +80,17 @@ export const List = ({
                     sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }}
                     key={header}
                   >
-                    {header}
-                    {isSortable && isSortable[index] && (
-                      <IconButton onClick={() => handleSort(index)}>
-                        <SwapVert/>
-                      </IconButton>
-                    )}
+                  {isSortable && isSortable[index] ? (
+                    <TableSortLabel
+                      active={sortColumn === index}
+                      direction={sortColumn === index ? sortDirection : 'asc'}
+                      onClick={() => handleSort(index)}
+                    >
+                      {header}
+                    </TableSortLabel>
+                  ) : (
+                    header
+                  )}
                   </TableCell>
                 ))}
                 <TableCell
