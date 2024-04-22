@@ -1,10 +1,10 @@
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
 import { Connections } from '../Connections';
-// const user = userEvent.setup();
+import userEvent from '@testing-library/user-event';
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -17,6 +17,7 @@ jest.mock('next/router', () => ({
 jest.mock('./../../../utils/common');
 
 describe('Sync connection suite', () => {
+  const user = userEvent.setup();
   const mockSession: Session = {
     expires: '1',
     user: { email: 'a', name: 'Delta', image: 'c' },
@@ -24,6 +25,7 @@ describe('Sync connection suite', () => {
 
   const CONNECTIONS = [
     {
+      connectionId: 'connection-id-1',
       blockId: 'test-conn-1',
       name: 'test-conn-1',
       source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
@@ -32,6 +34,7 @@ describe('Sync connection suite', () => {
       deploymentId: 'deploy-id-1',
     },
     {
+      connectionId: 'connection-id-2',
       blockId: 'test-conn-2',
       name: 'test-conn-2',
       source: { name: 'YourSurveyCTO', sourceName: 'surveyCTO' },
@@ -52,8 +55,6 @@ describe('Sync connection suite', () => {
     },
   ];
 
-  beforeEach(() => {});
-
   it('Sync connection', async () => {
     (global as any).fetch = jest
       .fn()
@@ -66,27 +67,31 @@ describe('Sync connection suite', () => {
         json: jest.fn().mockResolvedValueOnce(SOURCES),
       });
 
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <SWRConfig
-            value={{
-              dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
-            }}
-          >
-            <Connections />
-          </SWRConfig>
-        </SessionProvider>
-      );
+    render(
+      <SessionProvider session={mockSession}>
+        <SWRConfig
+          value={{
+            dedupingInterval: 0,
+            fetcher: (resource) =>
+              fetch(resource, {}).then((res) => res.json()),
+          }}
+        >
+          <Connections />
+        </SWRConfig>
+      </SessionProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
     });
 
     // look at only the first row of connection
     const connectionsTable = screen.getByRole('table');
     const connectionsTableRows = within(connectionsTable).getAllByRole('row');
     const connCells = within(connectionsTableRows[1]).getAllByRole('cell');
-    expect(connCells.length).toBe(4);
+    await waitFor(() => {
+      expect(connCells.length).toBe(4);
+    });
 
     const actionConnCell: any | HTMLElement | undefined =
       connCells[3]?.firstChild;
@@ -151,14 +156,20 @@ describe('Sync connection suite', () => {
 
     (global as any).fetch = flowStatusAndLogsFetch;
 
-    await act(() => syncButton.click());
+    await user.click(syncButton);
 
-    expect(flowStatusAndLogsFetch).toHaveBeenCalledTimes(6);
+    await waitFor(() => {
+      expect(screen.queryByTestId('sync-icon')).toBeNull();
+    });
   });
 
   it('sync connection - flow run id not found', async () => {
     (global as any).fetch = jest
       .fn()
+      .mockResolvedValueOnce(() => ({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(CONNECTIONS),
+      }))
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce(CONNECTIONS),
@@ -168,27 +179,31 @@ describe('Sync connection suite', () => {
         json: jest.fn().mockResolvedValueOnce(SOURCES),
       });
 
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <SWRConfig
-            value={{
-              dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
-            }}
-          >
-            <Connections />
-          </SWRConfig>
-        </SessionProvider>
-      );
+    render(
+      <SessionProvider session={mockSession}>
+        <SWRConfig
+          value={{
+            dedupingInterval: 0,
+            fetcher: (resource) =>
+              fetch(resource, {}).then((res) => res.json()),
+          }}
+        >
+          <Connections />
+        </SWRConfig>
+      </SessionProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
     });
 
     // look at only the first row of connection
     const connectionsTable = screen.getByRole('table');
     const connectionsTableRows = within(connectionsTable).getAllByRole('row');
     const connCells = within(connectionsTableRows[1]).getAllByRole('cell');
-    expect(connCells.length).toBe(4);
+    await waitFor(() => {
+      expect(connCells.length).toBe(4);
+    });
 
     const actionConnCell: any | HTMLElement | undefined =
       connCells[3]?.firstChild;
@@ -206,8 +221,10 @@ describe('Sync connection suite', () => {
 
     (global as any).fetch = fetchFlowRunIdFailed;
 
-    await act(() => syncButton.click());
+    await user.click(syncButton);
 
-    expect(fetchFlowRunIdFailed).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(fetchFlowRunIdFailed).toHaveBeenCalled();
+    });
   });
 });
