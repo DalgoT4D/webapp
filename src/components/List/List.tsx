@@ -17,6 +17,7 @@ interface ListProps {
   onlyList?: boolean;
   rowValues?: Array<Array<any>>;
   isSortable?: Array<boolean>;
+  height? : number ;
 }
 
 export const List = ({
@@ -27,6 +28,7 @@ export const List = ({
   onlyList,
   rowValues,
   isSortable,
+  height
 }: ListProps) => {
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>();
   const [sortColumn, setSortColumn] = React.useState<number | null>(null);
@@ -105,7 +107,7 @@ export const List = ({
               {orderedRows.map((row: any, idx: number) => (
                 <TableRow
                   key={idx}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } , ...(height && { height }), }}
                 >
                   {row.map(
                     // if action is sent render with right align

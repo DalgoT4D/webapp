@@ -189,7 +189,9 @@ const UnpivotOpForm = ({
       }: UnpivotDataConfig = opConfig;
       setSrcColumns(source_columns);
 
-      let orginalSrcColumns = source_columns.sort((a, b) => a.localeCompare(b));
+      const orginalSrcColumns = source_columns.sort((a, b) =>
+        a.localeCompare(b)
+      );
 
       // pre-fill form
       reset({
@@ -225,6 +227,7 @@ const UnpivotOpForm = ({
             ...[
               [
                 <Box
+                  key="selectAll"
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -327,6 +330,7 @@ const UnpivotOpForm = ({
             ...[
               [
                 <Box
+                  key="select_all_exclude_box"
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
