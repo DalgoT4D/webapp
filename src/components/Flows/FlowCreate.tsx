@@ -23,6 +23,7 @@ import Input from '../UI/Input/Input';
 import moment, { Moment } from 'moment';
 import { Connection } from '@/components/Connections/Connections';
 import { TransformTask } from '../DBT/DBTTarget';
+import { TaskSequence } from './TaskSequence';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -41,9 +42,9 @@ type DispConnection = {
 type DeploymentDef = {
   active: boolean;
   name: string;
-  dbtTransform: string;
+  tasks: Array<TransformTask>;
   connections: Array<any>;
-  cron: string | object|null;
+  cron: string | object | null;
   cronDaysOfWeek: Array<AutoCompleteOption>;
   cronTimeOfDay: string;
 };
@@ -89,9 +90,9 @@ const FlowCreate = ({
     defaultValues: {
       active: true,
       name: '',
-      dbtTransform: 'no',
       connections: [],
       cron: null,
+      tasks: tasks.filter((task) => task.generated_by === 'system'),
       cronDaysOfWeek: [],
       cronTimeOfDay: '',
     },
@@ -155,13 +156,19 @@ const FlowCreate = ({
             session,
             `prefect/v1/flows/${flowId}`
           );
+
+          const uuidOrder = data.transformTasks.reduce((acc: any, obj: any) => {
+            acc[obj.uuid] = obj.seq;
+            return acc;
+          }, {});
+
           const cronObject = convertCronToString(data.cron);
+
           reset({
             cron: {
               id: cronObject.schedule,
               label: cronObject.schedule,
             },
-            dbtTransform: data.dbtTransform,
             connections: data.connections
               .sort((c1: any, c2: any) => c1.seq - c2.seq)
               .map((conn: any) => ({
@@ -170,6 +177,9 @@ const FlowCreate = ({
               })),
             active: data.isScheduleActive,
             name: data.name,
+            tasks: tasks
+              .filter((obj) => uuidOrder.hasOwnProperty(obj.uuid))
+              .sort((a, b) => uuidOrder[a.uuid] - uuidOrder[b.uuid]),
             cronDaysOfWeek: cronObject.daysOfWeek.map((day: string) => ({
               id: day,
               label: WEEKDAYS[day],
@@ -207,6 +217,10 @@ const FlowCreate = ({
   }, []);
 
   const onSubmit = async (data: any) => {
+    if (data.tasks.length === 0) {
+      errorToast('Atleast one transform task is required', [], toastContext);
+      return;
+    }
     try {
       const cronExpression = convertToCronExpression(
         data.cron.id,
@@ -237,18 +251,12 @@ const FlowCreate = ({
           cron: cronExpression,
           name: data.name,
           connections: selectedConns,
-          dbtTransform: data.dbtTransform,
-          transformTasks:
-            tasks && data.dbtTransform === 'yes'
-              ? tasks
-                  .filter(
-                    (task: TransformTask) => task.generated_by === 'system'
-                  )
-                  .map((task: TransformTask) => ({
-                    uuid: task.uuid,
-                    seq: task.seq,
-                  }))
-              : [],
+          transformTasks: data.tasks.map(
+            (task: TransformTask, index: number) => ({
+              uuid: task.uuid,
+              seq: index + 1,
+            })
+          ),
         });
         successToast(
           `Pipeline ${data.name} updated successfully`,
@@ -261,19 +269,13 @@ const FlowCreate = ({
         const response = await httpPost(session, 'prefect/v1/flows/', {
           name: data.name,
           connections: selectedConns,
-          dbtTransform: data.dbtTransform,
           cron: cronExpression,
-          transformTasks:
-            tasks && data.dbtTransform === 'yes'
-              ? tasks
-                  .filter(
-                    (task: TransformTask) => task.generated_by === 'system'
-                  )
-                  .map((task: TransformTask) => ({
-                    uuid: task.uuid,
-                    seq: task.seq,
-                  }))
-              : [],
+          transformTasks: data.tasks.map(
+            (task: TransformTask, index: number) => ({
+              uuid: task.uuid,
+              seq: index + 1,
+            })
+          ),
         });
         successToast(
           `Pipeline ${response.name} created successfully`,
@@ -331,13 +333,11 @@ const FlowCreate = ({
           sx={{
             marginTop: '50px',
             backgroundColor: 'white',
-            padding: '33px 50px 33px 50px',
+            padding: '33px 50px 33px 30px',
             display: 'flex',
-            height: '500px',
-            gap: '50px',
           }}
         >
-          <Box sx={{ width: '60%' }}>
+          <Box sx={{ width: '60%', overflow: 'auto', pl: 4 }}>
             <Typography
               variant="h5"
               sx={{ marginBottom: '30px' }}
@@ -345,7 +345,7 @@ const FlowCreate = ({
             >
               Pipeline details
             </Typography>
-            <Stack gap="12px">
+            <Stack gap="12px" sx={{ maxWidth: '495px', mr: 4 }}>
               {isEditPage && (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Controller
@@ -370,7 +370,6 @@ const FlowCreate = ({
               )}
               <Box>
                 <Input
-                  sx={{ width: '90%' }}
                   data-testid="name"
                   variant="outlined"
                   register={register}
@@ -398,7 +397,7 @@ const FlowCreate = ({
                         }}
                         data-testid="connectionautocomplete"
                         value={field.value}
-                        sx={{ marginBottom: '10px', width: '90%' }}
+                        sx={{ marginBottom: '10px' }}
                         options={connectionOptions}
                         isOptionEqualToValue={(option: any, val: any) =>
                           val && option?.id === val?.id
@@ -422,139 +421,135 @@ const FlowCreate = ({
               </Box>
               <Box>
                 <InputLabel sx={{ marginBottom: '5px' }}>
-                  Transform data ?
+                  Transform tasks
                 </InputLabel>
                 <Controller
-                  name="dbtTransform"
+                  name="tasks"
                   control={control}
-                  render={({ field: { value, onChange } }) => (
-                    <Stack direction={'row'} alignItems="center" gap={'10%'}>
-                      <Switch
-                        checked={value === 'yes'}
-                        value={value}
-                        onChange={(event, value) => {
-                          onChange(value ? 'yes' : 'no');
-                        }}
-                      />
-                    </Stack>
+                  render={({ field }) => (
+                    <TaskSequence field={field} options={tasks} />
                   )}
                 />
               </Box>
             </Stack>
           </Box>
-          <Divider orientation="vertical" />
+          <Divider orientation="vertical" sx={{ height: 'auto' }} />
           <Box sx={{ width: '40%' }}>
-            <Typography variant="h5" sx={{ marginBottom: '30px' }}>
-              Schedule
-            </Typography>
+            <Box sx={{ ml: 4 }}>
+              <Typography variant="h5" sx={{ marginBottom: '30px' }}>
+                Schedule
+              </Typography>
 
-            <Box sx={{ marginBottom: '30px' }}>
-              <Controller
-                name="cron"
-                control={control}
-                rules={{ required: 'Schedule is required' }}
-                render={({ field }) => (
-                  <Autocomplete
-                    id="cron"
-                    value={field.value}
-                    data-testid="cronautocomplete"
-                    options={[
-                      { id: 'manual', label: 'manual' },
-                      { id: 'daily', label: 'daily' },
-                      { id: 'weekly', label: 'weekly' },
-                    ]}
-                    onChange={(e, data) => field.onChange(data)}
-                    isOptionEqualToValue={(option: any, val: any) =>
-                      val && option?.id === val?.id
-                    }
-                    renderInput={(params) => (
-                      <Input
-                        name="cron"
-                        {...params}
-                        placeholder="Select schedule"
-                        label="Daily/Weekly"
-                        variant="outlined"
-                        error={!!errors.cron}
-                        helperText={errors.cron?.message}
-                      />
-                    )}
-                  />
-                )}
-              />
-            </Box>
-            {scheduleSelected?.id === 'weekly' ? (
               <Box sx={{ marginBottom: '30px' }}>
                 <Controller
-                  name="cronDaysOfWeek"
+                  name="cron"
                   control={control}
-                  rules={{ required: 'Day(s) of week is required' }}
+                  rules={{ required: 'Schedule is required' }}
                   render={({ field }) => (
                     <Autocomplete
-                      id="cronDaysOfWeek"
-                      data-testid="cronDaysOfWeek"
-                      multiple
+                      id="cron"
                       value={field.value}
-                      options={Object.keys(WEEKDAYS).map((key) => ({
-                        id: String(key),
-                        label: WEEKDAYS[key],
-                      }))}
+                      data-testid="cronautocomplete"
+                      options={[
+                        { id: 'manual', label: 'manual' },
+                        { id: 'daily', label: 'daily' },
+                        { id: 'weekly', label: 'weekly' },
+                      ]}
+                      onChange={(e, data) => field.onChange(data)}
                       isOptionEqualToValue={(option: any, val: any) =>
                         val && option?.id === val?.id
                       }
-                      onChange={(e, data: readonly any[]) =>
-                        field.onChange(data)
-                      }
                       renderInput={(params) => (
                         <Input
-                          name="cronDaysOfWeek"
+                          name="cron"
                           {...params}
-                          placeholder="Select day"
-                          label="Day of the week"
+                          placeholder="Select schedule"
+                          label="Daily/Weekly"
                           variant="outlined"
-                          error={!!errors.cronDaysOfWeek}
-                          helperText={errors.cronDaysOfWeek?.message}
+                          error={!!errors.cron}
+                          helperText={errors.cron?.message}
                         />
                       )}
                     />
                   )}
                 />
               </Box>
-            ) : (
-              ''
-            )}
-            {scheduleSelected && scheduleSelected?.id !== 'manual' ? (
-              <Box data-testid="cronTimeOfDay">
-                <InputLabel htmlFor={'cronTimeOfDay'}>Time of day*</InputLabel>
-                <Controller
-                  name="cronTimeOfDay"
-                  control={control}
-                  rules={{ required: 'Time of day is required' }}
-                  render={({ field, fieldState: { error } }) => (
-                    <LocalizationProvider dateAdapter={AdapterMoment}>
-                      <TimePicker
-                        value={moment.utc(field.value, 'HH mm').local()}
-                        slotProps={{
-                          textField: {
-                            variant: 'outlined',
-                            error: !!error,
-                            helperText: error?.message,
-                          },
-                        }}
-                        onChange={(value: Moment | null) => {
-                          // the value will have a local time moment object
-                          const utcMinutes = moment.utc(value).minute();
-                          const utcHours = moment.utc(value).hours();
-                          const time = `${utcHours} ${utcMinutes}`;
-                          field.onChange(time);
-                        }}
+              {scheduleSelected?.id === 'weekly' ? (
+                <Box sx={{ marginBottom: '30px' }}>
+                  <Controller
+                    name="cronDaysOfWeek"
+                    control={control}
+                    rules={{ required: 'Day(s) of week is required' }}
+                    render={({ field }) => (
+                      <Autocomplete
+                        id="cronDaysOfWeek"
+                        data-testid="cronDaysOfWeek"
+                        multiple
+                        value={field.value}
+                        options={Object.keys(WEEKDAYS).map((key) => ({
+                          id: String(key),
+                          label: WEEKDAYS[key],
+                        }))}
+                        isOptionEqualToValue={(option: any, val: any) =>
+                          val && option?.id === val?.id
+                        }
+                        onChange={(e, data: readonly any[]) =>
+                          field.onChange(data)
+                        }
+                        renderInput={(params) => (
+                          <Input
+                            name="cronDaysOfWeek"
+                            {...params}
+                            placeholder="Select day"
+                            label="Day of the week"
+                            variant="outlined"
+                            error={!!errors.cronDaysOfWeek}
+                            helperText={errors.cronDaysOfWeek?.message}
+                          />
+                        )}
                       />
-                    </LocalizationProvider>
-                  )}
-                />
-              </Box>
-            ) : (
-              ''
-            )}
+                    )}
+                  />
+                </Box>
+              ) : (
+                ''
+              )}
+              {scheduleSelected && scheduleSelected?.id !== 'manual' ? (
+                <Box data-testid="cronTimeOfDay">
+                  <InputLabel htmlFor={'cronTimeOfDay'}>
+                    Time of day*
+                  </InputLabel>
+                  <Controller
+                    name="cronTimeOfDay"
+                    control={control}
+                    rules={{ required: 'Time of day is required' }}
+                    render={({ field, fieldState: { error } }) => (
+                      <LocalizationProvider dateAdapter={AdapterMoment}>
+                        <TimePicker
+                          value={moment.utc(field.value, 'HH mm').local()}
+                          slotProps={{
+                            textField: {
+                              variant: 'outlined',
+                              error: !!error,
+                              helperText: error?.message,
+                            },
+                          }}
+                          onChange={(value: Moment | null) => {
+                            // the value will have a local time moment object
+                            const utcMinutes = moment.utc(value).minute();
+                            const utcHours = moment.utc(value).hours();
+                            const time = `${utcHours} ${utcMinutes}`;
+                            field.onChange(time);
+                          }}
+                        />
+                      </LocalizationProvider>
+                    )}
+                  />
+                </Box>
+              ) : (
+                ''
+              )}
+            </Box>
           </Box>
         </Box>
       </form>
