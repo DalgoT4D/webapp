@@ -27,6 +27,20 @@ describe('Flow Creation', () => {
 
   const user = userEvent.setup();
 
+  const tasks = [
+    {
+      label: 'GIT pull',
+      slug: 'git-pull',
+      id: 47,
+      uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703',
+      deploymentId: null,
+      lock: null,
+      command: 'git pull',
+      generated_by: 'system',
+      seq: 1,
+      order: 1,
+    },
+  ];
   // ================================================================================
   it('renders the form', async () => {
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
@@ -279,7 +293,7 @@ describe('Flow Creation', () => {
           mutate={mutateMock}
           flowId={undefined}
           setSelectedFlowId={jest.fn}
-          tasks={[]}
+          tasks={tasks}
         />
       </SessionProvider>
     );
@@ -359,6 +373,12 @@ describe('Flow Creation', () => {
     const inputTimeOfDay: any = timeOfDayContainer.querySelector('input');
     fireEvent.change(inputTimeOfDay, { target: { value: '01:00 AM' } });
 
+    const tasksautocomplete = screen.getByTestId('tasksequence');
+
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'Enter' });
+
     await user.click(savebutton);
     await waitFor(() => {
       expect(updateCrudValMock).toHaveBeenCalled();
@@ -367,7 +387,9 @@ describe('Flow Creation', () => {
 
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
     expect(requestBody.name).toBe('MyFlow');
-    expect(requestBody.dbtTransform).toBe('no');
+    expect(requestBody.transformTasks).toStrictEqual([
+      { uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 },
+    ]);
     expect(requestBody.connections.length).toBe(1);
     expect(requestBody.connections[0].seq).toBe(1);
     expect(requestBody.connections[0].id).toBe('conn-1-id');
@@ -401,7 +423,7 @@ describe('Flow Creation', () => {
           mutate={mutateMock}
           flowId={undefined}
           setSelectedFlowId={jest.fn}
-          tasks={[]}
+          tasks={tasks}
         />
       </SessionProvider>
     );
@@ -456,6 +478,12 @@ describe('Flow Creation', () => {
 
     fireEvent.change(inputTimeOfDay, { target: { value: '06:30 AM' } });
 
+    const tasksautocomplete = screen.getByTestId('tasksequence');
+
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'Enter' });
+
     await user.click(savebutton);
     expect(updateCrudValMock).toHaveBeenCalled();
     expect(mutateMock).toHaveBeenCalled();
@@ -463,7 +491,9 @@ describe('Flow Creation', () => {
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
 
     expect(requestBody.name).toBe('MyFlow');
-    expect(requestBody.dbtTransform).toBe('no');
+    expect(requestBody.transformTasks).toStrictEqual([
+      { uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 },
+    ]);
     expect(requestBody.connections.length).toBe(1);
     expect(requestBody.connections[0].seq).toBe(1);
     expect(requestBody.connections[0].id).toBe('conn-1-id');
@@ -499,7 +529,7 @@ describe('Flow Creation', () => {
           mutate={mutateMock}
           flowId={undefined}
           setSelectedFlowId={jest.fn}
-          tasks={[]}
+          tasks={tasks}
         />
       </SessionProvider>
     );
@@ -510,11 +540,6 @@ describe('Flow Creation', () => {
     expect(cronOption).toBeInTheDocument();
     const cronautocomplete = screen.getByTestId('cronautocomplete');
 
-    // test with valid value
-    // fireEvent.change(cronOption, { target: { value: 'weekly' } });
-    // fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-    // fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-    // fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
     await user.clear(cronOption);
 
     await user.type(cronOption, 'weekly');
@@ -569,6 +594,12 @@ describe('Flow Creation', () => {
     fireEvent.change(inputTimeOfDay, { target: { value: '06:30 AM' } });
     fireEvent.keyDown(inputTimeOfDay, { key: 'Enter' });
 
+    const tasksautocomplete = screen.getByTestId('tasksequence');
+
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'Enter' });
+
     await user.click(savebutton);
     expect(updateCrudValMock).toHaveBeenCalled();
     expect(mutateMock).toHaveBeenCalled();
@@ -576,7 +607,9 @@ describe('Flow Creation', () => {
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
 
     expect(requestBody.name).toBe('MyFlow');
-    expect(requestBody.dbtTransform).toBe('no');
+    expect(requestBody.transformTasks).toStrictEqual([
+      { uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 },
+    ]);
     expect(requestBody.connections.length).toBe(1);
     expect(requestBody.connections[0].seq).toBe(1);
     expect(requestBody.connections[0].id).toBe('conn-1-id');

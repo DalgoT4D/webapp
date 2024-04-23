@@ -569,6 +569,7 @@ export const Connections = () => {
         title="Connection"
         headers={headers}
         rows={rows}
+        height={115}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
