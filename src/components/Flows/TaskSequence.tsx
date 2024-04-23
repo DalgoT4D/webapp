@@ -160,6 +160,7 @@ export const TaskSequence = ({
   return (
     <>
       <Autocomplete
+        data-testid="tasksequence"
         inputValue=""
         getOptionLabel={(task: any) => task.command}
         placeholder="Select"

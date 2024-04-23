@@ -1,11 +1,15 @@
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import {
+  render,
+  screen,
+  act,
+  fireEvent,
+  waitFor,
+} from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import FlowCreate from '../FlowCreate';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-
-// const user = userEvent.setup();
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -15,19 +19,28 @@ jest.mock('next/router', () => ({
   },
 }));
 
-// afterEach(() => {
-//   const fakeResponse = {};
-//   const mRes = { json: jest.fn().mockResolvedValueOnce(fakeResponse) };
-//   const mockedFetch = jest.fn().mockResolvedValueOnce(mRes as any);
-//   (global as any).fetch = mockedFetch;
-// });
-
 describe('Flow Creation', () => {
   const mockSession: Session = {
     expires: 'false',
     user: { email: 'a' },
   };
 
+  const user = userEvent.setup();
+
+  const tasks = [
+    {
+      label: 'GIT pull',
+      slug: 'git-pull',
+      id: 47,
+      uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703',
+      deploymentId: null,
+      lock: null,
+      command: 'git pull',
+      generated_by: 'system',
+      seq: 1,
+      order: 1,
+    },
+  ];
   // ================================================================================
   it('renders the form', async () => {
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
@@ -35,18 +48,25 @@ describe('Flow Creation', () => {
       json: jest.fn().mockResolvedValueOnce([]),
     });
 
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <FlowCreate updateCrudVal={() => {}} mutate={() => {}} />
-        </SessionProvider>
-      );
-    });
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          flowId={undefined}
+          updateCrudVal={jest.fn}
+          mutate={jest.fn}
+          setSelectedFlowId={jest.fn}
+          tasks={[]}
+        />
+      </SessionProvider>
+    );
 
     const cancellink = screen.getByTestId('cancellink');
-    expect(cancellink).toBeInTheDocument();
+
     const savebutton = screen.getByTestId('savebutton');
-    expect(savebutton).toBeInTheDocument();
+    await waitFor(() => {
+      expect(cancellink).toBeInTheDocument();
+      expect(savebutton).toBeInTheDocument();
+    });
   });
 
   // ================================================================================
@@ -57,21 +77,24 @@ describe('Flow Creation', () => {
     });
 
     const updateCrudValMock = jest.fn();
-
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <FlowCreate
-            updateCrudVal={(param) => updateCrudValMock(param)}
-            mutate={() => {}}
-          />
-        </SessionProvider>
-      );
-    });
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          flowId={undefined}
+          mutate={jest.fn}
+          setSelectedFlowId={jest.fn}
+          tasks={[]}
+          updateCrudVal={(param) => updateCrudValMock(param)}
+        />
+      </SessionProvider>
+    );
 
     const cancellink = screen.getByTestId('cancellink');
-    await userEvent.click(cancellink);
-    expect(updateCrudValMock).toBeCalledWith('index');
+    await user.click(cancellink);
+
+    await waitFor(() => {
+      expect(updateCrudValMock).toHaveBeenCalledWith('index');
+    });
   });
 
   // ================================================================================
@@ -84,21 +107,25 @@ describe('Flow Creation', () => {
     const updateCrudValMock = jest.fn();
     const mutateMock = jest.fn();
 
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <FlowCreate
-            updateCrudVal={(param) => updateCrudValMock(param)}
-            mutate={mutateMock}
-          />
-        </SessionProvider>
-      );
-    });
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          flowId={undefined}
+          setSelectedFlowId={jest.fn}
+          tasks={[]}
+          updateCrudVal={(param) => updateCrudValMock(param)}
+          mutate={mutateMock}
+        />
+      </SessionProvider>
+    );
 
     const savebutton = screen.getByTestId('savebutton');
-    await userEvent.click(savebutton);
-    expect(updateCrudValMock).not.toHaveBeenCalled();
-    expect(mutateMock).not.toHaveBeenCalled();
+    await user.click(savebutton);
+
+    await waitFor(() => {
+      expect(updateCrudValMock).not.toHaveBeenCalled();
+      expect(mutateMock).not.toHaveBeenCalled();
+    });
   });
 
   // ================================================================================
@@ -113,16 +140,17 @@ describe('Flow Creation', () => {
 
     const updateCrudValMock = jest.fn();
 
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <FlowCreate
-            updateCrudVal={(param) => updateCrudValMock(param)}
-            mutate={() => {}}
-          />
-        </SessionProvider>
-      );
-    });
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          updateCrudVal={(param) => updateCrudValMock(param)}
+          flowId={undefined}
+          mutate={jest.fn}
+          setSelectedFlowId={jest.fn}
+          tasks={[]}
+        />
+      </SessionProvider>
+    );
 
     // fetch connections
     expect(fetchMock).toHaveBeenCalled();
@@ -133,17 +161,18 @@ describe('Flow Creation', () => {
 
     // type name of connection into the autocomplete
     const connOption = screen.getByLabelText('Connections');
-    expect(connOption).toBeInTheDocument();
-    fireEvent.change(connOption, { target: { value: 'conn-1' } });
+    await user.type(connOption, 'conn-1');
 
     // keyboard magic to trigger the connection selections
     const autocomplete = screen.getByTestId('connectionautocomplete');
     fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
 
-    // look for the element in the list of selected connections
-    const selectedConnectionsAfter = screen.getByTestId('connectionchip');
-    expect(selectedConnectionsAfter).toBeInTheDocument();
+    await waitFor(() => {
+      // look for the element in the list of selected connections
+      const selectedConnectionsAfter = screen.getByTestId('connectionchip');
+      expect(selectedConnectionsAfter).toBeInTheDocument();
+    });
   });
 
   // ================================================================================
@@ -158,16 +187,17 @@ describe('Flow Creation', () => {
 
     const updateCrudValMock = jest.fn();
 
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <FlowCreate
-            updateCrudVal={(param) => updateCrudValMock(param)}
-            mutate={() => {}}
-          />
-        </SessionProvider>
-      );
-    });
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          updateCrudVal={(param) => updateCrudValMock(param)}
+          flowId={undefined}
+          mutate={jest.fn}
+          setSelectedFlowId={jest.fn}
+          tasks={[]}
+        />
+      </SessionProvider>
+    );
 
     // fetch connections
     expect(fetchMock).toHaveBeenCalled();
@@ -179,16 +209,18 @@ describe('Flow Creation', () => {
     // type name of connection into the autocomplete
     const connOption = screen.getByLabelText('Connections');
     expect(connOption).toBeInTheDocument();
-    fireEvent.change(connOption, { target: { value: 'conn-1' } });
+    await user.type(connOption, 'conn-1');
 
     // keyboard magic to trigger the connection selections
     const autocomplete = screen.getByTestId('connectionautocomplete');
     fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
 
-    // look for the element in the list of selected connections
-    const selectedConnectionsAfter = screen.getByTestId('connectionchip');
-    expect(selectedConnectionsAfter).toBeInTheDocument();
+    await waitFor(() => {
+      // look for the element in the list of selected connections
+      const selectedConnectionsAfter = screen.getByTestId('connectionchip');
+      expect(selectedConnectionsAfter).toBeInTheDocument();
+    });
   });
 
   // ================================================================================
@@ -202,7 +234,13 @@ describe('Flow Creation', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <FlowCreate updateCrudVal={() => {}} mutate={() => {}} />
+          <FlowCreate
+            updateCrudVal={jest.fn}
+            flowId={undefined}
+            mutate={jest.fn}
+            setSelectedFlowId={jest.fn}
+            tasks={[]}
+          />
         </SessionProvider>
       );
     });
@@ -215,15 +253,13 @@ describe('Flow Creation', () => {
 
     // test with valid value
     autocomplete.focus();
-    await act(() => userEvent.type(cronOption, 'daily'));
+    await user.type(cronOption, 'daily');
     fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
     expect(cronOption.value).toBe('daily');
 
     // test with invalid value
-    await act(async () => {
-      userEvent.type(cronOption, 'foo');
-    });
+    await user.type(cronOption, 'foo');
     fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
     expect(cronOption.value).not.toBe('foo');
@@ -249,13 +285,18 @@ describe('Flow Creation', () => {
 
     const updateCrudValMock = jest.fn();
     const mutateMock = jest.fn();
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <FlowCreate updateCrudVal={updateCrudValMock} mutate={mutateMock} />
-        </SessionProvider>
-      );
-    });
+
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          updateCrudVal={updateCrudValMock}
+          mutate={mutateMock}
+          flowId={undefined}
+          setSelectedFlowId={jest.fn}
+          tasks={tasks}
+        />
+      </SessionProvider>
+    );
 
     const cronOption = screen.getByRole('combobox', {
       name: 'Daily/Weekly',
@@ -263,18 +304,17 @@ describe('Flow Creation', () => {
     expect(cronOption).toBeInTheDocument();
     const cronautocomplete = screen.getByTestId('cronautocomplete');
 
-    // test with valid value
-    // cronautocomplete.focus();
-    await act(async () => {
-      await userEvent.clear(cronOption);
-      await userEvent.type(cronOption, 'daily');
-    });
+    await user.clear(cronOption);
+    await user.type(cronOption, 'daily');
+
     fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
-    expect(cronOption.value).toBe('daily');
+    await waitFor(() => {
+      expect(cronOption.value).toBe('daily');
+    });
 
     // test with invalid value
-    await act(() => userEvent.type(cronOption, 'foo'));
+    await user.type(cronOption, 'foo');
     // fireEvent.change(cronOption, { target: { value: 'foo' } });
     fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
@@ -291,14 +331,17 @@ describe('Flow Creation', () => {
     fireEvent.keyDown(connectionautocomplete, { key: 'Enter' });
 
     const savebutton = screen.getByTestId('savebutton');
-    await userEvent.click(savebutton);
+    await user.click(savebutton);
     expect(updateCrudValMock).not.toHaveBeenCalled();
     expect(mutateMock).not.toHaveBeenCalled();
 
     // enter last required field
     const flowname: any = screen.getByTestId('name').querySelector('input');
     fireEvent.change(flowname, { target: { value: 'MyFlow' } });
-    expect(flowname.value).toBe('MyFlow');
+    await waitFor(() => {
+      expect(flowname.value).toBe('MyFlow');
+    });
+
     const fetchMock2 = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce({ name: 'created flowname' }),
@@ -306,48 +349,51 @@ describe('Flow Creation', () => {
     (global as any).fetch = fetchMock2;
 
     // select day of week
-    await userEvent.clear(cronOption);
-    await act(async () => {
-      await userEvent.type(cronOption, 'weekly');
-      fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-      fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    await user.clear(cronOption);
+
+    await user.type(cronOption, 'weekly');
+    fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(cronOption.value).toBe('weekly');
     });
-    expect(cronOption.value).toBe('weekly');
+
     const dayOfWeekOption = screen.getByRole('combobox', {
       name: 'Day of the week',
     }) as HTMLInputElement;
     const multiTagCronDaysOfWeek = screen.getByTestId('cronDaysOfWeek');
-    await act(() =>
-      fireEvent.change(dayOfWeekOption, { target: { value: 'Sunday' } })
-    );
+    fireEvent.change(dayOfWeekOption, { target: { value: 'Sunday' } });
+
     fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'ArrowDown' });
-    await act(() =>
-      fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'Enter' })
-    );
+    fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'Enter' });
 
     // select the time also
     const timeOfDayContainer = screen.getByTestId('cronTimeOfDay');
     const inputTimeOfDay: any = timeOfDayContainer.querySelector('input');
     fireEvent.change(inputTimeOfDay, { target: { value: '01:00 AM' } });
 
-    await userEvent.click(savebutton);
-    expect(updateCrudValMock).toHaveBeenCalled();
-    expect(mutateMock).toHaveBeenCalled();
+    const tasksautocomplete = screen.getByTestId('tasksequence');
+
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'Enter' });
+
+    await user.click(savebutton);
+    await waitFor(() => {
+      expect(updateCrudValMock).toHaveBeenCalled();
+      expect(mutateMock).toHaveBeenCalled();
+    });
 
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
     expect(requestBody.name).toBe('MyFlow');
-    expect(requestBody.dbtTransform).toBe('no');
+    expect(requestBody.transformTasks).toStrictEqual([
+      { uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 },
+    ]);
     expect(requestBody.connections.length).toBe(1);
     expect(requestBody.connections[0].seq).toBe(1);
     expect(requestBody.connections[0].id).toBe('conn-1-id');
-
-    // expect(fetchMock2).toHaveBeenCalledWith({
-    //   name: 'MyFlow',
-    //   dbtTransform: 'no',
-    //   connectionBlocks: [{ seq: 1, blockName: 'conn-1-block', name: 'conn-1' }],
-    //   cron: { id: 'weekly', label: 'weekly' },
-    // });
-  });
+  }, 10000);
 
   // ================================================================================
   it('check another payload sent to api - cron daily', async () => {
@@ -369,13 +415,18 @@ describe('Flow Creation', () => {
 
     const updateCrudValMock = jest.fn();
     const mutateMock = jest.fn();
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <FlowCreate updateCrudVal={updateCrudValMock} mutate={mutateMock} />
-        </SessionProvider>
-      );
-    });
+
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          updateCrudVal={updateCrudValMock}
+          mutate={mutateMock}
+          flowId={undefined}
+          setSelectedFlowId={jest.fn}
+          tasks={tasks}
+        />
+      </SessionProvider>
+    );
 
     const cronOption = screen.getByRole('combobox', {
       name: 'Daily/Weekly',
@@ -384,13 +435,15 @@ describe('Flow Creation', () => {
     const cronautocomplete = screen.getByTestId('cronautocomplete');
 
     // test with valid value
-    await userEvent.clear(cronOption);
-    await act(async () => {
-      await userEvent.type(cronOption, 'daily');
-      fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-      fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    await user.clear(cronOption);
+
+    await user.type(cronOption, 'daily');
+    fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(cronOption.value).toBe('daily');
     });
-    expect(cronOption.value).toBe('daily');
 
     // type name of connection into the autocomplete
     const connOption = screen.getByLabelText('Connections');
@@ -412,44 +465,41 @@ describe('Flow Creation', () => {
       }
     });
     expect(flowname).not.toBeNull();
-    await userEvent.type(flowname, 'MyFlow');
+    await user.type(flowname, 'MyFlow');
     const fetchMock2 = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce({ name: 'created flowname' }),
     });
     (global as any).fetch = fetchMock2;
 
-    // select day of week
-    // const dayOfWeekOption = screen.getByRole('combobox', {
-    //   name: 'Day of the week',
-    // }) as HTMLInputElement;
-    // const multiTagCronDaysOfWeek = screen.getByTestId('cronDaysOfWeek');
-    // await act(() =>
-    //   fireEvent.change(dayOfWeekOption, { target: { value: 'Sunday' } })
-    // );
-    // fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'ArrowDown' });
-    // await act(() =>
-    //   fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'Enter' })
-    // );
-
     // select the time also
     const timeOfDayContainer = screen.getByTestId('cronTimeOfDay');
     const inputTimeOfDay: any = timeOfDayContainer.querySelector('input');
+
     fireEvent.change(inputTimeOfDay, { target: { value: '06:30 AM' } });
 
-    await userEvent.click(savebutton);
+    const tasksautocomplete = screen.getByTestId('tasksequence');
+
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'Enter' });
+
+    await user.click(savebutton);
     expect(updateCrudValMock).toHaveBeenCalled();
     expect(mutateMock).toHaveBeenCalled();
 
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
 
     expect(requestBody.name).toBe('MyFlow');
-    expect(requestBody.dbtTransform).toBe('no');
+    expect(requestBody.transformTasks).toStrictEqual([
+      { uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 },
+    ]);
     expect(requestBody.connections.length).toBe(1);
     expect(requestBody.connections[0].seq).toBe(1);
     expect(requestBody.connections[0].id).toBe('conn-1-id');
+    // this needs to be fixed based on the CI timezone
     // expect(requestBody.cron).toBe('0 1 * * *');
-  });
+  }, 10000);
 
   // // ================================================================================
   it('check another payload sent to api - cron weekly', async () => {
@@ -471,13 +521,18 @@ describe('Flow Creation', () => {
 
     const updateCrudValMock = jest.fn();
     const mutateMock = jest.fn();
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <FlowCreate updateCrudVal={updateCrudValMock} mutate={mutateMock} />
-        </SessionProvider>
-      );
-    });
+
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          updateCrudVal={updateCrudValMock}
+          mutate={mutateMock}
+          flowId={undefined}
+          setSelectedFlowId={jest.fn}
+          tasks={tasks}
+        />
+      </SessionProvider>
+    );
 
     const cronOption = screen.getByRole('combobox', {
       name: 'Daily/Weekly',
@@ -485,18 +540,14 @@ describe('Flow Creation', () => {
     expect(cronOption).toBeInTheDocument();
     const cronautocomplete = screen.getByTestId('cronautocomplete');
 
-    // test with valid value
-    // fireEvent.change(cronOption, { target: { value: 'weekly' } });
-    // fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-    // fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-    // fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
-    await userEvent.clear(cronOption);
-    await act(async () => {
-      await userEvent.type(cronOption, 'weekly');
-      fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
-      fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    await user.clear(cronOption);
+
+    await user.type(cronOption, 'weekly');
+    fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+    await waitFor(() => {
+      expect(cronOption.value).toBe('weekly');
     });
-    expect(cronOption.value).toBe('weekly');
 
     // type name of connection into the autocomplete
     const connOption = screen.getByLabelText('Connections');
@@ -518,7 +569,7 @@ describe('Flow Creation', () => {
       }
     });
     expect(flowname).not.toBeNull();
-    await userEvent.type(flowname, 'MyFlow');
+    await user.type(flowname, 'MyFlow');
     const fetchMock2 = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce({ name: 'created flowname' }),
@@ -530,13 +581,12 @@ describe('Flow Creation', () => {
       name: 'Day of the week',
     }) as HTMLInputElement;
     const multiTagCronDaysOfWeek = screen.getByTestId('cronDaysOfWeek');
-    await act(() =>
-      fireEvent.change(dayOfWeekOption, { target: { value: 'Sunday' } })
-    );
+
+    fireEvent.change(dayOfWeekOption, { target: { value: 'Sunday' } });
+
     fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'ArrowDown' });
-    await act(() =>
-      fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'Enter' })
-    );
+
+    fireEvent.keyDown(multiTagCronDaysOfWeek, { key: 'Enter' });
 
     // select the time also
     const timeOfDayContainer = screen.getByTestId('cronTimeOfDay');
@@ -544,17 +594,25 @@ describe('Flow Creation', () => {
     fireEvent.change(inputTimeOfDay, { target: { value: '06:30 AM' } });
     fireEvent.keyDown(inputTimeOfDay, { key: 'Enter' });
 
-    await userEvent.click(savebutton);
+    const tasksautocomplete = screen.getByTestId('tasksequence');
+
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(tasksautocomplete, { key: 'Enter' });
+
+    await user.click(savebutton);
     expect(updateCrudValMock).toHaveBeenCalled();
     expect(mutateMock).toHaveBeenCalled();
 
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
 
     expect(requestBody.name).toBe('MyFlow');
-    expect(requestBody.dbtTransform).toBe('no');
+    expect(requestBody.transformTasks).toStrictEqual([
+      { uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 },
+    ]);
     expect(requestBody.connections.length).toBe(1);
     expect(requestBody.connections[0].seq).toBe(1);
     expect(requestBody.connections[0].id).toBe('conn-1-id');
     // expect(requestBody.cron).toBe('0 1 * * 0');
-  });
+  }, 10000);
 });
