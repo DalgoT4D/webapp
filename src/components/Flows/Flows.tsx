@@ -19,9 +19,11 @@ import Image from 'next/image';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import styles from './Flows.module.css';
 
-interface BlockLock {
+export interface TaskLock {
   lockedBy: string;
   lockedAt: string;
+  flowRunId?: string;
+  status: 'queued' | 'running' | 'locked' | 'complete';
 }
 
 export interface FlowInterface {
@@ -30,7 +32,7 @@ export interface FlowInterface {
   deploymentName: string;
   deploymentId: string;
   lastRun?: FlowRun;
-  lock: BlockLock | undefined | null;
+  lock: TaskLock | undefined | null;
   isRunning: boolean;
   status: boolean;
 }
