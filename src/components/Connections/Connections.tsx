@@ -25,6 +25,7 @@ import styles from '@/styles/Common.module.css';
 import { delay, lastRunTime, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import { LogCard } from '@/components/Logs/LogCard';
+import { TaskLock } from '../Flows/Flows';
 
 type PrefectFlowRun = {
   id: string;
@@ -68,9 +69,8 @@ export type Connection = {
   catalogId: string;
   destination: Destination;
   source: Source;
-  lock: { lockedBy: string | null; lockedAt: string | null } | null;
+  lock: TaskLock | null;
   lastRun: null | any;
-  isRunning: boolean;
   normalize: boolean;
   status: string;
   syncCatalog: object;
@@ -143,7 +143,9 @@ export const Connections = () => {
   // const [blockId, setBlockId] = useState<string>('');
   const [connectionId, setConnectionId] = useState<string>('');
   // const [syncingBlockId, setSyncingBlockId] = useState<string>('');
-  const [syncingConnectionId, setSyncingConnectionId] = useState<string>('');
+  const [syncingConnectionIds, setSyncingConnectionIds] = useState<
+    Array<string>
+  >([]);
   const [syncLogs, setSyncLogs] = useState<Array<string>>([]);
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
 
@@ -241,7 +243,7 @@ export const Connections = () => {
     }
   };
 
-  const syncConnection = (deploymentId: string) => {
+  const syncConnection = (deploymentId: string, connectionId: string) => {
     (async () => {
       setExpandSyncLogs(true);
       if (!deploymentId) {
@@ -272,12 +274,16 @@ export const Connections = () => {
           await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
-        setSyncingConnectionId('');
+        setSyncingConnectionIds(
+          syncingConnectionIds.filter((id) => id !== connectionId)
+        );
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
       } finally {
-        setSyncingConnectionId('');
+        setSyncingConnectionIds(
+          syncingConnectionIds.filter((id) => id !== connectionId)
+        );
       }
     })();
   };
@@ -325,22 +331,29 @@ export const Connections = () => {
   };
 
   const Actions = ({
-    connection: { connectionId, deploymentId },
+    connection: { deploymentId, connectionId, lock },
     idx,
-  }: any) => (
+  }: {
+    connection: Connection;
+    idx: string;
+  }) => (
     <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
       <Button
         variant="contained"
         onClick={() => {
-          setSyncingConnectionId(connectionId);
-          syncConnection(deploymentId);
+          // push connection id into list of syncing connection ids
+          if (!syncingConnectionIds.includes(connectionId))
+            setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
+          syncConnection(deploymentId, connectionId);
         }}
         data-testid={'sync-' + idx}
-        disabled={syncingConnectionId === connectionId}
+        disabled={
+          syncingConnectionIds.includes(connectionId) || lock ? true : false
+        }
         key={'sync-' + idx}
         sx={{ marginRight: '10px' }}
       >
-        {syncingConnectionId === connectionId ? (
+        {syncingConnectionIds.includes(connectionId) || lock ? (
           <Image
             src={SyncIcon}
             className={styles.SyncIcon}
@@ -367,15 +380,16 @@ export const Connections = () => {
       </Button>
     </Box>
   );
+
   const getLastSync = (connection: Connection) =>
-    connection.isRunning ? (
+    connection?.lock?.status === 'running' ||
+    connection?.lock?.status === 'complete' ? (
       <CircularProgress />
-    ) : connection.lock ? (
+    ) : connection?.lock?.status === 'locked' ? (
       <LockIcon />
-    ) : syncingConnectionId ? (
-      <Typography variant="subtitle2" fontWeight={600}>
-        {lastRunTime(connection?.lastRun?.startTime)}
-      </Typography>
+    ) : syncingConnectionIds.includes(connection.connectionId) ||
+      connection?.lock?.status === 'queued' ? (
+      'queued'
     ) : (
       <Box
         sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
@@ -512,7 +526,7 @@ export const Connections = () => {
         }
       }
     })();
-  }, [data, syncingConnectionId]);
+  }, [data, syncingConnectionIds]);
 
   const handleClickOpen = () => {
     setShowDialog(true);
