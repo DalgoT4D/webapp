@@ -44,7 +44,7 @@ type DeploymentDef = {
   name: string;
   tasks: Array<TransformTask>;
   connections: Array<any>;
-  cron: string | object;
+  cron: string | object | null;
   cronDaysOfWeek: Array<AutoCompleteOption>;
   cronTimeOfDay: string;
 };
@@ -91,8 +91,8 @@ const FlowCreate = ({
       active: true,
       name: '',
       connections: [],
+      cron: null,
       tasks: tasks.filter((task) => task.generated_by === 'system'),
-      cron: '',
       cronDaysOfWeek: [],
       cronTimeOfDay: '',
     },
