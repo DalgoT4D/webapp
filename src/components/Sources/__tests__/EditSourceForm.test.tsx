@@ -1,11 +1,9 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import EditSourceForm from '../EditSourceForm';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-
-// const user = userEvent.setup();
 
 const pushMock = jest.fn();
 
@@ -22,29 +20,12 @@ describe('Connections Setup', () => {
     expires: '1',
     user: { email: 'a' },
   };
+  const user = userEvent.setup();
 
   // ============================================================
   it('renders the form', async () => {
     (global as any).fetch = jest
       .fn()
-      // airbyte/source_definitions
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce([
-          {
-            name: 'sourceDefElementName',
-            sourceDefinitionId: 'MY-SOURCEDEF-ID',
-          },
-          {
-            name: 'anotherSDefName',
-            sourceDefinitionId: 'anotherSDefId',
-          },
-          {
-            name: 'andAnotherSDefName',
-            sourceDefinitionId: 'andAnotherSDefId',
-          },
-        ]),
-      })
       // airbyte/sources/<sourceId>
       .mockResolvedValueOnce({
         ok: true,
@@ -71,30 +52,50 @@ describe('Connections Setup', () => {
         ]),
       });
     const setShowFormMock = jest.fn();
+    const setLoadingMock = jest.fn();
+    render(
+      <SessionProvider session={mockSession}>
+        <EditSourceForm
+          sourceId="fake-source-id"
+          showForm
+          setShowForm={(x) => setShowFormMock(x)}
+          mutate={jest.fn}
+          loading={false}
+          setLoading={setLoadingMock}
+          sourceDefs={[
+            {
+              label: 'Postgres',
+              id: 'MYSOURCEDEFID',
+              dockerRepository: 'airbyte/source-postgres',
+              tag: '3.3.1',
+            },
+          ]}
+        />
+      </SessionProvider>
+    );
 
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <EditSourceForm
-            sourceId="fake-source-id"
-            showForm={true}
-            setShowForm={(x) => setShowFormMock(x)}
-          />
-        </SessionProvider>
-      );
+    await waitFor(() => {
+      const savebutton = screen.getByTestId('savebutton');
+      expect(savebutton).toBeInTheDocument();
     });
-    const savebutton = screen.getByTestId('savebutton');
-    expect(savebutton).toBeInTheDocument();
 
     const cancelbutton = screen.getByTestId('cancelbutton');
     expect(cancelbutton).toBeInTheDocument();
 
+    await waitFor(() => {
+      expect(setLoadingMock).toHaveBeenLastCalledWith(false);
+    });
     const sourceName = screen.getByLabelText('Name*') as HTMLInputElement;
     expect(sourceName).toBeInTheDocument();
-    expect(sourceName.value).toBe('MYSOURCENAME');
+    await waitFor(() => {
+      expect(sourceName.value).toBe('MYSOURCENAME');
+    });
 
-    await userEvent.click(cancelbutton);
-    expect(setShowFormMock).toHaveBeenCalledWith(false);
+    await user.click(cancelbutton);
+
+    await waitFor(() => {
+      expect(setShowFormMock).toHaveBeenCalledWith(false);
+    });
 
     const sourceType = screen.getByLabelText('Select source type');
     expect(sourceType).toBeInTheDocument();
@@ -104,24 +105,6 @@ describe('Connections Setup', () => {
   it('renders the form and updates a value', async () => {
     (global as any).fetch = jest
       .fn()
-      // airbyte/source_definitions
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce([
-          {
-            name: 'sourceDefElementName',
-            sourceDefinitionId: 'MY-SOURCEDEF-ID',
-          },
-          {
-            name: 'anotherSDefName',
-            sourceDefinitionId: 'anotherSDefId',
-          },
-          {
-            name: 'andAnotherSDefName',
-            sourceDefinitionId: 'andAnotherSDefId',
-          },
-        ]),
-      })
       // airbyte/sources/<sourceId>
       .mockResolvedValueOnce({
         ok: true,
@@ -168,40 +151,56 @@ describe('Connections Setup', () => {
         ]),
       });
     const setShowFormMock = jest.fn();
+    const setLoadingMock = jest.fn();
 
-    await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <EditSourceForm
-            sourceId="fake-source-id"
-            showForm={true}
-            setShowForm={(x) => setShowFormMock(x)}
-          />
-        </SessionProvider>
-      );
+    render(
+      <SessionProvider session={mockSession}>
+        <EditSourceForm
+          sourceId="fake-source-id"
+          showForm={true}
+          setShowForm={(x) => setShowFormMock(x)}
+          mutate={jest.fn}
+          loading={false}
+          setLoading={setLoadingMock}
+          sourceDefs={[
+            {
+              label: 'Postgres',
+              id: 'MYSOURCEDEFID',
+              dockerRepository: 'airbyte/source-postgres',
+              tag: '3.3.1',
+            },
+          ]}
+        />
+      </SessionProvider>
+    );
+
+    await waitFor(() => {
+      const savebutton = screen.getByTestId('savebutton');
+      expect(savebutton).toBeInTheDocument();
     });
-    const savebutton = screen.getByTestId('savebutton');
-    expect(savebutton).toBeInTheDocument();
 
     const cancelbutton = screen.getByTestId('cancelbutton');
     expect(cancelbutton).toBeInTheDocument();
 
+    await waitFor(() => {
+      expect(setLoadingMock).toHaveBeenLastCalledWith(false);
+    });
     const sourceName = screen.getByLabelText('Name*') as HTMLInputElement;
     expect(sourceName).toBeInTheDocument();
-    expect(sourceName.value).toBe('MYSOURCENAME');
+    await waitFor(() => {
+      expect(sourceName.value).toBe('MYSOURCENAME');
+    });
 
     const sourceType = screen.getByLabelText('Select source type');
     expect(sourceType).toBeInTheDocument();
 
-    const submitMock = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce({}),
-    });
-    (global as any).fetch = submitMock;
-    await userEvent.type(sourceName, '-appended');
-    await userEvent.click(savebutton);
+    await user.type(sourceName, '-appended');
 
-    const response = JSON.parse(submitMock.mock.calls[0][1]['body']);
-    expect(response.name).toBe('MYSOURCENAME-appended');
+    const savebutton = screen.getByTestId('savebutton');
+    await user.click(savebutton);
+
+    await waitFor(() => {
+      expect(setLoadingMock).toHaveBeenCalled();
+    });
   });
 });

@@ -60,7 +60,7 @@ const EditSourceForm = ({
   sourceId,
   loading,
   setLoading,
-  sourceDefs
+  sourceDefs,
 }: EditSourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -81,10 +81,10 @@ const EditSourceForm = ({
       config: {},
     },
   });
+
   const watchSelectedSourceDef = watch('sourceDef');
   const [logs, setLogs] = useState<Array<any>>([]);
   const [source, setSource] = useState<any>(null);
-  // const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
   const lastRenderedSpecRef = useRef([]);
 
@@ -92,16 +92,10 @@ const EditSourceForm = ({
     reset();
     setShowForm(false);
     setSource(null);
-    // setSourceDefs([]);
+
     setSourceDefSpecs([]);
     setLogs([]);
   };
-
-  // useEffect(() => {
-  //   (async () => {
-  //     await fetchSourceDefinitions();
-  //   })();
-  // }, [showForm]);
 
   useEffect(() => {
     if (showForm && sourceId && sourceDefs.length > 0) {
@@ -251,14 +245,19 @@ const EditSourceForm = ({
     return (
       <>
         <Box sx={{ pt: 2, pb: 4 }}>
-          <Input
-            sx={{ width: '100%' }}
-            label="Name"
-            variant="outlined"
-            register={register}
+          <Controller
             name="name"
-            required
-          ></Input>
+            control={control}
+            rules={{ required: 'Name is required' }}
+            render={({ field }) => (
+              <Input
+                {...field}
+                sx={{ width: '100%' }}
+                label="Name*"
+                variant="outlined"
+              ></Input>
+            )}
+          />
           <Box sx={{ m: 2 }} />
           <>
             <Controller
