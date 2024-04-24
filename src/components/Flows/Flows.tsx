@@ -206,12 +206,12 @@ export const Flows = ({
         flowStatus(flow.status),
 
         flowLastRun(flow),
-        flow?.lock?.status === 'running' ? (
+        flow.lock?.status === 'running' ? (
           <CircularProgress />
-        ) : flow?.lock?.status === 'locked' ||
-          flow?.lock?.status === 'complete' ? (
+        ) : flow.lock?.status === 'locked' ||
+          flow.lock?.status === 'complete' ? (
           <LockIcon />
-        ) : flow?.lock?.status === 'queued' ? (
+        ) : flow.lock?.status === 'queued' ? (
           <Tooltip title="Job Queued" placement="top">
             <Image
               style={{ marginRight: 10 }}
