@@ -272,10 +272,10 @@ export const DBTTaskList = ({
               sx={{ display: 'flex', justifyContent: 'flex-end', gap: '20px' }}
             >
               <Box sx={{ alignItems: 'center', display: 'flex' }}>
-                {task?.lock?.status === 'running' ? (
+                {task.lock?.status === 'running' ? (
                   <CircularProgress />
-                ) : task?.lock?.status === 'locked' ||
-                  task?.lock?.status === 'complete' ? (
+                ) : task.lock?.status === 'locked' ||
+                  task.lock?.status === 'complete' ? (
                   <LockIcon />
                 ) : (
                   <Tooltip title="Job Queued" placement="top">

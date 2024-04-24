@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { CircularProgress, Box, Typography, Tooltip } from '@mui/material';
 import { List } from '../List/List';
@@ -388,15 +388,15 @@ export const Connections = () => {
   );
 
   const getLastSync = (connection: Connection) => {
-    if (connection?.lock?.status === 'running') return <CircularProgress />;
+    if (connection.lock?.status === 'running') return <CircularProgress />;
     else if (
-      connection?.lock?.status === 'locked' ||
-      connection?.lock?.status === 'complete'
+      connection.lock?.status === 'locked' ||
+      connection.lock?.status === 'complete'
     )
       return <LockIcon />;
     else if (
       syncingConnectionIds.includes(connection.connectionId) ||
-      connection?.lock?.status === 'queued'
+      connection.lock?.status === 'queued'
     )
       return (
         <Tooltip title="Job Queued" placement="top">
@@ -415,8 +415,8 @@ export const Connections = () => {
         <Typography variant="subtitle2" fontWeight={600}>
           {lastRunTime(connection?.lastRun?.startTime)}
         </Typography>
-        {connection?.lastRun?.status &&
-          (connection?.lastRun?.status == 'COMPLETED' ? (
+        {connection.lastRun?.status &&
+          (connection.lastRun?.status == 'COMPLETED' ? (
             <Box
               data-testid={'connectionstate-success'}
               sx={{
