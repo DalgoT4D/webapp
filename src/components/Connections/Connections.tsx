@@ -247,7 +247,7 @@ export const Connections = () => {
     }
   };
 
-  const pollForFlowRun = async (flow_run_id: string, connectionId: string) => {
+  const pollForFlowRun = async (flow_run_id: string) => {
     let flowRunStatus: string = await fetchFlowRunStatus(flow_run_id);
 
     await fetchAndSetFlowRunLogs(flow_run_id);
@@ -278,7 +278,9 @@ export const Connections = () => {
         return;
       }
 
-      pollForFlowRun(response.flow_run_id, connectionId);
+      successToast(`Sync initiated successfully`, [], toastContext);
+
+      pollForFlowRun(response.flow_run_id);
       mutate();
     } catch (err: any) {
       console.error(err);
@@ -512,12 +514,6 @@ export const Connections = () => {
       ]);
 
       setRows(tempRows);
-
-      let syncingIds: string[] = [];
-      data.forEach((conn: Connection) => {
-        if (conn.lock) syncingIds.push(conn.connectionId);
-      });
-      setSyncingConnectionIds(syncingIds);
     }
   };
 
