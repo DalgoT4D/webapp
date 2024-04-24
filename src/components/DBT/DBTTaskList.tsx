@@ -1,4 +1,10 @@
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import SyncIcon from '@/assets/icons/sync.svg';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -21,6 +27,7 @@ import { ActionsMenu } from '../UI/Menu/Menu';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import CreateOrgTaskForm from './CreateOrgTaskForm';
 import LockIcon from '@mui/icons-material/Lock';
+import JobQueuedIcon from '@/assets/icons/jobQueued.svg';
 
 type params = {
   setDbtRunLogs: (...args: any) => any;
@@ -271,7 +278,13 @@ export const DBTTaskList = ({
                   task?.lock?.status === 'complete' ? (
                   <LockIcon />
                 ) : (
-                  'queued'
+                  <Tooltip title="Job Queued" placement="top">
+                    <Image
+                      style={{ marginRight: 10 }}
+                      src={JobQueuedIcon}
+                      alt="job queued icon"
+                    />
+                  </Tooltip>
                 )}
               </Box>
               <Box

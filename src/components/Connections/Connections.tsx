@@ -5,6 +5,7 @@ import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
 import SyncIcon from '@/assets/icons/sync.svg';
+import JobQueuedIcon from '@/assets/icons/jobQueued.svg';
 import LockIcon from '@mui/icons-material/Lock';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -397,7 +398,15 @@ export const Connections = () => {
       syncingConnectionIds.includes(connection.connectionId) ||
       connection?.lock?.status === 'queued'
     )
-      return 'queued';
+      return (
+        <Tooltip title="Job Queued" placement="top">
+          <Image
+            style={{ marginRight: 10 }}
+            src={JobQueuedIcon}
+            alt="job queued icon"
+          />
+        </Tooltip>
+      );
 
     return (
       <Box
