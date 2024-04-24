@@ -44,6 +44,7 @@ export const Destinations = () => {
   const { data: session }: any = useSession();
   const [warehouse, setWarehouse] = useState<Warehouse>();
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   const [showCreateWarehouseDialog, setShowCreateWarehouseDialog] =
     useState(false);
   const [showEditWarehouseDialog, setShowEditWarehouseDialog] = useState(false);
@@ -315,6 +316,7 @@ export const Destinations = () => {
         <Box sx={{ display: 'flex', gap: '5px' }}>
           <Button
             variant="contained"
+            disabled={!permissions.includes('can_edit_warehouse')}
             onClick={() => setShowEditWarehouseDialog(true)}
             data-testid="edit-destination"
           >
@@ -323,6 +325,7 @@ export const Destinations = () => {
           <Button
             variant="contained"
             sx={{ backgroundColor: '#d84141' }}
+            disabled={!permissions.includes('can_delete_warehouses')}
             onClick={() => setShowDeleteWarehouseDialog(true)}
             data-testid="delete-destination"
           >
@@ -334,6 +337,7 @@ export const Destinations = () => {
         <Button
           color="primary"
           variant="outlined"
+          disabled={!permissions.includes('can_add_warehouse')}
           onClick={() => setShowCreateWarehouseDialog(true)}
           data-testid="add-new-destination"
         >

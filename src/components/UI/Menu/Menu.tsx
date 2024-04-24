@@ -21,6 +21,8 @@ interface MenuProps {
   handleResetConnection?: () => void;
   handleResendInvitation?: () => void;
   handleMakeAccountManager?: () => void;
+  hasEditPermission?: boolean;
+  hasDeletePermission?: boolean;
 }
 
 export const ActionsMenu: React.FC<MenuProps> = ({
@@ -33,6 +35,8 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   handleResetConnection,
   handleResendInvitation,
   handleMakeAccountManager,
+  hasEditPermission = true,
+  hasDeletePermission = true,
 }) => (
   <Menu
     id="basic-menu"
@@ -55,7 +59,11 @@ export const ActionsMenu: React.FC<MenuProps> = ({
     }}
   >
     {handleEdit && (
-      <MenuItem sx={{ my: 0 }} onClick={() => handleEdit()}>
+      <MenuItem
+        sx={{ my: 0 }}
+        onClick={() => handleEdit()}
+        disabled={!hasEditPermission}
+      >
         <ListItemIcon style={{ minWidth: 28 }}>
           <Image src={EditIcon} alt="edit icon" />
         </ListItemIcon>
@@ -81,7 +89,10 @@ export const ActionsMenu: React.FC<MenuProps> = ({
     {handleDelete && (
       <Box key="fake-key">
         <Divider style={{ margin: 0 }} />
-        <MenuItem onClick={() => handleDelete()}>
+        <MenuItem
+          onClick={() => handleDelete()}
+          disabled={!hasDeletePermission}
+        >
           <ListItemIcon style={{ minWidth: 28 }}>
             <Image src={DeleteIcon} alt="delete icon" />
           </ListItemIcon>

@@ -14,7 +14,8 @@ interface ListProps {
   rows: Array<any>;
   openDialog: any;
   onlyList?: boolean;
-  height? : number ;
+  height?: number;
+  hasCreatePermission?: boolean;
 }
 
 export const List = ({
@@ -23,7 +24,8 @@ export const List = ({
   headers,
   rows,
   onlyList,
-  height
+  height,
+  hasCreatePermission = true,
 }: ListProps) => {
   return (
     <>
@@ -33,6 +35,7 @@ export const List = ({
             data-testid={`add-new-${title}`.toLowerCase()}
             variant="contained"
             onClick={() => openDialog()}
+            disabled={!hasCreatePermission}
             className={`${title}add_walkthrough`.toLowerCase()}
           >
             + New {title}
@@ -64,7 +67,10 @@ export const List = ({
               {rows.map((row: any, idx: number) => (
                 <TableRow
                   key={idx}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } , ...(height && { height }), }}
+                  sx={{
+                    '&:last-child td, &:last-child th': { border: 0 },
+                    ...(height && { height }),
+                  }}
                 >
                   {row.map(
                     // if action is sent render with right align
@@ -73,7 +79,7 @@ export const List = ({
                         key={idx}
                         align={
                           headers.length + 1 === row.length &&
-                            idx === row.length - 1
+                          idx === row.length - 1
                             ? 'right'
                             : 'left'
                         }
