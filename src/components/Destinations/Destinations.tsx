@@ -337,7 +337,7 @@ export const Destinations = () => {
         <Button
           color="primary"
           variant="outlined"
-          disabled={!permissions.includes('can_add_warehouse')}
+          disabled={!permissions.includes('can_create_warehouse')}
           onClick={() => setShowCreateWarehouseDialog(true)}
           data-testid="add-new-destination"
         >

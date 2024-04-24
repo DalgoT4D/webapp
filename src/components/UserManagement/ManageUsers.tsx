@@ -3,7 +3,15 @@ import { List } from '../List/List';
 import Image from 'next/image';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ProfileIcon from '@/assets/icons/profile.svg';
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  FormControl,
+  MenuItem,
+  Select,
+  Typography,
+} from '@mui/material';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import useSWR from 'swr';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
@@ -25,6 +33,7 @@ type OrgUser = {
   active: boolean;
   role: number;
   role_slug: string;
+  new_role_slug: string;
   org: Org;
 };
 
@@ -34,16 +43,20 @@ interface ManageUsersInterface {
 
 const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   const { data, isLoading, mutate } = useSWR(`organizations/users`);
+  const { data: roles } = useSWR(`data/roles`);
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [editOrgRole, setEditOrgRole] = useState<OrgUser | null>(null);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [showMakeAccountManagerDialog, setShowMakeAccountManagerDialog] =
     useState<boolean>(false);
   const [orguserSelectedInAction, setOrguserSelectedInAction] =
     useState<OrgUser | null>(null);
+
+  const [selectedUserRole, setSelectedUserRole] = useState<string>('');
   const openActionMenu = Boolean(anchorEl);
   const handleClick = (orguser: OrgUser, event: HTMLElement | null) => {
     setOrguserSelectedInAction(orguser);
@@ -51,6 +64,38 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   };
 
   const handleClose = () => {
+    setOrguserSelectedInAction(null);
+    setAnchorEl(null);
+  };
+
+  const handleUpdateRole = async () => {
+    try {
+      const message = await httpPost(
+        session,
+        `organizations/user_role/modify/`,
+
+        { toupdate_email: editOrgRole?.email, role_uuid: selectedUserRole }
+      );
+      if (message.success) {
+        successToast('Role updated successfully', [], globalContext);
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    } finally {
+      mutate();
+      setEditOrgRole(null);
+      setSelectedUserRole('');
+      setOrguserSelectedInAction(null);
+    }
+  };
+
+  const handleEdit = () => {
+    setSelectedUserRole(
+      roles.find((role) => role.slug === orguserSelectedInAction?.new_role_slug)
+        .uuid
+    );
+    setEditOrgRole(orguserSelectedInAction);
     setAnchorEl(null);
   };
 
@@ -90,32 +135,57 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
             {orguser.email}
           </Typography>
         </Box>,
-        <Typography key={'role-' + idx} variant="subtitle2" fontWeight={600}>
-          {orguser.role_slug.replace('_', ' ')}
-        </Typography>,
+        editOrgRole?.email === orguser.email ? (
+          <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+            <Select
+              labelId="demo-select-small-label"
+              id="demo-select-small"
+              label="Age"
+              value={selectedUserRole}
+              onChange={(event) => setSelectedUserRole(event.target.value)}
+            >
+              {roles &&
+                roles.map((role: any) => (
+                  <MenuItem key={role.uuid} value={role.uuid}>
+                    {role.name}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        ) : (
+          <Typography key={'role-' + idx} variant="subtitle2" fontWeight={600}>
+            {orguser.new_role_slug.replace('-', ' ')}
+          </Typography>
+        ),
         <Box
           sx={{ justifyContent: 'end', display: 'flex' }}
           key={'action-box-' + idx}
         >
-          {orguser.email !== session?.user?.email && (
-            <Button
-              aria-controls={openActionMenu ? 'basic-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={openActionMenu ? 'true' : undefined}
-              onClick={(event) => handleClick(orguser, event.currentTarget)}
-              variant="contained"
-              key={'menu-' + idx}
-              color="info"
-              sx={{ px: 0, minWidth: 32 }}
-            >
-              <MoreHorizIcon />
+          {editOrgRole?.email === orguser.email ? (
+            <Button variant="contained" onClick={() => handleUpdateRole()}>
+              Save
             </Button>
+          ) : (
+            orguser.email !== session?.user?.email && (
+              <Button
+                aria-controls={openActionMenu ? 'basic-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={openActionMenu ? 'true' : undefined}
+                onClick={(event) => handleClick(orguser, event.currentTarget)}
+                variant="contained"
+                key={'menu-' + idx}
+                color="info"
+                sx={{ px: 0, minWidth: 32 }}
+              >
+                <MoreHorizIcon />
+              </Button>
+            )
           )}
         </Box>,
       ]);
     }
     return [];
-  }, [data]);
+  }, [data, editOrgRole, orguserSelectedInAction, selectedUserRole]);
 
   const makeAccountManager = async (orguser: OrgUser | null) => {
     if (orguser) {
@@ -170,8 +240,8 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
         anchorEl={anchorEl}
         open={openActionMenu}
         handleClose={handleClose}
+        handleEdit={handleEdit}
         handleDelete={handleClickDeleteAction}
-        handleMakeAccountManager={handleClickMakeAccountOwnerAction}
       />
       <List
         openDialog={() => {}}

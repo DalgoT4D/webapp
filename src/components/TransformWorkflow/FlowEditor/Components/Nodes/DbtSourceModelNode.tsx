@@ -10,7 +10,7 @@ import {
   tableCellClasses,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { SrcModelNodeType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
@@ -22,6 +22,7 @@ import {
 } from '@/contexts/FlowEditorCanvasContext';
 import { trimString } from '@/utils/common';
 import styled from '@emotion/styled';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 export interface ColumnData {
   name: string;
@@ -94,6 +95,8 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   const { setCanvasAction } = useCanvasAction();
   const { setCanvasNode } = useCanvasNode();
   const [columns, setColumns] = useState<Array<any>>([]);
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   const edges = useEdges();
   const nodeId: string | null = useNodeId();
@@ -106,7 +109,10 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   );
   // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean =
-    edgesEmanatingOutOfNode.length > 0 ? false : true;
+    permissions.includes('can_delete_dbt_model') &&
+    edgesEmanatingOutOfNode.length > 0
+      ? false
+      : true;
 
   const handleDeleteAction = () => {
     setCanvasAction({
@@ -124,10 +130,12 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   };
 
   const handleSelectNode = () => {
-    setCanvasAction({
-      type: 'open-opconfig-panel',
-      data: 'create',
-    });
+    if (permissions.includes('can_create_dbt_model')) {
+      setCanvasAction({
+        type: 'open-opconfig-panel',
+        data: 'create',
+      });
+    }
     setCanvasNode(node);
     setPreviewAction({ type: 'preview', data: node.data });
   };
