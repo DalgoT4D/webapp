@@ -139,10 +139,11 @@ const getSourceDest = (connection: Connection) => (
 
 export const Connections = () => {
   const { data: session }: any = useSession();
-  const toastContext = useContext(GlobalContext);
-  // const [blockId, setBlockId] = useState<string>('');
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
+
   const [connectionId, setConnectionId] = useState<string>('');
-  // const [syncingBlockId, setSyncingBlockId] = useState<string>('');
+
   const [syncingConnectionId, setSyncingConnectionId] = useState<string>('');
   const [syncLogs, setSyncLogs] = useState<Array<string>>([]);
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
@@ -245,7 +246,7 @@ export const Connections = () => {
     (async () => {
       setExpandSyncLogs(true);
       if (!deploymentId) {
-        errorToast('Deployment not created', [], toastContext);
+        errorToast('Deployment not created', [], globalContext);
         return;
       }
       try {
@@ -254,11 +255,11 @@ export const Connections = () => {
           `prefect/v1/flows/${deploymentId}/flow_run/`,
           {}
         );
-        if (response?.detail) errorToast(response.detail, [], toastContext);
+        if (response?.detail) errorToast(response.detail, [], globalContext);
 
         // if flow run id is not present, something went wrong
         if (!response?.flow_run_id) {
-          errorToast('Something went wrong', [], toastContext);
+          errorToast('Something went wrong', [], globalContext);
           return;
         }
 
@@ -275,7 +276,7 @@ export const Connections = () => {
         setSyncingConnectionId('');
       } catch (err: any) {
         console.error(err);
-        errorToast(err.message, [], toastContext);
+        errorToast(err.message, [], globalContext);
       } finally {
         setSyncingConnectionId('');
       }
@@ -290,12 +291,12 @@ export const Connections = () => {
           `airbyte/v1/connections/${connectionId}`
         );
         if (message.success) {
-          successToast('Connection deleted', [], toastContext);
+          successToast('Connection deleted', [], globalContext);
           mutate();
         }
       } catch (err: any) {
         console.error(err);
-        errorToast(err.message, [], toastContext);
+        errorToast(err.message, [], globalContext);
       }
     })();
     handleCancelDeleteConnection();
@@ -313,12 +314,12 @@ export const Connections = () => {
           successToast(
             'Reset connection initiated successfully',
             [],
-            toastContext
+            globalContext
           );
         }
       } catch (err: any) {
         console.error(err);
-        errorToast(err.message, [], toastContext);
+        errorToast(err.message, [], globalContext);
       }
     })();
     handleCancelResetConnection();
@@ -336,7 +337,10 @@ export const Connections = () => {
           syncConnection(deploymentId);
         }}
         data-testid={'sync-' + idx}
-        disabled={syncingConnectionId === connectionId}
+        disabled={
+          syncingConnectionId === connectionId ||
+          !permissions.includes('can_sync_sources')
+        }
         key={'sync-' + idx}
         sx={{ marginRight: '10px' }}
       >
@@ -556,6 +560,8 @@ export const Connections = () => {
         handleEdit={handleEditConnection}
         handleDelete={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
+        hasDeletePermission={permissions.includes('can_delete_connection')}
+        hasEditPermission={permissions.includes('can_edit_connection')}
       />
       <CreateConnectionForm
         setConnectionId={setConnectionId}
@@ -565,6 +571,7 @@ export const Connections = () => {
         setShowForm={setShowDialog}
       />
       <List
+        hasCreatePermission={permissions.includes('can_create_connection')}
         openDialog={handleClickOpen}
         title="Connection"
         headers={headers}
