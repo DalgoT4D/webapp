@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import SyncIcon from '@/assets/icons/sync.svg';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -20,6 +20,7 @@ import {
 import { ActionsMenu } from '../UI/Menu/Menu';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import CreateOrgTaskForm from './CreateOrgTaskForm';
+import LockIcon from '@mui/icons-material/Lock';
 
 type params = {
   setDbtRunLogs: (...args: any) => any;
@@ -228,6 +229,7 @@ export const DBTTaskList = ({
           response.flow_run_id
         );
 
+        fetchDbtTasks();
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
           await delay(5000);
           await fetchAndSetFlowRunLogs(response.flow_run_id);
@@ -260,25 +262,39 @@ export const DBTTaskList = ({
           </Box>,
           task.lock && isAnyTaskLocked ? (
             <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'end',
-              }}
+              sx={{ display: 'flex', justifyContent: 'flex-end', gap: '20px' }}
             >
+              <Box sx={{ alignItems: 'center', display: 'flex' }}>
+                {task?.lock?.status === 'running' ? (
+                  <CircularProgress />
+                ) : task?.lock?.status === 'locked' ||
+                  task?.lock?.status === 'complete' ? (
+                  <LockIcon />
+                ) : (
+                  'queued'
+                )}
+              </Box>
               <Box
                 sx={{
                   display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-around',
-                  alignItems: 'start',
+                  justifyContent: 'end',
                 }}
               >
-                <Typography variant="body2" fontWeight={400}>
-                  Triggered by: {trimEmail(task.lock.lockedBy)}
-                </Typography>
-                <Typography variant="body2" fontWeight={400}>
-                  {lastRunTime(task.lock.lockedAt)}
-                </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-around',
+                    alignItems: 'start',
+                  }}
+                >
+                  <Typography variant="body2" fontWeight={400}>
+                    Triggered by: {trimEmail(task.lock.lockedBy)}
+                  </Typography>
+                  <Typography variant="body2" fontWeight={400}>
+                    {lastRunTime(task.lock.lockedAt)}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
           ) : (
