@@ -199,10 +199,13 @@ export const Flows = ({
         flowStatus(flow.status),
 
         flowLastRun(flow),
-        flow.isRunning ? (
+        flow?.lock?.status === 'running' ? (
           <CircularProgress />
-        ) : flow.lock ? (
+        ) : flow?.lock?.status === 'locked' ||
+          flow?.lock?.status === 'complete' ? (
           <LockIcon />
+        ) : flow?.lock?.status === 'queued' ? (
+          'queued'
         ) : (
           flowState(flow)
         ),
@@ -221,7 +224,7 @@ export const Flows = ({
             last logs
           </Button>
           {flow.lock ? (
-            flow.isRunning ? (
+            flow.lock.status === 'running' ? (
               <>
                 <Typography
                   variant="body2"
