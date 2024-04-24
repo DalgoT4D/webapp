@@ -108,7 +108,6 @@ export const Sources = () => {
                 ? {}
                 : handleClick(source.sourceId, event.currentTarget)
             }
-            // disabled={!permissions.includes('can_edit_source')}
             variant="contained"
             key={'menu-' + idx}
             color="info"
