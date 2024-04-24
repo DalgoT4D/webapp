@@ -1,6 +1,13 @@
-import { Box, Button, Typography, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Button,
+  Typography,
+  CircularProgress,
+  Tooltip,
+} from '@mui/material';
 import React, { useContext, useMemo, useState } from 'react';
 import FlowIcon from '@/assets/icons/flow.svg';
+import JobQueuedIcon from '@/assets/icons/jobQueued.svg';
 import LockIcon from '@mui/icons-material/Lock';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SyncIcon from '@/assets/icons/sync.svg';
@@ -205,7 +212,13 @@ export const Flows = ({
           flow?.lock?.status === 'complete' ? (
           <LockIcon />
         ) : flow?.lock?.status === 'queued' ? (
-          'queued'
+          <Tooltip title="Job Queued" placement="top">
+            <Image
+              style={{ marginRight: 10 }}
+              src={JobQueuedIcon}
+              alt="job queued icon"
+            />
+          </Tooltip>
         ) : (
           flowState(flow)
         ),
