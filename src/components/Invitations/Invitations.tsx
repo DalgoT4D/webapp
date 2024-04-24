@@ -33,6 +33,7 @@ const Invitations = ({
 }: InvitationsInterface) => {
   const { data, isLoading, mutate } = useSWR(`users/invitations/`);
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -169,6 +170,10 @@ const Invitations = ({
         eleType="invitation"
         anchorEl={anchorEl}
         open={openActionMenu}
+        hasDeletePermission={permissions.includes('can_delete_invitation')}
+        hasResendPermission={permissions.includes(
+          'can_resend_email_verification'
+        )}
         handleClose={handleClose}
         handleDelete={handleClickDeleteAction}
         handleResendInvitation={handleClickResendAction}

@@ -29,6 +29,7 @@ const Transform = () => {
   const [dialogLoader, setDialogLoader] = useState<boolean>(false);
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   const open = Boolean(anchorEl);
   const handleClose = () => {
@@ -107,11 +108,7 @@ const Transform = () => {
         open={open}
         handleClose={handleClose}
       />
-      {/* <ConfirmationDialogTransform
-        open={confirmationOpen}
-        handleClose={() => setConfirmationOpen(false)}
-        transformType={selectedTransform}
-      /> */}
+
       <ConfirmationDialog
         loading={dialogLoader}
         show={confirmationOpen}
@@ -187,6 +184,7 @@ const Transform = () => {
                     color="primary"
                     sx={{ width: '100%' }}
                     onClick={() => handleSetup('ui')}
+                    disabled={!permissions.includes('can_create_dbt_workspace')}
                   >
                     Setup using UI
                   </Button>
@@ -238,6 +236,7 @@ const Transform = () => {
                     color="primary"
                     sx={{ width: '100%' }}
                     onClick={() => handleSetup('github')}
+                    disabled={!permissions.includes('can_create_dbt_workspace')}
                   >
                     Setup using Github
                   </Button>
