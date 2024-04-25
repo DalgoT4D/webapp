@@ -24,16 +24,11 @@ import {
 } from '@/contexts/DbtRunLogsContext';
 import { ReactFlowProvider } from 'reactflow';
 import { ResizableBox } from 'react-resizable';
-import {
-  PrefectFlowRun,
-  PrefectFlowRunLog,
-  TransformTask,
-} from '@/components/DBT/DBTTarget';
+import { TransformTask } from '@/components/DBT/DBTTarget';
 import {
   errorToast,
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
-import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { delay } from '@/utils/common';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
