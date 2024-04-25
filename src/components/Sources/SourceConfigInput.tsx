@@ -92,7 +92,7 @@ export const SourceConfigInput = ({
           let hasError = false;
           let errorMessge = '';
           if (parent && field) {
-            hasError = errors && errors.config && errors[parent][field];
+            hasError = errors && errors.config && !!errors[parent][field];
             errorMessge =
               errors &&
               errors.config &&

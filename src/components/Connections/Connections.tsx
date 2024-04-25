@@ -341,7 +341,12 @@ export const Connections = () => {
         sx={{ marginRight: '10px' }}
       >
         {syncingConnectionId === connectionId ? (
-          <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
+          <Image
+            src={SyncIcon}
+            className={styles.SyncIcon}
+            alt="sync icon"
+            data-testid="sync-icon"
+          />
         ) : (
           'Sync'
         )}
@@ -564,6 +569,7 @@ export const Connections = () => {
         title="Connection"
         headers={headers}
         rows={rows}
+        height={115}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}

@@ -15,7 +15,7 @@
   "dependencies": {
     "@dagrejs/dagre": "^1.0.4",
     "@emotion/react": "^11.11.3",
-    "@emotion/styled": "^11.10.8",
+    "@emotion/styled": "^11.11.5",
     "@mui/icons-material": "^5.15.6",
     "@mui/material": "^5.15.8",
     "@mui/x-date-pickers": "^6.19.2",
@@ -24,7 +24,7 @@
     "@types/d3": "^7.4.2",
     "@types/react-resizable": "^3.0.7",
     "ag-grid-react": "^31.1.0",
-    "cronstrue": "^2.48.0",
+    "cronstrue": "^2.49.0",
     "d3": "^7.8.5",
     "eslint": "8.57.0",
     "eslint-config-next": "13.5.6",
