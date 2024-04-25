@@ -1,7 +1,5 @@
 export const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-console.log('backendUrl:', backendUrl);
-
 export const flowRunLogsOffsetLimit = 200;
 
 export const usageDashboardId = process.env.NEXT_PUBLIC_USAGE_DASHBOARD_ID;
