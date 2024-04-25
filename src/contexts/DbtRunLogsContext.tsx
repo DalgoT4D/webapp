@@ -1,11 +1,11 @@
 import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
-import { PrefectFlowRunLog } from '@/components/DBT/DBTTarget';
+import { TaskProgressLog } from '@/components/TransformWorkflow/FlowEditor/FlowEditor';
 
-const DbtRunLogsContext = React.createContext<PrefectFlowRunLog[]>([]);
+const DbtRunLogsContext = React.createContext<TaskProgressLog[]>([]);
 const DbtRunLogsUpdateContext = React.createContext<
-  Dispatch<SetStateAction<PrefectFlowRunLog[]>>
->((() => {}) as Dispatch<SetStateAction<PrefectFlowRunLog[]>>);
+  Dispatch<SetStateAction<TaskProgressLog[]>>
+>((() => {}) as Dispatch<SetStateAction<TaskProgressLog[]>>);
 
 export const useDbtRunLogs = () => {
   return useContext(DbtRunLogsContext);
@@ -16,7 +16,7 @@ export const useDbtRunLogsUpdate = () => {
 };
 
 export const DbtRunLogsProvider = ({ children }: any) => {
-  const [dbtRunLogs, setDbtRunLogs] = useState<PrefectFlowRunLog[]>([]);
+  const [dbtRunLogs, setDbtRunLogs] = useState<TaskProgressLog[]>([]);
 
   return (
     <DbtRunLogsContext.Provider value={dbtRunLogs}>
