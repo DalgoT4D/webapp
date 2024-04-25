@@ -10,7 +10,7 @@ import { Box, Button, Typography } from '@mui/material';
 
 interface ListProps {
   title: string;
-  headers: Array<string>;
+  headers: Array<string | JSX.Element>;
   rows: Array<any>;
   openDialog: any;
   onlyList?: boolean;
