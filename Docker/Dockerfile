@@ -1,6 +1,7 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
+ENV NEXT_TELEMETRY_DISABLED=1
 # A common issue that may arise with node-alpine is a missing shared library required for use of process.dlopen. To add the missing shared libraries to your image, adding the libc6-compat package in your Dockerfile is recommended: apk add --no-cache libc6-compat
 
 RUN apk add --no-cache libc6-compat
@@ -26,6 +27,8 @@ COPY --from=deps /app/package.json ./
 
 COPY src ./src
 COPY public ./public
+
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN yarn build
 
@@ -59,6 +62,8 @@ COPY --from=builder /app/tsconfig.json ./
 
 
 USER nextjs
+
+ENV NEXT_TELEMETRY_DISABLED=1
 
 EXPOSE 3000
 CMD ["node", "server.js"]
