@@ -29,7 +29,10 @@ import {
   PrefectFlowRunLog,
   TransformTask,
 } from '@/components/DBT/DBTTarget';
-import { successToast } from '@/components/ToastMessage/ToastHelper';
+import {
+  errorToast,
+  successToast,
+} from '@/components/ToastMessage/ToastHelper';
 import { TASK_DBTDEPS, TASK_DBTRUN } from '@/config/constant';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { delay } from '@/utils/common';
@@ -117,6 +120,11 @@ type LowerSectionProps = {
   selectedTab: LowerSectionTabValues;
   setSelectedTab: (value: LowerSectionTabValues) => void;
   workflowInProgress: boolean;
+};
+
+export type TaskProgressLog = {
+  message: string;
+  status: string;
 };
 
 const LowerSection = ({
@@ -287,56 +295,56 @@ const FlowEditor = ({}) => {
       });
   };
 
-  const fetchFlowRunStatus = async (flow_run_id: string) => {
-    try {
-      const flowRun: PrefectFlowRun = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}`
-      );
+  // const fetchFlowRunStatus = async (flow_run_id: string) => {
+  //   try {
+  //     const flowRun: PrefectFlowRun = await httpGet(
+  //       session,
+  //       `prefect/flow_runs/${flow_run_id}`
+  //     );
 
-      if (!flowRun.state_type) return 'FAILED';
+  //     if (!flowRun.state_type) return 'FAILED';
 
-      return flowRun.state_type;
-    } catch (err: any) {
-      console.error(err);
-      return 'FAILED';
-    }
-  };
+  //     return flowRun.state_type;
+  //   } catch (err: any) {
+  //     console.error(err);
+  //     return 'FAILED';
+  //   }
+  // };
 
-  const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
-    try {
-      const response = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}/logs`
-      );
-      if (response?.logs?.logs && response.logs.logs.length > 0) {
-        const logsArray: PrefectFlowRunLog[] = response.logs.logs.map(
-          // eslint-disable-next-line
-          (logObject: PrefectFlowRunLog, idx: number) => logObject
-        );
+  // const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
+  //   try {
+  //     const response = await httpGet(
+  //       session,
+  //       `prefect/flow_runs/${flow_run_id}/logs`
+  //     );
+  //     if (response?.logs?.logs && response.logs.logs.length > 0) {
+  //       const logsArray: PrefectFlowRunLog[] = response.logs.logs.map(
+  //         // eslint-disable-next-line
+  //         (logObject: PrefectFlowRunLog, idx: number) => logObject
+  //       );
 
-        setDbtRunLogs(logsArray);
-      }
-    } catch (err: any) {
-      console.error(err);
-    }
-  };
+  //       setDbtRunLogs(logsArray);
+  //     }
+  //   } catch (err: any) {
+  //     console.error(err);
+  //   }
+  // };
 
-  const pollForFlowRun = async (flow_run_id: string) => {
-    let flowRunStatus: string = await fetchFlowRunStatus(flow_run_id);
+  // const pollForFlowRun = async (flow_run_id: string) => {
+  //   let flowRunStatus: string = await fetchFlowRunStatus(flow_run_id);
 
-    await fetchAndSetFlowRunLogs(flow_run_id);
-    while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
-      await delay(5000);
-      await fetchAndSetFlowRunLogs(flow_run_id);
-      flowRunStatus = await fetchFlowRunStatus(flow_run_id);
-    }
-  };
+  //   await fetchAndSetFlowRunLogs(flow_run_id);
+  //   while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
+  //     await delay(5000);
+  //     await fetchAndSetFlowRunLogs(flow_run_id);
+  //     flowRunStatus = await fetchFlowRunStatus(flow_run_id);
+  //   }
+  // };
 
   const checkForAnyRunningDbtJob = async () => {
     setLockUpperSection(true);
     let isAnyLocked = true;
-    let flow_run_id: string | undefined = '';
+    let celery_task_id: string | undefined = '';
     try {
       while (isAnyLocked) {
         isAnyLocked = false;
@@ -345,13 +353,13 @@ const FlowEditor = ({}) => {
         response?.forEach((task: TransformTask) => {
           if (task.lock) {
             isAnyLocked = true;
-            flow_run_id = task.lock?.flowRunId;
+            celery_task_id = task.lock?.celeryTaskId;
           }
         });
 
-        if (flow_run_id) {
+        if (celery_task_id) {
           setSelectedTab('logs');
-          await pollForFlowRun(flow_run_id);
+          await pollForTaskRun(celery_task_id);
         }
 
         if (isAnyLocked) await delay(5000);
@@ -363,6 +371,27 @@ const FlowEditor = ({}) => {
     }
   };
 
+  const pollForTaskRun = async (taskId: string) => {
+    try {
+      const response: { progress: Array<TaskProgressLog> } = await httpGet(
+        session,
+        `tasks/${taskId}`
+      );
+      setDbtRunLogs(response['progress']);
+
+      const lastMessage: TaskProgressLog =
+        response['progress'][response['progress'].length - 1];
+
+      if (!['completed', 'failed'].includes(lastMessage.status)) {
+        await delay(2000);
+        await pollForTaskRun(taskId);
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+  };
+
   const handleRunWorkflow = async () => {
     try {
       setLockUpperSection(true);
@@ -371,28 +400,16 @@ const FlowEditor = ({}) => {
       // Clear previous logs
       setDbtRunLogs([]);
 
-      const tasks: any = await httpGet(session, `prefect/tasks/transform/`);
+      const response: any = await httpPost(
+        session,
+        'dbt/run_dbt_via_celery/',
+        {}
+      );
 
-      const dbtDepsTask = tasks.find((task: any) => task.slug === TASK_DBTDEPS);
+      successToast('Dbt run initiated', [], globalContext);
 
-      if (dbtDepsTask) {
-        successToast('Installing dependencies', [], globalContext);
-        await httpPost(session, `prefect/tasks/${dbtDepsTask.uuid}/run/`, {});
-      }
-
-      const dbtRunTask = tasks.find((task: any) => task.slug === TASK_DBTRUN);
-
-      if (dbtRunTask) {
-        const response = await httpPost(
-          session,
-          `prefect/v1/flows/${dbtRunTask.deploymentId}/flow_run/`,
-          {}
-        );
-        successToast('Dbt run initiated', [], globalContext);
-
-        if (response.flow_run_id) await pollForFlowRun(response.flow_run_id);
-
-        // refresh canvas
+      if (response?.task_id) {
+        await pollForTaskRun(response.task_id);
         setRefreshEditor(!refreshEditor);
       }
     } catch (error) {
@@ -434,7 +451,6 @@ const FlowEditor = ({}) => {
     taskId: string,
     hashKey = 'taskprogress'
   ) => {
-    console.log('polling for sync sources task', taskId);
     try {
       const response: any = await httpGet(
         session,
