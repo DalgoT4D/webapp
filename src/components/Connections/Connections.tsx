@@ -526,31 +526,6 @@ export const Connections = () => {
         </Box>,
         getSourceDest(connection),
         getLastSync(connection),
-
-        // connection.lock ? (
-        //   <Box
-        //     sx={{
-        //       display: 'flex',
-        //       justifyContent: 'end',
-        //     }}
-        //   >
-        //     <Box
-        //       sx={{
-        //         display: 'flex',
-        //         flexDirection: 'column',
-        //         justifyContent: 'space-around',
-        //         alignItems: 'start',
-        //       }}
-        //     >
-        //       <Typography variant="body2" fontWeight={600}>
-        //         Triggered by: {trimEmail(connection.lock.lockedBy)}
-        //       </Typography>
-        //       <Typography variant="body2" fontWeight={600}>
-        //         {lastRunTime(connection.lock.lockedAt)}
-        //       </Typography>
-        //     </Box>
-        //   </Box>
-        // ) : (
         <Actions
           key={`actions-${connection.blockId}`}
           connection={connection}
