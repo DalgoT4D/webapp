@@ -261,6 +261,7 @@ export const DBTTaskList = ({
             </Typography>
           </Box>,
           <Box
+            key={`actions-${task.uuid}`}
             sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}
           >
             {task.lock && isAnyTaskLocked ? (
