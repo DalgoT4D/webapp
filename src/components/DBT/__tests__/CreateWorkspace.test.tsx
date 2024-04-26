@@ -63,7 +63,7 @@ describe('Create workspace', () => {
         .mockResolvedValueOnce({ detail: "couldn't create workspace" })
     });
 
-    (global as any).fetch = createWorkspaceFetch;
+    global.fetch = createWorkspaceFetch;
 
     render(
       <SessionProvider session={mockSession}>
@@ -135,7 +135,7 @@ describe('Create workspace', () => {
         })
       });
 
-    (global as any).fetch = createWorkspaceFetchAndProgress;
+    global.fetch = createWorkspaceFetchAndProgress;
 
     render(
       <SessionProvider session={mockSession}>
@@ -164,8 +164,10 @@ describe('Create workspace', () => {
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
+    });
   });
 
   it('submit form to create workspace - check progress api failed', async () => {
@@ -191,7 +193,7 @@ describe('Create workspace', () => {
         })
       });
 
-    (global as any).fetch = createWorkspaceFetchAndProgress;
+    global.fetch = createWorkspaceFetchAndProgress;
 
     render(
       <SessionProvider session={mockSession}>
@@ -220,8 +222,10 @@ describe('Create workspace', () => {
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
+    });
   });
 
   it('submit form to create workspace - check progress success', async () => {
@@ -257,7 +261,7 @@ describe('Create workspace', () => {
         })
       });
 
-    (global as any).fetch = createWorkspaceFetchAndProgress;
+    global.fetch = createWorkspaceFetchAndProgress;
 
     render(
       <SessionProvider session={mockSession}>
@@ -286,7 +290,9 @@ describe('Create workspace', () => {
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(4);
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(4);
+    });
   });
 });
