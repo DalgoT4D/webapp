@@ -1,4 +1,3 @@
-import '@testing-library/jest-dom';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SessionProvider } from 'next-auth/react';
@@ -8,14 +7,12 @@ import { DBTSetup } from '../DBTSetup';
 
 jest.mock('./../../../utils/common');
 
-// const user = userEvent.setup();
-
-const pushMock = jest.fn();
+const fnMock = jest.fn();
 
 jest.mock('next/router', () => ({
   useRouter() {
     return {
-      push: pushMock
+      push: fnMock
     };
   }
 }));
@@ -30,12 +27,12 @@ describe('Create workspace', () => {
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
@@ -71,12 +68,12 @@ describe('Create workspace', () => {
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
@@ -85,26 +82,31 @@ describe('Create workspace', () => {
     );
 
     const savebutton = screen.getByTestId('save-github-url');
-    await act(() => savebutton.click());
-
-    expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    });
 
     const urlinputfield = screen.getByLabelText('GitHub repo URL*');
     await userEvent.type(urlinputfield, 'github-repo-url');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    });
 
     const patinputfield = screen.getByLabelText('Personal access token');
     await userEvent.type(patinputfield, 'token-123');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    });
 
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    await act(() => savebutton.click());
+    savebutton.click();
     waitFor(() => {
       expect(createWorkspaceFetch).toHaveBeenCalledTimes(1);
     });
@@ -138,12 +140,12 @@ describe('Create workspace', () => {
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
@@ -194,12 +196,12 @@ describe('Create workspace', () => {
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
@@ -260,12 +262,12 @@ describe('Create workspace', () => {
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
