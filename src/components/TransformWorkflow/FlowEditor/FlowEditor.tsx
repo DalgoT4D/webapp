@@ -3,6 +3,7 @@ import {
   Box,
   CircularProgress,
   Divider,
+  IconButton,
   Tab,
   Table,
   TableBody,
@@ -12,6 +13,7 @@ import {
   Tabs,
 } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
+import { OpenINFull } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/PreviewPane';
@@ -115,6 +117,7 @@ type LowerSectionProps = {
   selectedTab: LowerSectionTabValues;
   setSelectedTab: (value: LowerSectionTabValues) => void;
   workflowInProgress: boolean;
+  setFullScreen?: any;
 };
 
 export type TaskProgressLog = {
@@ -127,6 +130,7 @@ const LowerSection = ({
   selectedTab,
   setSelectedTab,
   workflowInProgress,
+  setFullScreen,
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
 
@@ -141,6 +145,8 @@ const LowerSection = ({
       <Box
         sx={{
           height: '50px',
+          display: 'flex',
+          alignItems: 'center',
           background: '#F5FAFA',
           borderTop: '1px solid #CCCCCC',
           borderBottom: '1px solid #CCCCCC',
@@ -154,6 +160,9 @@ const LowerSection = ({
           <Tab label="Preview" value="preview" />
           <Tab label="Logs" value="logs" />
         </Tabs>
+        <IconButton sx={{ ml: 'auto' }} onClick={setFullScreen}>
+          <OpenINFull />
+        </IconButton>
       </Box>
       <Box>
         {selectedTab === 'preview' && <PreviewPane height={height} />}
@@ -530,9 +539,17 @@ const FlowEditor = ({}) => {
         height={lowerSectionHeight}
         onResize={onResize}
         minConstraints={[Infinity, 100]}
-        maxConstraints={[Infinity, 500]}
       >
         <LowerSection
+          setFullScreen={() => {
+            const dialogBox = document.querySelector('.MuiDialog-root');
+            if (dialogBox) {
+              const fullHeight = dialogBox?.clientHeight - 50;
+              setLowerSectionHeight(
+                lowerSectionHeight === fullHeight ? 300 : fullHeight
+              );
+            }
+          }}
           height={lowerSectionHeight}
           setSelectedTab={setSelectedTab}
           selectedTab={selectedTab}
