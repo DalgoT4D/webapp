@@ -9,7 +9,7 @@
     "lint": "next lint",
     "cypress": "cypress open",
     "cy:run": "cypress run",
-    "test": "jest",
+    "test": "jest --watch",
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
