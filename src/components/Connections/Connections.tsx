@@ -452,7 +452,7 @@ export const Connections = () => {
 
     return (
       <Box
-        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'left' }}
       >
         {jobStatus &&
           (['success', 'failed'].includes(jobStatus) ? (
@@ -496,6 +496,14 @@ export const Connections = () => {
         </Box>
         {jobStatus && ['success', 'failed'].includes(jobStatus) && (
           <Button
+            variant="contained"
+            sx={{
+              paddingY: '4px',
+              paddingX: '2px',
+              width: '60%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
             onClick={() => {
               fetchAirbyteLogs(connection.connectionId);
               setExpandSyncLogs(true);
