@@ -290,52 +290,6 @@ const FlowEditor = ({}) => {
       });
   };
 
-  // const fetchFlowRunStatus = async (flow_run_id: string) => {
-  //   try {
-  //     const flowRun: PrefectFlowRun = await httpGet(
-  //       session,
-  //       `prefect/flow_runs/${flow_run_id}`
-  //     );
-
-  //     if (!flowRun.state_type) return 'FAILED';
-
-  //     return flowRun.state_type;
-  //   } catch (err: any) {
-  //     console.error(err);
-  //     return 'FAILED';
-  //   }
-  // };
-
-  // const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
-  //   try {
-  //     const response = await httpGet(
-  //       session,
-  //       `prefect/flow_runs/${flow_run_id}/logs`
-  //     );
-  //     if (response?.logs?.logs && response.logs.logs.length > 0) {
-  //       const logsArray: PrefectFlowRunLog[] = response.logs.logs.map(
-  //         // eslint-disable-next-line
-  //         (logObject: PrefectFlowRunLog, idx: number) => logObject
-  //       );
-
-  //       setDbtRunLogs(logsArray);
-  //     }
-  //   } catch (err: any) {
-  //     console.error(err);
-  //   }
-  // };
-
-  // const pollForFlowRun = async (flow_run_id: string) => {
-  //   let flowRunStatus: string = await fetchFlowRunStatus(flow_run_id);
-
-  //   await fetchAndSetFlowRunLogs(flow_run_id);
-  //   while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
-  //     await delay(5000);
-  //     await fetchAndSetFlowRunLogs(flow_run_id);
-  //     flowRunStatus = await fetchFlowRunStatus(flow_run_id);
-  //   }
-  // };
-
   const checkForAnyRunningDbtJob = async () => {
     setLockUpperSection(true);
     let isAnyLocked = true;
