@@ -32,6 +32,7 @@ describe('Sync connection suite', () => {
       destination: { name: 'postgres-1', destinationName: 'postgres' },
       lastRun: { startTime: '1686937507' },
       deploymentId: 'deploy-id-1',
+      lock: null,
     },
     {
       connectionId: 'connection-id-2',
@@ -41,6 +42,7 @@ describe('Sync connection suite', () => {
       destination: { name: 'postgres-2', destinationName: 'postgres' },
       lastRun: { startTime: '1686937507' },
       deploymentId: 'deploy-id-2',
+      lock: null,
     },
   ];
 
@@ -185,7 +187,7 @@ describe('Sync connection suite', () => {
           value={{
             dedupingInterval: 0,
             fetcher: (resource) =>
-              fetch(resource, {}).then((res) => res.json()),
+              fetch(resource, {}).then((res) => CONNECTIONS),
           }}
         >
           <Connections />

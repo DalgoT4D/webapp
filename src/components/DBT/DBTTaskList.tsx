@@ -1,6 +1,8 @@
 import { Box, Button, Typography } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import SyncIcon from '@/assets/icons/sync.svg';
+import LoopIcon from '@mui/icons-material/Loop';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -20,6 +22,7 @@ import {
 import { ActionsMenu } from '../UI/Menu/Menu';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import CreateOrgTaskForm from './CreateOrgTaskForm';
+import LockIcon from '@mui/icons-material/Lock';
 
 type params = {
   setDbtRunLogs: (...args: any) => any;
@@ -88,9 +91,10 @@ export const DBTTaskList = ({
         data-testid={'task-' + task.uuid}
         disabled={runningTask || isAnyTaskLocked ? true : false}
         key={'task-' + task.uuid}
-        sx={{ marginRight: '10px' }}
+        sx={{ marginRight: '10px', width: '75px', height: '40px' }}
       >
-        {runningTask || isAnyTaskLocked ? (
+        {runningTask?.uuid === task.uuid ||
+        (task.lock?.status && task.lock?.status !== 'complete') ? (
           <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
         ) : (
           'Execute'
@@ -120,7 +124,6 @@ export const DBTTaskList = ({
         <SettingsIcon
           sx={{
             minWidth: '32px',
-
             color: 'text.secondary',
             marginTop: '5px',
           }}
@@ -228,12 +231,14 @@ export const DBTTaskList = ({
           response.flow_run_id
         );
 
+        fetchDbtTasks();
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
           await delay(5000);
           await fetchAndSetFlowRunLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
         setRunningTask(null);
+        fetchDbtTasks();
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
@@ -241,6 +246,7 @@ export const DBTTaskList = ({
         setRunningTask(null);
       }
     } else {
+      setRunningTask(null);
       errorToast('No deployment found for this DBT task', [], toastContext);
     }
   };
@@ -258,32 +264,42 @@ export const DBTTaskList = ({
               {task.command}
             </Typography>
           </Box>,
-          task.lock && isAnyTaskLocked ? (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'end',
-              }}
-            >
+          <Box
+            key={`actions-${task.uuid}`}
+            sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}
+          >
+            {task.lock && isAnyTaskLocked ? (
               <Box
                 sx={{
                   display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-around',
-                  alignItems: 'start',
+                  gap: '5px',
+                  alignItems: 'center',
                 }}
               >
-                <Typography variant="body2" fontWeight={400}>
-                  Triggered by: {trimEmail(task.lock.lockedBy)}
-                </Typography>
-                <Typography variant="body2" fontWeight={400}>
-                  {lastRunTime(task.lock.lockedAt)}
-                </Typography>
+                <Box sx={{ alignItems: 'center', display: 'flex' }}>
+                  {task.lock?.status === 'running' ? (
+                    <LoopIcon />
+                  ) : task.lock?.status === 'locked' ||
+                    task.lock?.status === 'complete' ? (
+                    <LockIcon />
+                  ) : (
+                    <ScheduleIcon />
+                  )}
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Triggered by: {trimEmail(task.lock.lockedBy)}
+                  </Typography>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    {lastRunTime(task.lock.lockedAt)}
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-          ) : (
+            ) : (
+              ''
+            )}
             <Actions key={`actions-${task.uuid}`} task={task} />
-          ),
+          </Box>,
         ]);
 
       setRows(tempRows);
@@ -333,7 +349,7 @@ export const DBTTaskList = ({
         title="Task"
         headers={['Command']}
         rows={rows}
-        height={70}
+        height={80}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}

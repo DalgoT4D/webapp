@@ -60,12 +60,13 @@ describe('Flow Creation', () => {
                 cron: '0 0 * * 1',
                 deploymentName: 'deployment-name',
                 deploymentId: 'deployment-id-2',
-                lastRun: undefined,
+                lastRun: null,
+                lock: null,
               } as FlowInterface,
             ]}
             updateCrudVal={updateCrudValMock}
             mutate={() => {}}
-            setSelectedFlow={() => {}}
+            setSelectedFlowId={() => {}}
           />
         </SessionProvider>
       );
@@ -74,12 +75,12 @@ describe('Flow Creation', () => {
     const flowstate0 = screen.getByTestId('flowstate-flow-0');
     expect(flowstate0).toBeInTheDocument();
     const { getByText: getByTextFlowState_0 } = within(flowstate0);
-    expect(getByTextFlowState_0('Success')).toBeInTheDocument();
+    expect(getByTextFlowState_0('success')).toBeInTheDocument();
 
     const flowstate1 = screen.getByTestId('flowstate-flow-1');
     expect(flowstate1).toBeInTheDocument();
     const { getByText: getByTextFlowState_1 } = within(flowstate1);
-    expect(getByTextFlowState_1('Failed')).toBeInTheDocument();
+    expect(getByTextFlowState_1('failed')).toBeInTheDocument();
 
     const flowlastrun0 = screen.getByTestId('flowlastrun-flow-0');
     expect(flowlastrun0).toBeInTheDocument();
@@ -104,9 +105,7 @@ describe('Flow Creation', () => {
         } as FlowRun,
       ]),
     });
-    const fetchLastFlowRunButton = screen.getByTestId(
-      'btn-openhistory-flow-0'
-    );
+    const fetchLastFlowRunButton = screen.getByTestId('btn-openhistory-flow-0');
     await userEvent.click(fetchLastFlowRunButton);
     const flowRunInfo = screen.getByTestId('single-flow-run-logs');
     expect(flowRunInfo).toBeInTheDocument();
