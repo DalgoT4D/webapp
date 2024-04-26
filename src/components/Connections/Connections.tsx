@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { CircularProgress, Box, Typography, Tooltip } from '@mui/material';
+import {
+  CircularProgress,
+  Box,
+  Typography,
+  Tooltip,
+  SxProps,
+} from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
 import SyncIcon from '@/assets/icons/sync.svg';
 import JobQueuedIcon from '@/assets/icons/jobQueued.svg';
 import LockIcon from '@mui/icons-material/Lock';
+import LoopIcon from '@mui/icons-material/Loop';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useSession } from 'next-auth/react';
@@ -381,6 +388,9 @@ export const Connections = () => {
         key={'menu-' + idx}
         color="info"
         sx={{ p: 0, minWidth: 32 }}
+        disabled={
+          syncingConnectionIds.includes(connectionId) || lock ? true : false
+        }
       >
         <MoreHorizIcon />
       </Button>
@@ -388,85 +398,113 @@ export const Connections = () => {
   );
 
   const getLastSync = (connection: Connection) => {
-    if (connection.lock?.status === 'running') return <CircularProgress />;
-    else if (
+    let jobStatus: string | null = null;
+    let jobStatusColor: string = 'grey';
+
+    // things when the connection is locked
+    if (connection.lock?.status === 'running') {
+      jobStatus = 'running';
+    } else if (
       connection.lock?.status === 'locked' ||
       connection.lock?.status === 'complete'
-    )
-      return <LockIcon />;
-    else if (
+    ) {
+      jobStatus = 'locked';
+    } else if (
       syncingConnectionIds.includes(connection.connectionId) ||
       connection.lock?.status === 'queued'
-    )
-      return (
-        <Tooltip title="Job Queued" placement="top">
-          <Image
-            style={{ marginRight: 10 }}
-            src={JobQueuedIcon}
-            alt="job queued icon"
-          />
-        </Tooltip>
-      );
+    ) {
+      jobStatus = 'queued';
+    }
+
+    // if lock is not there; check for last run
+    if (jobStatus === null && connection.lastRun) {
+      if (connection.lastRun?.status === 'COMPLETED') {
+        jobStatus = 'success';
+        jobStatusColor = '#399D47';
+      } else {
+        jobStatus = 'failed';
+        jobStatusColor = '#981F1F';
+      }
+    }
+
+    const StatusIcon = ({
+      sx,
+      status,
+    }: {
+      sx: SxProps;
+      status: string | null;
+    }) => {
+      if (status === null) return null;
+
+      if (status === 'running') {
+        return <LoopIcon sx={sx} />;
+      } else if (status === 'locked') {
+        return <LockIcon sx={sx} />;
+      } else if (status === 'queued') {
+        return null;
+      } else if (status === 'success') {
+        return <TaskAltIcon sx={sx} />;
+      } else if (status === 'failed') {
+        return <WarningAmberIcon sx={sx} />;
+      }
+
+      return null;
+    };
 
     return (
       <Box
         sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
       >
-        <Typography variant="subtitle2" fontWeight={600}>
-          {lastRunTime(connection?.lastRun?.startTime)}
-        </Typography>
-        {connection.lastRun?.status &&
-          (connection.lastRun?.status == 'COMPLETED' ? (
-            <Box
-              data-testid={'connectionstate-success'}
-              sx={{
-                display: 'flex',
-                color: '#399D47',
-                gap: '3px',
-                alignItems: 'center',
-              }}
-            >
-              <TaskAltIcon
-                sx={{
-                  alignItems: 'center',
-                  fontWeight: 700,
-                  fontSize: 'large',
-                }}
-              />
-              <Typography component="p" fontWeight={700}>
-                Success
-              </Typography>
-            </Box>
+        {jobStatus &&
+          (['success', 'failed'].includes(jobStatus) ? (
+            <Typography variant="subtitle2" fontWeight={600}>
+              {lastRunTime(connection?.lastRun?.startTime)}
+            </Typography>
           ) : (
-            <Box
-              data-testid={'connectionstate-failed'}
-              sx={{
-                display: 'flex',
-                color: '#981F1F',
-                gap: '3px',
-                alignItems: 'center',
-              }}
-            >
-              <WarningAmberIcon
-                sx={{
-                  alignItems: 'center',
-                  fontWeight: 700,
-                  fontSize: 'large',
-                }}
-              />
-              <Typography component="p" fontWeight={700}>
-                Failed
-              </Typography>
-            </Box>
+            <>
+              {connection.lock && (
+                <>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Triggered by: {trimEmail(connection.lock.lockedBy)}
+                  </Typography>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    {lastRunTime(connection.lock.lockedAt)}
+                  </Typography>
+                </>
+              )}
+            </>
           ))}
-        <Button
-          onClick={() => {
-            fetchAirbyteLogs(connection.connectionId);
-            setExpandSyncLogs(true);
+        <Box
+          data-testid={`connectionstate-${jobStatus}`}
+          sx={{
+            display: 'flex',
+            gap: '3px',
+            alignItems: 'center',
           }}
         >
-          Fetch Logs
-        </Button>
+          <StatusIcon
+            sx={{
+              alignItems: 'center',
+              fontWeight: 700,
+              fontSize: 'large',
+              color: jobStatusColor,
+            }}
+            status={jobStatus}
+          />
+          <Typography component="p" fontWeight={700} color={jobStatusColor}>
+            {jobStatus}
+          </Typography>
+        </Box>
+        {jobStatus && ['success', 'failed'].includes(jobStatus) && (
+          <Button
+            onClick={() => {
+              fetchAirbyteLogs(connection.connectionId);
+              setExpandSyncLogs(true);
+            }}
+          >
+            Fetch Logs
+          </Button>
+        )}
       </Box>
     );
   };
@@ -490,36 +528,36 @@ export const Connections = () => {
         getSourceDest(connection),
         getLastSync(connection),
 
-        connection.lock ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'end',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-around',
-                alignItems: 'start',
-              }}
-            >
-              <Typography variant="body2" fontWeight={600}>
-                Triggered by: {trimEmail(connection.lock.lockedBy)}
-              </Typography>
-              <Typography variant="body2" fontWeight={600}>
-                {lastRunTime(connection.lock.lockedAt)}
-              </Typography>
-            </Box>
-          </Box>
-        ) : (
-          <Actions
-            key={`actions-${connection.blockId}`}
-            connection={connection}
-            idx={connection.blockId}
-          />
-        ),
+        // connection.lock ? (
+        //   <Box
+        //     sx={{
+        //       display: 'flex',
+        //       justifyContent: 'end',
+        //     }}
+        //   >
+        //     <Box
+        //       sx={{
+        //         display: 'flex',
+        //         flexDirection: 'column',
+        //         justifyContent: 'space-around',
+        //         alignItems: 'start',
+        //       }}
+        //     >
+        //       <Typography variant="body2" fontWeight={600}>
+        //         Triggered by: {trimEmail(connection.lock.lockedBy)}
+        //       </Typography>
+        //       <Typography variant="body2" fontWeight={600}>
+        //         {lastRunTime(connection.lock.lockedAt)}
+        //       </Typography>
+        //     </Box>
+        //   </Box>
+        // ) : (
+        <Actions
+          key={`actions-${connection.blockId}`}
+          connection={connection}
+          idx={connection.blockId}
+        />,
+        // ),
       ]);
 
       setRows(tempRows);
