@@ -23,6 +23,7 @@ import { ActionsMenu } from '../UI/Menu/Menu';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import CreateOrgTaskForm from './CreateOrgTaskForm';
 import LockIcon from '@mui/icons-material/Lock';
+import { mutate } from 'swr';
 
 type params = {
   setDbtRunLogs: (...args: any) => any;
@@ -93,7 +94,8 @@ export const DBTTaskList = ({
         key={'task-' + task.uuid}
         sx={{ marginRight: '10px', width: '75px', height: '40px' }}
       >
-        {runningTask || isAnyTaskLocked ? (
+        {runningTask?.uuid === task.uuid ||
+        (task.lock?.status && task.lock?.status !== 'complete') ? (
           <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
         ) : (
           'Execute'
@@ -237,6 +239,7 @@ export const DBTTaskList = ({
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
         setRunningTask(null);
+        fetchDbtTasks();
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
@@ -244,6 +247,7 @@ export const DBTTaskList = ({
         setRunningTask(null);
       }
     } else {
+      setRunningTask(null);
       errorToast('No deployment found for this DBT task', [], toastContext);
     }
   };
