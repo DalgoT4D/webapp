@@ -33,7 +33,7 @@ export interface FlowInterface {
   cron: string;
   deploymentName: string;
   deploymentId: string;
-  lastRun?: FlowRun;
+  lastRun: FlowRun | null;
   lock: TaskLock | undefined | null;
   status: boolean;
 }
@@ -63,14 +63,14 @@ const flowLastRun = (flow: FlowInterface) => {
             {lastRunTime(flow.lock.lockedAt)}
           </Typography>
         </>
-      ) : flow?.lastRun ? (
+      ) : flow.lastRun ? (
         <Typography
           data-testid={'flowlastrun-' + flow.name}
           fontWeight={600}
           component="p"
         >
           {lastRunTime(
-            flow?.lastRun?.startTime || flow?.lastRun?.expectedStartTime
+            flow.lastRun?.startTime || flow.lastRun?.expectedStartTime
           )}
         </Typography>
       ) : (
@@ -294,7 +294,7 @@ export const Flows = ({
             color="rgba(9, 37, 64, 0.87)"
             fontWeight={700}
           >
-            &nbsp; {flow?.cron ? cronToString(flow.cron) : 'Manual'}
+            &nbsp; {flow.cron ? cronToString(flow.cron) : 'Manual'}
           </Typography>
         </Box>,
         flowStatus(flow.status),
