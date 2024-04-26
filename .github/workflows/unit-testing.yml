@@ -21,7 +21,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Run linter
-        run: yarn run eslint 'src/**/*.{js,ts,tsx}'
+        run: yarn run eslint 'src/**/*.{js,ts,tsx}' --quiet
 
       - name: Run test and generate coverage report
         run: yarn test:coverage
