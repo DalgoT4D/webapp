@@ -1,9 +1,10 @@
+import '@testing-library/jest-dom';
 import { act, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
+
 import { DBTSetup } from '../DBTSetup';
-import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
 
 jest.mock('./../../../utils/common');
 
