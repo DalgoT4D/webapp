@@ -20,11 +20,10 @@ export function mockFetch(data: any) {
   );
 }
 
-// ======================================================================
 describe('no token', () => {
   const mockSession = {
     expires: '1',
-    user: { token: null }
+    user: { name: '' }
   };
 
   window.fetch = mockFetch([{ org: { slug: 'test-org' } }]);
@@ -45,7 +44,6 @@ describe('no token', () => {
   });
 });
 
-// // ======================================================================
 describe('token and normal flow', () => {
   const mockSession: any = {
     expires: '1',
