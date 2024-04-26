@@ -156,7 +156,6 @@ export const Connections = () => {
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<
     Array<string>
   >([]);
-  // const [syncLogs, setSyncLogs] = useState<Array<string>>([]);
   const syncLogs = useConnSyncLogs();
   const setSyncLogs = useConnSyncLogsUpdate();
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
