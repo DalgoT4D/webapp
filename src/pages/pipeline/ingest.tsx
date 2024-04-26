@@ -5,6 +5,7 @@ import { Connections } from '@/components/Connections/Connections';
 import { Sources } from '@/components/Sources/Sources';
 import { Destinations } from '@/components/Destinations/Destinations';
 import { PageHead } from '@/components/PageHead';
+import { ConnectionSyncLogsProvider } from '@/contexts/ConnectionSyncLogsContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -67,7 +68,9 @@ export default function Ingest() {
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
-          <Connections />
+          <ConnectionSyncLogsProvider>
+            <Connections />
+          </ConnectionSyncLogsProvider>
         </TabPanel>
         <TabPanel value={value} index={1}>
           <Sources />
