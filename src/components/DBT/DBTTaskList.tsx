@@ -285,7 +285,7 @@ export const DBTTaskList = ({
                     task.lock?.status === 'complete' ? (
                     <LockIcon />
                   ) : (
-                    'queue icon'
+                    <LockIcon />
                   )}
                 </Box>
                 <Box>
