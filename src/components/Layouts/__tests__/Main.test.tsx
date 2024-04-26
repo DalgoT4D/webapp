@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { Main } from '../Main';
 import { SessionProvider } from 'next-auth/react';
+import { Main } from '../Main';
 
 jest.mock('next/navigation');
 
