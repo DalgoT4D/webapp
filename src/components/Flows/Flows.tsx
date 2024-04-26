@@ -132,7 +132,7 @@ export const Flows = ({
 
   const flowState = (flow: FlowInterface) => {
     let jobStatus: string | null = null;
-    let jobStatusColor: string = 'grey';
+    let jobStatusColor = 'grey';
 
     // things when the connection is locked
     if (flow.lock?.status === 'running') {
