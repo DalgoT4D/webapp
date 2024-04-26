@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import SyncIcon from '@/assets/icons/sync.svg';
+import LoopIcon from '@mui/icons-material/Loop';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -96,7 +97,7 @@ export const DBTTaskList = ({
         data-testid={'task-' + task.uuid}
         disabled={runningTask || isAnyTaskLocked ? true : false}
         key={'task-' + task.uuid}
-        sx={{ marginRight: '10px' }}
+        sx={{ marginRight: '10px', width: '75px', height: '40px' }}
       >
         {runningTask || isAnyTaskLocked ? (
           <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
@@ -128,7 +129,6 @@ export const DBTTaskList = ({
         <SettingsIcon
           sx={{
             minWidth: '32px',
-
             color: 'text.secondary',
             marginTop: '5px',
           }}
@@ -267,52 +267,41 @@ export const DBTTaskList = ({
               {task.command}
             </Typography>
           </Box>,
-          task.lock && isAnyTaskLocked ? (
-            <Box
-              sx={{ display: 'flex', justifyContent: 'flex-end', gap: '20px' }}
-            >
-              <Box sx={{ alignItems: 'center', display: 'flex' }}>
-                {task.lock?.status === 'running' ? (
-                  <CircularProgress />
-                ) : task.lock?.status === 'locked' ||
-                  task.lock?.status === 'complete' ? (
-                  <LockIcon />
-                ) : (
-                  <Tooltip title="Job Queued" placement="top">
-                    <Image
-                      style={{ marginRight: 10 }}
-                      src={JobQueuedIcon}
-                      alt="job queued icon"
-                    />
-                  </Tooltip>
-                )}
-              </Box>
+          <Box
+            sx={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}
+          >
+            {task.lock && isAnyTaskLocked ? (
               <Box
                 sx={{
                   display: 'flex',
-                  justifyContent: 'end',
+                  gap: '5px',
+                  alignItems: 'center',
                 }}
               >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-around',
-                    alignItems: 'start',
-                  }}
-                >
-                  <Typography variant="body2" fontWeight={400}>
+                <Box sx={{ alignItems: 'center', display: 'flex' }}>
+                  {task.lock?.status === 'running' ? (
+                    <LoopIcon />
+                  ) : task.lock?.status === 'locked' ||
+                    task.lock?.status === 'complete' ? (
+                    <LockIcon />
+                  ) : (
+                    'queue icon'
+                  )}
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={600}>
                     Triggered by: {trimEmail(task.lock.lockedBy)}
                   </Typography>
-                  <Typography variant="body2" fontWeight={400}>
+                  <Typography variant="subtitle2" fontWeight={600}>
                     {lastRunTime(task.lock.lockedAt)}
                   </Typography>
                 </Box>
               </Box>
-            </Box>
-          ) : (
+            ) : (
+              ''
+            )}
             <Actions key={`actions-${task.uuid}`} task={task} />
-          ),
+          </Box>,
         ]);
 
       setRows(tempRows);
@@ -362,7 +351,7 @@ export const DBTTaskList = ({
         title="Task"
         headers={['Command']}
         rows={rows}
-        height={70}
+        height={80}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
