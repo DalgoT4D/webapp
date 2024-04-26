@@ -3,6 +3,7 @@ import React, { useContext, useMemo, useState } from 'react';
 import FlowIcon from '@/assets/icons/flow.svg';
 import LoopIcon from '@mui/icons-material/Loop';
 import LockIcon from '@mui/icons-material/Lock';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SyncIcon from '@/assets/icons/sync.svg';
 import { useSession } from 'next-auth/react';
@@ -174,7 +175,7 @@ export const Flows = ({
       } else if (status === 'locked') {
         return <LockIcon sx={sx} />;
       } else if (status === 'queued') {
-        return <LockIcon sx={sx} />;
+        return <ScheduleIcon sx={sx} />;
       } else if (status === 'success') {
         return <TaskAltIcon sx={sx} />;
       } else if (status === 'failed') {

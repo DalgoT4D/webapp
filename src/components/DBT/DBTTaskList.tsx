@@ -2,6 +2,7 @@ import { Box, Button, Typography } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import SyncIcon from '@/assets/icons/sync.svg';
 import LoopIcon from '@mui/icons-material/Loop';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -279,7 +280,7 @@ export const DBTTaskList = ({
                     task.lock?.status === 'complete' ? (
                     <LockIcon />
                   ) : (
-                    <LockIcon />
+                    <ScheduleIcon />
                   )}
                 </Box>
                 <Box>

@@ -13,6 +13,7 @@ import Button from '@mui/material/Button';
 import SyncIcon from '@/assets/icons/sync.svg';
 import LockIcon from '@mui/icons-material/Lock';
 import LoopIcon from '@mui/icons-material/Loop';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useSession } from 'next-auth/react';
@@ -439,7 +440,7 @@ export const Connections = () => {
       } else if (status === 'locked') {
         return <LockIcon sx={sx} />;
       } else if (status === 'queued') {
-        return null;
+        return <ScheduleIcon sx={sx} />;
       } else if (status === 'success') {
         return <TaskAltIcon sx={sx} />;
       } else if (status === 'failed') {
