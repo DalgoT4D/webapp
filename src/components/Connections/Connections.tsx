@@ -560,6 +560,7 @@ export const Connections = () => {
         handleEdit={handleEditConnection}
         handleDelete={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
+        hasResetPermission={permissions.includes('can_reset_connection')}
         hasDeletePermission={permissions.includes('can_delete_connection')}
         hasEditPermission={permissions.includes('can_edit_connection')}
       />

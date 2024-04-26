@@ -84,6 +84,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   const { data, isLoading, mutate } = useSWR(`organizations/users`);
   const { data: roles } = useSWR(`data/roles`);
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -212,7 +213,10 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
               Save
             </Button>
           ) : (
-            orguser.email !== session?.user?.email && (
+            orguser.email !== session?.user?.email &&
+            roles
+              .map((role: any) => role.slug)
+              .includes(orguser.new_role_slug) && (
               <Button
                 aria-controls={openActionMenu ? 'basic-menu' : undefined}
                 aria-haspopup="true"
@@ -285,7 +289,9 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
         eleType="usermanagement"
         anchorEl={anchorEl}
         open={openActionMenu}
+        hasEditPermission={permissions.includes('can_edit_orguser')}
         handleClose={handleClose}
+        hasDeletePermission={permissions.includes('can_delete_orguser')}
         handleEdit={handleEdit}
         handleDelete={handleClickDeleteAction}
       />
