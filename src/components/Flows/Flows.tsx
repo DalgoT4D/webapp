@@ -185,29 +185,40 @@ export const Flows = ({
     };
 
     return (
-      <>
-        <Box
-          data-testid={'flowstate-' + flow.name}
+      <Box
+        data-testid={'flowstate-' + flow.name}
+        sx={{
+          display: 'flex',
+          gap: '3px',
+          alignItems: 'center',
+        }}
+      >
+        <StatusIcon
           sx={{
-            display: 'flex',
-            gap: '3px',
             alignItems: 'center',
+            fontWeight: 700,
+            fontSize: 'large',
+            color: jobStatusColor,
           }}
-        >
-          <StatusIcon
-            sx={{
-              alignItems: 'center',
-              fontWeight: 700,
-              fontSize: 'large',
-              color: jobStatusColor,
-            }}
-            status={jobStatus}
-          />
+          status={jobStatus}
+        />
+        {jobStatus ? (
           <Typography component="p" fontWeight={700} color={jobStatusColor}>
             {jobStatus}
           </Typography>
-        </Box>
-      </>
+        ) : (
+          <Box
+            sx={{
+              display: 'flex',
+              color: '#399D47',
+              gap: '3px',
+              alignItems: 'center',
+            }}
+          >
+            &mdash;
+          </Box>
+        )}
+      </Box>
     );
   };
 
