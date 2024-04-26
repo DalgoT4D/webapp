@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { DBTSetup } from '../DBTSetup';
@@ -14,15 +14,15 @@ const pushMock = jest.fn();
 jest.mock('next/router', () => ({
   useRouter() {
     return {
-      push: pushMock,
+      push: pushMock
     };
-  },
+  }
 }));
 
 describe('Create workspace', () => {
   const mockSession: Session = {
     expires: 'true',
-    user: { email: 'a' },
+    user: { email: 'a' }
   };
 
   it('initial render of the form', () => {
@@ -62,7 +62,7 @@ describe('Create workspace', () => {
       ok: false,
       json: jest
         .fn()
-        .mockResolvedValueOnce({ detail: "couldn't create workspace" }),
+        .mockResolvedValueOnce({ detail: "couldn't create workspace" })
     });
 
     (global as any).fetch = createWorkspaceFetch;
@@ -104,7 +104,9 @@ describe('Create workspace', () => {
     await userEvent.type(dbttargetschema, 'dest-schema');
 
     await act(() => savebutton.click());
-    expect(createWorkspaceFetch).toHaveBeenCalledTimes(1);
+    waitFor(() => {
+      expect(createWorkspaceFetch).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('submit form to create workspace - check progress failed', async () => {
@@ -112,22 +114,22 @@ describe('Create workspace', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' }),
+        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' })
       })
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce({
-          progress: [{ message: 'msg-1', status: 'running' }],
-        }),
+          progress: [{ message: 'msg-1', status: 'running' }]
+        })
       })
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce({
           progress: [
             { message: 'msg-1', status: 'running' },
-            { message: 'msg-2', status: 'failed' },
-          ],
-        }),
+            { message: 'msg-2', status: 'failed' }
+          ]
+        })
       });
 
     (global as any).fetch = createWorkspaceFetchAndProgress;
@@ -168,22 +170,22 @@ describe('Create workspace', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' }),
+        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' })
       })
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce({
-          progress: [{ message: 'msg-1', status: 'running' }],
-        }),
+          progress: [{ message: 'msg-1', status: 'running' }]
+        })
       })
       .mockResolvedValueOnce({
         ok: false,
         json: jest.fn().mockResolvedValueOnce({
           progress: [
             { message: 'msg-1', status: 'running' },
-            { message: 'msg-2', status: 'running' },
-          ],
-        }),
+            { message: 'msg-2', status: 'running' }
+          ]
+        })
       });
 
     (global as any).fetch = createWorkspaceFetchAndProgress;
@@ -224,13 +226,22 @@ describe('Create workspace', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' }),
+        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' })
       })
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce({
-          progress: [{ message: 'msg-1', status: 'running' }],
-        }),
+          progress: [{ message: 'msg-1', status: 'running' }]
+        })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          progress: [
+            { message: 'msg-1', status: 'running' },
+            { message: 'msg-2', status: 'running' }
+          ]
+        })
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -238,18 +249,9 @@ describe('Create workspace', () => {
           progress: [
             { message: 'msg-1', status: 'running' },
             { message: 'msg-2', status: 'running' },
-          ],
-        }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          progress: [
-            { message: 'msg-1', status: 'running' },
-            { message: 'msg-2', status: 'running' },
-            { message: 'msg-3', status: 'completed' },
-          ],
-        }),
+            { message: 'msg-3', status: 'completed' }
+          ]
+        })
       });
 
     (global as any).fetch = createWorkspaceFetchAndProgress;
