@@ -397,7 +397,7 @@ export const Connections = () => {
 
   const getLastSync = (connection: Connection) => {
     let jobStatus: string | null = null;
-    let jobStatusColor: string = 'grey';
+    let jobStatusColor = 'grey';
 
     // things when the connection is locked
     if (connection.lock?.status === 'running') {
