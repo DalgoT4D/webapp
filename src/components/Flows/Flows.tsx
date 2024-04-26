@@ -4,9 +4,11 @@ import {
   Typography,
   CircularProgress,
   Tooltip,
+  SxProps,
 } from '@mui/material';
 import React, { useContext, useMemo, useState } from 'react';
 import FlowIcon from '@/assets/icons/flow.svg';
+import LoopIcon from '@mui/icons-material/Loop';
 import JobQueuedIcon from '@/assets/icons/jobQueued.svg';
 import LockIcon from '@mui/icons-material/Lock';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
@@ -41,7 +43,6 @@ export interface FlowInterface {
   deploymentId: string;
   lastRun?: FlowRun;
   lock: TaskLock | undefined | null;
-  isRunning: boolean;
   status: boolean;
 }
 
@@ -52,63 +53,6 @@ export interface FlowsInterface {
   setSelectedFlowId: (arg: string) => any;
 }
 
-const flowState = (flow: FlowInterface) => {
-  if (!flow.lastRun) {
-    return (
-      <Box
-        data-testid={'flowstate-' + flow.name}
-        sx={{
-          display: 'flex',
-          color: '#399D47',
-          gap: '3px',
-          alignItems: 'center',
-        }}
-      >
-        &mdash;
-      </Box>
-    );
-  }
-  return (
-    <>
-      {flow.lastRun?.status === 'COMPLETED' ? (
-        <Box
-          data-testid={'flowstate-' + flow.name}
-          sx={{
-            display: 'flex',
-            color: '#399D47',
-            gap: '3px',
-            alignItems: 'center',
-          }}
-        >
-          <TaskAltIcon
-            sx={{ alignItems: 'center', fontWeight: 700, fontSize: 'large' }}
-          />
-          <Typography component="p" fontWeight={700}>
-            Success
-          </Typography>
-        </Box>
-      ) : (
-        <Box
-          data-testid={'flowstate-' + flow.name}
-          sx={{
-            display: 'flex',
-            color: '#981F1F',
-            gap: '3px',
-            alignItems: 'center',
-          }}
-        >
-          <WarningAmberIcon
-            sx={{ alignItems: 'center', fontWeight: 700, fontSize: 'large' }}
-          />
-          <Typography component="p" fontWeight={700}>
-            Failed
-          </Typography>
-        </Box>
-      )}
-    </>
-  );
-};
-
 const flowStatus = (status: boolean) => (
   <Typography component="p" fontWeight={600}>
     {status ? 'Active' : 'Inactive'}
@@ -118,7 +62,16 @@ const flowStatus = (status: boolean) => (
 const flowLastRun = (flow: FlowInterface) => {
   return (
     <>
-      {flow?.lastRun ? (
+      {flow.lock ? (
+        <>
+          <Typography variant="subtitle2" fontWeight={600}>
+            Triggered by: {trimEmail(flow.lock.lockedBy)}
+          </Typography>
+          <Typography variant="subtitle2" fontWeight={600}>
+            {lastRunTime(flow.lock.lockedAt)}
+          </Typography>
+        </>
+      ) : flow?.lastRun ? (
         <Typography
           data-testid={'flowlastrun-' + flow.name}
           fontWeight={600}
@@ -152,7 +105,9 @@ export const Flows = ({
   setSelectedFlowId,
 }: FlowsInterface) => {
   const [lastFlowRun, setLastFlowRun] = useState<FlowRun>();
-  const [runningDeploymentId, setRunningDeploymentId] = useState<string>('');
+  const [runningDeploymentIds, setRunningDeploymentIds] = useState<string[]>(
+    []
+  );
   const [deploymentId, setDeploymentId] = useState<string>('');
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
@@ -182,6 +137,152 @@ export const Flows = ({
     setDeploymentId(blockId);
     setAnchorEl(event);
   };
+
+  const flowState = (flow: FlowInterface) => {
+    let jobStatus: string | null = null;
+    let jobStatusColor: string = 'grey';
+
+    // things when the connection is locked
+    if (flow.lock?.status === 'running') {
+      jobStatus = 'running';
+    } else if (
+      flow.lock?.status === 'locked' ||
+      flow.lock?.status === 'complete'
+    ) {
+      jobStatus = 'locked';
+    } else if (
+      runningDeploymentIds.includes(flow.deploymentId) ||
+      flow.lock?.status === 'queued'
+    ) {
+      jobStatus = 'queued';
+    }
+
+    // if lock is not there; check for last run
+    if (jobStatus === null && flow.lastRun) {
+      if (flow.lastRun?.status === 'COMPLETED') {
+        jobStatus = 'success';
+        jobStatusColor = '#399D47';
+      } else {
+        jobStatus = 'failed';
+        jobStatusColor = '#981F1F';
+      }
+    }
+
+    const StatusIcon = ({
+      sx,
+      status,
+    }: {
+      sx: SxProps;
+      status: string | null;
+    }) => {
+      if (status === null) return null;
+
+      if (status === 'running') {
+        return <LoopIcon sx={sx} />;
+      } else if (status === 'locked') {
+        return <LockIcon sx={sx} />;
+      } else if (status === 'queued') {
+        return <LockIcon sx={sx} />;
+      } else if (status === 'success') {
+        return <TaskAltIcon sx={sx} />;
+      } else if (status === 'failed') {
+        return <WarningAmberIcon sx={sx} />;
+      }
+
+      return null;
+    };
+
+    return (
+      <>
+        <Box
+          data-testid={'flowstate-' + flow.name}
+          sx={{
+            display: 'flex',
+            gap: '3px',
+            alignItems: 'center',
+          }}
+        >
+          <StatusIcon
+            sx={{
+              alignItems: 'center',
+              fontWeight: 700,
+              fontSize: 'large',
+              color: jobStatusColor,
+            }}
+            status={jobStatus}
+          />
+          <Typography component="p" fontWeight={700} color={jobStatusColor}>
+            {jobStatus}
+          </Typography>
+        </Box>
+      </>
+    );
+  };
+
+  const Actions = ({ flow, idx }: { flow: FlowInterface; idx: string }) => (
+    <Box key={idx}>
+      <Button
+        variant="contained"
+        color="info"
+        data-testid={'btn-openhistory-' + flow.name}
+        sx={{
+          fontWeight: 600,
+          marginRight: '5px',
+        }}
+        onClick={() => fetchLastFlowRun(flow.deploymentId)}
+      >
+        last logs
+      </Button>
+      <>
+        <Button
+          sx={{ mr: 1 }}
+          data-testid={'btn-quickrundeployment-' + flow.name}
+          variant="contained"
+          disabled={
+            runningDeploymentIds.includes(flow.deploymentId) || flow.lock
+              ? true
+              : false
+          }
+          onClick={async () => {
+            // push deployment id into list of running deployment ids
+            if (!runningDeploymentIds.includes(flow.deploymentId)) {
+              setRunningDeploymentIds([
+                ...runningDeploymentIds,
+                flow.deploymentId,
+              ]);
+            }
+            handleQuickRunDeployment(flow.deploymentId);
+          }}
+        >
+          {runningDeploymentIds.includes(flow.deploymentId) || flow.lock ? (
+            <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
+          ) : (
+            'Run'
+          )}
+        </Button>
+        <Button
+          aria-controls={open ? 'basic-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={(event) =>
+            handleClick(flow.deploymentId, event.currentTarget)
+          }
+          variant="contained"
+          key={'menu-' + idx}
+          color="info"
+          sx={{ px: 0, minWidth: 32 }}
+          disabled={
+            runningDeploymentIds.includes(flow.deploymentId) || flow.lock
+              ? true
+              : false
+          }
+        >
+          <MoreHorizIcon />
+        </Button>
+      </>
+    </Box>
+  );
+
   // when the connection list changes
   let rows = [];
 
@@ -207,100 +308,16 @@ export const Flows = ({
         flowStatus(flow.status),
 
         flowLastRun(flow),
-        flow.lock?.status === 'running' ? (
-          <CircularProgress />
-        ) : flow.lock?.status === 'locked' ||
-          flow.lock?.status === 'complete' ? (
-          <LockIcon />
-        ) : flow.lock?.status === 'queued' ? (
-          <Tooltip title="Job Queued" placement="top">
-            <Image
-              style={{ marginRight: 10 }}
-              src={JobQueuedIcon}
-              alt="job queued icon"
-            />
-          </Tooltip>
-        ) : (
-          flowState(flow)
-        ),
-
-        <Box key={idx}>
-          <Button
-            variant="contained"
-            color="info"
-            data-testid={'btn-openhistory-' + flow.name}
-            sx={{
-              fontWeight: 600,
-              marginRight: '5px',
-            }}
-            onClick={() => fetchLastFlowRun(flow.deploymentId)}
-          >
-            last logs
-          </Button>
-          {flow.lock ? (
-            flow.lock.status === 'running' ? (
-              <>
-                <Typography
-                  variant="body2"
-                  fontWeight={600}
-                  sx={{ textAlign: 'center' }}
-                >
-                  Triggered by: {trimEmail(flow.lock.lockedBy)}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  fontWeight={600}
-                  sx={{ textAlign: 'center' }}
-                >
-                  {lastRunTime(flow.lock.lockedAt)}
-                </Typography>
-              </>
-            ) : (
-              ''
-            )
-          ) : (
-            <>
-              <Button
-                sx={{ mr: 1 }}
-                data-testid={'btn-quickrundeployment-' + flow.name}
-                variant="contained"
-                disabled={runningDeploymentId === flow.deploymentId}
-                onClick={() => {
-                  setRunningDeploymentId(flow.deploymentId);
-                  handleQuickRunDeployment(flow.deploymentId);
-                }}
-              >
-                {runningDeploymentId === flow.deploymentId ? (
-                  <Image
-                    src={SyncIcon}
-                    className={styles.SyncIcon}
-                    alt="sync icon"
-                  />
-                ) : (
-                  'Run'
-                )}
-              </Button>
-              <Button
-                aria-controls={open ? 'basic-menu' : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? 'true' : undefined}
-                onClick={(event) =>
-                  handleClick(flow.deploymentId, event.currentTarget)
-                }
-                variant="contained"
-                key={'menu-' + idx}
-                color="info"
-                sx={{ px: 0, minWidth: 32 }}
-              >
-                <MoreHorizIcon />
-              </Button>
-            </>
-          )}
-        </Box>,
+        flowState(flow),
+        <Actions
+          key={`actions-${flow.deploymentId}`}
+          flow={flow}
+          idx={idx.toString()}
+        />,
       ]);
     }
     return [];
-  }, [flows, runningDeploymentId]);
+  }, [flows]);
 
   const fetchLastFlowRun = async (deploymentId: string) => {
     try {
@@ -323,23 +340,19 @@ export const Flows = ({
     updateCrudVal('create');
   };
 
-  const handleQuickRunDeployment = (deploymentId: string) => {
-    (async () => {
-      try {
-        await httpPost(
-          session,
-          `prefect/v1/flows/${deploymentId}/flow_run/`,
-          {}
-        );
-        successToast('Flow run inititated successfully', [], toastContext);
-        mutate();
-      } catch (err: any) {
-        console.error(err);
-        errorToast(err.message, [], toastContext);
-      } finally {
-        setRunningDeploymentId('');
-      }
-    })();
+  const handleQuickRunDeployment = async (deploymentId: string) => {
+    try {
+      await httpPost(session, `prefect/v1/flows/${deploymentId}/flow_run/`, {});
+      successToast('Flow run inititated successfully', [], toastContext);
+      mutate();
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    } finally {
+      setRunningDeploymentIds(
+        runningDeploymentIds.filter((id) => id !== deploymentId)
+      );
+    }
   };
 
   const handleDeleteFlow = () => {
