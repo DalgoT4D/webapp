@@ -15,7 +15,12 @@ export type TransformTask = {
   label: string;
   slug: string;
   deploymentId: string | null;
-  lock: { lockedBy: string; lockedAt: string; flowRunId?: string } | null;
+  lock: {
+    lockedBy: string;
+    lockedAt: string;
+    flowRunId?: string;
+    celeryTaskId?: string;
+  } | null;
   command: string | null;
   generated_by: string;
   uuid: string;
