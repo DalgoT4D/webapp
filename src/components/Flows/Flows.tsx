@@ -29,8 +29,9 @@ import styles from './Flows.module.css';
 export interface TaskLock {
   lockedBy: string;
   lockedAt: string;
-  flowRunId?: string;
   status: 'queued' | 'running' | 'locked' | 'complete';
+  flowRunId?: string;
+  celeryTaskId?: string;
 }
 
 export interface FlowInterface {
