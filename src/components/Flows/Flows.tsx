@@ -249,7 +249,7 @@ export const Flows = ({
                 variant="contained"
                 disabled={
                   runningDeploymentId === flow.deploymentId ||
-                  !permissions.includes('can_view_pipeline')
+                  !permissions.includes('can_run_pipeline')
                 }
                 onClick={() => {
                   setRunningDeploymentId(flow.deploymentId);
