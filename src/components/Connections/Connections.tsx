@@ -11,7 +11,6 @@ import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
 import SyncIcon from '@/assets/icons/sync.svg';
-import JobQueuedIcon from '@/assets/icons/jobQueued.svg';
 import LockIcon from '@mui/icons-material/Lock';
 import LoopIcon from '@mui/icons-material/Loop';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
