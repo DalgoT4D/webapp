@@ -456,7 +456,7 @@ export const Connections = () => {
         {jobStatus &&
           (['success', 'failed'].includes(jobStatus) ? (
             <Typography variant="subtitle2" fontWeight={600}>
-              {lastRunTime(connection?.lastRun?.startTime)}
+              {lastRunTime(connection.lastRun?.startTime)}
             </Typography>
           ) : (
             <>
