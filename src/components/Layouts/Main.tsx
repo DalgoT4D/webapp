@@ -62,14 +62,14 @@ const MainDashboard = ({ children }: any) => {
         orgusers = orgusers.filter((orguser: OrgUser) => orguser.org);
         globalContext?.OrgUsers.dispatch({
           type: 'new',
-          orgUsersState: orgusers
+          orgUsersState: orgusers,
         });
 
         // see if the org is set in the local storage
         const currentOrgSlug = localStorage.getItem('org-slug');
         let currentOrgUser: OrgUser | null | undefined = null;
         currentOrgUser = orgusers?.find(
-          (orguser: OrgUser) => orguser.org.slug === currentOrgSlug
+          (orguser: OrgUser) => orguser.org.slug === currentOrgSlug,
         );
         // If not pick the first org from the api response
         if (!currentOrgUser && orgusers && orgusers.length > 0)
@@ -77,7 +77,7 @@ const MainDashboard = ({ children }: any) => {
         // update current org in global state
         globalContext?.CurrentOrg.dispatch({
           type: 'new',
-          orgState: { ...currentOrgUser?.org, wtype: currentOrgUser?.wtype }
+          orgState: { ...currentOrgUser?.org, wtype: currentOrgUser?.wtype },
         });
       } catch (error) {
         console.error(error);
@@ -90,7 +90,7 @@ const MainDashboard = ({ children }: any) => {
       value={{
         fetcher: (resource) => {
           return httpGet(session, resource).then((res) => res);
-        }
+        },
       }}
     >
       {redirectTo === 'setup-account' && (
@@ -106,7 +106,7 @@ const MainDashboard = ({ children }: any) => {
             sx={{
               display: 'flex',
               justifyContent: 'center',
-              fontSize: '18px'
+              fontSize: '18px',
             }}
           >
             <a href="mailto:support@dalgo.in">support@dalgo.in</a>
