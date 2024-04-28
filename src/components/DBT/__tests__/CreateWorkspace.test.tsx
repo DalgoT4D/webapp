@@ -12,15 +12,15 @@ const fnMock = jest.fn();
 jest.mock('next/router', () => ({
   useRouter() {
     return {
-      push: fnMock
+      push: fnMock,
     };
-  }
+  },
 }));
 
 describe('Create workspace', () => {
   const mockSession: Session = {
     expires: 'true',
-    user: { email: 'a' }
+    user: { email: 'a' },
   };
 
   it('initial render of the form', () => {
@@ -37,7 +37,7 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
     const urlinputfield = screen.getByTestId('github-url');
     expect(urlinputfield).toBeInTheDocument();
@@ -60,7 +60,7 @@ describe('Create workspace', () => {
       ok: false,
       json: jest
         .fn()
-        .mockResolvedValueOnce({ detail: "couldn't create workspace" })
+        .mockResolvedValueOnce({ detail: "couldn't create workspace" }),
     });
 
     global.fetch = createWorkspaceFetch;
@@ -78,7 +78,7 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -117,22 +117,22 @@ describe('Create workspace', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' })
+        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' }),
       })
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce({
-          progress: [{ message: 'msg-1', status: 'running' }]
-        })
+          progress: [{ message: 'msg-1', status: 'running' }],
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce({
           progress: [
             { message: 'msg-1', status: 'running' },
-            { message: 'msg-2', status: 'failed' }
-          ]
-        })
+            { message: 'msg-2', status: 'failed' },
+          ],
+        }),
       });
 
     global.fetch = createWorkspaceFetchAndProgress;
@@ -150,7 +150,7 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -175,22 +175,22 @@ describe('Create workspace', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' })
+        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' }),
       })
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce({
-          progress: [{ message: 'msg-1', status: 'running' }]
-        })
+          progress: [{ message: 'msg-1', status: 'running' }],
+        }),
       })
       .mockResolvedValueOnce({
         ok: false,
         json: jest.fn().mockResolvedValueOnce({
           progress: [
             { message: 'msg-1', status: 'running' },
-            { message: 'msg-2', status: 'running' }
-          ]
-        })
+            { message: 'msg-2', status: 'running' },
+          ],
+        }),
       });
 
     global.fetch = createWorkspaceFetchAndProgress;
@@ -208,7 +208,7 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -233,22 +233,13 @@ describe('Create workspace', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' })
+        json: jest.fn().mockResolvedValueOnce({ task_id: 'test-task-id' }),
       })
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce({
-          progress: [{ message: 'msg-1', status: 'running' }]
-        })
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          progress: [
-            { message: 'msg-1', status: 'running' },
-            { message: 'msg-2', status: 'running' }
-          ]
-        })
+          progress: [{ message: 'msg-1', status: 'running' }],
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -256,9 +247,18 @@ describe('Create workspace', () => {
           progress: [
             { message: 'msg-1', status: 'running' },
             { message: 'msg-2', status: 'running' },
-            { message: 'msg-3', status: 'completed' }
-          ]
-        })
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          progress: [
+            { message: 'msg-1', status: 'running' },
+            { message: 'msg-2', status: 'running' },
+            { message: 'msg-3', status: 'completed' },
+          ],
+        }),
       });
 
     global.fetch = createWorkspaceFetchAndProgress;
@@ -276,7 +276,7 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const savebutton = screen.getByTestId('save-github-url');

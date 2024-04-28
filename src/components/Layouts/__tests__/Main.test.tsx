@@ -7,22 +7,22 @@ jest.mock('next/navigation');
 jest.mock('next/router', () => ({
   useRouter() {
     return { push: jest.fn() };
-  }
+  },
 }));
 
 export function mockFetch(data: any) {
   return jest.fn().mockImplementation(() =>
     Promise.resolve({
       ok: true,
-      json: () => data
-    })
+      json: () => data,
+    }),
   );
 }
 
 describe('no token', () => {
   const mockSession = {
     expires: '1',
-    user: { name: '' }
+    user: { name: '' },
   };
 
   window.fetch = mockFetch([{ org: { slug: 'test-org' } }]);
@@ -33,7 +33,7 @@ describe('no token', () => {
         <Main>
           <div key="1" data-testid="not-logged-in" />
         </Main>
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const notLoggedIn = screen.getByTestId('not-logged-in');
@@ -46,7 +46,7 @@ describe('no token', () => {
 describe('token and normal flow', () => {
   const mockSession: any = {
     expires: '1',
-    user: { token: 'token', email_verified: true }
+    user: { token: 'token', email_verified: true },
   };
 
   it('renders the header and sidedrawer', () => {
@@ -75,7 +75,7 @@ describe('token and normal flow', () => {
         <Main>
           <div key="1" data-testid="normal-flow" />
         </Main>
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     // TODO: rewrite test cases for this component - logic has been changed
