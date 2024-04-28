@@ -60,7 +60,7 @@ export const TaskSequence = ({
     const selectedOptions = field.value;
 
     const newSelectedOptions = selectedOptions.filter(
-      (option) => option.uuid !== node.data.uuid
+      (option: any) => option.uuid !== node.data.uuid
     );
 
     field.onChange(newSelectedOptions);
