@@ -1,3 +1,4 @@
+import type { Config } from 'jest';
 import nextJest from 'next/jest.js';
 
 const createJestConfig = nextJest({
@@ -6,12 +7,11 @@ const createJestConfig = nextJest({
 });
 
 // Add any custom config to be passed to Jest
-/** @type {import('jest').Config} */
-const config = {
+const config: Config = {
   // Add more setup options before each test is run
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   collectCoverageFrom: ['src/components/**/*.{ts,tsx}', '!**/node_modules/**'],
-  testEnvironment: 'jest-environment-jsdom',
+  testEnvironment: 'jsdom',
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
