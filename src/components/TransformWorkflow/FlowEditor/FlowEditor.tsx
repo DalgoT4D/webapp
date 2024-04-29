@@ -164,7 +164,7 @@ const LowerSection = ({
           <OpenInFull />
         </IconButton>
       </Box>
-      <Box>
+      <Box sx={{ height: '100vh' }}>
         {selectedTab === 'preview' && <PreviewPane height={height} />}
         {selectedTab === 'logs' && (
           <Box
