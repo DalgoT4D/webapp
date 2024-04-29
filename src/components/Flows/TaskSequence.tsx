@@ -60,7 +60,7 @@ export const TaskSequence = ({
     const selectedOptions = field.value;
 
     const newSelectedOptions = selectedOptions.filter(
-      (option) => option.uuid !== node.data.uuid
+      (option: any) => option.uuid !== node.data.uuid
     );
 
     field.onChange(newSelectedOptions);
@@ -135,10 +135,15 @@ export const TaskSequence = ({
   }
 
   const onMove = (args: any) => {
+    if (!treeRef.current) {
+      return;
+    }
+    const ref: any = treeRef.current;
     const finalIndex = args.index - 1;
 
     const currentNodeIndex = args.dragNodes[0].rowIndex as number;
-    const data = treeRef.current.props.data;
+
+    const data = ref.props.data;
 
     const element = data[currentNodeIndex];
 
