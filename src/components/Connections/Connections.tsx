@@ -1,11 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { CircularProgress, Box, Typography, Tooltip } from '@mui/material';
+import {
+  CircularProgress,
+  Box,
+  Typography,
+  Tooltip,
+  SxProps,
+} from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 
 import SyncIcon from '@/assets/icons/sync.svg';
 import LockIcon from '@mui/icons-material/Lock';
+import LoopIcon from '@mui/icons-material/Loop';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useSession } from 'next-auth/react';
@@ -25,6 +33,11 @@ import styles from '@/styles/Common.module.css';
 import { delay, lastRunTime, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import { LogCard } from '@/components/Logs/LogCard';
+import { TaskLock } from '../Flows/Flows';
+import {
+  useConnSyncLogs,
+  useConnSyncLogsUpdate,
+} from '@/contexts/ConnectionSyncLogsContext';
 
 type PrefectFlowRun = {
   id: string;
@@ -68,9 +81,8 @@ export type Connection = {
   catalogId: string;
   destination: Destination;
   source: Source;
-  lock: { lockedBy: string | null; lockedAt: string | null } | null;
+  lock: TaskLock | null;
   lastRun: null | any;
-  isRunning: boolean;
   normalize: boolean;
   status: string;
   syncCatalog: object;
@@ -140,11 +152,12 @@ const getSourceDest = (connection: Connection) => (
 export const Connections = () => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
-  // const [blockId, setBlockId] = useState<string>('');
   const [connectionId, setConnectionId] = useState<string>('');
-  // const [syncingBlockId, setSyncingBlockId] = useState<string>('');
-  const [syncingConnectionId, setSyncingConnectionId] = useState<string>('');
-  const [syncLogs, setSyncLogs] = useState<Array<string>>([]);
+  const [syncingConnectionIds, setSyncingConnectionIds] = useState<
+    Array<string>
+  >([]);
+  const syncLogs = useConnSyncLogs();
+  const setSyncLogs = useConnSyncLogsUpdate();
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -164,22 +177,6 @@ export const Connections = () => {
   const [rows, setRows] = useState<Array<any>>([]);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
-
-  const fetchFlowRunStatus = async (flow_run_id: string) => {
-    try {
-      const flowRun: PrefectFlowRun = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}`
-      );
-
-      if (!flowRun.state_type) return 'FAILED';
-
-      return flowRun.state_type;
-    } catch (err: any) {
-      console.error(err);
-      return 'FAILED';
-    }
-  };
 
   function removeEscapeSequences(log: string) {
     // This regular expression matches typical ANSI escape codes
@@ -221,6 +218,22 @@ export const Connections = () => {
     }
   };
 
+  const fetchFlowRunStatus = async (flow_run_id: string) => {
+    try {
+      const flowRun: PrefectFlowRun = await httpGet(
+        session,
+        `prefect/flow_runs/${flow_run_id}`
+      );
+
+      if (!flowRun.state_type) return 'FAILED';
+
+      return flowRun.state_type;
+    } catch (err: any) {
+      console.error(err);
+      return 'FAILED';
+    }
+  };
+
   const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
     try {
       const response = await httpGet(
@@ -241,45 +254,49 @@ export const Connections = () => {
     }
   };
 
-  const syncConnection = (deploymentId: string) => {
-    (async () => {
-      setExpandSyncLogs(true);
-      if (!deploymentId) {
-        errorToast('Deployment not created', [], toastContext);
+  const pollForFlowRun = async (flow_run_id: string) => {
+    let flowRunStatus: string = await fetchFlowRunStatus(flow_run_id);
+
+    await fetchAndSetFlowRunLogs(flow_run_id);
+    while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
+      await delay(5000);
+      await fetchAndSetFlowRunLogs(flow_run_id);
+      flowRunStatus = await fetchFlowRunStatus(flow_run_id);
+    }
+  };
+
+  const syncConnection = async (deploymentId: string, connectionId: string) => {
+    setExpandSyncLogs(true);
+    if (!deploymentId) {
+      errorToast('Deployment not created', [], toastContext);
+      return;
+    }
+    try {
+      const response = await httpPost(
+        session,
+        `prefect/v1/flows/${deploymentId}/flow_run/`,
+        {}
+      );
+      if (response?.detail) errorToast(response.detail, [], toastContext);
+
+      // if flow run id is not present, something went wrong
+      if (!response?.flow_run_id) {
+        errorToast('Something went wrong', [], toastContext);
         return;
       }
-      try {
-        const response = await httpPost(
-          session,
-          `prefect/v1/flows/${deploymentId}/flow_run/`,
-          {}
-        );
-        if (response?.detail) errorToast(response.detail, [], toastContext);
 
-        // if flow run id is not present, something went wrong
-        if (!response?.flow_run_id) {
-          errorToast('Something went wrong', [], toastContext);
-          return;
-        }
+      successToast(`Sync initiated successfully`, [], toastContext);
 
-        // Poll and show logs till flow run is either completed or failed
-        let flowRunStatus: string = await fetchFlowRunStatus(
-          response.flow_run_id
-        );
-
-        while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
-          await delay(5000);
-          await fetchAndSetFlowRunLogs(response.flow_run_id);
-          flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
-        }
-        setSyncingConnectionId('');
-      } catch (err: any) {
-        console.error(err);
-        errorToast(err.message, [], toastContext);
-      } finally {
-        setSyncingConnectionId('');
-      }
-    })();
+      pollForFlowRun(response.flow_run_id);
+      mutate();
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    } finally {
+      setSyncingConnectionIds(
+        syncingConnectionIds.filter((id) => id !== connectionId)
+      );
+    }
   };
 
   const deleteConnection = (connectionId: string) => {
@@ -325,22 +342,30 @@ export const Connections = () => {
   };
 
   const Actions = ({
-    connection: { connectionId, deploymentId },
+    connection: { deploymentId, connectionId, lock },
     idx,
-  }: any) => (
+  }: {
+    connection: Connection;
+    idx: string;
+  }) => (
     <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
       <Button
         variant="contained"
-        onClick={() => {
-          setSyncingConnectionId(connectionId);
-          syncConnection(deploymentId);
+        onClick={async () => {
+          // push connection id into list of syncing connection ids
+          if (!syncingConnectionIds.includes(connectionId)) {
+            setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
+          }
+          syncConnection(deploymentId, connectionId);
         }}
         data-testid={'sync-' + idx}
-        disabled={syncingConnectionId === connectionId}
+        disabled={
+          syncingConnectionIds.includes(connectionId) || lock ? true : false
+        }
         key={'sync-' + idx}
         sx={{ marginRight: '10px' }}
       >
-        {syncingConnectionId === connectionId ? (
+        {syncingConnectionIds.includes(connectionId) || lock ? (
           <Image
             src={SyncIcon}
             className={styles.SyncIcon}
@@ -362,81 +387,134 @@ export const Connections = () => {
         key={'menu-' + idx}
         color="info"
         sx={{ p: 0, minWidth: 32 }}
+        disabled={
+          syncingConnectionIds.includes(connectionId) || lock ? true : false
+        }
       >
         <MoreHorizIcon />
       </Button>
     </Box>
   );
-  const getLastSync = (connection: Connection) =>
-    connection.isRunning ? (
-      <CircularProgress />
-    ) : connection.lock ? (
-      <LockIcon />
-    ) : syncingConnectionId ? (
-      <Typography variant="subtitle2" fontWeight={600}>
-        {lastRunTime(connection?.lastRun?.startTime)}
-      </Typography>
-    ) : (
+
+  const getLastSync = (connection: Connection) => {
+    let jobStatus: string | null = null;
+    let jobStatusColor = 'grey';
+
+    // things when the connection is locked
+    if (connection.lock?.status === 'running') {
+      jobStatus = 'running';
+    } else if (
+      connection.lock?.status === 'locked' ||
+      connection.lock?.status === 'complete'
+    ) {
+      jobStatus = 'locked';
+    } else if (
+      syncingConnectionIds.includes(connection.connectionId) ||
+      connection.lock?.status === 'queued'
+    ) {
+      jobStatus = 'queued';
+    }
+
+    // if lock is not there; check for last run
+    if (jobStatus === null && connection.lastRun) {
+      if (connection.lastRun?.status === 'COMPLETED') {
+        jobStatus = 'success';
+        jobStatusColor = '#399D47';
+      } else {
+        jobStatus = 'failed';
+        jobStatusColor = '#981F1F';
+      }
+    }
+
+    const StatusIcon = ({
+      sx,
+      status,
+    }: {
+      sx: SxProps;
+      status: string | null;
+    }) => {
+      if (status === null) return null;
+
+      if (status === 'running') {
+        return <LoopIcon sx={sx} />;
+      } else if (status === 'locked') {
+        return <LockIcon sx={sx} />;
+      } else if (status === 'queued') {
+        return <ScheduleIcon sx={sx} />;
+      } else if (status === 'success') {
+        return <TaskAltIcon sx={sx} />;
+      } else if (status === 'failed') {
+        return <WarningAmberIcon sx={sx} />;
+      }
+
+      return null;
+    };
+
+    return (
       <Box
-        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'left' }}
       >
-        <Typography variant="subtitle2" fontWeight={600}>
-          {lastRunTime(connection?.lastRun?.startTime)}
-        </Typography>
-        {connection?.lastRun?.status &&
-          (connection?.lastRun?.status == 'COMPLETED' ? (
-            <Box
-              data-testid={'connectionstate-success'}
-              sx={{
-                display: 'flex',
-                color: '#399D47',
-                gap: '3px',
-                alignItems: 'center',
-              }}
-            >
-              <TaskAltIcon
-                sx={{
-                  alignItems: 'center',
-                  fontWeight: 700,
-                  fontSize: 'large',
-                }}
-              />
-              <Typography component="p" fontWeight={700}>
-                Success
-              </Typography>
-            </Box>
+        {jobStatus &&
+          (['success', 'failed'].includes(jobStatus) ? (
+            <Typography variant="subtitle2" fontWeight={600}>
+              {lastRunTime(connection.lastRun?.startTime)}
+            </Typography>
           ) : (
-            <Box
-              data-testid={'connectionstate-failed'}
-              sx={{
-                display: 'flex',
-                color: '#981F1F',
-                gap: '3px',
-                alignItems: 'center',
-              }}
-            >
-              <WarningAmberIcon
-                sx={{
-                  alignItems: 'center',
-                  fontWeight: 700,
-                  fontSize: 'large',
-                }}
-              />
-              <Typography component="p" fontWeight={700}>
-                Failed
-              </Typography>
-            </Box>
+            <>
+              {connection.lock && (
+                <>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Triggered by: {trimEmail(connection.lock.lockedBy)}
+                  </Typography>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    {lastRunTime(connection.lock.lockedAt)}
+                  </Typography>
+                </>
+              )}
+            </>
           ))}
-        <Button
-          onClick={() => {
-            fetchAirbyteLogs(connection.connectionId);
-            setExpandSyncLogs(true);
+        <Box
+          data-testid={`connectionstate-${jobStatus}`}
+          sx={{
+            display: 'flex',
+            gap: '3px',
+            alignItems: 'center',
           }}
         >
-          Fetch Logs
-        </Button>
+          <StatusIcon
+            sx={{
+              alignItems: 'center',
+              fontWeight: 700,
+              fontSize: 'large',
+              color: jobStatusColor,
+            }}
+            status={jobStatus}
+          />
+          <Typography component="p" fontWeight={700} color={jobStatusColor}>
+            {jobStatus}
+          </Typography>
+        </Box>
+        {jobStatus && ['success', 'failed'].includes(jobStatus) && (
+          <Button
+            variant="contained"
+            sx={{
+              paddingY: '4px',
+              paddingX: '2px',
+              width: '60%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onClick={() => {
+              fetchAirbyteLogs(connection.connectionId);
+              setExpandSyncLogs(true);
+            }}
+          >
+            Fetch Logs
+          </Button>
+        )}
       </Box>
     );
+  };
 
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
@@ -456,63 +534,40 @@ export const Connections = () => {
         </Box>,
         getSourceDest(connection),
         getLastSync(connection),
-
-        connection.lock ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'end',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-around',
-                alignItems: 'start',
-              }}
-            >
-              <Typography variant="body2" fontWeight={600}>
-                Triggered by: {trimEmail(connection.lock.lockedBy)}
-              </Typography>
-              <Typography variant="body2" fontWeight={600}>
-                {lastRunTime(connection.lock.lockedAt)}
-              </Typography>
-            </Box>
-          </Box>
-        ) : (
-          <Actions
-            key={`actions-${connection.blockId}`}
-            connection={connection}
-            idx={connection.blockId}
-          />
-        ),
+        <Actions
+          key={`actions-${connection.blockId}`}
+          connection={connection}
+          idx={connection.blockId}
+        />,
+        // ),
       ]);
 
       setRows(tempRows);
     }
   };
 
-  // when the connection list changes
-  useMemo(() => {
-    (async () => {
-      // check if any connection is locked or not
-      let isLocked: boolean = data?.some((conn: any) => conn.lock);
-
-      updateRows(data);
-
+  const pollForConnectionsLockAndRefreshRows = async () => {
+    try {
+      let updatedData = await httpGet(session, 'airbyte/v1/connections');
+      let isLocked: boolean = updatedData?.some((conn: any) => conn.lock);
       while (isLocked) {
-        try {
-          const data = await httpGet(session, 'airbyte/v1/connections');
-          isLocked = data?.some((conn: any) => (conn.lock ? true : false));
-          await delay(3000);
-          updateRows(data);
-        } catch (error) {
-          isLocked = false;
-        }
+        updatedData = await httpGet(session, 'airbyte/v1/connections');
+        isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
+        await delay(3000);
+        updateRows(updatedData);
       }
-    })();
-  }, [data, syncingConnectionId]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // when the connection list changes
+  useEffect(() => {
+    if (session) {
+      updateRows(data);
+      pollForConnectionsLockAndRefreshRows();
+    }
+  }, [session, data]);
 
   const handleClickOpen = () => {
     setShowDialog(true);

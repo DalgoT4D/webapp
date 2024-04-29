@@ -3,6 +3,7 @@ import {
   Box,
   CircularProgress,
   Divider,
+  IconButton,
   Tab,
   Table,
   TableBody,
@@ -12,6 +13,7 @@ import {
   Tabs,
 } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
+import { OpenInFull } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/PreviewPane';
@@ -115,6 +117,7 @@ type LowerSectionProps = {
   selectedTab: LowerSectionTabValues;
   setSelectedTab: (value: LowerSectionTabValues) => void;
   workflowInProgress: boolean;
+  setFullScreen?: any;
 };
 
 export type TaskProgressLog = {
@@ -127,6 +130,7 @@ const LowerSection = ({
   selectedTab,
   setSelectedTab,
   workflowInProgress,
+  setFullScreen,
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
 
@@ -141,6 +145,8 @@ const LowerSection = ({
       <Box
         sx={{
           height: '50px',
+          display: 'flex',
+          alignItems: 'center',
           background: '#F5FAFA',
           borderTop: '1px solid #CCCCCC',
           borderBottom: '1px solid #CCCCCC',
@@ -154,6 +160,9 @@ const LowerSection = ({
           <Tab label="Preview" value="preview" />
           <Tab label="Logs" value="logs" />
         </Tabs>
+        <IconButton sx={{ ml: 'auto' }} onClick={setFullScreen}>
+          <OpenInFull />
+        </IconButton>
       </Box>
       <Box>
         {selectedTab === 'preview' && <PreviewPane height={height} />}
@@ -289,52 +298,6 @@ const FlowEditor = ({}) => {
         console.log(error);
       });
   };
-
-  // const fetchFlowRunStatus = async (flow_run_id: string) => {
-  //   try {
-  //     const flowRun: PrefectFlowRun = await httpGet(
-  //       session,
-  //       `prefect/flow_runs/${flow_run_id}`
-  //     );
-
-  //     if (!flowRun.state_type) return 'FAILED';
-
-  //     return flowRun.state_type;
-  //   } catch (err: any) {
-  //     console.error(err);
-  //     return 'FAILED';
-  //   }
-  // };
-
-  // const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
-  //   try {
-  //     const response = await httpGet(
-  //       session,
-  //       `prefect/flow_runs/${flow_run_id}/logs`
-  //     );
-  //     if (response?.logs?.logs && response.logs.logs.length > 0) {
-  //       const logsArray: PrefectFlowRunLog[] = response.logs.logs.map(
-  //         // eslint-disable-next-line
-  //         (logObject: PrefectFlowRunLog, idx: number) => logObject
-  //       );
-
-  //       setDbtRunLogs(logsArray);
-  //     }
-  //   } catch (err: any) {
-  //     console.error(err);
-  //   }
-  // };
-
-  // const pollForFlowRun = async (flow_run_id: string) => {
-  //   let flowRunStatus: string = await fetchFlowRunStatus(flow_run_id);
-
-  //   await fetchAndSetFlowRunLogs(flow_run_id);
-  //   while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
-  //     await delay(5000);
-  //     await fetchAndSetFlowRunLogs(flow_run_id);
-  //     flowRunStatus = await fetchFlowRunStatus(flow_run_id);
-  //   }
-  // };
 
   const checkForAnyRunningDbtJob = async () => {
     setLockUpperSection(true);
@@ -530,9 +493,17 @@ const FlowEditor = ({}) => {
         height={lowerSectionHeight}
         onResize={onResize}
         minConstraints={[Infinity, 100]}
-        maxConstraints={[Infinity, 500]}
       >
         <LowerSection
+          setFullScreen={() => {
+            const dialogBox = document.querySelector('.MuiDialog-root');
+            if (dialogBox) {
+              const fullHeight = dialogBox?.clientHeight - 50;
+              setLowerSectionHeight(
+                lowerSectionHeight === fullHeight ? 300 : fullHeight
+              );
+            }
+          }}
           height={lowerSectionHeight}
           setSelectedTab={setSelectedTab}
           selectedTab={selectedTab}
