@@ -84,8 +84,10 @@ const truncateString = (input: string) => {
   return input.substring(0, maxlength - 3) + '...';
 };
 
-const headers = ['Connection details', 'Source → Destination', 'Last sync'];
-const isSortable = [true, false, false]; // connection details is a sortable column
+const headers = {
+  values: ['Connection details', 'Source → Destination', 'Last sync'],
+  sortable: [true, false, false],
+}
 
 const getSourceDest = (connection: Connection) => (
   <Box
@@ -575,7 +577,6 @@ export const Connections = () => {
         headers={headers}
         rows={rows}
         rowValues={rowValues}
-        isSortable={isSortable}
         height={115}
       />
       <ConfirmationDialog

@@ -12,7 +12,9 @@ import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-const headers = ['Email', 'Role'];
+const headers = {
+  values: ['Email', 'Role']
+}
 
 type Org = {
   name: string;

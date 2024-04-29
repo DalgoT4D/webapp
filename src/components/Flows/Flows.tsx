@@ -375,7 +375,7 @@ export const Flows = ({
       <List
         rows={rows}
         openDialog={handleClickCreateFlow}
-        headers={['', 'Pipeline Status', 'Last run', 'Last run status']}
+        headers={{values: ['', 'Pipeline Status', 'Last run', 'Last run status']}}
         title={'Pipeline'}
       />
 

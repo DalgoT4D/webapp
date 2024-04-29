@@ -11,12 +11,14 @@ import { Box, Button, Typography } from '@mui/material';
 
 interface ListProps {
   title: string;
-  headers: Array<string>;
+  headers: {
+    values: Array<string>;
+    sortable?: Array<boolean>;
+  };
   rows: Array<any>;
   openDialog: any;
   onlyList?: boolean;
   rowValues?: Array<Array<any>>;
-  isSortable?: Array<boolean>;
   height? : number ;
 }
 
@@ -27,7 +29,6 @@ export const List = ({
   rows,
   onlyList,
   rowValues,
-  isSortable,
   height
 }: ListProps) => {
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>();
@@ -77,12 +78,12 @@ export const List = ({
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead sx={{ display: 'table-header-group' }}>
               <TableRow>
-                {headers.map((header, index) => (
+                {headers.values.map((header, index) => (
                   <TableCell
                     sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }}
                     key={header}
                   >
-                  {isSortable && isSortable[index] ? (
+                  {headers.sortable && headers.sortable[index] ? (
                     <TableSortLabel
                       active={sortColumn === index}
                       direction={sortColumn === index ? sortDirection : 'asc'}

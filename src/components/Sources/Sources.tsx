@@ -14,8 +14,10 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import Image from 'next/image';
 import { ActionsMenu } from '../UI/Menu/Menu';
 
-const headers = ['Source details', 'Type'];
-const isSortable = [true, false];
+const headers = {
+  values: ['Source details', 'Type'],
+  sortable: [true, false],
+}
 
 interface SourceDefinitionsApiResponse {
   sourceDefinitionId: string;
@@ -225,7 +227,6 @@ export const Sources = () => {
         headers={headers}
         rows={rows}
         rowValues={rowValues}
-        isSortable={isSortable}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
