@@ -116,7 +116,7 @@ export const List = ({
                       <TableCell
                         key={idx}
                         align={
-                          headers.length + 1 === row.length &&
+                          headers.values.length + 1 === row.length &&
                             idx === row.length - 1
                             ? 'right'
                             : 'left'
@@ -126,7 +126,7 @@ export const List = ({
                       </TableCell>
                     )
                   )}
-                  {headers.length + 1 !== row.length ? ( // if actions is not sent render some text
+                  {headers.values.length + 1 !== row.length ? ( // if actions is not sent render some text
                     <TableCell sx={{ p: 1 }} align="right">
                       Actions
                     </TableCell>
