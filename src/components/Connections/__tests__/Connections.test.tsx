@@ -60,13 +60,13 @@ describe('Connections Setup', () => {
       name: 'test-conn-1',
       source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
       destination: { name: 'postgres-1', destinationName: 'postgres' },
-      lastRun: { startTime: '1686937507' },
+      lastRun: { startTime: '1686937507', status: 'COMPLETED' },
     },
     {
       name: 'test-conn-2',
       source: { name: 'YourSurveyCTO', sourceName: 'surveyCTO' },
       destination: { name: 'postgres-2', destinationName: 'postgres' },
-      lastRun: { startTime: '1686937507' },
+      lastRun: { startTime: '1686937507', status: 'FAILED' },
     },
   ];
 
@@ -133,7 +133,11 @@ describe('Connections Setup', () => {
           CONNECTIONS[i]['destination']['destinationName']
       );
       expect(connCells[2].textContent).toBe(
-        lastRunTime(CONNECTIONS[i]['lastRun']['startTime']) + "Fetch Logs"
+        lastRunTime(CONNECTIONS[i]['lastRun']['startTime']) +
+          (CONNECTIONS[i]['lastRun']['status'] === 'COMPLETED'
+            ? 'success'
+            : 'failed') +
+          'Fetch Logs'
       );
     }
   });

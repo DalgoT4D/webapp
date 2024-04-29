@@ -39,6 +39,7 @@ import {
   FLATTEN_JSON_OP,
   PIVOT_OP,
   UNPIVOT_OP,
+  GENERIC_COL_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -66,6 +67,7 @@ import { generateDummyOperationlNode } from './dummynodes';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import PivotOpForm from './OperationPanel/Forms/PivotOpForm';
 import UnpivotOpForm from './OperationPanel/Forms/UnpivotOpForm';
+import GenericColumnOpForm from './OperationPanel/Forms/GenericColumnOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -100,6 +102,7 @@ const operationComponentMapping: any = {
   [FLATTEN_JSON_OP]: FlattenJsonOpForm,
   [PIVOT_OP]: PivotOpForm,
   [UNPIVOT_OP]: UnpivotOpForm,
+  [GENERIC_COL_OP]: GenericColumnOpForm,
 };
 
 const OperationForm = ({
@@ -343,11 +346,12 @@ const OperationConfigLayout = ({
   };
 
   const OperationList = ({ sx }: { sx: SxProps }) => {
-    // These are the operations that can't be chained
+    // These are the operations that can't be chained in middle using ctes
     const cantChainOperationsInMiddle: string[] = [
       UNION_OP,
       CAST_DATA_TYPES_OP,
       FLATTEN_JSON_OP,
+      UNPIVOT_OP,
     ];
 
     return (
