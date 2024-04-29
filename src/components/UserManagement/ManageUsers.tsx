@@ -91,8 +91,6 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   const [editOrgRole, setEditOrgRole] = useState<OrgUser | null>(null);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
-  const [showMakeAccountManagerDialog, setShowMakeAccountManagerDialog] =
-    useState<boolean>(false);
   const [orguserSelectedInAction, setOrguserSelectedInAction] =
     useState<OrgUser | null>(null);
 
@@ -104,7 +102,6 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   };
 
   const handleClose = () => {
-    setOrguserSelectedInAction(null);
     setAnchorEl(null);
   };
 
@@ -148,15 +145,6 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   const handleCancelDeleteOrguser = () => {
     setOrguserSelectedInAction(null);
     setShowConfirmDeleteDialog(false);
-  };
-
-  const handleClickMakeAccountOwnerAction = () => {
-    handleClose();
-    setShowMakeAccountManagerDialog(true);
-  };
-  const handleCancelMakeAccountManager = () => {
-    setOrguserSelectedInAction(null);
-    setShowMakeAccountManagerDialog(false);
   };
 
   let rows = [];
@@ -238,25 +226,6 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
     return [];
   }, [data, editOrgRole, orguserSelectedInAction, selectedUserRole]);
 
-  const makeAccountManager = async (orguser: OrgUser | null) => {
-    if (orguser) {
-      setLoading(true);
-      try {
-        await httpPost(session, `organizations/users/makeowner/`, {
-          new_owner_email: orguser.email,
-        });
-        successToast('Ownership changed successfully', [], globalContext);
-        mutate();
-        setMutateInvitations(true);
-      } catch (err: any) {
-        console.error(err);
-        errorToast(err.message, [], globalContext);
-      }
-      setLoading(false);
-    }
-    handleCancelMakeAccountManager();
-  };
-
   const deleteOrgUser = async (orguser: OrgUser | null) => {
     if (orguser) {
       setLoading(true);
@@ -308,13 +277,6 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
         handleClose={() => handleCancelDeleteOrguser()}
         handleConfirm={() => deleteOrgUser(orguserSelectedInAction)}
         message="This will delete the organization user permanently. The user will have to be invited again to join the platform"
-        loading={loading}
-      />
-      <ConfirmationDialog
-        show={showMakeAccountManagerDialog}
-        handleClose={() => handleCancelMakeAccountManager()}
-        handleConfirm={() => makeAccountManager(orguserSelectedInAction)}
-        message="You will no longer be the account owner."
         loading={loading}
       />
     </>
