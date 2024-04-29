@@ -1,7 +1,6 @@
-import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { Main } from '../Main';
+import { render, screen, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
+import { Main } from '../Main';
 
 jest.mock('next/navigation');
 
@@ -11,28 +10,39 @@ jest.mock('next/router', () => ({
   },
 }));
 
-// ======================================================================
+export function mockFetch(data: any) {
+  return jest.fn().mockImplementation(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => data,
+    }),
+  );
+}
+
 describe('no token', () => {
-  const mockSession: any = {
+  const mockSession = {
     expires: '1',
-    user: { token: null },
+    user: { name: '' },
   };
 
-  it('renders the component', () => {
+  window.fetch = mockFetch([{ org: { slug: 'test-org' } }]);
+
+  it('renders the component', async () => {
     render(
       <SessionProvider session={mockSession}>
         <Main>
           <div key="1" data-testid="not-logged-in" />
         </Main>
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const notLoggedIn = screen.getByTestId('not-logged-in');
-    expect(notLoggedIn).toBeInTheDocument();
+    await waitFor(() => {
+      expect(notLoggedIn).toBeInTheDocument();
+    });
   });
 });
 
-// // ======================================================================
 describe('token and normal flow', () => {
   const mockSession: any = {
     expires: '1',
@@ -65,7 +75,7 @@ describe('token and normal flow', () => {
         <Main>
           <div key="1" data-testid="normal-flow" />
         </Main>
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     // TODO: rewrite test cases for this component - logic has been changed
