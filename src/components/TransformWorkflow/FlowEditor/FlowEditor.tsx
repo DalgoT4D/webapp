@@ -13,7 +13,7 @@ import {
   Tabs,
 } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
-import { OpenINFull } from '@mui/icons-material';
+import { OpenInFull } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/PreviewPane';
@@ -161,7 +161,7 @@ const LowerSection = ({
           <Tab label="Logs" value="logs" />
         </Tabs>
         <IconButton sx={{ ml: 'auto' }} onClick={setFullScreen}>
-          <OpenINFull />
+          <OpenInFull />
         </IconButton>
       </Box>
       <Box>
