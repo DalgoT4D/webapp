@@ -218,7 +218,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       color: 'black',
     },
   };
-  // const setDbtRunLogs = useDbtRunLogsUpdate();
 
   const fetchDbtProjectGraph = async () => {
     try {

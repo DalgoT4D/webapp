@@ -10,12 +10,13 @@ import Image from 'next/image';
 import styles from './../Connections/Connections.module.css';
 import { delay } from '@/utils/common';
 import { TASK_DBTRUN, TASK_DBTTEST } from '@/config/constant';
+import { TaskLock } from '../Flows/Flows';
 
 export type TransformTask = {
   label: string;
   slug: string;
   deploymentId: string | null;
-  lock: { lockedBy: string; lockedAt: string; flowRunId?: string } | null;
+  lock: TaskLock | null;
   command: string | null;
   generated_by: string;
   uuid: string;

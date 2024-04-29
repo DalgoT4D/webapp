@@ -132,8 +132,9 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
 
   const handleEdit = () => {
     setSelectedUserRole(
-      roles.find((role) => role.slug === orguserSelectedInAction?.new_role_slug)
-        .uuid
+      roles.find(
+        (role: any) => role.slug === orguserSelectedInAction?.new_role_slug
+      ).uuid
     );
     setEditOrgRole(orguserSelectedInAction);
     setAnchorEl(null);

@@ -156,6 +156,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
 
   return (
     <Box
+      onClick={handleSelectNode}
       sx={{
         display: 'flex',
         border: node.selected || node.data?.isDummy ? '2px solid black' : '0px',
@@ -194,7 +195,10 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
             {isDeletable && (
               <IconButton
                 sx={{ color: 'white' }}
-                onClick={handleDeleteAction}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleDeleteAction();
+                }}
                 data-testid="closebutton"
               >
                 <DeleteIcon fontSize="small" />
@@ -213,7 +217,6 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
             overflow: 'auto',
             width: '100%',
           }}
-          onClick={handleSelectNode}
           onWheelCapture={(event) => {
             event.stopPropagation();
           }}
