@@ -1,10 +1,4 @@
-import {
-  render,
-  screen,
-  within,
-  waitFor,
-  cleanup,
-} from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
