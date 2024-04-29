@@ -47,10 +47,10 @@ export const List = ({
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead sx={{ display: 'table-header-group' }}>
               <TableRow>
-                {headers.map((header) => (
+                {headers.map((header, index) => (
                   <TableCell
                     sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }}
-                    key={header}
+                    key={index}
                   >
                     {header}
                   </TableCell>

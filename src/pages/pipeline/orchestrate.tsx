@@ -62,7 +62,7 @@ export default function Orchestrate() {
 
   // when the flows list changes
   useEffect(() => {
-    const isLocked: boolean = flows?.some((flow: any) =>
+    const isLocked: boolean = data?.some((flow: any) =>
       flow.lock ? true : false
     );
 

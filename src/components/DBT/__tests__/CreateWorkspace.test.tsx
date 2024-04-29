@@ -1,20 +1,18 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
+
 import { DBTSetup } from '../DBTSetup';
-import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
 
 jest.mock('./../../../utils/common');
 
-// const user = userEvent.setup();
-
-const pushMock = jest.fn();
+const fnMock = jest.fn();
 
 jest.mock('next/router', () => ({
   useRouter() {
     return {
-      push: pushMock,
+      push: fnMock,
     };
   },
 }));
@@ -29,17 +27,17 @@ describe('Create workspace', () => {
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
     const urlinputfield = screen.getByTestId('github-url');
     expect(urlinputfield).toBeInTheDocument();
@@ -65,46 +63,53 @@ describe('Create workspace', () => {
         .mockResolvedValueOnce({ detail: "couldn't create workspace" }),
     });
 
-    (global as any).fetch = createWorkspaceFetch;
+    global.fetch = createWorkspaceFetch;
 
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const savebutton = screen.getByTestId('save-github-url');
-    await act(() => savebutton.click());
-
-    expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    });
 
     const urlinputfield = screen.getByLabelText('GitHub repo URL*');
     await userEvent.type(urlinputfield, 'github-repo-url');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    });
 
     const patinputfield = screen.getByLabelText('Personal access token');
     await userEvent.type(patinputfield, 'token-123');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetch).not.toHaveBeenCalled();
+    });
 
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetch).toHaveBeenCalledTimes(1);
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetch).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('submit form to create workspace - check progress failed', async () => {
@@ -130,22 +135,22 @@ describe('Create workspace', () => {
         }),
       });
 
-    (global as any).fetch = createWorkspaceFetchAndProgress;
+    global.fetch = createWorkspaceFetchAndProgress;
 
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -159,8 +164,10 @@ describe('Create workspace', () => {
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
+    });
   });
 
   it('submit form to create workspace - check progress api failed', async () => {
@@ -186,22 +193,22 @@ describe('Create workspace', () => {
         }),
       });
 
-    (global as any).fetch = createWorkspaceFetchAndProgress;
+    global.fetch = createWorkspaceFetchAndProgress;
 
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -215,8 +222,10 @@ describe('Create workspace', () => {
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
+    });
   });
 
   it('submit form to create workspace - check progress success', async () => {
@@ -252,22 +261,22 @@ describe('Create workspace', () => {
         }),
       });
 
-    (global as any).fetch = createWorkspaceFetchAndProgress;
+    global.fetch = createWorkspaceFetchAndProgress;
 
     render(
       <SessionProvider session={mockSession}>
         <DBTSetup
-          onCreateWorkspace={() => {}}
-          setLogs={() => {}}
-          setExpandLogs={() => {}}
+          onCreateWorkspace={fnMock}
+          setLogs={fnMock}
+          setExpandLogs={fnMock}
           showDialog={true}
-          setShowDialog={() => {}}
-          setWorkspace={() => {}}
+          setShowDialog={fnMock}
+          setWorkspace={fnMock}
           mode="create"
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -281,7 +290,9 @@ describe('Create workspace', () => {
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    await act(() => savebutton.click());
-    expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(4);
+    savebutton.click();
+    waitFor(() => {
+      expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(4);
+    });
   });
 });

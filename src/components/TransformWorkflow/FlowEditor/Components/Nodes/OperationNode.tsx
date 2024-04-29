@@ -74,6 +74,7 @@ export function OperationNode(node: OperationNodeType) {
 
   return (
     <Box
+      onClick={handleSelectNode}
       sx={{
         border:
           node.id === canvasNode?.id || node.data?.isDummy
@@ -110,7 +111,10 @@ export function OperationNode(node: OperationNodeType) {
           >
             {isDeletable && (
               <IconButton
-                onClick={handleDeleteAction}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleDeleteAction();
+                }}
                 data-testid="closebutton"
               >
                 <DeleteIcon fontSize="small" />
@@ -119,7 +123,7 @@ export function OperationNode(node: OperationNodeType) {
           </Box>
         </Box>
         <Divider orientation="horizontal" sx={{ color: '#EEEEEE' }} />
-        <Box sx={{ display: 'flex' }} onClick={handleSelectNode}>
+        <Box sx={{ display: 'flex' }}>
           <Box
             sx={{
               flex: '1',
