@@ -31,7 +31,7 @@ const Invitations = ({
   mutateInvitationsParent,
   setMutateInvitationsParent,
 }: InvitationsInterface) => {
-  const { data, isLoading, mutate } = useSWR(`users/invitations/`);
+  const { data, isLoading, mutate } = useSWR(`v1/users/invitations/`);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const { data: session }: any = useSession();
