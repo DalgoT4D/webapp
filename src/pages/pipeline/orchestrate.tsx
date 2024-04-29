@@ -10,6 +10,29 @@ import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
 import { TransformTask } from '@/components/DBT/DBTTarget';
 
+const command: any = {
+  systemCommands: {
+    'git-pull': 1,
+    'dbt-clean': 2,
+    'dbt-deps': 3,
+    'dbt-run': 4,
+    'dbt-test': 7,
+    'dbt-docs-generate': 8,
+  },
+  customCommands: {
+    'dbt-run': 5,
+    'dbt-test': 6,
+  },
+};
+
+const getOrder = (task: TransformTask) => {
+  if (task.generated_by === 'system') {
+    return command.systemCommands[task.slug];
+  } else {
+    return command.customCommands[task.slug] || 5;
+  }
+};
+
 export default function Orchestrate() {
   const [crudVal, setCrudVal] = useState<string>('index'); // can be index or create
   const [flows, setFlows] = useState<Array<any>>([]);
@@ -39,7 +62,7 @@ export default function Orchestrate() {
 
   // when the flows list changes
   useEffect(() => {
-    const isLocked: boolean = flows?.some((flow: any) =>
+    const isLocked: boolean = data?.some((flow: any) =>
       flow.lock ? true : false
     );
 
@@ -55,7 +78,12 @@ export default function Orchestrate() {
       (async () => {
         try {
           const response = await httpGet(session, 'prefect/tasks/transform/');
-          setTasks(response);
+          setTasks(
+            response.map((task: TransformTask) => ({
+              ...task,
+              order: getOrder(task),
+            }))
+          );
         } catch (error) {
           console.error(error);
         }
