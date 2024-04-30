@@ -14,7 +14,10 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import Image from 'next/image';
 import { ActionsMenu } from '../UI/Menu/Menu';
 
-const headers = ['Source details', 'Type'];
+const headers = {
+  values: ['Source details', 'Type'],
+  sortable: [true, false],
+}
 
 interface SourceDefinitionsApiResponse {
   sourceDefinitionId: string;
@@ -69,6 +72,17 @@ export const Sources = () => {
   };
 
   let rows = [];
+  let rowValues = [];
+
+  rowValues = useMemo(() => {
+    if (data && data.length >= 0) {
+      return data.map((source: any) => [
+        source.name,
+        source.sourceName,
+      ])
+    }
+    return [];
+  }, [data, sourceDefs])
 
   rows = useMemo(() => {
     if (data && data.length >= 0) {
@@ -217,6 +231,7 @@ export const Sources = () => {
         title="Source"
         headers={headers}
         rows={rows}
+        rowValues={rowValues}
       />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}

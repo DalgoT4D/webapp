@@ -96,7 +96,11 @@ const truncateString = (input: string) => {
   return input.substring(0, maxlength - 3) + '...';
 };
 
-const headers = ['Connection details', 'Source → Destination', 'Last sync'];
+const headers = {
+  values: ['Connection details', 'Source → Destination', 'Last sync'],
+  sortable: [true, false, false],
+}
+
 const getSourceDest = (connection: Connection) => (
   <Box
     sx={{
@@ -176,6 +180,7 @@ export const Connections = () => {
   const [showConfirmResetDialog, setShowConfirmResetDialog] =
     useState<boolean>(false);
   const [rows, setRows] = useState<Array<any>>([]);
+  const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
 
@@ -545,7 +550,14 @@ export const Connections = () => {
         // ),
       ]);
 
+      const tempRowValues = data.map((connection: any) => [
+        connection.name, // as we are only sorting by connection name...
+        null,
+        null,
+      ])
+
       setRows(tempRows);
+      setRowValues(tempRowValues);
     }
   };
 
@@ -631,6 +643,7 @@ export const Connections = () => {
         title="Connection"
         headers={headers}
         rows={rows}
+        rowValues={rowValues}
         height={115}
       />
       <ConfirmationDialog
