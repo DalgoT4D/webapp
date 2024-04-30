@@ -22,44 +22,46 @@ import { InfoOutlined } from '@mui/icons-material';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-const headers = [
-  'Email',
-  <Box sx={{ display: 'flex', alignItems: 'center' }} key={'tooltip'}>
-    <span>Roles</span>
-    <Tooltip
-      title={
-        <Box>
+const headers = {
+  values: [
+    'Email',
+    <Box sx={{ display: 'flex', alignItems: 'center' }} key={'tooltip'}>
+      <span>Roles</span>
+      <Tooltip
+        title={
           <Box>
-            <strong>Super user :</strong> Dalgo platform admin member of T4D
-            Dalgo team (Able to create & set-up orgs)
+            <Box>
+              <strong>Super user :</strong> Dalgo platform admin member of T4D
+              Dalgo team (Able to create & set-up orgs)
+            </Box>
+            <Box>
+              <strong> Account manager </strong>: Admin of the NGO org, and is
+              also responsible for the user management
+            </Box>
+            <Box>
+              <strong>Pipeline manager : </strong> Org team member who is
+              responsible for creating pipelines & DBT models
+            </Box>
+            <Box>
+              <strong>Analyst : </strong> M&E team member who will be working on
+              transformation models of the org
+            </Box>
+            <Box>
+              <strong>Guest : </strong> The guest is able to view the platform
+              and the usage dashboard
+            </Box>
           </Box>
-          <Box>
-            <strong> Account manager </strong>: Admin of the NGO org, and is
-            also responsible for the user management
-          </Box>
-          <Box>
-            <strong>Pipeline manager : </strong> Org team member who is
-            responsible for creating pipelines & DBT models
-          </Box>
-          <Box>
-            <strong>Analyst : </strong> M&E team member who will be working on
-            transformation models of the org
-          </Box>
-          <Box>
-            <strong>Guest : </strong> The guest is able to view the platform and
-            the usage dashboard
-          </Box>
-        </Box>
-      }
-      arrow
-      sx={{
-        cursor: 'pointer',
-      }}
-    >
-      <InfoOutlined sx={{ cursor: 'pointer', fontSize: '16px', ml: 1 }} />
-    </Tooltip>
-  </Box>,
-];
+        }
+        arrow
+        sx={{
+          cursor: 'pointer',
+        }}
+      >
+        <InfoOutlined sx={{ cursor: 'pointer', fontSize: '16px', ml: 1 }} />
+      </Tooltip>
+    </Box>,
+  ],
+};
 
 type Org = {
   name: string;

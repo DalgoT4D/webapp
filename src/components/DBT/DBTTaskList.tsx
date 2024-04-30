@@ -354,7 +354,7 @@ export const DBTTaskList = ({
         hasCreatePermission={permissions.includes('can_create_orgtask')}
         openDialog={handleCreateOpenOrgTaskDialog}
         title="Task"
-        headers={['Command']}
+        headers={{values: ['Command']}}
         rows={rows}
         height={80}
       />

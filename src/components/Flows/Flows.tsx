@@ -416,7 +416,7 @@ export const Flows = ({
         hasCreatePermission={permissions.includes('can_create_pipeline')}
         rows={rows}
         openDialog={handleClickCreateFlow}
-        headers={['', 'Pipeline Status', 'Last run', 'Last run status']}
+        headers={{values: ['', 'Pipeline Status', 'Last run', 'Last run status']}}
         title={'Pipeline'}
       />
 
