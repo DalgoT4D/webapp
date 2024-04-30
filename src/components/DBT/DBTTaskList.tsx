@@ -347,7 +347,7 @@ export const DBTTaskList = ({
       <List
         openDialog={handleCreateOpenOrgTaskDialog}
         title="Task"
-        headers={['Command']}
+        headers={{values: ['Command']}}
         rows={rows}
         height={80}
       />
