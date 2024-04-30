@@ -11,7 +11,9 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-const headers = ['Email', 'Role', 'Sent On'];
+const headers = {
+  values: ['Email', 'Role', 'Sent On']
+}
 
 type Invitation = {
   id: number;
