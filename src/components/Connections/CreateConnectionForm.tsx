@@ -365,9 +365,17 @@ const CreateConnectionForm = ({
     const updateFilteredStreams = sourceStreams.filter((stream: SourceStream) =>
       filteredStreamNames.includes(stream.name)
     );
+    const sortedStreams = updateFilteredStreams.sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+    setFilteredSourceStreams(sortedStreams);
+    setSomeStreamSelected(sortedStreams.some((stream) => stream.selected));
+  }, [sourceStreams]);
+
+    /*
     setFilteredSourceStreams(updateFilteredStreams);
     setSomeStreamSelected(sourceStreams.some((stream) => stream.selected));
-  }, [sourceStreams]);
+  }, [sourceStreams]);*/
 
   const FormContent = () => {
     return (

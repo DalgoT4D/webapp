@@ -29,6 +29,8 @@
   border: none;
   -webkit-transform: scale(0.8, 0.8);
   -webkit-transform-origin: 0 0;
+  transform: scale(0.8, 0.8); /* Standard property for modern browsers */
+  transform-origin: 0 0; /* Standard property for modern browsers */
 }
 
 .description {
