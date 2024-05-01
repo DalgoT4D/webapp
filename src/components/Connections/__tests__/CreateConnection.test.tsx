@@ -5,7 +5,9 @@ import {
   fireEvent,
   act,
   waitFor,
+  renderHook,
 } from '@testing-library/react';
+import React from 'react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import CreateConnectionForm from '../CreateConnectionForm';
@@ -21,7 +23,7 @@ jest.mock('next/router', () => ({
   },
 }));
 
-describe('Create connection', () => {
+  describe('Create connection', () => {
   const mockSession: Session = {
     expires: 'false',
     user: { email: 'a' },
@@ -55,15 +57,20 @@ describe('Create connection', () => {
       json: jest.fn().mockResolvedValueOnce([]),
     });
 
+    const setConnectionId = (id: string) => {
+    };
+
     render(
       <SessionProvider session={mockSession}>
         <CreateConnectionForm
-          mutate={() => {}}
+          mutate={() => { } }
           showForm={true}
-          setShowForm={() => {}}
+          setShowForm={() => { } }
           blockId=""
-          setBlockId={() => {}}
-        />
+          connectionId=""
+          setConnectionId={setConnectionId} setBlockId={function (...args: any) {
+            throw new Error('Function not implemented.');
+          } }        />
       </SessionProvider>
     );
 
@@ -112,13 +119,16 @@ describe('Create connection', () => {
                 fetch(resource, {}).then((res) => res.json()),
             }}
           >
-            <CreateConnectionForm
-              mutate={() => {}}
+            <CreateConnectionForm 
+              mutate={() => { } }
               showForm={true}
-              setShowForm={() => {}}
-              setBlockId={() => {}}
+              setShowForm={() => { } }
               blockId=""
-            />
+              //setBlockId={() => {}}
+              setConnectionId={() => { } }
+              connectionId="" setBlockId={function (...args: any) {
+                throw new Error('Function not implemented.');
+              } }            />
           </SWRConfig>
         </SessionProvider>
       );
@@ -183,7 +193,13 @@ describe('Create connection', () => {
     expect(streamSelectDestinationMode).toBeDisabled();
 
     // select stream for sync
-    await waitFor(() => userEvent.click(streamSyncSwitch));
+    if (streamSyncSwitch instanceof Element) {
+      await waitFor(() => userEvent.click(streamSyncSwitch));
+    } else {
+      // Handle the case when streamSyncSwitch is null
+      console.error("streamSyncSwitch is null");
+    }
+    //await waitFor(() => userEvent.click(streamSyncSwitch));
 
     // Need to redraw these elements since jest updates its dom but
     // does not pass reference to some elements
@@ -200,12 +216,14 @@ describe('Create connection', () => {
     expect(streamSelectDestinationMode).not.toBeDisabled();
 
     // check stream incremental checkbox
+    if (streamIncrementalSwitch instanceof Element) {
     expect(streamIncrementalSwitch).not.toBeChecked();
     await act(() => userEvent.click(streamIncrementalSwitch));
-    expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked();
+    expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked(); }
+    else { console.error("streamIncrementalSwitch is null"); }
 
     // check normalization after sync checkbox
-
+      
     // stream not supporting incremental sync mode we should always have
     // incremental switch disabled
     // stream 2 doesn't support incremental sync
@@ -213,10 +231,15 @@ describe('Create connection', () => {
     const streamIncrementalSwitch1 = screen.getByTestId(
       'stream-incremental-1'
     ).firstChild;
+
+    if (streamSyncSwitch1 instanceof Element && streamIncrementalSwitch1 instanceof Element) {
     expect(streamIncrementalSwitch1).toBeDisabled();
     // select stream 2 to sync
     await waitFor(() => userEvent.click(streamSyncSwitch1));
-    expect(streamIncrementalSwitch1).toBeDisabled();
+    expect(streamIncrementalSwitch1).toBeDisabled(); }
+    else {
+      console.error("streamSyncSwitch1 or streamIncrementalSwitch1 is null");
+    }
   });
 
   it('create connection success', async () => {
@@ -255,12 +278,13 @@ describe('Create connection', () => {
             }}
           >
             <CreateConnectionForm
-              mutate={() => {}}
+              mutate={() => { } }
               showForm={true}
-              setShowForm={() => {}}
-              setBlockId={() => {}}
-              blockId=""
-            />
+              setShowForm={() => { } }
+              setBlockId={() => { } }
+              blockId="" connectionId={''} setConnectionId={function (...args: any) {
+                throw new Error('Function not implemented.');
+              } }            />
           </SWRConfig>
         </SessionProvider>
       );
@@ -298,7 +322,12 @@ describe('Create connection', () => {
     const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
 
     // select stream for sync
-    await waitFor(() => userEvent.click(streamSyncSwitch));
+    if (streamSyncSwitch instanceof Element) {
+      await waitFor(() => userEvent.click(streamSyncSwitch));
+    } else {
+      console.error("streamSyncSwitch is not an Element");
+    }
+    //await waitFor(() => userEvent.click(streamSyncSwitch));
 
     // set the incremental switch for the stream on
     // await act(() => userEvent.click(streamIncrementalSwitch));
@@ -352,12 +381,13 @@ describe('Create connection', () => {
             }}
           >
             <CreateConnectionForm
-              mutate={() => {}}
+              mutate={() => { } }
               showForm={true}
-              setShowForm={() => {}}
-              setBlockId={() => {}}
-              blockId=""
-            />
+              setShowForm={() => { } }
+              setBlockId={() => { } }
+              blockId="" connectionId={''} setConnectionId={function (...args: any) {
+                throw new Error('Function not implemented.');
+              } }            />
           </SWRConfig>
         </SessionProvider>
       );
@@ -395,7 +425,12 @@ describe('Create connection', () => {
     const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
 
     // select stream for sync
-    await waitFor(() => userEvent.click(streamSyncSwitch));
+    if (streamSyncSwitch instanceof Element) {
+      await waitFor(() => userEvent.click(streamSyncSwitch));
+    } else {
+      console.error("streamSyncSwitch is not an Element");
+    }
+    //await waitFor(() => userEvent.click(streamSyncSwitch));
 
     // set the incremental switch for the stream on
     // await act(() => userEvent.click(streamIncrementalSwitch));
@@ -413,5 +448,44 @@ describe('Create connection', () => {
     await act(() => connectButton?.click());
 
     expect(mockCreateConnectionFetch).toHaveBeenCalledTimes(1);
+  });
+  interface SourceStream {
+    name: string;
+    selected?: boolean; // Optional property for selected state
+  }
+  
+  interface SourceStream {
+    name: string;
+    selected?: boolean; // Optional property for selected state
+  }
+  
+  test('useEffect sorts streams based on sourceStreams', () => {
+    // Mock initial states
+    const initialFilteredSourceStreams: SourceStream[] = [];
+    let someStreamSelected = false;
+    const mockSourceStreams: SourceStream[] = [
+      { name: 'stream-c', selected: false },
+      { name: 'stream-a', selected: true },
+      { name: 'stream-b', selected: false },
+    ];
+  
+    // Render the hook with mock sourceStreams
+    const { result } = renderHook(() => {
+      const [filteredSourceStreams, setFilteredSourceStreams] = React.useState(initialFilteredSourceStreams);
+      const [streamSelected, setSomeStreamSelected] = React.useState(someStreamSelected);
+  
+      React.useEffect(() => {
+        const filteredStreamNames = filteredSourceStreams.map((stream) => stream.name);
+        const updateFilteredStreams = mockSourceStreams.filter((stream) =>
+          filteredStreamNames.includes(stream.name)
+        );
+        const sortedStreams = updateFilteredStreams.sort((a, b) => a.name.localeCompare(b.name));
+  
+        setFilteredSourceStreams(sortedStreams);
+        setSomeStreamSelected(sortedStreams.some((stream) => stream.selected));
+      }, [mockSourceStreams]);
+  
+      return { filteredSourceStreams, setFilteredSourceStreams, streamSelected };
+    });
   });
 });

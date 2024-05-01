@@ -629,8 +629,9 @@ export const Connections = () => {
         connectionId={connectionId}
         mutate={mutate}
         showForm={showDialog}
-        setShowForm={setShowDialog}
-      />
+        setShowForm={setShowDialog} setBlockId={function (...args: any) {
+          throw new Error('Function not implemented.');
+        } }      />
       <List
         openDialog={handleClickOpen}
         title="Connection"

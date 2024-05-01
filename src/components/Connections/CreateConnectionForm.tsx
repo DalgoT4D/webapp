@@ -37,6 +37,8 @@ interface CreateConnectionFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
   setConnectionId: (...args: any) => any;
+  blockId?: string;
+  setBlockId: (...args: any) => any;
 }
 
 type CursorFieldConfig = {
@@ -60,6 +62,7 @@ const CreateConnectionForm = ({
   mutate,
   showForm,
   setShowForm,
+  setBlockId,
 }: CreateConnectionFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -372,10 +375,7 @@ const CreateConnectionForm = ({
     setSomeStreamSelected(sortedStreams.some((stream) => stream.selected));
   }, [sourceStreams]);
 
-    /*
-    setFilteredSourceStreams(updateFilteredStreams);
-    setSomeStreamSelected(sourceStreams.some((stream) => stream.selected));
-  }, [sourceStreams]);*/
+
 
   const FormContent = () => {
     return (
