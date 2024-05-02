@@ -530,7 +530,10 @@ const CreateConnectionForm = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredSourceStreams.map((stream, idx: number) => (
+                  {filteredSourceStreams
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name)) // this will sort the stream on the basis of the name property.
+                    .map((stream, idx: number) => (
                     <TableRow key={stream.name}>
                       <TableCell
                         key="name"
