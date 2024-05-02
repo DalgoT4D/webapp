@@ -118,6 +118,7 @@ describe('Create connection', () => {
               setShowForm={() => {}}
               setBlockId={() => {}}
               blockId=""
+              filteredSourceStreams={SOURCES.slice().sort((a, b) => a.name.localeCompare(b.name))}
             />
           </SWRConfig>
         </SessionProvider>
