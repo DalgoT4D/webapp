@@ -56,7 +56,7 @@ export const DBTSetup = ({
       const hashKey = `${hashKeyPrefix}-${orgSlug}`;
       const message = await httpGet(
         session,
-        `tasks/${taskId}?hashKey=${hashKey}`
+        `tasks/${taskId}?hashkey=${hashKey}`
       );
       setProgressMessages(message['progress']);
 
