@@ -205,6 +205,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
             </Button>
           ) : (
             orguser.email !== session?.user?.email &&
+            roles &&
             roles
               .map((role: any) => role.slug)
               .includes(orguser.new_role_slug) && (
