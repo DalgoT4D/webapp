@@ -52,11 +52,9 @@ const AggregationOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
-
-
   type FormProps = {
     aggregate_on: {
-      column: string;
+      column: string | null;
       operation: { id: string; label: string } | null;
       output_column_name: string;
     }[];
@@ -66,7 +64,7 @@ const AggregationOpForm = ({
     defaultValues: {
       aggregate_on: [
         {
-          column: '',
+          column: null,
           operation: null,
           output_column_name: '',
         },
@@ -194,6 +192,7 @@ const AggregationOpForm = ({
               render={({ field, fieldState }) => (
                 <Autocomplete
                   {...field}
+                  data-testid="aggregateColumn"
                   disabled={action === 'view'}
                   fieldStyle="transformation"
                   options={srcColumns.sort((a, b) => a.localeCompare(b))}
@@ -218,6 +217,7 @@ const AggregationOpForm = ({
                 render={({ field, fieldState }) => (
                   <Autocomplete
                     disabled={action === 'view'}
+                    data-testid="operation"
                     options={AggregateOperations}
                     isOptionEqualToValue={(option: any, value: any) =>
                       option?.id === value?.id

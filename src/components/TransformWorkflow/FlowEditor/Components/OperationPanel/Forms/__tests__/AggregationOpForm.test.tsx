@@ -1,12 +1,16 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AggregationOpForm from '../AggregationOpForm'; // Adjust import as needed
 import { GlobalContext } from '@/contexts/ContextProvider'; // Adjust import as needed
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import { SrcModelNodeType } from '../../../Canvas';
+import userEvent from '@testing-library/user-event';
 
+const user = userEvent.setup();
 // Mock global context and session
+
+const continueOperationChainMock = jest.fn();
 const mockContext = {
-  Toast: { state: null },
+  Toast: { state: null, dispatch: jest.fn() },
 };
 
 // Mock dependencies
@@ -47,7 +51,7 @@ const props: OperationFormProps = {
       'Performs a calculation on multiple values in a column and returns a new column with that value in every row',
   },
   sx: { marginLeft: '10px' },
-  continueOperationChain: jest.fn(),
+  continueOperationChain: continueOperationChainMock,
   action: 'create',
   setLoading: jest.fn(),
 };
@@ -114,6 +118,76 @@ const props: OperationFormProps = {
           ]),
       });
 
+    case url.includes('transform/dbt_project/model'):
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            id: 'fake-id',
+            output_cols: [
+              '_airbyte_extracted_at',
+              '_airbyte_meta',
+              '_airbyte_raw_id',
+              'Bacteriological',
+              'District_Name',
+              'Iron',
+              'Latitude',
+              'Longitude',
+              'Multiple',
+              'Nitrate',
+              'Physical',
+              'salinity',
+              'SNo_',
+              'State',
+              'District aggregate',
+            ],
+            config: {
+              config: {
+                aggregate_on: [
+                  {
+                    operation: 'avg',
+                    column: 'District_Name',
+                    output_column_name: 'District aggregate',
+                  },
+                ],
+                source_columns: [
+                  '_airbyte_extracted_at',
+                  '_airbyte_meta',
+                  '_airbyte_raw_id',
+                  'Bacteriological',
+                  'District_Name',
+                  'Iron',
+                  'Latitude',
+                  'Longitude',
+                  'Multiple',
+                  'Nitrate',
+                  'Physical',
+                  'salinity',
+                  'SNo_',
+                  'State',
+                ],
+                other_inputs: [],
+              },
+              type: 'aggregate',
+              input_models: [
+                {
+                  uuid: 'fake-uuid',
+                  name: 'sheet2_mod2',
+                  display_name: 'sheet2_mod2',
+                  source_name: 'intermediate',
+                  schema: 'intermediate',
+                  type: 'source',
+                },
+              ],
+            },
+            type: 'operation_node',
+            target_model_id: 'fake-model-d',
+            seq: 1,
+            chain_length: 1,
+            is_last_in_chain: true,
+          }),
+      });
+
     default:
       return Promise.resolve({
         ok: false,
@@ -122,71 +196,74 @@ const props: OperationFormProps = {
   }
 });
 
-describe.only('AggregationOpForm', () => {
-  it.only('renders without crashing', async () => {
-    render(
-      <GlobalContext.Provider value={mockContext}>
-        <AggregationOpForm {...props} />
-      </GlobalContext.Provider>
-    );
+const aggregationOpForm = (
+  <GlobalContext.Provider value={mockContext}>
+    <AggregationOpForm {...props} />
+  </GlobalContext.Provider>
+);
+
+describe('AggregationOpForm', () => {
+  it('renders correct initial form state', async () => {
+    render(aggregationOpForm);
     await waitFor(() => {
+      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
+        ''
+      );
+      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
+      expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();
     });
-  });
-
-  it('renders correct initial form state', () => {
-    render(
-      <GlobalContext.Provider value={mockContext}>
-        <AggregationOpForm />
-      </GlobalContext.Provider>
-    );
-    expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
   });
 });
 
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
-    render(
-      <GlobalContext.Provider value={mockContext}>
-        <AggregationOpForm session={mockSession} />
-      </GlobalContext.Provider>
-    );
+    render(aggregationOpForm);
+    // Simulate form submission
+    const saveButton = screen.getByTestId('savebutton');
+    await userEvent.click(saveButton);
+
+    // validations to be called
+    await waitFor(() => {
+      expect(
+        screen.getByText('Column to aggregate is required')
+      ).toBeInTheDocument();
+      expect(screen.getByText('Operation is required')).toBeInTheDocument();
+      expect(
+        screen.getByText('Output column name is required')
+      ).toBeInTheDocument();
+    });
+
+    const column = screen.getByTestId('aggregateColumn');
+    const operation = screen.getByTestId('operation');
+    const [columnInput] = screen.getAllByRole('combobox');
+
+    await user.type(columnInput, 's');
+    await fireEvent.keyDown(column, { key: 'ArrowDown' });
+    await fireEvent.keyDown(column, { key: 'Enter' });
+
+    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
+    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
+    await fireEvent.keyDown(operation, { key: 'Enter' });
 
     // Simulate user typing in the Output Column Name
     const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
-    userEvent.type(outputColumnNameInput, 'Total Sales');
+    await user.type(outputColumnNameInput, 'District aggregate');
 
-    // Simulate form submission
-    const saveButton = screen.getByTestId('savebutton');
-    userEvent.click(saveButton);
+    await userEvent.click(saveButton);
 
-    // Assert that the input was successful and submission occurred
-    expect(outputColumnNameInput).toHaveValue('Total Sales');
-    expect(mockContext.setError).not.toHaveBeenCalled();
-  });
-});
+    await waitFor(() => {
+      expect(continueOperationChainMock).toHaveBeenCalled();
+    });
 
-describe('API integration', () => {
-  it('submits form data correctly to the server', async () => {
-    render(
-      <GlobalContext.Provider value={mockContext}>
-        <AggregationOpForm session={mockSession} />
-      </GlobalContext.Provider>
-    );
-
-    // Fill out and submit the form as previously tested
-    // Assert the server received the correct payload
-  });
-});
-
-describe('Conditional rendering', () => {
-  it('disables all inputs when action is view', () => {
-    render(
-      <GlobalContext.Provider value={mockContext}>
-        <AggregationOpForm session={mockSession} action="view" />
-      </GlobalContext.Provider>
-    );
-    expect(screen.getByLabelText('Output Column Name*')).toBeDisabled();
-    expect(screen.getByTestId('savebutton')).toBeDisabled();
+    // reset to initial state after submit
+    await waitFor(() => {
+      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
+        ''
+      );
+      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
+      expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
+      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+    });
   });
 });
