@@ -4,6 +4,7 @@ import {
   Autocomplete as AutocompleteElement,
   AutocompleteProps as AutocompleteElementProps,
 } from '@mui/material';
+import { forwardRef } from 'react';
 
 interface AutocompleteProps
   extends Omit<
@@ -18,19 +19,24 @@ interface AutocompleteProps
   onChange: any;
 }
 
-export const Autocomplete = ({
-  placeholder,
-  fieldStyle = 'normal',
-  label,
-  error,
-  helperText,
-  name,
-  onChange,
-  ...rest
-}: AutocompleteProps) => {
+export const Autocomplete = forwardRef(function Autocomplete(
+  {
+    placeholder,
+    fieldStyle = 'normal',
+    label,
+    error,
+    helperText,
+    name,
+    onChange,
+    ...rest
+  }: AutocompleteProps,
+  ref
+) {
   return (
     <AutocompleteElement
       {...rest}
+      ref={ref}
+      id={name}
       onChange={(e, data) => {
         onChange(data);
       }}
@@ -47,4 +53,4 @@ export const Autocomplete = ({
       )}
     />
   );
-};
+});

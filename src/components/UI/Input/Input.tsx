@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
 import { Box, TextField, InputLabel, TextFieldProps } from '@mui/material';
+import { forwardRef } from 'react';
 import { UseFormRegister } from 'react-hook-form';
 
 const StyledTextField = styled(TextField)(() => ({
@@ -58,17 +59,20 @@ interface InputProps extends Omit<TextFieldProps, 'variant'> {
   fieldStyle?: 'normal' | 'transformation' | 'none';
 }
 
-export const Input: React.FC<InputProps> = ({
-  id,
-  label,
-  register,
-  name,
-  sx,
-  required = false,
-  hookFormValidations = {},
-  fieldStyle = 'normal',
-  ...rest
-}) => {
+export const Input: React.FC<InputProps> = forwardRef(function Input(
+  {
+    id,
+    label,
+    register,
+    name,
+    sx,
+    required = false,
+    hookFormValidations = {},
+    fieldStyle = 'normal',
+    ...rest
+  },
+  ref
+) {
   let InputBox, Label;
   switch (fieldStyle) {
     case 'normal':
@@ -95,6 +99,7 @@ export const Input: React.FC<InputProps> = ({
   if (rest.type === 'number') {
     registerValues.valueAsNumber = true;
   }
+
   return (
     <Box sx={sx}>
       {label && (
@@ -114,12 +119,13 @@ export const Input: React.FC<InputProps> = ({
           }}
           {...rest}
           id={id ? id : name}
+          ref={ref}
         />
       ) : (
-        <InputBox {...rest} id={id ? id : name} />
+        <InputBox {...rest} id={id ? id : name} ref={ref} />
       )}
     </Box>
   );
-};
+});
 
 export default Input;
