@@ -417,11 +417,16 @@ const FlowEditor = ({}) => {
         response?.progress.map((resp: { status: string; message: string }) => ({
           level: 0,
           timestamp: new Date(),
-          message: resp.status,
+          message: resp.message,
         }))
       );
-      await delay(3000);
-      await pollForSyncSourcesTask(taskId, hashKey);
+      const lastMessage: TaskProgressLog =
+        response['progress'][response['progress'].length - 1];
+
+      if (!['completed', 'failed'].includes(lastMessage.status)) {
+        await delay(3000);
+        await pollForSyncSourcesTask(taskId, hashKey);
+      }
     } catch (error: any) {
       console.log(error);
     }
