@@ -110,9 +110,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean =
     permissions.includes('can_delete_dbt_model') &&
-    edgesEmanatingOutOfNode.length > 0
-      ? false
-      : true;
+    edgesEmanatingOutOfNode.length <= 0;
 
   const handleDeleteAction = () => {
     setCanvasAction({

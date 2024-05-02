@@ -28,7 +28,7 @@ export function OperationNode(node: OperationNodeType) {
 
   // can only delete/chain more ops if this node doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean =
-    permissions.includes('can_delete_dbt_operation') ||
+    permissions.includes('can_delete_dbt_operation') &&
     edgesEmanatingOutOfNode.length <= 0;
 
   const handleDeleteAction = () => {
