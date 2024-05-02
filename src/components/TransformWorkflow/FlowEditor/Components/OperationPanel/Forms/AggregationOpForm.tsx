@@ -38,8 +38,6 @@ const AggregationOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -54,10 +52,12 @@ const AggregationOpForm = ({
       ? (node?.data as OperationNodeData)
       : {};
 
+
+
   type FormProps = {
     aggregate_on: {
       column: string;
-      operation: { id: string; label: string };
+      operation: { id: string; label: string } | null;
       output_column_name: string;
     }[];
   };
@@ -67,7 +67,7 @@ const AggregationOpForm = ({
       aggregate_on: [
         {
           column: '',
-          operation: { id: '', label: '' },
+          operation: null,
           output_column_name: '',
         },
       ],

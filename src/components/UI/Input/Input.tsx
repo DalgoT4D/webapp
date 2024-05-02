@@ -25,11 +25,11 @@ const StyledTextField = styled(TextField)(() => ({
     padding: '8px 10px',
   },
   'input::-webkit-outer-spin-button, input::-webkit-inner-spin-button': {
-    '-webkit-appearance': 'none',
+    WebkitAppearance: 'none' as any,
     margin: 0,
   },
   'input[type=number]': {
-    '-moz-appearance': 'textfield',
+    MozAppearance: 'textfield' as any,
   },
 }));
 
