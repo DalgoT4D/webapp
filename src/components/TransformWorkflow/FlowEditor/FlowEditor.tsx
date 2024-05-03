@@ -387,18 +387,17 @@ const FlowEditor = ({}) => {
       // Clear previous logs
       setDbtRunLogs([]);
 
-      const syncSourcesTaskId = globalContext?.CurrentOrg.state.slug;
-      const syncSourcesHashKey = `syncsources-${syncSourcesTaskId}`;
+      const orgslug = globalContext?.CurrentOrg.state.slug;
+      const syncSourcesHashKey = `syncsources-${orgslug}`;
 
       const response: any = await httpPost(
         session,
         `transform/dbt_project/sync_sources/`,
         {}
       );
-      await delay(1000);
 
-      if (response?.task_progress_id && syncSourcesTaskId) {
-        await pollForSyncSourcesTask(syncSourcesTaskId, syncSourcesHashKey);
+      if (response?.task_id && orgslug) {
+        await pollForSyncSourcesTask(response.task_id, syncSourcesHashKey);
       }
     } catch (error) {
       console.error(error);
