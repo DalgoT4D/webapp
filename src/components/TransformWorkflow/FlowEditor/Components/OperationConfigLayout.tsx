@@ -80,8 +80,8 @@ export interface OperationFormProps {
   operation: UIOperationType;
   sx: SxProps;
   continueOperationChain: (...args: any) => void;
-  clearAndClosePanel: (...args: any) => void;
-  dummyNodeId: string;
+  clearAndClosePanel?: (...args: any) => void;
+  dummyNodeId?: string;
   action: 'create' | 'view' | 'edit';
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
