@@ -2,8 +2,8 @@ import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
 import { TaskProgressLog } from '@/components/TransformWorkflow/FlowEditor/FlowEditor';
 
-const DbtRunLogsContext = React.createContext<TaskProgressLog[]>([]);
-const DbtRunLogsUpdateContext = React.createContext<
+export const DbtRunLogsContext = React.createContext<TaskProgressLog[]>([]);
+export const DbtRunLogsUpdateContext = React.createContext<
   Dispatch<SetStateAction<TaskProgressLog[]>>
 >((() => {}) as Dispatch<SetStateAction<TaskProgressLog[]>>);
 
@@ -18,6 +18,7 @@ export const useDbtRunLogsUpdate = () => {
 export const DbtRunLogsProvider = ({ children }: any) => {
   const [dbtRunLogs, setDbtRunLogs] = useState<TaskProgressLog[]>([]);
 
+  // Todo: Make them in same context object
   return (
     <DbtRunLogsContext.Provider value={dbtRunLogs}>
       <DbtRunLogsUpdateContext.Provider value={setDbtRunLogs}>

@@ -13,7 +13,7 @@ interface CanvasNodeContext {
   >;
 }
 
-const CanvasNodeContext = React.createContext<CanvasNodeContext>({
+export const CanvasNodeContext = React.createContext<CanvasNodeContext>({
   canvasNode: null,
   setCanvasNode: () => {},
 });
@@ -57,7 +57,7 @@ interface CanvasActionContext {
   setCanvasAction: Dispatch<SetStateAction<Action>>;
 }
 
-const CanvasActionContext = React.createContext<CanvasActionContext>({
+export const CanvasActionContext = React.createContext<CanvasActionContext>({
   canvasAction: { type: '', data: null },
   setCanvasAction: () => {},
 });
