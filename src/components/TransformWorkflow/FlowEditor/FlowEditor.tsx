@@ -331,9 +331,11 @@ const FlowEditor = ({}) => {
 
   const pollForTaskRun = async (taskId: string) => {
     try {
+      const orgSlug = globalContext?.CurrentOrg.state.slug;
+      const hashKey = `run-dbt-commands-${orgSlug}`;
       const response: { progress: Array<TaskProgressLog> } = await httpGet(
         session,
-        `tasks/${taskId}`
+        `tasks/${taskId}?hashkey=${hashKey}`
       );
       setDbtRunLogs(response['progress']);
 
@@ -385,18 +387,17 @@ const FlowEditor = ({}) => {
       // Clear previous logs
       setDbtRunLogs([]);
 
-      const syncSourcesTaskId = globalContext?.CurrentOrg.state.slug;
-      const syncSourcesHashKey = `syncsources-${syncSourcesTaskId}`;
+      const orgslug = globalContext?.CurrentOrg.state.slug;
+      const syncSourcesHashKey = `syncsources-${orgslug}`;
 
       const response: any = await httpPost(
         session,
         `transform/dbt_project/sync_sources/`,
         {}
       );
-      await delay(1000);
 
-      if (response?.task_progress_id && syncSourcesTaskId) {
-        await pollForSyncSourcesTask(syncSourcesTaskId, syncSourcesHashKey);
+      if (response?.task_id && orgslug) {
+        await pollForSyncSourcesTask(response.task_id, syncSourcesHashKey);
       }
     } catch (error) {
       console.error(error);
@@ -405,10 +406,7 @@ const FlowEditor = ({}) => {
     }
   };
 
-  const pollForSyncSourcesTask = async (
-    taskId: string,
-    hashKey = 'taskprogress'
-  ) => {
+  const pollForSyncSourcesTask = async (taskId: string, hashKey: string) => {
     try {
       const response: any = await httpGet(
         session,
@@ -420,7 +418,7 @@ const FlowEditor = ({}) => {
             (resp: { status: string; message: string }) => ({
               level: 0,
               timestamp: new Date(),
-              message: resp.status,
+              message: resp.message,
             })
           )
         );
