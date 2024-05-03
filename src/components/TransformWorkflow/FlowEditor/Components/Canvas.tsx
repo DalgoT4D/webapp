@@ -93,6 +93,7 @@ type EdgeStyleProps = {
 export interface UIOperationType {
   slug: string;
   label: string;
+  infoToolTip?: string;
 }
 
 const nodeTypes: NodeTypes = {

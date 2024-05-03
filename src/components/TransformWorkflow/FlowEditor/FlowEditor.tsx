@@ -414,13 +414,16 @@ const FlowEditor = ({}) => {
         session,
         `tasks/${taskId}?hashkey=${hashKey}`
       );
-      setDbtRunLogs(
-        response?.progress.map((resp: { status: string; message: string }) => ({
-          level: 0,
-          timestamp: new Date(),
-          message: resp.status,
-        }))
-      );
+      if (response && response?.progress)
+        setDbtRunLogs(
+          response?.progress.map(
+            (resp: { status: string; message: string }) => ({
+              level: 0,
+              timestamp: new Date(),
+              message: resp.status,
+            })
+          )
+        );
       await delay(3000);
       await pollForSyncSourcesTask(taskId, hashKey);
     } catch (error: any) {
