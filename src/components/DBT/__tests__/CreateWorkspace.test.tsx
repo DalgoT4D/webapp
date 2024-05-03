@@ -99,7 +99,7 @@ describe('Create workspace', () => {
     await userEvent.type(patinputfield, 'token-123');
 
     await userEvent.click(savebutton);
-    waitFor(() => {
+    await waitFor(() => {
       expect(createWorkspaceFetch).not.toHaveBeenCalled();
     });
 
