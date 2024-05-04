@@ -412,7 +412,7 @@ const FlowEditor = ({}) => {
         session,
         `tasks/${taskId}?hashkey=${hashKey}`
       );
-      if (response && response?.progress)
+      if (response && response?.progress) {
         setDbtRunLogs(
           response?.progress.map(
             (resp: { status: string; message: string }) => ({
@@ -422,6 +422,19 @@ const FlowEditor = ({}) => {
             })
           )
         );
+        if (response.progress.length > 0) {
+          const lastMessage = response.progress[response.progress.length - 1];
+          if (lastMessage.status === 'completed') {
+            successToast('Sync Sources completed', [], globalContext);
+            fetchSourcesModels();
+            return;
+          }
+          if (lastMessage.status === 'failed') {
+            errorToast('Sync Sources failed', [], globalContext);
+            return;
+          }
+        }
+      }
       await delay(3000);
       await pollForSyncSourcesTask(taskId, hashKey);
     } catch (error: any) {
