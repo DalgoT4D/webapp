@@ -102,7 +102,7 @@ const AggregationOpForm = ({
         source_columns: srcColumns,
         config: {
           aggregate_on: data.aggregate_on.map((item) => ({
-            operation: item.operation.id,
+            operation: item.operation?.id,
             column: item.column,
             output_column_name: item.output_column_name,
           })),
