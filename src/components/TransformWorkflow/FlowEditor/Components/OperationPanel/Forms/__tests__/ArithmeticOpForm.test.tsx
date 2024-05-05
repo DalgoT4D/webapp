@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import AggregationOpForm from '../AggregationOpForm';
+import ArithmeticOpForm from '../ArithmeticOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import { SrcModelNodeType } from '../../../Canvas';
@@ -36,7 +36,7 @@ const props: OperationFormProps = {
     },
     type: 'src_model_node',
     xPos: 100,
-    yPos: 100,
+    yPos: 200,
     selected: false,
     isConnectable: true,
     sourcePosition: 'bottom',
@@ -45,10 +45,10 @@ const props: OperationFormProps = {
     zIndex: 0,
   } as SrcModelNodeType,
   operation: {
-    label: 'Aggregate',
-    slug: 'aggregate',
+    label: 'Arithmetic',
+    slug: 'arithmetic',
     infoToolTip:
-      'Performs a calculation on multiple values in a column and returns a new column with that value in every row',
+      'Perform arithmetic operations on or between one or more columns',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -57,6 +57,7 @@ const props: OperationFormProps = {
 };
 
 (global as any).fetch = jest.fn((url: string) => {
+  console.log('sscs', url);
   switch (true) {
     case url.includes('warehouse/table_columns/intermediate/sheet2_mod2'):
       return Promise.resolve({
@@ -121,71 +122,7 @@ const props: OperationFormProps = {
     case url.includes('transform/dbt_project/model'):
       return Promise.resolve({
         ok: true,
-        json: () =>
-          Promise.resolve({
-            id: 'fake-id',
-            output_cols: [
-              '_airbyte_extracted_at',
-              '_airbyte_meta',
-              '_airbyte_raw_id',
-              'Bacteriological',
-              'District_Name',
-              'Iron',
-              'Latitude',
-              'Longitude',
-              'Multiple',
-              'Nitrate',
-              'Physical',
-              'salinity',
-              'SNo_',
-              'State',
-              'District aggregate',
-            ],
-            config: {
-              config: {
-                aggregate_on: [
-                  {
-                    operation: 'avg',
-                    column: 'District_Name',
-                    output_column_name: 'District aggregate',
-                  },
-                ],
-                source_columns: [
-                  '_airbyte_extracted_at',
-                  '_airbyte_meta',
-                  '_airbyte_raw_id',
-                  'Bacteriological',
-                  'District_Name',
-                  'Iron',
-                  'Latitude',
-                  'Longitude',
-                  'Multiple',
-                  'Nitrate',
-                  'Physical',
-                  'salinity',
-                  'SNo_',
-                  'State',
-                ],
-                other_inputs: [],
-              },
-              type: 'aggregate',
-              input_models: [
-                {
-                  uuid: 'fake-uuid',
-                  name: 'sheet2_mod2',
-                  display_name: 'sheet2_mod2',
-                  source_name: 'intermediate',
-                  schema: 'intermediate',
-                  type: 'source',
-                },
-              ],
-            },
-            type: 'operation_node',
-            target_model_id: 'fake-model-d',
-            seq: 1,
-            chain_length: 1,
-            is_last_in_chain: true,
-          }),
+        json: () => Promise.resolve(),
       });
 
     default:
@@ -196,61 +133,63 @@ const props: OperationFormProps = {
   }
 });
 
-const aggregationOpForm = (
+const arithmeticForm = (
   <GlobalContext.Provider value={mockContext}>
-    <AggregationOpForm {...props} />
+    <ArithmeticOpForm {...props} />
   </GlobalContext.Provider>
 );
 
 describe('AggregationOpForm', () => {
   it('renders correct initial form state', async () => {
-    render(aggregationOpForm);
+    render(arithmeticForm);
     await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
-      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
+      expect(screen.getByLabelText('Operation*')).toHaveValue('');
       expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
-      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
     });
   });
 });
 
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
-    render(aggregationOpForm);
+    render(arithmeticForm);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+    });
     // Simulate form submission
     const saveButton = screen.getByTestId('savebutton');
     await userEvent.click(saveButton);
 
     // validations to be called
     await waitFor(() => {
-      expect(
-        screen.getByText('Column to aggregate is required')
-      ).toBeInTheDocument();
       expect(screen.getByText('Operation is required')).toBeInTheDocument();
+      expect(screen.getAllByText('Column is required')).toHaveLength(2);
       expect(
         screen.getByText('Output column name is required')
       ).toBeInTheDocument();
     });
 
-    const column = screen.getByTestId('aggregateColumn');
     const operation = screen.getByTestId('operation');
-    const [columnInput] = screen.getAllByRole('combobox');
-
-    await user.type(columnInput, 's');
-    await fireEvent.keyDown(column, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column, { key: 'Enter' });
 
     await fireEvent.keyDown(operation, { key: 'ArrowDown' });
     await fireEvent.keyDown(operation, { key: 'ArrowDown' });
     await fireEvent.keyDown(operation, { key: 'Enter' });
 
+    const column1 = screen.getByTestId('column0');
+    await fireEvent.keyDown(column1, { key: 'ArrowDown' });
+    await fireEvent.keyDown(column1, { key: 'ArrowDown' });
+    await fireEvent.keyDown(column1, { key: 'Enter' });
+
+    const column2 = screen.getByTestId('column1');
+    await fireEvent.keyDown(column2, { key: 'ArrowDown' });
+    await fireEvent.keyDown(column2, { key: 'ArrowDown' });
+    await fireEvent.keyDown(column2, { key: 'Enter' });
+
     // Simulate user typing in the Output Column Name
     const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
-    await user.type(outputColumnNameInput, 'District aggregate');
+    await user.type(outputColumnNameInput, 'Sum');
 
-    await userEvent.click(saveButton);
+    await user.click(saveButton);
 
     await waitFor(() => {
       expect(continueOperationChainMock).toHaveBeenCalled();
@@ -258,12 +197,8 @@ describe('Form interactions', () => {
 
     // reset to initial state after submit
     await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
-      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
+      expect(screen.getByLabelText('Operation*')).toHaveValue('');
       expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
-      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
     });
   });
 });
