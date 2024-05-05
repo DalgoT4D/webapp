@@ -513,7 +513,8 @@ const FlowCreate = ({
               {scheduleSelected && scheduleSelected?.id !== 'manual' ? (
                 <Box data-testid="cronTimeOfDay">
                   <InputLabel htmlFor={'cronTimeOfDay'}>
-                    Time of day*
+                    Time of day* (
+                    {Intl.DateTimeFormat().resolvedOptions().timeZone} timezone)
                   </InputLabel>
                   <Controller
                     name="cronTimeOfDay"
