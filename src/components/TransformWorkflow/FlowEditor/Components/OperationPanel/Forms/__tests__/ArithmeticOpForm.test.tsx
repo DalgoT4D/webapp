@@ -2,8 +2,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ArithmeticOpForm from '../ArithmeticOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
-import { SrcModelNodeType } from '../../../Canvas';
 import userEvent from '@testing-library/user-event';
+import { intermediateTableResponse, mockNode } from './helpers';
 
 const user = userEvent.setup();
 // Mock global context and session
@@ -24,26 +24,7 @@ jest.mock('next-auth/react', () => ({
 }));
 
 const props: OperationFormProps = {
-  node: {
-    id: 'fake-id',
-    data: {
-      id: 'fake-id',
-      source_name: 'intermediate',
-      input_name: 'sheet2_mod2',
-      input_type: 'source',
-      schema: 'intermediate',
-      type: 'src_model_node',
-    },
-    type: 'src_model_node',
-    xPos: 100,
-    yPos: 200,
-    selected: false,
-    isConnectable: true,
-    sourcePosition: 'bottom',
-    targetPosition: 'top',
-    dragging: false,
-    zIndex: 0,
-  } as SrcModelNodeType,
+  node: mockNode,
   operation: {
     label: 'Arithmetic',
     slug: 'arithmetic',
@@ -57,72 +38,17 @@ const props: OperationFormProps = {
 };
 
 (global as any).fetch = jest.fn((url: string) => {
-  console.log('sscs', url);
   switch (true) {
     case url.includes('warehouse/table_columns/intermediate/sheet2_mod2'):
       return Promise.resolve({
         ok: true,
-        json: () =>
-          Promise.resolve([
-            {
-              name: 'salinity',
-              data_type: 'character varying',
-            },
-            {
-              name: 'Multiple',
-              data_type: 'character varying',
-            },
-            {
-              name: 'Iron',
-              data_type: 'character varying',
-            },
-            {
-              name: 'Latitude',
-              data_type: 'character varying',
-            },
-            {
-              name: 'Longitude',
-              data_type: 'character varying',
-            },
-            {
-              name: 'Physical',
-              data_type: 'character varying',
-            },
-            {
-              name: 'Nitrate',
-              data_type: 'character varying',
-            },
-            {
-              name: 'State',
-              data_type: 'character varying',
-            },
-            {
-              name: 'District_Name',
-              data_type: 'character varying',
-            },
-            {
-              name: 'SNo_',
-              data_type: 'character varying',
-            },
-            {
-              name: '_airbyte_raw_id',
-              data_type: 'character varying',
-            },
-            {
-              name: '_airbyte_extracted_at',
-              data_type: 'timestamp with time zone',
-            },
-            {
-              name: '_airbyte_meta',
-              data_type: 'jsonb',
-            },
-          ]),
+        json: () => Promise.resolve(intermediateTableResponse),
       });
 
     case url.includes('transform/dbt_project/model'):
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(),
+        json: () => Promise.resolve({}),
       });
 
     default:
