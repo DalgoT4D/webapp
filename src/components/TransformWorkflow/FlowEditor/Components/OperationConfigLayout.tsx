@@ -1,7 +1,6 @@
 import {
   Backdrop,
   Box,
-  CircularProgress,
   Divider,
   IconButton,
   LinearProgress,
@@ -18,9 +17,8 @@ import {
   OperationNodeType,
   SrcModelNodeType,
   UIOperationType,
-  getNextNodePosition,
 } from './Canvas';
-// import { operations } from './OperationConfigForms/constant';
+
 import {
   OPERATION_NODE,
   RENAME_COLUMNS_OP,
@@ -68,6 +66,7 @@ import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import PivotOpForm from './OperationPanel/Forms/PivotOpForm';
 import UnpivotOpForm from './OperationPanel/Forms/UnpivotOpForm';
 import GenericColumnOpForm from './OperationPanel/Forms/GenericColumnOpForm';
+import { getNextNodePosition } from '@/utils/editor';
 
 interface OperationConfigProps {
   sx: SxProps;

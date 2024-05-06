@@ -24,7 +24,6 @@ const RenameColumnOp = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -190,6 +189,7 @@ const RenameColumnOp = ({
               render={({ field }) => (
                 <Autocomplete
                   {...field}
+                  data-testid={`currentName${index}`}
                   id={`config${index}old`}
                   onChange={(data: any) => {
                     field.onChange(data);
@@ -213,6 +213,7 @@ const RenameColumnOp = ({
               render={({ field }) => (
                 <Input
                   {...field}
+                  data-testid={`newName${index}`}
                   id={`config${index}new`}
                   fieldStyle="none"
                   sx={{ padding: '0' }}

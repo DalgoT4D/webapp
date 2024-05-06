@@ -1,16 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-
+import { Edge, useReactFlow } from 'reactflow';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
+import { DbtSourceModel, OperationNodeData } from '../../Canvas';
+import { generateDummySrcModelNode } from '../../dummynodes';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { OperationFormProps } from '../../OperationConfigLayout';
-import { DbtSourceModel, OperationNodeData } from '../../Canvas';
+
 import { useSession } from 'next-auth/react';
 import { Controller, useForm } from 'react-hook-form';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Box, Button } from '@mui/material';
-import { Edge, useReactFlow } from 'reactflow';
+
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
-import { generateDummySrcModelNode } from '../../dummynodes';
 
 export interface SecondaryInput {
   input: { input_name: string; input_type: string; source_name: string };
@@ -30,7 +31,6 @@ const JoinOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
   dummyNodeId,
   action,
   setLoading,
@@ -40,7 +40,6 @@ const JoinOpForm = ({
   const [table2Columns, setTable2Columns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
-
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
   const { deleteElements, addEdges, addNodes, getEdges, getNodes } =
     useReactFlow();
@@ -358,6 +357,7 @@ const JoinOpForm = ({
           render={({ field, fieldState }) => (
             <Autocomplete
               {...field}
+              data-testid="table1key"
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
               disabled={action === 'view'}
@@ -379,6 +379,7 @@ const JoinOpForm = ({
             return (
               <Autocomplete
                 {...field}
+                data-testid="table2"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
                 fieldStyle="transformation"
@@ -429,6 +430,7 @@ const JoinOpForm = ({
           render={({ field, fieldState }) => (
             <Autocomplete
               {...field}
+              data-testid="table2key"
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
               fieldStyle="transformation"
@@ -446,6 +448,7 @@ const JoinOpForm = ({
           render={({ field, fieldState }) => (
             <Autocomplete
               {...field}
+              data-testid="joinType"
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
               fieldStyle="transformation"
