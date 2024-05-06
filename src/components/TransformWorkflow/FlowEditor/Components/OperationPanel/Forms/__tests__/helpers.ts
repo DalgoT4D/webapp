@@ -140,3 +140,22 @@ export const mockNode = {
   dragging: false,
   zIndex: 0,
 } as SrcModelNodeType;
+
+export const sourceModelsMock = [
+  {
+    id: 'fake-id-1',
+    source_name: 'intermediate',
+    input_name: 'sheet2_mod',
+    input_type: 'source',
+    schema: 'intermediate',
+    type: 'src_model_node',
+  },
+  {
+    id: 'fake-id-2',
+    source_name: 'intermediate',
+    input_name: 'sheet2_mod2',
+    input_type: 'source',
+    schema: 'intermediate',
+    type: 'src_model_node',
+  },
+];

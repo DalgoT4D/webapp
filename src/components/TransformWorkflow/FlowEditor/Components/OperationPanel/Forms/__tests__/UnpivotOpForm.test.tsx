@@ -1,9 +1,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import PivotOpForm from '../PivotOpForm';
+import UnpivotOpForm from '../UnpivotOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import { intermediateTableResponse, mockNode } from './helpers';
+import {
+  intermediateTableResponse,
+  mockNode,
+  sourceModelsMock,
+} from './helpers';
+import { ReactFlowProvider } from 'reactflow';
 
 const user = userEvent.setup();
 // Mock global context and session
@@ -26,10 +31,9 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Join',
-    slug: 'join',
-    infoToolTip:
-      'Combine rows from two or more tables, based on a related (key) column between them',
+    label: 'Rename',
+    slug: 'renamecolumns',
+    infoToolTip: 'Select columns and rename them',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -45,6 +49,11 @@ const props: OperationFormProps = {
         json: () => Promise.resolve(intermediateTableResponse),
       });
 
+    case url.includes('transform/dbt_project/sources_models'):
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(sourceModelsMock),
+      });
     case url.includes('transform/dbt_project/model'):
       return Promise.resolve({
         ok: true,
@@ -59,28 +68,29 @@ const props: OperationFormProps = {
   }
 });
 
-const pivotForm = (
-  <GlobalContext.Provider value={mockContext}>
-    <PivotOpForm {...props} />
-  </GlobalContext.Provider>
+const unpivotForm = (
+  <ReactFlowProvider>
+    <GlobalContext.Provider value={mockContext}>
+      <UnpivotOpForm {...props} />
+    </GlobalContext.Provider>
+  </ReactFlowProvider>
 );
 
-describe('Pivot form', () => {
+describe('Unpivot form', () => {
   it('renders correct initial form state', async () => {
-    render(pivotForm);
+    render(unpivotForm);
     await waitFor(() => {
+      expect(screen.getByText('Columns to unpivot')).toBeInTheDocument();
       expect(
-        screen.getByText('Select Column to pivot on*')
+        screen.getByText('Columns to keep in output table')
       ).toBeInTheDocument();
-      expect(screen.getByText('Column values to pivot on')).toBeInTheDocument();
-      expect(screen.getByText('Columns to groupby')).toBeInTheDocument();
     });
   });
 });
 
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
-    render(pivotForm);
+    render(unpivotForm);
 
     await waitFor(() => {
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();
@@ -90,31 +100,16 @@ describe('Form interactions', () => {
 
     // validations to be called
     await waitFor(() => {
-      expect(screen.getByText('Pivot Column is required')).toBeInTheDocument();
       expect(
-        screen.getByText('Atleast one value is required')
+        screen.getByText('Atleast one column required to unpivot')
       ).toBeInTheDocument();
     });
 
-    const pivot = screen.getByTestId('pivot');
+    const unpivotColumn1 = screen.getByTestId('unpivotColumn1');
+    const unpivotColumn2 = screen.getByTestId('unpivotColumn2');
 
-    await fireEvent.keyDown(pivot, { key: 'ArrowDown' });
-    await fireEvent.keyDown(pivot, { key: 'ArrowDown' });
-    await fireEvent.keyDown(pivot, { key: 'Enter' });
-
-    const columnValue0 = screen
-      .getByTestId('columnValue0')
-      .querySelector('input') as HTMLInputElement;
-
-    await user.type(columnValue0, '100');
-
-    await user.click(screen.getByTestId('addcase'));
-
-    const columnValue1 = screen
-      .getByTestId('columnValue1')
-      .querySelector('input') as HTMLInputElement;
-
-    await user.type(columnValue1, '200');
+    await user.click(unpivotColumn1);
+    await user.click(unpivotColumn2);
 
     await user.click(saveButton);
 
