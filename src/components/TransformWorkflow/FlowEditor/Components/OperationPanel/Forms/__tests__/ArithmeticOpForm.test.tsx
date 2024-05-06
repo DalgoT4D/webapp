@@ -65,7 +65,7 @@ const arithmeticForm = (
   </GlobalContext.Provider>
 );
 
-describe('AggregationOpForm', () => {
+describe('Arithmetic form', () => {
   it('renders correct initial form state', async () => {
     render(arithmeticForm);
     await waitFor(() => {

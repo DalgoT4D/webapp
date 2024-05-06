@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import CaseWhenOpForm from '../CaseWhenOpForm';
+import CastColumnOpForm from '../CastColumnOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
@@ -26,10 +26,10 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Case',
-    slug: 'casewhen',
+    label: 'Cast',
+    slug: 'castdatatypes',
     infoToolTip:
-      'Select the relevant column, operation, and comparison column or value',
+      "Convert a column's values (of any type) into a specified datatype",
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -51,6 +51,29 @@ const props: OperationFormProps = {
         json: () => Promise.resolve(),
       });
 
+    case url.includes('transform/dbt_project/data_type'):
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            'boolean',
+            'char',
+            'character varying',
+            'date',
+            'double precision',
+            'float',
+            'integer',
+            'jsonb',
+            'numeric',
+            'text',
+            'time',
+            'timestamp',
+            'timestamp with time zone',
+            'uuid',
+            'varchar',
+          ]),
+      });
+
     default:
       return Promise.resolve({
         ok: false,
@@ -59,71 +82,47 @@ const props: OperationFormProps = {
   }
 });
 
-const caseForm = (
+const castForm = (
   <GlobalContext.Provider value={mockContext}>
-    <CaseWhenOpForm {...props} />
+    <CastColumnOpForm {...props} />
   </GlobalContext.Provider>
 );
 
-describe('Case form', () => {
+describe('AggregationOpForm', () => {
   it('renders correct initial form state', async () => {
-    render(caseForm);
+    render(castForm);
     await waitFor(() => {
-      expect(screen.getByText('When')).toBeInTheDocument();
-      expect(screen.getByText('Then')).toBeInTheDocument();
-      expect(screen.getByText('Else')).toBeInTheDocument();
-      expect(screen.getByText('Output Column Name*')).toBeInTheDocument();
+      expect(screen.getByText('Column name')).toBeInTheDocument();
+      expect(screen.getByText('Type')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('columnName0').querySelector('input')
+      ).toHaveValue('salinity');
+      expect(
+        screen.getByTestId('columnName1').querySelector('input')
+      ).toHaveValue('Multiple');
     });
   });
 });
 
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
-    render(caseForm);
+    render(castForm);
 
     await waitFor(() => {
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();
     });
-    // Simulate form submission
-    const saveButton = screen.getByTestId('savebutton');
-    await userEvent.click(saveButton);
 
-    // validations to be called
-    await waitFor(() => {
-      expect(screen.getByText('Column is required')).toBeInTheDocument();
-      expect(screen.getByText('Operation is required')).toBeInTheDocument();
-      expect(screen.getAllByText('Value is required')).toHaveLength(2);
-      expect(screen.getByText('Column name is required')).toBeInTheDocument();
-    });
+    const columnType = screen.getByTestId('type0');
 
-    const operation = screen.getByTestId('operation');
-
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'Enter' });
-
-    const column1 = screen.getByTestId('column');
-    await fireEvent.keyDown(column1, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column1, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column1, { key: 'Enter' });
-
-    const columnValue = screen
-      .getByTestId('value0')
-      .querySelector('input') as HTMLInputElement;
-    await user.type(columnValue, '0');
-    const columnValue1 = screen
-      .getByTestId('value1')
-      .querySelector('input') as HTMLInputElement;
-    await user.type(columnValue1, '5');
-    const thenValue = screen
-      .getByTestId('thenInput')
-      .querySelector('input') as HTMLInputElement;
-    await user.type(thenValue, '5');
+    await fireEvent.keyDown(columnType, { key: 'ArrowDown' });
+    await fireEvent.keyDown(columnType, { key: 'ArrowDown' });
+    await fireEvent.keyDown(columnType, { key: 'Enter' });
 
     // Simulate user typing in the Output Column Name
     const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
-    await user.type(outputColumnNameInput, 'Replace');
+    await user.type(outputColumnNameInput, 'default value');
 
+    const saveButton = screen.getByTestId('savebutton');
     await user.click(saveButton);
 
     await waitFor(() => {
