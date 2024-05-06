@@ -25,7 +25,7 @@ import styled from '@emotion/styled';
 
 export interface ColumnData {
   name: string;
-  data_type: string;
+  data_type: string | null;
 }
 
 const StyledTableCell = styled(TableCell)(() => ({
@@ -72,7 +72,7 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
         </TableRow>
       </TableHead>
       <TableBody>
-        {columns.map((row: ColumnData, idx: number) => (
+        {columns.map((row: ColumnData) => (
           <StyledTableRow key={row.name}>
             <StyledTableCell
               align="left"

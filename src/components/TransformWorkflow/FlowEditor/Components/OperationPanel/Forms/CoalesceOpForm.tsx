@@ -53,11 +53,10 @@ const CoalesceOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
+
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
@@ -258,6 +257,7 @@ const CoalesceOpForm = ({
                   render={({ field }) => (
                     <Autocomplete
                       {...field}
+                      data-testid={`column${index}`}
                       disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns
@@ -298,6 +298,7 @@ const CoalesceOpForm = ({
             render={({ field, fieldState }) => (
               <Input
                 {...field}
+                data-testid="defaultValue"
                 helperText={fieldState.error?.message}
                 error={!!fieldState.error}
                 disabled={action === 'view'}
