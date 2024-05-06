@@ -40,6 +40,7 @@ import {
   PIVOT_OP,
   UNPIVOT_OP,
   GENERIC_COL_OP,
+  GENERIC_SQL_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -68,6 +69,7 @@ import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import PivotOpForm from './OperationPanel/Forms/PivotOpForm';
 import UnpivotOpForm from './OperationPanel/Forms/UnpivotOpForm';
 import GenericColumnOpForm from './OperationPanel/Forms/GenericColumnOpForm';
+import GenericSqlOpForm from './OperationPanel/Forms/GenericSqlOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -103,6 +105,7 @@ const operationComponentMapping: any = {
   [PIVOT_OP]: PivotOpForm,
   [UNPIVOT_OP]: UnpivotOpForm,
   [GENERIC_COL_OP]: GenericColumnOpForm,
+  [GENERIC_SQL_OP]: GenericSqlOpForm,
 };
 
 const OperationForm = ({
