@@ -210,6 +210,7 @@ const ReplaceValueOpForm = ({
             render={({ field, fieldState }) => (
               <Autocomplete
                 {...field}
+                data-testid="column"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
                 disabled={action === 'view'}
@@ -226,6 +227,7 @@ const ReplaceValueOpForm = ({
           removeItem={(index: number) => remove(index)}
           data={fields.map((field, idx) => [
             <Input
+              data-testid={`columnValue${idx}`}
               disabled={action === 'view'}
               fieldStyle="none"
               key={field.old + idx}
@@ -233,6 +235,7 @@ const ReplaceValueOpForm = ({
               register={register}
             />,
             <Input
+              data-testid={`replacedValue${idx}`}
               disabled={action === 'view'}
               fieldStyle="none"
               key={field.new + idx}
