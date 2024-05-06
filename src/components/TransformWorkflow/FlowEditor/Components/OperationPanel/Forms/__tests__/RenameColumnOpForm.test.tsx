@@ -1,19 +1,18 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import RenameColumnOpForm from '../RenameColumnOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -92,11 +91,7 @@ describe('Form interactions', () => {
       ).toBeInTheDocument();
     });
 
-    const currentName0 = screen.getByTestId('currentName0');
-
-    await fireEvent.keyDown(currentName0, { key: 'ArrowDown' });
-    await fireEvent.keyDown(currentName0, { key: 'ArrowDown' });
-    await fireEvent.keyDown(currentName0, { key: 'Enter' });
+    await fireMultipleKeyDown('currentName0', 2);
 
     const newName0 = screen
       .getByTestId('newName0')
@@ -106,11 +101,7 @@ describe('Form interactions', () => {
 
     await user.click(screen.getByText('Add column'));
 
-    const currentName1 = screen.getByTestId('currentName1');
-
-    await fireEvent.keyDown(currentName1, { key: 'ArrowDown' });
-    await fireEvent.keyDown(currentName1, { key: 'ArrowDown' });
-    await fireEvent.keyDown(currentName1, { key: 'Enter' });
+    await fireMultipleKeyDown('currentName1', 2);
 
     const newName1 = screen
       .getByTestId('newName1')

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import WhereFilterOpForm from '../WhereFilterOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
@@ -8,16 +8,15 @@ import {
   mockNode,
   sourceModelsMock,
 } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -30,9 +29,10 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Rename',
-    slug: 'renamecolumns',
-    infoToolTip: 'Select columns and rename them',
+    label: 'Filter',
+    slug: 'where',
+    infoToolTip:
+      'Filters all the row values in the selected column based on the defined condition',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -100,24 +100,9 @@ describe('Form interactions', () => {
       expect(screen.getByText('Operation is required')).toBeInTheDocument();
     });
 
-    const columnToCheck = screen.getByTestId('columnToCheck');
-
-    await fireEvent.keyDown(columnToCheck, { key: 'ArrowDown' });
-    await fireEvent.keyDown(columnToCheck, { key: 'ArrowDown' });
-    await fireEvent.keyDown(columnToCheck, { key: 'Enter' });
-
-    const operation = screen.getByTestId('operation');
-
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'Enter' });
-
-    const columnToCheckAgainst = screen.getByTestId('checkAgainstColumn');
-
-    await fireEvent.keyDown(columnToCheckAgainst, { key: 'ArrowDown' });
-    await fireEvent.keyDown(columnToCheckAgainst, { key: 'ArrowDown' });
-    await fireEvent.keyDown(columnToCheckAgainst, { key: 'ArrowDown' });
-    await fireEvent.keyDown(columnToCheckAgainst, { key: 'Enter' });
+    await fireMultipleKeyDown('columnToCheck', 2);
+    await fireMultipleKeyDown('operation', 2);
+    await fireMultipleKeyDown('checkAgainstColumn', 3);
 
     await user.click(saveButton);
 

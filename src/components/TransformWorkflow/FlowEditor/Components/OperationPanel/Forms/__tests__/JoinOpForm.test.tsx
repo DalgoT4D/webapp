@@ -9,16 +9,15 @@ import {
   sourceModelsMock,
 } from './helpers';
 import { ReactFlowProvider } from 'reactflow';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -112,17 +111,8 @@ describe('Form interactions', () => {
       expect(screen.getByText('Join type is required')).toBeInTheDocument();
     });
 
-    const table1Key = screen.getByTestId('table1key');
-
-    await fireEvent.keyDown(table1Key, { key: 'ArrowDown' });
-    await fireEvent.keyDown(table1Key, { key: 'ArrowDown' });
-    await fireEvent.keyDown(table1Key, { key: 'Enter' });
-
-    const secondTable = screen.getByTestId('table2');
-
-    await fireEvent.keyDown(secondTable, { key: 'ArrowDown' });
-    await fireEvent.keyDown(secondTable, { key: 'ArrowDown' });
-    await fireEvent.keyDown(secondTable, { key: 'Enter' });
+    await fireMultipleKeyDown('table1key', 2);
+    await fireMultipleKeyDown('table2', 2);
 
     const table2Key = await screen.getByTestId('table2key');
 
@@ -136,11 +126,7 @@ describe('Form interactions', () => {
     await fireEvent.keyDown(table2Key, { key: 'ArrowDown' });
     await fireEvent.keyDown(table2Key, { key: 'Enter' });
 
-    const joinType = await screen.getByTestId('joinType');
-
-    await fireEvent.keyDown(joinType, { key: 'ArrowDown' });
-    await fireEvent.keyDown(joinType, { key: 'ArrowDown' });
-    await fireEvent.keyDown(joinType, { key: 'Enter' });
+    await fireMultipleKeyDown('joinType', 2);
 
     await user.click(saveButton);
 

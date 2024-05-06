@@ -1,19 +1,18 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import FlattenJsonOpForm from '../FlattenJsonOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -72,7 +71,7 @@ const flattenjsonForm = (
   </GlobalContext.Provider>
 );
 
-describe('Flatter json form', () => {
+describe('Flatten json form', () => {
   it('renders correct initial form state', async () => {
     render(flattenjsonForm);
     await waitFor(() => {
@@ -96,11 +95,7 @@ describe('Form interactions', () => {
       expect(screen.getByText('JSON column is required')).toBeInTheDocument();
     });
 
-    const column = screen.getByTestId('jsonColumn');
-
-    await fireEvent.keyDown(column, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column, { key: 'Enter' });
+    await fireMultipleKeyDown('jsonColumn', 2);
 
     await waitFor(() => {
       expect(screen.getByText('JSON Columns')).toBeInTheDocument();

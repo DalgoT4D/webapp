@@ -1,19 +1,18 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import ArithmeticOpForm from '../ArithmeticOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -95,23 +94,12 @@ describe('Form interactions', () => {
       ).toBeInTheDocument();
     });
 
-    const operation = screen.getByTestId('operation');
+    await fireMultipleKeyDown('operation', 2);
 
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'Enter' });
+    await fireMultipleKeyDown('column0', 2);
 
-    const column1 = screen.getByTestId('column0');
-    await fireEvent.keyDown(column1, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column1, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column1, { key: 'Enter' });
+    await fireMultipleKeyDown('column1', 2);
 
-    const column2 = screen.getByTestId('column1');
-    await fireEvent.keyDown(column2, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column2, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column2, { key: 'Enter' });
-
-    // Simulate user typing in the Output Column Name
     const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
     await user.type(outputColumnNameInput, 'Sum');
 

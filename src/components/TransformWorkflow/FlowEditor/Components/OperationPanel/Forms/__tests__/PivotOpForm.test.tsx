@@ -1,19 +1,18 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import PivotOpForm from '../PivotOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -26,10 +25,9 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Join',
-    slug: 'join',
-    infoToolTip:
-      'Combine rows from two or more tables, based on a related (key) column between them',
+    label: 'Pivot',
+    slug: 'pivot',
+    infoToolTip: 'Pivot table data based on values of selected column',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -96,11 +94,7 @@ describe('Form interactions', () => {
       ).toBeInTheDocument();
     });
 
-    const pivot = screen.getByTestId('pivot');
-
-    await fireEvent.keyDown(pivot, { key: 'ArrowDown' });
-    await fireEvent.keyDown(pivot, { key: 'ArrowDown' });
-    await fireEvent.keyDown(pivot, { key: 'Enter' });
+    await fireMultipleKeyDown('pivot', 2);
 
     const columnValue0 = screen
       .getByTestId('columnValue0')

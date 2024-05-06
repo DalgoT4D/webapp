@@ -1,19 +1,18 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import DropColumnOpForm from '../DropColumnOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -66,7 +65,7 @@ const dropColumnForm = (
 );
 
 describe('Drop column form', () => {
-  it.only('renders correct initial form state', async () => {
+  it('renders correct initial form state', async () => {
     render(dropColumnForm);
     await waitFor(() => {
       expect(screen.getByText('Select Column to Drop')).toBeInTheDocument();
@@ -75,7 +74,7 @@ describe('Drop column form', () => {
 });
 
 describe('Form interactions', () => {
-  it.only('allows filling out the form and submitting', async () => {
+  it('allows filling out the form and submitting', async () => {
     render(dropColumnForm);
 
     await waitFor(() => {
@@ -91,11 +90,7 @@ describe('Form interactions', () => {
       ).toBeInTheDocument();
     });
 
-    const column = screen.getByTestId('dropColumn');
-
-    await fireEvent.keyDown(column, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column, { key: 'Enter' });
+    await fireMultipleKeyDown('dropColumn', 2);
 
     await waitFor(() => {
       expect(screen.getByTestId('columnName0')).toBeInTheDocument();

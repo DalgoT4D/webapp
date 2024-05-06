@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import AggregationOpForm from '../AggregationOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
@@ -8,6 +8,7 @@ import {
   intermediateTableResponse,
   mockNode,
 } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
 // Mock global context and session
@@ -101,17 +102,11 @@ describe('Form interactions', () => {
       ).toBeInTheDocument();
     });
 
-    const column = screen.getByTestId('aggregateColumn');
-    const operation = screen.getByTestId('operation');
     const [columnInput] = screen.getAllByRole('combobox');
 
     await user.type(columnInput, 's');
-    await fireEvent.keyDown(column, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column, { key: 'Enter' });
-
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'Enter' });
+    await fireMultipleKeyDown('aggregateColumn', 1);
+    await fireMultipleKeyDown('operation', 2);
 
     // Simulate user typing in the Output Column Name
     const outputColumnNameInput = screen.getByLabelText('Output Column Name*');

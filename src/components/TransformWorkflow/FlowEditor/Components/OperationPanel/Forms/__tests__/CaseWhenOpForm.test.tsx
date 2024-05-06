@@ -1,19 +1,18 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import CaseWhenOpForm from '../CaseWhenOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -96,16 +95,8 @@ describe('Form interactions', () => {
       expect(screen.getByText('Column name is required')).toBeInTheDocument();
     });
 
-    const operation = screen.getByTestId('operation');
-
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(operation, { key: 'Enter' });
-
-    const column1 = screen.getByTestId('column');
-    await fireEvent.keyDown(column1, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column1, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column1, { key: 'Enter' });
+    await fireMultipleKeyDown('operation', 2);
+    await fireMultipleKeyDown('column', 2);
 
     const columnValue = screen
       .getByTestId('value0')
