@@ -20,6 +20,7 @@ import { ActionsMenu } from '../UI/Menu/Menu';
 import Image from 'next/image';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import styles from './Flows.module.css';
+import { localTimezone } from '@/utils/common';
 
 export interface TaskLock {
   lockedBy: string;
@@ -299,15 +300,35 @@ export const Flows = ({
         >
           <Image style={{ marginRight: 10 }} src={FlowIcon} alt="flow icon" />
           <Typography variant="h6" fontWeight={700}>
-            {`${flow.name} | `}
+            {`${flow.name}`}
           </Typography>
-          <Typography
-            variant="subtitle2"
-            color="rgba(9, 37, 64, 0.87)"
-            fontWeight={700}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              borderLeft: '1px solid grey',
+              marginLeft: 2,
+            }}
           >
-            &nbsp; {flow.cron ? cronToString(flow.cron) : 'Manual'}
-          </Typography>
+            <Typography
+              variant="subtitle2"
+              color="rgba(9, 37, 64, 0.87)"
+              fontWeight={700}
+              sx={{ paddingLeft: 1 }}
+            >
+              {flow.cron ? cronToString(flow.cron) : 'Manual'}
+            </Typography>
+            {flow.cron && (
+              <Typography
+                variant="subtitle2"
+                color="rgba(9, 37, 64, 0.87)"
+                fontWeight={700}
+                sx={{ paddingLeft: 1 }}
+              >
+                {localTimezone()}
+              </Typography>
+            )}
+          </Box>
         </Box>,
         flowStatus(flow.status),
 
@@ -411,7 +432,9 @@ export const Flows = ({
       <List
         rows={rows}
         openDialog={handleClickCreateFlow}
-        headers={{values: ['', 'Pipeline Status', 'Last run', 'Last run status']}}
+        headers={{
+          values: ['', 'Pipeline Status', 'Last run', 'Last run status'],
+        }}
         title={'Pipeline'}
       />
 
