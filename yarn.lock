@@ -359,17 +359,17 @@
     debug "^3.1.0"
     lodash.once "^4.1.1"
 
-"@dagrejs/dagre@^1.0.4":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@dagrejs/dagre/-/dagre-1.1.1.tgz#77c6521864f2996ac5e7a63ff9058d9781a3d9e6"
-  integrity sha512-AQfT6pffEuPE32weFzhS/u3UpX+bRXUARIXL7UqLaxz497cN8pjuBlX6axO4IIECE2gBV8eLFQkGCtKX5sDaUA==
+"@dagrejs/dagre@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@dagrejs/dagre/-/dagre-1.1.2.tgz#5ec339979447091f48d2144deed8c70dfadae374"
+  integrity sha512-F09dphqvHsbe/6C2t2unbmpr5q41BNPEfJCdn8Z7aEBpVSy/zFQ/b4SWsweQjWNsYMDvE2ffNUN8X0CeFsEGNw==
   dependencies:
-    "@dagrejs/graphlib" "2.2.1"
+    "@dagrejs/graphlib" "2.2.2"
 
-"@dagrejs/graphlib@2.2.1":
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/@dagrejs/graphlib/-/graphlib-2.2.1.tgz#29b34038335573d312ec972ce5cd59fa2232a3b6"
-  integrity sha512-xJsN1v6OAxXk6jmNdM+OS/bBE8nDCwM0yDNprXR18ZNatL6to9ggod9+l2XtiLhXfLm0NkE7+Er/cpdlM+SkUA==
+"@dagrejs/graphlib@2.2.2":
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/@dagrejs/graphlib/-/graphlib-2.2.2.tgz#74154d5cb880a23b4fae71034a09b4b5aef06feb"
+  integrity sha512-CbyGpCDKsiTg/wuk79S7Muoj8mghDGAESWGxcSyhHX5jD35vYMBZochYVFzlHxynpE9unpu6O+4ZuhrLxASsOg==
 
 "@emotion/babel-plugin@^11.11.0":
   version "11.11.0"
