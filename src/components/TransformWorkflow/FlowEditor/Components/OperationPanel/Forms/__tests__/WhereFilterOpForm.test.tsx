@@ -1,9 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import PivotOpForm from '../PivotOpForm';
+import WhereFilterOpForm from '../WhereFilterOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import { intermediateTableResponse, mockNode } from './helpers';
+import {
+  intermediateTableResponse,
+  mockNode,
+  sourceModelsMock,
+} from './helpers';
 
 const user = userEvent.setup();
 // Mock global context and session
@@ -26,10 +30,9 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Join',
-    slug: 'join',
-    infoToolTip:
-      'Combine rows from two or more tables, based on a related (key) column between them',
+    label: 'Rename',
+    slug: 'renamecolumns',
+    infoToolTip: 'Select columns and rename them',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -45,6 +48,11 @@ const props: OperationFormProps = {
         json: () => Promise.resolve(intermediateTableResponse),
       });
 
+    case url.includes('transform/dbt_project/sources_models'):
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(sourceModelsMock),
+      });
     case url.includes('transform/dbt_project/model'):
       return Promise.resolve({
         ok: true,
@@ -59,28 +67,26 @@ const props: OperationFormProps = {
   }
 });
 
-const pivotForm = (
+const whereFilterForm = (
   <GlobalContext.Provider value={mockContext}>
-    <PivotOpForm {...props} />
+    <WhereFilterOpForm {...props} />
   </GlobalContext.Provider>
 );
 
-describe('Pivot form', () => {
+describe('Where filter form', () => {
   it('renders correct initial form state', async () => {
-    render(pivotForm);
+    render(whereFilterForm);
     await waitFor(() => {
-      expect(
-        screen.getByText('Select Column to pivot on*')
-      ).toBeInTheDocument();
-      expect(screen.getByText('Column values to pivot on')).toBeInTheDocument();
-      expect(screen.getByText('Columns to groupby')).toBeInTheDocument();
+      expect(screen.getByText('Select column*')).toBeInTheDocument();
+      expect(screen.getByText('Select operation*')).toBeInTheDocument();
+      expect(screen.getByText('Advance Filter')).toBeInTheDocument();
     });
   });
 });
 
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
-    render(pivotForm);
+    render(whereFilterForm);
 
     await waitFor(() => {
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();
@@ -90,31 +96,28 @@ describe('Form interactions', () => {
 
     // validations to be called
     await waitFor(() => {
-      expect(screen.getByText('Pivot Column is required')).toBeInTheDocument();
-      expect(
-        screen.getByText('Atleast one value is required')
-      ).toBeInTheDocument();
+      expect(screen.getAllByText('Column is required')).toHaveLength(2);
+      expect(screen.getByText('Operation is required')).toBeInTheDocument();
     });
 
-    const pivot = screen.getByTestId('pivot');
+    const columnToCheck = screen.getByTestId('columnToCheck');
 
-    await fireEvent.keyDown(pivot, { key: 'ArrowDown' });
-    await fireEvent.keyDown(pivot, { key: 'ArrowDown' });
-    await fireEvent.keyDown(pivot, { key: 'Enter' });
+    await fireEvent.keyDown(columnToCheck, { key: 'ArrowDown' });
+    await fireEvent.keyDown(columnToCheck, { key: 'ArrowDown' });
+    await fireEvent.keyDown(columnToCheck, { key: 'Enter' });
 
-    const columnValue0 = screen
-      .getByTestId('columnValue0')
-      .querySelector('input') as HTMLInputElement;
+    const operation = screen.getByTestId('operation');
 
-    await user.type(columnValue0, '100');
+    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
+    await fireEvent.keyDown(operation, { key: 'ArrowDown' });
+    await fireEvent.keyDown(operation, { key: 'Enter' });
 
-    await user.click(screen.getByTestId('addcase'));
+    const columnToCheckAgainst = screen.getByTestId('checkAgainstColumn');
 
-    const columnValue1 = screen
-      .getByTestId('columnValue1')
-      .querySelector('input') as HTMLInputElement;
-
-    await user.type(columnValue1, '200');
+    await fireEvent.keyDown(columnToCheckAgainst, { key: 'ArrowDown' });
+    await fireEvent.keyDown(columnToCheckAgainst, { key: 'ArrowDown' });
+    await fireEvent.keyDown(columnToCheckAgainst, { key: 'ArrowDown' });
+    await fireEvent.keyDown(columnToCheckAgainst, { key: 'Enter' });
 
     await user.click(saveButton);
 

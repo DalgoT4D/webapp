@@ -3,7 +3,11 @@ import JoinOpForm from '../JoinOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import { intermediateTableResponse, mockNode } from './helpers';
+import {
+  intermediateTableResponse,
+  mockNode,
+  sourceModelsMock,
+} from './helpers';
 import { ReactFlowProvider } from 'reactflow';
 
 const user = userEvent.setup();
@@ -55,25 +59,7 @@ const props: OperationFormProps = {
     case url.includes('transform/dbt_project/sources_models'):
       return Promise.resolve({
         ok: true,
-        json: () =>
-          Promise.resolve([
-            {
-              id: 'fake-id-1',
-              source_name: 'intermediate',
-              input_name: 'sheet2_mod',
-              input_type: 'source',
-              schema: 'intermediate',
-              type: 'src_model_node',
-            },
-            {
-              id: 'fake-id-2',
-              source_name: 'intermediate',
-              input_name: 'sheet2_mod2',
-              input_type: 'source',
-              schema: 'intermediate',
-              type: 'src_model_node',
-            },
-          ]),
+        json: () => Promise.resolve(sourceModelsMock),
       });
     case url.includes('transform/dbt_project/model'):
       return Promise.resolve({
