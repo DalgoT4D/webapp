@@ -156,6 +156,7 @@ const DropColumnOp = ({
             <Grid container spacing={1}>
               <Grid item xs={12}>
                 <Input
+                  data-testid={`columnName${index}`}
                   fieldStyle="transformation"
                   disabled
                   variant="outlined"
@@ -183,6 +184,7 @@ const DropColumnOp = ({
         ))}
         <Grid item xs={12}>
           <Autocomplete
+            data-testid="dropColumn"
             disabled={action === 'view'}
             value={column}
             inputValue={column}
@@ -207,6 +209,7 @@ const DropColumnOp = ({
         )}
         <Grid item xs={12}>
           <Button
+            data-testid="savebutton"
             onClick={handleSave}
             variant="contained"
             disabled={action === 'view'}

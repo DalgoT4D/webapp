@@ -14,10 +14,7 @@ import { useSession } from 'next-auth/react';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
 const CreateTableForm = ({
-  operation,
-  node,
   sx,
-  continueOperationChain,
   clearAndClosePanel,
 }: OperationFormProps) => {
   const { data: session } = useSession();

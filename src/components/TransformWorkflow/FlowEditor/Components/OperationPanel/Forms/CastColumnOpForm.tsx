@@ -40,7 +40,7 @@ const CastColumnOp = ({
       : {};
 
   type FormData = {
-    config: { name: string; data_type: string }[];
+    config: { name: string; data_type: string | null }[];
   };
 
   const { control, handleSubmit, register, reset, getValues, setValue } =
@@ -49,7 +49,7 @@ const CastColumnOp = ({
         config: [
           {
             name: '',
-            data_type: '',
+            data_type: null,
           },
         ] as ColumnData[],
       },
