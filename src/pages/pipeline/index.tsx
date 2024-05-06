@@ -44,14 +44,24 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
             ? '#C15E5E'
             : '#00897B';
         const lastRun = moment(new Date(run.startTime)).calendar();
+        const lastRunDateFormat = moment(new Date(run.startTime)).format(
+          'YYYY-MM-DD HH:mm:ss'
+        );
         const totalRunTime = Math.round(run.totalRunTime);
+        const runTimeInHours = Math.floor(totalRunTime / 3600);
+        const runTimeInMinutes = Math.floor((totalRunTime - (runTimeInHours * 3600)) / 60);
+        const runTimeInSeconds = totalRunTime - (runTimeInHours * 3600) - (runTimeInMinutes * 60);
         return {
           id: run.id,
           name: run.name,
           color,
           status,
           lastRun,
+          lastRunDateFormat,
           totalRunTime,
+          runTimeInHours,
+          runTimeInMinutes,
+          runTimeInSeconds,
         };
       })
       .reverse();
@@ -97,12 +107,22 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
 
       .on('mouseover', (event, d: any) => {
         const [x, y] = d3.pointer(event, d);
+        let runTime = `${d.runTimeInHours}hr ${d.runTimeInMinutes}min ${d.runTimeInSeconds}s`;
+        if(d.runTimeInHours === 0){
+          runTime = `${d.runTimeInMinutes}min ${d.runTimeInSeconds}s`;
+        }
+        if(d.runTimeInMinutes === 0 && d.runTimeInHours === 0){
+          runTime = `${d.runTimeInSeconds}s`;
+        }
+        if(d.runTimeInMinutes === 0 && d.runTimeInHours !== 0){
+          runTime = `${d.runTimeInHours}hr ${d.runTimeInSeconds}s`;
+        }
         // Show tooltip on mouseover
         tooltip
           .style('visibility', 'visible')
           .html(
-            `<strong>Start time:</strong> ${d.lastRun}
-            <br><strong>Run time:</strong> ${d.totalRunTime}s
+            `<strong>Start time:</strong> ${d.lastRunDateFormat}
+            <br><strong>Run time:</strong> ${runTime}
             <br> <strong>Status:</strong> ${d.status}
             <br><a class="log-link" style="cursor:pointer" >Check logs</a>
             `

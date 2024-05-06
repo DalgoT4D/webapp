@@ -24,6 +24,7 @@ import moment, { Moment } from 'moment';
 import { Connection } from '@/components/Connections/Connections';
 import { TransformTask } from '../DBT/DBTTarget';
 import { TaskSequence } from './TaskSequence';
+import { localTimezone } from '@/utils/common';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -217,10 +218,6 @@ const FlowCreate = ({
   }, []);
 
   const onSubmit = async (data: any) => {
-    if (data.tasks.length === 0) {
-      errorToast('Atleast one transform task is required', [], toastContext);
-      return;
-    }
     try {
       const cronExpression = convertToCronExpression(
         data.cron.id,
@@ -517,7 +514,7 @@ const FlowCreate = ({
               {scheduleSelected && scheduleSelected?.id !== 'manual' ? (
                 <Box data-testid="cronTimeOfDay">
                   <InputLabel htmlFor={'cronTimeOfDay'}>
-                    Time of day*
+                    Time of day* ({localTimezone()} timezone)
                   </InputLabel>
                   <Controller
                     name="cronTimeOfDay"
