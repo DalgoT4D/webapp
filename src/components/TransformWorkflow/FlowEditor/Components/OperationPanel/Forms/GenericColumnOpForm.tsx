@@ -44,8 +44,6 @@ const GenericColumnOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -225,6 +223,7 @@ const GenericColumnOpForm = ({
             name="computed_columns.0.function_name"
             render={({ field, fieldState }) => (
               <Input
+                data-testid="function"
                 helperText={fieldState.error?.message}
                 error={!!fieldState.error}
                 disabled={action === 'view'}
@@ -282,6 +281,7 @@ const GenericColumnOpForm = ({
                     render={({ field, fieldState }) => (
                       <Autocomplete
                         {...field}
+                        data-testid={`column${index}`}
                         helperText={fieldState.error?.message}
                         error={!!fieldState.error}
                         disabled={action === 'view'}
