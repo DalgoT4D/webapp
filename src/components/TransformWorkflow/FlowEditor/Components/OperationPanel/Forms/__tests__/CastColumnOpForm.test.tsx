@@ -118,10 +118,6 @@ describe('Form interactions', () => {
     await fireEvent.keyDown(columnType, { key: 'ArrowDown' });
     await fireEvent.keyDown(columnType, { key: 'Enter' });
 
-    // Simulate user typing in the Output Column Name
-    const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
-    await user.type(outputColumnNameInput, 'default value');
-
     const saveButton = screen.getByTestId('savebutton');
     await user.click(saveButton);
 
