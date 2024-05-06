@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import UnpivotOpForm from '../UnpivotOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
@@ -11,14 +11,12 @@ import {
 import { ReactFlowProvider } from 'reactflow';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -31,9 +29,9 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Rename',
-    slug: 'renamecolumns',
-    infoToolTip: 'Select columns and rename them',
+    label: 'Unpivot',
+    slug: 'unpivot',
+    infoToolTip: 'Unpivot columns & values of a table into rows',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,

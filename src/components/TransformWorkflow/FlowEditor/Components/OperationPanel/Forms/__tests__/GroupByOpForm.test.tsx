@@ -1,19 +1,18 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import GroupByOpForm from '../GroupByOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -101,23 +100,9 @@ describe('Form interactions', () => {
       ).toBeInTheDocument();
     });
 
-    const column = screen.getByTestId('columns0');
-
-    await fireEvent.keyDown(column, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column, { key: 'ArrowDown' });
-    await fireEvent.keyDown(column, { key: 'Enter' });
-
-    const metric = screen.getByTestId('metric');
-
-    await fireEvent.keyDown(metric, { key: 'ArrowDown' });
-    await fireEvent.keyDown(metric, { key: 'ArrowDown' });
-    await fireEvent.keyDown(metric, { key: 'Enter' });
-
-    const aggregation = screen.getByTestId('aggregation');
-
-    await fireEvent.keyDown(aggregation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(aggregation, { key: 'ArrowDown' });
-    await fireEvent.keyDown(aggregation, { key: 'Enter' });
+    await fireMultipleKeyDown('columns0', 2);
+    await fireMultipleKeyDown('metric', 2);
+    await fireMultipleKeyDown('aggregation', 2);
 
     const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
     await user.type(outputColumnNameInput, 'Group column');

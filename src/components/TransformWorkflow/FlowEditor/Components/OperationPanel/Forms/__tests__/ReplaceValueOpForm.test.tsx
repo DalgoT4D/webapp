@@ -1,19 +1,18 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import ReplaceValueOpForm from '../ReplaceValueOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -26,9 +25,10 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Rename',
-    slug: 'renamecolumns',
-    infoToolTip: 'Select columns and rename them',
+    label: 'Replace',
+    slug: 'replace',
+    infoToolTip:
+      'Replace all the row values in a column having a specified string with a new value',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -93,11 +93,7 @@ describe('Form interactions', () => {
       ).toBeInTheDocument();
     });
 
-    const columnValue = screen.getByTestId('column');
-
-    await fireEvent.keyDown(columnValue, { key: 'ArrowDown' });
-    await fireEvent.keyDown(columnValue, { key: 'ArrowDown' });
-    await fireEvent.keyDown(columnValue, { key: 'Enter' });
+    await fireMultipleKeyDown('column', 2);
 
     const columnValue0 = screen
       .getByTestId('columnValue0')

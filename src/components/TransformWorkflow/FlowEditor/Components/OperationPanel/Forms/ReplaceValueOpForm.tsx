@@ -32,7 +32,6 @@ const ReplaceValueOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
   action,
   setLoading,
 }: OperationFormProps) => {

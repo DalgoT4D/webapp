@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import UnionTablesOpForm from '../UnionTablesOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
@@ -9,16 +9,15 @@ import {
   sourceModelsMock,
 } from './helpers';
 import { ReactFlowProvider } from 'reactflow';
+import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -101,11 +100,7 @@ describe('Form interactions', () => {
       expect(screen.getByText('Table 2 is required')).toBeInTheDocument();
     });
 
-    const columnValue = screen.getByTestId('table1');
-
-    await fireEvent.keyDown(columnValue, { key: 'ArrowDown' });
-    await fireEvent.keyDown(columnValue, { key: 'ArrowDown' });
-    await fireEvent.keyDown(columnValue, { key: 'Enter' });
+    await fireMultipleKeyDown('table1', 2);
 
     await user.click(saveButton);
 
