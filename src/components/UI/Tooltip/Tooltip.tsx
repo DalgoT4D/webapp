@@ -1,16 +1,24 @@
 import React from 'react';
-import Tooltip from '@mui/material/Tooltip';
-import InfoIcon from '@mui/icons-material/Info';
+import Tooltip, { TooltipProps } from '@mui/material/Tooltip';
+import InfoIcon from '@mui/icons-material/InfoOutlined';
 import Typography from '@mui/material/Typography';
 
 interface InfoTooltipProps {
   title: string;
+  placement?: any;
 }
 
-function InfoTooltip({ title }: InfoTooltipProps) {
+function InfoTooltip({ title, placement = 'bottom' }: InfoTooltipProps) {
   return (
-    <Tooltip title={<Typography sx={{ fontSize: '14px' }}>{title}</Typography>}>
-      <InfoIcon fontSize="small" sx={{ color: '#888888' }} />
+    <Tooltip
+      placement={placement}
+      title={<Typography sx={{ fontSize: '14px' }}>{title}</Typography>}
+    >
+      <InfoIcon
+        className="infoIcon"
+        fontSize="small"
+        sx={{ color: '#888888', cursor: 'pointer' }}
+      />
     </Tooltip>
   );
 }
