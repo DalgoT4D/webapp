@@ -363,37 +363,42 @@ const OperationConfigLayout = ({
               canvasNode?.type === OPERATION_NODE
             );
             return (
-              <Tooltip
+              <ListItemButton
                 key={op.slug}
-                title={
-                  canSelectOperation
-                    ? ''
-                    : 'Please create a table to use this function'
-                }
-                placement="top"
-                disableHoverListener={canSelectOperation}
-              >
-                <ListItemButton
-                  key={op.slug}
-                  sx={{
-                    padding: '10px 20px',
-                    color: '#0F2440',
-                    fontWeight: 600,
-                    '&:hover': {
-                      backgroundColor: '#F5FAFA',
+                sx={{
+                  padding: '10px 20px',
+                  color: '#0F2440',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: '#F5FAFA',
+                    '& .infoIcon': {
+                      visibility: 'visible',
                     },
-                  }}
-                  onClick={
-                    canSelectOperation
-                      ? () => {
-                          handleSelectOp(op);
-                        }
-                      : undefined
-                  }
-                >
-                  {op.label}
-                </ListItemButton>
-              </Tooltip>
+                  },
+                  '& .infoIcon': {
+                    visibility: 'hidden',
+                  },
+                }}
+                onClick={
+                  canSelectOperation
+                    ? () => {
+                        handleSelectOp(op);
+                      }
+                    : undefined
+                }
+              >
+                {op.label}
+                <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+                  <InfoTooltip
+                    placement="top"
+                    title={
+                      canSelectOperation
+                        ? op.infoToolTip
+                        : 'Please create a table to use this function'
+                    }
+                  />
+                </Box>
+              </ListItemButton>
             );
           })}
         </List>
