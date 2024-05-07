@@ -106,9 +106,8 @@ const GenericSqlOpForm = ({
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
       );
-      console.log(config.input_models[0].name, 'config');
       const { config: opConfig, input_models } = config;
-      setInputModels(config.input_models[0].name);
+      setInputModels(input_models);
 
       const { sql_statement_2, sql_statement_1 }: GenericDataConfig = opConfig;
 

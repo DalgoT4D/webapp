@@ -4,11 +4,13 @@ import React from 'react';
 interface CreateTableAddFunctionProps {
   clickCreateTable: () => void;
   clickAddFunction: () => void;
+  showAddFunction: boolean;
 }
 
 const CreateTableOrAddFunction = ({
   clickCreateTable,
   clickAddFunction,
+  showAddFunction,
 }: CreateTableAddFunctionProps) => {
   return (
     <Box
@@ -23,9 +25,12 @@ const CreateTableOrAddFunction = ({
       <Button variant="outlined" onClick={clickCreateTable}>
         Create a table
       </Button>
-      <Button variant="outlined" onClick={clickAddFunction}>
-        Add function
-      </Button>
+
+      {showAddFunction && (
+        <Button variant="outlined" onClick={clickAddFunction}>
+          Add function
+        </Button>
+      )}
     </Box>
   );
 };

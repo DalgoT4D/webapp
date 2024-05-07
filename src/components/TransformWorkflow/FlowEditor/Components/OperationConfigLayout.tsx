@@ -166,6 +166,7 @@ const OperationConfigLayout = ({
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
   const [isPanelLoading, setIsPanelLoading] = useState<boolean>(false);
+  const [showAddFunction, setShowAddFunction] = useState<boolean>(true);
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
   const panelOpFormState = useRef<'create' | 'view' | 'edit'>('view');
@@ -459,6 +460,9 @@ const OperationConfigLayout = ({
     deleteElements({
       nodes: [{ id: dummyNodeIdRef.current }],
     });
+    if (selectedOp) {
+      setShowAddFunction(selectedOp.slug !== GENERIC_SQL_OP);
+    }
     setSelectedOp(null);
     setCanvasAction({
       type: 'update-canvas-node',
@@ -552,10 +556,13 @@ const OperationConfigLayout = ({
               }}
             />
           ) : (
-            <CreateTableOrAddFunction
-              clickCreateTable={handleCreateTable}
-              clickAddFunction={handleAddFunction}
-            />
+            <>
+              <CreateTableOrAddFunction
+                clickCreateTable={handleCreateTable}
+                clickAddFunction={handleAddFunction}
+                showAddFunction={showAddFunction}
+              />
+            </>
           )}
         </Box>
       </Box>
