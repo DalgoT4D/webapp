@@ -8,11 +8,6 @@ import {
   Switch,
   Select,
   MenuItem,
-  // RadioGroup,
-  // Radio,
-  // FormControl,
-  // FormLabel,
-  // Grid,
   TextField,
 } from '@mui/material';
 import {
@@ -21,7 +16,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  // FormControlLabel,
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -78,6 +72,8 @@ const CreateConnectionForm = ({
   const [filteredSourceStreams, setFilteredSourceStreams] = useState<
     Array<SourceStream>
   >([]);
+
+  console.log(filteredSourceStreams);
   const [loading, setLoading] = useState<boolean>(false);
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
   const [normalize, setNormalize] = useState<boolean>(false);
@@ -232,10 +228,6 @@ const CreateConnectionForm = ({
     setIncrementalAllStreams(false);
     searchInputRef.current = '';
   };
-
-  // const handleRadioChange = (event: any) => {
-  //   setNormalize(event.target.value === 'normalized');
-  // };
 
   // create/update a connection
   const onSubmit = async (data: any) => {
@@ -417,57 +409,6 @@ const CreateConnectionForm = ({
 
           <Box sx={{ m: 2 }} />
 
-          {/* <Box
-            sx={{
-              ...(connectionId && { pointerEvents: 'none' }),
-            }}
-          >
-            <FormControl sx={{ width: '100%' }}>
-              <FormLabel component="legend">Select type</FormLabel>
-              <RadioGroup
-                aria-label="normalize-radio-group"
-                value={normalize ? 'normalized' : 'raw'}
-                onChange={handleRadioChange}
-              >
-                <Grid container>
-                  <Grid
-                    item
-                    xs={5.8}
-                    sx={{
-                      px: 2,
-                      py: 1,
-                      background: '#f2f2eb',
-                      borderRadius: 2,
-                    }}
-                  >
-                    <FormControlLabel
-                      data-testid="normalizationCheckbox"
-                      value="normalized"
-                      control={<Radio />}
-                      label="Normalized"
-                    />
-                  </Grid>
-                  <Grid item xs={0.4} />
-                  <Grid
-                    item
-                    xs={5.8}
-                    sx={{
-                      px: 2,
-                      py: 1,
-                      background: '#f2f2eb',
-                      borderRadius: 2,
-                    }}
-                  >
-                    <FormControlLabel
-                      value="raw"
-                      control={<Radio />}
-                      label="Raw"
-                    />
-                  </Grid>
-                </Grid>
-              </RadioGroup>
-            </FormControl>
-          </Box> */}
           {filteredSourceStreams.length >= 0 && (
             <>
               <Table data-testid="sourceStreamTable" sx={{ marginTop: '5px' }}>
@@ -534,81 +475,86 @@ const CreateConnectionForm = ({
                     .slice()
                     .sort((a, b) => a.name.localeCompare(b.name)) // this will sort the stream on the basis of the name property.
                     .map((stream, idx: number) => (
-                    <TableRow key={stream.name}>
-                      <TableCell
-                        key="name"
-                        align="center"
-                        sx={
-                          stream.selected
-                            ? { color: 'green', fontWeight: 700 }
-                            : {}
-                        }
-                      >
-                        {stream.name}
-                      </TableCell>
-                      <TableCell key="sel" align="center">
-                        <Switch
-                          data-testid={`stream-sync-${idx}`}
-                          checked={stream.selected}
-                          onChange={(event) =>
-                            selectStream(event.target.checked, stream)
+                      <TableRow key={stream.name}>
+                        <TableCell
+                          key="name"
+                          align="center"
+                          sx={
+                            stream.selected
+                              ? { color: 'green', fontWeight: 700 }
+                              : {}
                           }
-                        />
-                      </TableCell>
-                      <TableCell key="inc" align="center">
-                        <Switch
-                          data-testid={`stream-incremental-${idx}`}
-                          disabled={
-                            !stream.supportsIncremental || !stream.selected
-                          }
-                          checked={
-                            stream.syncMode === 'incremental' && stream.selected
-                          }
-                          onChange={(event) =>
-                            setStreamIncr(event.target.checked, stream)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell key="destination" align="center">
-                        <Select
-                          data-testid={`stream-destmode-${idx}`}
-                          disabled={!stream.selected}
-                          value={stream.destinationSyncMode}
-                          onChange={(event) => {
-                            setDestinationSyncMode(event.target.value, stream);
-                          }}
                         >
-                          <MenuItem value="append">Append</MenuItem>
-                          <MenuItem value="overwrite">Overwrite</MenuItem>
-                          <MenuItem value="append_dedup">
-                            Append / Dedup
-                          </MenuItem>
-                        </Select>
-                      </TableCell>
-                      <TableCell key="cursorfield" align="center">
-                        <Select
-                          data-testid={`stream-cursorfield-${idx}`}
-                          disabled={
-                            !stream.selected ||
-                            !stream.supportsIncremental ||
-                            stream.syncMode !== 'incremental'
-                          }
-                          value={stream.cursorField}
-                          onChange={(event) => {
-                            updateCursorField(event.target.value, stream);
-                          }}
-                        >
-                          {stream.cursorFieldConfig?.cursorFieldOptions.map(
-                            (option: string) => (
-                              <MenuItem key={option} value={option}>
-                                {option}
-                              </MenuItem>
-                            )
-                          )}
-                        </Select>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          {stream.name}
+                        </TableCell>
+                        <TableCell key="sel" align="center">
+                          <Switch
+                            data-testid={`stream-sync-${idx}`}
+                            checked={stream.selected}
+                            onChange={(event) =>
+                              selectStream(event.target.checked, stream)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell key="inc" align="center">
+                          <Switch
+                            data-testid={`stream-incremental-${idx}`}
+                            disabled={
+                              !stream.supportsIncremental || !stream.selected
+                            }
+                            checked={
+                              stream.supportsIncremental &&
+                              stream.syncMode === 'incremental' &&
+                              stream.selected
+                            }
+                            onChange={(event) =>
+                              setStreamIncr(event.target.checked, stream)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell key="destination" align="center">
+                          <Select
+                            data-testid={`stream-destmode-${idx}`}
+                            disabled={!stream.selected}
+                            value={stream.destinationSyncMode}
+                            onChange={(event) => {
+                              setDestinationSyncMode(
+                                event.target.value,
+                                stream
+                              );
+                            }}
+                          >
+                            <MenuItem value="append">Append</MenuItem>
+                            <MenuItem value="overwrite">Overwrite</MenuItem>
+                            <MenuItem value="append_dedup">
+                              Append / Dedup
+                            </MenuItem>
+                          </Select>
+                        </TableCell>
+                        <TableCell key="cursorfield" align="center">
+                          <Select
+                            data-testid={`stream-cursorfield-${idx}`}
+                            disabled={
+                              !stream.selected ||
+                              !stream.supportsIncremental ||
+                              stream.syncMode !== 'incremental'
+                            }
+                            value={stream.cursorField}
+                            onChange={(event) => {
+                              updateCursorField(event.target.value, stream);
+                            }}
+                          >
+                            {stream.cursorFieldConfig?.cursorFieldOptions.map(
+                              (option: string) => (
+                                <MenuItem key={option} value={option}>
+                                  {option}
+                                </MenuItem>
+                              )
+                            )}
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </>
