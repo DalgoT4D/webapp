@@ -2,6 +2,8 @@ name: Build and Deploy to Netlify
 on:
   pull_request:
     branches: [main]
+permissions:
+  pull-requests: write
 
 jobs:
   build:
@@ -11,24 +13,59 @@ jobs:
 
       - name: Install Dependencies
         env:
-            NEXT_PUBLIC_BACKEND_URL: "https://staging-api.dalgo.in"
-            NEXTAUTH_SECRET: "3977d3ad9fe97429dc96935e2f025a64"
-            NEXTAUTH_URL: "deploy-preview-${{ github.event.number }}"
+          NEXT_PUBLIC_BACKEND_URL: 'https://staging-api.dalgo.in'
+          NEXTAUTH_SECRET: '3977d3ad9fe97429dc96935e2f025a64'
+          NEXTAUTH_URL: 'deploy-preview-${{ github.event.number }}'
         run: |
           yarn install
           yarn build
 
       - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v3.0
-        with:
-          publish-dir: '.next/'
-          production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: 'Deploy from GitHub Actions'
-          enable-pull-request-comment: true
-          overwrites-pull-request-comment: true
-          alias: deploy-preview-${{ github.event.number }}
+        id: netlify_deploy
+        run: |
+          prod_flag=""
+          if [ "$BRANCH_NAME" = "main" ]; then prod_flag="--prod"; fi
+          netlify deploy \
+            --dir dist \
+            --site ${{ secrets.NETLIFY_SITE_ID }} \
+            --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} \
+            $prod_flag \
+            --json \
+            > deploy_output.json
+
+      - name: Generate URL Preview
+        id: url_preview
+        if: ${{ env.BRANCH_NAME != 'main' }}
+        run: |
+          NETLIFY_PREVIEW_URL=$(jq -r '.deploy_url' deploy_output.json)
+          echo "NETLIFY_PREVIEW_URL=$NETLIFY_PREVIEW_URL" >> "$GITHUB_OUTPUT"
+
+      - name: DEBUG=WILL BE REMOVED
+        run: echo ${{ steps.url_preview.outputs.NETLIFY_PREVIEW_URL }}
+
+      - name: Comment URL Preview on PR
+        uses: actions/github-script@v7
+        if: ${{ env.BRANCH_NAME != 'main' }}
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        timeout-minutes: 1
+          NETLIFY_PREVIEW_URL: ${{ steps.url_preview.outputs.NETLIFY_PREVIEW_URL }}
+        with:
+          script: |
+            async function comment(){
+                const result = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha,
+                })
+                const issueNumber = result.data[0].number
+                if(issueNumber){
+                await github.rest.issues.createComment({
+                    issue_number: issueNumber,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: 'Preview URL: ' + process.env.NETLIFY_PREVIEW_URL
+                })
+                }else{
+                console.log('No PR found for commit ' + context.sha)
+                }
+            }
+            comment()
