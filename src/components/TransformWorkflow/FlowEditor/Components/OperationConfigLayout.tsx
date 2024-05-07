@@ -1,14 +1,12 @@
 import {
   Backdrop,
   Box,
-  CircularProgress,
   Divider,
   IconButton,
   LinearProgress,
   List,
   ListItemButton,
   SxProps,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
@@ -20,7 +18,6 @@ import {
   UIOperationType,
   getNextNodePosition,
 } from './Canvas';
-// import { operations } from './OperationConfigForms/constant';
 import {
   OPERATION_NODE,
   RENAME_COLUMNS_OP,

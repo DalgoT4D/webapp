@@ -1,5 +1,5 @@
 import React from 'react';
-import Tooltip, { TooltipProps } from '@mui/material/Tooltip';
+import Tooltip from '@mui/material/Tooltip';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import Typography from '@mui/material/Typography';
 
