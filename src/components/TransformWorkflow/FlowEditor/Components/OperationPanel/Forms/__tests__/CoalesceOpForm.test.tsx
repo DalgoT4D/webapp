@@ -37,7 +37,6 @@ const props: OperationFormProps = {
 };
 
 (global as any).fetch = jest.fn((url: string) => {
-  console.log(url, 'swes');
   switch (true) {
     case url.includes('warehouse/table_columns/intermediate/sheet2_mod2'):
       return Promise.resolve({
@@ -84,6 +83,21 @@ describe('Form interactions', () => {
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();
     });
 
+    // Simulate form submission
+    const saveButton = screen.getByTestId('savebutton');
+    await userEvent.click(saveButton);
+
+    // validations to be called
+    await waitFor(() => {
+      expect(
+        screen.getByText('Atleast 1 column is required')
+      ).toBeInTheDocument();
+      expect(screen.getByText('Default value is required')).toBeInTheDocument();
+      expect(
+        screen.getByText('Output column name is required')
+      ).toBeInTheDocument();
+    });
+
     await fireMultipleKeyDown('column0', 2);
 
     const defaultValueINput = screen
@@ -95,7 +109,6 @@ describe('Form interactions', () => {
     const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
     await user.type(outputColumnNameInput, 'Default value');
 
-    const saveButton = screen.getByTestId('savebutton');
     await user.click(saveButton);
 
     await waitFor(() => {

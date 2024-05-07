@@ -122,7 +122,7 @@ const ArithmeticOpForm = ({
         source_columns: srcColumns,
         other_inputs: [],
         config: {
-          operator: data.arithmeticOp.id,
+          operator: data.arithmeticOp?.id,
           operands: data.operands.map(
             (op: {
               type: string;
@@ -321,7 +321,8 @@ const ArithmeticOpForm = ({
                     )}
                   />
                 )}
-                {((['sub', 'div'].includes(arithmeticOp?.id) &&
+                {arithmeticOp &&
+                ((['sub', 'div'].includes(arithmeticOp?.id) &&
                   fields.length < 2) ||
                   ['add', 'mul'].includes(arithmeticOp?.id)) &&
                 index === fields.length - 1 ? (

@@ -27,16 +27,14 @@ describe('Invite user', () => {
   };
 
   it('initial render of the invite user form - success', async () => {
-    await act(() =>
-      render(
-        <SessionProvider session={mockSession}>
-          <InviteUserForm
-            mutate={mutate}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
-        </SessionProvider>
-      )
+    render(
+      <SessionProvider session={mockSession}>
+        <InviteUserForm
+          mutate={mutate}
+          showForm={true}
+          setShowForm={setShowForm}
+        />
+      </SessionProvider>
     );
 
     const inviteUserApiMock = jest.fn().mockResolvedValueOnce({
@@ -44,7 +42,7 @@ describe('Invite user', () => {
       json: jest.fn().mockResolvedValueOnce({ success: 1 }),
     });
 
-    (global as any).fetch = inviteUserApiMock;
+    global.fetch = inviteUserApiMock;
 
     const emailInput = screen.getByLabelText('Email*');
     await userEvent.type(emailInput, 'inviteuser@gmail.com');
@@ -57,16 +55,14 @@ describe('Invite user', () => {
   });
 
   it('initial render of the invite user form - failure', async () => {
-    await act(() =>
-      render(
-        <SessionProvider session={mockSession}>
-          <InviteUserForm
-            mutate={mutate}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
-        </SessionProvider>
-      )
+    render(
+      <SessionProvider session={mockSession}>
+        <InviteUserForm
+          mutate={mutate}
+          showForm={true}
+          setShowForm={setShowForm}
+        />
+      </SessionProvider>
     );
 
     const inviteUserApiMock = jest.fn().mockResolvedValueOnce({
@@ -74,7 +70,7 @@ describe('Invite user', () => {
       json: jest.fn().mockResolvedValueOnce({ detail: 'something went wrong' }),
     });
 
-    (global as any).fetch = inviteUserApiMock;
+    global.fetch = inviteUserApiMock;
 
     const emailInput = screen.getByLabelText('Email*');
     await userEvent.type(emailInput, 'inviteuser@gmail.com');
