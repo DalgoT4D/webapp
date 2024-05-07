@@ -15,7 +15,7 @@ jobs:
         env:
           NEXT_PUBLIC_BACKEND_URL: 'https://staging-api.dalgo.in'
           NEXTAUTH_SECRET: '3977d3ad9fe97429dc96935e2f025a64'
-          NEXTAUTH_URL: 'deploy-preview-${{ github.event.number }}'
+          NEXTAUTH_URL: 'https://663a0990e241e7045181ba13--dalgo-webapp.netlify.app'
         run: |
           yarn install
           yarn build
