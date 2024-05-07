@@ -1,0 +1,34 @@
+name: Build and Deploy to Netlify
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        env:
+            NEXT_PUBLIC_BACKEND_URL: "https://staging-api.dalgo.in"
+            NEXTAUTH_SECRET: "3977d3ad9fe97429dc96935e2f025a64"
+            NEXTAUTH_URL: "deploy-preview-${{ github.event.number }}"
+        run: |
+          yarn install
+          yarn build
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: './build'
+          production-branch: master
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: 'Deploy from GitHub Actions'
+          enable-pull-request-comment: true
+          overwrites-pull-request-comment: true
+          alias: deploy-preview-${{ github.event.number }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 1
