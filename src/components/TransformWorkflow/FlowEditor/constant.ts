@@ -17,7 +17,7 @@ export const UNION_OP = 'unionall';
 export const PIVOT_OP = 'pivot';
 export const UNPIVOT_OP = 'unpivot';
 export const GENERIC_COL_OP = 'generic';
-export const GENERIC_SQL_OP = 'generic_sql';
+export const GENERIC_SQL_OP = 'rawsql';
 
 export const operations = [
   {
