@@ -73,7 +73,6 @@ const CreateConnectionForm = ({
     Array<SourceStream>
   >([]);
 
-  console.log(filteredSourceStreams);
   const [loading, setLoading] = useState<boolean>(false);
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
   const [normalize, setNormalize] = useState<boolean>(false);
