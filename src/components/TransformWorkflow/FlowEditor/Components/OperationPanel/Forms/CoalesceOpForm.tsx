@@ -56,7 +56,6 @@ const CoalesceOpForm = ({
   action,
   setLoading,
 }: OperationFormProps) => {
-
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
@@ -69,7 +68,7 @@ const CoalesceOpForm = ({
 
   const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
-      columns: [{ col: '' }],
+      columns: [{ col: null }] as Array<{ col: string | null }>,
       default_value: '',
       output_column_name: '',
     },
@@ -176,8 +175,10 @@ const CoalesceOpForm = ({
       setSrcColumns(source_columns);
 
       // pre-fill form
-      const coalesceColumns = columns.map((col: string) => ({ col: col }));
-      coalesceColumns.push({ col: '' });
+      const coalesceColumns = columns.map((col: string | null) => ({
+        col: col,
+      }));
+      coalesceColumns.push({ col: null });
       reset({
         columns: coalesceColumns,
         default_value: default_value,
@@ -268,7 +269,7 @@ const CoalesceOpForm = ({
                         .sort((a, b) => a.localeCompare(b))}
                       onChange={(data: any) => {
                         field.onChange(data);
-                        if (data) append({ col: '' });
+                        if (data) append({ col: null });
                         else remove(index + 1);
                       }}
                     />

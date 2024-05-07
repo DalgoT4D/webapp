@@ -71,7 +71,6 @@ const InviteUserForm = ({
       handleClose();
       successToast('Invitation sent over email', [], globalContext);
     } catch (err: any) {
-      console.error(err);
       errorToast(err.message, [], globalContext);
     }
     setLoading(false);

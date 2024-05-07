@@ -2,7 +2,7 @@ const nodeGap = 30;
 
 export const getNextNodePosition = (nodes: any) => {
   if (!nodes) {
-    return;
+    return { x: 0, y: 0 };
   }
   let rightMostX = nodes.length > 0 ? Number.NEGATIVE_INFINITY : 0;
   let rightMostY = 0;

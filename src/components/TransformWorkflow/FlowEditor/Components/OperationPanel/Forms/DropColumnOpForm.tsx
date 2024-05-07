@@ -33,7 +33,7 @@ const DropColumnOp = ({
   const [valid, setValid] = useState(true);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const [column, setColumn] = useState('');
+  const [column, setColumn] = useState(null);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -187,7 +187,7 @@ const DropColumnOp = ({
             data-testid="dropColumn"
             disabled={action === 'view'}
             value={column}
-            inputValue={column}
+            inputValue={column === null ? '' : column}
             fieldStyle="transformation"
             options={srcColumns
               .filter((col) => !selectedColumns.includes(col))
@@ -196,7 +196,7 @@ const DropColumnOp = ({
             onChange={(value: any) => {
               if (value) {
                 handleAddColumn(value);
-                setColumn('');
+                setColumn(null);
                 setValid(true);
               }
             }}
