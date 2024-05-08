@@ -156,8 +156,9 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
   }, []);
 
   return (
-    <div>
-      <svg ref={svgRef} width="100%" height={58}></svg>
+    <div style={{ overflowX: 'auto' }}>
+      {/* runs.length * (barWidth + margin) is the specified width */}
+      <svg ref={svgRef} width={runs.length * 14 + 'px'} height={58}></svg>
     </div>
   );
 };
