@@ -114,3 +114,11 @@ export const trimString = (string: string, length: number) => {
     string
   );
 };
+
+export const parseStringForNull = (st: string | null | undefined) => {
+  if (st === null || st === undefined) {
+    return null;
+  }
+
+  return st.trim().toLowerCase() === 'null' ? null : st;
+};
