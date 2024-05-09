@@ -29,7 +29,6 @@ const GenericSqlOpForm = ({
   setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
-  // const [inputName, setInputName] = useState('');
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
@@ -37,7 +36,7 @@ const GenericSqlOpForm = ({
       : node?.type === OPERATION_NODE
       ? (node?.data as OperationNodeData)
       : {};
-  const { control, handleSubmit, reset, getValues, formState } = useForm({
+  const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       sql_statement_1: '',
       sql_statement_2: '',
