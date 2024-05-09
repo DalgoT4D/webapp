@@ -37,6 +37,7 @@ import {
   PIVOT_OP,
   UNPIVOT_OP,
   GENERIC_COL_OP,
+  GENERIC_SQL_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -65,6 +66,7 @@ import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import PivotOpForm from './OperationPanel/Forms/PivotOpForm';
 import UnpivotOpForm from './OperationPanel/Forms/UnpivotOpForm';
 import GenericColumnOpForm from './OperationPanel/Forms/GenericColumnOpForm';
+import GenericSqlOpForm from './OperationPanel/Forms/GenericSqlOpForm';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -100,6 +102,7 @@ const operationComponentMapping: any = {
   [PIVOT_OP]: PivotOpForm,
   [UNPIVOT_OP]: UnpivotOpForm,
   [GENERIC_COL_OP]: GenericColumnOpForm,
+  [GENERIC_SQL_OP]: GenericSqlOpForm,
 };
 
 const OperationForm = ({
@@ -160,6 +163,7 @@ const OperationConfigLayout = ({
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
   const [isPanelLoading, setIsPanelLoading] = useState<boolean>(false);
+  const [showAddFunction, setShowAddFunction] = useState<boolean>(true);
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
   const panelOpFormState = useRef<'create' | 'view' | 'edit'>('view');
@@ -458,6 +462,9 @@ const OperationConfigLayout = ({
     deleteElements({
       nodes: [{ id: dummyNodeIdRef.current }],
     });
+    if (selectedOp) {
+      setShowAddFunction(selectedOp.slug !== GENERIC_SQL_OP);
+    }
     setSelectedOp(null);
     setCanvasAction({
       type: 'update-canvas-node',
@@ -551,10 +558,13 @@ const OperationConfigLayout = ({
               }}
             />
           ) : (
-            <CreateTableOrAddFunction
-              clickCreateTable={handleCreateTable}
-              clickAddFunction={handleAddFunction}
-            />
+            <>
+              <CreateTableOrAddFunction
+                clickCreateTable={handleCreateTable}
+                clickAddFunction={handleAddFunction}
+                showAddFunction={showAddFunction}
+              />
+            </>
           )}
         </Box>
       </Box>
