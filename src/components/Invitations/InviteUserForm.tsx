@@ -1,12 +1,22 @@
 import React, { useContext, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
-import { Box, Button } from '@mui/material';
+import useSWR from 'swr';
+import {
+  Box,
+  Button,
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  MenuItem,
+  Select,
+} from '@mui/material';
 import Input from '../UI/Input/Input';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
+
 
 interface InviteUserFormProps {
   mutate: (...args: any) => any;
@@ -16,6 +26,7 @@ interface InviteUserFormProps {
 
 type InviteUserFormInput = {
   invited_email: string;
+  invited_role_slug: string;
 };
 
 const InviteUserForm = ({
@@ -24,6 +35,7 @@ const InviteUserForm = ({
   setShowForm,
 }: InviteUserFormProps) => {
   const { data: session }: any = useSession();
+  const { data: roles } = useSWR(`data/roles`);
   const [loading, setLoading] = useState<boolean>(false);
   const globalContext = useContext(GlobalContext);
 
@@ -31,10 +43,12 @@ const InviteUserForm = ({
     handleSubmit,
     register,
     reset,
+    control,
     formState: { errors },
   } = useForm<InviteUserFormInput>({
     defaultValues: {
       invited_email: '',
+      invited_role_slug: '',
     },
   });
 
@@ -55,6 +69,36 @@ const InviteUserForm = ({
           register={register}
           name="invited_email"
         ></Input>
+        <Controller
+          control={control}
+          rules={{ required: 'Role is required' }}
+          name="invited_role_slug"
+          render={({ field, fieldState }) => (
+            <FormControl sx={{ width: '100%', mt: 2 }}>
+              <FormLabel>Role*</FormLabel>
+              <Select
+                error={!!fieldState.error}
+                sx={{ height: '56px' }}
+                label="role"
+                value={field.value}
+                placeholder="Select role"
+                onChange={(event) => field.onChange(event.target.value)}
+              >
+                {roles &&
+                  roles.map((role: any) => (
+                    <MenuItem key={role.uuid} value={role.slug}>
+                      {role.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+              {fieldState.error && (
+                <FormHelperText sx={{ color: 'red' }}>
+                  {fieldState.error.message}
+                </FormHelperText>
+              )}
+            </FormControl>
+          )}
+        />
         <Box sx={{ m: 2 }} />
       </Box>
     </>
@@ -65,7 +109,7 @@ const InviteUserForm = ({
     try {
       await httpPost(session, 'organizations/users/invite/', {
         invited_email: data.invited_email,
-        invited_role_slug: 'pipeline_manager',
+        invited_role_slug: data.invited_role_slug,
       });
       mutate();
       handleClose();

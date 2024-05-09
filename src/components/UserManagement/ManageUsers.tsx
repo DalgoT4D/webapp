@@ -170,9 +170,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
           {editOrgRole?.email === orguser.email ? (
             <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
               <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                label="Age"
+                label="Role"
                 sx={{ ml: -2 }}
                 value={selectedUserRole}
                 onChange={(event) => setSelectedUserRole(event.target.value)}
