@@ -18,6 +18,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { parseStringForNull } from '@/utils/common';
 
 export interface GenericCol {
   function_name: string;
@@ -66,7 +67,7 @@ const GenericColumnOpForm = ({
       operands: {
         type: string;
         col_val: string;
-        const_val: number | undefined;
+        const_val: string | undefined;
       }[];
       output_column_name: string;
     }[];
@@ -126,10 +127,13 @@ const GenericColumnOpForm = ({
               (op: {
                 type: string;
                 col_val: string;
-                const_val: number | undefined;
+                const_val: string | undefined;
               }) => ({
                 is_col: op.type === 'col',
-                value: op.type === 'col' ? op.col_val : op.const_val,
+                value:
+                  op.type === 'col'
+                    ? op.col_val
+                    : parseStringForNull(op.const_val),
               })
             ),
             output_column_name: item.output_column_name,
@@ -306,7 +310,6 @@ const GenericColumnOpForm = ({
                         fieldStyle="transformation"
                         sx={{ padding: '0' }}
                         placeholder="Enter a numeric value"
-                        type="number"
                         disabled={action === 'view'}
                       />
                     )}
