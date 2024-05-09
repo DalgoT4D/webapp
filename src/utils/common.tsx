@@ -6,6 +6,10 @@ export const lastRunTime = (startTime: string) => {
   return startTime ? moment(new Date(startTime)).fromNow() : '-';
 };
 
+export const localTimezone = () => {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+};
+
 // minutes, hours, day of month, month, day of week
 // 0 1 * * *
 // WE ASSUME AND REQUIRE that d-o-m and m are always "*"
