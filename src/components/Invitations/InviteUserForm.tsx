@@ -17,7 +17,6 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 
-
 interface InviteUserFormProps {
   mutate: (...args: any) => any;
   showForm: boolean;
@@ -26,7 +25,7 @@ interface InviteUserFormProps {
 
 type InviteUserFormInput = {
   invited_email: string;
-  invited_role_slug: string;
+  invited_role_uuid: string;
 };
 
 const InviteUserForm = ({
@@ -48,7 +47,7 @@ const InviteUserForm = ({
   } = useForm<InviteUserFormInput>({
     defaultValues: {
       invited_email: '',
-      invited_role_slug: '',
+      invited_role_uuid: '',
     },
   });
 
@@ -72,7 +71,7 @@ const InviteUserForm = ({
         <Controller
           control={control}
           rules={{ required: 'Role is required' }}
-          name="invited_role_slug"
+          name="invited_role_uuid"
           render={({ field, fieldState }) => (
             <FormControl sx={{ width: '100%', mt: 2 }}>
               <FormLabel>Role*</FormLabel>
@@ -86,7 +85,7 @@ const InviteUserForm = ({
               >
                 {roles &&
                   roles.map((role: any) => (
-                    <MenuItem key={role.uuid} value={role.slug}>
+                    <MenuItem key={role.uuid} value={role.uuid}>
                       {role.name}
                     </MenuItem>
                   ))}
@@ -107,9 +106,9 @@ const InviteUserForm = ({
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
-      await httpPost(session, 'organizations/users/invite/', {
+      await httpPost(session, 'v1/organizations/users/invite/', {
         invited_email: data.invited_email,
-        invited_role_slug: data.invited_role_slug,
+        invited_role_uuid: data.invited_role_uuid,
       });
       mutate();
       handleClose();
