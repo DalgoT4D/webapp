@@ -218,8 +218,6 @@ const OperationConfigLayout = ({
     setSelectedOp(op);
   };
 
-  console.log(selectedOp);
-
   useEffect(() => {
     if (canvasAction.type === 'open-opconfig-panel') {
       setOpenPanel(true);
