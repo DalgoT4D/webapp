@@ -334,9 +334,6 @@ const WhereFilterOpForm = ({
                 control={control}
                 key="operand.const_val"
                 name="operand.const_val"
-                rules={{
-                  required: advanceFilter === 'no' && 'Value is required',
-                }}
                 render={({ field, fieldState }) => (
                   <Input
                     {...field}
