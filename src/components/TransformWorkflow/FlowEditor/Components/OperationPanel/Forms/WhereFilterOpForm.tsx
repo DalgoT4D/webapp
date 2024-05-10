@@ -21,6 +21,7 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import { LogicalOperators } from './CaseWhenOpForm';
+import { parseStringForNull } from '@/utils/common';
 
 interface GenericOperand {
   value: string;
@@ -122,7 +123,7 @@ const WhereFilterOpForm = ({
                 value:
                   data.operand.type === 'col'
                     ? data.operand.col_val
-                    : data.operand.const_val,
+                    : parseStringForNull(data.operand.const_val),
                 is_col: data.operand.type === 'col',
               },
             },
