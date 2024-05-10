@@ -31,10 +31,6 @@ const headers = {
         title={
           <Box>
             <Box>
-              <strong>Super user :</strong> Dalgo platform admin member of T4D
-              Dalgo team (Able to create & set-up orgs)
-            </Box>
-            <Box>
               <strong> Account manager </strong>: Admin of the NGO org, and is
               also responsible for the user management
             </Box>
@@ -202,11 +198,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
               Save
             </Button>
           ) : (
-            orguser.email !== session?.user?.email &&
-            roles &&
-            roles
-              .map((role: any) => role.slug)
-              .includes(orguser.new_role_slug) && (
+            orguser.email !== session?.user?.email && (
               <Button
                 aria-controls={openActionMenu ? 'basic-menu' : undefined}
                 aria-haspopup="true"
