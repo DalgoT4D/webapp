@@ -185,7 +185,9 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
               variant="subtitle2"
               fontWeight={600}
             >
-              {orguser.new_role_slug.replace('-', ' ')}
+              {orguser.new_role_slug
+                .replace('-', ' ')
+                .replace(/\b\w/g, (char) => char.toUpperCase())}
             </Typography>
           )}
         </Box>,
