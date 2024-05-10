@@ -20,6 +20,7 @@ import Input from '@/components/UI/Input/Input';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
+import { parseStringForNull } from '@/utils/common';
 
 interface GenericOperand {
   value: string;
@@ -324,7 +325,10 @@ const CaseWhenOpForm = ({
                     col_val: string;
                     const_val: string;
                   }) => ({
-                    value: op.type === 'col' ? op.col_val : op.const_val,
+                    value:
+                      op.type === 'col'
+                        ? op.col_val
+                        : parseStringForNull(op.const_val),
                     is_col: op.type === 'col',
                   })
                 )
@@ -333,7 +337,7 @@ const CaseWhenOpForm = ({
                 value:
                   clause.then.type === 'col'
                     ? clause.then.col_val
-                    : clause.then.const_val,
+                    : parseStringForNull(clause.then.const_val),
                 is_col: clause.then.type === 'col',
               },
               operator: clause.logicalOp.id,
@@ -343,7 +347,7 @@ const CaseWhenOpForm = ({
             value:
               data.else.type === 'col'
                 ? data.else.col_val
-                : data.else.const_val,
+                : parseStringForNull(data.else.const_val),
             is_col: data.else.type === 'col',
           },
           sql_snippet: data.sql_snippet,
