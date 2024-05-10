@@ -108,9 +108,7 @@ describe('Invite user', () => {
     const firstRow = usersTableRows[1];
     const firstRowCells = firstRow.childNodes;
     expect(firstRowCells[0].textContent).toBe(users[0].email);
-    expect(firstRowCells[1].textContent).toBe(
-      users[0].role_slug.replace('_', ' ')
-    );
+    expect(firstRowCells[1].textContent).toBe('Account Manager');
     expect(
       await within(firstRowCells[2]).queryByTestId('MoreHorizIcon')
     ).toBeNull();
@@ -118,9 +116,7 @@ describe('Invite user', () => {
     const secondRow = usersTableRows[2];
     const secondRowCells = secondRow.childNodes;
     expect(secondRowCells[0].textContent).toBe(users[1].email);
-    expect(secondRowCells[1].textContent).toBe(
-      users[1].role_slug.replace('_', ' ')
-    );
+    expect(secondRowCells[1].textContent).toBe('Account Manager');
     expect(
       await within(secondRowCells[2]).queryByTestId('MoreHorizIcon')
     ).toBeInTheDocument();
@@ -158,9 +154,7 @@ describe('Delete org user', () => {
     const secondRow = usersTableRows[2];
     const secondRowCells = secondRow.childNodes;
     expect(secondRowCells[0].textContent).toBe(users[1].email);
-    expect(secondRowCells[1].textContent).toBe(
-      users[1].role_slug.replace('_', ' ')
-    );
+    expect(secondRowCells[1].textContent).toBe('Account Manager');
 
     const actionDeleteCell: any | HTMLElement | undefined =
       secondRowCells[2]?.firstChild;
@@ -223,9 +217,7 @@ describe('Delete org user', () => {
     const secondRow = usersTableRows[2];
     const secondRowCells = secondRow.childNodes;
     expect(secondRowCells[0].textContent).toBe(users[1].email);
-    expect(secondRowCells[1].textContent).toBe(
-      users[1].role_slug.replace('_', ' ')
-    );
+    expect(secondRowCells[1].textContent).toBe('Account Manager');
 
     const actionDeleteCell: any | HTMLElement | undefined =
       secondRowCells[2]?.firstChild;

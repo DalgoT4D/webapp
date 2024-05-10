@@ -37,7 +37,6 @@ const InviteUserForm = ({
   const { data: roles } = useSWR(`data/roles`);
   const [loading, setLoading] = useState<boolean>(false);
   const globalContext = useContext(GlobalContext);
-
   const {
     handleSubmit,
     register,
@@ -68,36 +67,39 @@ const InviteUserForm = ({
           register={register}
           name="invited_email"
         ></Input>
-        <Controller
-          control={control}
-          rules={{ required: 'Role is required' }}
-          name="invited_role_uuid"
-          render={({ field, fieldState }) => (
-            <FormControl sx={{ width: '100%', mt: 2 }}>
-              <FormLabel>Role*</FormLabel>
-              <Select
-                error={!!fieldState.error}
-                sx={{ height: '56px' }}
-                label="role"
-                value={field.value}
-                placeholder="Select role"
-                onChange={(event) => field.onChange(event.target.value)}
-              >
-                {roles &&
-                  roles.map((role: any) => (
-                    <MenuItem key={role.uuid} value={role.uuid}>
-                      {role.name}
-                    </MenuItem>
-                  ))}
-              </Select>
-              {fieldState.error && (
-                <FormHelperText sx={{ color: 'red' }}>
-                  {fieldState.error.message}
-                </FormHelperText>
-              )}
-            </FormControl>
-          )}
-        />
+        {roles && (
+          <Controller
+            control={control}
+            rules={{ required: 'Role is required' }}
+            name="invited_role_uuid"
+            render={({ field, fieldState }) => (
+              <FormControl sx={{ width: '100%', mt: 2 }}>
+                <FormLabel>Role*</FormLabel>
+                <Select
+                  data-testid="role"
+                  error={!!fieldState.error}
+                  sx={{ height: '56px' }}
+                  label="role"
+                  value={field.value}
+                  placeholder="Select role"
+                  onChange={(event) => field.onChange(event.target.value)}
+                >
+                  {roles &&
+                    roles.map((role: any) => (
+                      <MenuItem key={role.uuid} value={role.uuid}>
+                        {role.name}
+                      </MenuItem>
+                    ))}
+                </Select>
+                {fieldState.error && (
+                  <FormHelperText sx={{ color: 'red' }}>
+                    {fieldState.error.message}
+                  </FormHelperText>
+                )}
+              </FormControl>
+            )}
+          />
+        )}
         <Box sx={{ m: 2 }} />
       </Box>
     </>
