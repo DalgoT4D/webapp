@@ -5,6 +5,7 @@ import { Flows, FlowInterface } from '../Flows';
 import { FlowRun } from '../SingleFlowRunHistory';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -28,47 +29,61 @@ describe('Flow Creation', () => {
 
     await act(async () => {
       render(
-        <SessionProvider session={mockSession}>
-          <Flows
-            flows={[
-              {
-                name: 'flow-0',
-                cron: '0 0 * * 1',
-                deploymentName: 'deployment-name',
-                deploymentId: 'deployment-id-0',
-                lastRun: {
-                  name: 'flow-run-0',
-                  status: 'COMPLETED',
-                  startTime: startTime.toString(),
-                  expectedStartTime: startTime.toString(),
-                } as FlowRun,
-              } as FlowInterface,
-              {
-                name: 'flow-1',
-                cron: '0 0 * * 1',
-                deploymentName: 'deployment-name',
-                deploymentId: 'deployment-id-1',
-                lastRun: {
-                  name: 'flow-run-1',
-                  status: 'FAILED',
-                  startTime: startTime.toString(),
-                  expectedStartTime: startTime.toString(),
-                } as FlowRun,
-              } as FlowInterface,
-              {
-                name: 'flow-2',
-                cron: '0 0 * * 1',
-                deploymentName: 'deployment-name',
-                deploymentId: 'deployment-id-2',
-                lastRun: null,
-                lock: null,
-              } as FlowInterface,
-            ]}
-            updateCrudVal={updateCrudValMock}
-            mutate={() => {}}
-            setSelectedFlowId={() => {}}
-          />
-        </SessionProvider>
+        <GlobalContext.Provider
+          value={{
+            Permissions: {
+              state: [
+                'can_view_pipeline',
+                'can_run_pipeline',
+                'can_edit_pipeline',
+                'can_delete_pipeline',
+                'can_create_pipeline',
+              ],
+            },
+          }}
+        >
+          <SessionProvider session={mockSession}>
+            <Flows
+              flows={[
+                {
+                  name: 'flow-0',
+                  cron: '0 0 * * 1',
+                  deploymentName: 'deployment-name',
+                  deploymentId: 'deployment-id-0',
+                  lastRun: {
+                    name: 'flow-run-0',
+                    status: 'COMPLETED',
+                    startTime: startTime.toString(),
+                    expectedStartTime: startTime.toString(),
+                  } as FlowRun,
+                } as FlowInterface,
+                {
+                  name: 'flow-1',
+                  cron: '0 0 * * 1',
+                  deploymentName: 'deployment-name',
+                  deploymentId: 'deployment-id-1',
+                  lastRun: {
+                    name: 'flow-run-1',
+                    status: 'FAILED',
+                    startTime: startTime.toString(),
+                    expectedStartTime: startTime.toString(),
+                  } as FlowRun,
+                } as FlowInterface,
+                {
+                  name: 'flow-2',
+                  cron: '0 0 * * 1',
+                  deploymentName: 'deployment-name',
+                  deploymentId: 'deployment-id-2',
+                  lastRun: null,
+                  lock: null,
+                } as FlowInterface,
+              ]}
+              updateCrudVal={updateCrudValMock}
+              mutate={() => {}}
+              setSelectedFlowId={() => {}}
+            />
+          </SessionProvider>
+        </GlobalContext.Provider>
       );
     });
 

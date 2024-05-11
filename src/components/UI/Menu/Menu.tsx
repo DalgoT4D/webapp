@@ -20,7 +20,10 @@ interface MenuProps {
   handleDelete?: () => void;
   handleResetConnection?: () => void;
   handleResendInvitation?: () => void;
-  handleMakeAccountManager?: () => void;
+  hasEditPermission?: boolean;
+  hasDeletePermission?: boolean;
+  hasResendPermission?: boolean;
+  hasResetPermission?: boolean;
 }
 
 export const ActionsMenu: React.FC<MenuProps> = ({
@@ -32,7 +35,10 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   handleDelete,
   handleResetConnection,
   handleResendInvitation,
-  handleMakeAccountManager,
+  hasEditPermission = true,
+  hasDeletePermission = true,
+  hasResendPermission = true,
+  hasResetPermission = true,
 }) => (
   <Menu
     id="basic-menu"
@@ -55,7 +61,11 @@ export const ActionsMenu: React.FC<MenuProps> = ({
     }}
   >
     {handleEdit && (
-      <MenuItem sx={{ my: 0 }} onClick={() => handleEdit()}>
+      <MenuItem
+        sx={{ my: 0 }}
+        onClick={() => handleEdit()}
+        disabled={!hasEditPermission}
+      >
         <ListItemIcon style={{ minWidth: 28 }}>
           <Image src={EditIcon} alt="edit icon" />
         </ListItemIcon>
@@ -63,25 +73,25 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </MenuItem>
     )}
     {handleResendInvitation && (
-      <MenuItem sx={{ my: 0 }} onClick={() => handleResendInvitation()}>
+      <MenuItem
+        sx={{ my: 0 }}
+        onClick={() => handleResendInvitation()}
+        disabled={!hasResendPermission}
+      >
         <ListItemIcon style={{ minWidth: 28 }}>
           <Image src={EditIcon} alt="edit icon" />
         </ListItemIcon>
         Resend
       </MenuItem>
     )}
-    {handleMakeAccountManager && (
-      <MenuItem sx={{ my: 0 }} onClick={() => handleMakeAccountManager()}>
-        <ListItemIcon style={{ minWidth: 28 }}>
-          <Image src={EditIcon} alt="edit icon" />
-        </ListItemIcon>
-        Make Account Manager
-      </MenuItem>
-    )}
+
     {handleDelete && (
       <Box key="fake-key">
         <Divider style={{ margin: 0 }} />
-        <MenuItem onClick={() => handleDelete()}>
+        <MenuItem
+          onClick={() => handleDelete()}
+          disabled={!hasDeletePermission}
+        >
           <ListItemIcon style={{ minWidth: 28 }}>
             <Image src={DeleteIcon} alt="delete icon" />
           </ListItemIcon>
@@ -91,7 +101,10 @@ export const ActionsMenu: React.FC<MenuProps> = ({
     )}
     <Divider style={{ margin: 0 }} />
     {eleType === 'connection' && handleResetConnection && (
-      <MenuItem onClick={() => handleResetConnection()}>
+      <MenuItem
+        onClick={() => handleResetConnection()}
+        disabled={!hasResetPermission}
+      >
         <ListItemIcon style={{ minWidth: 28 }}>
           <RestartAltIcon sx={{ width: 16 }} />
         </ListItemIcon>

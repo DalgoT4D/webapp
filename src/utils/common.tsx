@@ -92,7 +92,7 @@ export const getOrgHeaderValue = (verb: string, path: string) => {
     return '';
   } else if (
     verb === 'POST' &&
-    ['organizations/', 'organizations/users/invite/accept/'].includes(path)
+    ['organizations/', 'v1/organizations/users/invite/accept/'].includes(path)
   ) {
     return '';
   }

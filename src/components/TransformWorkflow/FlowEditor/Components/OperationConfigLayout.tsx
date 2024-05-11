@@ -9,7 +9,7 @@ import {
   SxProps,
   Typography,
 } from '@mui/material';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
@@ -67,6 +67,7 @@ import PivotOpForm from './OperationPanel/Forms/PivotOpForm';
 import UnpivotOpForm from './OperationPanel/Forms/UnpivotOpForm';
 import GenericColumnOpForm from './OperationPanel/Forms/GenericColumnOpForm';
 import GenericSqlOpForm from './OperationPanel/Forms/GenericSqlOpForm';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -167,6 +168,8 @@ const OperationConfigLayout = ({
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
   const panelOpFormState = useRef<'create' | 'view' | 'edit'>('view');
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   const { addEdges, addNodes, deleteElements, getNodes, setNodes, getEdges } =
     useReactFlow();
@@ -215,14 +218,21 @@ const OperationConfigLayout = ({
     setSelectedOp(op);
   };
 
+  console.log(selectedOp);
+
   useEffect(() => {
     if (canvasAction.type === 'open-opconfig-panel') {
       setOpenPanel(true);
       setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
+      console.log(canvasAction, panelOpFormState);
       if (['view', 'edit'].includes(panelOpFormState.current)) {
         const nodeData = canvasNode?.data as OperationNodeData;
-        if (!nodeData?.is_last_in_chain) {
+        console.log(canvasNode);
+        if (
+          !nodeData?.is_last_in_chain ||
+          !permissions.includes('can_edit_dbt_operation')
+        ) {
           setSelectedOp(
             operations.find((op) => op.slug === nodeData.config?.type)
           );
