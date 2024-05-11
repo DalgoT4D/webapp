@@ -225,7 +225,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
     if (orguser) {
       setLoading(true);
       try {
-        await httpPost(session, `organizations/users/delete`, {
+        await httpPost(session, `v1/organizations/users/delete`, {
           email: orguser.email,
         });
         successToast(
