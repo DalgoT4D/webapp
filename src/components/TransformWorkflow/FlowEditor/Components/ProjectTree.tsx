@@ -1,5 +1,5 @@
 import { Box, Tooltip, Typography } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Tree, NodeApi } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
@@ -11,8 +11,11 @@ import useResizeObserver from 'use-resize-observer';
 import { trimString } from '@/utils/common';
 import Image from 'next/image';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 const Node = ({ node, style, dragHandle }: any) => {
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   const width = node.tree.props.width;
 
   const stringLengthWithWidth = Math.abs(width / 15);
@@ -21,7 +24,6 @@ const Node = ({ node, style, dragHandle }: any) => {
   let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
   name = trimString(name, stringLengthWithWidth);
   const { setCanvasAction } = useCanvasAction();
-
   return (
     <Box
       style={style}
@@ -31,6 +33,7 @@ const Node = ({ node, style, dragHandle }: any) => {
         display: 'flex',
         mr: 2,
         width: (250 * width) / 270 + 'px',
+        opacity: permissions.includes('can_create_dbt_model') ? 1 : 0.5,
       }}
       onClick={() => (node.isLeaf ? undefined : node.toggle())}
     >
@@ -45,19 +48,19 @@ const Node = ({ node, style, dragHandle }: any) => {
         <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>
           {name}
         </Typography>
-        {node.isLeaf && (
-          <AddIcon
-            sx={{ ml: 'auto', cursor: 'pointer' }}
-            onClick={() => node.toggle()}
-          />
-        )}
+        {node.isLeaf && <AddIcon sx={{ ml: 'auto', cursor: 'pointer' }} />}
         {!node.isLeaf && node.level === 0 && (
           <Tooltip title="Sync Sources">
             <ReplayIcon
-              sx={{ ml: 'auto', cursor: 'pointer' }}
+              sx={{
+                ml: 'auto',
+                cursor: 'pointer',
+                opacity: permissions.includes('can_sync_sources') ? 1 : 0.5,
+              }}
               onClick={(event) => {
                 event.stopPropagation();
-                setCanvasAction({ type: 'sync-sources', data: null });
+                if (permissions.includes('can_sync_sources'))
+                  setCanvasAction({ type: 'sync-sources', data: null });
               }}
             />
           </Tooltip>
@@ -77,6 +80,8 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
   const { setCanvasAction } = useCanvasAction();
   const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   const constructAndSetProjectTreeData = (
     dbtSourceModels: DbtSourceModel[]
@@ -155,7 +160,11 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
           height={height}
           width={width}
           rowHeight={30}
-          onSelect={handleNodeClick}
+          onSelect={
+            permissions.includes('can_create_dbt_model')
+              ? handleNodeClick
+              : undefined
+          }
         >
           {Node}
         </Tree>

@@ -32,6 +32,7 @@ window.ResizeObserver =
 
 describe('FlowEditor', () => {
   const mockGlobalContext = {
+    Permissions: { state: [] },
     CurrentOrg: { state: { slug: 'mock-org-slug' } },
   };
 
