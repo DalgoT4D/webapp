@@ -171,10 +171,6 @@ const ClauseOperands = ({
                   control={control}
                   key={`clauses.${clauseIndex}.operands.${operandIndex}.const_val`}
                   name={`clauses.${clauseIndex}.operands.${operandIndex}.const_val`}
-                  rules={{
-                    required:
-                      data.advanceFilter === 'no' && 'Value is required',
-                  }}
                   render={({ field, fieldState }) => (
                     <Input
                       helperText={fieldState.error?.message}
@@ -632,10 +628,6 @@ const CaseWhenOpForm = ({
                       <Controller
                         control={control}
                         key={`clauses.${clauseIndex}.then.const_val`}
-                        rules={{
-                          required:
-                            advanceFilter === 'no' && 'Value is required',
-                        }}
                         name={`clauses.${clauseIndex}.then.const_val`}
                         render={({ field, fieldState }) => (
                           <Input
