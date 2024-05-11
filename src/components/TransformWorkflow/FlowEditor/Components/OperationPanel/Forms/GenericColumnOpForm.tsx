@@ -78,7 +78,7 @@ const GenericColumnOpForm = ({
       computed_columns: [
         {
           function_name: '',
-          operands: [{ type: 'col', col_val: '', const_val: undefined }],
+          operands: [{ type: 'col', col_val: '', const_val: '' }],
           output_column_name: '',
         },
       ],
@@ -239,6 +239,27 @@ const GenericColumnOpForm = ({
               />
             )}
           />
+          {fields.length === 0 && (
+            <Button
+              disabled={action === 'view'}
+              variant="shadow"
+              type="button"
+              data-testid="addoperand"
+              sx={{
+                marginTop: '17px',
+                marginRight: '3px',
+              }}
+              onClick={(event) =>
+                append({
+                  type: 'col',
+                  col_val: '',
+                  const_val: '',
+                })
+              }
+            >
+              + Add operand
+            </Button>
+          )}
           {fields.map((field, index) => {
             const radioValue = watch(
               `computed_columns.0.operands.${index}.type`
@@ -299,7 +320,6 @@ const GenericColumnOpForm = ({
                   <Controller
                     key={`operands.${index}.const_val`}
                     control={control}
-                    rules={{ required: 'Value is required' }}
                     name={`computed_columns.0.operands.${index}.const_val`}
                     render={({ field, fieldState }) => (
                       <Input
@@ -309,13 +329,13 @@ const GenericColumnOpForm = ({
                         label=""
                         fieldStyle="transformation"
                         sx={{ padding: '0' }}
-                        placeholder="Enter a numeric value"
+                        placeholder="Enter a numeric or string value"
                         disabled={action === 'view'}
                       />
                     )}
                   />
                 )}
-                {index === fields.length - 1 ? (
+                {index === fields.length - 1 && (
                   <Button
                     disabled={action === 'view'}
                     variant="shadow"
@@ -323,30 +343,31 @@ const GenericColumnOpForm = ({
                     data-testid="addoperand"
                     sx={{
                       marginTop: '17px',
+                      marginRight: '3px',
                     }}
                     onClick={(event) =>
                       append({
                         type: 'col',
                         col_val: '',
-                        const_val: undefined,
+                        const_val: '',
                       })
                     }
                   >
                     + Add operand
                   </Button>
-                ) : index < fields.length - 1 ? (
+                )}
+                {index < fields.length && (
                   <Button
                     disabled={action === 'view'}
-                    variant="outlined"
+                    variant="shadow"
                     type="button"
+                    color="error"
                     data-testid="removeoperand"
                     sx={{ marginTop: '17px' }}
                     onClick={(event) => remove(index)}
                   >
                     Remove
                   </Button>
-                ) : (
-                  ''
                 )}
               </Box>
             );
