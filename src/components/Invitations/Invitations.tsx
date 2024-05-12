@@ -12,16 +12,19 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
 const headers = {
-  values: ['Email', 'Role', 'Sent On']
-}
+  values: ['Email', 'Role', 'Sent On'],
+};
+
+type InvitedRole = {
+  uuid: string;
+  name: string;
+};
 
 type Invitation = {
   id: number;
   invited_email: string;
-  invited_role_slug: string;
-  invited_role: number;
+  invited_role: InvitedRole;
   invited_on: string;
-  status: string;
 };
 
 interface InvitationsInterface {
@@ -95,7 +98,7 @@ const Invitations = ({
           {invitation.invited_email}
         </Typography>,
         <Typography key={'role-' + idx} variant="subtitle2" fontWeight={600}>
-          {invitation.invited_role_slug.replace('_', ' ')}
+          {invitation.invited_role.name}
         </Typography>,
         <Typography key={'sent-on-' + idx} variant="subtitle2" fontWeight={600}>
           {moment
