@@ -34,7 +34,7 @@
     "react": "18.2.0",
     "react-arborist": "^3.4.0",
     "react-dom": "18.2.0",
-    "react-hook-form": "^7.50.1",
+    "react-hook-form": "^7.51.3",
     "react-joyride": "^2.8.1",
     "react-resizable": "^3.0.5",
     "reactflow": "^11.11.0",
