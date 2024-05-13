@@ -11,15 +11,16 @@ import { Box, Button, Typography } from '@mui/material';
 
 interface ListProps {
   title: string;
-  headers: {
-    values: Array<string>;
-    sortable?: Array<boolean>;
-  };
   rows: Array<any>;
   openDialog: any;
   onlyList?: boolean;
+  height?: number;
+  hasCreatePermission?: boolean;
+  headers: {
+    values: Array<string | JSX.Element>;
+    sortable?: Array<boolean>;
+  };
   rowValues?: Array<Array<any>>;
-  height? : number ;
 }
 
 export const List = ({
@@ -28,8 +29,9 @@ export const List = ({
   headers,
   rows,
   onlyList,
+  height,
+  hasCreatePermission = true,
   rowValues,
-  height
 }: ListProps) => {
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>();
   const [sortColumn, setSortColumn] = React.useState<number | null>(null);
@@ -46,12 +48,15 @@ export const List = ({
   };
 
   const orderedRows = React.useMemo(() => {
-    if (sortColumn === null || sortDirection === undefined || !rowValues) return rows; // no sorting needed
+    if (sortColumn === null || sortDirection === undefined || !rowValues)
+      return rows; // no sorting needed
 
     // Sort row values lexicographically based on the sort column:
     const sorted = [...rowValues].sort((a, b) => {
-      if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1;
-      if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1;
+      if (a[sortColumn] < b[sortColumn])
+        return sortDirection === 'asc' ? -1 : 1;
+      if (a[sortColumn] > b[sortColumn])
+        return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
 
@@ -67,6 +72,7 @@ export const List = ({
             data-testid={`add-new-${title}`.toLowerCase()}
             variant="contained"
             onClick={() => openDialog()}
+            disabled={!hasCreatePermission}
             className={`${title}add_walkthrough`.toLowerCase()}
           >
             + New {title}
@@ -81,19 +87,19 @@ export const List = ({
                 {headers.values.map((header, index) => (
                   <TableCell
                     sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }}
-                    key={header}
+                    key={index}
                   >
-                  {headers.sortable && headers.sortable[index] ? (
-                    <TableSortLabel
-                      active={sortColumn === index}
-                      direction={sortColumn === index ? sortDirection : 'asc'}
-                      onClick={() => handleSort(index)}
-                    >
-                      {header}
-                    </TableSortLabel>
-                  ) : (
-                    header
-                  )}
+                    {headers.sortable && headers.sortable[index] ? (
+                      <TableSortLabel
+                        active={sortColumn === index}
+                        direction={sortColumn === index ? sortDirection : 'asc'}
+                        onClick={() => handleSort(index)}
+                      >
+                        {header}
+                      </TableSortLabel>
+                    ) : (
+                      header
+                    )}
                   </TableCell>
                 ))}
                 <TableCell
@@ -108,7 +114,10 @@ export const List = ({
               {orderedRows.map((row: any, idx: number) => (
                 <TableRow
                   key={idx}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } , ...(height && { height }), }}
+                  sx={{
+                    '&:last-child td, &:last-child th': { border: 0 },
+                    ...(height && { height }),
+                  }}
                 >
                   {row.map(
                     // if action is sent render with right align
@@ -117,7 +126,7 @@ export const List = ({
                         key={idx}
                         align={
                           headers.values.length + 1 === row.length &&
-                            idx === row.length - 1
+                          idx === row.length - 1
                             ? 'right'
                             : 'left'
                         }

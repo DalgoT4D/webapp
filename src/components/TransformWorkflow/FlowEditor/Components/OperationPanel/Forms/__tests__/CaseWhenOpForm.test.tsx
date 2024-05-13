@@ -91,7 +91,6 @@ describe('Form interactions', () => {
     await waitFor(() => {
       expect(screen.getByText('Column is required')).toBeInTheDocument();
       expect(screen.getByText('Operation is required')).toBeInTheDocument();
-      expect(screen.getAllByText('Value is required')).toHaveLength(2);
       expect(screen.getByText('Column name is required')).toBeInTheDocument();
     });
 

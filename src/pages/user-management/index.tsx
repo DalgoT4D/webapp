@@ -1,10 +1,11 @@
 import styles from '@/styles/Home.module.css';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
 import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
 import ManageUsers from '@/components/UserManagement/ManageUsers';
 import Invitations from '@/components/Invitations/Invitations';
 import InviteUserForm from '@/components/Invitations/InviteUserForm';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -32,6 +33,8 @@ const UserManagement = () => {
   const [value, setValue] = React.useState(0);
   const [showInviteUserForm, setShowInviteUserForm] = useState<boolean>(false);
   const [mutateInvitations, setMutateInvitations] = useState<boolean>(false);
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -58,6 +61,7 @@ const UserManagement = () => {
             data-testid={'invite-user'}
             variant="contained"
             onClick={handleClickInviteUser}
+            disabled={!permissions.includes('can_create_invitation')}
           >
             Invite user
           </Button>
@@ -69,18 +73,22 @@ const UserManagement = () => {
             aria-label="user-management-tabs"
           >
             <Tab label="Users" sx={{ mr: 4 }} />
-            <Tab label="Pending Invitations" />
+            {permissions.includes('can_view_invitations') && (
+              <Tab label="Pending Invitations" />
+            )}
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
           <ManageUsers setMutateInvitations={setMutateInvitations} />
         </TabPanel>
-        <TabPanel value={value} index={1}>
-          <Invitations
-            mutateInvitationsParent={mutateInvitations}
-            setMutateInvitationsParent={setMutateInvitations}
-          />
-        </TabPanel>
+        {permissions.includes('can_view_invitations') && (
+          <TabPanel value={value} index={1}>
+            <Invitations
+              mutateInvitationsParent={mutateInvitations}
+              setMutateInvitationsParent={setMutateInvitations}
+            />
+          </TabPanel>
+        )}
         <InviteUserForm
           mutate={() => console.log('mutate here')}
           showForm={showInviteUserForm}

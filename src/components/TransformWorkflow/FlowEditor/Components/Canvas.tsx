@@ -107,6 +107,8 @@ const CanvasHeader = ({
 }: {
   setCanvasAction: (...args: any) => void;
 }) => {
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   return (
     <Box
       sx={{
@@ -128,6 +130,7 @@ const CanvasHeader = ({
           variant="contained"
           type="button"
           onClick={() => setCanvasAction({ type: 'run-workflow', data: null })}
+          disabled={!permissions.includes('can_run_pipeline')}
         >
           Run
         </Button>

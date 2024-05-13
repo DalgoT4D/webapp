@@ -3,6 +3,8 @@ import {
   ToastReducer,
   initialToastState,
   ToastStateInterface,
+  PermissionReducer,
+  initialPermissionState,
 } from './reducers/ToastReducer';
 import {
   CurrentOrgReducer,
@@ -19,6 +21,7 @@ import React from 'react';
 import ToastMessage from '@/components/ToastMessage/ToastMessage';
 
 interface context {
+  Permissions: { state: string[]; dispatch: any };
   Toast: { state: ToastStateInterface; dispatch: any };
   CurrentOrg: { state: CurrentOrgStateInterface; dispatch: any };
   OrgUsers: { state: Array<OrgUserStateInterface>; dispatch: any };
@@ -26,6 +29,12 @@ interface context {
 export const GlobalContext = createContext<context | null>(null);
 
 const ContextProvider = ({ children }: any) => {
+  // Toast reduces/logic-updater
+  const [permissions, permissionsDisptach]: [any, any] = useReducer<any>(
+    PermissionReducer,
+    initialPermissionState
+  );
+
   // Toast reduces/logic-updater
   const [toast, toastDisptach]: [any, any] = useReducer<any>(
     ToastReducer,
@@ -49,6 +58,7 @@ const ContextProvider = ({ children }: any) => {
   return (
     <GlobalContext.Provider
       value={{
+        Permissions: { state: permissions, dispatch: permissionsDisptach },
         Toast: { state: toast, dispatch: toastDisptach },
         CurrentOrg: { state: currentOrg, dispatch: currentOrgDispatch },
         OrgUsers: { state: orgUsers, dispatch: orgUsersDispatch },

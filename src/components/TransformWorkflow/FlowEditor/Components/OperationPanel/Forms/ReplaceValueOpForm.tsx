@@ -112,7 +112,7 @@ const ReplaceValueOpForm = ({
       };
 
       data.config.forEach((item: any) => {
-        if (item.old && item.new)
+        if (item.old || item.new)
           postData.config.columns[0].replace_ops.push({
             find: parseStringForNull(item.old),
             replace: parseStringForNull(item.new),
