@@ -54,6 +54,8 @@ export const Sources = () => {
   const [sourceIdToEdit, setSourceIdToEdit] = useState<string>('');
   const [sourceToBeDeleted, setSourceToBeDeleted] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const permissions = globalContext?.Permissions.state || [];
   const handleEditSource = () => {
     handleClose();
     setShowEditSourceDialog(true);
@@ -201,6 +203,8 @@ export const Sources = () => {
       <ActionsMenu
         eleType="source"
         anchorEl={anchorEl}
+        hasEditPermission={permissions.includes('can_edit_source')}
+        hasDeletePermission={permissions.includes('can_delete_source')}
         open={open}
         handleClose={handleClose}
         handleEdit={handleEditSource}
@@ -222,6 +226,7 @@ export const Sources = () => {
         sourceId={sourceIdToEdit}
       />
       <List
+        hasCreatePermission={permissions.includes('can_create_source')}
         openDialog={handleClickOpen}
         title="Source"
         headers={headers}

@@ -12,16 +12,19 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
 const headers = {
-  values: ['Email', 'Role', 'Sent On']
-}
+  values: ['Email', 'Role', 'Sent On'],
+};
+
+type InvitedRole = {
+  uuid: string;
+  name: string;
+};
 
 type Invitation = {
   id: number;
   invited_email: string;
-  invited_role_slug: string;
-  invited_role: number;
+  invited_role: InvitedRole;
   invited_on: string;
-  status: string;
 };
 
 interface InvitationsInterface {
@@ -33,8 +36,9 @@ const Invitations = ({
   mutateInvitationsParent,
   setMutateInvitationsParent,
 }: InvitationsInterface) => {
-  const { data, isLoading, mutate } = useSWR(`users/invitations/`);
+  const { data, isLoading, mutate } = useSWR(`v1/users/invitations/`);
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -94,7 +98,7 @@ const Invitations = ({
           {invitation.invited_email}
         </Typography>,
         <Typography key={'role-' + idx} variant="subtitle2" fontWeight={600}>
-          {invitation.invited_role_slug.replace('_', ' ')}
+          {invitation.invited_role.name}
         </Typography>,
         <Typography key={'sent-on-' + idx} variant="subtitle2" fontWeight={600}>
           {moment
@@ -171,6 +175,10 @@ const Invitations = ({
         eleType="invitation"
         anchorEl={anchorEl}
         open={openActionMenu}
+        hasDeletePermission={permissions.includes('can_delete_invitation')}
+        hasResendPermission={permissions.includes(
+          'can_resend_email_verification'
+        )}
         handleClose={handleClose}
         handleDelete={handleClickDeleteAction}
         handleResendInvitation={handleClickResendAction}

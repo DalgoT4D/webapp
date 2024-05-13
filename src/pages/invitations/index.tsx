@@ -53,7 +53,7 @@ const AcceptInvite = () => {
     if (invite_code && invite_code.length > 0) {
       try {
         setLoading(true);
-        await httpPost(session, 'organizations/users/invite/accept/', {
+        await httpPost(session, 'v1/organizations/users/invite/accept/', {
           invite_code: invite_code,
           ...(password && password.length > 0 && { password: password }),
         });

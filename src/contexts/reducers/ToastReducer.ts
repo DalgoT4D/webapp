@@ -10,9 +10,14 @@ export interface ToastStateInterface {
   handleClose: (...args: any) => any;
 }
 
-interface Action {
+interface ToastAction {
   type: 'close' | 'new';
   toastState: ToastStateInterface;
+}
+
+interface PermissionAction {
+  type: 'add';
+  permissionState: string[];
 }
 
 export const initialToastState = {
@@ -23,9 +28,24 @@ export const initialToastState = {
   messages: [],
 };
 
+export const initialPermissionState = [];
+
+export const PermissionReducer = (
+  state: string[],
+  updateAction: PermissionAction
+) => {
+  switch (updateAction?.type) {
+    case 'add':
+      return updateAction.permissionState;
+
+    default:
+      return state;
+  }
+};
+
 export const ToastReducer = (
   state: ToastStateInterface,
-  updateAction: Action
+  updateAction: ToastAction
 ) => {
   switch (updateAction?.type) {
     case 'close':

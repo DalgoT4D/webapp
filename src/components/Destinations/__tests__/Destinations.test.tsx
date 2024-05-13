@@ -6,6 +6,7 @@ import { SWRConfig } from 'swr';
 import { Dialog } from '@mui/material';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 // Mock create destination form component
 jest.mock('./../CreateDestinationForm', () => {
@@ -119,13 +120,24 @@ describe('Destinations', () => {
     }),
   });
 
-  it('fetches a postgres warehouse', async () => {
-    render(
+  const destinations = (mockFunction: any) => (
+    <GlobalContext.Provider
+      value={{
+        CurrentOrg: { state: { is_demo: false } },
+        Permissions: {
+          state: [
+            'can_edit_warehouse',
+            'can_create_warehouse',
+            'can_delete_warehouse',
+          ],
+        },
+      }}
+    >
       <SWRConfig
         value={{
           dedupingInterval: 0,
           fetcher: (resource) =>
-            mockSWR_postgres(resource, {}).then((res: any) => res.json()),
+            mockFunction(resource, {}).then((res: any) => res.json()),
           provider: () => new Map(),
         }}
       >
@@ -133,7 +145,11 @@ describe('Destinations', () => {
           <Destinations />
         </SessionProvider>
       </SWRConfig>
-    );
+    </GlobalContext.Provider>
+  );
+
+  it('fetches a postgres warehouse', async () => {
+    render(destinations(mockSWR_postgres));
     await waitFor(() => {
       const wtype = screen.getByTestId('wname');
       expect(wtype).toHaveTextContent('PGWarehouse');
@@ -158,20 +174,7 @@ describe('Destinations', () => {
   });
 
   it('fetches a bigquery warehouse', async () => {
-    render(
-      <SWRConfig
-        value={{
-          dedupingInterval: 0,
-          fetcher: (resource) =>
-            mockSWR_bigquery(resource, {}).then((res: any) => res.json()),
-          provider: () => new Map(),
-        }}
-      >
-        <SessionProvider session={mockSession}>
-          <Destinations />
-        </SessionProvider>
-      </SWRConfig>
-    );
+    render(destinations(mockSWR_bigquery));
 
     await waitFor(() => {
       const wtype = screen.getByTestId('wname');
@@ -214,19 +217,7 @@ describe('Destinations', () => {
     });
 
     await act(() => {
-      render(
-        <SWRConfig
-          value={{
-            dedupingInterval: 0,
-            fetcher: () => mockSWR_nowarehouse().then((res: any) => res.json()),
-            provider: () => new Map(),
-          }}
-        >
-          <SessionProvider session={mockSession}>
-            <Destinations />
-          </SessionProvider>
-        </SWRConfig>
-      );
+      render(destinations(mockSWR_nowarehouse));
     });
 
     const addNewWarehouseButton = screen.getByTestId('add-new-destination');

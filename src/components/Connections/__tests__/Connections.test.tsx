@@ -9,6 +9,7 @@ import { SWRConfig } from 'swr';
 import userEvent from '@testing-library/user-event';
 import { Dialog } from '@mui/material';
 import { lastRunTime } from '@/utils/common';
+import { GlobalContext } from '@/contexts/ContextProvider';
 // const user = userEvent.setup();
 
 const pushMock = jest.fn();
@@ -70,22 +71,48 @@ describe('Connections Setup', () => {
     },
   ];
 
-  it('add connection button in the dom', () => {
-    render(
+  const connections = (
+    <SessionProvider session={mockSession}>
+      <Connections />
+    </SessionProvider>
+  );
+
+  const connectionWithConfig = (
+    <GlobalContext.Provider
+      value={{
+        Permissions: {
+          state: [
+            'can_sync_sources',
+            'can_reset_connection',
+            'can_delete_connection',
+            'can_edit_connection',
+            'can_create_connection',
+          ],
+        },
+      }}
+    >
       <SessionProvider session={mockSession}>
-        <Connections />
+        <SWRConfig
+          value={{
+            dedupingInterval: 0,
+            fetcher: (resource) =>
+              fetch(resource, {}).then((res) => res.json()),
+          }}
+        >
+          <Connections />
+        </SWRConfig>
       </SessionProvider>
-    );
+    </GlobalContext.Provider>
+  );
+
+  it('add connection button in the dom', () => {
+    render(connections);
     const addNewConnectionButton = screen.getByTestId('add-new-connection');
     expect(addNewConnectionButton).toBeInTheDocument();
   });
 
   it('check empty list', () => {
-    render(
-      <SessionProvider session={mockSession}>
-        <Connections />
-      </SessionProvider>
-    );
+    render(connections);
 
     expect(
       screen.getByText('No connection found. Please create one')
@@ -99,19 +126,7 @@ describe('Connections Setup', () => {
     });
 
     await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <SWRConfig
-            value={{
-              dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
-            }}
-          >
-            <Connections />
-          </SWRConfig>
-        </SessionProvider>
-      );
+      render(connectionWithConfig);
     });
 
     const connectionsTable = screen.getByRole('table');
@@ -149,19 +164,7 @@ describe('Connections Setup', () => {
     });
 
     await act(async () => {
-      render(
-        <SessionProvider session={mockSession}>
-          <SWRConfig
-            value={{
-              dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
-            }}
-          >
-            <Connections />
-          </SWRConfig>
-        </SessionProvider>
-      );
+      render(connectionWithConfig);
     });
 
     const addNewConnectionButton = screen.getByTestId('add-new-connection');
