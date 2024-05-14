@@ -21,14 +21,13 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { httpGet } from '@/helpers/http';
-import { DbtSourceModel } from './Canvas';
+import { DbtSourceModel } from '../Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
 const PreviewPane = ({ height }: { height: number }) => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
-  // const flowEditorContext = useContext(FlowEditorContext);
   const { previewAction } = usePreviewAction();
 
   const [columns, setColumns] = useState<any[]>([]);
