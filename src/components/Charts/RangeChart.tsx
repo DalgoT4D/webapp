@@ -1,47 +1,137 @@
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 
-export const RangeChart = ({ data }) => {
-  const colors = d3
-    .scaleOrdinal()
-    .domain(data.map((d) => d.character))
-    .range(['#8BC34A', '#4CAF50', '#388E3C', '#2E7D32', '#1B5E20']); // Shades of green
+interface CharacterData {
+  name: string;
+  percentage: number;
+  count: number;
+}
 
-  const d3Container = useRef(null);
+interface RangeChartProps {
+  data: CharacterData[];
+  colors?: string[];
+  barHeight?: number;
+}
+const chartColors = [
+  '#00897b',
+  '#33a195',
+  '#66b8b0',
+  '#98d0c9',
+  '#cce7e4',
+  '#c7d8d7',
+];
+
+export const RangeChart: React.FC<RangeChartProps> = ({
+  data,
+  colors = chartColors,
+  barHeight = 16,
+}) => {
+  const ref = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    if (data && d3Container.current) {
-      const svg = d3.select(d3Container.current);
-      svg.selectAll('*').remove(); // Clear svg content before adding new elements
+    const svg = d3.select(ref.current).attr('width', 700).attr('height', 100); // Height adjusted for legends and text
 
-      const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-      const width = 960 - margin.left - margin.right;
-      const height = 500 - margin.top - margin.bottom;
+    const xScale = d3
+      .scaleLinear()
+      .domain([0, d3.sum(data, (d) => d.count)])
+      .range([0, 700]);
 
-      const x = d3.scaleLinear().rangeRound([0, width]).domain([0, 100]); // as percentage
+    const tooltip = d3
+      .select('body')
+      .append('div')
+      .attr('class', 'tooltip')
+      .style('position', 'absolute')
+      .style('text-align', 'center')
+      .style('width', '150px')
+      .style('height', '24px')
+      .style('padding', '2px')
+      .style('z-index', '2000')
+      .style('font', '12px sans-serif')
+      .style('background', 'white')
+      .style('border', '1px solid black')
+      .style('border-radius', '8px')
+      .style('pointer-events', 'none')
+      .style('opacity', 0);
 
-      const g = svg
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
+    let offsetX = 0;
+    svg
+      .selectAll('rect')
+      .data(data)
+      .enter()
+      .append('rect')
+      .attr('x', (d) => {
+        const x = offsetX;
+        offsetX += xScale(d.count);
+        return x;
+      })
+      .attr('y', 30)
+      .attr('width', (d) => xScale(d.count))
+      .attr('height', barHeight)
+      .attr('fill', (d, i) => colors[i % colors.length])
+      .on('mouseover', (event, d) => {
+        tooltip.transition().duration(200).style('opacity', 0.9);
+        tooltip
+          .html(`${d.name}: ${d.percentage}% | ${d.count}`)
+          .style('left', event.pageX + 5 + 'px')
+          .style('top', event.pageY - 28 + 'px');
+      })
+      .on('mouseout', () => {
+        tooltip.transition().duration(500).style('opacity', 0);
+      });
 
-      let cumulative = 0;
-      g.selectAll('.bar')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('x', (d) => {
-          let x0 = cumulative;
-          cumulative += x(d.percent);
-          return x0;
-        })
-        .attr('y', height / 2 - 50) // adjust position and height of the bar
-        .attr('width', (d) => x(d.percent))
-        .attr('height', 100)
-        .attr('fill', (d) => colors(d.character));
-    }
+    offsetX = 0; // Reset for text placement
+    svg
+      .selectAll('text.value')
+      .data(data)
+      .enter()
+      .append('text')
+      .attr('x', (d) => {
+        const x = offsetX + xScale(d.count) / 2;
+        offsetX += xScale(d.count);
+        return x;
+      })
+      .attr('y', 25)
+      .style('text-anchor', 'middle')
+      .text((d) =>
+        xScale(d.count) > 50 ? `${d.percentage}% | ${d.count}` : ''
+      )
+      .classed('hidden-text', (d) => xScale(d.count) <= 50);
+
+    // Legend section
+    const legend = svg.append('g').attr('transform', 'translate(0, 60)');
+
+    offsetX = 0; // Reset for legend placement
+    legend
+      .selectAll('rect')
+      .data(data)
+      .enter()
+      .append('rect')
+      .attr('x', (_, i) => {
+        const x = offsetX;
+        offsetX += 110; // Space out legends
+        return x;
+      })
+      .attr('y', 0)
+      .attr('width', 16)
+      .attr('height', 8)
+      .attr('fill', (d, i) => colors[i % colors.length]);
+
+    offsetX = 0; // Reset for text placement in legend
+    legend
+      .selectAll('text')
+      .data(data)
+      .enter()
+      .append('text')
+      .attr('x', (_, i) => {
+        const x = offsetX + 25;
+        offsetX += 110; // Space out legends
+        return x;
+      })
+      .attr('y', 8)
+      .text((d) => d.name);
   }, [data]);
 
-  return (
-    <svg className="d3-component" width={960} height={500} ref={d3Container} />
-  );
+  return <svg ref={ref}></svg>;
 };
+
+export default RangeChart;

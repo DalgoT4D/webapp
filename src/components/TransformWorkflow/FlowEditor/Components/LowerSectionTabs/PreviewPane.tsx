@@ -152,6 +152,7 @@ const PreviewPane = ({ height }: { height: number }) => {
                       sx={{
                         backgroundColor: '#F5FAFA',
                         border: '1px solid #dddddd',
+                        borderLeft: 'unset',
                         padding: '8px',
                         textAlign: 'left',
                         fontWeight: 700,
@@ -185,13 +186,15 @@ const PreviewPane = ({ height }: { height: number }) => {
             <TableBody sx={{ borderColor: '#dddddd' }}>
               {getRowModel().rows.map((row: any) => {
                 return (
-                  <TableRow key={row.id}>
+                  <TableRow key={row.id} sx={{ boxShadow: 'unset' }}>
                     {row.getVisibleCells().map((cell: any) => (
                       <TableCell
                         key={cell.id}
                         sx={{
                           fontWeight: 600,
-                          border: '1px solid #dddddd',
+                          borderBottom: '1px solid #dddddd',
+                          borderRight: '1px solid #dddddd',
+
                           textAlign: 'left',
                           fontSize: '0.8rem',
                         }}
@@ -209,20 +212,18 @@ const PreviewPane = ({ height }: { height: number }) => {
           </Table>
         </Box>
 
-        {
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25, 100]}
-            component="div"
-            count={totalCount}
-            rowsPerPage={pageSize}
-            page={currentPageIndex - 1}
-            onPageChange={(e, newPage) => setCurrentPageIndex(newPage + 1)}
-            onRowsPerPageChange={(e: any) => {
-              setPageSize(e.target.value);
-              setCurrentPageIndex(1);
-            }}
-          />
-        }
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 100]}
+          component="div"
+          count={totalCount}
+          rowsPerPage={pageSize}
+          page={currentPageIndex - 1}
+          onPageChange={(e, newPage) => setCurrentPageIndex(newPage + 1)}
+          onRowsPerPageChange={(e: any) => {
+            setPageSize(e.target.value);
+            setCurrentPageIndex(1);
+          }}
+        />
       </Box>
     </Box>
   ) : null;
