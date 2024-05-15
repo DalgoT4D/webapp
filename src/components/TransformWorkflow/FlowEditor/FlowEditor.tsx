@@ -177,7 +177,7 @@ const LowerSection = ({
             dbtRunLogs={dbtRunLogs}
           />
         )}
-        {selectedTab === 'statistics' && <StatisticsPane />}
+        {selectedTab === 'statistics' && <StatisticsPane height={height} />}
       </Box>
     </Box>
   );
