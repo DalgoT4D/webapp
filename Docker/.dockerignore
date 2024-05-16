@@ -4,3 +4,8 @@ node_modules
 npm-debug.log
 README.md
 .next
+
+.gcloudignore
+
+# Exclude git history and configuration.
+.gitignore
