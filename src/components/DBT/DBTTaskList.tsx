@@ -60,6 +60,7 @@ export const DBTTaskList = ({
 }: params) => {
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
+  const permissions = toastContext?.Permissions.state || [];
   const [rows, setRows] = useState<Array<any>>([]);
   const [taskId, setTaskId] = useState<string>('');
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
@@ -89,7 +90,11 @@ export const DBTTaskList = ({
           setRunningTask(task);
         }}
         data-testid={'task-' + task.uuid}
-        disabled={runningTask || isAnyTaskLocked ? true : false}
+        disabled={
+          !!runningTask ||
+          isAnyTaskLocked ||
+          !permissions.includes('can_run_orgtask')
+        }
         key={'task-' + task.uuid}
         sx={{ marginRight: '10px', width: '75px', height: '40px' }}
       >
@@ -341,13 +346,15 @@ export const DBTTaskList = ({
         eleType="transformtask"
         anchorEl={anchorEl}
         open={open}
+        hasDeletePermission={permissions.includes('can_delete_orgtask')}
         handleClose={handleClose}
         handleDelete={openDeleteTaskModal}
       />
       <List
+        hasCreatePermission={permissions.includes('can_create_orgtask')}
         openDialog={handleCreateOpenOrgTaskDialog}
         title="Task"
-        headers={['Command']}
+        headers={{values: ['Command']}}
         rows={rows}
         height={80}
       />

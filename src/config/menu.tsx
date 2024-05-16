@@ -19,6 +19,7 @@ export interface MenuOption {
   icon: (selected: boolean) => JSX.Element;
   parent?: number;
   className?: string;
+  permission?: string;
 }
 
 export const sideMenu: MenuOption[] = [
@@ -44,6 +45,7 @@ export const sideMenu: MenuOption[] = [
     path: '/pipeline',
     icon: (selected: boolean) => <PipelineIcon fill={getColor(selected)} />,
     className: 'pipeline_walkthrough',
+    permission: 'can_view_dashboard',
   },
 
   {

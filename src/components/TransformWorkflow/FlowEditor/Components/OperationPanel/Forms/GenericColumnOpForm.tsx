@@ -18,6 +18,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { parseStringForNull } from '@/utils/common';
 
 export interface GenericCol {
   function_name: string;
@@ -66,7 +67,7 @@ const GenericColumnOpForm = ({
       operands: {
         type: string;
         col_val: string;
-        const_val: number | undefined;
+        const_val: string | undefined;
       }[];
       output_column_name: string;
     }[];
@@ -77,7 +78,7 @@ const GenericColumnOpForm = ({
       computed_columns: [
         {
           function_name: '',
-          operands: [{ type: 'col', col_val: '', const_val: undefined }],
+          operands: [{ type: 'col', col_val: '', const_val: '' }],
           output_column_name: '',
         },
       ],
@@ -126,10 +127,13 @@ const GenericColumnOpForm = ({
               (op: {
                 type: string;
                 col_val: string;
-                const_val: number | undefined;
+                const_val: string | undefined;
               }) => ({
                 is_col: op.type === 'col',
-                value: op.type === 'col' ? op.col_val : op.const_val,
+                value:
+                  op.type === 'col'
+                    ? op.col_val
+                    : parseStringForNull(op.const_val),
               })
             ),
             output_column_name: item.output_column_name,
@@ -235,6 +239,27 @@ const GenericColumnOpForm = ({
               />
             )}
           />
+          {fields.length === 0 && (
+            <Button
+              disabled={action === 'view'}
+              variant="shadow"
+              type="button"
+              data-testid="addoperand"
+              sx={{
+                marginTop: '17px',
+                marginRight: '3px',
+              }}
+              onClick={(event) =>
+                append({
+                  type: 'col',
+                  col_val: '',
+                  const_val: '',
+                })
+              }
+            >
+              + Add operand
+            </Button>
+          )}
           {fields.map((field, index) => {
             const radioValue = watch(
               `computed_columns.0.operands.${index}.type`
@@ -295,7 +320,6 @@ const GenericColumnOpForm = ({
                   <Controller
                     key={`operands.${index}.const_val`}
                     control={control}
-                    rules={{ required: 'Value is required' }}
                     name={`computed_columns.0.operands.${index}.const_val`}
                     render={({ field, fieldState }) => (
                       <Input
@@ -305,14 +329,13 @@ const GenericColumnOpForm = ({
                         label=""
                         fieldStyle="transformation"
                         sx={{ padding: '0' }}
-                        placeholder="Enter a numeric value"
-                        type="number"
+                        placeholder="Enter a numeric or string value"
                         disabled={action === 'view'}
                       />
                     )}
                   />
                 )}
-                {index === fields.length - 1 ? (
+                {index === fields.length - 1 && (
                   <Button
                     disabled={action === 'view'}
                     variant="shadow"
@@ -320,30 +343,31 @@ const GenericColumnOpForm = ({
                     data-testid="addoperand"
                     sx={{
                       marginTop: '17px',
+                      marginRight: '3px',
                     }}
                     onClick={(event) =>
                       append({
                         type: 'col',
                         col_val: '',
-                        const_val: undefined,
+                        const_val: '',
                       })
                     }
                   >
                     + Add operand
                   </Button>
-                ) : index < fields.length - 1 ? (
+                )}
+                {index < fields.length && (
                   <Button
                     disabled={action === 'view'}
-                    variant="outlined"
+                    variant="shadow"
                     type="button"
+                    color="error"
                     data-testid="removeoperand"
                     sx={{ marginTop: '17px' }}
                     onClick={(event) => remove(index)}
                   >
                     Remove
                   </Button>
-                ) : (
-                  ''
                 )}
               </Box>
             );

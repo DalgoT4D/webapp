@@ -37,7 +37,7 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>,
+      </SessionProvider>
     );
     const urlinputfield = screen.getByTestId('github-url');
     expect(urlinputfield).toBeInTheDocument();
@@ -78,11 +78,11 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     const savebutton = screen.getByTestId('save-github-url');
-    savebutton.click();
+    await userEvent.click(savebutton);
     waitFor(() => {
       expect(createWorkspaceFetch).not.toHaveBeenCalled();
     });
@@ -90,7 +90,7 @@ describe('Create workspace', () => {
     const urlinputfield = screen.getByLabelText('GitHub repo URL*');
     await userEvent.type(urlinputfield, 'github-repo-url');
 
-    savebutton.click();
+    await userEvent.click(savebutton);
     waitFor(() => {
       expect(createWorkspaceFetch).not.toHaveBeenCalled();
     });
@@ -98,16 +98,16 @@ describe('Create workspace', () => {
     const patinputfield = screen.getByLabelText('Personal access token');
     await userEvent.type(patinputfield, 'token-123');
 
-    savebutton.click();
-    waitFor(() => {
+    await userEvent.click(savebutton);
+    await waitFor(() => {
       expect(createWorkspaceFetch).not.toHaveBeenCalled();
     });
 
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    savebutton.click();
-    waitFor(() => {
+    await userEvent.click(savebutton);
+    await waitFor(() => {
       expect(createWorkspaceFetch).toHaveBeenCalledTimes(1);
     });
   });
@@ -150,7 +150,7 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -164,8 +164,8 @@ describe('Create workspace', () => {
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    savebutton.click();
-    waitFor(() => {
+    await userEvent.click(savebutton);
+    await waitFor(() => {
       expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
     });
   });
@@ -208,7 +208,7 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -222,8 +222,8 @@ describe('Create workspace', () => {
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    savebutton.click();
-    waitFor(() => {
+    await userEvent.click(savebutton);
+    await waitFor(() => {
       expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(3);
     });
   });
@@ -276,7 +276,7 @@ describe('Create workspace', () => {
           gitrepoUrl=""
           schema=""
         />
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -290,8 +290,8 @@ describe('Create workspace', () => {
     const dbttargetschema = screen.getByLabelText('dbt target schema*');
     await userEvent.type(dbttargetschema, 'dest-schema');
 
-    savebutton.click();
-    waitFor(() => {
+    await userEvent.click(savebutton);
+    await waitFor(() => {
       expect(createWorkspaceFetchAndProgress).toHaveBeenCalledTimes(4);
     });
   });

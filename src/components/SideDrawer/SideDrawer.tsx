@@ -30,6 +30,7 @@ export interface ItemButtonProps {
   isSelected: boolean;
   onClick: (item: MenuOption) => void;
   children?: ReactNode;
+  disabled?: boolean;
 }
 
 const ItemButton: React.FC<ItemButtonProps> = ({
@@ -38,13 +39,14 @@ const ItemButton: React.FC<ItemButtonProps> = ({
   onClick,
   openMenu,
   children,
+  disabled = false,
 }: ItemButtonProps) => {
   const renderButtonContent = () => (
     <ListItemButton
       sx={openMenu ? {} : { pl: '8px' }}
       disableRipple
       data-testid="listButton"
-      onClick={() => onClick(item)}
+      onClick={() => !disabled && onClick(item)}
       selected={isSelected}
     >
       <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>
@@ -70,8 +72,6 @@ const ItemButton: React.FC<ItemButtonProps> = ({
     </Tooltip>
   );
 };
-
-
 
 // const DrawerHeader = styled('div')(({ theme }) => ({
 //   display: 'flex',
@@ -131,6 +131,7 @@ export const SideDrawer = ({ openMenu }: any) => {
   );
   const [runWalkThrough, setRunWalkThrough] = useState(false);
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   // handle drawer expand and collapse
 
@@ -175,6 +176,10 @@ export const SideDrawer = ({ openMenu }: any) => {
                 <ItemButton
                   openMenu={openMenu}
                   item={item}
+                  disabled={
+                    item.permission !== undefined &&
+                    !permissions.includes(item.permission)
+                  }
                   isSelected={selectedIndex === item.index}
                   onClick={() => handleListItemClick(item)}
                 >

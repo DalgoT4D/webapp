@@ -19,7 +19,7 @@ export interface SecondaryInput {
 }
 
 interface JoinDataConfig {
-  join_type: 'left' | 'inner';
+  join_type: 'left' | 'inner' | 'full outer';
   join_on: { key1: string; key2: string; compare_with: string };
   other_inputs: SecondaryInput[];
   source_columns: string[];
@@ -450,7 +450,7 @@ const JoinOpForm = ({
               helperText={fieldState.error?.message}
               fieldStyle="transformation"
               disabled={action === 'view'}
-              options={['left', 'right', 'inner']}
+              options={['left', 'right', 'inner', 'full outer']}
               label="Select the join type*"
             />
           )}

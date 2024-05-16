@@ -95,6 +95,7 @@ const DBTTransformType = ({
 
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -335,6 +336,11 @@ const DBTTransformType = ({
                             <Button
                               variant="contained"
                               onClick={() => setShowConnectRepoDialog(true)}
+                              disabled={
+                                !permissions.includes(
+                                  'can_create_dbt_workspace'
+                                )
+                              }
                             >
                               Connect & Setup Repo{' '}
                             </Button>

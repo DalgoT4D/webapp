@@ -50,9 +50,14 @@ export const DBTSetup = ({
   const [failureMessage, setFailureMessage] = useState(null);
   const toastContext = useContext(GlobalContext);
 
-  const checkProgress = async function (taskId: string) {
+  const checkProgress = async function (taskId: string, hashKeyPrefix: string) {
     try {
-      const message = await httpGet(session, `tasks/${taskId}`);
+      const orgSlug = toastContext?.CurrentOrg.state.slug;
+      const hashKey = `${hashKeyPrefix}-${orgSlug}`;
+      const message = await httpGet(
+        session,
+        `tasks/${taskId}?hashkey=${hashKey}`
+      );
       setProgressMessages(message['progress']);
 
       const lastMessage = message['progress'][message['progress'].length - 1];
@@ -64,7 +69,7 @@ export const DBTSetup = ({
         setFailureMessage(lastMessage['message']);
       } else {
         await delay(2000);
-        checkProgress(taskId);
+        checkProgress(taskId, hashKeyPrefix);
       }
     } catch (err: any) {
       console.error(err);
@@ -129,7 +134,7 @@ export const DBTSetup = ({
     try {
       const message = await httpPost(session, 'dbt/workspace/', payload);
       await delay(1000);
-      checkProgress(message.task_id);
+      checkProgress(message.task_id, 'setup-dbt-workspace');
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
@@ -167,7 +172,7 @@ export const DBTSetup = ({
       try {
         const message = await httpPut(session, 'dbt/github/', updateGitPayload);
         await delay(1000);
-        checkProgress(message.task_id);
+        checkProgress(message.task_id, 'clone-github-repo');
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
