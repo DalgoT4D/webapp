@@ -68,6 +68,7 @@ export const Header = ({
     AutoCompleteOption | null | undefined
   >(null);
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
     setAnchorEl(event);
@@ -217,15 +218,17 @@ export const Header = ({
             }}
             onClick={handleCreateOrgClick}
           >
-            <Typography
-              variant="subtitle1"
-              sx={{
-                fontWeight: 600,
-                borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
-              }}
-            >
-              Create new org
-            </Typography>
+            {permissions.includes('can_create_org') && (
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  fontWeight: 600,
+                  borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
+                }}
+              >
+                Create new org
+              </Typography>
+            )}
           </Box>
         )}
         {orgs.map((org: AutoCompleteOption, idx: number) => (

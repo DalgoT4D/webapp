@@ -96,7 +96,11 @@ const truncateString = (input: string) => {
   return input.substring(0, maxlength - 3) + '...';
 };
 
-const headers = ['Connection details', 'Source → Destination', 'Last sync'];
+const headers = {
+  values: ['Connection details', 'Source → Destination', 'Last sync'],
+  sortable: [true, false, false],
+}
+
 const getSourceDest = (connection: Connection) => (
   <Box
     sx={{
@@ -151,7 +155,8 @@ const getSourceDest = (connection: Connection) => (
 
 export const Connections = () => {
   const { data: session }: any = useSession();
-  const toastContext = useContext(GlobalContext);
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   const [connectionId, setConnectionId] = useState<string>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<
     Array<string>
@@ -175,6 +180,7 @@ export const Connections = () => {
   const [showConfirmResetDialog, setShowConfirmResetDialog] =
     useState<boolean>(false);
   const [rows, setRows] = useState<Array<any>>([]);
+  const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
 
@@ -268,7 +274,7 @@ export const Connections = () => {
   const syncConnection = async (deploymentId: string, connectionId: string) => {
     setExpandSyncLogs(true);
     if (!deploymentId) {
-      errorToast('Deployment not created', [], toastContext);
+      errorToast('Deployment not created', [], globalContext);
       return;
     }
     try {
@@ -277,21 +283,21 @@ export const Connections = () => {
         `prefect/v1/flows/${deploymentId}/flow_run/`,
         {}
       );
-      if (response?.detail) errorToast(response.detail, [], toastContext);
+      if (response?.detail) errorToast(response.detail, [], globalContext);
 
       // if flow run id is not present, something went wrong
       if (!response?.flow_run_id) {
-        errorToast('Something went wrong', [], toastContext);
+        errorToast('Something went wrong', [], globalContext);
         return;
       }
 
-      successToast(`Sync initiated successfully`, [], toastContext);
+      successToast(`Sync initiated successfully`, [], globalContext);
 
       pollForFlowRun(response.flow_run_id);
       mutate();
     } catch (err: any) {
       console.error(err);
-      errorToast(err.message, [], toastContext);
+      errorToast(err.message, [], globalContext);
     } finally {
       setSyncingConnectionIds(
         syncingConnectionIds.filter((id) => id !== connectionId)
@@ -307,12 +313,12 @@ export const Connections = () => {
           `airbyte/v1/connections/${connectionId}`
         );
         if (message.success) {
-          successToast('Connection deleted', [], toastContext);
+          successToast('Connection deleted', [], globalContext);
           mutate();
         }
       } catch (err: any) {
         console.error(err);
-        errorToast(err.message, [], toastContext);
+        errorToast(err.message, [], globalContext);
       }
     })();
     handleCancelDeleteConnection();
@@ -330,12 +336,12 @@ export const Connections = () => {
           successToast(
             'Reset connection initiated successfully',
             [],
-            toastContext
+            globalContext
           );
         }
       } catch (err: any) {
         console.error(err);
-        errorToast(err.message, [], toastContext);
+        errorToast(err.message, [], globalContext);
       }
     })();
     handleCancelResetConnection();
@@ -360,7 +366,9 @@ export const Connections = () => {
         }}
         data-testid={'sync-' + idx}
         disabled={
-          syncingConnectionIds.includes(connectionId) || lock ? true : false
+          syncingConnectionIds.includes(connectionId) ||
+          !!lock ||
+          !permissions.includes('can_sync_sources')
         }
         key={'sync-' + idx}
         sx={{ marginRight: '10px' }}
@@ -542,7 +550,14 @@ export const Connections = () => {
         // ),
       ]);
 
+      const tempRowValues = data.map((connection: any) => [
+        connection.name, // as we are only sorting by connection name...
+        null,
+        null,
+      ])
+
       setRows(tempRows);
+      setRowValues(tempRowValues);
     }
   };
 
@@ -611,6 +626,9 @@ export const Connections = () => {
         handleEdit={handleEditConnection}
         handleDelete={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
+        hasResetPermission={permissions.includes('can_reset_connection')}
+        hasDeletePermission={permissions.includes('can_delete_connection')}
+        hasEditPermission={permissions.includes('can_edit_connection')}
       />
       <CreateConnectionForm
         setConnectionId={setConnectionId}
@@ -620,10 +638,12 @@ export const Connections = () => {
         setShowForm={setShowDialog}
       />
       <List
+        hasCreatePermission={permissions.includes('can_create_connection')}
         openDialog={handleClickOpen}
         title="Connection"
         headers={headers}
         rows={rows}
+        rowValues={rowValues}
         height={115}
       />
       <ConfirmationDialog

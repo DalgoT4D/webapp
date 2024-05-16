@@ -20,6 +20,7 @@ import { ActionsMenu } from '../UI/Menu/Menu';
 import Image from 'next/image';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import styles from './Flows.module.css';
+import { localTimezone } from '@/utils/common';
 
 export interface TaskLock {
   lockedBy: string;
@@ -103,12 +104,13 @@ export const Flows = ({
   );
   const [deploymentId, setDeploymentId] = useState<string>('');
   const { data: session }: any = useSession();
-  const toastContext = useContext(GlobalContext);
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [deleteFlowLoading, setDeleteFlowLoading] = useState<boolean>(false);
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   const open = Boolean(anchorEl);
   const handleClose = () => {
@@ -233,6 +235,7 @@ export const Flows = ({
           fontWeight: 600,
           marginRight: '5px',
         }}
+        disabled={!permissions.includes('can_view_pipeline')}
         onClick={() => fetchLastFlowRun(flow.deploymentId)}
       >
         last logs
@@ -243,9 +246,9 @@ export const Flows = ({
           data-testid={'btn-quickrundeployment-' + flow.name}
           variant="contained"
           disabled={
-            runningDeploymentIds.includes(flow.deploymentId) || flow.lock
-              ? true
-              : false
+            runningDeploymentIds.includes(flow.deploymentId) ||
+            !!flow.lock ||
+            !permissions.includes('can_run_pipeline')
           }
           onClick={async () => {
             // push deployment id into list of running deployment ids
@@ -299,15 +302,35 @@ export const Flows = ({
         >
           <Image style={{ marginRight: 10 }} src={FlowIcon} alt="flow icon" />
           <Typography variant="h6" fontWeight={700}>
-            {`${flow.name} | `}
+            {`${flow.name}`}
           </Typography>
-          <Typography
-            variant="subtitle2"
-            color="rgba(9, 37, 64, 0.87)"
-            fontWeight={700}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              borderLeft: '1px solid grey',
+              marginLeft: 2,
+            }}
           >
-            &nbsp; {flow.cron ? cronToString(flow.cron) : 'Manual'}
-          </Typography>
+            <Typography
+              variant="subtitle2"
+              color="rgba(9, 37, 64, 0.87)"
+              fontWeight={700}
+              sx={{ paddingLeft: 1 }}
+            >
+              {flow.cron ? cronToString(flow.cron) : 'Manual'}
+            </Typography>
+            {flow.cron && (
+              <Typography
+                variant="subtitle2"
+                color="rgba(9, 37, 64, 0.87)"
+                fontWeight={700}
+                sx={{ paddingLeft: 1 }}
+              >
+                {localTimezone()}
+              </Typography>
+            )}
+          </Box>
         </Box>,
         flowStatus(flow.status),
 
@@ -347,11 +370,11 @@ export const Flows = ({
   const handleQuickRunDeployment = async (deploymentId: string) => {
     try {
       await httpPost(session, `prefect/v1/flows/${deploymentId}/flow_run/`, {});
-      successToast('Flow run inititated successfully', [], toastContext);
+      successToast('Flow run inititated successfully', [], globalContext);
       mutate();
     } catch (err: any) {
       console.error(err);
-      errorToast(err.message, [], toastContext);
+      errorToast(err.message, [], globalContext);
     } finally {
       setRunningDeploymentIds(
         runningDeploymentIds.filter((id) => id !== deploymentId)
@@ -368,13 +391,13 @@ export const Flows = ({
           `prefect/v1/flows/${deploymentId}`
         );
         if (data?.success) {
-          successToast('Flow deleted successfully', [], toastContext);
+          successToast('Flow deleted successfully', [], globalContext);
         } else {
-          errorToast('Something went wrong', [], toastContext);
+          errorToast('Something went wrong', [], globalContext);
         }
       } catch (err: any) {
         console.error(err);
-        errorToast(err.message, [], toastContext);
+        errorToast(err.message, [], globalContext);
       } finally {
         mutate();
         handleClose();
@@ -390,6 +413,8 @@ export const Flows = ({
         eleType="flow"
         anchorEl={anchorEl}
         open={open}
+        hasEditPermission={permissions.includes('can_edit_pipeline')}
+        hasDeletePermission={permissions.includes('can_delete_pipeline')}
         handleEdit={handleEditConnection}
         handleClose={handleClose}
         handleDelete={handleDeleteConnection}
@@ -409,9 +434,12 @@ export const Flows = ({
       </Box>
 
       <List
+        hasCreatePermission={permissions.includes('can_create_pipeline')}
         rows={rows}
         openDialog={handleClickCreateFlow}
-        headers={['', 'Pipeline Status', 'Last run', 'Last run status']}
+        headers={{
+          values: ['', 'Pipeline Status', 'Last run', 'Last run status'],
+        }}
         title={'Pipeline'}
       />
 
