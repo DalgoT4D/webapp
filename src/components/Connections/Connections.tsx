@@ -86,6 +86,7 @@ export type Connection = {
   normalize: boolean;
   status: string;
   syncCatalog: object;
+  resetConnDeploymentId: string;
 };
 
 const truncateString = (input: string) => {
