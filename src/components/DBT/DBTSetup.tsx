@@ -143,10 +143,6 @@ export const DBTSetup = ({
   };
 
   const editWorkspace = async (data: DBTCreateWorkspaceParams) => {
-    setWorkspace({
-      gitrepo_url: data.gitrepoUrl,
-      default_schema: data.schema,
-    });
     if (data.schema && data.schema !== schema) {
       const updateSchemaPayload = {
         target_configs_schema: data.schema,
@@ -172,6 +168,10 @@ export const DBTSetup = ({
       try {
         const message = await httpPut(session, 'dbt/github/', updateGitPayload);
         await delay(1000);
+        setWorkspace({
+          gitrepo_url: data.gitrepoUrl,
+          default_schema: data.schema,
+        });
         checkProgress(message.task_id, 'clone-github-repo');
       } catch (err: any) {
         console.error(err);
