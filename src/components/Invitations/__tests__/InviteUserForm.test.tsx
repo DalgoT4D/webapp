@@ -68,7 +68,8 @@ describe('Invite user', () => {
       ok: true,
       json: jest.fn().mockResolvedValueOnce({ success: 1 }),
     });
-    (global as any).fetch = inviteUserApiMock;
+
+    global.fetch = inviteUserApiMock;
 
     render(inviteForm);
 
@@ -97,7 +98,7 @@ describe('Invite user', () => {
       json: jest.fn().mockResolvedValueOnce({ detail: 'something went wrong' }),
     });
 
-    (global as any).fetch = inviteUserApiMock;
+    global.fetch = inviteUserApiMock;
 
     render(inviteForm);
 
