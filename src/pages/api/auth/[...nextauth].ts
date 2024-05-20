@@ -45,7 +45,6 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         // Add logic here to look up the user from the credentials supplied
         const { username, password } = credentials as any;
-
         const res = await fetch(`${backendUrl}/api/login/`, {
           method: 'POST',
           headers: {
