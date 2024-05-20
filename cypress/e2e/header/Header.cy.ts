@@ -10,7 +10,7 @@ describe('Header', () => {
   });
 
   it('Should render logo and profile icon', () => {
-    cy.get('[alt="ddp logo"]').should('be.visible');
+    cy.get('[alt="dalgo logo"]').should('be.visible');
     cy.get('[alt="profile icon"]').should('be.visible');
   });
 

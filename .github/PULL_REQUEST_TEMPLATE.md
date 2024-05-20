@@ -4,7 +4,7 @@
 
   Before submitting a pull request, please make sure the following is done:
 
-  1. Fork [the repository](https://github.com/DevDataPlatform/DDP_frontend) and create your branch from `main`.
+  1. Fork [the repository](https://github.com/DalgoT4D/webapp) and create your branch from `main`.
   2. Run `yarn` in the repository root.
   3. If you've fixed a bug or added code that should be tested, add tests!
   4. Please ensure coding standard and conventions are followed.
