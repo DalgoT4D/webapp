@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from '@/styles/Home.module.css';
 import { useSession } from 'next-auth/react';
 import { backendUrl } from '@/config/constant';
-import { Card, Typography } from '@mui/material';
+import { Box, Card, Typography } from '@mui/material';
 import { httpPost } from '@/helpers/http';
 
 export const Elementary = () => {
