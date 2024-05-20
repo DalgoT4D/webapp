@@ -331,17 +331,7 @@ const DBTTransformType = ({
                             )}
                           </Box>
                         </Box>
-                        <Box sx={{ ml: 'auto' }}>
-                          <Button
-                            variant="contained"
-                            onClick={() => setShowConnectRepoDialog(true)}
-                            disabled={
-                              !permissions.includes('can_edit_dbt_workspace')
-                            }
-                          >
-                            Edit
-                          </Button>
-                        </Box>
+
                         <Box>
                           {dbtSetupStage === 'create-workspace' ? (
                             <Button
