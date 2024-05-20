@@ -32,8 +32,6 @@ const UnpivotOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -289,6 +287,7 @@ const UnpivotOpForm = ({
                   key={field.id}
                   control={
                     <Checkbox
+                      data-testid={`unpivotColumn${idx}`}
                       disabled={action === 'view'}
                       checked={field.is_unpivot_checked}
                       onChange={(
