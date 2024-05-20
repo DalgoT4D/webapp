@@ -44,7 +44,6 @@ const FlattenJsonOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -217,6 +216,7 @@ const FlattenJsonOpForm = ({
               render={({ field, fieldState }) => (
                 <Autocomplete
                   {...field}
+                  data-testid="jsonColumn"
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                   fieldStyle="transformation"

@@ -16,7 +16,6 @@ import {
   OperationNodeType,
   SrcModelNodeType,
   UIOperationType,
-  getNextNodePosition,
 } from './Canvas';
 import {
   OPERATION_NODE,
@@ -66,6 +65,7 @@ import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import PivotOpForm from './OperationPanel/Forms/PivotOpForm';
 import UnpivotOpForm from './OperationPanel/Forms/UnpivotOpForm';
 import GenericColumnOpForm from './OperationPanel/Forms/GenericColumnOpForm';
+import { getNextNodePosition } from '@/utils/editor';
 import GenericSqlOpForm from './OperationPanel/Forms/GenericSqlOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 

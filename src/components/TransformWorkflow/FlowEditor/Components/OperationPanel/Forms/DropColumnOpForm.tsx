@@ -33,7 +33,7 @@ const DropColumnOp = ({
   const [valid, setValid] = useState(true);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const [column, setColumn] = useState('');
+  const [column, setColumn] = useState(null);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -156,6 +156,7 @@ const DropColumnOp = ({
             <Grid container spacing={1}>
               <Grid item xs={12}>
                 <Input
+                  data-testid={`columnName${index}`}
                   fieldStyle="transformation"
                   disabled
                   variant="outlined"
@@ -183,9 +184,10 @@ const DropColumnOp = ({
         ))}
         <Grid item xs={12}>
           <Autocomplete
+            data-testid="dropColumn"
             disabled={action === 'view'}
             value={column}
-            inputValue={column}
+            inputValue={column === null ? '' : column}
             fieldStyle="transformation"
             options={srcColumns
               .filter((col) => !selectedColumns.includes(col))
@@ -194,7 +196,7 @@ const DropColumnOp = ({
             onChange={(value: any) => {
               if (value) {
                 handleAddColumn(value);
-                setColumn('');
+                setColumn(null);
                 setValid(true);
               }
             }}
@@ -207,6 +209,7 @@ const DropColumnOp = ({
         )}
         <Grid item xs={12}>
           <Button
+            data-testid="savebutton"
             onClick={handleSave}
             variant="contained"
             disabled={action === 'view'}
