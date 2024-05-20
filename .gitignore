@@ -40,3 +40,5 @@ next-env.d.ts
 .vscode
 
 cypress.env.json
+
+cloudbuild.yaml
