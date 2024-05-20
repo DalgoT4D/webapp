@@ -100,7 +100,7 @@ const truncateString = (input: string) => {
 const headers = {
   values: ['Connection details', 'Source → Destination', 'Last sync'],
   sortable: [true, false, false],
-}
+};
 
 const getSourceDest = (connection: Connection) => (
   <Box
@@ -159,6 +159,7 @@ export const Connections = () => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const [connectionId, setConnectionId] = useState<string>('');
+  const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<
     Array<string>
   >([]);
@@ -168,8 +169,9 @@ export const Connections = () => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const handleClick = (connectionId: string, event: HTMLElement | null) => {
-    setConnectionId(connectionId);
+  const handleClick = (connection: Connection, event: HTMLElement | null) => {
+    setConnectionId(connection.connectionId);
+    setResetDeploymentId(connection.resetConnDeploymentId);
     setAnchorEl(event);
   };
   const handleClose = () => {
@@ -325,12 +327,12 @@ export const Connections = () => {
     handleCancelDeleteConnection();
   };
 
-  const resetConnection = (connectionId: string) => {
+  const resetConnection = (deploymentId: string) => {
     (async () => {
       try {
         const message = await httpPost(
           session,
-          `airbyte/v1/connections/${connectionId}/reset`,
+          `prefect/v1/flows/${deploymentId}/flow_run/`,
           {}
         );
         if (message.success) {
@@ -349,61 +351,64 @@ export const Connections = () => {
   };
 
   const Actions = ({
-    connection: { deploymentId, connectionId, lock },
+    connection,
     idx,
   }: {
     connection: Connection;
     idx: string;
-  }) => (
-    <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
-      <Button
-        variant="contained"
-        onClick={async () => {
-          // push connection id into list of syncing connection ids
-          if (!syncingConnectionIds.includes(connectionId)) {
-            setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
+  }) => {
+    const { deploymentId, connectionId, lock } = connection;
+    return (
+      <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
+        <Button
+          variant="contained"
+          onClick={async () => {
+            // push connection id into list of syncing connection ids
+            if (!syncingConnectionIds.includes(connectionId)) {
+              setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
+            }
+            syncConnection(deploymentId, connectionId);
+          }}
+          data-testid={'sync-' + idx}
+          disabled={
+            syncingConnectionIds.includes(connectionId) ||
+            !!lock ||
+            !permissions.includes('can_sync_sources')
           }
-          syncConnection(deploymentId, connectionId);
-        }}
-        data-testid={'sync-' + idx}
-        disabled={
-          syncingConnectionIds.includes(connectionId) ||
-          !!lock ||
-          !permissions.includes('can_sync_sources')
-        }
-        key={'sync-' + idx}
-        sx={{ marginRight: '10px' }}
-      >
-        {syncingConnectionIds.includes(connectionId) || lock ? (
-          <Image
-            src={SyncIcon}
-            className={styles.SyncIcon}
-            alt="sync icon"
-            data-testid="sync-icon"
-          />
-        ) : (
-          'Sync'
-        )}
-      </Button>
+          key={'sync-' + idx}
+          sx={{ marginRight: '10px' }}
+        >
+          {syncingConnectionIds.includes(connectionId) || lock ? (
+            <Image
+              src={SyncIcon}
+              className={styles.SyncIcon}
+              alt="sync icon"
+              data-testid="sync-icon"
+            />
+          ) : (
+            'Sync'
+          )}
+        </Button>
 
-      <Button
-        id={idx}
-        aria-controls={open ? 'basic-menu' : undefined}
-        aria-haspopup="true"
-        aria-expanded={open ? 'true' : undefined}
-        onClick={(event) => handleClick(connectionId, event.currentTarget)}
-        variant="contained"
-        key={'menu-' + idx}
-        color="info"
-        sx={{ p: 0, minWidth: 32 }}
-        disabled={
-          syncingConnectionIds.includes(connectionId) || lock ? true : false
-        }
-      >
-        <MoreHorizIcon />
-      </Button>
-    </Box>
-  );
+        <Button
+          id={idx}
+          aria-controls={open ? 'basic-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={(event) => handleClick(connection, event.currentTarget)}
+          variant="contained"
+          key={'menu-' + idx}
+          color="info"
+          sx={{ p: 0, minWidth: 32 }}
+          disabled={
+            syncingConnectionIds.includes(connectionId) || lock ? true : false
+          }
+        >
+          <MoreHorizIcon />
+        </Button>
+      </Box>
+    );
+  };
 
   const getLastSync = (connection: Connection) => {
     let jobStatus: string | null = null;
@@ -555,7 +560,7 @@ export const Connections = () => {
         connection.name, // as we are only sorting by connection name...
         null,
         null,
-      ])
+      ]);
 
       setRows(tempRows);
       setRowValues(tempRowValues);
@@ -656,7 +661,7 @@ export const Connections = () => {
       <ConfirmationDialog
         show={showConfirmResetDialog}
         handleClose={() => handleCancelResetConnection()}
-        handleConfirm={() => resetConnection(connectionId)}
+        handleConfirm={() => resetConnection(resetDeploymentId)}
         message="Resetting the connection will clear all data at the warehouse."
       />
       <LogCard
