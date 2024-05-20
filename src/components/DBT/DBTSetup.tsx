@@ -176,6 +176,7 @@ export const DBTSetup = ({
           default_schema: data.schema,
         });
         await delay(1000);
+
         checkProgress(message.task_id, 'clone-github-repo');
       } catch (err: any) {
         console.error(err);
