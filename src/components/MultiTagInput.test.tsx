@@ -13,6 +13,7 @@ const MultiTagBoundToFormControl = () => {
         <MultiTagInput
           fieldValueArr={value}
           field="test"
+          disabled={false}
           label="TestLabel"
           setFormValue={setValue}
         />

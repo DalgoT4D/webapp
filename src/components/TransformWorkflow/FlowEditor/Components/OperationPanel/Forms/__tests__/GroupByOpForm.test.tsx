@@ -1,24 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import AggregationOpForm from '../AggregationOpForm';
+import GroupByOpForm from '../GroupByOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import {
-  aggregateDbtModelResponse,
-  intermediateTableResponse,
-  mockNode,
-} from './helpers';
+import { intermediateTableResponse, mockNode } from './helpers';
 import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -31,10 +25,9 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Aggregate',
-    slug: 'aggregate',
-    infoToolTip:
-      'Performs a calculation on multiple values in a column and returns a new column with that value in every row',
+    label: 'Group By',
+    slug: 'groupby',
+    infoToolTip: 'Group your data by one or more dimensions and analyse it',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -53,7 +46,7 @@ const props: OperationFormProps = {
     case url.includes('transform/dbt_project/model'):
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(aggregateDbtModelResponse),
+        json: () => Promise.resolve(),
       });
 
     default:
@@ -64,68 +57,60 @@ const props: OperationFormProps = {
   }
 });
 
-const aggregationOpForm = (
+const groupByForm = (
   <GlobalContext.Provider value={mockContext}>
-    <AggregationOpForm {...props} />
+    <GroupByOpForm {...props} />
   </GlobalContext.Provider>
 );
 
-describe('AggregationOpForm', () => {
+describe('Flatter json form', () => {
   it('renders correct initial form state', async () => {
-    render(aggregationOpForm);
+    render(groupByForm);
     await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
-      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
-      expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
-      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+      expect(screen.getByText('Select dimensios')).toBeInTheDocument();
+      expect(screen.getByText('ADD AGGREGATION 01')).toBeInTheDocument();
+      expect(screen.getByText('Select metric*')).toBeInTheDocument();
+      expect(screen.getByText('Select aggregation*')).toBeInTheDocument();
+      expect(screen.getByText('Output Column Name*')).toBeInTheDocument();
     });
   });
 });
 
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
-    render(aggregationOpForm);
-    // Simulate form submission
+    render(groupByForm);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+    });
     const saveButton = screen.getByTestId('savebutton');
     await userEvent.click(saveButton);
 
     // validations to be called
     await waitFor(() => {
       expect(
-        screen.getByText('Column to aggregate is required')
+        screen.getByText('Atleast 1 column is required')
       ).toBeInTheDocument();
-      expect(screen.getByText('Operation is required')).toBeInTheDocument();
+      expect(screen.getByText('Metric is required')).toBeInTheDocument();
+      expect(
+        screen.getByText('Aggregate function is required')
+      ).toBeInTheDocument();
       expect(
         screen.getByText('Output column name is required')
       ).toBeInTheDocument();
     });
 
-    const [columnInput] = screen.getAllByRole('combobox');
+    await fireMultipleKeyDown('columns0', 2);
+    await fireMultipleKeyDown('metric', 2);
+    await fireMultipleKeyDown('aggregation', 2);
 
-    await user.type(columnInput, 's');
-    await fireMultipleKeyDown('aggregateColumn', 1);
-    await fireMultipleKeyDown('operation', 2);
-
-    // Simulate user typing in the Output Column Name
     const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
-    await user.type(outputColumnNameInput, 'District aggregate');
+    await user.type(outputColumnNameInput, 'Group column');
 
-    await userEvent.click(saveButton);
+    await user.click(saveButton);
 
     await waitFor(() => {
       expect(continueOperationChainMock).toHaveBeenCalled();
-    });
-
-    // reset to initial state after submit
-    await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
-      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
-      expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
-      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
     });
   });
 });
