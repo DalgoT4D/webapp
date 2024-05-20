@@ -25,7 +25,6 @@ const CastColumnOp = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -41,7 +40,7 @@ const CastColumnOp = ({
       : {};
 
   type FormData = {
-    config: { name: string; data_type: string }[];
+    config: { name: string; data_type: string | null }[];
   };
 
   const { control, handleSubmit, register, reset, getValues, setValue } =
@@ -50,7 +49,7 @@ const CastColumnOp = ({
         config: [
           {
             name: '',
-            data_type: '',
+            data_type: null,
           },
         ] as ColumnData[],
       },
@@ -199,6 +198,7 @@ const CastColumnOp = ({
           headers={['Column name', 'Type']}
           data={config.map((column, index) => [
             <Input
+              data-testid={`columnName${index}`}
               key={`config.${index}.name`}
               fieldStyle="none"
               sx={{ padding: '0' }}
@@ -214,6 +214,7 @@ const CastColumnOp = ({
               render={({ field }) => (
                 <Autocomplete
                   {...field}
+                  data-testid={`type${index}`}
                   disabled={action === 'view'}
                   disableClearable
                   fieldStyle="none"

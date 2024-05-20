@@ -52,8 +52,6 @@ const GroupByOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -297,6 +295,7 @@ const GroupByOpForm = ({
                   render={({ field }) => (
                     <Autocomplete
                       {...field}
+                      data-testid={`columns${index}`}
                       disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns?.filter(
@@ -337,6 +336,7 @@ const GroupByOpForm = ({
                 render={({ field, fieldState }) => (
                   <Autocomplete
                     {...field}
+                    data-testid="metric"
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                     disabled={action === 'view'}
@@ -358,6 +358,7 @@ const GroupByOpForm = ({
                 render={({ field, fieldState }) => (
                   <Autocomplete
                     {...field}
+                    data-testid="aggregation"
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                     disabled={action === 'view'}
