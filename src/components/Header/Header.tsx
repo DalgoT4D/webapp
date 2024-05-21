@@ -160,7 +160,7 @@ export const Header = ({
             <Image src={HamburgerIcon} alt="Hamburger-icon" />
           </IconButton>
         )}
-        <Image src={Logo} alt="ddp logo" />
+        <Image src={Logo} alt="dalgo logo" />
       </Box>
       <Box
         display="flex"
