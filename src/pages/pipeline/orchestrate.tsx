@@ -93,7 +93,7 @@ export default function Orchestrate() {
 
   return (
     <>
-      <PageHead title="Orchestrate" />
+      <PageHead title="Dalgo | Orchestrate" />
       <main className={styles.main}>
         {crudVal === 'index' &&
           (isLoading ? (
