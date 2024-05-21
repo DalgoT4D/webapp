@@ -87,26 +87,24 @@ const ConnectionDetailsForm = ({
           setValue('name', data?.name);
 
           // Process catalogDiff to extract table names and changed columns
-          // Assuming the array is stored in a variable named 'dataArray'
           if (Array.isArray(data)) {
             data.forEach((dataItem) => {
               if (Array.isArray(dataItem?.catalogDiff?.transforms)) {
                 const newData = dataItem.catalogDiff.transforms.map(
                   (transform: any) => {
                     const tableName = transform.streamDescriptor.name;
-                    const changedColumns = transform.updateStream.reduce(
-                      (columns: string[], update: any) => {
-                        if (
-                          update.transformType === 'add_field' ||
-                          update.transformType === 'remove_field'
-                        ) {
-                          columns.push(...update.fieldName);
-                        }
-                        return columns;
-                      },
-                      []
-                    );
-                    return { name: tableName, changedColumns };
+                    const addedColumns: string[] = [];
+
+                    const removedColumns: string[] = [];
+
+                    transform.updateStream.forEach((update: any) => {
+                      if (update.transformType === 'add_field') {
+                        addedColumns.push(...update.fieldName);
+                      } else if (update.transformType === 'remove_field') {
+                        removedColumns.push(...update.fieldName);
+                      }
+                    });
+                    return { name: tableName, addedColumns, removedColumns };
                   }
                 );
                 console.log('Processed Data:', newData); // Log processed data
@@ -128,8 +126,6 @@ const ConnectionDetailsForm = ({
                 setTableData([]); // Set tableData to an empty array
               }
             });
-          } else {
-            console.log('No data received or invalid data structure.'); // Log message for no data received
           }
         } catch (err: any) {
           console.error(err);
@@ -213,6 +209,7 @@ const ConnectionDetailsForm = ({
               <TableBody>
                 {tableData.map((table, idx) => (
                   <React.Fragment key={idx}>
+                    <Typography variant="subtitle2">Table name</Typography>
                     <TableRow>
                       <TableCell>
                         <Typography variant="subtitle1" gutterBottom>
@@ -223,38 +220,71 @@ const ConnectionDetailsForm = ({
                     {table.changedColumns.some((column) =>
                       column.startsWith('-')
                     ) && (
-                      <TableRow>
-                        <TableCell>
+                      <React.Fragment>
+                        <Typography variant="h6" gutterBottom>
+                          Columns Removed
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                          }}
+                        >
                           <Typography variant="subtitle2">
-                            Columns Removed
+                            Table Name
                           </Typography>
+                          <Typography variant="subtitle2">
+                            Column Name
+                          </Typography>
+                        </Box>
+                        <Table>
                           {table.changedColumns
                             .filter((column) => column.startsWith('-'))
                             .map((column, idx) => (
-                              <Typography key={idx} variant="body2">
-                                {column.substring(1)} {/* remove '-' prefix */}
-                              </Typography>
+                              <TableRow key={idx}>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {table.name}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {column.substring(1)}
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
                             ))}
-                        </TableCell>
-                      </TableRow>
+                        </Table>
+                      </React.Fragment>
                     )}
                     {table.changedColumns.some(
                       (column) => !column.startsWith('-')
                     ) && (
-                      <TableRow>
-                        <TableCell>
-                          <Typography variant="subtitle2">
-                            Columns Added
-                          </Typography>
+                      <React.Fragment>
+                        <Typography variant="h6" gutterBottom>
+                          Columns Added
+                        </Typography>
+                        <Typography variant="subtitle2">Table Name</Typography>
+                        <Typography variant="subtitle2">Column Name</Typography>
+                        <Table>
                           {table.changedColumns
                             .filter((column) => !column.startsWith('-'))
                             .map((column, idx) => (
-                              <Typography key={idx} variant="body2">
-                                {column}
-                              </Typography>
+                              <TableRow key={idx}>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {table.name}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {column}
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
                             ))}
-                        </TableCell>
-                      </TableRow>
+                        </Table>
+                      </React.Fragment>
                     )}
                   </React.Fragment>
                 ))}
