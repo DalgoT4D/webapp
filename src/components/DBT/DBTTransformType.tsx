@@ -50,7 +50,7 @@ const TopNavBar = ({ handleClose }: any) => (
         height: '56px',
       }}
     >
-      <Image src={Logo} alt="ddp logo" />
+      <Image src={Logo} alt="dalgo logo" />
     </Box>
     <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
       <IconButton

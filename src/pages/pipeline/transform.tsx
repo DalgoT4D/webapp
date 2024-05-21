@@ -122,7 +122,7 @@ const Transform = () => {
         set up your transformation`}
       />
 
-      <PageHead title="DDP: Transform" />
+      <PageHead title="Dalgo | Transform" />
       <main className={styles.main}>
         {selectedTransform === 'none' ? (
           <Box>
