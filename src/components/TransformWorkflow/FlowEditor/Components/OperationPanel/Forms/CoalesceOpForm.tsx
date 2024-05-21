@@ -53,8 +53,6 @@ const CoalesceOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -70,7 +68,7 @@ const CoalesceOpForm = ({
 
   const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
-      columns: [{ col: '' }],
+      columns: [{ col: null }] as Array<{ col: string | null }>,
       default_value: '',
       output_column_name: '',
     },
@@ -177,8 +175,10 @@ const CoalesceOpForm = ({
       setSrcColumns(source_columns);
 
       // pre-fill form
-      const coalesceColumns = columns.map((col: string) => ({ col: col }));
-      coalesceColumns.push({ col: '' });
+      const coalesceColumns = columns.map((col: string | null) => ({
+        col: col,
+      }));
+      coalesceColumns.push({ col: null });
       reset({
         columns: coalesceColumns,
         default_value: default_value,
@@ -258,6 +258,7 @@ const CoalesceOpForm = ({
                   render={({ field }) => (
                     <Autocomplete
                       {...field}
+                      data-testid={`column${index}`}
                       disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns
@@ -268,7 +269,7 @@ const CoalesceOpForm = ({
                         .sort((a, b) => a.localeCompare(b))}
                       onChange={(data: any) => {
                         field.onChange(data);
-                        if (data) append({ col: '' });
+                        if (data) append({ col: null });
                         else remove(index + 1);
                       }}
                     />
@@ -298,6 +299,7 @@ const CoalesceOpForm = ({
             render={({ field, fieldState }) => (
               <Input
                 {...field}
+                data-testid="defaultValue"
                 helperText={fieldState.error?.message}
                 error={!!fieldState.error}
                 disabled={action === 'view'}
