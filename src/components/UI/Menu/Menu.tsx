@@ -17,6 +17,7 @@ interface MenuProps {
     | 'transformtask';
   handleClose: () => void;
   handleEdit?: () => void;
+  handleDetails?: () => void;
   handleDelete?: () => void;
   handleResetConnection?: () => void;
   handleResendInvitation?: () => void;
@@ -32,6 +33,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   eleType,
   handleClose,
   handleEdit,
+  handleDetails,
   handleDelete,
   handleResetConnection,
   handleResendInvitation,
@@ -70,6 +72,18 @@ export const ActionsMenu: React.FC<MenuProps> = ({
           <Image src={EditIcon} alt="edit icon" />
         </ListItemIcon>
         Edit
+      </MenuItem>
+    )}
+    {handleDetails && (
+      <MenuItem
+        sx={{ my: 0 }}
+        onClick={() => handleDetails()}
+        disabled={!hasEditPermission}
+      >
+        <ListItemIcon style={{ minWidth: 28 }}>
+          <Image src={EditIcon} alt="edit icon" />
+        </ListItemIcon>
+        Details
       </MenuItem>
     )}
     {handleResendInvitation && (

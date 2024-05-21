@@ -38,6 +38,7 @@ import {
   useConnSyncLogs,
   useConnSyncLogsUpdate,
 } from '@/contexts/ConnectionSyncLogsContext';
+import ConnectionDetailsForm from './ConnectionDetailsForm';
 
 type PrefectFlowRun = {
   id: string;
@@ -178,6 +179,7 @@ export const Connections = () => {
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [showConfirmResetDialog, setShowConfirmResetDialog] =
@@ -617,6 +619,11 @@ export const Connections = () => {
     setShowDialog(true);
   };
 
+  const handleDetailsConnection = () => {
+    handleClose();
+    setShowDetails(true);
+  };
+
   // show load progress indicator
   if (isLoading) {
     return <CircularProgress />;
@@ -630,6 +637,7 @@ export const Connections = () => {
         open={open}
         handleClose={handleClose}
         handleEdit={handleEditConnection}
+        handleDetails={handleDetailsConnection}
         handleDelete={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
         hasResetPermission={permissions.includes('can_reset_connection')}
@@ -642,6 +650,13 @@ export const Connections = () => {
         mutate={mutate}
         showForm={showDialog}
         setShowForm={setShowDialog}
+      />
+      <ConnectionDetailsForm
+        setConnectionId={setConnectionId}
+        connectionId={connectionId}
+        mutate={mutate}
+        showForm={showDetails}
+        setShowForm={setShowDetails}
       />
       <List
         hasCreatePermission={permissions.includes('can_create_connection')}
