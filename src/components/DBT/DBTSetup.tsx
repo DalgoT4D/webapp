@@ -149,6 +149,10 @@ export const DBTSetup = ({
       };
       try {
         await httpPut(session, 'dbt/v1/schema/', updateSchemaPayload);
+        setWorkspace({
+          gitrepo_url: gitrepoUrl,
+          default_schema: data.schema,
+        });
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
