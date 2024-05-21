@@ -32,7 +32,7 @@ export const Auth: React.FC<AuthProps> = ({
             justifyContent="center"
             alignItems="center"
           >
-            <Image src={Logo} alt="ddp logo" />
+            <Image src={Logo} alt="dalgo logo" />
             <Paper
               sx={{
                 p: 4,
