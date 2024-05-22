@@ -39,6 +39,7 @@ import {
   useConnSyncLogsUpdate,
 } from '@/contexts/ConnectionSyncLogsContext';
 import ConnectionDetailsForm from './ConnectionDetailsForm';
+import PendingActionsAccordion from './PendingActions';
 
 type PrefectFlowRun = {
   id: string;
@@ -631,6 +632,7 @@ export const Connections = () => {
 
   return (
     <>
+      <PendingActionsAccordion />
       <ActionsMenu
         eleType="connection"
         anchorEl={anchorEl}
