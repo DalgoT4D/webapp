@@ -68,7 +68,8 @@ const ConnectionDetailsForm = ({
   const [tableData, setTableData] = useState<
     Array<{ name: string; changedColumns: string[] }>
   >([]);
-  const [columnChanges, setColumnChanges] = useState<ColumnChange[]>([]);
+  const [syncCatalog, setSyncCatalog] = useState<any>(null);
+  const [catalogId, setCatalogId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const searchInputRef: any = useRef();
   const inputRef: any = useRef(null);
@@ -84,7 +85,9 @@ const ConnectionDetailsForm = ({
             `airbyte/v1/connections/${connectionId}/catalog`
           );
           console.log('Fetched Data:', data); // Log fetched data
-          setValue('name', data?.name);
+          setCatalogId(data[0]?.catalogId || '');
+          setValue('name', data[0]?.name || '');
+          setSyncCatalog(data[0]?.syncCatalog?.streams || {});
 
           // Process catalogDiff to extract table names and changed columns
           if (Array.isArray(data)) {
@@ -93,18 +96,23 @@ const ConnectionDetailsForm = ({
                 const newData = dataItem.catalogDiff.transforms.map(
                   (transform: any) => {
                     const tableName = transform.streamDescriptor.name;
-                    const addedColumns: string[] = [];
-
-                    const removedColumns: string[] = [];
-
-                    transform.updateStream.forEach((update: any) => {
-                      if (update.transformType === 'add_field') {
-                        addedColumns.push(...update.fieldName);
-                      } else if (update.transformType === 'remove_field') {
-                        removedColumns.push(...update.fieldName);
-                      }
-                    });
-                    return { name: tableName, addedColumns, removedColumns };
+                    const changedColumns = transform.updateStream.reduce(
+                      (columns: string[], update: any) => {
+                        if (
+                          update.transformType === 'add_field' ||
+                          update.transformType === 'remove_field'
+                        ) {
+                          columns.push(
+                            `${
+                              update.transformType === 'add_field' ? '+' : '-'
+                            }${update.fieldName.join(', ')}`
+                          );
+                        }
+                        return columns;
+                      },
+                      []
+                    );
+                    return { name: tableName, changedColumns };
                   }
                 );
                 console.log('Processed Data:', newData); // Log processed data
@@ -126,6 +134,8 @@ const ConnectionDetailsForm = ({
                 setTableData([]); // Set tableData to an empty array
               }
             });
+          } else {
+            console.log('No data received or invalid data structure.'); // Log message for no data received
           }
         } catch (err: any) {
           console.error(err);
@@ -146,13 +156,13 @@ const ConnectionDetailsForm = ({
   };
 
   const onSubmit = async (data: any) => {
+    console.log(data, 'data');
     const payload: any = {
+      sourceCatalogId: catalogId,
       name: data.name,
-      streams: sourceStreams.map((stream: SourceStream) => {
-        return {
-          name: stream.name,
-        };
-      }),
+      connectionId,
+      syncCatalog: syncCatalog,
+      skipReset: true,
     };
     if (data.destinationSchema) {
       payload.destinationSchema = data.destinationSchema;
@@ -162,7 +172,7 @@ const ConnectionDetailsForm = ({
         setLoading(true);
         await httpPut(
           session,
-          `airbyte/v1/web_backend/connections/update`,
+          `airbyte/v1/connections/${connectionId}/schema_update`,
           payload
         );
         successToast('Connection updated', [], globalContext);
