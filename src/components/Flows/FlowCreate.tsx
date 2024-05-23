@@ -4,11 +4,15 @@ import {
   Backdrop,
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Divider,
+  FormControlLabel,
   InputLabel,
   Stack,
   Switch,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
@@ -25,6 +29,7 @@ import { Connection } from '@/components/Connections/Connections';
 import { TransformTask } from '../DBT/DBTTarget';
 import { TaskSequence } from './TaskSequence';
 import { localTimezone } from '@/utils/common';
+import { CheckBox } from '@mui/icons-material';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
@@ -87,6 +92,7 @@ const FlowCreate = ({
     formState: { dirtyFields, errors },
     reset,
     watch,
+    setValue,
   } = useForm<DeploymentDef>({
     defaultValues: {
       active: true,
@@ -98,6 +104,20 @@ const FlowCreate = ({
       cronTimeOfDay: '',
     },
   });
+
+  const [alignment, setAlignment] = useState('simple');
+  const handleChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newAlignment: string
+  ) => {
+    if (newAlignment === 'simple') {
+      setValue(
+        'tasks',
+        tasks.filter((task) => task.generated_by === 'system')
+      );
+    }
+    setAlignment(newAlignment);
+  };
 
   const scheduleSelected: any = watch('cron');
 
@@ -158,10 +178,30 @@ const FlowCreate = ({
             `prefect/v1/flows/${flowId}`
           );
 
-          const uuidOrder = data.transformTasks.reduce((acc: any, obj: any) => {
-            acc[obj.uuid] = obj.seq;
-            return acc;
-          }, {});
+          let tasksToApply = tasks.filter(
+            (task) => task.generated_by === 'system'
+          );
+
+          if (data.transformTasks.length === 0) {
+            tasksToApply = [];
+          }
+
+          if (
+            data.transformTasks.length > 0 &&
+            data.transformTasks.length !== tasksToApply.length
+          ) {
+            const uuidOrder = data.transformTasks.reduce(
+              (acc: any, obj: any) => {
+                acc[obj.uuid] = obj.seq;
+                return acc;
+              },
+              {}
+            );
+            tasksToApply = tasks
+              .filter((obj) => uuidOrder.hasOwnProperty(obj.uuid))
+              .sort((a, b) => uuidOrder[a.uuid] - uuidOrder[b.uuid]);
+            setAlignment('advanced');
+          }
 
           const cronObject = convertCronToString(data.cron);
 
@@ -178,9 +218,7 @@ const FlowCreate = ({
               })),
             active: data.isScheduleActive,
             name: data.name,
-            tasks: tasks
-              .filter((obj) => uuidOrder.hasOwnProperty(obj.uuid))
-              .sort((a, b) => uuidOrder[a.uuid] - uuidOrder[b.uuid]),
+            tasks: tasksToApply,
             cronDaysOfWeek: cronObject.daysOfWeek.map((day: string) => ({
               id: day,
               label: WEEKDAYS[day],
@@ -420,13 +458,54 @@ const FlowCreate = ({
                 <InputLabel sx={{ marginBottom: '5px' }}>
                   Transform tasks
                 </InputLabel>
-                <Controller
-                  name="tasks"
-                  control={control}
-                  render={({ field }) => (
-                    <TaskSequence field={field} options={tasks} />
-                  )}
-                />
+
+                <ToggleButtonGroup
+                  color="primary"
+                  sx={{ mt: 1 }}
+                  value={alignment}
+                  exclusive
+                  onChange={handleChange}
+                  aria-label="Platform"
+                >
+                  <ToggleButton sx={{ padding: '4px 11px' }} value="simple">
+                    Simple
+                  </ToggleButton>
+                  <ToggleButton sx={{ padding: '4px 11px' }} value="advanced">
+                    Advanced
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                <Box sx={{ mt: 2 }}>
+                  <Controller
+                    name="tasks"
+                    control={control}
+                    render={({ field }) =>
+                      alignment === 'simple' ? (
+                        <FormControlLabel
+                          key={field.name}
+                          control={
+                            <Checkbox
+                              checked={field.value.length > 0}
+                              onChange={() => {
+                                if (field.value.length > 0) {
+                                  field.onChange([]);
+                                } else {
+                                  field.onChange(
+                                    tasks.filter(
+                                      (task) => task.generated_by === 'system'
+                                    )
+                                  );
+                                }
+                              }}
+                            />
+                          }
+                          label="Run all tasks"
+                        />
+                      ) : (
+                        <TaskSequence field={field} options={tasks} />
+                      )
+                    }
+                  />
+                </Box>
               </Box>
             </Stack>
           </Box>

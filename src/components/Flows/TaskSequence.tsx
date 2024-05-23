@@ -6,7 +6,7 @@ import DeleteIcon from '@/assets/icons/delete.svg';
 import DragIcon from '@/assets/icons/drag.svg';
 
 import { NodeApi, Tree } from 'react-arborist';
-import { Box } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import Image from 'next/image';
 
 interface TaskSequenceProps {
@@ -172,6 +172,25 @@ export const TaskSequence = ({
         options={autocompleteOptions}
         onChange={handleSelect}
       />
+      <Box sx={{ width: '100%', display: 'flex', mt: 2 }}>
+        <Button
+          sx={{ ml: 'auto' }}
+          variant="contained"
+          size="small"
+          onClick={() =>
+            field.onChange(
+              initialOptions.filter((task) => task.generated_by === 'system')
+            )
+          }
+        >
+          Reset to default
+        </Button>
+      </Box>
+      <Typography sx={{ mt: 1 }} variant="body2" gutterBottom>
+        These are your default transformation tasks. Most users don&apos;t need to
+        change this list
+      </Typography>
+
       <Tree
         ref={treeRef}
         data={field.value}
@@ -183,7 +202,6 @@ export const TaskSequence = ({
         rowHeight={50}
         height={field.value.length * 40}
         overscanCount={1}
-        paddingTop={30}
         paddingBottom={30}
         disableDrag={(node: any) => node.generated_by === 'system'}
         disableDrop={(node) => {
