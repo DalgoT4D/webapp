@@ -14,7 +14,6 @@ import { httpGet, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
-import Input from '../UI/Input/Input';
 
 interface ConnectionDetailsFormProps {
   connectionId: string;
@@ -71,6 +70,7 @@ const ConnectionDetailsForm = ({
   const [syncCatalog, setSyncCatalog] = useState<any>(null);
   const [catalogId, setCatalogId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [hasBreakingChanges, setHasBreakingChanges] = useState<boolean>(false);
   const searchInputRef: any = useRef();
   const inputRef: any = useRef(null);
   const shouldFocusInput: any = useRef(null);
@@ -84,15 +84,16 @@ const ConnectionDetailsForm = ({
             session,
             `airbyte/v1/connections/${connectionId}/catalog`
           );
-          console.log('Fetched Data:', data); // Log fetched data
           setCatalogId(data[0]?.catalogId || '');
           setValue('name', data[0]?.name || '');
           setSyncCatalog(data[0]?.syncCatalog?.streams || {});
+          console.log('Fetched Data:', data);
 
-          // Process catalogDiff to extract table names and changed columns
           if (Array.isArray(data)) {
             data.forEach((dataItem) => {
               if (Array.isArray(dataItem?.catalogDiff?.transforms)) {
+                const breakingChanges = dataItem.schemaChange === 'breaking';
+                setHasBreakingChanges(breakingChanges);
                 const newData = dataItem.catalogDiff.transforms.map(
                   (transform: any) => {
                     const tableName = transform.streamDescriptor.name;
@@ -115,7 +116,7 @@ const ConnectionDetailsForm = ({
                     return { name: tableName, changedColumns };
                   }
                 );
-                console.log('Processed Data:', newData); // Log processed data
+                console.log('Processed Data:', newData);
                 setTableData(newData);
 
                 // Extract and set source streams
@@ -130,12 +131,12 @@ const ConnectionDetailsForm = ({
                   setFilteredSourceStreams(sourceStreamsData);
                 }
               } else {
-                console.log('No changes detected or invalid data structure.'); // Log message for no changes
-                setTableData([]); // Set tableData to an empty array
+                console.log('No changes detected or invalid data structure.');
+                setTableData([]);
               }
             });
           } else {
-            console.log('No data received or invalid data structure.'); // Log message for no data received
+            console.log('No data received or invalid data structure.');
           }
         } catch (err: any) {
           console.error(err);
@@ -161,12 +162,16 @@ const ConnectionDetailsForm = ({
       sourceCatalogId: catalogId,
       name: data.name,
       connectionId,
-      syncCatalog: syncCatalog,
+      syncCatalog: {
+        streams: Object.values(syncCatalog),
+      },
       skipReset: true,
     };
+
     if (data.destinationSchema) {
       payload.destinationSchema = data.destinationSchema;
     }
+
     try {
       if (connectionId) {
         setLoading(true);
@@ -176,6 +181,14 @@ const ConnectionDetailsForm = ({
           payload
         );
         successToast('Connection updated', [], globalContext);
+
+        // Fetch the updated catalog data
+        const updatedCatalogData: any = await httpGet(
+          session,
+          `airbyte/v1/connections/${connectionId}/catalog`
+        );
+        console.log('Updated Catalog Data:', updatedCatalogData);
+
         setLoading(false);
       }
       mutate();
@@ -183,8 +196,8 @@ const ConnectionDetailsForm = ({
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -213,16 +226,35 @@ const ConnectionDetailsForm = ({
         <Box sx={{ pt: 2, pb: 4 }}>
           {tableData.length > 0 ? (
             <Table>
-              <Typography variant="h6">{`${tableCount} table${
+              <Typography variant="h6" fontWeight={600}>{`${tableCount} table${
                 tableCount !== 1 ? 's' : ''
               } with changes`}</Typography>
               <TableBody>
                 {tableData.map((table, idx) => (
                   <React.Fragment key={idx}>
-                    <Typography variant="subtitle2">Table name</Typography>
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="#5f7182"
+                      marginTop="20px"
+                      gutterBottom
+                    >
+                      Tables added
+                    </Typography>
+                    <Typography
+                      variant="subtitle2"
+                      color="#7b889c"
+                      fontWeight={800}
+                    >
+                      Table name
+                    </Typography>
                     <TableRow>
-                      <TableCell>
-                        <Typography variant="subtitle1" gutterBottom>
+                      <TableCell sx={{ bgcolor: '#f2f2eb' }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ margin: 0, padding: 0 }}
+                          gutterBottom
+                        >
                           {table.name}
                         </Typography>
                       </TableCell>
@@ -231,7 +263,13 @@ const ConnectionDetailsForm = ({
                       column.startsWith('-')
                     ) && (
                       <React.Fragment>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography
+                          variant="h6"
+                          fontWeight={600}
+                          color="#5f7182"
+                          marginTop="20px"
+                          gutterBottom
+                        >
                           Columns Removed
                         </Typography>
                         <Box
@@ -240,10 +278,18 @@ const ConnectionDetailsForm = ({
                             justifyContent: 'space-between',
                           }}
                         >
-                          <Typography variant="subtitle2">
+                          <Typography
+                            variant="subtitle2"
+                            color="#7b889c"
+                            fontWeight={800}
+                          >
                             Table Name
                           </Typography>
-                          <Typography variant="subtitle2">
+                          <Typography
+                            variant="subtitle2"
+                            color="#7b889c"
+                            fontWeight={800}
+                          >
                             Column Name
                           </Typography>
                         </Box>
@@ -251,14 +297,33 @@ const ConnectionDetailsForm = ({
                           {table.changedColumns
                             .filter((column) => column.startsWith('-'))
                             .map((column, idx) => (
-                              <TableRow key={idx}>
-                                <TableCell>
-                                  <Typography variant="body2">
+                              <TableRow
+                                key={idx}
+                                sx={{
+                                  boxShadow: 'none',
+                                }}
+                              >
+                                <TableCell
+                                  sx={{
+                                    bgcolor: '#f2f2eb',
+                                    paddingRight: '8px',
+                                    borderRight: '8px solid white',
+                                    width: '50%',
+                                  }}
+                                >
+                                  <Typography variant="body2" align="left">
                                     {table.name}
                                   </Typography>
                                 </TableCell>
-                                <TableCell>
-                                  <Typography variant="body2">
+                                <TableCell
+                                  sx={{
+                                    bgcolor: '#f2f2eb',
+                                    paddingLeft: '8px',
+                                    borderLeft: '8px solid white',
+                                    width: '50%',
+                                  }}
+                                >
+                                  <Typography variant="body2" align="left">
                                     {column.substring(1)}
                                   </Typography>
                                 </TableCell>
@@ -271,24 +336,62 @@ const ConnectionDetailsForm = ({
                       (column) => !column.startsWith('-')
                     ) && (
                       <React.Fragment>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography variant="h6" color="#5f7182" gutterBottom>
                           Columns Added
                         </Typography>
-                        <Typography variant="subtitle2">Table Name</Typography>
-                        <Typography variant="subtitle2">Column Name</Typography>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            color="#7b889c"
+                            fontWeight={800}
+                          >
+                            Table Name
+                          </Typography>
+                          <Typography
+                            variant="subtitle2"
+                            color="#7b889c"
+                            fontWeight={800}
+                          >
+                            Column Name
+                          </Typography>
+                        </Box>
                         <Table>
                           {table.changedColumns
                             .filter((column) => !column.startsWith('-'))
                             .map((column, idx) => (
-                              <TableRow key={idx}>
-                                <TableCell>
-                                  <Typography variant="body2">
+                              <TableRow
+                                key={idx}
+                                sx={{
+                                  boxShadow: 'none',
+                                }}
+                              >
+                                <TableCell
+                                  sx={{
+                                    bgcolor: '#f2f2eb',
+                                    paddingRight: '8px',
+                                    borderRight: '8px solid white',
+                                    width: '50%',
+                                  }}
+                                >
+                                  <Typography variant="body2" align="left">
                                     {table.name}
                                   </Typography>
                                 </TableCell>
-                                <TableCell>
-                                  <Typography variant="body2">
-                                    {column}
+                                <TableCell
+                                  sx={{
+                                    bgcolor: '#f2f2eb',
+                                    paddingLeft: '8px',
+                                    borderLeft: '8px solid white',
+                                    width: '50%',
+                                  }}
+                                >
+                                  <Typography variant="body2" align="left">
+                                    {column.substring(1)}
                                   </Typography>
                                 </TableCell>
                               </TableRow>
@@ -320,7 +423,11 @@ const ConnectionDetailsForm = ({
         formContent={<FormContent />}
         formActions={
           <>
-            <Button variant="contained" type="submit">
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={hasBreakingChanges}
+            >
               Yes, I approve
             </Button>
             <Button color="secondary" variant="outlined" onClick={handleClose}>
