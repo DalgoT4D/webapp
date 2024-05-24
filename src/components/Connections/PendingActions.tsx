@@ -62,7 +62,7 @@ const PendingActionsAccordion = () => {
 
   return (
     <>
-      <Accordion>
+      <Accordion sx={{ marginBottom: '16px' }}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"
