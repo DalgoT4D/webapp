@@ -69,7 +69,7 @@ const PendingActionsAccordion = () => {
           id="panel1a-header"
         >
           <Typography variant="h6" fontWeight={800}>
-            Pending Actions
+            Pending Actions ({schemaChangeData.length})
           </Typography>
         </AccordionSummary>
         <AccordionDetails>

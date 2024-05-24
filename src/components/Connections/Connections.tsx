@@ -13,6 +13,7 @@ import Button from '@mui/material/Button';
 import SyncIcon from '@/assets/icons/sync.svg';
 import LockIcon from '@mui/icons-material/Lock';
 import LoopIcon from '@mui/icons-material/Loop';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -620,6 +621,23 @@ export const Connections = () => {
     setShowDialog(true);
   };
 
+  const handleRefreshConnection = async () => {
+    handleClose();
+    try {
+      const response = await httpGet(
+        session,
+        `airbyte/v1/connections/${connectionId}/catalog`
+      );
+      if (response.success) {
+        successToast('Connection refreshed successfully', [], globalContext);
+        mutate(); // Update the connection data
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast('Failed to refresh connection', [], globalContext);
+    }
+  };
+
   // show load progress indicator
   if (isLoading) {
     return <CircularProgress />;
@@ -634,6 +652,7 @@ export const Connections = () => {
         open={open}
         handleClose={handleClose}
         handleEdit={handleEditConnection}
+        handleRefresh={handleRefreshConnection}
         handleDelete={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
         hasResetPermission={permissions.includes('can_reset_connection')}
