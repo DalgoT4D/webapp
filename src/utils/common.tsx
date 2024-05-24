@@ -6,6 +6,10 @@ export const lastRunTime = (startTime: string) => {
   return startTime ? moment(new Date(startTime)).fromNow() : '-';
 };
 
+export const localTimezone = () => {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+};
+
 // minutes, hours, day of month, month, day of week
 // 0 1 * * *
 // WE ASSUME AND REQUIRE that d-o-m and m are always "*"
@@ -88,7 +92,7 @@ export const getOrgHeaderValue = (verb: string, path: string) => {
     return '';
   } else if (
     verb === 'POST' &&
-    ['organizations/', 'organizations/users/invite/accept/'].includes(path)
+    ['organizations/', 'v1/organizations/users/invite/accept/'].includes(path)
   ) {
     return '';
   }
@@ -109,4 +113,12 @@ export const trimString = (string: string, length: number) => {
   ) : (
     string
   );
+};
+
+export const parseStringForNull = (st: string | null | undefined) => {
+  if (st === null || st === undefined) {
+    return null;
+  }
+
+  return st.trim().toLowerCase() === 'null' ? null : st;
 };

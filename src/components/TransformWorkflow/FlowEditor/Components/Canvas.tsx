@@ -93,6 +93,7 @@ type EdgeStyleProps = {
 export interface UIOperationType {
   slug: string;
   label: string;
+  infoToolTip?: string;
 }
 
 const nodeTypes: NodeTypes = {
@@ -125,6 +126,8 @@ const CanvasHeader = ({
 }: {
   setCanvasAction: (...args: any) => void;
 }) => {
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   return (
     <Box
       sx={{
@@ -146,6 +149,7 @@ const CanvasHeader = ({
           variant="contained"
           type="button"
           onClick={() => setCanvasAction({ type: 'run-workflow', data: null })}
+          disabled={!permissions.includes('can_run_pipeline')}
         >
           Run
         </Button>
@@ -215,7 +219,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       color: 'black',
     },
   };
-  // const setDbtRunLogs = useDbtRunLogsUpdate();
 
   const fetchDbtProjectGraph = async () => {
     try {

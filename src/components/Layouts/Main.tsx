@@ -24,6 +24,7 @@ type OrgUser = {
   role_slug: string;
   org: Org;
   wtype: string;
+  permissions: { slug: string; name: string }[];
 };
 
 const MainDashboard = ({ children }: any) => {
@@ -38,6 +39,7 @@ const MainDashboard = ({ children }: any) => {
     (async () => {
       try {
         let orgusers = await httpGet(session, `currentuserv2`);
+
         // if there are no orgs, redirect to create org page
         let hasOrg = false;
         if (orgusers && orgusers.length > 0) {
@@ -69,7 +71,7 @@ const MainDashboard = ({ children }: any) => {
         const currentOrgSlug = localStorage.getItem('org-slug');
         let currentOrgUser: OrgUser | null | undefined = null;
         currentOrgUser = orgusers?.find(
-          (orguser: OrgUser) => orguser.org.slug === currentOrgSlug
+          (orguser: OrgUser) => orguser.org.slug === currentOrgSlug,
         );
         // If not pick the first org from the api response
         if (!currentOrgUser && orgusers && orgusers.length > 0)
@@ -78,6 +80,16 @@ const MainDashboard = ({ children }: any) => {
         globalContext?.CurrentOrg.dispatch({
           type: 'new',
           orgState: { ...currentOrgUser?.org, wtype: currentOrgUser?.wtype },
+        });
+
+        // update permissions in global state
+        const permissions = currentOrgUser?.permissions.map(
+          (permission: any) => permission.slug
+        );
+
+        globalContext?.Permissions.dispatch({
+          type: 'add',
+          permissionState: permissions,
         });
       } catch (error) {
         console.error(error);

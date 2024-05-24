@@ -40,3 +40,23 @@ Open `http://localhost:<port>` with your browser to see the result.
 ## Development convention
 
 Refer to this [guide](https://github.com/airbnb/javascript/tree/master/react)
+
+## Using Docker on Dev
+
+Make sure you have docker and docker compose installed.
+
+-  Install [docker](https://docs.docker.com/engine/install/)
+-  Install [docker-compose](https://docs.docker.com/compose/install/)
+
+
+### Step 1: Copy .env file to Dcoker folder
+
+### Step 2: Build the Docker image
+
+All the variables with NEXT_PUBLIC prefix need to be added to the build command. This is because we are running the application as standalone mode
+
+`docker build -f Docker/Dockerfile --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg NEXT_PUBLIC_BACKEND_URL="<url of django backend>" -t dalgo_frontend:0.1 .`
+
+### Step 3: Start the application
+
+`docker-compose -f Docker/docker-compose.yaml up`

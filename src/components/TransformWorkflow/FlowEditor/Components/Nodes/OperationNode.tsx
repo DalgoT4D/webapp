@@ -8,9 +8,12 @@ import {
   useCanvasAction,
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 export function OperationNode(node: OperationNodeType) {
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
   const edges = useEdges();
   const nodeId = useNodeId();
   const { setCanvasAction, canvasAction } = useCanvasAction();
@@ -25,7 +28,8 @@ export function OperationNode(node: OperationNodeType) {
 
   // can only delete/chain more ops if this node doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean =
-    edgesEmanatingOutOfNode.length > 0 ? false : true;
+    permissions.includes('can_delete_dbt_operation') &&
+    edgesEmanatingOutOfNode.length <= 0;
 
   const handleDeleteAction = () => {
     setCanvasAction({
@@ -44,10 +48,17 @@ export function OperationNode(node: OperationNodeType) {
 
   const handleSelectNode = () => {
     setCanvasNode(node);
-    setCanvasAction({
-      type: 'open-opconfig-panel',
-      data: 'edit',
-    });
+    if (permissions.includes('can_edit_dbt_operation'))
+      setCanvasAction({
+        type: 'open-opconfig-panel',
+        data: 'edit',
+      });
+    else if (permissions.includes('can_view_dbt_operation')) {
+      setCanvasAction({
+        type: 'open-opconfig-panel',
+        data: 'view',
+      });
+    }
   };
 
   useEffect(() => {
@@ -64,6 +75,7 @@ export function OperationNode(node: OperationNodeType) {
 
   return (
     <Box
+      onClick={handleSelectNode}
       sx={{
         border:
           node.id === canvasNode?.id || node.data?.isDummy
@@ -100,7 +112,10 @@ export function OperationNode(node: OperationNodeType) {
           >
             {isDeletable && (
               <IconButton
-                onClick={handleDeleteAction}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleDeleteAction();
+                }}
                 data-testid="closebutton"
               >
                 <DeleteIcon fontSize="small" />
@@ -109,7 +124,7 @@ export function OperationNode(node: OperationNodeType) {
           </Box>
         </Box>
         <Divider orientation="horizontal" sx={{ color: '#EEEEEE' }} />
-        <Box sx={{ display: 'flex' }} onClick={handleSelectNode}>
+        <Box sx={{ display: 'flex' }}>
           <Box
             sx={{
               flex: '1',

@@ -16,6 +16,8 @@ export const CASEWHEN_OP = 'casewhen';
 export const UNION_OP = 'unionall';
 export const PIVOT_OP = 'pivot';
 export const UNPIVOT_OP = 'unpivot';
+export const GENERIC_COL_OP = 'generic';
+export const GENERIC_SQL_OP = 'rawsql';
 
 export const operations = [
   {
@@ -102,6 +104,16 @@ export const operations = [
     label: 'Unpivot',
     slug: UNPIVOT_OP,
     infoToolTip: 'Unpivot columns & values of a table into rows',
+  },
+  {
+    label: 'Generic Column',
+    slug: GENERIC_COL_OP,
+    infoToolTip: 'Add a generic column operation',
+  },
+  {
+    label: 'Generic SQL',
+    slug: GENERIC_SQL_OP,
+    infoToolTip: 'Add a generic sql operation',
   },
 ].sort((a, b) => a.label.localeCompare(b.label));
 
