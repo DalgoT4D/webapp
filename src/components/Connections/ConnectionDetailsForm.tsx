@@ -84,60 +84,52 @@ const ConnectionDetailsForm = ({
             session,
             `airbyte/v1/connections/${connectionId}/catalog`
           );
-          setCatalogId(data[0]?.catalogId || '');
-          setValue('name', data[0]?.name || '');
-          setSyncCatalog(data[0]?.syncCatalog?.streams || {});
-          console.log('Fetched Data:', data);
 
-          if (Array.isArray(data)) {
-            data.forEach((dataItem) => {
-              if (Array.isArray(dataItem?.catalogDiff?.transforms)) {
-                const breakingChanges = dataItem.schemaChange === 'breaking';
-                setHasBreakingChanges(breakingChanges);
-                const newData = dataItem.catalogDiff.transforms.map(
-                  (transform: any) => {
-                    const tableName = transform.streamDescriptor.name;
-                    const changedColumns = transform.updateStream.reduce(
-                      (columns: string[], update: any) => {
-                        if (
-                          update.transformType === 'add_field' ||
-                          update.transformType === 'remove_field'
-                        ) {
-                          columns.push(
-                            `${
-                              update.transformType === 'add_field' ? '+' : '-'
-                            }${update.fieldName.join(', ')}`
-                          );
-                        }
-                        return columns;
-                      },
-                      []
-                    );
-                    return { name: tableName, changedColumns };
-                  }
-                );
-                console.log('Processed Data:', newData);
-                setTableData(newData);
+          setCatalogId(data.catalogId || '');
+          setValue('name', data.name || '');
+          setSyncCatalog(data.syncCatalog?.streams || {});
 
-                // Extract and set source streams
-                const streams = dataItem.syncCatalog?.streams;
-                if (streams) {
-                  const sourceStreamsData = streams.map((stream: any) => ({
-                    name: stream.stream.name,
-                    columnsAdded: stream.stream.columnsAdded,
-                    columnsRemoved: stream.stream.columnsRemoved,
-                  }));
-                  setSourceStreams(sourceStreamsData);
-                  setFilteredSourceStreams(sourceStreamsData);
+          const catalogDiffData = data.catalogDiff?.transforms || [];
+
+          const newData = catalogDiffData.map((transform: any) => {
+            const tableName = transform.streamDescriptor.name;
+            const changedColumns = transform.updateStream.reduce(
+              (columns: string[], update: any) => {
+                if (
+                  update.transformType === 'add_field' ||
+                  update.transformType === 'remove_field'
+                ) {
+                  columns.push(
+                    `${
+                      update.transformType === 'add_field' ? '+' : '-'
+                    }${update.fieldName.join(', ')}`
+                  );
                 }
-              } else {
-                console.log('No changes detected or invalid data structure.');
-                setTableData([]);
-              }
-            });
-          } else {
-            console.log('No data received or invalid data structure.');
+                return columns;
+              },
+              []
+            );
+            return { name: tableName, changedColumns };
+          });
+
+          console.log('Processed Data:', newData);
+          setTableData(newData);
+
+          // Extract and set source streams
+          const streams = data.syncCatalog?.streams;
+          if (streams) {
+            const sourceStreamsData = streams.map((stream: any) => ({
+              name: stream.stream.name,
+              columnsAdded: stream.stream.columnsAdded,
+              columnsRemoved: stream.stream.columnsRemoved,
+            }));
+            setSourceStreams(sourceStreamsData);
+            setFilteredSourceStreams(sourceStreamsData);
           }
+
+          // Check for breaking changes
+          const breakingChanges = data.schemaChange === 'breaking';
+          setHasBreakingChanges(breakingChanges);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
