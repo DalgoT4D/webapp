@@ -13,7 +13,6 @@ import Button from '@mui/material/Button';
 import SyncIcon from '@/assets/icons/sync.svg';
 import LockIcon from '@mui/icons-material/Lock';
 import LoopIcon from '@mui/icons-material/Loop';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -188,6 +187,7 @@ export const Connections = () => {
     useState<boolean>(false);
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
 
@@ -623,6 +623,7 @@ export const Connections = () => {
 
   const handleRefreshConnection = async () => {
     handleClose();
+    setIsRefreshing(true); // Set loading state to true
     try {
       const response = await httpGet(
         session,
@@ -635,11 +636,13 @@ export const Connections = () => {
     } catch (err: any) {
       console.error(err);
       errorToast('Failed to refresh connection', [], globalContext);
+    } finally {
+      setIsRefreshing(false); // Set loading state to false
     }
   };
 
   // show load progress indicator
-  if (isLoading) {
+  if (isLoading || isRefreshing) {
     return <CircularProgress />;
   }
 
