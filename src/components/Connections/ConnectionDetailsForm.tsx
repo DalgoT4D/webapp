@@ -97,13 +97,18 @@ const ConnectionDetailsForm = ({
               (columns: string[], update: any) => {
                 if (
                   update.transformType === 'add_field' ||
-                  update.transformType === 'remove_field'
+                  update.transformType === 'remove_field' ||
+                  update.transformType === 'update_field_schema'
                 ) {
-                  columns.push(
-                    `${
-                      update.transformType === 'add_field' ? '+' : '-'
-                    }${update.fieldName.join(', ')}`
-                  );
+                  if (update.transformType === 'update_field_schema') {
+                    columns.push(`+${update.fieldName.join(', ')}`);
+                  } else {
+                    columns.push(
+                      `${
+                        update.transformType === 'add_field' ? '+' : '-'
+                      }${update.fieldName.join(', ')}`
+                    );
+                  }
                 }
                 return columns;
               },
@@ -328,8 +333,14 @@ const ConnectionDetailsForm = ({
                       (column) => !column.startsWith('-')
                     ) && (
                       <React.Fragment>
-                        <Typography variant="h6" color="#5f7182" gutterBottom>
-                          Columns Added
+                        <Typography
+                          variant="h6"
+                          fontWeight={600}
+                          color="#5f7182"
+                          marginTop="20px"
+                          gutterBottom
+                        >
+                          Columns Added/Updated
                         </Typography>
                         <Box
                           sx={{
