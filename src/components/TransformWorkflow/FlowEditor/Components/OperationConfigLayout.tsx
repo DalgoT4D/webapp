@@ -1,17 +1,15 @@
 import {
   Backdrop,
   Box,
-  CircularProgress,
   Divider,
   IconButton,
   LinearProgress,
   List,
   ListItemButton,
   SxProps,
-  Tooltip,
   Typography,
 } from '@mui/material';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
@@ -20,7 +18,6 @@ import {
   UIOperationType,
   getNextNodePosition,
 } from './Canvas';
-// import { operations } from './OperationConfigForms/constant';
 import {
   OPERATION_NODE,
   RENAME_COLUMNS_OP,
@@ -39,6 +36,8 @@ import {
   FLATTEN_JSON_OP,
   PIVOT_OP,
   UNPIVOT_OP,
+  GENERIC_COL_OP,
+  GENERIC_SQL_OP,
 } from '../constant';
 import RenameColumnOpForm from './OperationPanel/Forms/RenameColumnOpForm';
 import CastColumnOpForm from './OperationPanel/Forms/CastColumnOpForm';
@@ -66,6 +65,9 @@ import { generateDummyOperationlNode } from './dummynodes';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import PivotOpForm from './OperationPanel/Forms/PivotOpForm';
 import UnpivotOpForm from './OperationPanel/Forms/UnpivotOpForm';
+import GenericColumnOpForm from './OperationPanel/Forms/GenericColumnOpForm';
+import GenericSqlOpForm from './OperationPanel/Forms/GenericSqlOpForm';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -78,8 +80,8 @@ export interface OperationFormProps {
   operation: UIOperationType;
   sx: SxProps;
   continueOperationChain: (...args: any) => void;
-  clearAndClosePanel: (...args: any) => void;
-  dummyNodeId: string;
+  clearAndClosePanel?: (...args: any) => void;
+  dummyNodeId?: string;
   action: 'create' | 'view' | 'edit';
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -100,6 +102,8 @@ const operationComponentMapping: any = {
   [FLATTEN_JSON_OP]: FlattenJsonOpForm,
   [PIVOT_OP]: PivotOpForm,
   [UNPIVOT_OP]: UnpivotOpForm,
+  [GENERIC_COL_OP]: GenericColumnOpForm,
+  [GENERIC_SQL_OP]: GenericSqlOpForm,
 };
 
 const OperationForm = ({
@@ -160,9 +164,12 @@ const OperationConfigLayout = ({
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
   const [isPanelLoading, setIsPanelLoading] = useState<boolean>(false);
+  const [showAddFunction, setShowAddFunction] = useState<boolean>(true);
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
   const panelOpFormState = useRef<'create' | 'view' | 'edit'>('view');
+  const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   const { addEdges, addNodes, deleteElements, getNodes, setNodes, getEdges } =
     useReactFlow();
@@ -216,9 +223,14 @@ const OperationConfigLayout = ({
       setOpenPanel(true);
       setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
+      console.log(canvasAction, panelOpFormState);
       if (['view', 'edit'].includes(panelOpFormState.current)) {
         const nodeData = canvasNode?.data as OperationNodeData;
-        if (!nodeData?.is_last_in_chain) {
+        console.log(canvasNode);
+        if (
+          !nodeData?.is_last_in_chain ||
+          !permissions.includes('can_edit_dbt_operation')
+        ) {
           setSelectedOp(
             operations.find((op) => op.slug === nodeData.config?.type)
           );
@@ -343,11 +355,12 @@ const OperationConfigLayout = ({
   };
 
   const OperationList = ({ sx }: { sx: SxProps }) => {
-    // These are the operations that can't be chained
+    // These are the operations that can't be chained in middle using ctes
     const cantChainOperationsInMiddle: string[] = [
       UNION_OP,
       CAST_DATA_TYPES_OP,
       FLATTEN_JSON_OP,
+      UNPIVOT_OP,
     ];
 
     return (
@@ -359,37 +372,42 @@ const OperationConfigLayout = ({
               canvasNode?.type === OPERATION_NODE
             );
             return (
-              <Tooltip
+              <ListItemButton
                 key={op.slug}
-                title={
-                  canSelectOperation
-                    ? ''
-                    : 'Please create a table to use this function'
-                }
-                placement="top"
-                disableHoverListener={canSelectOperation}
-              >
-                <ListItemButton
-                  key={op.slug}
-                  sx={{
-                    padding: '10px 20px',
-                    color: '#0F2440',
-                    fontWeight: 600,
-                    '&:hover': {
-                      backgroundColor: '#F5FAFA',
+                sx={{
+                  padding: '10px 20px',
+                  color: '#0F2440',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: '#F5FAFA',
+                    '& .infoIcon': {
+                      visibility: 'visible',
                     },
-                  }}
-                  onClick={
-                    canSelectOperation
-                      ? () => {
-                          handleSelectOp(op);
-                        }
-                      : undefined
-                  }
-                >
-                  {op.label}
-                </ListItemButton>
-              </Tooltip>
+                  },
+                  '& .infoIcon': {
+                    visibility: 'hidden',
+                  },
+                }}
+                onClick={
+                  canSelectOperation
+                    ? () => {
+                        handleSelectOp(op);
+                      }
+                    : undefined
+                }
+              >
+                {op.label}
+                <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+                  <InfoTooltip
+                    placement="top"
+                    title={
+                      canSelectOperation
+                        ? op.infoToolTip
+                        : 'Please create a table to use this function'
+                    }
+                  />
+                </Box>
+              </ListItemButton>
             );
           })}
         </List>
@@ -452,6 +470,9 @@ const OperationConfigLayout = ({
     deleteElements({
       nodes: [{ id: dummyNodeIdRef.current }],
     });
+    if (selectedOp) {
+      setShowAddFunction(selectedOp.slug !== GENERIC_SQL_OP);
+    }
     setSelectedOp(null);
     setCanvasAction({
       type: 'update-canvas-node',
@@ -545,10 +566,13 @@ const OperationConfigLayout = ({
               }}
             />
           ) : (
-            <CreateTableOrAddFunction
-              clickCreateTable={handleCreateTable}
-              clickAddFunction={handleAddFunction}
-            />
+            <>
+              <CreateTableOrAddFunction
+                clickCreateTable={handleCreateTable}
+                clickAddFunction={handleAddFunction}
+                showAddFunction={showAddFunction}
+              />
+            </>
           )}
         </Box>
       </Box>

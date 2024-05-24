@@ -1,11 +1,11 @@
 import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
-import { PrefectFlowRunLog } from '@/components/DBT/DBTTarget';
+import { TaskProgressLog } from '@/components/TransformWorkflow/FlowEditor/FlowEditor';
 
-const DbtRunLogsContext = React.createContext<PrefectFlowRunLog[]>([]);
-const DbtRunLogsUpdateContext = React.createContext<
-  Dispatch<SetStateAction<PrefectFlowRunLog[]>>
->((() => {}) as Dispatch<SetStateAction<PrefectFlowRunLog[]>>);
+export const DbtRunLogsContext = React.createContext<TaskProgressLog[]>([]);
+export const DbtRunLogsUpdateContext = React.createContext<
+  Dispatch<SetStateAction<TaskProgressLog[]>>
+>((() => {}) as Dispatch<SetStateAction<TaskProgressLog[]>>);
 
 export const useDbtRunLogs = () => {
   return useContext(DbtRunLogsContext);
@@ -16,8 +16,9 @@ export const useDbtRunLogsUpdate = () => {
 };
 
 export const DbtRunLogsProvider = ({ children }: any) => {
-  const [dbtRunLogs, setDbtRunLogs] = useState<PrefectFlowRunLog[]>([]);
+  const [dbtRunLogs, setDbtRunLogs] = useState<TaskProgressLog[]>([]);
 
+  // Todo: Make them in same context object
   return (
     <DbtRunLogsContext.Provider value={dbtRunLogs}>
       <DbtRunLogsUpdateContext.Provider value={setDbtRunLogs}>

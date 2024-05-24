@@ -11,6 +11,7 @@ import Input from '@/components/UI/Input/Input';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
+import { parseStringForNull } from '@/utils/common';
 
 interface ReplaceOp {
   find: string;
@@ -112,10 +113,10 @@ const ReplaceValueOpForm = ({
       };
 
       data.config.forEach((item: any) => {
-        if (item.old && item.new)
+        if (item.old || item.new)
           postData.config.columns[0].replace_ops.push({
-            find: item.old,
-            replace: item.new,
+            find: parseStringForNull(item.old),
+            replace: parseStringForNull(item.new),
           });
       });
 

@@ -5,6 +5,7 @@ import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
 import { Connections } from '../Connections';
 import userEvent from '@testing-library/user-event';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -32,6 +33,7 @@ describe('Sync connection suite', () => {
       destination: { name: 'postgres-1', destinationName: 'postgres' },
       lastRun: { startTime: '1686937507' },
       deploymentId: 'deploy-id-1',
+      lock: null,
     },
     {
       connectionId: 'connection-id-2',
@@ -41,6 +43,7 @@ describe('Sync connection suite', () => {
       destination: { name: 'postgres-2', destinationName: 'postgres' },
       lastRun: { startTime: '1686937507' },
       deploymentId: 'deploy-id-2',
+      lock: null,
     },
   ];
 
@@ -55,6 +58,35 @@ describe('Sync connection suite', () => {
     },
   ];
 
+  const connections = (
+    <GlobalContext.Provider
+      value={{
+        CurrentOrg: { state: { is_demo: false } },
+        Permissions: {
+          state: [
+            'can_sync_sources',
+            'can_reset_connection',
+            'can_delete_connection',
+            'can_edit_connection',
+            'can_create_connection',
+          ],
+        },
+      }}
+    >
+      <SessionProvider session={mockSession}>
+        <SWRConfig
+          value={{
+            dedupingInterval: 0,
+            fetcher: (resource) =>
+              fetch(resource, {}).then((res) => res.json()),
+          }}
+        >
+          <Connections />
+        </SWRConfig>
+      </SessionProvider>
+    </GlobalContext.Provider>
+  );
+
   it('Sync connection', async () => {
     (global as any).fetch = jest
       .fn()
@@ -67,19 +99,7 @@ describe('Sync connection suite', () => {
         json: jest.fn().mockResolvedValueOnce(SOURCES),
       });
 
-    render(
-      <SessionProvider session={mockSession}>
-        <SWRConfig
-          value={{
-            dedupingInterval: 0,
-            fetcher: (resource) =>
-              fetch(resource, {}).then((res) => res.json()),
-          }}
-        >
-          <Connections />
-        </SWRConfig>
-      </SessionProvider>
-    );
+    render(connections);
 
     await waitFor(() => {
       expect(screen.getByRole('table')).toBeInTheDocument();
@@ -164,34 +184,23 @@ describe('Sync connection suite', () => {
   });
 
   it('sync connection - flow run id not found', async () => {
-    (global as any).fetch = jest
-      .fn()
-      .mockResolvedValueOnce(() => ({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce(CONNECTIONS),
-      }))
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce(CONNECTIONS),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce(SOURCES),
-      });
-
-    render(
-      <SessionProvider session={mockSession}>
-        <SWRConfig
-          value={{
-            dedupingInterval: 0,
-            fetcher: (resource) =>
-              fetch(resource, {}).then((res) => res.json()),
-          }}
-        >
-          <Connections />
-        </SWRConfig>
-      </SessionProvider>
-    );
+    // Mock fetch
+    (global as any).fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/connections')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(CONNECTIONS),
+        });
+      } else if (url.includes('/sources')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(SOURCES),
+        });
+      } else {
+        return Promise.reject(new Error('Not found'));
+      }
+    });
+    render(connections);
 
     await waitFor(() => {
       expect(screen.getByRole('table')).toBeInTheDocument();

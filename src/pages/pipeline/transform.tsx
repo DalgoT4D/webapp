@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpDelete } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
 import { Box, Grid, Typography, Button } from '@mui/material';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
@@ -29,6 +29,7 @@ const Transform = () => {
   const [dialogLoader, setDialogLoader] = useState<boolean>(false);
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions.state || [];
 
   const open = Boolean(anchorEl);
   const handleClose = () => {
@@ -90,6 +91,8 @@ const Transform = () => {
         } else {
           errorToast(err.message, [], globalContext);
         }
+        // roll back the changes
+        await httpDelete(session, 'transform/dbt_project/dbtrepo');
       }
     } else if (transformClickedOn === 'github') {
       setSelectedTransform('github');
@@ -107,11 +110,7 @@ const Transform = () => {
         open={open}
         handleClose={handleClose}
       />
-      {/* <ConfirmationDialogTransform
-        open={confirmationOpen}
-        handleClose={() => setConfirmationOpen(false)}
-        transformType={selectedTransform}
-      /> */}
+
       <ConfirmationDialog
         loading={dialogLoader}
         show={confirmationOpen}
@@ -187,6 +186,7 @@ const Transform = () => {
                     color="primary"
                     sx={{ width: '100%' }}
                     onClick={() => handleSetup('ui')}
+                    disabled={!permissions.includes('can_create_dbt_workspace')}
                   >
                     Setup using UI
                   </Button>
@@ -238,6 +238,7 @@ const Transform = () => {
                     color="primary"
                     sx={{ width: '100%' }}
                     onClick={() => handleSetup('github')}
+                    disabled={!permissions.includes('can_create_dbt_workspace')}
                   >
                     Setup using Github
                   </Button>

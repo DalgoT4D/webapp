@@ -5,6 +5,7 @@ import { Flows, FlowInterface } from '../Flows';
 import { FlowRun } from '../SingleFlowRunHistory';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -28,58 +29,73 @@ describe('Flow Creation', () => {
 
     await act(async () => {
       render(
-        <SessionProvider session={mockSession}>
-          <Flows
-            flows={[
-              {
-                name: 'flow-0',
-                cron: '0 0 * * 1',
-                deploymentName: 'deployment-name',
-                deploymentId: 'deployment-id-0',
-                lastRun: {
-                  name: 'flow-run-0',
-                  status: 'COMPLETED',
-                  startTime: startTime.toString(),
-                  expectedStartTime: startTime.toString(),
-                } as FlowRun,
-              } as FlowInterface,
-              {
-                name: 'flow-1',
-                cron: '0 0 * * 1',
-                deploymentName: 'deployment-name',
-                deploymentId: 'deployment-id-1',
-                lastRun: {
-                  name: 'flow-run-1',
-                  status: 'FAILED',
-                  startTime: startTime.toString(),
-                  expectedStartTime: startTime.toString(),
-                } as FlowRun,
-              } as FlowInterface,
-              {
-                name: 'flow-2',
-                cron: '0 0 * * 1',
-                deploymentName: 'deployment-name',
-                deploymentId: 'deployment-id-2',
-                lastRun: undefined,
-              } as FlowInterface,
-            ]}
-            updateCrudVal={updateCrudValMock}
-            mutate={() => {}}
-            setSelectedFlow={() => {}}
-          />
-        </SessionProvider>
+        <GlobalContext.Provider
+          value={{
+            Permissions: {
+              state: [
+                'can_view_pipeline',
+                'can_run_pipeline',
+                'can_edit_pipeline',
+                'can_delete_pipeline',
+                'can_create_pipeline',
+              ],
+            },
+          }}
+        >
+          <SessionProvider session={mockSession}>
+            <Flows
+              flows={[
+                {
+                  name: 'flow-0',
+                  cron: '0 0 * * 1',
+                  deploymentName: 'deployment-name',
+                  deploymentId: 'deployment-id-0',
+                  lastRun: {
+                    name: 'flow-run-0',
+                    status: 'COMPLETED',
+                    startTime: startTime.toString(),
+                    expectedStartTime: startTime.toString(),
+                  } as FlowRun,
+                } as FlowInterface,
+                {
+                  name: 'flow-1',
+                  cron: '0 0 * * 1',
+                  deploymentName: 'deployment-name',
+                  deploymentId: 'deployment-id-1',
+                  lastRun: {
+                    name: 'flow-run-1',
+                    status: 'FAILED',
+                    startTime: startTime.toString(),
+                    expectedStartTime: startTime.toString(),
+                  } as FlowRun,
+                } as FlowInterface,
+                {
+                  name: 'flow-2',
+                  cron: '0 0 * * 1',
+                  deploymentName: 'deployment-name',
+                  deploymentId: 'deployment-id-2',
+                  lastRun: null,
+                  lock: null,
+                } as FlowInterface,
+              ]}
+              updateCrudVal={updateCrudValMock}
+              mutate={() => {}}
+              setSelectedFlowId={() => {}}
+            />
+          </SessionProvider>
+        </GlobalContext.Provider>
       );
     });
 
     const flowstate0 = screen.getByTestId('flowstate-flow-0');
     expect(flowstate0).toBeInTheDocument();
     const { getByText: getByTextFlowState_0 } = within(flowstate0);
-    expect(getByTextFlowState_0('Success')).toBeInTheDocument();
+    expect(getByTextFlowState_0('success')).toBeInTheDocument();
 
     const flowstate1 = screen.getByTestId('flowstate-flow-1');
     expect(flowstate1).toBeInTheDocument();
     const { getByText: getByTextFlowState_1 } = within(flowstate1);
-    expect(getByTextFlowState_1('Failed')).toBeInTheDocument();
+    expect(getByTextFlowState_1('failed')).toBeInTheDocument();
 
     const flowlastrun0 = screen.getByTestId('flowlastrun-flow-0');
     expect(flowlastrun0).toBeInTheDocument();
@@ -104,9 +120,7 @@ describe('Flow Creation', () => {
         } as FlowRun,
       ]),
     });
-    const fetchLastFlowRunButton = screen.getByTestId(
-      'btn-openhistory-flow-0'
-    );
+    const fetchLastFlowRunButton = screen.getByTestId('btn-openhistory-flow-0');
     await userEvent.click(fetchLastFlowRunButton);
     const flowRunInfo = screen.getByTestId('single-flow-run-logs');
     expect(flowRunInfo).toBeInTheDocument();
