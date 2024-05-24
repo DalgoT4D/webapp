@@ -373,12 +373,6 @@ describe('Flow Creation', () => {
     const inputTimeOfDay: any = timeOfDayContainer.querySelector('input');
     fireEvent.change(inputTimeOfDay, { target: { value: '01:00 AM' } });
 
-    const tasksautocomplete = screen.getByTestId('tasksequence');
-
-    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(tasksautocomplete, { key: 'Enter' });
-
     await user.click(savebutton);
     await waitFor(() => {
       expect(updateCrudValMock).toHaveBeenCalled();
@@ -477,12 +471,6 @@ describe('Flow Creation', () => {
     const inputTimeOfDay: any = timeOfDayContainer.querySelector('input');
 
     fireEvent.change(inputTimeOfDay, { target: { value: '06:30 AM' } });
-
-    const tasksautocomplete = screen.getByTestId('tasksequence');
-
-    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(tasksautocomplete, { key: 'Enter' });
 
     await user.click(savebutton);
     expect(updateCrudValMock).toHaveBeenCalled();
@@ -593,12 +581,6 @@ describe('Flow Creation', () => {
     const inputTimeOfDay: any = timeOfDayContainer.querySelector('input');
     fireEvent.change(inputTimeOfDay, { target: { value: '06:30 AM' } });
     fireEvent.keyDown(inputTimeOfDay, { key: 'Enter' });
-
-    const tasksautocomplete = screen.getByTestId('tasksequence');
-
-    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(tasksautocomplete, { key: 'ArrowDown' });
-    fireEvent.keyDown(tasksautocomplete, { key: 'Enter' });
 
     await user.click(savebutton);
     expect(updateCrudValMock).toHaveBeenCalled();
