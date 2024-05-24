@@ -29,7 +29,6 @@ import { Connection } from '@/components/Connections/Connections';
 import { TransformTask } from '../DBT/DBTTarget';
 import { TaskSequence } from './TaskSequence';
 import { localTimezone } from '@/utils/common';
-import { CheckBox } from '@mui/icons-material';
 
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
