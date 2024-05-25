@@ -55,7 +55,7 @@ const ConnectionDetailsForm = ({
 }: ConnectionDetailsFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const { register, handleSubmit, reset, setValue } = useForm({
+  const { handleSubmit, reset, setValue } = useForm({
     defaultValues: {
       name: '',
     },
