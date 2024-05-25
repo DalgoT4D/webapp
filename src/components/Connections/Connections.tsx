@@ -9,7 +9,6 @@ import {
 } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
-
 import SyncIcon from '@/assets/icons/sync.svg';
 import LockIcon from '@mui/icons-material/Lock';
 import LoopIcon from '@mui/icons-material/Loop';
@@ -38,7 +37,6 @@ import {
   useConnSyncLogs,
   useConnSyncLogsUpdate,
 } from '@/contexts/ConnectionSyncLogsContext';
-
 import PendingActionsAccordion from './PendingActions';
 
 type PrefectFlowRun = {
@@ -621,7 +619,7 @@ export const Connections = () => {
     setShowDialog(true);
   };
 
-  const handleRefreshConnection = async () => {
+  const RefreshConnection = async () => {
     handleClose();
     setIsRefreshing(true); // Set loading state to true
     try {
@@ -655,7 +653,7 @@ export const Connections = () => {
         open={open}
         handleClose={handleClose}
         handleEdit={handleEditConnection}
-        handleRefresh={handleRefreshConnection}
+        handleRefresh={RefreshConnection}
         handleDelete={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
         hasResetPermission={permissions.includes('can_reset_connection')}
