@@ -9,6 +9,7 @@ import {
   TableCell,
   TableSortLabel,
   Button,
+  Skeleton,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -52,25 +53,34 @@ export const StatisticsPane = ({ height }) => {
       accessorKey: 'distribution',
       header: 'Data distribution',
       cell: ({ row }) => {
-        const { type } = row.original;
+        const { type, distribution } = row.original;
+        console.log(row.original);
         switch (type) {
-          case 'Integer':
-            return (
+          case 'Numeric':
+            return distribution ? (
               <StatsChart
-                data={{ min: 2, max: 300, mean: 34, median: 65, mode: 103 }}
+                data={{
+                  min: distribution.minVal,
+                  max: distribution.maxVal,
+                  mean: distribution.mean,
+                  median: distribution.median,
+                  mode: distribution.mode,
+                }}
               />
+            ) : (
+              <Skeleton variant="rectangular" height={100} />
             );
           case 'String':
+            const chartData = distribution.charts[0].data;
+            const sum = chartData.reduce((acc, curr) => acc + curr.count, 0);
+            console.log(sum);
             return (
               <RangeChart
-                data={[
-                  { name: 'Character E', percentage: 20, count: 1201 },
-                  { name: 'Character D', percentage: 16, count: 800 },
-                  { name: 'Character C', percentage: 12, count: 600 },
-                  { name: 'Character B', percentage: 8, count: 350 },
-                  { name: 'Character A', percentage: 4, count: 200 },
-                  { name: 'Others', percentage: 48, count: 2152 },
-                ]}
+                data={chartData.map((data) => ({
+                  name: data.category,
+                  percentage: ((data.count * 100) / sum).toFixed(1),
+                  count: data.count,
+                }))}
               />
             );
 
@@ -111,7 +121,13 @@ export const StatisticsPane = ({ height }) => {
   const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
   const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
 
-  const pollTaskStatus = async (session, taskId, interval = 5000) => {
+  const pollTaskStatus = async (
+    session,
+    taskId,
+    colName,
+    setData,
+    interval = 5000
+  ) => {
     const orgSlug = globalContext?.CurrentOrg.state.slug;
     const hashKey = `data-insights`;
     const taskUrl = `tasks/${taskId}?hashkey=${hashKey}`;
@@ -119,10 +135,24 @@ export const StatisticsPane = ({ height }) => {
     const poll = async (resolve, reject) => {
       try {
         const response = await httpGet(session, taskUrl);
-        console.log(response);
-        if (response.status === 'completed') {
-          resolve(response);
-        } else if (response.status === 'failed') {
+        const latestProgress = response.progress[response.progress.length - 1];
+        if (latestProgress.status === 'completed') {
+          const result = latestProgress.results;
+          setData((data) =>
+            data.map((dat) => {
+              if (dat.name === colName) {
+                return {
+                  ...dat,
+                  null: result.countNull,
+                  distinct: result.countDistinct,
+                  distribution: result,
+                };
+              }
+              return dat;
+            })
+          );
+          resolve({ ...latestProgress.results, colName: colName });
+        } else if (latestProgress.status === 'failed') {
           reject(new Error('Task failed'));
         } else {
           setTimeout(() => poll(resolve, reject), interval);
@@ -143,14 +173,14 @@ export const StatisticsPane = ({ height }) => {
       const tableData1 = await httpGet(session, dataUrl);
       console.log(tableData1);
 
-      tableData1.forEach(async (column) => {
-        const tableData2 = await httpPost(session, metrics, {
-          db_schema: schema,
-          db_table: table,
-          column_name: column.name,
-        });
-        console.log(tableData2);
-      });
+      // tableData1.forEach(async (column) => {
+      //   const tableData2 = await httpPost(session, metrics, {
+      //     db_schema: schema,
+      //     db_table: table,
+      //     column_name: column.name,
+      //   });
+      //   console.log(tableData2);
+      // });
 
       const tasks = tableData1.map(async (column) => {
         const tableData2 = await httpPost(session, metrics, {
@@ -162,7 +192,12 @@ export const StatisticsPane = ({ height }) => {
 
         await delay(1000);
 
-        return pollTaskStatus(session, tableData2.task_id);
+        return pollTaskStatus(
+          session,
+          tableData2.task_id,
+          column.name,
+          setData
+        );
       });
 
       // const tableData = {
@@ -188,10 +223,16 @@ export const StatisticsPane = ({ height }) => {
       setData(tableData);
 
       const results = await Promise.all(tasks);
+
+      // const resultMap = results.reduce((prev, curr, index) => {}, {});
+
+      console.log(results);
     } catch (error: any) {
       errorToast(error.message, [], toastContext);
     }
   };
+
+  console.log(data);
   useEffect(() => {
     if (previewAction.type === 'preview') {
       setModelToPreview(previewAction.data);
@@ -332,22 +373,29 @@ export const StatisticsPane = ({ height }) => {
                       boxShadow: 'unset',
                     }}
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        sx={{
-                          fontWeight: 600,
-                          textAlign: 'left',
-                          borderBottom: '1px solid #ddd',
-                          fontSize: '0.8rem',
-                        }}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
+                    {row.getVisibleCells().map((cell) => {
+                      console.log(cell.getValue());
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          sx={{
+                            fontWeight: 600,
+                            textAlign: 'left',
+                            borderBottom: '1px solid #ddd',
+                            fontSize: '0.8rem',
+                          }}
+                        >
+                          {cell.getValue() !== undefined ? (
+                            flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )
+                          ) : (
+                            <Skeleton variant="rectangular" height={118} />
+                          )}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
                 );
               })}
