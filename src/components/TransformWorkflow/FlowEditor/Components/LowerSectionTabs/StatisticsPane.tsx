@@ -35,11 +35,7 @@ export const StatisticsPane = ({ height }) => {
   const globalContext = useContext(GlobalContext);
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
 
-  //   const { data } = useSWR(`api for rows and columns count`);
-  const countData = {
-    rowsCount: 100,
-    columnsCount: 7,
-  };
+  const [rowCount, setRowCount] = useState(0);
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
   const { previewAction } = usePreviewAction();
@@ -232,6 +228,14 @@ export const StatisticsPane = ({ height }) => {
     }
   };
 
+  const fetchRowCount = async (schema, table) => {
+    const count = await httpGet(
+      session,
+      `warehouse/table_count/${schema}/${table}`
+    );
+    setRowCount(count.total_rows);
+  };
+
   console.log(data);
   useEffect(() => {
     if (previewAction.type === 'preview') {
@@ -243,7 +247,7 @@ export const StatisticsPane = ({ height }) => {
 
   useEffect(() => {
     if (modelToPreview) {
-      fetchColumns(modelToPreview.schema, modelToPreview.input_name);
+      fetchRowCount(modelToPreview.schema, modelToPreview.input_name);
     }
   }, [modelToPreview]);
 
@@ -300,9 +304,9 @@ export const StatisticsPane = ({ height }) => {
                 mr: 2,
               }}
             >
-              <VisibilityIcon sx={{ mr: 1 }} /> {countData.columnsCount} Columns{' '}
+              <VisibilityIcon sx={{ mr: 1 }} /> {data.length} Columns{' '}
             </Box>
-            {countData.rowsCount} Rows
+            {rowCount} Rows
           </Box>
 
           <Box
@@ -314,7 +318,13 @@ export const StatisticsPane = ({ height }) => {
               alignItems: 'center',
             }}
           >
-            <Button variant="contained" sx={{ mr: 2 }}>
+            <Button
+              variant="contained"
+              sx={{ mr: 2 }}
+              onClick={() =>
+                fetchColumns(modelToPreview.schema, modelToPreview.input_name)
+              }
+            >
               Generate
             </Button>
             <DownloadIcon sx={{ cursor: 'pointer' }} />
