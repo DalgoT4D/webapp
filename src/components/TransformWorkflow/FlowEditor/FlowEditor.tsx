@@ -278,6 +278,7 @@ const FlowEditor = ({}) => {
       successToast('Dbt run initiated', [], globalContext);
 
       if (response?.task_id) {
+        await delay(2000);
         await pollForTaskRun(response.task_id);
         setRefreshEditor(!refreshEditor);
       }

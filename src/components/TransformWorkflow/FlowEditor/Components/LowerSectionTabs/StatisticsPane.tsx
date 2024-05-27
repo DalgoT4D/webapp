@@ -19,7 +19,7 @@ import {
   getSortedRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { httpGet } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
 import { DbtSourceModel } from '../Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -28,8 +28,10 @@ import useSWR from 'swr';
 import { StatsChart } from '@/components/Charts/StatsChart';
 import { RangeChart } from '@/components/Charts/RangeChart';
 import { BarChart } from '@/components/Charts/BarChart';
+import { delay } from '@/utils/common';
 
 export const StatisticsPane = ({ height }) => {
+  const globalContext = useContext(GlobalContext);
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
 
   //   const { data } = useSWR(`api for rows and columns count`);
@@ -109,27 +111,83 @@ export const StatisticsPane = ({ height }) => {
   const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
   const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
 
+  const pollTaskStatus = async (session, taskId, interval = 5000) => {
+    const orgSlug = globalContext?.CurrentOrg.state.slug;
+    const hashKey = `data-insights`;
+    const taskUrl = `tasks/${taskId}?hashkey=${hashKey}`;
+
+    const poll = async (resolve, reject) => {
+      try {
+        const response = await httpGet(session, taskUrl);
+        console.log(response);
+        if (response.status === 'completed') {
+          resolve(response);
+        } else if (response.status === 'failed') {
+          reject(new Error('Task failed'));
+        } else {
+          setTimeout(() => poll(resolve, reject), interval);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    return new Promise(poll);
+  };
+
   const fetchColumns = async (schema: string, table: string) => {
     try {
-      const dataUrl = `warehouse/table_data`;
+      const dataUrl = `warehouse/v1/table_data/${schema}/${table}`;
+      const metrics = `warehouse/insights/metrics/`;
 
-      //   const tableData = httpGet(session, dataUrl);
-      const tableData = {
-        data: [
-          { name: 'Date', type: 'Timestamp', distinct: 300, null: 23 },
-          {
-            name: 'Age',
-            type: 'Integer',
-            distinct: 200,
-            null: 3,
-          },
-          { name: 'Message', type: 'String', distinct: 334, null: 1 },
-          { name: 'IsAdmin', type: 'Boolean', distinct: 23, null: 4 },
-          { name: 'result', type: 'JSON', distinct: 23, null: 4 },
-        ],
-      };
+      const tableData1 = await httpGet(session, dataUrl);
+      console.log(tableData1);
 
-      setData(tableData.data);
+      tableData1.forEach(async (column) => {
+        const tableData2 = await httpPost(session, metrics, {
+          db_schema: schema,
+          db_table: table,
+          column_name: column.name,
+        });
+        console.log(tableData2);
+      });
+
+      const tasks = tableData1.map(async (column) => {
+        const tableData2 = await httpPost(session, metrics, {
+          db_schema: schema,
+          db_table: table,
+          column_name: column.name,
+        });
+        console.log(tableData2);
+
+        await delay(1000);
+
+        return pollTaskStatus(session, tableData2.task_id);
+      });
+
+      // const tableData = {
+      //   data: [
+      //     { name: 'Date', type: 'Timestamp', distinct: 300, null: 23 },
+      //     {
+      //       name: 'Age',
+      //       type: 'Integer',
+      //       distinct: 200,
+      //       null: 3,
+      //     },
+      //     { name: 'Message', type: 'String', distinct: 334, null: 1 },
+      //     { name: 'IsAdmin', type: 'Boolean', distinct: 23, null: 4 },
+      //     { name: 'result', type: 'JSON', distinct: 23, null: 4 },
+      //   ],
+      // };
+
+      const tableData = tableData1.map((data) => ({
+        name: data.name,
+        type: data.translated_type,
+      }));
+
+      setData(tableData);
+
+      const results = await Promise.all(tasks);
     } catch (error: any) {
       errorToast(error.message, [], toastContext);
     }
@@ -223,7 +281,7 @@ export const StatisticsPane = ({ height }) => {
         </Box>
       </Box>
       <Box>
-        <Box sx={{ height: height-50, overflow: 'auto' }}>
+        <Box sx={{ height: height - 50, overflow: 'auto' }}>
           <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
             <TableHead>
               {getHeaderGroups().map((headerGroup: any) => (
