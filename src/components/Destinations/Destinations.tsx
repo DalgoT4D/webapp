@@ -9,6 +9,7 @@ import { httpDelete } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
+import Image from 'next/image';
 
 interface ConnectionConfiguration {
   host?: string;
@@ -93,224 +94,214 @@ export const Destinations = () => {
 
   return (
     <>
+      {warehouse &&
+        ['postgres', 'bigquery', 'snowflake'].includes(warehouse.wtype) && (
+          <>
+            <Typography data-testid="wname" variant="h3">
+              {warehouse.name}
+            </Typography>
+            <Image
+              src={warehouse.icon}
+              width={100}
+              height={100}
+              alt="warehouse icon"
+            />
+          </>
+        )}
       {warehouse && warehouse.wtype === 'postgres' && (
-        <>
-          <Typography data-testid="wname" variant="h3">
-            {warehouse.name}
-          </Typography>
-          <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
-          <Table sx={{ maxWidth: '600px' }}>
-            <TableBody>
-              <TableRow>
-                <TableCell>Host</TableCell>
-                <TableCell align="right" data-testid="host">
-                  {warehouse.connectionConfiguration.host}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Port</TableCell>
-                <TableCell align="right" data-testid="port">
-                  {warehouse.connectionConfiguration.port}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Database</TableCell>
-                <TableCell align="right" data-testid="database">
-                  {warehouse.connectionConfiguration.database}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>User</TableCell>
-                <TableCell align="right" data-testid="username">
-                  {warehouse.connectionConfiguration.username}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Airbyte Workspace ID</TableCell>
-                <TableCell align="right" data-testid="abworkspaceid">
-                  {warehouse.airbyteWorkspaceId}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
-                <TableCell align="right" data-testid="abworkspacedocker">
-                  {warehouse.airbyteDockerRepository}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ minWidth: 300 }}>
-                  Docker Image Version
-                </TableCell>
-                <TableCell align="right" data-testid="abworkspacedockerversion">
-                  {warehouse.tag}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </>
+        <Table sx={{ maxWidth: '600px' }}>
+          <TableBody>
+            <TableRow>
+              <TableCell>Host</TableCell>
+              <TableCell align="right" data-testid="host">
+                {warehouse.connectionConfiguration.host}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Port</TableCell>
+              <TableCell align="right" data-testid="port">
+                {warehouse.connectionConfiguration.port}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Database</TableCell>
+              <TableCell align="right" data-testid="database">
+                {warehouse.connectionConfiguration.database}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>User</TableCell>
+              <TableCell align="right" data-testid="username">
+                {warehouse.connectionConfiguration.username}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Airbyte Workspace ID</TableCell>
+              <TableCell align="right" data-testid="abworkspaceid">
+                {warehouse.airbyteWorkspaceId}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
+              <TableCell align="right" data-testid="abworkspacedocker">
+                {warehouse.airbyteDockerRepository}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ minWidth: 300 }}>Docker Image Version</TableCell>
+              <TableCell align="right" data-testid="abworkspacedockerversion">
+                {warehouse.tag}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       )}
       {warehouse && warehouse.wtype === 'bigquery' && (
-        <>
-          <Typography data-testid="wname" variant="h3">
-            {warehouse.name}
-          </Typography>
-          <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
-          <Table sx={{ maxWidth: '600px' }}>
-            <TableBody>
-              <TableRow>
-                <TableCell>Project</TableCell>
-                <TableCell align="right" data-testid="project_id">
-                  {warehouse.connectionConfiguration.project_id}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Dataset</TableCell>
-                <TableCell align="right" data-testid="dataset_id">
-                  {warehouse.connectionConfiguration.dataset_id} /{' '}
-                  {warehouse.connectionConfiguration.dataset_location}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Loading Method</TableCell>
-                <TableCell align="right" data-testid="loading_method">
-                  {warehouse.connectionConfiguration.loading_method.method}
-                </TableCell>
-              </TableRow>
-              {warehouse.connectionConfiguration.loading_method.method ===
-                'GCS Staging' && (
-                <>
-                  <TableRow>
-                    <TableCell>GCS Bucket &amp; Path</TableCell>
-                    <TableCell
-                      align="right"
-                      data-testid="gcs_bucket_name_and_path"
-                    >
-                      {
-                        warehouse.connectionConfiguration.loading_method
-                          .gcs_bucket_name
-                      }{' '}
-                      /{' '}
-                      {
-                        warehouse.connectionConfiguration.loading_method
-                          .gcs_bucket_path
-                      }
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>GCS Temp Files</TableCell>
-                    <TableCell align="right">
-                      {
-                        warehouse.connectionConfiguration.loading_method[
-                          'keep_files_in_gcs-bucket'
-                        ]
-                      }
-                    </TableCell>
-                  </TableRow>
-                </>
-              )}
-              <TableRow>
-                <TableCell>Transformation Priority</TableCell>
-                <TableCell align="right">
-                  {warehouse.connectionConfiguration.transformation_priority}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Airbyte Workspace ID</TableCell>
-                <TableCell align="right" data-testid="abworkspaceid">
-                  {warehouse.airbyteWorkspaceId}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
-                <TableCell align="right" data-testid="abworkspacedocker">
-                  {warehouse.airbyteDockerRepository}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ minWidth: 300 }}>
-                  Docker Image Version
-                </TableCell>
-                <TableCell align="right" data-testid="abworkspacedockerversion">
-                  {warehouse.tag}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </>
+        <Table sx={{ maxWidth: '600px' }}>
+          <TableBody>
+            <TableRow>
+              <TableCell>Project</TableCell>
+              <TableCell align="right" data-testid="project_id">
+                {warehouse.connectionConfiguration.project_id}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Dataset</TableCell>
+              <TableCell align="right" data-testid="dataset_id">
+                {warehouse.connectionConfiguration.dataset_id} /{' '}
+                {warehouse.connectionConfiguration.dataset_location}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Loading Method</TableCell>
+              <TableCell align="right" data-testid="loading_method">
+                {warehouse.connectionConfiguration.loading_method.method}
+              </TableCell>
+            </TableRow>
+            {warehouse.connectionConfiguration.loading_method.method ===
+              'GCS Staging' && (
+              <>
+                <TableRow>
+                  <TableCell>GCS Bucket &amp; Path</TableCell>
+                  <TableCell
+                    align="right"
+                    data-testid="gcs_bucket_name_and_path"
+                  >
+                    {
+                      warehouse.connectionConfiguration.loading_method
+                        .gcs_bucket_name
+                    }{' '}
+                    /{' '}
+                    {
+                      warehouse.connectionConfiguration.loading_method
+                        .gcs_bucket_path
+                    }
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>GCS Temp Files</TableCell>
+                  <TableCell align="right">
+                    {
+                      warehouse.connectionConfiguration.loading_method[
+                        'keep_files_in_gcs-bucket'
+                      ]
+                    }
+                  </TableCell>
+                </TableRow>
+              </>
+            )}
+            <TableRow>
+              <TableCell>Transformation Priority</TableCell>
+              <TableCell align="right">
+                {warehouse.connectionConfiguration.transformation_priority}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Airbyte Workspace ID</TableCell>
+              <TableCell align="right" data-testid="abworkspaceid">
+                {warehouse.airbyteWorkspaceId}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
+              <TableCell align="right" data-testid="abworkspacedocker">
+                {warehouse.airbyteDockerRepository}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ minWidth: 300 }}>Docker Image Version</TableCell>
+              <TableCell align="right" data-testid="abworkspacedockerversion">
+                {warehouse.tag}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       )}
       {warehouse && warehouse.wtype === 'snowflake' && (
-        <>
-          <Typography data-testid="wname" variant="h3">
-            {warehouse.name}
-          </Typography>
-          <Box dangerouslySetInnerHTML={{ __html: warehouse.icon }} />
-          <Table sx={{ maxWidth: '600px' }}>
-            <TableBody>
-              <TableRow>
-                <TableCell>Host</TableCell>
-                <TableCell align="right" data-testid="project_id">
-                  {warehouse.connectionConfiguration.host}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Compute Warehouse</TableCell>
-                <TableCell align="right" data-testid="dataset_id">
-                  {warehouse.connectionConfiguration.warehouse}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Database</TableCell>
-                <TableCell align="right" data-testid="dataset_id">
-                  {warehouse.connectionConfiguration.database}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Schema</TableCell>
-                <TableCell align="right" data-testid="dataset_id">
-                  {warehouse.connectionConfiguration.schema}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>User</TableCell>
-                <TableCell align="right">
-                  {warehouse.connectionConfiguration.username}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Role</TableCell>
-                <TableCell align="right">
-                  {warehouse.connectionConfiguration.role}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Loading Method</TableCell>
-                <TableCell align="right" data-testid="loading_method">
-                  {warehouse.connectionConfiguration.loading_method.method}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Airbyte Workspace ID</TableCell>
-                <TableCell align="right" data-testid="abworkspace">
-                  {warehouse.airbyteWorkspaceId}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
-                <TableCell align="right" data-testid="abworkspace">
-                  {warehouse.airbyteDockerRepository}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ minWidth: 300 }}>
-                  Docker Image Version
-                </TableCell>
-                <TableCell align="right" data-testid="abworkspace">
-                  {warehouse.tag}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </>
+        <Table sx={{ maxWidth: '600px' }}>
+          <TableBody>
+            <TableRow>
+              <TableCell>Host</TableCell>
+              <TableCell align="right" data-testid="project_id">
+                {warehouse.connectionConfiguration.host}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Compute Warehouse</TableCell>
+              <TableCell align="right" data-testid="dataset_id">
+                {warehouse.connectionConfiguration.warehouse}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Database</TableCell>
+              <TableCell align="right" data-testid="dataset_id">
+                {warehouse.connectionConfiguration.database}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Schema</TableCell>
+              <TableCell align="right" data-testid="dataset_id">
+                {warehouse.connectionConfiguration.schema}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>User</TableCell>
+              <TableCell align="right">
+                {warehouse.connectionConfiguration.username}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Role</TableCell>
+              <TableCell align="right">
+                {warehouse.connectionConfiguration.role}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Loading Method</TableCell>
+              <TableCell align="right" data-testid="loading_method">
+                {warehouse.connectionConfiguration.loading_method.method}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Airbyte Workspace ID</TableCell>
+              <TableCell align="right" data-testid="abworkspace">
+                {warehouse.airbyteWorkspaceId}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ minWidth: 300 }}>Docker Image Tag</TableCell>
+              <TableCell align="right" data-testid="abworkspace">
+                {warehouse.airbyteDockerRepository}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ minWidth: 300 }}>Docker Image Version</TableCell>
+              <TableCell align="right" data-testid="abworkspace">
+                {warehouse.tag}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       )}
       {warehouse && !globalContext?.CurrentOrg.state.is_demo && (
         <Box sx={{ display: 'flex', gap: '5px' }}>
