@@ -21,7 +21,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
   }, [data]);
 
   const drawChart = () => {
-    const margin = { top: 20, right: 0, bottom: 20, left: 0 };
+    const margin = { top: 20, right: 30, bottom: 20, left: 30 };
     const width = 700 - margin.left - margin.right;
     const height = 100 - margin.top - margin.bottom;
 

@@ -43,7 +43,6 @@ export const RangeChart: React.FC<RangeChartProps> = ({
       .style('position', 'absolute')
       .style('text-align', 'center')
       .style('width', '150px')
-      .style('height', '24px')
       .style('padding', '2px')
       .style('z-index', '2000')
       .style('font', '12px sans-serif')
@@ -71,7 +70,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
       .on('mouseover', (event, d) => {
         tooltip.transition().duration(200).style('opacity', 0.9);
         tooltip
-          .html(`${d.name}: ${d.percentage}% | ${d.count}`)
+          .html(`${d.name}: ${d.percentage}% | Count: ${d.count}`)
           .style('left', event.pageX + 5 + 'px')
           .style('top', event.pageY - 28 + 'px');
       })
@@ -128,7 +127,22 @@ export const RangeChart: React.FC<RangeChartProps> = ({
         return x;
       })
       .attr('y', 8)
-      .text((d) => d.name);
+      .text((d) => {
+        const maxLength = 10; // Trim to 10 characters
+        return d.name.length > maxLength
+          ? d.name.substring(0, maxLength) + '...'
+          : d.name;
+      })
+      .on('mouseover', (event, d) => {
+        tooltip.transition().duration(200).style('opacity', 0.9);
+        tooltip
+          .html(d.name)
+          .style('left', event.pageX + 5 + 'px')
+          .style('top', event.pageY - 28 + 'px');
+      })
+      .on('mouseout', () => {
+        tooltip.transition().duration(500).style('opacity', 0);
+      });
   }, [data]);
 
   return <svg ref={ref}></svg>;
