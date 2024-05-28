@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-type BarChartData = {
+export type BarChartData = {
   label: string;
   value: number;
 };
 
-type BarChartProps = {
+export type BarChartProps = {
   data: BarChartData[];
 };
 
@@ -66,7 +66,7 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
         .data(data)
         .enter()
         .append('text')
-        .text((d) => `${d.value}%`)
+        .text((d) => `${d.value}`)
         .attr('x', (d) => x(d.label)! + x.bandwidth() / 2)
         .attr('y', (d) => y(d.value) - 5)
         .attr('text-anchor', 'middle')

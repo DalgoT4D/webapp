@@ -29,9 +29,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 // import DownloadIcon from '@mui/icons-material/Download';
 import { StatsChart } from '@/components/Charts/StatsChart';
 import { RangeChart } from '@/components/Charts/RangeChart';
-import { BarChart } from '@/components/Charts/BarChart';
 import { delay } from '@/utils/common';
 import { Session } from 'next-auth';
+import { DateTimeInsights } from '@/components/Charts/DateTimeInsights';
 
 interface StatisticsPaneProps {
   height: number;
@@ -43,12 +43,64 @@ interface ColumnData {
   distinct?: number;
   null?: number;
   distribution?: any;
+  postBody?: any;
 }
 
 interface TableDetailsResponse {
   name: string;
   translated_type: 'Numeric' | 'String' | 'Datetime' | 'JSON' | 'Boolean';
 }
+
+const pollTaskStatus = async (
+  session: Session | null,
+  taskId: string,
+  postBody: any,
+  setData: any,
+  interval = 5000
+) => {
+  // const orgSlug = globalContext?.CurrentOrg.state.slug;
+  const hashKey = `data-insights`;
+  const taskUrl = `tasks/${taskId}?hashkey=${hashKey}`;
+
+  const poll = async (
+    resolve: (value?: unknown) => void,
+    reject: (reason?: any) => void
+  ) => {
+    try {
+      const response = await httpGet(session, taskUrl);
+      const latestProgress = response.progress[response.progress.length - 1];
+      if (latestProgress.status === 'completed') {
+        const result = latestProgress.results;
+        setData((columnData: ColumnData[]) =>
+          columnData.map((data) => {
+            if (data.name === postBody.column_name) {
+              return {
+                ...data,
+                null: result.countNull,
+                distinct: result.countDistinct,
+                distribution: result,
+                postBody,
+              };
+            }
+            return data;
+          })
+        );
+        resolve(latestProgress.results);
+      } else if (
+        latestProgress.status === 'failed' ||
+        latestProgress.status === 'error'
+      ) {
+        reject({ reason: 'Failed' });
+      } else {
+        setTimeout(() => poll(resolve, reject), interval);
+      }
+    } catch (error) {
+      reject(error);
+    }
+  };
+
+  return new Promise(poll);
+};
 
 export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   const globalContext = useContext(GlobalContext);
@@ -69,7 +121,8 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
       header: 'Data distribution',
       size: 700,
       cell: ({ row }) => {
-        const { type, distribution } = row.original;
+        console.log(row.original);
+        const { type, distribution, postBody } = row.original;
         switch (type) {
           case 'Numeric':
             return distribution ? (
@@ -88,13 +141,13 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
             );
           case 'String':
             const chartData = distribution.charts[0].data;
-            const sum = chartData.reduce((acc, curr) => acc + curr.count, 0);
-            console.log(sum);
             return (
               <RangeChart
                 data={chartData.map((data) => ({
                   name: data.category,
-                  percentage: ((data.count * 100) / sum).toFixed(1),
+                  percentage: ((data.count * 100) / distribution.count).toFixed(
+                    1
+                  ),
                   count: data.count,
                 }))}
               />
@@ -104,8 +157,18 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
             return (
               <RangeChart
                 data={[
-                  { name: 'True', percentage: 40, count: 1201 },
-                  { name: 'False', percentage: 60, count: 2400 },
+                  {
+                    name: 'True',
+                    percentage:
+                      (distribution.countTrue * 100) / distribution.count,
+                    count: distribution.countTrue,
+                  },
+                  {
+                    name: 'False',
+                    percentage:
+                      (distribution.countFalse * 100) / distribution.count,
+                    count: distribution.countFalse,
+                  },
                 ]}
                 colors={['#00897b', '#c7d8d7']}
                 barHeight={12}
@@ -113,19 +176,20 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
             );
 
           case 'Datetime':
+            const dateTimeData = distribution.charts[0].data;
             return (
-              <BarChart
-                data={[
-                  { label: 'Others', value: 48 },
-                  { label: 'Jan 23', value: 16 },
-                  { label: 'Feb 23', value: 26 },
-                  { label: 'March 23', value: 46 },
-                  { label: 'April 23', value: 16 },
-                ]}
+              <DateTimeInsights
+                barProps={{
+                  data: dateTimeData,
+                }}
+                minDate={distribution.minVal}
+                maxDate={distribution.maxVal}
+                type="chart"
+                postBody={postBody}
               />
             );
           default:
-            return <div>---No data available---</div>;
+            return <div> -- -- -- No data available -- -- -- </div>;
         }
       },
     },
@@ -137,53 +201,6 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
   const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
 
-  const pollTaskStatus = async (
-    session: Session | null,
-    taskId: string,
-    colName: string,
-    setData: any,
-    interval = 5000
-  ) => {
-    // const orgSlug = globalContext?.CurrentOrg.state.slug;
-    const hashKey = `data-insights`;
-    const taskUrl = `tasks/${taskId}?hashkey=${hashKey}`;
-
-    const poll = async (
-      resolve: (value?: unknown) => void,
-      reject: (reason?: any) => void
-    ) => {
-      try {
-        const response = await httpGet(session, taskUrl);
-        const latestProgress = response.progress[response.progress.length - 1];
-        if (latestProgress.status === 'completed') {
-          const result = latestProgress.results;
-          setData((columnData: ColumnData[]) =>
-            columnData.map((data) => {
-              if (data.name === colName) {
-                return {
-                  ...data,
-                  null: result.countNull,
-                  distinct: result.countDistinct,
-                  distribution: result,
-                };
-              }
-              return data;
-            })
-          );
-          resolve({ ...latestProgress.results, colName: colName });
-        } else if (latestProgress.status === 'failed') {
-          reject(new Error('Task failed'));
-        } else {
-          setTimeout(() => poll(resolve, reject), interval);
-        }
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    return new Promise(poll);
-  };
-
   const fetchColumns = async (schema: string, table: string) => {
     try {
       const dataUrl = `warehouse/v1/table_data/${schema}/${table}`;
@@ -193,23 +210,6 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
         session,
         dataUrl
       );
-
-      tableDetails.forEach(async (column) => {
-        const metrics: { task_id: string } = await httpPost(
-          session,
-          metricsApiUrl,
-          {
-            db_schema: schema,
-            db_table: table,
-            column_name: column.name,
-          }
-        );
-
-        await delay(1000);
-
-        pollTaskStatus(session, metrics.task_id, column.name, setData);
-      });
-
       const tableData = tableDetails.map((data) => ({
         name: data.name,
         type: data.translated_type,
@@ -217,8 +217,30 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
 
       setData(tableData);
 
-      // const results = await Promise.all(tasks);
-      // console.log(results);
+      tableDetails.forEach(async (column) => {
+        const postBody: any = {
+          db_schema: schema,
+          db_table: table,
+          column_name: column.name,
+        };
+        if (column.translated_type === 'Datetime') {
+          postBody.filter = {
+            range: 'year',
+            limit: 10,
+            offset: 0,
+          };
+        }
+
+        const metrics: { task_id: string } = await httpPost(
+          session,
+          metricsApiUrl,
+          postBody
+        );
+
+        await delay(1000);
+
+        pollTaskStatus(session, metrics.task_id, postBody, setData);
+      });
     } catch (error: any) {
       errorToast(error.message, [], toastContext);
     }
