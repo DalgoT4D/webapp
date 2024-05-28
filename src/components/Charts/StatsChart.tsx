@@ -1,9 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
+import { Box } from '@mui/material';
+import Image from 'next/image';
+import switchIcon from '@/assets/icons/switch-chart.svg';
 
 interface DataProps {
-  min: number;
-  max: number;
+  minimum: number;
+  maximum: number;
   mean: number;
   median: number;
   mode: number;
@@ -11,14 +14,16 @@ interface DataProps {
 
 interface StatsChartProps {
   data: DataProps;
+  type: 'chart' | 'numbers';
 }
 
-export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
+export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
+  const [chartType, setChartType] = useState(type);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    drawChart();
-  }, [data]);
+    if (data && chartType === 'chart') drawChart();
+  }, [data, chartType]);
 
   const drawChart = () => {
     const margin = { top: 20, right: 30, bottom: 20, left: 30 };
@@ -39,7 +44,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
     // Scale for positioning
     const xScale = d3
       .scaleLinear()
-      .domain([data.min, data.max])
+      .domain([data.minimum, data.maximum])
       .range([0, width]);
 
     // Calculate positions
@@ -59,7 +64,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
     // Draw lines to min and max
     svg
       .append('line')
-      .attr('x1', xScale(data.min))
+      .attr('x1', xScale(data.minimum))
       .attr('x2', xScale(minCentral))
       .attr('y1', height / 2)
       .attr('y2', height / 2)
@@ -69,7 +74,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
     svg
       .append('line')
       .attr('x1', xScale(maxCentral))
-      .attr('x2', xScale(data.max))
+      .attr('x2', xScale(data.maximum))
       .attr('y1', height / 2)
       .attr('y2', height / 2)
       .attr('stroke', 'black')
@@ -95,12 +100,54 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
     };
 
     // Add markers for all positions
-    addMarker(data.min, 'Min');
-    addMarker(data.max, 'Max');
+    addMarker(data.minimum, 'Min');
+    addMarker(data.maximum, 'Max');
     addMarker(data.mean, 'Mean', false);
     addMarker(data.median, 'Median');
     addMarker(data.mode, 'Mode', false);
   };
 
-  return <div ref={ref}></div>;
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '110px',
+      }}
+    >
+      {chartType === 'chart' ? (
+        <div ref={ref}></div>
+      ) : (
+        <Box sx={{ minWidth: '700px', display: 'flex', alignItems: 'center' }}>
+          {Object.keys(data).map((key) => (
+            <Box key={key} sx={{ mr: '50px' }}>
+              <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>
+                {key.charAt(0).toUpperCase() + key.slice(1)}
+              </Box>
+              <Box
+                sx={{
+                  mt: 1,
+                  width: '84px',
+                  background: '#F5FAFA',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <Box sx={{ ml: 1 }}> {data[key]}</Box>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      )}
+      <Image
+        style={{ marginLeft: '20px', cursor: 'pointer' }}
+        src={switchIcon}
+        onClick={() =>
+          setChartType(chartType === 'chart' ? 'numbers' : 'chart')
+        }
+        alt="switch icon"
+      />
+    </Box>
+  );
 };
