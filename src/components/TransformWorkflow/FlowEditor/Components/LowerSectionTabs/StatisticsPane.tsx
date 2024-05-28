@@ -10,6 +10,7 @@ import {
   TableSortLabel,
   Button,
   Skeleton,
+  CircularProgress,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -19,19 +20,37 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   flexRender,
+  ColumnDef,
 } from '@tanstack/react-table';
 import { httpGet, httpPost } from '@/helpers/http';
 import { DbtSourceModel } from '../Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import DownloadIcon from '@mui/icons-material/Download';
-import useSWR from 'swr';
+// import DownloadIcon from '@mui/icons-material/Download';
 import { StatsChart } from '@/components/Charts/StatsChart';
 import { RangeChart } from '@/components/Charts/RangeChart';
 import { BarChart } from '@/components/Charts/BarChart';
 import { delay } from '@/utils/common';
+import { Session } from 'next-auth';
 
-export const StatisticsPane = ({ height }) => {
+interface StatisticsPaneProps {
+  height: number;
+}
+
+interface ColumnData {
+  name: string;
+  type: 'Numeric' | 'String' | 'Datetime' | 'JSON' | 'Boolean';
+  distinct?: number;
+  null?: number;
+  distribution?: any;
+}
+
+interface TableDetailsResponse {
+  name: string;
+  translated_type: 'Numeric' | 'String' | 'Datetime' | 'JSON' | 'Boolean';
+}
+
+export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   const globalContext = useContext(GlobalContext);
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
 
@@ -40,24 +59,25 @@ export const StatisticsPane = ({ height }) => {
   const toastContext = useContext(GlobalContext);
   const { previewAction } = usePreviewAction();
 
-  const columns = [
-    { accessorKey: 'name', header: 'Column name' },
-    { accessorKey: 'type', header: 'Column type' },
-    { accessorKey: 'distinct', header: 'Distinct' },
-    { accessorKey: 'null', header: 'Null' },
+  const columns: ColumnDef<ColumnData, any>[] = [
+    { accessorKey: 'name', header: 'Column name', size: 150 },
+    { accessorKey: 'type', header: 'Column type', size: 100 },
+    { accessorKey: 'distinct', header: 'Distinct', size: 100 },
+    { accessorKey: 'null', header: 'Null', size: 100 },
     {
       accessorKey: 'distribution',
       header: 'Data distribution',
+      size: 700,
       cell: ({ row }) => {
         const { type, distribution } = row.original;
-        console.log(row.original);
         switch (type) {
           case 'Numeric':
             return distribution ? (
               <StatsChart
+                type="chart"
                 data={{
-                  min: distribution.minVal,
-                  max: distribution.maxVal,
+                  minimum: distribution.minVal,
+                  maximum: distribution.maxVal,
                   mean: distribution.mean,
                   median: distribution.median,
                   mode: distribution.mode,
@@ -92,7 +112,7 @@ export const StatisticsPane = ({ height }) => {
               />
             );
 
-          case 'Timestamp':
+          case 'Datetime':
             return (
               <BarChart
                 data={[
@@ -112,39 +132,42 @@ export const StatisticsPane = ({ height }) => {
   ];
 
   // Row Data: The data to be displayed.
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<ColumnData[]>([]);
 
   const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
   const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
 
   const pollTaskStatus = async (
-    session,
-    taskId,
-    colName,
-    setData,
+    session: Session | null,
+    taskId: string,
+    colName: string,
+    setData: any,
     interval = 5000
   ) => {
-    const orgSlug = globalContext?.CurrentOrg.state.slug;
+    // const orgSlug = globalContext?.CurrentOrg.state.slug;
     const hashKey = `data-insights`;
     const taskUrl = `tasks/${taskId}?hashkey=${hashKey}`;
 
-    const poll = async (resolve, reject) => {
+    const poll = async (
+      resolve: (value?: unknown) => void,
+      reject: (reason?: any) => void
+    ) => {
       try {
         const response = await httpGet(session, taskUrl);
         const latestProgress = response.progress[response.progress.length - 1];
         if (latestProgress.status === 'completed') {
           const result = latestProgress.results;
-          setData((data) =>
-            data.map((dat) => {
-              if (dat.name === colName) {
+          setData((columnData: ColumnData[]) =>
+            columnData.map((data) => {
+              if (data.name === colName) {
                 return {
-                  ...dat,
+                  ...data,
                   null: result.countNull,
                   distinct: result.countDistinct,
                   distribution: result,
                 };
               }
-              return dat;
+              return data;
             })
           );
           resolve({ ...latestProgress.results, colName: colName });
@@ -164,71 +187,44 @@ export const StatisticsPane = ({ height }) => {
   const fetchColumns = async (schema: string, table: string) => {
     try {
       const dataUrl = `warehouse/v1/table_data/${schema}/${table}`;
-      const metrics = `warehouse/insights/metrics/`;
+      const metricsApiUrl = `warehouse/insights/metrics/`;
 
-      const tableData1 = await httpGet(session, dataUrl);
-      console.log(tableData1);
+      const tableDetails: TableDetailsResponse[] = await httpGet(
+        session,
+        dataUrl
+      );
 
-      // tableData1.forEach(async (column) => {
-      //   const tableData2 = await httpPost(session, metrics, {
-      //     db_schema: schema,
-      //     db_table: table,
-      //     column_name: column.name,
-      //   });
-      //   console.log(tableData2);
-      // });
-
-      const tasks = tableData1.map(async (column) => {
-        const tableData2 = await httpPost(session, metrics, {
-          db_schema: schema,
-          db_table: table,
-          column_name: column.name,
-        });
-        console.log(tableData2);
+      tableDetails.forEach(async (column) => {
+        const metrics: { task_id: string } = await httpPost(
+          session,
+          metricsApiUrl,
+          {
+            db_schema: schema,
+            db_table: table,
+            column_name: column.name,
+          }
+        );
 
         await delay(1000);
 
-        return pollTaskStatus(
-          session,
-          tableData2.task_id,
-          column.name,
-          setData
-        );
+        pollTaskStatus(session, metrics.task_id, column.name, setData);
       });
 
-      // const tableData = {
-      //   data: [
-      //     { name: 'Date', type: 'Timestamp', distinct: 300, null: 23 },
-      //     {
-      //       name: 'Age',
-      //       type: 'Integer',
-      //       distinct: 200,
-      //       null: 3,
-      //     },
-      //     { name: 'Message', type: 'String', distinct: 334, null: 1 },
-      //     { name: 'IsAdmin', type: 'Boolean', distinct: 23, null: 4 },
-      //     { name: 'result', type: 'JSON', distinct: 23, null: 4 },
-      //   ],
-      // };
-
-      const tableData = tableData1.map((data) => ({
+      const tableData = tableDetails.map((data) => ({
         name: data.name,
         type: data.translated_type,
       }));
 
       setData(tableData);
 
-      const results = await Promise.all(tasks);
-
-      // const resultMap = results.reduce((prev, curr, index) => {}, {});
-
-      console.log(results);
+      // const results = await Promise.all(tasks);
+      // console.log(results);
     } catch (error: any) {
       errorToast(error.message, [], toastContext);
     }
   };
 
-  const fetchRowCount = async (schema, table) => {
+  const fetchRowCount = async (schema: string, table: string) => {
     const count = await httpGet(
       session,
       `warehouse/table_count/${schema}/${table}`
@@ -248,6 +244,7 @@ export const StatisticsPane = ({ height }) => {
   useEffect(() => {
     if (modelToPreview) {
       fetchRowCount(modelToPreview.schema, modelToPreview.input_name);
+      fetchColumns(modelToPreview.schema, modelToPreview.input_name);
     }
   }, [modelToPreview]);
 
@@ -277,142 +274,150 @@ export const StatisticsPane = ({ height }) => {
   });
 
   return modelToPreview ? (
-    <Box>
-      <Box
-        sx={{
-          alignItems: 'center',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="body1" fontWeight="bold" padding="10px">
-            {modelToPreview?.input_name}
-          </Typography>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              ml: '56px',
-              fontWeight: 600,
-            }}
-          >
+    data.length > 0 ? (
+      <Box>
+        <Box
+          sx={{
+            alignItems: 'center',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="body1" fontWeight="bold" padding="10px">
+              {modelToPreview?.input_name}
+            </Typography>
             <Box
               sx={{
+                display: 'flex',
+                alignItems: 'center',
+                ml: '56px',
+                fontWeight: 600,
+              }}
+            >
+              {data.length > 0 && (
+                <Box
+                  sx={{
+                    color: '#00897b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontWeight: 700,
+                    mr: 2,
+                  }}
+                >
+                  <VisibilityIcon sx={{ mr: 1 }} /> {data.length} Columns{' '}
+                </Box>
+              )}
+              {rowCount} Rows
+            </Box>
+
+            <Box
+              sx={{
+                ml: 'auto',
+                mr: 2,
                 color: '#00897b',
                 display: 'flex',
                 alignItems: 'center',
-                fontWeight: 700,
-                mr: 2,
               }}
             >
-              <VisibilityIcon sx={{ mr: 1 }} /> {data.length} Columns{' '}
+              <Button
+                variant="contained"
+                sx={{ mr: 2 }}
+                onClick={() =>
+                  fetchColumns(modelToPreview.schema, modelToPreview.input_name)
+                }
+              >
+                Refresh
+              </Button>
+              {/* <DownloadIcon sx={{ cursor: 'pointer' }} /> */}
             </Box>
-            {rowCount} Rows
-          </Box>
-
-          <Box
-            sx={{
-              ml: 'auto',
-              mr: 2,
-              color: '#00897b',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Button
-              variant="contained"
-              sx={{ mr: 2 }}
-              onClick={() =>
-                fetchColumns(modelToPreview.schema, modelToPreview.input_name)
-              }
-            >
-              Generate
-            </Button>
-            <DownloadIcon sx={{ cursor: 'pointer' }} />
           </Box>
         </Box>
-      </Box>
-      <Box>
-        <Box sx={{ height: height - 50, overflow: 'auto' }}>
-          <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
-            <TableHead>
-              {getHeaderGroups().map((headerGroup: any) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header: any) => (
-                    <TableCell
-                      key={header.id}
-                      colSpan={header.colSpan}
+        <Box>
+          <Box sx={{ height: height - 50, overflow: 'auto' }}>
+            <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
+              <TableHead>
+                {getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableCell
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        sx={{
+                          width: header.column.columnDef.size,
+                          backgroundColor: '#F5FAFA',
+                          border: '1px solid #dddddd',
+                          padding: '8px',
+                          textAlign: 'left',
+                          fontWeight: 700,
+                          color: 'rgba(15, 36, 64, 0.57)',
+                        }}
+                      >
+                        <Box display="flex" alignItems="center">
+                          <TableSortLabel
+                            active={sortedColumn === header.id}
+                            direction={
+                              sortedColumn === header.id
+                                ? sortOrder === 1
+                                  ? 'asc'
+                                  : 'desc'
+                                : 'asc'
+                            }
+                            onClick={() => handleSort(header.id)}
+                            sx={{ marginLeft: '4px' }}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                          </TableSortLabel>
+                        </Box>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHead>
+              <TableBody sx={{ borderColor: '#dddddd' }}>
+                {getRowModel().rows.map((row) => {
+                  return (
+                    <TableRow
+                      key={row.id}
                       sx={{
-                        backgroundColor: '#F5FAFA',
-                        border: '1px solid #dddddd',
-                        padding: '8px',
-                        textAlign: 'left',
-                        fontWeight: 700,
-                        color: 'rgba(15, 36, 64, 0.57)',
+                        boxShadow: 'unset',
                       }}
                     >
-                      <Box display="flex" alignItems="center">
-                        <TableSortLabel
-                          active={sortedColumn === header.id}
-                          direction={
-                            sortedColumn === header.id
-                              ? sortOrder === 1
-                                ? 'asc'
-                                : 'desc'
-                              : 'asc'
-                          }
-                          onClick={() => handleSort(header.id)}
-                          sx={{ marginLeft: '4px' }}
-                        >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                        </TableSortLabel>
-                      </Box>
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHead>
-            <TableBody sx={{ borderColor: '#dddddd' }}>
-              {getRowModel().rows.map((row) => {
-                return (
-                  <TableRow
-                    key={row.id}
-                    sx={{
-                      boxShadow: 'unset',
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      console.log(cell.getValue());
-                      return (
-                        <TableCell
-                          key={cell.id}
-                          sx={{
-                            fontWeight: 600,
-                            textAlign: 'left',
-                            borderBottom: '1px solid #ddd',
-                            fontSize: '0.8rem',
-                          }}
-                        >
-                          {cell.getValue() !== undefined ? (
-                            flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )
-                          ) : (
-                            <Skeleton variant="rectangular" height={118} />
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      {row.getVisibleCells().map((cell) => {
+                        console.log(cell.getValue());
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            sx={{
+                              width: cell.column.columnDef.size,
+                              fontWeight: 600,
+                              textAlign: 'left',
+                              borderBottom: '1px solid #ddd',
+                              fontSize: '0.8rem',
+                            }}
+                          >
+                            {cell.getValue() !== undefined ? (
+                              flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )
+                            ) : (
+                              <Skeleton variant="rectangular" height={118} />
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Box>
         </Box>
       </Box>
-    </Box>
+    ) : (
+      <CircularProgress />
+    )
   ) : null;
 };
