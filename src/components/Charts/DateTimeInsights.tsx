@@ -150,7 +150,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
       ) : (
         <Box sx={{ minWidth: '700px', display: 'flex', alignItems: 'center' }}>
           <Box sx={{ mr: '30px' }}>
-            <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>Start date</Box>
+            <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>Minimum date</Box>
             <Box
               sx={{
                 mt: 1,
@@ -169,7 +169,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
           </Box>
           <Box sx={{ pt: 3 }}>TO</Box>
           <Box sx={{ m: '0px 30px' }}>
-            <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>End date</Box>
+            <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>Maximum date</Box>
             <Box
               sx={{
                 mt: 1,
@@ -181,13 +181,12 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
               }}
             >
               <Box sx={{ ml: 1 }}>
-                {' '}
                 {moment(maxDate).format('ddd, Do MMMM, YYYY')}
               </Box>
             </Box>
           </Box>
           <Box sx={{ m: '0px' }}>
-            <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>Total days</Box>
+            <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>Total days data</Box>
             <Box
               sx={{
                 mt: 1,
