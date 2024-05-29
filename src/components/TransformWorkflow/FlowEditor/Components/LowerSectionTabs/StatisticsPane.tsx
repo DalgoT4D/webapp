@@ -37,7 +37,7 @@ interface StatisticsPaneProps {
   height: number;
 }
 
-interface DateTimeFilter {
+export interface DateTimeFilter {
   range: 'year' | 'month' | 'day';
   limit: number;
   offset: number;

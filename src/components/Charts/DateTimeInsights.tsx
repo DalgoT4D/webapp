@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import switchIcon from '@/assets/icons/switch-chart.svg';
 import switchFilter from '@/assets/icons/switch-filter.svg';
-import { BarChart, BarChartData, BarChartProps } from './BarChart';
-import { Box, Skeleton } from '@mui/material';
+import { BarChart } from './BarChart';
+import { Box, Skeleton, SxProps } from '@mui/material';
 import Image from 'next/image';
 import moment from 'moment';
 import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
 import { Session } from 'next-auth';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import { DateTimeFilter } from '../TransformWorkflow/FlowEditor/Components/LowerSectionTabs/StatisticsPane';
 
 type DateTimeInsightsProps = {
   minDate: string;
@@ -37,6 +40,19 @@ const formatDate = (obj: any, returnType: 'year' | 'month' | 'day') => {
     default:
       throw new Error('Invalid return type');
   }
+};
+
+const arrowStyles: SxProps = {
+  width: '16px',
+  height: '70px',
+  background: '#F5FAFA',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  ':hover': {
+    background: '#c8d3d3',
+  },
 };
 
 const pollTaskStatus = async (
@@ -100,22 +116,42 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
     }))
   );
 
-  const [filter, setFilter] = useState({
+  const [filter, setFilter] = useState<DateTimeFilter>({
     range: 'year',
     limit: 10,
     offset: 0,
   });
 
-  const updateFilter = async () => {
+  const updateOffset = async (type: 'increase' | 'decrease') => {
+    let newOffset =
+      type === 'increase' ? filter.offset + 10 : filter.offset - 10;
+
+    if (newOffset < 0) newOffset = 0;
+
+    const newFilter: DateTimeFilter = {
+      ...filter,
+      offset: newOffset,
+    };
+    await updateFilter(newFilter);
+  };
+
+  const updateRange = async () => {
     const rangeMap: any = {
       year: 'month',
       month: 'day',
       day: 'year',
     };
 
-    const newFilter = { ...filter, range: rangeMap[filter.range] };
+    const newFilter: DateTimeFilter = {
+      ...filter,
+      range: rangeMap[filter.range],
+    };
+    await updateFilter(newFilter);
+  };
 
-    setFilter((filter) => ({ ...filter, range: rangeMap[filter.range] }));
+  const updateFilter = async (newFilter: DateTimeFilter) => {
+    setBarChartData([]);
+    setFilter(newFilter);
 
     const metricsApiUrl = `warehouse/insights/metrics/`;
 
@@ -143,7 +179,29 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
     >
       {chartType === 'chart' ? (
         barChartData.length > 0 ? (
-          <BarChart data={barChartData} />
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {filter.offset > 0 && (
+              <Box
+                sx={arrowStyles}
+                onClick={() => {
+                  updateOffset('decrease');
+                }}
+              >
+                <ArrowLeftIcon />
+              </Box>
+            )}
+            <BarChart data={barChartData} />
+            {barChartData.length === 10 && (
+              <Box
+                sx={arrowStyles}
+                onClick={() => {
+                  updateOffset('increase');
+                }}
+              >
+                <ArrowRightIcon />
+              </Box>
+            )}
+          </Box>
         ) : (
           <Skeleton height={100} width={700} />
         )
@@ -215,8 +273,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
             }}
             src={switchFilter}
             onClick={() => {
-              setBarChartData([]);
-              updateFilter();
+              updateRange();
             }}
             alt="switch icon"
           />
