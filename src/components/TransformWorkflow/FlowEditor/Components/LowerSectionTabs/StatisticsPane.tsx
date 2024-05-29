@@ -159,7 +159,12 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
         if (distribution === 'failed' && postBody !== undefined) {
           return (
             <Box
-              sx={{ display: 'flex', alignItems: 'center', color: '#9d1313' }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                color: '#9d1313',
+                minHeight: '100px',
+              }}
             >
               <ErrorOutlineIcon sx={{ mr: 1 }} /> Error fetching stats{' '}
               <Button
