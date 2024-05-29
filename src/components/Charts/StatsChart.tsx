@@ -26,7 +26,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
   }, [data, chartType]);
 
   const drawChart = () => {
-    const margin = { top: 20, right: 30, bottom: 20, left: 30 };
+    const margin = { top: 20, right: 40, bottom: 20, left: 40 };
     const width = 700 - margin.left - margin.right;
     const height = 100 - margin.top - margin.bottom;
 
@@ -81,11 +81,11 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
       .attr('stroke-width', '2');
 
     // Function to add markers and labels for values
-    const addMarker = (value, label, up = true) => {
+    const addMarker = (value, label, up = true, distance = 2) => {
       svg
         .append('text')
         .attr('x', xScale(value))
-        .attr('y', up ? height / 2 - 20 : height / 2 + 20)
+        .attr('y', up ? height / distance - 20 : height / distance )
         .attr('text-anchor', 'middle')
         .text(label + ': ' + value);
 
@@ -102,9 +102,9 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
     // Add markers for all positions
     addMarker(data.minimum, 'Min');
     addMarker(data.maximum, 'Max');
-    addMarker(data.mean, 'Mean', false);
-    addMarker(data.median, 'Median');
-    addMarker(data.mode, 'Mode', false);
+    addMarker(data.mean, 'Mean', false, 1.1);
+    addMarker(data.median, 'Median', true, 5);
+    addMarker(data.mode, 'Mode', false, 0.8);
   };
 
   return (
