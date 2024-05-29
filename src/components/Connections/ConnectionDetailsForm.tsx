@@ -426,15 +426,17 @@ const ConnectionDetailsForm = ({
         formContent={<FormContent />}
         formActions={
           <>
-            <Button
-              variant="contained"
-              type="submit"
-              disabled={hasBreakingChanges}
-            >
-              Yes, I approve
-            </Button>
+            {tableData.length > 0 && (
+              <Button
+                variant="contained"
+                type="submit"
+                disabled={hasBreakingChanges}
+              >
+                Yes, I approve
+              </Button>
+            )}
             <Button color="secondary" variant="outlined" onClick={handleClose}>
-              Cancel
+              Close
             </Button>
           </>
         }
