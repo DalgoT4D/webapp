@@ -25,8 +25,8 @@ import {
 import { httpGet, httpPost } from '@/helpers/http';
 import { DbtSourceModel } from '../Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-// import DownloadIcon from '@mui/icons-material/Download';
 import { StatsChart } from '@/components/Charts/StatsChart';
 import { RangeChart } from '@/components/Charts/RangeChart';
 import { delay } from '@/utils/common';
@@ -37,24 +37,40 @@ interface StatisticsPaneProps {
   height: number;
 }
 
+interface DateTimeFilter {
+  range: 'year' | 'month' | 'day';
+  limit: number;
+  offset: number;
+}
+interface PostBody {
+  db_schema: string;
+  db_table: string;
+  column_name: string;
+  filter?: DateTimeFilter;
+}
+
+type ColumnTypes = 'Numeric' | 'String' | 'Datetime' | 'Json' | 'Boolean';
+
 interface ColumnData {
   name: string;
-  type: 'Numeric' | 'String' | 'Datetime' | 'JSON' | 'Boolean';
+  type: ColumnTypes;
   distinct?: number;
   null?: number;
   distribution?: any;
-  postBody?: any;
+  postBody?: PostBody;
 }
 
 interface TableDetailsResponse {
   name: string;
-  translated_type: 'Numeric' | 'String' | 'Datetime' | 'JSON' | 'Boolean';
+  translated_type: ColumnTypes;
 }
+
+const metricsApiUrl = `warehouse/insights/metrics/`;
 
 const pollTaskStatus = async (
   session: Session | null,
   taskId: string,
-  postBody: any,
+  postBody: PostBody,
   setData: any,
   interval = 5000
 ) => {
@@ -90,6 +106,20 @@ const pollTaskStatus = async (
         latestProgress.status === 'failed' ||
         latestProgress.status === 'error'
       ) {
+        setData((columnData: ColumnData[]) =>
+          columnData.map((data) => {
+            if (data.name === postBody.column_name) {
+              return {
+                ...data,
+                null: '',
+                distinct: '',
+                distribution: 'failed',
+                postBody,
+              };
+            }
+            return data;
+          })
+        );
         reject({ reason: 'Failed' });
       } else {
         setTimeout(() => poll(resolve, reject), interval);
@@ -103,13 +133,17 @@ const pollTaskStatus = async (
 };
 
 export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
-  const globalContext = useContext(GlobalContext);
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
 
   const [rowCount, setRowCount] = useState(0);
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
   const { previewAction } = usePreviewAction();
+  // Row Data: The data to be displayed.
+  const [data, setData] = useState<ColumnData[]>([]);
+
+  const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
+  const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
 
   const columns: ColumnDef<ColumnData, any>[] = [
     { accessorKey: 'name', header: 'Column name', size: 150 },
@@ -121,8 +155,47 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
       header: 'Data distribution',
       size: 700,
       cell: ({ row }) => {
-        console.log(row.original);
         const { type, distribution, postBody } = row.original;
+        if (distribution === 'failed' && postBody !== undefined) {
+          return (
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', color: '#9d1313' }}
+            >
+              <ErrorOutlineIcon sx={{ mr: 1 }} /> Error fetching stats{' '}
+              <Button
+                sx={{ ml: 2 }}
+                variant="outlined"
+                size="small"
+                onClick={async () => {
+                  const metrics: { task_id: string } = await httpPost(
+                    session,
+                    metricsApiUrl,
+                    postBody
+                  );
+
+                  setData((columnData: ColumnData[]) =>
+                    columnData.map((data) => {
+                      if (data.name === postBody.column_name) {
+                        return {
+                          ...data,
+                          null: undefined,
+                          distinct: undefined,
+                          distribution: undefined,
+                          postBody,
+                        };
+                      }
+                      return data;
+                    })
+                  );
+                  await delay(1000);
+                  pollTaskStatus(session, metrics.task_id, postBody, setData);
+                }}
+              >
+                Try again
+              </Button>
+            </Box>
+          );
+        }
         switch (type) {
           case 'Numeric':
             return distribution ? (
@@ -143,7 +216,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
             const chartData = distribution.charts[0].data;
             return (
               <RangeChart
-                data={chartData.map((data) => ({
+                data={chartData.map((data: any) => ({
                   name: data.category,
                   percentage: ((data.count * 100) / distribution.count).toFixed(
                     1
@@ -195,34 +268,43 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
     },
   ];
 
-  // Row Data: The data to be displayed.
-  const [data, setData] = useState<ColumnData[]>([]);
-
-  const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
-  const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
-
   const fetchColumns = async (schema: string, table: string) => {
     try {
       const dataUrl = `warehouse/v1/table_data/${schema}/${table}`;
-      const metricsApiUrl = `warehouse/insights/metrics/`;
 
       const tableDetails: TableDetailsResponse[] = await httpGet(
         session,
         dataUrl
       );
-      const tableData = tableDetails.map((data) => ({
-        name: data.name,
-        type: data.translated_type,
-      }));
+      const tableData = tableDetails.map((data) => {
+        if (data.translated_type === 'Json') {
+          return {
+            name: data.name,
+            type: data.translated_type,
+            null: '',
+            distinct: '',
+            distribution: '',
+          };
+        }
+        return {
+          name: data.name,
+          type: data.translated_type,
+        };
+      });
 
       setData(tableData);
 
       tableDetails.forEach(async (column) => {
-        const postBody: any = {
+        if (column.translated_type === 'Json') {
+          return;
+        }
+
+        const postBody: PostBody = {
           db_schema: schema,
           db_table: table,
           column_name: column.name,
         };
+
         if (column.translated_type === 'Datetime') {
           postBody.filter = {
             range: 'year',
@@ -254,7 +336,16 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
     setRowCount(count.total_rows);
   };
 
-  console.log(data);
+  useEffect(() => {
+    return () => {
+      const highestId = window.setTimeout(() => {
+        for (let i = highestId; i >= 0; i--) {
+          window.clearInterval(i);
+        }
+      }, 0);
+    };
+  }, []);
+
   useEffect(() => {
     if (previewAction.type === 'preview') {
       setModelToPreview(previewAction.data);
@@ -349,12 +440,11 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
               >
                 Refresh
               </Button>
-              {/* <DownloadIcon sx={{ cursor: 'pointer' }} /> */}
             </Box>
           </Box>
         </Box>
         <Box>
-          <Box sx={{ height: height - 50, overflow: 'auto' }}>
+          <Box sx={{ height: height - 100, overflow: 'auto' }}>
             <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
               <TableHead>
                 {getHeaderGroups().map((headerGroup) => (
