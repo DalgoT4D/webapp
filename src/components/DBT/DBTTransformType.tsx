@@ -107,7 +107,7 @@ const DBTTransformType = ({
     handleClose();
   };
 
-  const [showWorkFlow, setShowWorkflow] = useState(true);
+  const [showWorkFlow, setShowWorkflow] = useState(false);
 
   const dialog = (
     <Dialog fullScreen open={showWorkFlow} TransitionComponent={Transition}>
