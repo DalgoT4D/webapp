@@ -92,7 +92,7 @@ const ClauseOperands = ({
   data: {
     srcColumns: string[];
     advanceFilter: string;
-    logicalOp: { id: string; label: string };
+    logicalOp: { id: string; label: string } | null;
   };
 }) => {
   const { fields: operandFields } = useFieldArray({
@@ -103,7 +103,7 @@ const ClauseOperands = ({
   return (
     <>
       {operandFields
-        .slice(0, data.logicalOp.id === 'between' ? 2 : 1)
+        .slice(0, data.logicalOp?.id === 'between' ? 2 : 1)
         .map((operandField, operandIndex) => {
           const operandRadioValue = watch(
             `clauses.${clauseIndex}.operands.${operandIndex}.type`
@@ -173,6 +173,7 @@ const ClauseOperands = ({
                   name={`clauses.${clauseIndex}.operands.${operandIndex}.const_val`}
                   render={({ field, fieldState }) => (
                     <Input
+                      data-testid={`value${operandIndex}`}
                       helperText={fieldState.error?.message}
                       error={!!fieldState.error}
                       fieldStyle="transformation"
@@ -196,8 +197,6 @@ const CaseWhenOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -214,7 +213,7 @@ const CaseWhenOpForm = ({
 
   type clauseType = {
     filterCol: string;
-    logicalOp: { id: string; label: string };
+    logicalOp: { id: string; label: string } | null;
     operands: {
       type: string;
       col_val: string;
@@ -244,7 +243,7 @@ const CaseWhenOpForm = ({
       clauses: [
         {
           filterCol: '',
-          logicalOp: { id: '', label: '' },
+          logicalOp: null,
           operands: [
             { type: 'val', col_val: '', const_val: '' },
             { type: 'val', col_val: '', const_val: '' },
@@ -328,7 +327,7 @@ const CaseWhenOpForm = ({
                     is_col: op.type === 'col',
                   })
                 )
-                .slice(0, clause.logicalOp.id === 'between' ? 2 : 1),
+                .slice(0, clause.logicalOp?.id === 'between' ? 2 : 1),
               then: {
                 value:
                   clause.then.type === 'col'
@@ -336,7 +335,7 @@ const CaseWhenOpForm = ({
                     : parseStringForNull(clause.then.const_val),
                 is_col: clause.then.type === 'col',
               },
-              operator: clause.logicalOp.id,
+              operator: clause.logicalOp?.id,
             };
           }),
           else_clause: {
@@ -505,6 +504,7 @@ const CaseWhenOpForm = ({
                     render={({ field, fieldState }) => (
                       <Autocomplete
                         {...field}
+                        data-testid="column"
                         helperText={fieldState.error?.message}
                         error={!!fieldState.error}
                         options={srcColumns}
@@ -521,13 +521,14 @@ const CaseWhenOpForm = ({
                     rules={{
                       validate: (value) =>
                         advanceFilter !== 'no' ||
-                        value.id !== '' ||
+                        value !== null ||
                         'Operation is required',
                     }}
                     name={`clauses.${clauseIndex}.logicalOp`}
                     render={({ field, fieldState }) => (
                       <Autocomplete
                         {...field}
+                        data-testid="operation"
                         helperText={fieldState.error?.message}
                         error={!!fieldState.error}
                         options={LogicalOperators}
@@ -633,6 +634,7 @@ const CaseWhenOpForm = ({
                           <Input
                             {...field}
                             label=""
+                            data-testid="thenInput"
                             fieldStyle="transformation"
                             helperText={fieldState.error?.message}
                             error={!!fieldState.error}

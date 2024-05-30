@@ -26,7 +26,6 @@ const UnionTablesOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
   dummyNodeId,
   action,
   setLoading,
@@ -313,6 +312,7 @@ const UnionTablesOpForm = ({
               render={({ field, fieldState }) => (
                 <Autocomplete
                   {...field}
+                  data-testid={`table${index}`}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                   key={`${index}`}

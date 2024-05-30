@@ -1,24 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import AggregationOpForm from '../AggregationOpForm';
+import ArithmeticOpForm from '../ArithmeticOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import {
-  aggregateDbtModelResponse,
-  intermediateTableResponse,
-  mockNode,
-} from './helpers';
+import { intermediateTableResponse, mockNode } from './helpers';
 import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -31,10 +25,10 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Aggregate',
-    slug: 'aggregate',
+    label: 'Arithmetic',
+    slug: 'arithmetic',
     infoToolTip:
-      'Performs a calculation on multiple values in a column and returns a new column with that value in every row',
+      'Perform arithmetic operations on or between one or more columns',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -53,7 +47,7 @@ const props: OperationFormProps = {
     case url.includes('transform/dbt_project/model'):
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(aggregateDbtModelResponse),
+        json: () => Promise.resolve({}),
       });
 
     default:
@@ -64,55 +58,52 @@ const props: OperationFormProps = {
   }
 });
 
-const aggregationOpForm = (
+const arithmeticForm = (
   <GlobalContext.Provider value={mockContext}>
-    <AggregationOpForm {...props} />
+    <ArithmeticOpForm {...props} />
   </GlobalContext.Provider>
 );
 
-describe('AggregationOpForm', () => {
+describe('Arithmetic form', () => {
   it('renders correct initial form state', async () => {
-    render(aggregationOpForm);
+    render(arithmeticForm);
     await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
-      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
+      expect(screen.getByLabelText('Operation*')).toHaveValue('');
       expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
-      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
     });
   });
 });
 
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
-    render(aggregationOpForm);
+    render(arithmeticForm);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+    });
     // Simulate form submission
     const saveButton = screen.getByTestId('savebutton');
     await userEvent.click(saveButton);
 
     // validations to be called
     await waitFor(() => {
-      expect(
-        screen.getByText('Column to aggregate is required')
-      ).toBeInTheDocument();
       expect(screen.getByText('Operation is required')).toBeInTheDocument();
+      expect(screen.getAllByText('Column is required')).toHaveLength(2);
       expect(
         screen.getByText('Output column name is required')
       ).toBeInTheDocument();
     });
 
-    const [columnInput] = screen.getAllByRole('combobox');
-
-    await user.type(columnInput, 's');
-    await fireMultipleKeyDown('aggregateColumn', 1);
     await fireMultipleKeyDown('operation', 2);
 
-    // Simulate user typing in the Output Column Name
-    const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
-    await user.type(outputColumnNameInput, 'District aggregate');
+    await fireMultipleKeyDown('column0', 2);
 
-    await userEvent.click(saveButton);
+    await fireMultipleKeyDown('column1', 2);
+
+    const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
+    await user.type(outputColumnNameInput, 'Sum');
+
+    await user.click(saveButton);
 
     await waitFor(() => {
       expect(continueOperationChainMock).toHaveBeenCalled();
@@ -120,12 +111,8 @@ describe('Form interactions', () => {
 
     // reset to initial state after submit
     await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
-      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
+      expect(screen.getByLabelText('Operation*')).toHaveValue('');
       expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
-      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
     });
   });
 });

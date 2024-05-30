@@ -10,12 +10,32 @@ jest.mock('next/router', () => ({
   },
 }));
 
+// mock Header and SideDrawer
+jest.mock('../../SideDrawer/SideDrawer', () => {
+  const MockSideDrawer = () => {
+    return <div data-testid="side-drawer" />;
+  };
+
+  MockSideDrawer.displayName = 'MockSideDrawer';
+
+  return MockSideDrawer;
+});
+jest.mock('../../Header/Header', () => {
+  const MockHeader = () => {
+    return <div data-testid="header" />;
+  };
+
+  MockHeader.displayName = 'MockHeader';
+
+  return MockHeader;
+});
+
 export function mockFetch(data: any) {
   return jest.fn().mockImplementation(() =>
     Promise.resolve({
       ok: true,
       json: () => data,
-    }),
+    })
   );
 }
 
@@ -33,7 +53,7 @@ describe('no token', () => {
         <Main>
           <div key="1" data-testid="not-logged-in" />
         </Main>
-      </SessionProvider>,
+      </SessionProvider>
     );
 
     const notLoggedIn = screen.getByTestId('not-logged-in');
@@ -49,34 +69,16 @@ describe('token and normal flow', () => {
     user: { token: 'token', email_verified: true },
   };
 
-  it('renders the header and sidedrawer', () => {
-    // mock Header and SideDrawer
-    jest.mock('../../SideDrawer/SideDrawer', () => {
-      const MockSideDrawer = () => {
-        return <div data-testid="side-drawer" />;
-      };
-
-      MockSideDrawer.displayName = 'MockSideDrawer';
-
-      return MockSideDrawer;
-    });
-    jest.mock('../../Header/Header', () => {
-      const MockHeader = () => {
-        return <div data-testid="header" />;
-      };
-
-      MockHeader.displayName = 'MockHeader';
-
-      return MockHeader;
-    });
-
+  it('renders the header and sidedrawer', async () => {
     render(
       <SessionProvider session={mockSession}>
         <Main>
           <div key="1" data-testid="normal-flow" />
         </Main>
-      </SessionProvider>,
+      </SessionProvider>
     );
+
+    await waitFor(() => {});
 
     // TODO: rewrite test cases for this component - logic has been changed
     // const normalFlow = screen.getByTestId('normal-flow');

@@ -8,7 +8,7 @@ export default function WorkFlows() {
   const router = useRouter();
   return (
     <>
-      <PageHead title="Workflows" />
+      <PageHead title="Dalgo | Workflows" />
       <main className={styles.main}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '50px' }}>
           TODO: This is where you will select the worflow and do the initial

@@ -12,7 +12,7 @@ import { PreviewActionProvider } from '@/contexts/FlowEditorPreviewContext';
 export default function WorkflowEditor() {
   return (
     <>
-      <PageHead title="FlowEditors" />
+      <PageHead title="Dalgo | FlowEditor" />
       <main className={styles.floweditor}>
         <CanvasNodeProvider>
           <CanvasActionProvider>
