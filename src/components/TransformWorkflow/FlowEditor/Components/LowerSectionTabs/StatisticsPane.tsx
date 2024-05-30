@@ -424,19 +424,17 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                   fontWeight: 600,
                 }}
               >
-                {data.length > 0 && (
-                  <Box
-                    sx={{
-                      color: '#00897b',
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontWeight: 700,
-                      mr: 2,
-                    }}
-                  >
-                    <VisibilityIcon sx={{ mr: 1 }} /> {data.length} Columns{' '}
-                  </Box>
-                )}
+                <Box
+                  sx={{
+                    color: '#00897b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontWeight: 700,
+                    mr: 2,
+                  }}
+                >
+                  <VisibilityIcon sx={{ mr: 1 }} /> {data.length} Columns{' '}
+                </Box>
                 {rowCount > 0 ? rowCount : 0} Rows
               </Box>
 
