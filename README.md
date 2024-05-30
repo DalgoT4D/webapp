@@ -1,4 +1,4 @@
-## Dalgo webapp
+## Dalgo frontend
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Code coverage badge](https://img.shields.io/codecov/c/github/DalgoT4D/webapp/main.svg)](https://codecov.io/gh/DalgoT4D/webapp/branch/main)
@@ -45,9 +45,8 @@ Refer to this [guide](https://github.com/airbnb/javascript/tree/master/react)
 
 Make sure you have docker and docker compose installed.
 
--  Install [docker](https://docs.docker.com/engine/install/)
--  Install [docker-compose](https://docs.docker.com/compose/install/)
-
+- Install [docker](https://docs.docker.com/engine/install/)
+- Install [docker compose](https://docs.docker.com/compose/install/)
 
 ### Step 1: Copy .env file to Dcoker folder
 
@@ -59,4 +58,4 @@ All the variables with NEXT_PUBLIC prefix need to be added to the build command.
 
 ### Step 3: Start the application
 
-`docker-compose -f Docker/docker-compose.yaml up`
+`docker compose -f Docker/docker-compose.yaml --env-file .env up`
