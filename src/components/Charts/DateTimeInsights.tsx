@@ -104,7 +104,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
   >('available');
 
   const [barChartData, setBarChartData] = useState(
-    barProps.data.map((data) => ({
+    barProps.data.map((data: any) => ({
       label: formatDate(data, 'year'),
       value: data.frequency,
     }))
@@ -173,7 +173,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
       setNewData('available');
     }
     setBarChartData(
-      responseData.map((data) => ({
+      responseData.map((data: any) => ({
         label: formatDate(data, newFilter.range),
         value: data.frequency,
       }))

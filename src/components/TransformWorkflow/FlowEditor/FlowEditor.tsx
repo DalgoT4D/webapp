@@ -118,7 +118,7 @@ type LowerSectionProps = {
 
 export type TaskProgressLog = {
   message: string;
-  status?: string;
+  status: string;
   timestamp: string;
 };
 

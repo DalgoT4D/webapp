@@ -81,11 +81,16 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
       .attr('stroke-width', '2');
 
     // Function to add markers and labels for values
-    const addMarker = (value, label, up = true, distance = 2) => {
+    const addMarker = (
+      value: number,
+      label: string,
+      up = true,
+      distance = 2
+    ) => {
       svg
         .append('text')
         .attr('x', xScale(value))
-        .attr('y', up ? height / distance - 20 : height / distance )
+        .attr('y', up ? height / distance - 20 : height / distance)
         .attr('text-anchor', 'middle')
         .text(label + ': ' + value);
 
@@ -119,7 +124,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
         <div ref={ref}></div>
       ) : (
         <Box sx={{ minWidth: '700px', display: 'flex', alignItems: 'center' }}>
-          {Object.keys(data).map((key) => (
+          {(Object.keys(data) as Array<keyof DataProps>).map((key) => (
             <Box key={key} sx={{ mr: '50px' }}>
               <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>
                 {key.charAt(0).toUpperCase() + key.slice(1)}
