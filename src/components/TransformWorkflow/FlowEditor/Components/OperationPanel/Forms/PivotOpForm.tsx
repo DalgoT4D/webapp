@@ -32,8 +32,6 @@ const PivotOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -245,6 +243,7 @@ const PivotOpForm = ({
             render={({ field, fieldState }) => (
               <Autocomplete
                 {...field}
+                data-testid="pivot"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
                 disabled={action === 'view'}
@@ -272,6 +271,7 @@ const PivotOpForm = ({
           removeItem={(index: number) => remove(index)}
           data={fields.map((field, idx) => [
             <Input
+              data-testid={`columnValue${idx}`}
               disabled={action === 'view'}
               fieldStyle="none"
               key={field.col + idx}

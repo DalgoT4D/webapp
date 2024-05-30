@@ -46,7 +46,7 @@ const UserManagement = () => {
 
   return (
     <>
-      <PageHead title="DDP | User Management" />
+      <PageHead title="Dalgo | User Management" />
       <main className={styles.main}>
         <Typography
           sx={{ fontWeight: 700 }}

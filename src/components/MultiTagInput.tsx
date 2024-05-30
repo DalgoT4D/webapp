@@ -56,7 +56,6 @@ const MultiTagInput = ({
         variant="outlined"
         data-testid={`${field}-multi-tag`}
         id={'0'}
-        defaultValue={''}
         name={field}
         placeholder={label}
         sx={{ width: '100%' }}
