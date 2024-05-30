@@ -33,14 +33,11 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
         .domain([0, d3.max(data, (d) => d.value) as number])
         .range([height, 0]);
 
-      const yAxis = d3.axisLeft(y);
       const xAxis = d3.axisBottom(x);
 
       const chart = svg
         .append('g')
         .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
-      //   chart.append('g').call(yAxis);
 
       chart
         .append('g')

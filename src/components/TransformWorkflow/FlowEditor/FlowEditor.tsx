@@ -5,11 +5,6 @@ import {
   Divider,
   IconButton,
   Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   Tabs,
 } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
@@ -34,7 +29,6 @@ import {
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { delay } from '@/utils/common';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
-import moment from 'moment';
 import { LogsPane } from './Components/LowerSectionTabs/LogsPane';
 import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
 
