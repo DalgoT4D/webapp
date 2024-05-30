@@ -270,7 +270,12 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
               />
             );
           default:
-            return <div> -- -- -- No data available -- -- -- </div>;
+            return (
+              <Box sx={{ textAlign: 'center' }}>
+                {' '}
+                -- -- -- No data available -- -- --{' '}
+              </Box>
+            );
         }
       },
     },

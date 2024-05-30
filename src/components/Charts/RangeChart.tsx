@@ -81,7 +81,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
           .style('top', event.pageY - 28 + 'px');
       })
       .on('mouseout', () => {
-        tooltip.transition().duration(500).style('opacity', 0);
+        tooltip.transition().duration(200).style('opacity', 0);
       });
 
     offsetX = 0; // Reset for text placement
@@ -147,7 +147,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
           .style('top', event.pageY - 28 + 'px');
       })
       .on('mouseout', () => {
-        tooltip.transition().duration(500).style('opacity', 0);
+        tooltip.transition().duration(200).style('opacity', 0);
       });
 
     return () => {
