@@ -74,7 +74,6 @@ const pollTaskStatus = async (
   setData: any,
   interval = 5000
 ) => {
-  // const orgSlug = globalContext?.CurrentOrg.state.slug;
   const hashKey = `data-insights`;
   const taskUrl = `tasks/${taskId}?hashkey=${hashKey}`;
 
