@@ -54,8 +54,8 @@ type ColumnTypes = 'Numeric' | 'String' | 'Datetime' | 'Json' | 'Boolean';
 interface ColumnData {
   name: string;
   type: ColumnTypes;
-  distinct?: number;
-  null?: number;
+  distinct?: number | string;
+  null?: number | string;
   distribution?: any;
   postBody?: PostBody;
 }
@@ -284,7 +284,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
         session,
         dataUrl
       );
-      const tableData = tableDetails.map((data) => {
+      const tableData: ColumnData[] = tableDetails.map((data) => {
         if (data.translated_type === 'Json') {
           return {
             name: data.name,
