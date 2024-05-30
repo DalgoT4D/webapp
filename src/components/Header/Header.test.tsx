@@ -18,7 +18,7 @@ describe('tests for page header', () => {
       </SessionProvider>
     );
 
-    const logo = screen.getByAltText('ddp logo');
+    const logo = screen.getByAltText('dalgo logo');
     expect(logo).toBeInTheDocument();
   });
 

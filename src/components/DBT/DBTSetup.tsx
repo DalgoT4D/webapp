@@ -143,16 +143,16 @@ export const DBTSetup = ({
   };
 
   const editWorkspace = async (data: DBTCreateWorkspaceParams) => {
-    setWorkspace({
-      gitrepo_url: data.gitrepoUrl,
-      default_schema: data.schema,
-    });
     if (data.schema && data.schema !== schema) {
       const updateSchemaPayload = {
         target_configs_schema: data.schema,
       };
       try {
         await httpPut(session, 'dbt/v1/schema/', updateSchemaPayload);
+        setWorkspace({
+          gitrepo_url: gitrepoUrl,
+          default_schema: data.schema,
+        });
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
@@ -171,7 +171,12 @@ export const DBTSetup = ({
       setExpandLogs(true);
       try {
         const message = await httpPut(session, 'dbt/github/', updateGitPayload);
+        setWorkspace({
+          gitrepo_url: data.gitrepoUrl,
+          default_schema: data.schema,
+        });
         await delay(1000);
+
         checkProgress(message.task_id, 'clone-github-repo');
       } catch (err: any) {
         console.error(err);

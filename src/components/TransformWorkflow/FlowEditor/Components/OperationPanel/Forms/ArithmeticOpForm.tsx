@@ -39,8 +39,6 @@ const ArithmeticOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -56,7 +54,7 @@ const ArithmeticOpForm = ({
       : {};
 
   type FormProps = {
-    arithmeticOp: { id: string; label: string };
+    arithmeticOp: { id: string; label: string } | null;
     operands: {
       type: string;
       col_val: string;
@@ -68,7 +66,7 @@ const ArithmeticOpForm = ({
   const { control, handleSubmit, reset, watch, formState } = useForm<FormProps>(
     {
       defaultValues: {
-        arithmeticOp: { id: '', label: '' },
+        arithmeticOp: null,
         operands: [
           { type: 'col', col_val: '', const_val: 0 },
           { type: 'col', col_val: '', const_val: 0 },
@@ -124,7 +122,7 @@ const ArithmeticOpForm = ({
         source_columns: srcColumns,
         other_inputs: [],
         config: {
-          operator: data.arithmeticOp.id,
+          operator: data.arithmeticOp?.id,
           operands: data.operands.map(
             (op: {
               type: string;
@@ -231,6 +229,7 @@ const ArithmeticOpForm = ({
             render={({ field, fieldState }) => {
               return (
                 <Autocomplete
+                  data-testid="operation"
                   {...field}
                   disabled={action === 'view'}
                   placeholder="Select the operation*"
@@ -290,6 +289,7 @@ const ArithmeticOpForm = ({
                     name={`operands.${index}.col_val`}
                     render={({ field, fieldState }) => (
                       <Autocomplete
+                        data-testid={`column${index}`}
                         {...field}
                         helperText={fieldState.error?.message}
                         error={!!fieldState.error}
@@ -321,7 +321,8 @@ const ArithmeticOpForm = ({
                     )}
                   />
                 )}
-                {((['sub', 'div'].includes(arithmeticOp?.id) &&
+                {arithmeticOp &&
+                ((['sub', 'div'].includes(arithmeticOp?.id) &&
                   fields.length < 2) ||
                   ['add', 'mul'].includes(arithmeticOp?.id)) &&
                 index === fields.length - 1 ? (

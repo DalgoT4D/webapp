@@ -1,5 +1,6 @@
-import { DbtSourceModel, UIOperationType, getNextNodePosition } from './Canvas';
+import { DbtSourceModel, UIOperationType } from './Canvas';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
+import { getNextNodePosition } from '@/utils/editor';
 
 export const generateDummySrcModelNode = (
   node: any,

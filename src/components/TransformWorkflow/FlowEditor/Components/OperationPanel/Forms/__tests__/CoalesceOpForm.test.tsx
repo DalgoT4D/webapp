@@ -1,24 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import AggregationOpForm from '../AggregationOpForm';
+import CoalesceOpForm from '../CoalesceOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import {
-  aggregateDbtModelResponse,
-  intermediateTableResponse,
-  mockNode,
-} from './helpers';
+import { intermediateTableResponse, mockNode } from './helpers';
 import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
-// Mock global context and session
 
 const continueOperationChainMock = jest.fn();
 const mockContext = {
   Toast: { state: null, dispatch: jest.fn() },
 };
 
-// Mock dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn().mockReturnValue({
     data: {
@@ -31,10 +25,10 @@ jest.mock('next-auth/react', () => ({
 const props: OperationFormProps = {
   node: mockNode,
   operation: {
-    label: 'Aggregate',
-    slug: 'aggregate',
+    label: 'Coalesce',
+    slug: 'coalescecolumns',
     infoToolTip:
-      'Performs a calculation on multiple values in a column and returns a new column with that value in every row',
+      'Reads columns in the order selected and returns the first non-NULL value from a series of columns',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -53,7 +47,7 @@ const props: OperationFormProps = {
     case url.includes('transform/dbt_project/model'):
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(aggregateDbtModelResponse),
+        json: () => Promise.resolve(),
       });
 
     default:
@@ -64,29 +58,31 @@ const props: OperationFormProps = {
   }
 });
 
-const aggregationOpForm = (
+const coalesceForm = (
   <GlobalContext.Provider value={mockContext}>
-    <AggregationOpForm {...props} />
+    <CoalesceOpForm {...props} />
   </GlobalContext.Provider>
 );
 
-describe('AggregationOpForm', () => {
+describe('Coalesce form', () => {
   it('renders correct initial form state', async () => {
-    render(aggregationOpForm);
+    render(coalesceForm);
     await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
-      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
-      expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
-      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+      expect(screen.getByText('Columns')).toBeInTheDocument();
+      expect(screen.getByText('Default Value*')).toBeInTheDocument();
+      expect(screen.getByText('Output Column Name*')).toBeInTheDocument();
     });
   });
 });
 
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
-    render(aggregationOpForm);
+    render(coalesceForm);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+    });
+
     // Simulate form submission
     const saveButton = screen.getByTestId('savebutton');
     await userEvent.click(saveButton);
@@ -94,38 +90,29 @@ describe('Form interactions', () => {
     // validations to be called
     await waitFor(() => {
       expect(
-        screen.getByText('Column to aggregate is required')
+        screen.getByText('Atleast 1 column is required')
       ).toBeInTheDocument();
-      expect(screen.getByText('Operation is required')).toBeInTheDocument();
+      expect(screen.getByText('Default value is required')).toBeInTheDocument();
       expect(
         screen.getByText('Output column name is required')
       ).toBeInTheDocument();
     });
 
-    const [columnInput] = screen.getAllByRole('combobox');
+    await fireMultipleKeyDown('column0', 2);
 
-    await user.type(columnInput, 's');
-    await fireMultipleKeyDown('aggregateColumn', 1);
-    await fireMultipleKeyDown('operation', 2);
+    const defaultValueINput = screen
+      .getByTestId('defaultValue')
+      .querySelector('input') as HTMLInputElement;
+    await user.type(defaultValueINput, '2');
 
     // Simulate user typing in the Output Column Name
     const outputColumnNameInput = screen.getByLabelText('Output Column Name*');
-    await user.type(outputColumnNameInput, 'District aggregate');
+    await user.type(outputColumnNameInput, 'Default value');
 
-    await userEvent.click(saveButton);
+    await user.click(saveButton);
 
     await waitFor(() => {
       expect(continueOperationChainMock).toHaveBeenCalled();
-    });
-
-    // reset to initial state after submit
-    await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
-      expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
-      expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
-      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
     });
   });
 });
