@@ -44,7 +44,8 @@ const formatDate = (obj: any, returnType: 'year' | 'month' | 'day') => {
 
 const arrowStyles: SxProps = {
   width: '16px',
-  height: '70px',
+  mt: 3,
+  height: '80px',
   background: '#F5FAFA',
   display: 'flex',
   alignItems: 'center',
@@ -58,8 +59,6 @@ const arrowStyles: SxProps = {
 const pollTaskStatus = async (
   session: Session | null,
   taskId: string,
-  filter: any,
-  setData: any,
   interval = 5000
 ) => {
   // const orgSlug = globalContext?.CurrentOrg.state.slug;
@@ -74,14 +73,6 @@ const pollTaskStatus = async (
       const response = await httpGet(session, taskUrl);
       const latestProgress = response.progress[response.progress.length - 1];
       if (latestProgress.status === 'completed') {
-        const result = latestProgress.results;
-        console.log(result);
-        setData(
-          result.charts[0].data.map((data) => ({
-            label: formatDate(data, filter.range),
-            value: data.frequency,
-          }))
-        );
         resolve(latestProgress.results);
       } else if (
         latestProgress.status === 'failed' ||
@@ -108,6 +99,9 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
 }) => {
   const { data: session } = useSession();
   const [chartType, setChartType] = useState(type);
+  const [newData, setNewData] = useState<
+    'available' | 'loading' | 'unavailable'
+  >('available');
 
   const [barChartData, setBarChartData] = useState(
     barProps.data.map((data) => ({
@@ -145,12 +139,15 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
     const newFilter: DateTimeFilter = {
       ...filter,
       range: rangeMap[filter.range],
+      offset: 0,
     };
     await updateFilter(newFilter);
   };
 
+  console.log(newData);
+
   const updateFilter = async (newFilter: DateTimeFilter) => {
-    setBarChartData([]);
+    setNewData('loading');
     setFilter(newFilter);
 
     const metricsApiUrl = `warehouse/insights/metrics/`;
@@ -167,7 +164,20 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
 
     await delay(1000);
 
-    pollTaskStatus(session, metrics.task_id, newFilter, setBarChartData);
+    const tasks: any = await pollTaskStatus(session, metrics.task_id);
+    const responseData = tasks.charts[0].data;
+
+    if (responseData.length === 0) {
+      setNewData('unavailable');
+    } else {
+      setNewData('available');
+    }
+    setBarChartData(
+      responseData.map((data) => ({
+        label: formatDate(data, newFilter.range),
+        value: data.frequency,
+      }))
+    );
   };
   return (
     <Box
@@ -178,33 +188,59 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
       }}
     >
       {chartType === 'chart' ? (
-        barChartData.length > 0 ? (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {filter.offset > 0 && (
-              <Box
-                sx={arrowStyles}
-                onClick={() => {
-                  updateOffset('decrease');
-                }}
-              >
-                <ArrowLeftIcon />
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {filter.offset > 0 && (
+            <Box
+              sx={arrowStyles}
+              onClick={() => {
+                updateOffset('decrease');
+              }}
+            >
+              <ArrowLeftIcon />
+            </Box>
+          )}
+          <Box sx={{ position: 'relative', mt: 5 }}>
+            {newData === 'loading' && <Skeleton height={100} width={700} />}
+            {newData === 'available' && <BarChart data={barChartData} />}
+            {newData === 'unavailable' && (
+              <Box sx={{ width: 700, textAlign: 'center' }}>
+                No Data available
               </Box>
             )}
-            <BarChart data={barChartData} />
-            {barChartData.length === 10 && (
-              <Box
-                sx={arrowStyles}
-                onClick={() => {
-                  updateOffset('increase');
+            <Box
+              sx={{
+                right: 20,
+                top: -50,
+                position: 'absolute',
+              }}
+            >
+              {filter.range}
+              <Image
+                style={{
+                  cursor: 'pointer',
+                  display: 'block',
+
+                  marginLeft: 'auto',
                 }}
-              >
-                <ArrowRightIcon />
-              </Box>
-            )}
+                src={switchFilter}
+                onClick={() => {
+                  updateRange();
+                }}
+                alt="switch icon"
+              />
+            </Box>
           </Box>
-        ) : (
-          <Skeleton height={100} width={700} />
-        )
+          {barChartData.length === 10 && (
+            <Box
+              sx={arrowStyles}
+              onClick={() => {
+                updateOffset('increase');
+              }}
+            >
+              <ArrowRightIcon />
+            </Box>
+          )}
+        </Box>
       ) : (
         <Box sx={{ minWidth: '700px', display: 'flex', alignItems: 'center' }}>
           <Box sx={{ mr: '30px' }}>
@@ -264,20 +300,6 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
         </Box>
       )}
       <Box sx={{ marginLeft: '20px' }}>
-        {chartType === 'chart' && (
-          <Image
-            style={{
-              cursor: 'pointer',
-              display: 'block',
-              marginBottom: '10px',
-            }}
-            src={switchFilter}
-            onClick={() => {
-              updateRange();
-            }}
-            alt="switch icon"
-          />
-        )}
         <Image
           style={{ cursor: 'pointer' }}
           src={switchIcon}
