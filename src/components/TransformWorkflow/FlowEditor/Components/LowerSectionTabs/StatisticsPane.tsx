@@ -373,6 +373,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
 
   useEffect(() => {
     if (modelToPreview) {
+      setData([]);
       fetchRowCountAndColumns(modelToPreview.schema, modelToPreview.input_name);
     }
   }, [modelToPreview]);
