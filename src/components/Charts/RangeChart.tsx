@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 
 interface CharacterData {
   name: string;
-  percentage: number;
+  percentage: string;
   count: number;
 }
 
@@ -143,6 +143,10 @@ export const RangeChart: React.FC<RangeChartProps> = ({
       .on('mouseout', () => {
         tooltip.transition().duration(500).style('opacity', 0);
       });
+
+    return () => {
+      tooltip.remove();
+    };
   }, [data]);
 
   return <svg ref={ref}></svg>;

@@ -135,7 +135,7 @@ const pollTaskStatus = async (
 export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
 
-  const [rowCount, setRowCount] = useState(0);
+  const [rowCount, setRowCount] = useState(-1);
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
   const { previewAction } = usePreviewAction();
@@ -147,13 +147,13 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
 
   const columns: ColumnDef<ColumnData, any>[] = [
     { accessorKey: 'name', header: 'Column name', size: 150 },
-    { accessorKey: 'type', header: 'Column type', size: 100 },
+    { accessorKey: 'type', header: 'Column type', size: 150 },
     { accessorKey: 'distinct', header: 'Distinct', size: 100 },
     { accessorKey: 'null', header: 'Null', size: 100 },
     {
       accessorKey: 'distribution',
       header: 'Data distribution',
-      size: 700,
+      size: 800,
       cell: ({ row }) => {
         const { type, distribution, postBody } = row.original;
         if (distribution === 'failed' && postBody !== undefined) {
@@ -237,14 +237,18 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                 data={[
                   {
                     name: 'True',
-                    percentage:
-                      (distribution.countTrue * 100) / distribution.count,
+                    percentage: (
+                      (distribution.countTrue * 100) /
+                      distribution.count
+                    ).toFixed(1),
                     count: distribution.countTrue,
                   },
                   {
                     name: 'False',
-                    percentage:
-                      (distribution.countFalse * 100) / distribution.count,
+                    percentage: (
+                      (distribution.countFalse * 100) /
+                      distribution.count
+                    ).toFixed(1),
                     count: distribution.countFalse,
                   },
                 ]}
@@ -300,7 +304,11 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
       setData(tableData);
 
       tableDetails.forEach(async (column) => {
-        if (column.translated_type === 'Json') {
+        if (
+          !['Datetime', 'Json', 'Boolean', 'String', 'Numeric'].includes(
+            column.translated_type
+          )
+        ) {
           return;
         }
 
@@ -333,12 +341,16 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
     }
   };
 
-  const fetchRowCount = async (schema: string, table: string) => {
+  const fetchRowCountAndColumns = async (schema: string, table: string) => {
     const count = await httpGet(
       session,
       `warehouse/table_count/${schema}/${table}`
     );
     setRowCount(count.total_rows);
+
+    if (count.total_rows > 0) {
+      fetchColumns(schema, table);
+    }
   };
 
   useEffect(() => {
@@ -361,8 +373,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
 
   useEffect(() => {
     if (modelToPreview) {
-      fetchRowCount(modelToPreview.schema, modelToPreview.input_name);
-      fetchColumns(modelToPreview.schema, modelToPreview.input_name);
+      fetchRowCountAndColumns(modelToPreview.schema, modelToPreview.input_name);
     }
   }, [modelToPreview]);
 
@@ -392,149 +403,176 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   });
 
   return modelToPreview ? (
-    data.length > 0 ? (
-      <Box>
-        <Box
-          sx={{
-            alignItems: 'center',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="body1" fontWeight="bold" padding="10px">
-              {modelToPreview?.input_name}
-            </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                ml: '56px',
-                fontWeight: 600,
-              }}
-            >
-              {data.length > 0 && (
-                <Box
-                  sx={{
-                    color: '#00897b',
-                    display: 'flex',
-                    alignItems: 'center',
-                    fontWeight: 700,
-                    mr: 2,
-                  }}
-                >
-                  <VisibilityIcon sx={{ mr: 1 }} /> {data.length} Columns{' '}
-                </Box>
-              )}
-              {rowCount} Rows
-            </Box>
-
-            <Box
-              sx={{
-                ml: 'auto',
-                mr: 2,
-                color: '#00897b',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{ mr: 2 }}
-                onClick={() =>
-                  fetchColumns(modelToPreview.schema, modelToPreview.input_name)
-                }
+    rowCount !== 0 ? (
+      data.length > 0 ? (
+        <Box>
+          <Box
+            sx={{
+              alignItems: 'center',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1" fontWeight="bold" padding="10px">
+                {modelToPreview?.input_name}
+              </Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  ml: '56px',
+                  fontWeight: 600,
+                }}
               >
-                Refresh
-              </Button>
+                {data.length > 0 && (
+                  <Box
+                    sx={{
+                      color: '#00897b',
+                      display: 'flex',
+                      alignItems: 'center',
+                      fontWeight: 700,
+                      mr: 2,
+                    }}
+                  >
+                    <VisibilityIcon sx={{ mr: 1 }} /> {data.length} Columns{' '}
+                  </Box>
+                )}
+                {rowCount > 0 ? rowCount : 0} Rows
+              </Box>
+
+              <Box
+                sx={{
+                  ml: 'auto',
+                  mr: 2,
+                  color: '#00897b',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <Button
+                  variant="contained"
+                  sx={{ mr: 2 }}
+                  onClick={() =>
+                    fetchColumns(
+                      modelToPreview.schema,
+                      modelToPreview.input_name
+                    )
+                  }
+                >
+                  Refresh
+                </Button>
+              </Box>
             </Box>
           </Box>
-        </Box>
-        <Box>
-          <Box sx={{ height: height - 100, overflow: 'auto' }}>
-            <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
-              <TableHead>
-                {getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableCell
-                        key={header.id}
-                        colSpan={header.colSpan}
+          <Box>
+            <Box sx={{ height: height - 100, overflow: 'auto' }}>
+              <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
+                <TableHead>
+                  {getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableCell
+                          key={header.id}
+                          colSpan={header.colSpan}
+                          sx={{
+                            width: header.column.columnDef.size,
+                            backgroundColor: '#F5FAFA',
+                            border: '1px solid #dddddd',
+                            padding: '8px',
+                            textAlign: 'left',
+                            fontWeight: 700,
+                            color: 'rgba(15, 36, 64, 0.57)',
+                          }}
+                        >
+                          <Box display="flex" alignItems="center">
+                            <TableSortLabel
+                              active={sortedColumn === header.id}
+                              direction={
+                                sortedColumn === header.id
+                                  ? sortOrder === 1
+                                    ? 'asc'
+                                    : 'desc'
+                                  : 'asc'
+                              }
+                              onClick={() => handleSort(header.id)}
+                              sx={{ marginLeft: '4px' }}
+                            >
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                            </TableSortLabel>
+                          </Box>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHead>
+                <TableBody sx={{ borderColor: '#dddddd' }}>
+                  {getRowModel().rows.map((row) => {
+                    return (
+                      <TableRow
+                        key={row.id}
                         sx={{
-                          width: header.column.columnDef.size,
-                          backgroundColor: '#F5FAFA',
-                          border: '1px solid #dddddd',
-                          padding: '8px',
-                          textAlign: 'left',
-                          fontWeight: 700,
-                          color: 'rgba(15, 36, 64, 0.57)',
+                          boxShadow: 'unset',
+                          height: '180px',
                         }}
                       >
-                        <Box display="flex" alignItems="center">
-                          <TableSortLabel
-                            active={sortedColumn === header.id}
-                            direction={
-                              sortedColumn === header.id
-                                ? sortOrder === 1
-                                  ? 'asc'
-                                  : 'desc'
-                                : 'asc'
-                            }
-                            onClick={() => handleSort(header.id)}
-                            sx={{ marginLeft: '4px' }}
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                          </TableSortLabel>
-                        </Box>
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHead>
-              <TableBody sx={{ borderColor: '#dddddd' }}>
-                {getRowModel().rows.map((row) => {
-                  return (
-                    <TableRow
-                      key={row.id}
-                      sx={{
-                        boxShadow: 'unset',
-                      }}
-                    >
-                      {row.getVisibleCells().map((cell) => {
-                        console.log(cell.getValue());
-                        return (
-                          <TableCell
-                            key={cell.id}
-                            sx={{
-                              width: cell.column.columnDef.size,
-                              fontWeight: 600,
-                              textAlign: 'left',
-                              borderBottom: '1px solid #ddd',
-                              fontSize: '0.8rem',
-                            }}
-                          >
-                            {cell.getValue() !== undefined ? (
-                              flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )
-                            ) : (
-                              <Skeleton variant="rectangular" height={118} />
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        {row.getVisibleCells().map((cell) => {
+                          console.log(cell.getValue());
+                          return (
+                            <TableCell
+                              key={cell.id}
+                              sx={{
+                                width: cell.column.columnDef.size,
+                                fontWeight: 600,
+                                textAlign: 'left',
+                                borderBottom: '1px solid #ddd',
+                                fontSize: '0.8rem',
+                              }}
+                            >
+                              {cell.getValue() !== undefined ? (
+                                flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )
+                              ) : (
+                                <Skeleton variant="rectangular" height={118} />
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Box>
           </Box>
         </Box>
-      </Box>
+      ) : (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: height,
+          }}
+        >
+          <CircularProgress sx={{ mr: 2 }} />
+          Generating insights
+        </Box>
+      )
     ) : (
-      <CircularProgress />
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: height,
+        }}
+      >
+        No data (0 rows) available to generate insights
+      </Box>
     )
   ) : null;
 };
