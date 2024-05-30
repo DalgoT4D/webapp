@@ -8,6 +8,9 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const config: Config = {
+  moduleNameMapper: {
+    '^d3$': '<rootDir>/node_modules/d3/dist/d3.min.js',
+  },
   // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   collectCoverageFrom: ['src/components/**/*.{ts,tsx}', '!**/node_modules/**'],
