@@ -23,7 +23,7 @@ type DateTimeInsightsProps = {
 
 const formatDate = (obj: any, returnType: 'year' | 'month' | 'day') => {
   const { year, month, day } = obj;
-  console.log(obj);
+
   const date = moment({
     year,
     month: month ? month - 1 : 0,
@@ -143,8 +143,6 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
     };
     await updateFilter(newFilter);
   };
-
-  console.log(newData);
 
   const updateFilter = async (newFilter: DateTimeFilter) => {
     setNewData('loading');

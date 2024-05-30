@@ -26,10 +26,16 @@ export const RangeChart: React.FC<RangeChartProps> = ({
   colors = chartColors,
   barHeight = 16,
 }) => {
-  const ref = useRef<SVGSVGElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const svg = d3.select(ref.current).attr('width', 700).attr('height', 100); // Height adjusted for legends and text
+    
+    d3.select(ref.current).select('svg').remove();
+    const svg = d3
+      .select(ref.current)
+      .append('svg')
+      .attr('width', 700)
+      .attr('height', 100); // Height adjusted for legends and text
 
     const xScale = d3
       .scaleLinear()
@@ -149,7 +155,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
     };
   }, [data]);
 
-  return <svg ref={ref}></svg>;
+  return <div ref={ref}></div>;
 };
 
 export default RangeChart;

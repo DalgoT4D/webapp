@@ -516,7 +516,6 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                         }}
                       >
                         {row.getVisibleCells().map((cell) => {
-                          console.log(cell.getValue());
                           return (
                             <TableCell
                               key={cell.id}
