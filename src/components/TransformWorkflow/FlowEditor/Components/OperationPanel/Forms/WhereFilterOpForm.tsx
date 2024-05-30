@@ -47,8 +47,6 @@ const WhereFilterOpForm = ({
   operation,
   sx,
   continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
   action,
   setLoading,
 }: OperationFormProps) => {
@@ -244,6 +242,7 @@ const WhereFilterOpForm = ({
               render={({ field, fieldState }) => (
                 <Autocomplete
                   {...field}
+                  data-testid="columnToCheck"
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                   options={srcColumns}
@@ -266,6 +265,7 @@ const WhereFilterOpForm = ({
               render={({ field, fieldState }) => (
                 <Autocomplete
                   {...field}
+                  data-testid="operation"
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                   options={LogicalOperators.filter((op) => op.id !== 'between')}
@@ -320,6 +320,7 @@ const WhereFilterOpForm = ({
                 render={({ field, fieldState }) => (
                   <Autocomplete
                     {...field}
+                    data-testid="checkAgainstColumn"
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                     fieldStyle="transformation"

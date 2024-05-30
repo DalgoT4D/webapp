@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
-import { httpGet, httpPost } from '@/helpers/http';
+import { httpGet, httpPost, httpDelete } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
 import { Box, Grid, Typography, Button } from '@mui/material';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
@@ -91,6 +91,8 @@ const Transform = () => {
         } else {
           errorToast(err.message, [], globalContext);
         }
+        // roll back the changes
+        await httpDelete(session, 'transform/dbt_project/dbtrepo');
       }
     } else if (transformClickedOn === 'github') {
       setSelectedTransform('github');
@@ -120,7 +122,7 @@ const Transform = () => {
         set up your transformation`}
       />
 
-      <PageHead title="DDP: Transform" />
+      <PageHead title="Dalgo | Transform" />
       <main className={styles.main}>
         {selectedTransform === 'none' ? (
           <Box>
