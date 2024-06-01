@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import useSWR from 'swr';
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Typography, Link } from '@mui/material';
 import { Table, TableBody, TableCell, TableRow } from '@mui/material';
 import CreateDestinationForm from './CreateDestinationForm';
 import EditDestinationForm from './EditDestinationForm';
@@ -138,7 +138,12 @@ export const Destinations = () => {
             <TableRow>
               <TableCell>Airbyte Workspace ID</TableCell>
               <TableCell align="right" data-testid="abworkspaceid">
-                {warehouse.airbyteWorkspaceId}
+                <Link
+                  href={`http://localhost:8000/workspaces/${warehouse.airbyteWorkspaceId}`}
+                  target="_blank"
+                >
+                  {warehouse.airbyteWorkspaceId}
+                </Link>
               </TableCell>
             </TableRow>
             <TableRow>
