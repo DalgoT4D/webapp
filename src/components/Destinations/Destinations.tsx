@@ -150,7 +150,7 @@ export const Destinations = () => {
     warehouse &&
     ['postgres', 'bigquery', 'snowflake'].includes(warehouse.wtype)
   ) {
-    tableData = getTableData(warehouse);
+    tableData = getTableData(warehouse, permissions.includes('can_create_org'));
   }
 
   return (

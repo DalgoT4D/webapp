@@ -1,6 +1,6 @@
 import { Warehouse, WarehouseTableRow } from './Destinations';
 
-export const getTableData = (warehouse: Warehouse) => {
+export const getTableData = (warehouse: Warehouse, isSuperAdmin: boolean) => {
   let tableData: WarehouseTableRow[] = [];
 
   switch (warehouse.wtype) {
@@ -111,7 +111,9 @@ export const getTableData = (warehouse: Warehouse) => {
     {
       label: 'Airbyte Workspace ID',
       value: warehouse.airbyteWorkspaceId,
-      link: `http://localhost:8000/workspaces/${warehouse.airbyteWorkspaceId}`,
+      link: isSuperAdmin
+        ? `http://localhost:8000/workspaces/${warehouse.airbyteWorkspaceId}`
+        : undefined,
     },
     {
       label: 'Docker Image Tag',
