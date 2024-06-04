@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 
-interface CharacterData {
+export interface CharacterData {
   name: string;
   percentage: string;
   count: number;
@@ -29,7 +29,6 @@ export const RangeChart: React.FC<RangeChartProps> = ({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    
     d3.select(ref.current).select('svg').remove();
     const svg = d3
       .select(ref.current)
@@ -58,6 +57,16 @@ export const RangeChart: React.FC<RangeChartProps> = ({
       .style('pointer-events', 'none')
       .style('opacity', 0);
 
+    const onMouseOver = (event: any, d: CharacterData) => {
+      tooltip.transition().duration(200).style('opacity', 0.9);
+      tooltip
+        .html(
+          `<strong>${d.name}</strong>: ${d.percentage}%  |  <strong>Count</strong>: ${d.count}`
+        )
+        .style('left', event.pageX + 5 + 'px')
+        .style('top', event.pageY - 28 + 'px');
+    };
+
     let offsetX = 0;
     svg
       .selectAll('rect')
@@ -73,13 +82,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
       .attr('width', (d) => xScale(d.count))
       .attr('height', barHeight)
       .attr('fill', (d, i) => colors[i % colors.length])
-      .on('mouseover', (event, d) => {
-        tooltip.transition().duration(200).style('opacity', 0.9);
-        tooltip
-          .html(`${d.name}: ${d.percentage}% | Count: ${d.count}`)
-          .style('left', event.pageX + 5 + 'px')
-          .style('top', event.pageY - 28 + 'px');
-      })
+      .on('mouseover', onMouseOver)
       .on('mouseout', () => {
         tooltip.transition().duration(200).style('opacity', 0);
       });
@@ -119,8 +122,11 @@ export const RangeChart: React.FC<RangeChartProps> = ({
       .attr('y', 0)
       .attr('width', 16)
       .attr('height', 8)
-      .attr('fill', (d, i) => colors[i % colors.length]);
-
+      .attr('fill', (d, i) => colors[i % colors.length])
+      .on('mouseover', onMouseOver)
+      .on('mouseout', () => {
+        tooltip.transition().duration(200).style('opacity', 0);
+      });
     offsetX = 0; // Reset for text placement in legend
     legend
       .selectAll('text')
@@ -139,13 +145,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
           ? d.name.substring(0, maxLength) + '...'
           : d.name;
       })
-      .on('mouseover', (event, d) => {
-        tooltip.transition().duration(200).style('opacity', 0.9);
-        tooltip
-          .html(d.name)
-          .style('left', event.pageX + 5 + 'px')
-          .style('top', event.pageY - 28 + 'px');
-      })
+      .on('mouseover', onMouseOver)
       .on('mouseout', () => {
         tooltip.transition().duration(200).style('opacity', 0);
       });

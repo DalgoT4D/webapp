@@ -4,10 +4,18 @@ import * as d3 from 'd3';
 export type BarChartData = {
   label: string;
   value: number;
+  barTopLabel?: string;
 };
 
 export type BarChartProps = {
   data: BarChartData[];
+};
+
+const trimString = (label: string) => {
+  const maxLength = 10; // Trim to 10 characters
+  return label.length > maxLength
+    ? label.substring(0, maxLength) + '...'
+    : label;
 };
 
 export const BarChart: React.FC<BarChartProps> = ({ data }) => {
@@ -25,7 +33,7 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
       const x = d3
         .scaleBand()
         .range([0, width])
-        .domain(data.map((d) => d.label))
+        .domain(data.map((d) => trimString(d.label)))
         .padding(0.1);
 
       const y = d3
@@ -52,7 +60,7 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
         .enter()
         .append('rect')
         .attr('class', 'bar')
-        .attr('x', (d) => x(d.label)!)
+        .attr('x', (d) => x(trimString(d.label))!)
         .attr('y', (d) => y(d.value))
         .attr('width', x.bandwidth())
         .attr('height', (d) => height - y(d.value))
@@ -63,8 +71,8 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
         .data(data)
         .enter()
         .append('text')
-        .text((d) => `${d.value}`)
-        .attr('x', (d) => x(d.label)! + x.bandwidth() / 2)
+        .text((d) => `${d.barTopLabel ? d.barTopLabel : d.value}`)
+        .attr('x', (d) => x(trimString(d.label))! + x.bandwidth() / 2)
         .attr('y', (d) => y(d.value) - 5)
         .attr('text-anchor', 'middle')
         .style('fill', '#000');

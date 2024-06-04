@@ -38,6 +38,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
       .append('svg')
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
+      .style('overflow', 'visible')
       .append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
@@ -92,7 +93,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
         .attr('x', xScale(value))
         .attr('y', up ? height / distance - 20 : height / distance)
         .attr('text-anchor', 'middle')
-        .text(label + ': ' + value);
+        .text(label + ': ' + Math.trunc(value).toLocaleString());
 
       svg
         .append('line')
@@ -139,7 +140,9 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
                   alignItems: 'center',
                 }}
               >
-                <Box sx={{ ml: 1 }}> {data[key]}</Box>
+                <Box sx={{ ml: 1 }}>
+                  {Math.trunc(data[key]).toLocaleString()}
+                </Box>
               </Box>
             </Box>
           ))}
