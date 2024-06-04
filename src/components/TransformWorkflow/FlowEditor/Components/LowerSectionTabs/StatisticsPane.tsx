@@ -33,6 +33,7 @@ import { delay } from '@/utils/common';
 import { Session } from 'next-auth';
 import { DateTimeInsights } from '@/components/Charts/DateTimeInsights';
 import { StringInsights } from '@/components/Charts/StringInsights';
+import { NumberInsights } from '@/components/Charts/NumberInsights';
 
 interface StatisticsPaneProps {
   height: number;
@@ -204,7 +205,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
         switch (type) {
           case 'Numeric':
             return distribution ? (
-              <StatsChart
+              <NumberInsights
                 type="chart"
                 data={{
                   minimum: distribution.minVal,
@@ -228,6 +229,13 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                   ),
                   count: data.count,
                 }))}
+                statsData={{
+                  minimum: distribution.minVal,
+                  maximum: distribution.maxVal,
+                  mean: distribution.mean,
+                  median: distribution.median,
+                  mode: distribution.mode,
+                }}
               />
             );
 
