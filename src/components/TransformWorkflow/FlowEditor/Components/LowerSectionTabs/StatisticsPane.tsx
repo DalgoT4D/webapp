@@ -32,6 +32,7 @@ import { RangeChart } from '@/components/Charts/RangeChart';
 import { delay } from '@/utils/common';
 import { Session } from 'next-auth';
 import { DateTimeInsights } from '@/components/Charts/DateTimeInsights';
+import { StringInsights } from '@/components/Charts/StringInsights';
 
 interface StatisticsPaneProps {
   height: number;
@@ -219,7 +220,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
           case 'String':
             const chartData = distribution.charts[0].data;
             return (
-              <RangeChart
+              <StringInsights
                 data={chartData.map((data: any) => ({
                   name: data.category,
                   percentage: ((data.count * 100) / distribution.count).toFixed(
