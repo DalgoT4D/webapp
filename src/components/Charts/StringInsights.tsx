@@ -4,13 +4,20 @@ import { BarChart } from './BarChart';
 import { Box } from '@mui/material';
 import Image from 'next/image';
 import RangeChart, { CharacterData } from './RangeChart';
+import { DataProps, StatsChart } from './StatsChart';
 
 type StringInsightsProps = {
   data: CharacterData[];
+  statsData: DataProps;
 };
 
-export const StringInsights: React.FC<StringInsightsProps> = ({ data }) => {
-  const [chartType, setChartType] = useState<'chart' | 'numbers'>('chart');
+export const StringInsights: React.FC<StringInsightsProps> = ({
+  data,
+  statsData,
+}) => {
+  const [chartType, setChartType] = useState<'chart' | 'bars' | 'stats'>(
+    'chart'
+  );
 
   return (
     <Box
@@ -20,9 +27,9 @@ export const StringInsights: React.FC<StringInsightsProps> = ({ data }) => {
         minHeight: '110px',
       }}
     >
-      {chartType === 'chart' ? (
-        <RangeChart data={data} />
-      ) : (
+      {chartType === 'chart' && <RangeChart data={data} />}
+
+      {chartType === 'bars' && (
         <BarChart
           data={data.map((bar) => ({
             label: bar.name,
@@ -31,12 +38,29 @@ export const StringInsights: React.FC<StringInsightsProps> = ({ data }) => {
           }))}
         />
       )}
+
+      {chartType === 'stats' && (
+        <Box>
+          <StatsChart data={statsData} />
+          <Box
+            sx={{ fontSize: '11px', color: '#768292', fontWeight: 600, ml: 2 }}
+          >
+            String length distribution
+          </Box>
+        </Box>
+      )}
       <Box sx={{ marginLeft: '20px' }}>
         <Image
           style={{ cursor: 'pointer' }}
           src={switchIcon}
           onClick={() =>
-            setChartType(chartType === 'chart' ? 'numbers' : 'chart')
+            setChartType(
+              chartType === 'chart'
+                ? 'bars'
+                : chartType === 'bars'
+                ? 'stats'
+                : 'chart'
+            )
           }
           alt="switch icon"
         />

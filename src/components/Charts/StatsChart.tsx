@@ -1,10 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
-import { Box } from '@mui/material';
-import Image from 'next/image';
-import switchIcon from '@/assets/icons/switch-chart.svg';
 
-interface DataProps {
+export interface DataProps {
   minimum: number;
   maximum: number;
   mean: number;
@@ -14,16 +11,14 @@ interface DataProps {
 
 interface StatsChartProps {
   data: DataProps;
-  type: 'chart' | 'numbers';
 }
 
-export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
-  const [chartType, setChartType] = useState(type);
+export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (data && chartType === 'chart') drawChart();
-  }, [data, chartType]);
+    if (data) drawChart();
+  }, [data]);
 
   const drawChart = () => {
     const margin = { top: 20, right: 40, bottom: 20, left: 40 };
@@ -113,49 +108,5 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data, type }) => {
     addMarker(data.mode, 'Mode', false, 0.8);
   };
 
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        minHeight: '110px',
-      }}
-    >
-      {chartType === 'chart' ? (
-        <div ref={ref}></div>
-      ) : (
-        <Box sx={{ minWidth: '700px', display: 'flex', alignItems: 'center' }}>
-          {(Object.keys(data) as Array<keyof DataProps>).map((key) => (
-            <Box key={key} sx={{ mr: '50px' }}>
-              <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </Box>
-              <Box
-                sx={{
-                  mt: 1,
-                  width: '84px',
-                  background: '#F5FAFA',
-                  height: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <Box sx={{ ml: 1 }}>
-                  {Math.trunc(data[key]).toLocaleString()}
-                </Box>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-      )}
-      <Image
-        style={{ marginLeft: '20px', cursor: 'pointer' }}
-        src={switchIcon}
-        onClick={() =>
-          setChartType(chartType === 'chart' ? 'numbers' : 'chart')
-        }
-        alt="switch icon"
-      />
-    </Box>
-  );
+  return <div ref={ref}></div>;
 };
