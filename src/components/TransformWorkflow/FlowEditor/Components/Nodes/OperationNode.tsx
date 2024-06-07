@@ -120,7 +120,7 @@ export function OperationNode(node: OperationNodeType) {
             }}
           >
             <Image
-              src={operationIconMapping[node.data.config.type]}
+              src={operationIconMapping[node.data?.config.type]}
               alt="operation icon"
             ></Image>
             {isDeletable && (
