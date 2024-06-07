@@ -70,6 +70,7 @@ export const DBTTaskList = ({
   const open = Boolean(anchorEl);
   const [showCreateOrgTaskDialog, setShowCreateOrgTaskDialog] =
     useState<boolean>(false);
+  const [deleteTaskLoad, setDeleteTaskLoading] = useState(false);
 
   const handleClick = (taskId: string, event: HTMLElement | null) => {
     setTaskId(taskId);
@@ -314,6 +315,7 @@ export const DBTTaskList = ({
   const deleteTask = (taskId: string) => {
     (async () => {
       try {
+        setDeleteTaskLoading(true);
         const message = await httpDelete(session, `prefect/tasks/${taskId}/`);
         if (message.success) {
           successToast('Task deleted', [], toastContext);
@@ -322,6 +324,8 @@ export const DBTTaskList = ({
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
+      } finally {
+        setDeleteTaskLoading(false);
       }
     })();
     handleCancelDeleteTask();
@@ -354,11 +358,12 @@ export const DBTTaskList = ({
         hasCreatePermission={permissions.includes('can_create_orgtask')}
         openDialog={handleCreateOpenOrgTaskDialog}
         title="Task"
-        headers={{values: ['Command']}}
+        headers={{ values: ['Command'] }}
         rows={rows}
         height={80}
       />
       <ConfirmationDialog
+        loading={deleteTaskLoad}
         show={showConfirmDeleteDialog}
         handleClose={() => setShowConfirmDeleteDialog(false)}
         handleConfirm={() => deleteTask(taskId)}
