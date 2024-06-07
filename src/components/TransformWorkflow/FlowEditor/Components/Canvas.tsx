@@ -26,7 +26,11 @@ import { httpDelete, httpGet } from '@/helpers/http';
 import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
+import {
+  OPERATION_NODE,
+  SRC_MODEL_NODE,
+  operationIconMapping,
+} from '../constant';
 import {
   useCanvasAction,
   useCanvasNode,
@@ -46,7 +50,10 @@ export interface OperationNodeData {
   output_cols: Array<string>;
   type: typeof OPERATION_NODE;
   target_model_id: string;
-  config: any;
+  config: {
+    type: keyof typeof operationIconMapping;
+    [key: string]: any;
+  };
   isDummy?: boolean;
   prev_source_columns?: string[];
   is_last_in_chain?: boolean;
