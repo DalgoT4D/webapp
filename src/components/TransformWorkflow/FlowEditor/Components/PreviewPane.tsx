@@ -9,6 +9,7 @@ import {
   TableCell,
   TableSortLabel,
   TablePagination,
+  Button,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -20,9 +21,13 @@ import {
   getSortedRowModel,
   flexRender,
 } from '@tanstack/react-table';
+import SyncIcon from '@/assets/icons/sync.svg';
+import styles from '@/styles/Common.module.css';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { httpGet } from '@/helpers/http';
 import { DbtSourceModel } from './Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
+import Image from 'next/image';
 
 const PreviewPane = ({ height }: { height: number }) => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
@@ -41,6 +46,9 @@ const PreviewPane = ({ height }: { height: number }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(1); // Page index
   const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
   const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
+
+  // download in progress flag
+  const [downloadInProgress, setDownloadInProgress] = useState(false);
 
   useEffect(() => {
     if (previewAction.type === 'preview') {
@@ -129,16 +137,81 @@ const PreviewPane = ({ height }: { height: number }) => {
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const handleTableDataDownload = async () => {
+    setDownloadInProgress(true);
+    try {
+      if (modelToPreview) {
+        console.log('Downloading table data');
+        const schema = modelToPreview.schema;
+        const table = modelToPreview.input_name;
+
+        const filename = `${schema}__${table}.csv`;
+
+        const response = await httpGet(
+          session,
+          `warehouse/download/${schema}/${table}`,
+          false
+        );
+
+        const blob = await response.blob();
+
+        const a = document.createElement('a');
+
+        // Create a URL for the blob
+        const url = URL.createObjectURL(blob);
+
+        // Set the download attributes
+        a.href = url;
+        a.download = filename || 'download';
+
+        // Append the anchor element to the body
+        document.body.appendChild(a);
+
+        // Programmatically click the anchor element
+        a.click();
+
+        // Clean up: remove the anchor element from the body and revoke the blob URL
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setDownloadInProgress(false);
+      }
+    } catch (error: any) {
+      setDownloadInProgress(false);
+      errorToast(error.message, [], toastContext);
+      console.error(error);
+    }
+  };
+
   return modelToPreview ? (
     <Box>
       <Box
         sx={{
           alignItems: 'center',
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '5px',
         }}
       >
         <Typography variant="body1" fontWeight="bold" padding="10px">
           {modelToPreview?.input_name}
         </Typography>
+        <Button
+          onClick={handleTableDataDownload}
+          variant="contained"
+          sx={{ padding: '5px' }}
+          disabled={downloadInProgress}
+        >
+          {downloadInProgress ? (
+            <Image
+              src={SyncIcon}
+              className={styles.SyncIcon}
+              alt="sync icon"
+              data-testid="sync-icon"
+            />
+          ) : (
+            <FileDownloadIcon fontSize="small" />
+          )}
+        </Button>
       </Box>
       <Box>
         <Box sx={{ height: height - 150, overflow: 'auto' }}>
