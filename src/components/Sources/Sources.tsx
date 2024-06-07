@@ -17,7 +17,7 @@ import { ActionsMenu } from '../UI/Menu/Menu';
 const headers = {
   values: ['Source details', 'Type'],
   sortable: [true, false],
-}
+};
 
 interface SourceDefinitionsApiResponse {
   sourceDefinitionId: string;
@@ -54,6 +54,7 @@ export const Sources = () => {
   const [sourceIdToEdit, setSourceIdToEdit] = useState<string>('');
   const [sourceToBeDeleted, setSourceToBeDeleted] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [deleteSourceLoading, setDeleteSourceLoading] = useState(false);
 
   const permissions = globalContext?.Permissions.state || [];
   const handleEditSource = () => {
@@ -76,13 +77,10 @@ export const Sources = () => {
 
   rowValues = useMemo(() => {
     if (data && data.length >= 0) {
-      return data.map((source: any) => [
-        source.name,
-        source.sourceName,
-      ])
+      return data.map((source: any) => [source.name, source.sourceName]);
     }
     return [];
-  }, [data, sourceDefs])
+  }, [data, sourceDefs]);
 
   rows = useMemo(() => {
     if (data && data.length >= 0) {
@@ -151,6 +149,7 @@ export const Sources = () => {
 
   const deleteSource = async (sourceId: any) => {
     try {
+      setDeleteSourceLoading(true);
       const response = await httpDelete(session, `airbyte/sources/${sourceId}`);
       if (response.success) {
         successToast('Source deleted', [], globalContext);
@@ -161,6 +160,8 @@ export const Sources = () => {
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
+      setDeleteSourceLoading(false);
     }
     handleCancelDeleteSource();
   };
@@ -234,6 +235,7 @@ export const Sources = () => {
         rowValues={rowValues}
       />
       <ConfirmationDialog
+        loading={deleteSourceLoading}
         show={showConfirmDeleteDialog}
         handleClose={() => handleCancelDeleteSource()}
         handleConfirm={() => deleteSource(sourceToBeDeleted)}
