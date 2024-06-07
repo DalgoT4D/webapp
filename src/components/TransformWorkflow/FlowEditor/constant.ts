@@ -1,3 +1,21 @@
+import renameIcon from '@/assets/icons/UI4T/rename.svg';
+import flattenJsonIcon from '@/assets/icons/UI4T/flatten.svg';
+import castDataTypesIcon from '@/assets/icons/UI4T/cast.svg';
+import coalesceColumnsIcon from '@/assets/icons/UI4T/coalesce.svg';
+import arithmeticIcon from '@/assets/icons/UI4T/arithmetic.svg';
+import concatIcon from '@/assets/icons/UI4T/concat.svg';
+import dropColumnsIcon from '@/assets/icons/UI4T/drop.svg';
+import replaceIcon from '@/assets/icons/UI4T/replace.svg';
+import joinIcon from '@/assets/icons/UI4T/join.svg';
+import whereIcon from '@/assets/icons/UI4T/filter.svg';
+import groupByIcon from '@/assets/icons/UI4T/groupby.svg';
+import aggregateIcon from '@/assets/icons/UI4T/aggregate.svg';
+import caseWhenIcon from '@/assets/icons/UI4T/case.svg';
+import unionAllIcon from '@/assets/icons/UI4T/union.svg';
+import pivotIcon from '@/assets/icons/UI4T/pivot.svg';
+import unpivotIcon from '@/assets/icons/UI4T/unpivot.svg';
+import genericIcon from '@/assets/icons/UI4T/generic.svg';
+
 export const RENAME_COLUMNS_OP = 'renamecolumns';
 export const FLATTEN_OP = 'flatten';
 export const FLATTEN_JSON_OP = 'flattenjson';
@@ -18,6 +36,29 @@ export const PIVOT_OP = 'pivot';
 export const UNPIVOT_OP = 'unpivot';
 export const GENERIC_COL_OP = 'generic';
 export const GENERIC_SQL_OP = 'rawsql';
+
+export const operationIconMapping = {
+  [RENAME_COLUMNS_OP]: renameIcon,
+  [FLATTEN_OP]: flattenJsonIcon,
+  [FLATTEN_JSON_OP]: flattenJsonIcon,
+  [CAST_DATA_TYPES_OP]: castDataTypesIcon,
+  [COALESCE_COLUMNS_OP]: coalesceColumnsIcon,
+  [ARITHMETIC_OP]: arithmeticIcon,
+  [CONCAT_COLUMNS_OP]: concatIcon,
+  [DROP_COLUMNS_OP]: dropColumnsIcon,
+  // REGEX_EXTRACTION_OP]: regexExtractionIcon,
+  [REPLACE_COLUMN_VALUE_OP]: replaceIcon,
+  [JOIN_OP]: joinIcon,
+  [WHERE_OP]: whereIcon,
+  [GROUPBY_OP]: groupByIcon,
+  [AGGREGATE_OP]: aggregateIcon,
+  [CASEWHEN_OP]: caseWhenIcon,
+  [UNION_OP]: unionAllIcon,
+  [PIVOT_OP]: pivotIcon,
+  [UNPIVOT_OP]: unpivotIcon,
+  [GENERIC_COL_OP]: genericIcon,
+  [GENERIC_SQL_OP]: genericIcon,
+};
 
 export const operations = [
   {
@@ -54,7 +95,7 @@ export const operations = [
     slug: RENAME_COLUMNS_OP,
     infoToolTip: 'Select columns and rename them',
   },
-  { label: 'Regex extraction', slug: REGEX_EXTRACTION_OP, infoToolTip: '' },
+  // { label: 'Regex extraction', slug: REGEX_EXTRACTION_OP, infoToolTip: '' },
   {
     label: 'Join',
     slug: JOIN_OP,
