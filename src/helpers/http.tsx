@@ -2,7 +2,11 @@ import { backendUrl } from '@/config/constant';
 // import { useSession } from 'next-auth/react';
 import { getOrgHeaderValue } from '@/utils/common';
 
-export async function httpGet(session: any, path: string) {
+export async function httpGet(
+  session: any,
+  path: string,
+  isJson: boolean = true
+) {
   const response = await fetch(`${backendUrl}/api/${path}`, {
     method: 'GET',
     headers: {
@@ -12,7 +16,7 @@ export async function httpGet(session: any, path: string) {
   });
 
   if (response.ok) {
-    const message = await response.json();
+    const message = isJson ? await response.json() : response;
     return message;
   } else {
     const error = await response.json();
