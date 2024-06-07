@@ -3,13 +3,18 @@ import 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { OperationNodeType } from '../Canvas';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { OPERATION_NODE, operations } from '../../constant';
+import {
+  OPERATION_NODE,
+  operationIconMapping,
+  operations,
+} from '../../constant';
 import {
   useCanvasAction,
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
 import { useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import Image from 'next/image';
 
 export function OperationNode(node: OperationNodeType) {
   const globalContext = useContext(GlobalContext);
@@ -108,10 +113,19 @@ export function OperationNode(node: OperationNodeType) {
               height: '48px',
               background: '#F5FAFA',
               borderRadius: '4px',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
+            <Image
+              src={operationIconMapping[node.data?.config.type]}
+              alt="operation icon"
+            ></Image>
             {isDeletable && (
               <IconButton
+                sx={{ position: 'absolute', right: -15, top: -15 }}
                 onClick={(event) => {
                   event.stopPropagation();
                   handleDeleteAction();
