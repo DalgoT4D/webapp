@@ -2,11 +2,7 @@ import { backendUrl } from '@/config/constant';
 // import { useSession } from 'next-auth/react';
 import { getOrgHeaderValue } from '@/utils/common';
 
-export async function httpGet(
-  session: any,
-  path: string,
-  isJson: boolean = true
-) {
+export async function httpGet(session: any, path: string, isJson = true) {
   const response = await fetch(`${backendUrl}/api/${path}`, {
     method: 'GET',
     headers: {

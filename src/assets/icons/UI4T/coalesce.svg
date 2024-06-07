@@ -1,0 +1,17 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="2.5" y="4.5" width="7" height="23" rx="0.5" fill="white" stroke="#728090"/>
+<rect x="11.5" y="4.5" width="7" height="23" rx="0.5" fill="white" stroke="#728090"/>
+<rect x="22.5" y="4.5" width="7" height="23" rx="0.5" fill="white" stroke="#728090"/>
+<path d="M2.5 5C2.5 4.72386 2.72386 4.5 3 4.5H9C9.27614 4.5 9.5 4.72386 9.5 5V8.5H2.5V5Z" fill="#728090" stroke="#728090"/>
+<path d="M11.5 5C11.5 4.72386 11.7239 4.5 12 4.5H18C18.2761 4.5 18.5 4.72386 18.5 5V8.5H11.5V5Z" fill="#728090" stroke="#728090"/>
+<path d="M22.5 5C22.5 4.72386 22.7239 4.5 23 4.5H29C29.2761 4.5 29.5 4.72386 29.5 5V8.5H22.5V5Z" fill="#728090" stroke="#728090"/>
+<circle cx="5.9" cy="12.9" r="0.9" fill="#728090"/>
+<circle cx="25.9" cy="6.30002" r="0.9" fill="white"/>
+<circle cx="14.9" cy="17.9" r="0.9" fill="#728090"/>
+<circle cx="25.9" cy="17.9" r="0.9" fill="#728090"/>
+<circle cx="5.9" cy="22.9" r="0.9" fill="#728090"/>
+<circle cx="25.9" cy="22.9" r="0.9" fill="#728090"/>
+<path d="M2 6.75C1.86193 6.75 1.75 6.86193 1.75 7C1.75 7.13807 1.86193 7.25 2 7.25V6.75ZM22 7L19.5 5.55662V8.44338L22 7ZM2 7.25L19.75 7.25V6.75L2 6.75V7.25Z" fill="#728090"/>
+<path d="M11 7H19" stroke="white" stroke-width="0.5"/>
+<path d="M2 7H10" stroke="white" stroke-width="0.5"/>
+</svg>
