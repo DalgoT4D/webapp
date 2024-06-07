@@ -161,9 +161,9 @@ describe('Destinations', () => {
     expect(port).toHaveTextContent('5432');
     const database = screen.getByTestId('database');
     expect(database).toHaveTextContent('MYDATABASE');
-    const username = screen.getByTestId('username');
+    const username = screen.getByTestId('user');
     expect(username).toHaveTextContent('MYUSERNAME');
-    const abworkspace = screen.getByTestId('abworkspaceid');
+    const abworkspace = screen.getByTestId('airbyteWorkspaceID');
     expect(abworkspace).toHaveTextContent('WORKSPACE_ID');
 
     // Check if edit button renders the mocked component
@@ -181,19 +181,19 @@ describe('Destinations', () => {
       expect(wtype).toHaveTextContent('BQWarehouse');
     });
 
-    const project_id = screen.getByTestId('project_id');
+    const project_id = screen.getByTestId('project');
     expect(project_id).toHaveTextContent('PROJECT_ID');
-    const dataset_id = screen.getByTestId('dataset_id');
+    const dataset_id = screen.getByTestId('dataset');
     expect(dataset_id).toHaveTextContent('DATASET_ID');
-    const loading_method = screen.getByTestId('loading_method');
+    const loading_method = screen.getByTestId('loadingMethod');
     expect(loading_method).toHaveTextContent('GCS Staging');
     const gcs_bucket_name_and_path = screen.getByTestId(
-      'gcs_bucket_name_and_path'
+      'gCSBucket&amp;Path'
     );
     expect(gcs_bucket_name_and_path).toHaveTextContent(
       'gcs_bucket_name / gcs_bucket_path'
     );
-    const abworkspace = screen.getByTestId('abworkspaceid');
+    const abworkspace = screen.getByTestId('airbyteWorkspaceID');
     expect(abworkspace).toHaveTextContent('WORKSPACE_ID');
 
     const edit_button = screen.getByTestId('edit-destination');

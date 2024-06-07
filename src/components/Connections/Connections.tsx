@@ -166,6 +166,8 @@ export const Connections = () => {
   const syncLogs = useConnSyncLogs();
   const setSyncLogs = useConnSyncLogsUpdate();
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [resetLoading, setResetLoading] = useState<boolean>(false);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -313,6 +315,7 @@ export const Connections = () => {
   const deleteConnection = (connectionId: string) => {
     (async () => {
       try {
+        setDeleteLoading(true);
         const message = await httpDelete(
           session,
           `airbyte/v1/connections/${connectionId}`
@@ -324,6 +327,8 @@ export const Connections = () => {
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], globalContext);
+      } finally {
+        setDeleteLoading(false);
       }
     })();
     handleCancelDeleteConnection();
@@ -332,6 +337,7 @@ export const Connections = () => {
   const resetConnection = (deploymentId: string) => {
     (async () => {
       try {
+        setResetLoading(true);
         const message = await httpPost(
           session,
           `prefect/v1/flows/${deploymentId}/flow_run/`,
@@ -347,6 +353,8 @@ export const Connections = () => {
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], globalContext);
+      } finally {
+        setResetLoading(true);
       }
     })();
     handleCancelResetConnection();
@@ -677,12 +685,14 @@ export const Connections = () => {
         height={115}
       />
       <ConfirmationDialog
+        loading={deleteLoading}
         show={showConfirmDeleteDialog}
         handleClose={() => handleCancelDeleteConnection()}
         handleConfirm={() => deleteConnection(connectionId)}
         message="This will delete the connection permanently and all the flows built on top of this."
       />
       <ConfirmationDialog
+        loading={resetLoading}
         show={showConfirmResetDialog}
         handleClose={() => handleCancelResetConnection()}
         handleConfirm={() => resetConnection(resetDeploymentId)}
