@@ -331,14 +331,6 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
           column_name: column.name,
         };
 
-        if (column.translated_type === 'Datetime') {
-          postBody.filter = {
-            range: 'year',
-            limit: 10,
-            offset: 0,
-          };
-        }
-
         const metrics: { task_id: string } = await httpPost(
           session,
           metricsApiUrl,
