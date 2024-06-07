@@ -122,3 +122,9 @@ export const parseStringForNull = (st: string | null | undefined) => {
 
   return st.trim().toLowerCase() === 'null' ? null : st;
 };
+
+export const toCamelCase = (str: string) => {
+  return str
+    .replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ''))
+    .replace(/(^\w)/, (m) => m.toLowerCase());
+};
