@@ -95,7 +95,7 @@ export const operations = [
     slug: RENAME_COLUMNS_OP,
     infoToolTip: 'Select columns and rename them',
   },
-  { label: 'Regex extraction', slug: REGEX_EXTRACTION_OP, infoToolTip: '' },
+  // { label: 'Regex extraction', slug: REGEX_EXTRACTION_OP, infoToolTip: '' },
   {
     label: 'Join',
     slug: JOIN_OP,
