@@ -402,8 +402,8 @@ export const Flows = ({
         mutate();
         handleClose();
         setShowConfirmDeleteDialog(false);
+        setDeleteFlowLoading(false);
       }
-      setDeleteFlowLoading(false);
     })();
   };
 
