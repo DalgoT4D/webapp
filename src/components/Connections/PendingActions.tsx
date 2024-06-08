@@ -30,29 +30,29 @@ const PendingActionsAccordion = () => {
     setOpenPopup(true);
   };
 
+  const fetchData = async () => {
+    try {
+      const schemaChangeResponse = await httpGet(
+        session,
+        'airbyte/v1/connection/schema_change'
+      );
+      setSchemaChangeData(schemaChangeResponse);
+
+      const connectionDataResponse = await httpGet(
+        session,
+        'airbyte/v1/connections'
+      );
+      const connectionMap: Record<string, string> = {};
+      connectionDataResponse.forEach((connection: any) => {
+        connectionMap[connection.connectionId] = connection.name;
+      });
+      setConnectionNameMap(connectionMap);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const schemaChangeResponse = await httpGet(
-          session,
-          'airbyte/v1/connection/schema_change'
-        );
-        setSchemaChangeData(schemaChangeResponse);
-
-        const connectionDataResponse = await httpGet(
-          session,
-          'airbyte/v1/connections'
-        );
-        const connectionMap: Record<string, string> = {};
-        connectionDataResponse.forEach((connection: any) => {
-          connectionMap[connection.connectionId] = connection.name;
-        });
-        setConnectionNameMap(connectionMap);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
     fetchData();
   }, [session]);
 
@@ -141,6 +141,7 @@ const PendingActionsAccordion = () => {
             mutate={() => {}}
             showForm={openPopup}
             setShowForm={setOpenPopup}
+            fetchPendingActions={fetchData}
           />
         </DialogContent>
       </Dialog>
