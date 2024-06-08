@@ -21,6 +21,7 @@ interface ConnectionDetailsFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
   setConnectionId: (...args: any) => any;
+  fetchPendingActions: () => Promise<void>;
 }
 
 type CursorFieldConfig = {
@@ -52,6 +53,7 @@ const ConnectionDetailsForm = ({
   mutate,
   showForm,
   setShowForm,
+  fetchPendingActions,
 }: ConnectionDetailsFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -184,7 +186,8 @@ const ConnectionDetailsForm = ({
           session,
           `airbyte/v1/connections/${connectionId}/catalog`
         );
-        console.log('Updated Catalog Data:', updatedCatalogData);
+        // console.log('Updated Catalog Data:', updatedCatalogData);
+        await fetchPendingActions();
 
         setLoading(false);
       }
