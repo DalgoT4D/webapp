@@ -48,7 +48,7 @@ export interface FlowsInterface {
 }
 
 const flowStatus = (status: boolean) => (
-  <Typography component="p" fontWeight={600}>
+  <Typography component="p" fontWeight={600} width={100}>
     {status ? 'Active' : 'Inactive'}
   </Typography>
 );
@@ -57,14 +57,14 @@ const flowLastRun = (flow: FlowInterface) => {
   return (
     <>
       {flow.lock ? (
-        <>
+        <Box width={120}>
           <Typography variant="subtitle2" fontWeight={600}>
-            Triggered by: {trimEmail(flow.lock.lockedBy)}
+            By: <strong>{trimEmail(flow.lock.lockedBy)}</strong>
           </Typography>
-          <Typography variant="subtitle2" fontWeight={600}>
+          <Typography variant="subtitle2" fontWeight={600} fontSize={10}>
             {lastRunTime(flow.lock.lockedAt)}
           </Typography>
-        </>
+        </Box>
       ) : flow.lastRun ? (
         <Typography
           data-testid={'flowlastrun-' + flow.name}
@@ -191,6 +191,7 @@ export const Flows = ({
       <Box
         data-testid={'flowstate-' + flow.name}
         sx={{
+          width: 100,
           display: 'flex',
           gap: '3px',
           alignItems: 'center',
@@ -226,7 +227,7 @@ export const Flows = ({
   };
 
   const Actions = ({ flow, idx }: { flow: FlowInterface; idx: string }) => (
-    <Box key={idx}>
+    <Box key={idx} sx={{ width: '200px' }}>
       <Button
         variant="contained"
         color="info"
@@ -301,36 +302,36 @@ export const Flows = ({
           sx={{ display: 'flex', alignItems: 'center', alignContent: 'center' }}
         >
           <Image style={{ marginRight: 10 }} src={FlowIcon} alt="flow icon" />
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" fontWeight={700} width={200}>
             {`${flow.name}`}
           </Typography>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              borderLeft: '1px solid grey',
-              marginLeft: 2,
-            }}
+        </Box>,
+        <Box
+          key={`schedule-${flow.deploymentId}`}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            width: 90,
+          }}
+        >
+          <Typography
+            variant="subtitle2"
+            color="rgba(9, 37, 64, 0.87)"
+            fontWeight={700}
+            sx={{ paddingLeft: 1 }}
           >
+            {flow.cron ? cronToString(flow.cron) : 'Manual'}
+          </Typography>
+          {flow.cron && (
             <Typography
               variant="subtitle2"
               color="rgba(9, 37, 64, 0.87)"
               fontWeight={700}
               sx={{ paddingLeft: 1 }}
             >
-              {flow.cron ? cronToString(flow.cron) : 'Manual'}
+              {localTimezone()}
             </Typography>
-            {flow.cron && (
-              <Typography
-                variant="subtitle2"
-                color="rgba(9, 37, 64, 0.87)"
-                fontWeight={700}
-                sx={{ paddingLeft: 1 }}
-              >
-                {localTimezone()}
-              </Typography>
-            )}
-          </Box>
+          )}
         </Box>,
         flowStatus(flow.status),
 
@@ -438,7 +439,13 @@ export const Flows = ({
         rows={rows}
         openDialog={handleClickCreateFlow}
         headers={{
-          values: ['', 'Pipeline Status', 'Last run', 'Last run status'],
+          values: [
+            '',
+            'Schedule',
+            'Pipeline Status',
+            'Last run',
+            'Last run status',
+          ],
         }}
         title={'Pipeline'}
       />
