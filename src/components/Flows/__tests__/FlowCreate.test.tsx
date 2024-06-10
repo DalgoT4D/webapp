@@ -381,9 +381,7 @@ describe('Flow Creation', () => {
 
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
     expect(requestBody.name).toBe('MyFlow');
-    expect(requestBody.transformTasks).toStrictEqual([
-      { uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 },
-    ]);
+    expect(requestBody.transformTasks).toStrictEqual([]);
     expect(requestBody.connections.length).toBe(1);
     expect(requestBody.connections[0].seq).toBe(1);
     expect(requestBody.connections[0].id).toBe('conn-1-id');
@@ -479,9 +477,7 @@ describe('Flow Creation', () => {
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
 
     expect(requestBody.name).toBe('MyFlow');
-    expect(requestBody.transformTasks).toStrictEqual([
-      { uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 },
-    ]);
+    expect(requestBody.transformTasks).toStrictEqual([]);
     expect(requestBody.connections.length).toBe(1);
     expect(requestBody.connections[0].seq).toBe(1);
     expect(requestBody.connections[0].id).toBe('conn-1-id');
@@ -589,9 +585,7 @@ describe('Flow Creation', () => {
     const requestBody = JSON.parse(fetchMock2.mock.calls[0][1]['body']);
 
     expect(requestBody.name).toBe('MyFlow');
-    expect(requestBody.transformTasks).toStrictEqual([
-      { uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 },
-    ]);
+    expect(requestBody.transformTasks).toStrictEqual([]);
     expect(requestBody.connections.length).toBe(1);
     expect(requestBody.connections[0].seq).toBe(1);
     expect(requestBody.connections[0].id).toBe('conn-1-id');
