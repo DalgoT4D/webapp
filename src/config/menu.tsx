@@ -7,6 +7,7 @@ import OrchestrateIcon from '@/assets/icons/orchestrate';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 
 import { primaryColor } from './theme';
+import { showElementaryMenu } from './constant';
 
 export const drawerWidth = 250;
 
@@ -20,6 +21,7 @@ export interface MenuOption {
   parent?: number;
   className?: string;
   permission?: string;
+  hide?: boolean;
 }
 
 export const sideMenu: MenuOption[] = [
@@ -46,6 +48,7 @@ export const sideMenu: MenuOption[] = [
     icon: (selected: boolean) => <UsageIcon fill={getColor(selected)} />,
     parent: 1,
     className: 'usage_walkthrough',
+    hide: !showElementaryMenu,
   },
   {
     index: 2,
