@@ -232,33 +232,6 @@ const ConnectionDetailsForm = ({
               <TableBody>
                 {tableData.map((table, idx) => (
                   <React.Fragment key={idx}>
-                    <Typography
-                      variant="h6"
-                      fontWeight={600}
-                      color="#5f7182"
-                      marginTop="20px"
-                      gutterBottom
-                    >
-                      Tables added
-                    </Typography>
-                    <Typography
-                      variant="subtitle2"
-                      color="#7b889c"
-                      fontWeight={800}
-                    >
-                      Table name
-                    </Typography>
-                    <TableRow>
-                      <TableCell sx={{ bgcolor: '#f2f2eb' }}>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{ margin: 0, padding: 0 }}
-                          gutterBottom
-                        >
-                          {table.name}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
                     {table.changedColumns.some((column) =>
                       column.startsWith('-')
                     ) && (
