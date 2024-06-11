@@ -159,6 +159,7 @@ export const SideDrawer = ({ openMenu }: any) => {
           (sideItem) => sideItem.parent === item.index
         );
         const itemColor = selectedIndex === item.index ? 'primary' : 'inherit';
+        if (item.hide) return null;
         return (
           !item.parent && (
             <Fragment key={item.title}>
@@ -200,20 +201,25 @@ export const SideDrawer = ({ openMenu }: any) => {
                     sx={{ ml: openMenu ? 4 : 0 }}
                     data-testid={`child-menu-${item.index}`}
                   >
-                    {hasChildren.map((subitem) => (
-                      <ListItem
-                        key={subitem.title}
-                        sx={{ px: 1.5 }}
-                        className={subitem.className}
-                      >
-                        <ItemButton
-                          openMenu={openMenu}
-                          item={subitem}
-                          isSelected={selectedIndex === subitem.index}
-                          onClick={() => handleListItemClick(subitem)}
-                        />
-                      </ListItem>
-                    ))}
+                    {hasChildren.map((subitem) => {
+                      if (subitem.hide) {
+                        return null;
+                      }
+                      return (
+                        <ListItem
+                          key={subitem.title}
+                          sx={{ px: 1.5 }}
+                          className={subitem.className}
+                        >
+                          <ItemButton
+                            openMenu={openMenu}
+                            item={subitem}
+                            isSelected={selectedIndex === subitem.index}
+                            onClick={() => handleListItemClick(subitem)}
+                          />
+                        </ListItem>
+                      );
+                    })}
                   </List>
                 </Collapse>
               )}
@@ -229,18 +235,13 @@ export const SideDrawer = ({ openMenu }: any) => {
         sx: { border: 'none' },
       }}
       sx={{
-        // width: drawerWidth,
-        // flexShrink: 0,
         '& .MuiDrawer-paper': {
           display: 'flex',
           justifyContent: 'space-between',
-          // width: drawerWidth,
-          // boxSizing: 'border-box',
           paddingTop: 7,
         },
       }}
       open={openMenu}
-      // anchor={'left'}
       variant="permanent"
     >
       {getList}
