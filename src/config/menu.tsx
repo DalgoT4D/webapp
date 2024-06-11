@@ -40,6 +40,14 @@ export const sideMenu: MenuOption[] = [
     className: 'usage_walkthrough',
   },
   {
+    index: 1.2,
+    title: 'Data Quality',
+    path: '/elementary',
+    icon: (selected: boolean) => <UsageIcon fill={getColor(selected)} />,
+    parent: 1,
+    className: 'usage_walkthrough',
+  },
+  {
     index: 2,
     title: 'Pipeline overview',
     path: '/pipeline',

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from '@/styles/Home.module.css';
 import { useSession } from 'next-auth/react';
 import { backendUrl } from '@/config/constant';
-import { Card, Typography } from '@mui/material';
+import { Box, Button, Card, Typography } from '@mui/material';
 import { httpPost } from '@/helpers/http';
 
 export const Elementary = () => {
@@ -32,30 +32,40 @@ export const Elementary = () => {
 
   return (
     <>
-      {elementaryToken && (
-        <main className={styles.analysis}>
-          <iframe
-            src={backendUrl + `/elementary/${elementaryToken}`}
-            width={'100%'}
-            height={'800px'}
-            style={{ border: 0 }}
-          ></iframe>
-        </main>
-      )}
-      {!elementaryToken && (
+      <main className={styles.analysis}>
         <Card
           sx={{
             background: 'white',
             display: 'flex',
             borderRadius: '8px',
             padding: '16px',
-            justifyContent: 'space-between',
+            height: '100%',
+            width: '100%',
+            justifyContent: 'center',
             alignItems: 'center',
           }}
         >
-          <Typography variant="h6">No Elementary report available</Typography>
+          {elementaryToken ? (
+            <Box>
+              <Box sx={{ display: 'flex' }}>
+                <Typography>Last generated: </Typography>
+                <Button sx={{ ml: 'auto' }} variant="contained">
+                  Generate new
+                </Button>
+              </Box>
+
+              <iframe
+                src={backendUrl + `/elementary/${elementaryToken}`}
+                width={'100%'}
+                height={'100%'}
+                style={{ border: 0 }}
+              ></iframe>
+            </Box>
+          ) : (
+            <Typography variant="h6">No Elementary report available</Typography>
+          )}
         </Card>
-      )}
+      </main>
     </>
   );
 };
