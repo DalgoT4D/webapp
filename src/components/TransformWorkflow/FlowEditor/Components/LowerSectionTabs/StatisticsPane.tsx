@@ -34,6 +34,22 @@ import { DateTimeInsights } from '@/components/Charts/DateTimeInsights';
 import { StringInsights } from '@/components/Charts/StringInsights';
 import { NumberInsights } from '@/components/Charts/NumberInsights';
 
+const useDebounce = (value: number, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 interface StatisticsPaneProps {
   height: number;
 }
@@ -134,6 +150,8 @@ const pollTaskStatus = async (
 
 export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
+
+  const debouncedHeight = useDebounce(height, 500);
 
   const [rowCount, setRowCount] = useState(-1);
   const { data: session } = useSession();
@@ -474,7 +492,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
             </Box>
           </Box>
           <Box>
-            <Box sx={{ height: height - 100, overflow: 'auto' }}>
+            <Box sx={{ height: debouncedHeight - 100, overflow: 'auto' }}>
               <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
                 <TableHead>
                   {getHeaderGroups().map((headerGroup) => (
@@ -569,7 +587,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: height,
+            height: debouncedHeight,
           }}
         >
           <CircularProgress sx={{ mr: 2 }} />
@@ -582,7 +600,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          height: height,
+          height: debouncedHeight,
         }}
       >
         No data (0 rows) available to generate insights
@@ -594,7 +612,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: height,
+        height: debouncedHeight,
       }}
     >
       Select a table to view
