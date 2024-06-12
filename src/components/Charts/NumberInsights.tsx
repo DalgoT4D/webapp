@@ -24,7 +24,11 @@ export const NumberInsights: React.FC<NumberInsightsProps> = ({
       }}
     >
       {chartType === 'chart' ? (
-        <StatsChart data={data}></StatsChart>
+        data.minimum === data.maximum ? (
+          'All entries in this column are identical'
+        ) : (
+          <StatsChart data={data}></StatsChart>
+        )
       ) : (
         <Box sx={{ minWidth: '700px', display: 'flex', alignItems: 'center' }}>
           {(Object.keys(data) as Array<keyof DataProps>).map((key) => (

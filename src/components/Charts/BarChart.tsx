@@ -76,6 +76,42 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
         .attr('y', (d) => y(d.value) - 5)
         .attr('text-anchor', 'middle')
         .style('fill', '#000');
+
+      const tooltip = d3
+        .select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('position', 'absolute')
+        .style('text-align', 'center')
+        .style('width', '150px')
+        .style('padding', '2px')
+        .style('z-index', '2000')
+        .style('font', '12px sans-serif')
+        .style('background', 'white')
+        .style('border', '1px solid black')
+        .style('border-radius', '8px')
+        .style('pointer-events', 'none')
+        .style('opacity', 0);
+
+      // Add tooltip functionality to the x-axis labels
+      svg
+        .selectAll('.tick text')
+        .on('mouseover', (event, d) => {
+          const originalLabel = data.find(
+            (item) => trimString(item.label) === d
+          )?.label;
+
+          if (originalLabel && originalLabel?.length > 10) {
+            tooltip.transition().duration(200).style('opacity', 0.9);
+            tooltip
+              .html(`${originalLabel}`)
+              .style('left', event.pageX + 5 + 'px')
+              .style('top', event.pageY - 28 + 'px');
+          }
+        })
+        .on('mouseout', () => {
+          tooltip.transition().duration(500).style('opacity', 0);
+        });
     }
   }, [data]);
 
