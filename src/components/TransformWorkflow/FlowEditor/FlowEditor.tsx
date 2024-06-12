@@ -189,8 +189,8 @@ const FlowEditor = ({}) => {
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction } = useCanvasAction();
 
-  const onResize = (_event: any, { size }: any) => {
-    setLowerSectionHeight(size.height);
+  const onResize = (event: any) => {
+    setLowerSectionHeight(document.body.clientHeight - event.clientY - 45);
   };
   const fetchSourcesModels = () => {
     httpGet(session, 'transform/dbt_project/sources_models/')
