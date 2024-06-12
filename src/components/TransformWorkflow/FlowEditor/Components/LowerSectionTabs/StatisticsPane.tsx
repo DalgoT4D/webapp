@@ -142,165 +142,169 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   // Row Data: The data to be displayed.
   const [data, setData] = useState<ColumnData[]>([]);
 
-  const columns: ColumnDef<ColumnData, any>[] = [
-    {
-      accessorKey: 'name',
-      header: 'Column name',
-      size: 150,
-      enableSorting: true,
-    },
-    {
-      accessorKey: 'type',
-      header: 'Column type',
-      size: 150,
-      enableSorting: true,
-    },
-    {
-      accessorKey: 'distinct',
-      header: 'Distinct',
-      size: 100,
-      enableSorting: true,
-    },
-    { accessorKey: 'null', header: 'Null', size: 100, enableSorting: true },
-    {
-      accessorKey: 'distribution',
-      header: 'Data distribution',
-      size: 800,
-      enableSorting: false,
-      cell: ({ row }) => {
-        const { type, distribution, postBody } = row.original;
-        if (distribution === 'failed' && postBody !== undefined) {
-          return (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                color: '#9d1313',
-                minHeight: '100px',
-              }}
-            >
-              <ErrorOutlineIcon sx={{ mr: 1 }} /> Error fetching stats{' '}
-              <Button
-                sx={{ ml: 2 }}
-                variant="outlined"
-                size="small"
-                onClick={async () => {
-                  const metrics: { task_id: string } = await httpPost(
-                    session,
-                    metricsApiUrl,
-                    postBody
-                  );
-
-                  setData((columnData: ColumnData[]) =>
-                    columnData.map((data) => {
-                      if (data.name === postBody.column_name) {
-                        return {
-                          ...data,
-                          null: undefined,
-                          distinct: undefined,
-                          distribution: undefined,
-                          postBody,
-                        };
-                      }
-                      return data;
-                    })
-                  );
-                  await delay(1000);
-                  pollTaskStatus(session, metrics.task_id, postBody, setData);
+  const columns: ColumnDef<ColumnData, any>[] = useMemo(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Column name',
+        size: 150,
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'type',
+        header: 'Column type',
+        size: 150,
+        enableSorting: true,
+      },
+      {
+        accessorKey: 'distinct',
+        header: 'Distinct',
+        size: 100,
+        enableSorting: true,
+      },
+      { accessorKey: 'null', header: 'Null', size: 100, enableSorting: true },
+      {
+        accessorKey: 'distribution',
+        header: 'Data distribution',
+        size: 800,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const { type, distribution, postBody } = row.original;
+          if (distribution === 'failed' && postBody !== undefined) {
+            return (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: '#9d1313',
+                  minHeight: '100px',
                 }}
               >
-                Try again
-              </Button>
-            </Box>
-          );
-        }
-        switch (type) {
-          case 'Numeric':
-            return distribution ? (
-              <NumberInsights
-                type="chart"
-                data={{
-                  minimum: distribution.minVal,
-                  maximum: distribution.maxVal,
-                  mean: distribution.mean,
-                  median: distribution.median,
-                  mode: distribution.mode,
-                }}
-              />
-            ) : (
-              <Skeleton variant="rectangular" height={100} />
-            );
-          case 'String':
-            const chartData = distribution.charts[0].data;
-            return (
-              <StringInsights
-                data={chartData.map((data: any) => ({
-                  name: data.category,
-                  percentage: ((data.count * 100) / distribution.count).toFixed(
-                    1
-                  ),
-                  count: data.count,
-                }))}
-                statsData={{
-                  minimum: distribution.minVal,
-                  maximum: distribution.maxVal,
-                  mean: distribution.mean,
-                  median: distribution.median,
-                  mode: distribution.mode,
-                }}
-              />
-            );
+                <ErrorOutlineIcon sx={{ mr: 1 }} /> Error fetching stats{' '}
+                <Button
+                  sx={{ ml: 2 }}
+                  variant="outlined"
+                  size="small"
+                  onClick={async () => {
+                    const metrics: { task_id: string } = await httpPost(
+                      session,
+                      metricsApiUrl,
+                      postBody
+                    );
 
-          case 'Boolean':
-            return (
-              <RangeChart
-                data={[
-                  {
-                    name: 'True',
-                    percentage: (
-                      (distribution.countTrue * 100) /
-                      distribution.count
-                    ).toFixed(1),
-                    count: distribution.countTrue,
-                  },
-                  {
-                    name: 'False',
-                    percentage: (
-                      (distribution.countFalse * 100) /
-                      distribution.count
-                    ).toFixed(1),
-                    count: distribution.countFalse,
-                  },
-                ]}
-                colors={['#00897b', '#c7d8d7']}
-                barHeight={12}
-              />
-            );
-
-          case 'Datetime':
-            const dateTimeData = distribution.charts[0].data;
-            return (
-              <DateTimeInsights
-                barProps={{
-                  data: dateTimeData,
-                }}
-                minDate={distribution.minVal}
-                maxDate={distribution.maxVal}
-                type="chart"
-                postBody={postBody}
-              />
-            );
-          default:
-            return (
-              <Box sx={{ textAlign: 'center' }}>
-                {' '}
-                -- -- -- No data available -- -- --{' '}
+                    setData((columnData: ColumnData[]) =>
+                      columnData.map((data) => {
+                        if (data.name === postBody.column_name) {
+                          return {
+                            ...data,
+                            null: undefined,
+                            distinct: undefined,
+                            distribution: undefined,
+                            postBody,
+                          };
+                        }
+                        return data;
+                      })
+                    );
+                    await delay(1000);
+                    pollTaskStatus(session, metrics.task_id, postBody, setData);
+                  }}
+                >
+                  Try again
+                </Button>
               </Box>
             );
-        }
+          }
+          switch (type) {
+            case 'Numeric':
+              return distribution ? (
+                <NumberInsights
+                  type="chart"
+                  data={{
+                    minimum: distribution.minVal,
+                    maximum: distribution.maxVal,
+                    mean: distribution.mean,
+                    median: distribution.median,
+                    mode: distribution.mode,
+                  }}
+                />
+              ) : (
+                <Skeleton variant="rectangular" height={100} />
+              );
+            case 'String':
+              const chartData = distribution.charts[0].data;
+              return (
+                <StringInsights
+                  data={chartData.map((data: any) => ({
+                    name: data.category,
+                    percentage: (
+                      (data.count * 100) /
+                      distribution.count
+                    ).toFixed(1),
+                    count: data.count,
+                  }))}
+                  statsData={{
+                    minimum: distribution.minVal,
+                    maximum: distribution.maxVal,
+                    mean: distribution.mean,
+                    median: distribution.median,
+                    mode: distribution.mode,
+                  }}
+                />
+              );
+
+            case 'Boolean':
+              return (
+                <RangeChart
+                  data={[
+                    {
+                      name: 'True',
+                      percentage: (
+                        (distribution.countTrue * 100) /
+                        distribution.count
+                      ).toFixed(1),
+                      count: distribution.countTrue,
+                    },
+                    {
+                      name: 'False',
+                      percentage: (
+                        (distribution.countFalse * 100) /
+                        distribution.count
+                      ).toFixed(1),
+                      count: distribution.countFalse,
+                    },
+                  ]}
+                  colors={['#00897b', '#c7d8d7']}
+                  barHeight={12}
+                />
+              );
+
+            case 'Datetime':
+              const dateTimeData = distribution.charts[0].data;
+              return (
+                <DateTimeInsights
+                  barProps={{
+                    data: dateTimeData,
+                  }}
+                  minDate={distribution.minVal}
+                  maxDate={distribution.maxVal}
+                  type="chart"
+                  postBody={postBody}
+                />
+              );
+            default:
+              return (
+                <Box sx={{ textAlign: 'center' }}>
+                  {' '}
+                  -- -- -- No data available -- -- --{' '}
+                </Box>
+              );
+          }
+        },
       },
-    },
-  ];
+    ],
+    []
+  );
 
   const fetchColumns = async (schema: string, table: string) => {
     try {
