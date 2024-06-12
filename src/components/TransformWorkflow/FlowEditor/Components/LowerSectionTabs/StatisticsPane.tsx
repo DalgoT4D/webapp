@@ -27,7 +27,6 @@ import { DbtSourceModel } from '../Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { StatsChart } from '@/components/Charts/StatsChart';
 import { RangeChart } from '@/components/Charts/RangeChart';
 import { delay } from '@/utils/common';
 import { Session } from 'next-auth';
@@ -143,18 +142,31 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   // Row Data: The data to be displayed.
   const [data, setData] = useState<ColumnData[]>([]);
 
-  const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
-  const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
-
   const columns: ColumnDef<ColumnData, any>[] = [
-    { accessorKey: 'name', header: 'Column name', size: 150 },
-    { accessorKey: 'type', header: 'Column type', size: 150 },
-    { accessorKey: 'distinct', header: 'Distinct', size: 100 },
-    { accessorKey: 'null', header: 'Null', size: 100 },
+    {
+      accessorKey: 'name',
+      header: 'Column name',
+      size: 150,
+      enableSorting: true,
+    },
+    {
+      accessorKey: 'type',
+      header: 'Column type',
+      size: 150,
+      enableSorting: true,
+    },
+    {
+      accessorKey: 'distinct',
+      header: 'Distinct',
+      size: 100,
+      enableSorting: true,
+    },
+    { accessorKey: 'null', header: 'Null', size: 100, enableSorting: true },
     {
       accessorKey: 'distribution',
       header: 'Data distribution',
       size: 800,
+      enableSorting: false,
       cell: ({ row }) => {
         const { type, distribution, postBody } = row.original;
         if (distribution === 'failed' && postBody !== undefined) {
@@ -383,15 +395,6 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
     }
   }, [modelToPreview]);
 
-  const handleSort = (columnId: string) => {
-    if (sortedColumn === columnId) {
-      setSortOrder(sortOrder === 1 ? -1 : 1);
-    } else {
-      setSortedColumn(columnId);
-      setSortOrder(1);
-    }
-  };
-
   const tableData = useMemo(() => {
     return {
       columns,
@@ -431,14 +434,13 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
               >
                 <Box
                   sx={{
-                    color: '#00897b',
                     display: 'flex',
                     alignItems: 'center',
-                    fontWeight: 700,
                     mr: 2,
                   }}
                 >
-                  <VisibilityIcon sx={{ mr: 1 }} /> {data.length} Columns{' '}
+                  <VisibilityIcon sx={{ mr: 1, color: '#00897b' }} />{' '}
+                  {data.length} Columns{' '}
                 </Box>
                 {rowCount > 0 ? rowCount : 0} Rows
               </Box>
@@ -488,23 +490,28 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                           }}
                         >
                           <Box display="flex" alignItems="center">
-                            <TableSortLabel
-                              active={sortedColumn === header.id}
-                              direction={
-                                sortedColumn === header.id
-                                  ? sortOrder === 1
-                                    ? 'asc'
-                                    : 'desc'
-                                  : 'asc'
-                              }
-                              onClick={() => handleSort(header.id)}
-                              sx={{ marginLeft: '4px' }}
-                            >
-                              {flexRender(
+                            {header.column.columnDef.enableSorting ? (
+                              <TableSortLabel
+                                active={!!header.column.getIsSorted()}
+                                direction={
+                                  header.column.getIsSorted() === 'desc'
+                                    ? 'desc'
+                                    : 'asc'
+                                }
+                                onClick={header.column.getToggleSortingHandler()}
+                                sx={{ marginLeft: '4px' }}
+                              >
+                                {flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                              </TableSortLabel>
+                            ) : (
+                              flexRender(
                                 header.column.columnDef.header,
                                 header.getContext()
-                              )}
-                            </TableSortLabel>
+                              )
+                            )}
                           </Box>
                         </TableCell>
                       ))}
@@ -577,5 +584,16 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
         No data (0 rows) available to generate insights
       </Box>
     )
-  ) : null;
+  ) : (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: height,
+      }}
+    >
+      Select a table to view
+    </Box>
+  );
 };

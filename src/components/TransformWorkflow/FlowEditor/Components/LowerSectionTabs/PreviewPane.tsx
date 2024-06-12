@@ -299,7 +299,18 @@ const PreviewPane = ({ height }: { height: number }) => {
         />
       </Box>
     </Box>
-  ) : null;
+  ) : (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: height,
+      }}
+    >
+      Select a table to view
+    </Box>
+  );
 };
 
 export default PreviewPane;
