@@ -79,70 +79,78 @@ const ConnectionDetailsForm = ({
 
   useEffect(() => {
     if (connectionId) {
-      (async () => {
-        setLoading(true);
-        try {
-          const data: any = await httpGet(
-            session,
-            `airbyte/v1/connections/${connectionId}/catalog`
-          );
-
-          setCatalogId(data.catalogId || '');
-          setValue('name', data.name || '');
-          setSyncCatalog(data.syncCatalog?.streams || {});
-
-          const catalogDiffData = data.catalogDiff?.transforms || [];
-
-          const newData = catalogDiffData.map((transform: any) => {
-            const tableName = transform.streamDescriptor.name;
-            const changedColumns = transform.updateStream.reduce(
-              (columns: string[], update: any) => {
-                if (
-                  update.transformType === 'add_field' ||
-                  update.transformType === 'remove_field' ||
-                  update.transformType === 'update_field_schema'
-                ) {
-                  if (update.transformType === 'update_field_schema') {
-                    columns.push(`+${update.fieldName.join(', ')}`);
-                  } else {
-                    columns.push(
-                      `${
-                        update.transformType === 'add_field' ? '+' : '-'
-                      }${update.fieldName.join(', ')}`
-                    );
-                  }
-                }
-                return columns;
-              },
-              []
+      setLoading(true);
+      let hasLoaded = false;
+      const intervalId = setInterval(async () => {
+        if (!hasLoaded) {
+          setLoading(true);
+          try {
+            const data: any = await httpGet(
+              session,
+              `airbyte/v1/connections/${connectionId}/catalog`
             );
-            return { name: tableName, changedColumns };
-          });
 
-          console.log('Processed Data:', newData);
-          setTableData(newData);
+            setCatalogId(data.catalogId || '');
+            setValue('name', data.name || '');
+            setSyncCatalog(data.syncCatalog?.streams || {});
 
-          // Extract and set source streams
-          const streams = data.syncCatalog?.streams;
-          if (streams) {
-            const sourceStreamsData = streams.map((stream: any) => ({
-              name: stream.stream.name,
-              columnsAdded: stream.stream.columnsAdded,
-              columnsRemoved: stream.stream.columnsRemoved,
-            }));
-            setSourceStreams(sourceStreamsData);
-            setFilteredSourceStreams(sourceStreamsData);
+            const catalogDiffData = data.catalogDiff?.transforms || [];
+
+            const newData = catalogDiffData.map((transform: any) => {
+              const tableName = transform.streamDescriptor.name;
+              const changedColumns = transform.updateStream.reduce(
+                (columns: string[], update: any) => {
+                  if (
+                    update.transformType === 'add_field' ||
+                    update.transformType === 'remove_field' ||
+                    update.transformType === 'update_field_schema'
+                  ) {
+                    if (update.transformType === 'update_field_schema') {
+                      columns.push(`+${update.fieldName.join(', ')}`);
+                    } else {
+                      columns.push(
+                        `${
+                          update.transformType === 'add_field' ? '+' : '-'
+                        }${update.fieldName.join(', ')}`
+                      );
+                    }
+                  }
+                  return columns;
+                },
+                []
+              );
+              return { name: tableName, changedColumns };
+            });
+
+            console.log('Processed Data:', newData);
+            setTableData(newData);
+
+            const streams = data.syncCatalog?.streams;
+            if (streams) {
+              const sourceStreamsData = streams.map((stream: any) => ({
+                name: stream.stream.name,
+                columnsAdded: stream.stream.columnsAdded,
+                columnsRemoved: stream.stream.columnsRemoved,
+              }));
+              setSourceStreams(sourceStreamsData);
+              setFilteredSourceStreams(sourceStreamsData);
+            }
+
+            const breakingChanges = data.schemaChange === 'breaking';
+            setHasBreakingChanges(breakingChanges);
+
+            hasLoaded = true;
+          } catch (err: any) {
+            console.error(err);
+            errorToast(err.message, [], globalContext);
           }
-
-          // Check for breaking changes
-          const breakingChanges = data.schemaChange === 'breaking';
-          setHasBreakingChanges(breakingChanges);
-        } catch (err: any) {
-          console.error(err);
-          errorToast(err.message, [], globalContext);
+          if (hasLoaded) {
+            setLoading(false);
+          }
         }
-        setLoading(false);
-      })();
+      }, 5000);
+
+      return () => clearInterval(intervalId);
     }
   }, [connectionId]);
 
@@ -182,7 +190,7 @@ const ConnectionDetailsForm = ({
         successToast('Connection updated', [], globalContext);
 
         // Fetch the updated catalog data
-        const updatedCatalogData: any = await httpGet(
+        await httpGet(
           session,
           `airbyte/v1/connections/${connectionId}/catalog`
         );
