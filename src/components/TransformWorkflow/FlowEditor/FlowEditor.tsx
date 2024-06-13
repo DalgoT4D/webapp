@@ -190,7 +190,9 @@ const FlowEditor = ({}) => {
   const { canvasAction } = useCanvasAction();
 
   const onResize = (event: any) => {
-    setLowerSectionHeight(document.body.clientHeight - event.clientY - 45);
+    const dailogHeight =
+      document.querySelector('.MuiDialog-root')?.clientHeight || 0;
+    setLowerSectionHeight(dailogHeight - event.clientY);
   };
   const fetchSourcesModels = () => {
     httpGet(session, 'transform/dbt_project/sources_models/')
