@@ -62,7 +62,7 @@ export default function Analysis() {
   return (
     <>
       <PageHead title="Dalgo" />
-      <main className={styles.analysis}>
+      <Box sx={{ p: '3rem 4rem', width: '100%' }}>
         {globalContext?.CurrentOrg?.state?.viz_url && (
           <iframe
             src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
@@ -150,7 +150,7 @@ export default function Analysis() {
             />
           </Box>
         )}
-      </main>
+      </Box>
     </>
   );
 }
