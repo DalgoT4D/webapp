@@ -105,7 +105,9 @@ export const Elementary = () => {
               ></iframe>
             </Box>
           ) : (
-            <Typography variant="h6">No Elementary report available</Typography>
+            <Typography variant="h6">
+              No data quality report available
+            </Typography>
           )}
         </Card>
       </Box>
