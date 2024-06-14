@@ -29,7 +29,6 @@ export const Elementary = () => {
           globalContext
         );
       }
-      console.log(response);
     } catch (err: any) {
       console.error(err);
       errorToast(
