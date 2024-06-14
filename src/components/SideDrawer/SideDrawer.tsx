@@ -177,9 +177,9 @@ export const SideDrawer = ({ openMenu }: any) => {
                   {hasChildren.length > 0 && openMenu && (
                     <IconButton
                       sx={{ padding: 0 }}
-                      onClick={() => handleCollpaseArrowClick(idx)}
+                      onClick={() => handleCollpaseArrowClick(item.index)}
                     >
-                      {open[idx] ? (
+                      {open[item.index] ? (
                         <ExpandLess color={itemColor} />
                       ) : (
                         <ExpandMore color={itemColor} />
@@ -190,7 +190,7 @@ export const SideDrawer = ({ openMenu }: any) => {
               </ListItem>
               {hasChildren.length > 0 && (
                 <Collapse
-                  in={open[idx]}
+                  in={open[item.index]}
                   key={item.index}
                   timeout="auto"
                   unmountOnExit

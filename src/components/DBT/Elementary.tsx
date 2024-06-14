@@ -91,7 +91,7 @@ export const Elementary = () => {
           {loading ? (
             <CircularProgress />
           ) : elementaryToken ? (
-            <Box width={'100%'} height={'calc(100vh - 250px)'}>
+            <Box width="100%" height="calc(100vh - 250px)">
               <Box sx={{ display: 'flex', mb: 1 }}>
                 <Typography variant="h6">
                   <strong> Last generated:</strong> {generatedAt}
@@ -100,8 +100,8 @@ export const Elementary = () => {
 
               <iframe
                 src={backendUrl + `/elementary/${elementaryToken}`}
-                width={'100%'}
-                height={'100%'}
+                width="100%"
+                height="100%"
                 style={{ border: 0 }}
               ></iframe>
             </Box>
