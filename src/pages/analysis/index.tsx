@@ -1,4 +1,3 @@
-import styles from '@/styles/Home.module.css';
 import '@/styles/Home.module.css';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { PageHead } from '@/components/PageHead';
