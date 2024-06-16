@@ -73,7 +73,7 @@ export const Elementary = () => {
             onClick={() => refreshReport()}
             variant="contained"
           >
-            Regerate report
+            Regenerate report
           </Button>
         </Box>
         <Card
