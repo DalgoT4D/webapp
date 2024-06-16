@@ -73,16 +73,6 @@ const ItemButton: React.FC<ItemButtonProps> = ({
   );
 };
 
-// const DrawerHeader = styled('div')(({ theme }) => ({
-//   display: 'flex',
-//   alignItems: 'center',
-//   justifyContent: 'flex-end',
-//   padding: theme.spacing(0, 1),
-//   minHeight: '20px',
-//   // necessary for content to be below app bar
-//   ...theme.mixins.toolbar,
-// }));
-
 const openedMixin = (theme: Theme): CSSObject => ({
   width: drawerWidth,
   transition: theme.transitions.create('width', {
@@ -169,6 +159,7 @@ export const SideDrawer = ({ openMenu }: any) => {
           (sideItem) => sideItem.parent === item.index
         );
         const itemColor = selectedIndex === item.index ? 'primary' : 'inherit';
+        if (item.hide) return null;
         return (
           !item.parent && (
             <Fragment key={item.title}>
@@ -186,9 +177,9 @@ export const SideDrawer = ({ openMenu }: any) => {
                   {hasChildren.length > 0 && openMenu && (
                     <IconButton
                       sx={{ padding: 0 }}
-                      onClick={() => handleCollpaseArrowClick(idx)}
+                      onClick={() => handleCollpaseArrowClick(item.index)}
                     >
-                      {open[idx] ? (
+                      {open[item.index] ? (
                         <ExpandLess color={itemColor} />
                       ) : (
                         <ExpandMore color={itemColor} />
@@ -199,7 +190,7 @@ export const SideDrawer = ({ openMenu }: any) => {
               </ListItem>
               {hasChildren.length > 0 && (
                 <Collapse
-                  in={open[idx]}
+                  in={open[item.index]}
                   key={item.index}
                   timeout="auto"
                   unmountOnExit
@@ -210,20 +201,25 @@ export const SideDrawer = ({ openMenu }: any) => {
                     sx={{ ml: openMenu ? 4 : 0 }}
                     data-testid={`child-menu-${item.index}`}
                   >
-                    {hasChildren.map((subitem) => (
-                      <ListItem
-                        key={subitem.title}
-                        sx={{ px: 1.5 }}
-                        className={subitem.className}
-                      >
-                        <ItemButton
-                          openMenu={openMenu}
-                          item={subitem}
-                          isSelected={selectedIndex === subitem.index}
-                          onClick={() => handleListItemClick(subitem)}
-                        />
-                      </ListItem>
-                    ))}
+                    {hasChildren.map((subitem) => {
+                      if (subitem.hide) {
+                        return null;
+                      }
+                      return (
+                        <ListItem
+                          key={subitem.title}
+                          sx={{ px: 1.5 }}
+                          className={subitem.className}
+                        >
+                          <ItemButton
+                            openMenu={openMenu}
+                            item={subitem}
+                            isSelected={selectedIndex === subitem.index}
+                            onClick={() => handleListItemClick(subitem)}
+                          />
+                        </ListItem>
+                      );
+                    })}
                   </List>
                 </Collapse>
               )}
@@ -239,73 +235,70 @@ export const SideDrawer = ({ openMenu }: any) => {
         sx: { border: 'none' },
       }}
       sx={{
-        // width: drawerWidth,
-        // flexShrink: 0,
         '& .MuiDrawer-paper': {
           display: 'flex',
           justifyContent: 'space-between',
-          // width: drawerWidth,
-          // boxSizing: 'border-box',
           paddingTop: 7,
         },
       }}
       open={openMenu}
-      // anchor={'left'}
       variant="permanent"
     >
       {getList}
-      {openMenu && (<Box
-        sx={{
-          position: 'relative',
-          bottom: 0,
-          paddingBottom: 4,
-          width: drawerWidth,
-        }}
-      >
-        <Link href="https://dalgot4d.github.io/dalgo_docs/" target="_blank">
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Typography sx={{ paddingRight: 1 }}>Documentation</Typography>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="16"
-              viewBox="0 0 24 24"
-              width="16"
-              fill="currentColor"
+      {openMenu && (
+        <Box
+          sx={{
+            position: 'relative',
+            bottom: 0,
+            paddingBottom: 4,
+            width: drawerWidth,
+          }}
+        >
+          <Link href="https://dalgot4d.github.io/dalgo_docs/" target="_blank">
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <path d="M0 0h24v24H0z" fill="none" />
-              <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
-            </svg>
-          </Box>
-        </Link>
-        <Link href="https://dalgo.in/privacy-policy/" target="_blank">
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginTop: 1,
-            }}
-          >
-            <Typography sx={{ paddingRight: 1 }}>Privacy Policy</Typography>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="16"
-              viewBox="0 0 24 24"
-              width="16"
-              fill="currentColor"
+              <Typography sx={{ paddingRight: 1 }}>Documentation</Typography>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="16"
+                viewBox="0 0 24 24"
+                width="16"
+                fill="currentColor"
+              >
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg>
+            </Box>
+          </Link>
+          <Link href="https://dalgo.in/privacy-policy/" target="_blank">
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 1,
+              }}
             >
-              <path d="M0 0h24v24H0z" fill="none" />
-              <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
-            </svg>
-          </Box>
-        </Link>
-      </Box>)}
+              <Typography sx={{ paddingRight: 1 }}>Privacy Policy</Typography>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="16"
+                viewBox="0 0 24 24"
+                width="16"
+                fill="currentColor"
+              >
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg>
+            </Box>
+          </Link>
+        </Box>
+      )}
       {globalContext?.CurrentOrg.state.is_demo && demoProductWalkthrough && (
         <ProductWalk
           run={runWalkThrough}
