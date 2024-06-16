@@ -1,4 +1,3 @@
-import styles from '@/styles/Home.module.css';
 import '@/styles/Home.module.css';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { PageHead } from '@/components/PageHead';
@@ -62,7 +61,7 @@ export default function Analysis() {
   return (
     <>
       <PageHead title="Dalgo" />
-      <main className={styles.analysis}>
+      <Box sx={{ p: '3rem 4rem', width: '100%' }}>
         {globalContext?.CurrentOrg?.state?.viz_url && (
           <iframe
             src={`${globalContext?.CurrentOrg?.state.viz_url}superset/welcome/`}
@@ -150,7 +149,7 @@ export default function Analysis() {
             />
           </Box>
         )}
-      </main>
+      </Box>
     </>
   );
 }
