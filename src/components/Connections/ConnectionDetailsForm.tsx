@@ -14,6 +14,7 @@ import { httpGet, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
+import { delay } from '@/utils/common';
 
 interface ConnectionDetailsFormProps {
   connectionId: string;
@@ -28,12 +29,6 @@ type CursorFieldConfig = {
   sourceDefinedCursor: boolean;
   cursorFieldOptions: string[];
 };
-
-interface ColumnChange {
-  table: string;
-  added: string[];
-  removed: string[];
-}
 
 interface SourceStream {
   name: string;
@@ -77,55 +72,107 @@ const ConnectionDetailsForm = ({
   const inputRef: any = useRef(null);
   const shouldFocusInput: any = useRef(null);
 
+  const [progressMessages, setProgressMessages] = useState<any[]>([]);
+  const [setupStatus, setSetupStatus] = useState('not-started');
+  const [failureMessage, setFailureMessage] = useState<string | null>(null);
+  const toastContext = useContext(GlobalContext);
+
+  const checkProgress = async function (
+    taskId: string,
+    hashKeyPrefix: string
+  ): Promise<[boolean, any]> {
+    try {
+      const orgSlug = toastContext?.CurrentOrg.state.slug;
+      const hashKey = `${hashKeyPrefix}-${orgSlug}`;
+      const message = await httpGet(
+        session,
+        `tasks/${taskId}?hashkey=${hashKey}`
+      );
+      await delay(3000);
+      setProgressMessages(message['progress']);
+      const lastMessage = message['progress'][message['progress'].length - 1];
+
+      if (lastMessage['status'] === 'completed') {
+        setSetupStatus('completed');
+        return [true, lastMessage['result']];
+      } else if (lastMessage['status'] === 'failed') {
+        setSetupStatus('failed');
+        setFailureMessage(lastMessage['message']);
+        return [false, null];
+      } else {
+        await delay(2000);
+        return await checkProgress(taskId, hashKeyPrefix);
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+      return [false, null];
+    }
+  };
+
   useEffect(() => {
     if (connectionId) {
-      setLoading(true);
-      let hasLoaded = false;
-      const intervalId = setInterval(async () => {
-        if (!hasLoaded) {
-          setLoading(true);
-          try {
-            const data: any = await httpGet(
-              session,
-              `airbyte/v1/connections/${connectionId}/catalog`
-            );
+      (async () => {
+        setLoading(true);
+        try {
+          const data: any = await httpGet(
+            session,
+            `airbyte/v1/connections/${connectionId}/catalog`
+          );
+          await delay(3000);
+          const [isSuccessful, result] = await checkProgress(
+            data.task_id,
+            'schema-change'
+          );
+          if (isSuccessful && result) {
+            setCatalogId(result.catalogId || '');
+            setValue('name', result.name || '');
+            setSyncCatalog(result.syncCatalog?.streams || {});
 
-            setCatalogId(data.catalogId || '');
-            setValue('name', data.name || '');
-            setSyncCatalog(data.syncCatalog?.streams || {});
-
-            const catalogDiffData = data.catalogDiff?.transforms || [];
+            const catalogDiffData = result.catalogDiff?.transforms || [];
+            console.log(catalogDiffData, 'catalog');
 
             const newData = catalogDiffData.map((transform: any) => {
               const tableName = transform.streamDescriptor.name;
-              const changedColumns = transform.updateStream.reduce(
-                (columns: string[], update: any) => {
-                  if (
-                    update.transformType === 'add_field' ||
-                    update.transformType === 'remove_field' ||
-                    update.transformType === 'update_field_schema'
-                  ) {
-                    if (update.transformType === 'update_field_schema') {
-                      columns.push(`+${update.fieldName.join(', ')}`);
-                    } else {
-                      columns.push(
-                        `${
-                          update.transformType === 'add_field' ? '+' : '-'
-                        }${update.fieldName.join(', ')}`
-                      );
+
+              // Initialize changedColumns based on transformType
+              let changedColumns: string[] = [];
+
+              if (transform.transformType === 'remove_stream') {
+                changedColumns.push(`-Stream: ${tableName}`);
+              } else if (transform.transformType === 'add_stream') {
+                changedColumns.push(`+Stream: ${tableName}`);
+              } else {
+                changedColumns = transform.updateStream.reduce(
+                  (columns: string[], update: any) => {
+                    if (
+                      update.transformType === 'add_field' ||
+                      update.transformType === 'remove_field' ||
+                      update.transformType === 'update_field_schema'
+                    ) {
+                      if (update.transformType === 'update_field_schema') {
+                        columns.push(`+${update.fieldName.join(', ')}`);
+                      } else {
+                        columns.push(
+                          `${
+                            update.transformType === 'add_field' ? '+' : '-'
+                          }${update.fieldName.join(', ')}`
+                        );
+                      }
                     }
-                  }
-                  return columns;
-                },
-                []
-              );
+                    return columns;
+                  },
+                  []
+                );
+              }
+
               return { name: tableName, changedColumns };
             });
 
-            console.log('Processed Data:', newData);
             setTableData(newData);
 
-            const streams = data.syncCatalog?.streams;
+            // Extract and set source streams
+            const streams = result.syncCatalog?.streams;
             if (streams) {
               const sourceStreamsData = streams.map((stream: any) => ({
                 name: stream.stream.name,
@@ -136,21 +183,16 @@ const ConnectionDetailsForm = ({
               setFilteredSourceStreams(sourceStreamsData);
             }
 
-            const breakingChanges = data.schemaChange === 'breaking';
+            // Check for breaking changes
+            const breakingChanges = result.schemaChange === 'breaking';
             setHasBreakingChanges(breakingChanges);
-
-            hasLoaded = true;
-          } catch (err: any) {
-            console.error(err);
-            errorToast(err.message, [], globalContext);
           }
-          if (hasLoaded) {
-            setLoading(false);
-          }
+        } catch (err: any) {
+          console.error(err);
+          errorToast(err.message, [], globalContext);
         }
-      }, 5000);
-
-      return () => clearInterval(intervalId);
+        setLoading(false);
+      })();
     }
   }, [connectionId]);
 
@@ -188,13 +230,7 @@ const ConnectionDetailsForm = ({
           payload
         );
         successToast('Connection updated', [], globalContext);
-
-        // Fetch the updated catalog data
-        await httpGet(
-          session,
-          `airbyte/v1/connections/${connectionId}/catalog`
-        );
-        // console.log('Updated Catalog Data:', updatedCatalogData);
+        await delay(5000);
         await fetchPendingActions();
 
         setLoading(false);
@@ -229,165 +265,169 @@ const ConnectionDetailsForm = ({
 
   const FormContent = () => {
     const tableCount = tableData.length;
+
+    // Separate tables and columns added/removed
+    const tablesRemoved = tableData.filter((table) =>
+      table.changedColumns.some((column) => column.startsWith('-Stream'))
+    );
+    const tablesAdded = tableData.filter((table) =>
+      table.changedColumns.some((column) => column.startsWith('+Stream'))
+    );
+    const columnsRemoved = tableData.flatMap((table) =>
+      table.changedColumns
+        .filter(
+          (column) => column.startsWith('-') && !column.startsWith('-Stream')
+        )
+        .map((column) => ({
+          tableName: table.name,
+          columnName: column.substring(1),
+        }))
+    );
+    const columnsAdded = tableData.flatMap((table) =>
+      table.changedColumns
+        .filter(
+          (column) => column.startsWith('+') && !column.startsWith('+Stream')
+        )
+        .map((column) => ({
+          tableName: table.name,
+          columnName: column.substring(1),
+        }))
+    );
+
     return (
       <>
-        <Box sx={{ pt: 2, pb: 4 }}>
-          {tableData.length > 0 ? (
+        <Box>
+          <Typography variant="h5" gutterBottom>
+            {tableCount} tables with changes
+          </Typography>
+          {tableCount > 0 ? (
             <Table>
-              <Typography variant="h6" fontWeight={600}>{`${tableCount} table${
-                tableCount !== 1 ? 's' : ''
-              } with changes`}</Typography>
               <TableBody>
-                {tableData.map((table, idx) => (
-                  <React.Fragment key={idx}>
-                    {table.changedColumns.some((column) =>
-                      column.startsWith('-')
-                    ) && (
-                      <React.Fragment>
-                        <Typography
-                          variant="h6"
-                          fontWeight={600}
-                          color="#5f7182"
-                          marginTop="20px"
-                          gutterBottom
-                        >
-                          Columns Removed
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          <Typography
-                            variant="subtitle2"
-                            color="#7b889c"
-                            fontWeight={800}
-                          >
-                            Table Name
+                {tablesRemoved.length > 0 && (
+                  <React.Fragment>
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="#5f7182"
+                      gutterBottom
+                    >
+                      Tables Removed
+                    </Typography>
+                    {tablesRemoved.map((table, idx) => (
+                      <TableRow key={idx} sx={{ boxShadow: 'none' }}>
+                        <TableCell colSpan={2} sx={{ bgcolor: '#f2f2eb' }}>
+                          <Typography variant="body2" align="left">
+                            {table.name}
                           </Typography>
-                          <Typography
-                            variant="subtitle2"
-                            color="#7b889c"
-                            fontWeight={800}
-                          >
-                            Column Name
-                          </Typography>
-                        </Box>
-                        <Table>
-                          {table.changedColumns
-                            .filter((column) => column.startsWith('-'))
-                            .map((column, idx) => (
-                              <TableRow
-                                key={idx}
-                                sx={{
-                                  boxShadow: 'none',
-                                }}
-                              >
-                                <TableCell
-                                  sx={{
-                                    bgcolor: '#f2f2eb',
-                                    paddingRight: '8px',
-                                    borderRight: '8px solid white',
-                                    width: '50%',
-                                  }}
-                                >
-                                  <Typography variant="body2" align="left">
-                                    {table.name}
-                                  </Typography>
-                                </TableCell>
-                                <TableCell
-                                  sx={{
-                                    bgcolor: '#f2f2eb',
-                                    paddingLeft: '8px',
-                                    borderLeft: '8px solid white',
-                                    width: '50%',
-                                  }}
-                                >
-                                  <Typography variant="body2" align="left">
-                                    {column.substring(1)}
-                                  </Typography>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </Table>
-                      </React.Fragment>
-                    )}
-                    {table.changedColumns.some(
-                      (column) => !column.startsWith('-')
-                    ) && (
-                      <React.Fragment>
-                        <Typography
-                          variant="h6"
-                          fontWeight={600}
-                          color="#5f7182"
-                          marginTop="20px"
-                          gutterBottom
-                        >
-                          Columns Added/Updated
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          <Typography
-                            variant="subtitle2"
-                            color="#7b889c"
-                            fontWeight={800}
-                          >
-                            Table Name
-                          </Typography>
-                          <Typography
-                            variant="subtitle2"
-                            color="#7b889c"
-                            fontWeight={800}
-                          >
-                            Column Name
-                          </Typography>
-                        </Box>
-                        <Table>
-                          {table.changedColumns
-                            .filter((column) => !column.startsWith('-'))
-                            .map((column, idx) => (
-                              <TableRow
-                                key={idx}
-                                sx={{
-                                  boxShadow: 'none',
-                                }}
-                              >
-                                <TableCell
-                                  sx={{
-                                    bgcolor: '#f2f2eb',
-                                    paddingRight: '8px',
-                                    borderRight: '8px solid white',
-                                    width: '50%',
-                                  }}
-                                >
-                                  <Typography variant="body2" align="left">
-                                    {table.name}
-                                  </Typography>
-                                </TableCell>
-                                <TableCell
-                                  sx={{
-                                    bgcolor: '#f2f2eb',
-                                    paddingLeft: '8px',
-                                    borderLeft: '8px solid white',
-                                    width: '50%',
-                                  }}
-                                >
-                                  <Typography variant="body2" align="left">
-                                    {column.substring(1)}
-                                  </Typography>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </Table>
-                      </React.Fragment>
-                    )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </React.Fragment>
-                ))}
+                )}
+                {tablesAdded.length > 0 && (
+                  <React.Fragment>
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="#5f7182"
+                      marginTop="10px"
+                      gutterBottom
+                    >
+                      Tables Added
+                    </Typography>
+                    {tablesAdded.map((table, idx) => (
+                      <TableRow key={idx} sx={{ boxShadow: 'none' }}>
+                        <TableCell colSpan={2} sx={{ bgcolor: '#f2f2eb' }}>
+                          <Typography variant="body2" align="left">
+                            {table.name}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </React.Fragment>
+                )}
+                {columnsRemoved.length > 0 && (
+                  <React.Fragment>
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="#5f7182"
+                      marginTop="10px"
+                      gutterBottom
+                    >
+                      Columns Removed
+                    </Typography>
+                    {columnsRemoved.map((column, idx) => (
+                      <TableRow key={idx} sx={{ boxShadow: 'none' }}>
+                        <TableCell
+                          sx={{
+                            bgcolor: '#f2f2eb',
+                            paddingRight: '8px',
+                            borderRight: '8px solid white',
+                            width: '50%',
+                          }}
+                        >
+                          <Typography variant="body2" align="left">
+                            {column.tableName}
+                          </Typography>
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            bgcolor: '#f2f2eb',
+                            paddingLeft: '8px',
+                            borderLeft: '8px solid white',
+                            width: '50%',
+                          }}
+                        >
+                          <Typography variant="body2" align="left">
+                            {column.columnName}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </React.Fragment>
+                )}
+                {columnsAdded.length > 0 && (
+                  <React.Fragment>
+                    <Typography
+                      variant="h6"
+                      fontWeight={600}
+                      color="#5f7182"
+                      marginTop="10px"
+                      gutterBottom
+                    >
+                      Columns Added
+                    </Typography>
+                    {columnsAdded.map((column, idx) => (
+                      <TableRow key={idx} sx={{ boxShadow: 'none' }}>
+                        <TableCell
+                          sx={{
+                            bgcolor: '#f2f2eb',
+                            paddingRight: '8px',
+                            borderRight: '8px solid white',
+                            width: '50%',
+                          }}
+                        >
+                          <Typography variant="body2" align="left">
+                            {column.tableName}
+                          </Typography>
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            bgcolor: '#f2f2eb',
+                            paddingLeft: '8px',
+                            borderLeft: '8px solid white',
+                            width: '50%',
+                          }}
+                        >
+                          <Typography variant="body2" align="left">
+                            {column.columnName}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </React.Fragment>
+                )}
               </TableBody>
             </Table>
           ) : (
@@ -415,11 +455,17 @@ const ConnectionDetailsForm = ({
                 variant="contained"
                 type="submit"
                 disabled={hasBreakingChanges}
+                sx={{ marginTop: '20px' }}
               >
                 Yes, I approve
               </Button>
             )}
-            <Button color="secondary" variant="outlined" onClick={handleClose}>
+            <Button
+              color="secondary"
+              variant="outlined"
+              onClick={handleClose}
+              sx={{ marginTop: '20px' }}
+            >
               Close
             </Button>
           </>
