@@ -176,6 +176,11 @@ const CreateSourceForm = ({
               data-testid="autocomplete"
               value={field.value}
               options={sourceDefs}
+              renderOption={(props, option) => (
+                <li {...props} key={option.id}>
+                  {option.label}
+                </li>
+              )}
               isOptionEqualToValue={(
                 option: AutoCompleteOption,
                 value: AutoCompleteOption
