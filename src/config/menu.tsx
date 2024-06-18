@@ -4,9 +4,11 @@ import IngestIcon from '@/assets/icons/ingest';
 import TransformIcon from '@/assets/icons/transform';
 import PipelineIcon from '@/assets/icons/pipeline';
 import OrchestrateIcon from '@/assets/icons/orchestrate';
+import DataQualityIcon from '@/assets/icons/dataQuality';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 
 import { primaryColor } from './theme';
+import { showElementaryMenu } from './constant';
 
 export const drawerWidth = 250;
 
@@ -20,6 +22,7 @@ export interface MenuOption {
   parent?: number;
   className?: string;
   permission?: string;
+  hide?: boolean;
 }
 
 export const sideMenu: MenuOption[] = [
@@ -72,9 +75,16 @@ export const sideMenu: MenuOption[] = [
     parent: 2,
     className: 'orchestrate_walkthrough',
   },
-
   {
     index: 3,
+    title: 'Data Quality',
+    path: '/elementary',
+    icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
+    className: 'data_quality_walkthrough',
+    hide: !showElementaryMenu,
+  },
+  {
+    index: 4,
     title: 'User management',
     path: '/user-management',
     icon: () => <SupervisorAccountIcon />,
