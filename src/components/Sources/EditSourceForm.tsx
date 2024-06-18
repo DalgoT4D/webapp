@@ -269,6 +269,11 @@ const EditSourceForm = ({
                   disabled={true}
                   id="sourceDef"
                   value={field.value}
+                  renderOption={(props, option) => (
+                    <li {...props} key={option.id}>
+                      {option.label}
+                    </li>
+                  )}
                   options={sourceDefs}
                   onChange={(e, data) => data && field.onChange(data)}
                   renderInput={(params) => {
