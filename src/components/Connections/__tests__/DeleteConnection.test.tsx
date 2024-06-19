@@ -94,7 +94,7 @@ describe('Delete connection', () => {
 
     // will open the confirmation dialogue
     const actionMenuItems = screen.getAllByRole('menuitem');
-    const deleteAction = actionMenuItems[1];
+    const deleteAction = actionMenuItems[2];
     await act(() => deleteAction.click());
 
     const confirmButton = screen.getByTestId('confirmbutton');
