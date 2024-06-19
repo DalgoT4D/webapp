@@ -85,7 +85,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
         <ListItemIcon style={{ minWidth: 28 }}>
           <RefreshIcon sx={{ width: 14 }} />
         </ListItemIcon>
-        Refresh
+        Refresh schema
       </MenuItem>
     )}
     {handleResendInvitation && (
