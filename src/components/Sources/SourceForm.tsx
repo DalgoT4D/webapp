@@ -53,28 +53,19 @@ const SourceForm = ({
 }: SourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    reset,
-    setValue,
-    unregister,
-    getValues,
-  } = useForm<SourceFormInput>({
-    defaultValues: {
-      name: '',
-      sourceDef: null,
-      config: {},
-    },
-  });
+  const { handleSubmit, control, watch, reset, setValue } =
+    useForm<SourceFormInput>({
+      defaultValues: {
+        name: '',
+        sourceDef: null,
+        config: {},
+      },
+    });
 
   const watchSelectedSourceDef = watch('sourceDef');
   const [logs, setLogs] = useState<Array<any>>([]);
   const [source, setSource] = useState<any>(null);
   const [sourceDefSpecs, setSourceDefSpecs] = useState<Array<any>>([]);
-  const lastRenderedSpecRef = useRef([]);
 
   const handleClose = () => {
     reset();
@@ -224,94 +215,83 @@ const SourceForm = ({
   };
 
   const onSubmit = async (data: any) => {
-    // unregister form fields
-    ConnectorConfigInput.syncFormFieldsWithSpecs(
-      data,
-      lastRenderedSpecRef.current || [],
-      unregister
-    );
-
-    await checkSourceConnectivityForUpdate(getValues());
+    await checkSourceConnectivityForUpdate(data);
   };
 
-  const FormContent = () => {
-    return (
-      <>
-        <Box sx={{ pt: 2, pb: 4 }}>
+  const formContent = (
+    <>
+      <Box sx={{ pt: 2, pb: 4 }}>
+        <Controller
+          name="name"
+          control={control}
+          rules={{ required: 'Name is required' }}
+          render={({ field: { ref, ...rest }, fieldState }) => (
+            <Input
+              {...rest}
+              sx={{ width: '100%' }}
+              label="Name*"
+              variant="outlined"
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            ></Input>
+          )}
+        />
+        <Box sx={{ m: 2 }} />
+        <>
           <Controller
-            name="name"
+            name="sourceDef"
             control={control}
-            rules={{ required: 'Name is required' }}
-            render={({ field: { ref, ...rest }, fieldState }) => (
-              <Input
-                {...rest}
-                sx={{ width: '100%' }}
-                label="Name*"
-                variant="outlined"
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
-              ></Input>
+            rules={{ required: 'Source type is required' }}
+            render={({ field, fieldState }) => (
+              <Autocomplete
+                disabled={!!sourceId}
+                id="sourceDef"
+                data-testid="autocomplete"
+                value={field.value}
+                getOptionLabel={(option) =>
+                  `${option.label} (v${option.dockerImageTag})`
+                }
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    {`${option.label} (v${option.dockerImageTag})`}
+                  </li>
+                )}
+                options={sourceDefs}
+                onChange={(e, data) => data && field.onChange(data)}
+                renderInput={(params) => {
+                  return (
+                    <Input
+                      name="sourceDef"
+                      {...params}
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message}
+                      label="Select source type"
+                      variant="outlined"
+                    />
+                  );
+                }}
+              />
             )}
           />
           <Box sx={{ m: 2 }} />
-          <>
-            <Controller
-              name="sourceDef"
-              control={control}
-              rules={{ required: 'Source type is required' }}
-              render={({ field, fieldState }) => (
-                <Autocomplete
-                  disabled={!!sourceId}
-                  id="sourceDef"
-                  data-testid="autocomplete"
-                  value={field.value}
-                  getOptionLabel={(option) =>
-                    `${option.label} (v${option.dockerImageTag})`
-                  }
-                  renderOption={(props, option) => (
-                    <li {...props} key={option.id}>
-                      {`${option.label} (v${option.dockerImageTag})`}
-                    </li>
-                  )}
-                  options={sourceDefs}
-                  onChange={(e, data) => data && field.onChange(data)}
-                  renderInput={(params) => {
-                    return (
-                      <Input
-                        name="sourceDef"
-                        {...params}
-                        error={!!fieldState.error}
-                        helperText={fieldState.error?.message}
-                        label="Select source type"
-                        variant="outlined"
-                      />
-                    );
-                  }}
-                />
-              )}
-            />
-            <Box sx={{ m: 2 }} />
-            <SourceConfigInput
-              specs={sourceDefSpecs}
-              registerFormFieldValue={register}
-              control={control}
-              setFormValue={setValue}
-              source={source}
-              unregisterFormField={unregister}
-              lastRenderedSpecRef={lastRenderedSpecRef}
-            />
-          </>
-        </Box>
-      </>
-    );
-  };
+          <SourceConfigInput
+            specs={sourceDefSpecs}
+            control={control}
+            setFormValue={setValue}
+            source={undefined}
+          />
+        </>
+      </Box>
+    </>
+  );
+
   return (
     <CustomDialog
       title={sourceId ? 'Edit source' : 'Add a new source'}
       show={showForm}
       handleClose={handleClose}
       handleSubmit={handleSubmit(onSubmit)}
-      formContent={<FormContent />}
+      formContent={formContent}
       formActions={
         <Box>
           <Button variant="contained" type="submit" data-testid="savebutton">
