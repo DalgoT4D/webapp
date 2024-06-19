@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import EditSourceForm from '../EditSourceForm';
+import EditSourceForm from '../SourceForm';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
