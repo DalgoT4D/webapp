@@ -38,6 +38,7 @@ import {
   useConnSyncLogs,
   useConnSyncLogsUpdate,
 } from '@/contexts/ConnectionSyncLogsContext';
+import { ConnectionLogs } from './ConnectionLogs';
 
 type PrefectFlowRun = {
   id: string;
@@ -166,6 +167,7 @@ export const Connections = () => {
   const syncLogs = useConnSyncLogs();
   const setSyncLogs = useConnSyncLogsUpdate();
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
+  const [showLogsDialog, setShowLogsDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
   const [resetLoading, setResetLoading] = useState<boolean>(false);
 
@@ -206,6 +208,7 @@ export const Connections = () => {
         setSyncLogs(formattedLogs);
         return response.status;
       }
+      console.log(response);
       response.logs.forEach((log: string) => {
         log = removeEscapeSequences(log);
         const pattern1 = /\)[:;]\d+ -/;
@@ -527,8 +530,9 @@ export const Connections = () => {
               alignItems: 'center',
             }}
             onClick={() => {
+              setShowLogsDialog(true);
               fetchAirbyteLogs(connection.connectionId);
-              setExpandSyncLogs(true);
+              // setExpandSyncLogs(true);
             }}
           >
             Fetch Logs
@@ -632,6 +636,9 @@ export const Connections = () => {
 
   return (
     <>
+      {showLogsDialog && (
+        <ConnectionLogs setShowLogsDialog={setShowLogsDialog} />
+      )}
       <ActionsMenu
         eleType="connection"
         anchorEl={anchorEl}
