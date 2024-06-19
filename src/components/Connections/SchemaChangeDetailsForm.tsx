@@ -16,7 +16,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
 
-interface ConnectionDetailsFormProps {
+interface SchemaChangeDetailsFormProps {
   connectionId: string;
   mutate: (...args: any) => any;
   showForm: boolean;
@@ -42,14 +42,14 @@ interface SourceStream {
   columnsRemoved?: string[];
 }
 
-const ConnectionDetailsForm = ({
+const SchemaChangeDetailsForm = ({
   setConnectionId,
   connectionId,
   mutate,
   showForm,
   setShowForm,
   fetchPendingActions,
-}: ConnectionDetailsFormProps) => {
+}: SchemaChangeDetailsFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
   const { handleSubmit, reset, setValue } = useForm({
@@ -476,4 +476,4 @@ const ConnectionDetailsForm = ({
   );
 };
 
-export default ConnectionDetailsForm;
+export default SchemaChangeDetailsForm;

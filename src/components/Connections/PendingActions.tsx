@@ -14,7 +14,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
-import ConnectionDetailsForm from './ConnectionDetailsForm';
+import SchemaChangeDetailsForm from './SchemaChangeDetailsForm';
 
 const PendingActionsAccordion = () => {
   const [schemaChangeData, setSchemaChangeData] = useState<any[]>([]);
@@ -135,7 +135,7 @@ const PendingActionsAccordion = () => {
       </Accordion>
       <Dialog open={openPopup} onClose={() => setOpenPopup(false)}>
         <DialogContent>
-          <ConnectionDetailsForm
+          <SchemaChangeDetailsForm
             setConnectionId={setSelectedConnectionId}
             connectionId={selectedConnectionId}
             mutate={() => {}}
