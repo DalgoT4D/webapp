@@ -44,7 +44,7 @@ export const Elementary = () => {
     try {
       const response = await httpPost(
         session,
-        'dbt/make-elementary-report/',
+        'dbt/fetch-elementary-report/',
         {}
       );
 
