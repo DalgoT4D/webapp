@@ -2,6 +2,43 @@ import { Box, Dialog, IconButton, Typography } from '@mui/material';
 import { Transition } from '../DBT/DBTTransformType';
 import Close from '@mui/icons-material/Close';
 
+const fetchAirbyteLogs = async (connectionId: string) => {
+  try {
+    const response = await httpGet(
+      session,
+      `airbyte/v1/connections/${connectionId}/jobs`
+    );
+    const formattedLogs: Array<string> = [];
+    if (response.status === 'not found') {
+      formattedLogs.push('No logs found');
+      setSyncLogs(formattedLogs);
+      return response.status;
+    }
+    console.log(response);
+    response.logs.forEach((log: string) => {
+      log = removeEscapeSequences(log);
+      const pattern1 = /\)[:;]\d+ -/;
+      const pattern2 = /\)[:;]\d+/;
+      let match = log.match(pattern1);
+      let index = 0;
+      if (match?.index) {
+        index = match.index + match[0].length;
+      } else {
+        match = log.match(pattern2);
+        if (match?.index) {
+          index = match.index + match[0].length;
+        }
+      }
+      formattedLogs.push(log.slice(index));
+    });
+    setSyncLogs(formattedLogs);
+    return response.status;
+  } catch (err: any) {
+    console.error(err);
+  }
+};
+
+
 const TopNavBar = ({ handleClose }: any) => (
   <Box sx={{ display: 'flex' }}>
     <Box

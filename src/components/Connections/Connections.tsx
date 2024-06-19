@@ -196,42 +196,6 @@ export const Connections = () => {
     return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
   }
 
-  const fetchAirbyteLogs = async (connectionId: string) => {
-    try {
-      const response = await httpGet(
-        session,
-        `airbyte/v1/connections/${connectionId}/jobs`
-      );
-      const formattedLogs: Array<string> = [];
-      if (response.status === 'not found') {
-        formattedLogs.push('No logs found');
-        setSyncLogs(formattedLogs);
-        return response.status;
-      }
-      console.log(response);
-      response.logs.forEach((log: string) => {
-        log = removeEscapeSequences(log);
-        const pattern1 = /\)[:;]\d+ -/;
-        const pattern2 = /\)[:;]\d+/;
-        let match = log.match(pattern1);
-        let index = 0;
-        if (match?.index) {
-          index = match.index + match[0].length;
-        } else {
-          match = log.match(pattern2);
-          if (match?.index) {
-            index = match.index + match[0].length;
-          }
-        }
-        formattedLogs.push(log.slice(index));
-      });
-      setSyncLogs(formattedLogs);
-      return response.status;
-    } catch (err: any) {
-      console.error(err);
-    }
-  };
-
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
       const flowRun: PrefectFlowRun = await httpGet(
@@ -531,8 +495,8 @@ export const Connections = () => {
             }}
             onClick={() => {
               setShowLogsDialog(true);
-              fetchAirbyteLogs(connection.connectionId);
-              // setExpandSyncLogs(true);
+
+              setExpandSyncLogs(true);
             }}
           >
             Fetch Logs
