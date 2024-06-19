@@ -1,6 +1,7 @@
 import { Box, Divider, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import Image from 'next/image';
 import EditIcon from '@/assets/icons/edit.svg';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteIcon from '@/assets/icons/delete.svg';
 
@@ -17,6 +18,7 @@ interface MenuProps {
     | 'transformtask';
   handleClose: () => void;
   handleEdit?: () => void;
+  handleRefresh?: () => void;
   handleDelete?: () => void;
   handleResetConnection?: () => void;
   handleResendInvitation?: () => void;
@@ -32,6 +34,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   eleType,
   handleClose,
   handleEdit,
+  handleRefresh,
   handleDelete,
   handleResetConnection,
   handleResendInvitation,
@@ -70,6 +73,19 @@ export const ActionsMenu: React.FC<MenuProps> = ({
           <Image src={EditIcon} alt="edit icon" />
         </ListItemIcon>
         Edit
+      </MenuItem>
+    )}
+    <Divider style={{ margin: 0 }} />
+    {handleRefresh && (
+      <MenuItem
+        sx={{ my: 0 }}
+        onClick={() => handleRefresh()}
+        disabled={!hasEditPermission}
+      >
+        <ListItemIcon style={{ minWidth: 28 }}>
+          <RefreshIcon sx={{ width: 14 }} />
+        </ListItemIcon>
+        Refresh schema
       </MenuItem>
     )}
     {handleResendInvitation && (
