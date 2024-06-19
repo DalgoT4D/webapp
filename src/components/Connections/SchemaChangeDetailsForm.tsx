@@ -78,16 +78,10 @@ const SchemaChangeDetailsForm = ({
   const toastContext = useContext(GlobalContext);
 
   const checkProgress = async function (
-    taskId: string,
-    hashKeyPrefix: string
+    taskId: string
   ): Promise<[boolean, any]> {
     try {
-      const orgSlug = toastContext?.CurrentOrg.state.slug;
-      const hashKey = `${hashKeyPrefix}-${orgSlug}`;
-      const message = await httpGet(
-        session,
-        `tasks/${taskId}?hashkey=${hashKey}`
-      );
+      const message = await httpGet(session, `tasks/stp/${taskId}`);
       await delay(3000);
       setProgressMessages(message['progress']);
       const lastMessage = message['progress'][message['progress'].length - 1];
@@ -101,7 +95,7 @@ const SchemaChangeDetailsForm = ({
         return [false, null];
       } else {
         await delay(2000);
-        return await checkProgress(taskId, hashKeyPrefix);
+        return await checkProgress(taskId);
       }
     } catch (err: any) {
       console.error(err);
@@ -120,17 +114,13 @@ const SchemaChangeDetailsForm = ({
             `airbyte/v1/connections/${connectionId}/catalog`
           );
           await delay(3000);
-          const [isSuccessful, result] = await checkProgress(
-            data.task_id,
-            'schema-change'
-          );
+          const [isSuccessful, result] = await checkProgress(data.task_id);
           if (isSuccessful && result) {
             setCatalogId(result.catalogId || '');
             setValue('name', result.name || '');
             setSyncCatalog(result.syncCatalog?.streams || {});
 
             const catalogDiffData = result.catalogDiff?.transforms || [];
-            console.log(catalogDiffData, 'catalog');
 
             const newData = catalogDiffData.map((transform: any) => {
               const tableName = transform.streamDescriptor.name;
@@ -206,7 +196,6 @@ const SchemaChangeDetailsForm = ({
   };
 
   const onSubmit = async (data: any) => {
-    console.log(data, 'data');
     const payload: any = {
       sourceCatalogId: catalogId,
       name: data.name,
@@ -294,11 +283,13 @@ const SchemaChangeDetailsForm = ({
         }))
     );
 
+    const pluralizeTable = tableCount === 1 ? 'table' : 'tables';
+
     return (
       <>
         <Box>
           <Typography variant="h5" gutterBottom>
-            {tableCount} tables with changes
+            {tableCount} {pluralizeTable} with changes
           </Typography>
           {tableCount > 0 ? (
             <Table>
