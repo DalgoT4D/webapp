@@ -9,10 +9,8 @@ import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
 export interface SourceConfigInputprops {
   specs: Array<any>;
-  registerFormFieldValue: (...args: any) => any;
   control: any;
   setFormValue: (...args: any) => any;
-  unregisterFormField: (...args: any) => any;
   source?: any;
   lastRenderedSpecRef: any;
 }
