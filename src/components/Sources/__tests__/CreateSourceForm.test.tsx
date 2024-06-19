@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import CreateSourceForm from '../CreateSourceForm';
+import CreateSourceForm from '../SourceForm';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -25,6 +25,9 @@ describe('Connections Setup', () => {
   const createSourceForm = () => (
     <SessionProvider session={mockSession}>
       <CreateSourceForm
+        sourceId=""
+        loading={false}
+        setLoading={jest.fn()}
         mutate={jest.fn()}
         showForm
         sourceDefs={[
@@ -116,6 +119,7 @@ describe('Connections Setup', () => {
     await user.click(savebutton);
 
     await waitFor(() => {
+      screen.debug(document, Infinity);
       expect(createSourceSubmit).toHaveBeenCalled();
     });
 

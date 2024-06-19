@@ -122,7 +122,7 @@ class ConnectorConfigInput {
       if (exclude[0] in data?.properties) {
         dropdownEnums.push(
           data?.properties[exclude[0]]?.const ||
-          data?.properties[exclude[0]]?.enum[0]
+            data?.properties[exclude[0]]?.enum[0]
         );
       }
     }
@@ -271,8 +271,6 @@ class ConnectorConfigInput {
     dropDownVal: string,
     field: string,
     currenRenderedSpecs: Array<ConnectorSpec>
-    // unregisterFormFieldCallback: (...args: any) => any
-    // registerFormFieldCallback: (...args: any) => any
   ) {
     // Fetch the current selected spec of type object based on selection
     const selectedSpec: ConnectorSpec | undefined = currenRenderedSpecs.find(
@@ -288,7 +286,11 @@ class ConnectorConfigInput {
           // Check if the child has another level or not
           if (ele.specs && ele.enum && ele.enum.length === 0) {
             ele.specs.forEach((childEle: ConnectorSpec) => {
-              filteredChildSpecs.push({ ...childEle, parent: childEle?.parent ? childEle.parent : ele.parent, order: ele.order });
+              filteredChildSpecs.push({
+                ...childEle,
+                parent: childEle?.parent ? childEle.parent : ele.parent,
+                order: ele.order,
+              });
             });
           } else {
             filteredChildSpecs.push(ele);
@@ -296,11 +298,6 @@ class ConnectorConfigInput {
         }
       });
     }
-
-    // Set the order of child specs to be displayed at correct position
-    // filteredChildSpecs.forEach((ele: ConnectorSpec) => {
-    //   ele.order = selectedSpec?.order || -1;
-    // });
 
     // Find the specs that will have parent in the following enum array
     const enumsToRemove =
@@ -314,14 +311,6 @@ class ConnectorConfigInput {
         (sp: ConnectorSpec) => !sp.parent || !enumsToRemove.includes(sp.parent)
       )
       .concat(filteredChildSpecs);
-
-    // Unregister the form fields that have parent in enumsToRemove
-    // currenRenderedSpecs.forEach((sp: ConnectorSpec) => {
-    //   if (sp.parent && enumsToRemove.includes(sp.parent)) {
-    //     console.log('unregisterin', sp);
-    //     unregisterFormFieldCallback(sp.field);
-    //   }
-    // });
 
     return tempSpecs;
   }

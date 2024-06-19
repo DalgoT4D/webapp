@@ -5,8 +5,7 @@ import { List } from '../List/List';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useSession } from 'next-auth/react';
 import { httpDelete, httpGet } from '@/helpers/http';
-import CreateSourceForm from './CreateSourceForm';
-import EditSourceForm from './EditSourceForm';
+import SourceForm from './SourceForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import connectionIcon from '@/assets/icons/connection.svg';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -35,6 +34,7 @@ type AutoCompleteOption = {
   id: string;
   label: string;
   dockerRepository: string;
+  dockerImageTag: string;
   tag: string;
 };
 
@@ -45,10 +45,8 @@ export const Sources = () => {
   const [sourceDefs, setSourceDefs] = useState<Array<AutoCompleteOption>>([]);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/sources`);
-  const [showCreateSourceDialog, setShowCreateSourceDialog] =
-    useState<boolean>(false);
-  const [showEditSourceDialog, setShowEditSourceDialog] =
-    useState<boolean>(false);
+
+  const [showSourceDialog, setShowSourceDialog] = useState<boolean>(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [sourceIdToEdit, setSourceIdToEdit] = useState<string>('');
@@ -59,7 +57,7 @@ export const Sources = () => {
   const permissions = globalContext?.Permissions.state || [];
   const handleEditSource = () => {
     handleClose();
-    setShowEditSourceDialog(true);
+    setShowSourceDialog(true);
   };
 
   const open = Boolean(anchorEl);
@@ -134,7 +132,7 @@ export const Sources = () => {
   }, [data, sourceDefs]);
 
   const handleClickOpen = () => {
-    setShowCreateSourceDialog(true);
+    setShowSourceDialog(true);
   };
 
   const handleDeleteSource = () => {
@@ -179,6 +177,7 @@ export const Sources = () => {
             label: element.name,
             id: element.sourceDefinitionId,
             dockerRepository: element.dockerRepository,
+            dockerImageTag: element.dockerImageTag,
             tag: element?.dockerImageTag,
           } as AutoCompleteOption;
         }
@@ -211,24 +210,23 @@ export const Sources = () => {
         handleEdit={handleEditSource}
         handleDelete={handleDeleteSource}
       />
-      <CreateSourceForm
-        mutate={mutate}
-        sourceDefs={sourceDefs}
-        showForm={showCreateSourceDialog}
-        setShowForm={setShowCreateSourceDialog}
-      />
-      <EditSourceForm
+
+      <SourceForm
         mutate={mutate}
         loading={loading}
         setLoading={setLoading}
         sourceDefs={sourceDefs}
-        showForm={showEditSourceDialog}
-        setShowForm={setShowEditSourceDialog}
+        showForm={showSourceDialog}
+        setShowForm={setShowSourceDialog}
         sourceId={sourceIdToEdit}
       />
       <List
         hasCreatePermission={permissions.includes('can_create_source')}
-        openDialog={handleClickOpen}
+        openDialog={() => {
+          setSourceIdToEdit('');
+          setSourceToBeDeleted(null);
+          handleClickOpen();
+        }}
         title="Source"
         headers={headers}
         rows={rows}
