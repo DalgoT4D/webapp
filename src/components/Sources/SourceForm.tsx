@@ -84,7 +84,6 @@ const SourceForm = ({
     setLogs([]);
   };
 
-  console.log(loading);
   useEffect(() => {
     if (showForm && sourceId && sourceDefs.length > 0) {
       setLoading(true);
