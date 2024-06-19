@@ -98,7 +98,7 @@ const FlowCreate = ({
       name: '',
       connections: [],
       cron: null,
-      tasks: tasks.filter((task) => task.generated_by === 'system'),
+      tasks: [],
       cronDaysOfWeek: [],
       cronTimeOfDay: '',
     },
@@ -110,10 +110,7 @@ const FlowCreate = ({
     newAlignment: string
   ) => {
     if (newAlignment === 'simple') {
-      setValue(
-        'tasks',
-        tasks.filter((task) => task.generated_by === 'system')
-      );
+      setValue('tasks', []);
     }
     setAlignment(newAlignment);
   };
