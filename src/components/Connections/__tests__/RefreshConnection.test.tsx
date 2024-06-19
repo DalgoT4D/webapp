@@ -15,7 +15,7 @@ jest.mock('next/router', () => ({
   },
 }));
 
-describe('Reset connection suite', () => {
+describe('Refresh connection', () => {
   const mockSession: Session = {
     expires: '1',
     user: { email: 'a', name: 'Delta', image: 'c' },
@@ -51,7 +51,7 @@ describe('Reset connection suite', () => {
 
   beforeEach(() => {});
 
-  it('reset connection', async () => {
+  it('refresh connection', async () => {
     (global as any).fetch = jest
       .fn()
       .mockResolvedValueOnce({
@@ -94,35 +94,35 @@ describe('Reset connection suite', () => {
 
     // will open the confirmation dialogue
     const actionMenuItems = screen.getAllByRole('menuitem');
-    const deleteAction = actionMenuItems[3];
-    await act(() => deleteAction.click());
+    const refreshAction = actionMenuItems[2];
+    await act(() => refreshAction.click());
 
     const confirmButton = screen.getByTestId('confirmbutton');
 
-    // Mock the delete api call success
-    const resetConnSuccess = jest.fn().mockResolvedValueOnce({
+    // Mock the refresh api call success
+    const refreshConnSuccess = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce({
         success: 1,
       }),
     });
-    (global as any).fetch = resetConnSuccess;
+    (global as any).fetch = refreshConnSuccess;
 
     await act(() => confirmButton.click());
 
-    expect(resetConnSuccess).toHaveBeenCalled();
+    expect(refreshConnSuccess).toHaveBeenCalled();
 
-    // Mock the delete api call failure
-    const resetConnFailure = jest.fn().mockResolvedValueOnce({
+    // Mock the refresh api call failure
+    const refreshConnFailure = jest.fn().mockResolvedValueOnce({
       ok: false,
       json: jest.fn().mockResolvedValueOnce({
         detail: 'something went wrong',
       }),
     });
-    (global as any).fetch = resetConnFailure;
+    (global as any).fetch = refreshConnFailure;
 
     await act(() => confirmButton.click());
 
-    expect(resetConnFailure).toHaveBeenCalled();
+    expect(refreshConnFailure).toHaveBeenCalled();
   });
 });
