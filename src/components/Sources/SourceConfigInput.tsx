@@ -12,7 +12,6 @@ export interface SourceConfigInputprops {
   control: any;
   setFormValue: (...args: any) => any;
   source?: any;
-  lastRenderedSpecRef: any;
 }
 
 export type SourceSpec = {
@@ -35,7 +34,6 @@ export const SourceConfigInput = ({
   control,
   setFormValue,
   source,
-  lastRenderedSpecRef,
 }: SourceConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<SourceSpec>>([]);
 
@@ -61,7 +59,6 @@ export const SourceConfigInput = ({
     );
 
     setConnectorSpecs(tempSpecs);
-    lastRenderedSpecRef.current = tempSpecs;
   };
 
   useEffect(() => {
