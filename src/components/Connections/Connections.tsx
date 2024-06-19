@@ -635,10 +635,34 @@ export const Connections = () => {
         session,
         `airbyte/v1/connections/${connectionId}/catalog`
       );
-      if (response.success) {
-        successToast('Connection refreshed successfully', [], globalContext);
-        mutate(); // Update the connection data
-      }
+      const checkRefresh = async function () {
+        const refreshResponse = await httpGet(
+          session,
+          'tasks/stp/' + response.task_id
+        );
+        if (refreshResponse.progress && refreshResponse.progress.length > 0) {
+          const lastStatus =
+            refreshResponse.progress[refreshResponse.progress.length - 1]
+              .status;
+          // running | failed | completed
+          if (lastStatus === 'failed') {
+            errorToast('Failed to refresh connection', [], globalContext);
+            return;
+          } else if (lastStatus === 'completed') {
+            successToast(
+              'Connection refreshed successfully',
+              [],
+              globalContext
+            );
+            mutate();
+            return;
+          }
+        }
+        // else poll again
+        await delay(2000);
+        await checkRefresh();
+      };
+      await checkRefresh();
     } catch (err: any) {
       console.error(err);
       errorToast('Failed to refresh connection', [], globalContext);
