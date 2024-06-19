@@ -10,7 +10,7 @@ import { SourceConfigInput } from './SourceConfigInput';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
-interface EditSourceFormProps {
+interface SourceFormProps {
   mutate: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
@@ -30,30 +30,19 @@ interface SourceApiResponse {
   workspaceId: string;
 }
 
-interface SourceDefinitionsApiResponse {
-  sourceDefinitionId: string;
-  name: string;
-  sourceType: string;
-  releaseStage: string;
-  protocolVersion: string;
-  maxSecondsBetweenMessages: number;
-  documentationUrl: string;
-  dockerRepository: string;
-  dockerImageTag: string;
-}
-
 type AutoCompleteOption = {
   id: string;
   label: string;
+  dockerImageTag: string;
 };
 
-type EditSourceFormInput = {
+type SourceFormInput = {
   name: string;
   sourceDef: null | AutoCompleteOption;
   config: object;
 };
 
-const EditSourceForm = ({
+const SourceForm = ({
   mutate,
   showForm,
   setShowForm,
@@ -61,7 +50,7 @@ const EditSourceForm = ({
   loading,
   setLoading,
   sourceDefs,
-}: EditSourceFormProps) => {
+}: SourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
   const {
@@ -73,8 +62,7 @@ const EditSourceForm = ({
     setValue,
     unregister,
     getValues,
-    formState: { errors },
-  } = useForm<EditSourceFormInput>({
+  } = useForm<SourceFormInput>({
     defaultValues: {
       name: '',
       sourceDef: null,
@@ -92,11 +80,11 @@ const EditSourceForm = ({
     reset();
     setShowForm(false);
     setSource(null);
-
     setSourceDefSpecs([]);
     setLogs([]);
   };
 
+  console.log(loading);
   useEffect(() => {
     if (showForm && sourceId && sourceDefs.length > 0) {
       setLoading(true);
@@ -125,29 +113,6 @@ const EditSourceForm = ({
     setLoading(false);
   }, [sourceDefs, showForm]);
 
-  // const fetchSourceDefinitions = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const data: Array<SourceDefinitionsApiResponse> = await httpGet(
-  //       session,
-  //       'airbyte/source_definitions'
-  //     );
-  //     const sourceDefRows: AutoCompleteOption[] = data?.map(
-  //       (element: SourceDefinitionsApiResponse) => {
-  //         return {
-  //           label: element.name,
-  //           id: element.sourceDefinitionId,
-  //         } as AutoCompleteOption;
-  //       }
-  //     );
-  //     setSourceDefs(sourceDefRows);
-  //   } catch (err: any) {
-  //     console.error(err);
-  //     errorToast(err.message, [], globalContext);
-  //   }
-  //   setLoading(false);
-  // };
-
   useEffect(() => {
     if (watchSelectedSourceDef?.id) {
       (async () => {
@@ -164,21 +129,27 @@ const EditSourceForm = ({
           connectorConfigInput.setOrderToChildProperties();
 
           // Prefill the source config
-          ConnectorConfigInput.prefillFormFields(
-            source.connectionConfiguration,
-            'config',
-            setValue
-          );
+          if (sourceId) {
+            ConnectorConfigInput.prefillFormFields(
+              source.connectionConfiguration,
+              'config',
+              setValue
+            );
+          }
 
           // Prepare the specs config before setting it
-          connectorConfigInput.prepareSpecsToRender();
+          let specsConfigFields = connectorConfigInput.prepareSpecsToRender();
 
-          const specsConfigFields: any =
-            connectorConfigInput.updateSpecsToRender(
+          if (sourceId) {
+            specsConfigFields = connectorConfigInput.updateSpecsToRender(
               source.connectionConfiguration
             );
+          }
 
           setSourceDefSpecs(specsConfigFields);
+          specsConfigFields.forEach((spec: any) =>
+            setValue(spec.field, spec.default)
+          );
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
@@ -186,6 +157,22 @@ const EditSourceForm = ({
       })();
     }
   }, [watchSelectedSourceDef]);
+
+  const createSource = async (data: any) => {
+    try {
+      await httpPost(session, 'airbyte/sources/', {
+        name: data.name,
+        sourceDefId: data.sourceDef.id,
+        config: data.config,
+      });
+      mutate();
+      handleClose();
+      successToast('Source added', [], globalContext);
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+  };
 
   const editSource = async (data: any) => {
     try {
@@ -207,17 +194,23 @@ const EditSourceForm = ({
     setLoading(true);
     setLogs([]);
     try {
-      const checkResponse = await httpPost(
-        session,
-        `airbyte/sources/${sourceId}/check_connection_for_update/`,
-        {
-          name: data.name,
-          sourceDefId: data.sourceDef.id,
-          config: data.config,
-        }
-      );
+      let url = `airbyte/sources/check_connection/`;
+      if (sourceId) {
+        url = `airbyte/sources/${sourceId}/check_connection_for_update/`;
+      }
+      const checkResponse = await httpPost(session, url, {
+        name: data.name,
+        sourceDefId: data.sourceDef.id,
+        config: data.config,
+      });
+
       if (checkResponse.status === 'succeeded') {
-        await editSource(data);
+        if (sourceId) {
+          await editSource(data);
+        } else {
+          await createSource(data);
+        }
+
         setLoading(false);
       } else {
         setLogs(checkResponse.logs);
@@ -249,12 +242,14 @@ const EditSourceForm = ({
             name="name"
             control={control}
             rules={{ required: 'Name is required' }}
-            render={({ field }) => (
+            render={({ field: { ref, ...rest }, fieldState }) => (
               <Input
-                {...field}
+                {...rest}
                 sx={{ width: '100%' }}
                 label="Name*"
                 variant="outlined"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
               ></Input>
             )}
           />
@@ -264,14 +259,18 @@ const EditSourceForm = ({
               name="sourceDef"
               control={control}
               rules={{ required: 'Source type is required' }}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <Autocomplete
-                  disabled={true}
+                  disabled={!!sourceId}
                   id="sourceDef"
+                  data-testid="autocomplete"
                   value={field.value}
+                  getOptionLabel={(option) =>
+                    `${option.label} (v${option.dockerImageTag})`
+                  }
                   renderOption={(props, option) => (
                     <li {...props} key={option.id}>
-                      {option.label}
+                      {`${option.label} (v${option.dockerImageTag})`}
                     </li>
                   )}
                   options={sourceDefs}
@@ -281,8 +280,8 @@ const EditSourceForm = ({
                       <Input
                         name="sourceDef"
                         {...params}
-                        error={!!errors.sourceDef}
-                        helperText={errors.sourceDef?.message}
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
                         label="Select source type"
                         variant="outlined"
                       />
@@ -293,7 +292,6 @@ const EditSourceForm = ({
             />
             <Box sx={{ m: 2 }} />
             <SourceConfigInput
-              errors={errors}
               specs={sourceDefSpecs}
               registerFormFieldValue={register}
               control={control}
@@ -309,7 +307,7 @@ const EditSourceForm = ({
   };
   return (
     <CustomDialog
-      title={'Edit source'}
+      title={sourceId ? 'Edit source' : 'Add a new source'}
       show={showForm}
       handleClose={handleClose}
       handleSubmit={handleSubmit(onSubmit)}
@@ -337,9 +335,9 @@ const EditSourceForm = ({
           )}
         </Box>
       }
-      loading={loading || !source}
+      loading={loading}
     />
   );
 };
 
-export default EditSourceForm;
+export default SourceForm;
