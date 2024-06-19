@@ -143,12 +143,13 @@ const SourceForm = ({
             specsConfigFields = connectorConfigInput.updateSpecsToRender(
               source.connectionConfiguration
             );
+          } else {
+            specsConfigFields.forEach((spec: any) =>
+              setValue(spec.field, spec.default)
+            );
           }
 
           setSourceDefSpecs(specsConfigFields);
-          specsConfigFields.forEach((spec: any) =>
-            setValue(spec.field, spec.default)
-          );
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
