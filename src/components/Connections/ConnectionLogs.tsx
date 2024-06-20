@@ -231,8 +231,6 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
     })();
   }, []);
 
-  console.log(showLoadMore);
-
   return (
     <Dialog
       sx={{
@@ -294,44 +292,46 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
               ))}
             </TableBody>
           </Table>
-          {showLoadMore && (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '12px',
-                  mt: 1,
-                }}
-                onClick={async () => {
-                  if (connection) {
-                    const response: LogObject[] = await fetchAirbyteLogs(
-                      connection.connectionId,
-                      session,
-                      offset
-                    );
-                    if (response) {
-                      setLogDetails((logs) => [...logs, ...response]);
-                      setOffset((offset) => offset + 1);
-                    }
-                    if (response.length < limit) {
-                      setShowLoadMore(false);
-                    }
-                  }
-                }}
-              >
-                load more <DownIcon />
-              </Box>
-            </Box>
-          )}
+          {logDetails.length > 0
+            ? showLoadMore && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '12px',
+                      mt: 1,
+                    }}
+                    onClick={async () => {
+                      if (connection) {
+                        const response: LogObject[] = await fetchAirbyteLogs(
+                          connection.connectionId,
+                          session,
+                          offset
+                        );
+                        if (response) {
+                          setLogDetails((logs) => [...logs, ...response]);
+                          setOffset((offset) => offset + 1);
+                        }
+                        if (response.length < limit) {
+                          setShowLoadMore(false);
+                        }
+                      }
+                    }}
+                  >
+                    load more <DownIcon />
+                  </Box>
+                </Box>
+              )
+            : 'No information available'}
         </Box>
       </Box>
     </Dialog>
