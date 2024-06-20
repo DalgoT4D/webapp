@@ -41,7 +41,9 @@ export const StringInsights: React.FC<StringInsightsProps> = ({
 
       {chartType === 'stats' &&
         (statsData.minimum === statsData.maximum ? (
-          'All entries in this column are identical in length'
+          <Box width={700}>
+            All entries in this column are identical in length
+          </Box>
         ) : (
           <Box>
             <StatsChart data={statsData} />

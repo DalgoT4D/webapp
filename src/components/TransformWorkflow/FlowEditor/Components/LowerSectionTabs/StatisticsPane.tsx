@@ -251,6 +251,12 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
               );
             case 'String':
               const chartData = distribution.charts[0].data;
+              if (distribution.count === distribution.countNull) {
+                return <Box>All values are null</Box>;
+              }
+              if (distribution.count === distribution.countDistinct) {
+                return <Box>All values are distinct</Box>;
+              }
               return (
                 <StringInsights
                   data={chartData.map((data: any) => ({
