@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import Image from 'next/image';
 import switchIcon from '@/assets/icons/switch-chart.svg';
 import { DataProps, StatsChart } from './StatsChart';
@@ -31,27 +31,45 @@ export const NumberInsights: React.FC<NumberInsightsProps> = ({
         )
       ) : (
         <Box sx={{ minWidth: '700px', display: 'flex', alignItems: 'center' }}>
-          {(Object.keys(data) as Array<keyof DataProps>).map((key) => (
-            <Box key={key} sx={{ mr: '50px' }}>
-              <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </Box>
-              <Box
-                sx={{
-                  mt: 1,
-                  width: '84px',
-                  background: '#F5FAFA',
-                  height: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <Box sx={{ ml: 1 }}>
-                  {Math.trunc(data[key]).toLocaleString()}
+          {(Object.keys(data) as Array<keyof DataProps>)
+            .filter((key) => key !== 'otherModes')
+            .map((key) => (
+              <Box key={key} sx={{ mr: '50px' }}>
+                <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>
+                  {key.charAt(0).toUpperCase() + key.slice(1)}
+                </Box>
+                <Box
+                  sx={{
+                    mt: 1,
+                    width: '84px',
+                    background: '#F5FAFA',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Box sx={{ ml: 1 }}>
+                    {data[key] ? (
+                      key === 'mode' &&
+                      data.otherModes &&
+                      data.otherModes.length > 1 ? (
+                        <Tooltip
+                          title={`Other modes: ${data.otherModes?.join(', ')}`}
+                        >
+                          <span>
+                            {Math.trunc(data[key] as number).toLocaleString()}
+                          </span>
+                        </Tooltip>
+                      ) : (
+                        Math.trunc(data[key] as number).toLocaleString()
+                      )
+                    ) : (
+                      'NA'
+                    )}
+                  </Box>
                 </Box>
               </Box>
-            </Box>
-          ))}
+            ))}
         </Box>
       )}
       <Image

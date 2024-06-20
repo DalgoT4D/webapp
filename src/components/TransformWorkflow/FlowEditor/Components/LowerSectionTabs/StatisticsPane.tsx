@@ -244,6 +244,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                     mean: distribution.mean,
                     median: distribution.median,
                     mode: distribution.mode,
+                    otherModes: distribution.other_modes,
                   }}
                 />
               ) : (
@@ -273,6 +274,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                     mean: distribution.mean,
                     median: distribution.median,
                     mode: distribution.mode,
+                    otherModes: distribution.other_modes,
                   }}
                 />
               );
