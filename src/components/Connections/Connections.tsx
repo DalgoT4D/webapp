@@ -9,7 +9,6 @@ import {
 } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
-
 import SyncIcon from '@/assets/icons/sync.svg';
 import LockIcon from '@mui/icons-material/Lock';
 import LoopIcon from '@mui/icons-material/Loop';
@@ -39,6 +38,7 @@ import {
   useConnSyncLogsUpdate,
 } from '@/contexts/ConnectionSyncLogsContext';
 import { ConnectionLogs } from './ConnectionLogs';
+import PendingActionsAccordion from './PendingActions';
 
 type PrefectFlowRun = {
   id: string;
@@ -183,12 +183,14 @@ export const Connections = () => {
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [showConfirmResetDialog, setShowConfirmResetDialog] =
     useState<boolean>(false);
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
 
@@ -588,8 +590,52 @@ export const Connections = () => {
     setShowDialog(true);
   };
 
+  const RefreshConnection = async () => {
+    handleClose();
+    setIsRefreshing(true); // Set loading state to true
+    try {
+      const response = await httpGet(
+        session,
+        `airbyte/v1/connections/${connectionId}/catalog`
+      );
+      const checkRefresh = async function () {
+        const refreshResponse = await httpGet(
+          session,
+          'tasks/stp/' + response.task_id
+        );
+        if (refreshResponse.progress && refreshResponse.progress.length > 0) {
+          const lastStatus =
+            refreshResponse.progress[refreshResponse.progress.length - 1]
+              .status;
+          // running | failed | completed
+          if (lastStatus === 'failed') {
+            errorToast('Failed to refresh connection', [], globalContext);
+            return;
+          } else if (lastStatus === 'completed') {
+            successToast(
+              'Connection refreshed successfully',
+              [],
+              globalContext
+            );
+            mutate();
+            return;
+          }
+        }
+        // else poll again
+        await delay(2000);
+        await checkRefresh();
+      };
+      await checkRefresh();
+    } catch (err: any) {
+      console.error(err);
+      errorToast('Failed to refresh connection', [], globalContext);
+    } finally {
+      setIsRefreshing(false); // Set loading state to false
+    }
+  };
+
   // show load progress indicator
-  if (isLoading) {
+  if (isLoading || isRefreshing) {
     return <CircularProgress />;
   }
 
@@ -601,12 +647,14 @@ export const Connections = () => {
           connection={logsConnection}
         />
       )}
+      <PendingActionsAccordion />
       <ActionsMenu
         eleType="connection"
         anchorEl={anchorEl}
         open={open}
         handleClose={handleClose}
         handleEdit={handleEditConnection}
+        handleRefresh={RefreshConnection}
         handleDelete={handleDeleteConnection}
         handleResetConnection={handleResetConnection}
         hasResetPermission={permissions.includes('can_reset_connection')}
