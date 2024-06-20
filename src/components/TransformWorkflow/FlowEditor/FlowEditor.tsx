@@ -31,6 +31,7 @@ import { delay } from '@/utils/common';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import { LogsPane } from './Components/LowerSectionTabs/LogsPane';
 import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
+import { showDataInsightsTab } from '@/config/constant';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
@@ -156,7 +157,10 @@ const LowerSection = ({
         >
           <Tab label="Preview" value="preview" />
           <Tab label="Logs" value="logs" />
-          <Tab label="Data statistics" value="statistics" />
+
+          {showDataInsightsTab && (
+            <Tab label="Data statistics" value="statistics" />
+          )}
         </Tabs>
         <IconButton sx={{ ml: 'auto' }} onClick={setFullScreen}>
           <OpenInFull />
