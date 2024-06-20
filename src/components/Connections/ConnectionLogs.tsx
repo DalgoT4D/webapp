@@ -172,7 +172,11 @@ const Row = ({ logDetail }: { logDetail: LogObject }) => {
                 index = match.index + match[0].length;
               }
             }
-            return <Box sx={{ mb: 2 }}>{log.slice(index)}</Box>;
+            return (
+              <Box key={index} sx={{ mb: 2 }}>
+                {log.slice(index)}
+              </Box>
+            );
           })}
         </Box>
       </TableCell>
