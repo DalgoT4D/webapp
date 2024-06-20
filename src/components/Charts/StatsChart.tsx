@@ -6,7 +6,8 @@ export interface DataProps {
   maximum: number;
   mean: number;
   median: number;
-  mode: number;
+  mode: number | null;
+  otherModes: null | number[];
 }
 
 interface StatsChartProps {
@@ -44,7 +45,10 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
       .range([0, width]);
 
     // Calculate positions
-    const values = [data.mean, data.median, data.mode];
+    const values = [data.mean, data.median];
+    if (data.mode) {
+      values.push(data.mode);
+    }
     const minCentral = Math.min(...values);
     const maxCentral = Math.max(...values);
 
@@ -100,12 +104,56 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
         .attr('stroke-width', '2');
     };
 
+    const tooltip = d3
+      .select('body')
+      .append('div')
+      .attr('class', 'tooltip')
+      .style('position', 'absolute')
+      .style('text-align', 'center')
+      .style('width', '150px')
+      .style('padding', '2px')
+      .style('z-index', '2000')
+      .style('font', '12px sans-serif')
+      .style('background', 'white')
+      .style('border', '1px solid black')
+      .style('border-radius', '8px')
+      .style('pointer-events', 'none')
+      .style('opacity', 0);
+
     // Add markers for all positions
     addMarker(data.minimum, 'Min');
     addMarker(data.maximum, 'Max');
     addMarker(data.mean, 'Mean', false, 1.1);
     addMarker(data.median, 'Median', true, 5);
-    addMarker(data.mode, 'Mode', false, 0.8);
+    if (data.mode) {
+      svg
+        .append('text')
+        .attr('x', xScale(data.mode))
+        .attr('y', height / 0.8)
+        .attr('text-anchor', 'middle')
+        .text('Mode' + ': ' + Math.trunc(data.mode).toLocaleString())
+        .on('mouseover', (event) => {
+          if (data.otherModes && data.otherModes.length > 0) {
+            tooltip.transition().duration(200).style('opacity', 0.9);
+            tooltip
+              .html(`Other modes: ${data.otherModes?.join(', ')}`)
+              .style('left', event.pageX + 5 + 'px')
+              .style('top', event.pageY - 28 + 'px');
+          }
+        })
+        .on('mouseout', () => {
+          tooltip.transition().duration(500).style('opacity', 0);
+        });
+
+      svg
+        .append('line')
+        .attr('x1', xScale(data.mode))
+        .attr('x2', xScale(data.mode))
+        .attr('y1', height / 2 - 5)
+        .attr('y2', height / 2 + 5)
+        .attr('stroke', 'black')
+        .attr('stroke-width', '2');
+    }
   };
 
   return <div ref={ref}></div>;
