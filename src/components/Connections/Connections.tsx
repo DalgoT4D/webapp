@@ -160,6 +160,7 @@ export const Connections = () => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const [connectionId, setConnectionId] = useState<string>('');
+  const [logsConnection, setLogsConnection] = useState<Connection>();
   const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<
     Array<string>
@@ -190,11 +191,6 @@ export const Connections = () => {
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
-
-  function removeEscapeSequences(log: string) {
-    // This regular expression matches typical ANSI escape codes
-    return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
-  }
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -495,8 +491,7 @@ export const Connections = () => {
             }}
             onClick={() => {
               setShowLogsDialog(true);
-
-              setExpandSyncLogs(true);
+              setLogsConnection(connection);
             }}
           >
             Fetch Logs
@@ -601,7 +596,10 @@ export const Connections = () => {
   return (
     <>
       {showLogsDialog && (
-        <ConnectionLogs setShowLogsDialog={setShowLogsDialog} />
+        <ConnectionLogs
+          setShowLogsDialog={setShowLogsDialog}
+          connection={logsConnection}
+        />
       )}
       <ActionsMenu
         eleType="connection"
