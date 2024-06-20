@@ -194,11 +194,12 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  color: '#9d1313',
                   minHeight: '100px',
                 }}
               >
-                <ErrorOutlineIcon sx={{ mr: 1 }} /> Error fetching stats{' '}
+                -- -- -- No data available -- -- --
+                {/* commenting it out for now until we need the try again option */}
+                {/* <ErrorOutlineIcon sx={{ mr: 1 }} /> Error fetching stats{' '}
                 <Button
                   sx={{ ml: 2 }}
                   variant="outlined"
@@ -229,7 +230,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                   }}
                 >
                   Try again
-                </Button>
+                </Button> */}
               </Box>
             );
           }
@@ -320,9 +321,8 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
               );
             default:
               return (
-                <Box sx={{ textAlign: 'center' }}>
-                  {' '}
-                  -- -- -- No data available -- -- --{' '}
+                <Box sx={{ alignItems: 'center', display: 'flex' }}>
+                  -- -- -- No data available -- -- --
                 </Box>
               );
           }
