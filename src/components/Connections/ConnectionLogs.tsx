@@ -15,6 +15,9 @@ import { useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { Connection } from './Connections';
+import DownIcon from '@mui/icons-material/KeyboardArrowDown';
+import UpIcon from '@mui/icons-material/KeyboardArrowUp';
+
 import moment from 'moment';
 
 function removeEscapeSequences(log: string) {
@@ -22,31 +25,18 @@ function removeEscapeSequences(log: string) {
   return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
 }
 
-const fetchAirbyteLogs = async (connectionId: string, session: any) => {
+const fetchAirbyteLogs = async (
+  connectionId: string,
+  session: any,
+  offset = 0
+) => {
   try {
     const response = await httpGet(
       session,
-      `airbyte/v1/connections/${connectionId}/sync/history`
+      `airbyte/v1/connections/${connectionId}/sync/history?limit=${limit}&offset=${offset}`
     );
 
-    return response.history;
-
-    // response.logs.forEach((log: string) => {
-    //   log = removeEscapeSequences(log);
-    //   const pattern1 = /\)[:;]\d+ -/;
-    //   const pattern2 = /\)[:;]\d+/;
-    //   let match = log.match(pattern1);
-    //   let index = 0;
-    //   if (match?.index) {
-    //     index = match.index + match[0].length;
-    //   } else {
-    //     match = log.match(pattern2);
-    //     if (match?.index) {
-    //       index = match.index + match[0].length;
-    //     }
-    //   }
-    //   formattedLogs.push(log.slice(index));
-    // });
+    return response.history || [];
   } catch (err: any) {
     console.error(err);
   }
@@ -132,12 +122,97 @@ interface LogObject {
   totalTimeInSeconds: number;
 }
 
+const limit = 10;
+
+const Row = ({ logDetail }: { logDetail: LogObject }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <TableRow
+      key={logDetail.job_id}
+      sx={{
+        position: 'relative',
+        p: 2,
+
+        background:
+          logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
+      }}
+    >
+      <TableCell
+        sx={{
+          verticalAlign: 'baseline',
+          fontWeight: 600,
+          borderTopLeftRadius: '10px',
+          borderBottomLeftRadius: '10px',
+        }}
+      >
+        {moment(logDetail.date).format('MMMM D, YYYY')}
+      </TableCell>
+      <TableCell sx={{ verticalAlign: 'baseline', fontWeight: 500 }}>
+        <Box
+          sx={{
+            mb: 2,
+            maxWidth: '800px',
+            height: open ? '400px' : '54px',
+            overflow: open ? 'scroll' : 'hidden',
+            wordBreak: 'break-all',
+            transition: 'height 0.5s ease-in-out',
+          }}
+        >
+          {logDetail.logs.map((log: string) => {
+            log = removeEscapeSequences(log);
+            const pattern1 = /\)[:;]\d+ -/;
+            const pattern2 = /\)[:;]\d+/;
+            let match = log.match(pattern1);
+            let index = 0;
+            if (match?.index) {
+              index = match.index + match[0].length;
+            } else {
+              match = log.match(pattern2);
+              if (match?.index) {
+                index = match.index + match[0].length;
+              }
+            }
+            return <Box sx={{ mb: 2 }}>{log.slice(index)}</Box>;
+          })}
+        </Box>
+      </TableCell>
+      <TableCell sx={{ verticalAlign: 'baseline', fontWeight: 500 }}>
+        {logDetail.recordsSynced}
+      </TableCell>
+      <TableCell sx={{ verticalAlign: 'baseline', fontWeight: 500 }}>
+        {logDetail.bytesSynced}
+      </TableCell>
+      <TableCell
+        sx={{
+          verticalAlign: 'baseline',
+          fontWeight: 500,
+          borderTopRightRadius: '10px',
+          borderBottomRightRadius: '10px',
+        }}
+      >
+        {formatDuration(logDetail.totalTimeInSeconds)}
+      </TableCell>
+      <Box
+        sx={{ position: 'absolute', bottom: 0, left: '50%', cursor: 'pointer' }}
+      >
+        {open ? (
+          <UpIcon onClick={() => setOpen(!open)} />
+        ) : (
+          <DownIcon onClick={() => setOpen(!open)} />
+        )}
+      </Box>
+    </TableRow>
+  );
+};
+
 export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
   setShowLogsDialog,
   connection,
 }) => {
   const { data: session }: any = useSession();
   const [logDetails, setLogDetails] = useState<LogObject[]>([]);
+  const [offset, setOffset] = useState(1);
+  const [showLoadMore, setShowLoadMore] = useState(true);
   useEffect(() => {
     (async () => {
       if (connection) {
@@ -148,9 +223,16 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
         if (response) {
           setLogDetails(response);
         }
+
+        if (response.length < limit) {
+          setShowLoadMore(false);
+        }
       }
     })();
   }, []);
+
+  console.log(showLoadMore);
+
   return (
     <Dialog
       sx={{
@@ -168,7 +250,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
     >
       <TopNavBar handleClose={() => setShowLogsDialog(false)} />
       <Box sx={{ p: '0px 28px' }}>
-        <Box>
+        <Box sx={{ mb: 1 }}>
           <Box sx={{ fontSize: '16px', display: 'flex' }}>
             <Typography sx={{ fontWeight: 700 }}>
               {`${connection?.name} |`}
@@ -178,43 +260,78 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
               {connection?.destination.destinationName}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', fontSize: '14px' }}>
-            <Typography sx={{ fontWeight: 600, color: '#7D8998' }}>
-              Scheduled on
-            </Typography>
-            {/* <Typography>{moment(connection?.lastRun)}</Typography> */}
-          </Box>
         </Box>
         <Box>
           <Table>
             <TableHead>
-              <TableRow>
+              <TableRow
+                sx={{
+                  background: '#00897B',
+                  '& > :first-of-type': {
+                    borderTopLeftRadius: '10px',
+                    borderBottomLeftRadius: '10px',
+                  },
+                  '& > :last-of-type': {
+                    borderTopRightRadius: '10px',
+                    borderBottomRightRadius: '10px',
+                  },
+                }}
+              >
                 {columns.map((column) => (
-                  <TableCell key={column}>{column}</TableCell>
+                  <TableCell
+                    sx={{ p: '8px 16px', color: 'white', fontWeight: 700 }}
+                    key={column}
+                  >
+                    {column}
+                  </TableCell>
                 ))}
               </TableRow>
             </TableHead>
 
             <TableBody>
               {logDetails.map((logDetail) => (
-                <TableRow key={logDetail.job_id}>
-                  <TableCell>
-                    {moment(logDetail.date).format('MMMM D, YYYY')}
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ width: '500px' }}>
-                      {logDetail.logs.join('\n')}
-                    </Box>
-                  </TableCell>
-                  <TableCell>{logDetail.recordsSynced}</TableCell>
-                  <TableCell>{logDetail.bytesSynced}</TableCell>
-                  <TableCell>
-                    {formatDuration(logDetail.totalTimeInSeconds)}
-                  </TableCell>
-                </TableRow>
+                <Row key={logDetail.job_id} logDetail={logDetail} />
               ))}
             </TableBody>
           </Table>
+          {showLoadMore && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  mt: 1,
+                }}
+                onClick={async () => {
+                  if (connection) {
+                    const response: LogObject[] = await fetchAirbyteLogs(
+                      connection.connectionId,
+                      session,
+                      offset
+                    );
+                    if (response) {
+                      setLogDetails((logs) => [...logs, ...response]);
+                      setOffset((offset) => offset + 1);
+                    }
+                    if (response.length < limit) {
+                      setShowLoadMore(false);
+                    }
+                  }
+                }}
+              >
+                load more <DownIcon />
+              </Box>
+            </Box>
+          )}
         </Box>
       </Box>
     </Dialog>
