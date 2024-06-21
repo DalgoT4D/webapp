@@ -3,7 +3,7 @@ import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
-import EditDestinationForm from '../EditDestinationForm';
+import EditDestinationForm from '../DestinationForm';
 
 const pushMock = jest.fn();
 
