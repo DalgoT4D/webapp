@@ -2,8 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import useSWR from 'swr';
 import { Box, Button, CircularProgress, Typography, Link } from '@mui/material';
 import { Table, TableBody, TableCell, TableRow } from '@mui/material';
-import CreateDestinationForm from './CreateDestinationForm';
-import EditDestinationForm from './DestinationForm';
+import DestinationForm from './DestinationForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpDelete } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
@@ -189,14 +188,8 @@ export const Destinations = () => {
           Add a new warehouse
         </Button>
       )}
-      {/* {!warehouse && (
-        <CreateDestinationForm
-          showForm={showWarehouseDialog}
-          setShowForm={setShowWarehouseDialog}
-          mutate={mutate}
-        />
-      )} */}
-      <EditDestinationForm
+
+      <DestinationForm
         showForm={showWarehouseDialog}
         setShowForm={setShowWarehouseDialog}
         warehouse={warehouse}
