@@ -15,6 +15,7 @@ import {
 import { useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Image from 'next/image';
+import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
 export function OperationNode(node: OperationNodeType) {
   const globalContext = useContext(GlobalContext);
@@ -23,6 +24,7 @@ export function OperationNode(node: OperationNodeType) {
   const nodeId = useNodeId();
   const { setCanvasAction, canvasAction } = useCanvasAction();
   const { setCanvasNode, canvasNode } = useCanvasNode();
+  const { setPreviewAction } = usePreviewAction();
 
   const edgesGoingIntoNode: Edge[] = edges.filter(
     (edge: Edge) => edge.target === nodeId
@@ -53,6 +55,7 @@ export function OperationNode(node: OperationNodeType) {
 
   const handleSelectNode = () => {
     setCanvasNode(node);
+    setPreviewAction({ type: 'clear-preview', data: null });
     if (permissions.includes('can_edit_dbt_operation'))
       setCanvasAction({
         type: 'open-opconfig-panel',

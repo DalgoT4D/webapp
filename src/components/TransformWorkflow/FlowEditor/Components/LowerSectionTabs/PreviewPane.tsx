@@ -25,7 +25,7 @@ import SyncIcon from '@/assets/icons/sync.svg';
 import styles from '@/styles/Common.module.css';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { httpGet } from '@/helpers/http';
-import { DbtSourceModel } from './Canvas';
+import { DbtSourceModel } from '../Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import Image from 'next/image';
 
@@ -33,7 +33,6 @@ const PreviewPane = ({ height }: { height: number }) => {
   const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
-  // const flowEditorContext = useContext(FlowEditorContext);
   const { previewAction } = usePreviewAction();
 
   const [columns, setColumns] = useState<any[]>([]);
@@ -226,6 +225,7 @@ const PreviewPane = ({ height }: { height: number }) => {
                       sx={{
                         backgroundColor: '#F5FAFA',
                         border: '1px solid #dddddd',
+                        borderLeft: 'unset',
                         padding: '8px',
                         textAlign: 'left',
                         fontWeight: 700,
@@ -259,13 +259,15 @@ const PreviewPane = ({ height }: { height: number }) => {
             <TableBody sx={{ borderColor: '#dddddd' }}>
               {getRowModel().rows.map((row: any) => {
                 return (
-                  <TableRow key={row.id}>
+                  <TableRow key={row.id} sx={{ boxShadow: 'unset' }}>
                     {row.getVisibleCells().map((cell: any) => (
                       <TableCell
                         key={cell.id}
                         sx={{
                           fontWeight: 600,
-                          border: '1px solid #dddddd',
+                          borderBottom: '1px solid #dddddd',
+                          borderRight: '1px solid #dddddd',
+
                           textAlign: 'left',
                           fontSize: '0.8rem',
                         }}
@@ -283,23 +285,32 @@ const PreviewPane = ({ height }: { height: number }) => {
           </Table>
         </Box>
 
-        {
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25, 100]}
-            component="div"
-            count={totalCount}
-            rowsPerPage={pageSize}
-            page={currentPageIndex - 1}
-            onPageChange={(e, newPage) => setCurrentPageIndex(newPage + 1)}
-            onRowsPerPageChange={(e: any) => {
-              setPageSize(e.target.value);
-              setCurrentPageIndex(1);
-            }}
-          />
-        }
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 100]}
+          component="div"
+          count={totalCount}
+          rowsPerPage={pageSize}
+          page={currentPageIndex - 1}
+          onPageChange={(e, newPage) => setCurrentPageIndex(newPage + 1)}
+          onRowsPerPageChange={(e: any) => {
+            setPageSize(e.target.value);
+            setCurrentPageIndex(1);
+          }}
+        />
       </Box>
     </Box>
-  ) : null;
+  ) : (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: height,
+      }}
+    >
+      Select a table to view
+    </Box>
+  );
 };
 
 export default PreviewPane;
