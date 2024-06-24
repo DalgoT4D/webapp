@@ -6,9 +6,9 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { SourceConfigInput } from './SourceConfigInput';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
+import { ConfigInput } from '../ConfigInput/ConfigInput';
 
 interface SourceFormProps {
   mutate: (...args: any) => any;
@@ -274,11 +274,11 @@ const SourceForm = ({
             )}
           />
           <Box sx={{ m: 2 }} />
-          <SourceConfigInput
+          <ConfigInput
             specs={sourceDefSpecs}
             control={control}
             setFormValue={setValue}
-            source={undefined}
+            entity={source}
           />
         </>
       </Box>
