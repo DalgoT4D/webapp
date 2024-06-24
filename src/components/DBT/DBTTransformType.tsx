@@ -30,7 +30,7 @@ import Close from '@mui/icons-material/Close';
 import Logo from '@/assets/images/logo.svg';
 import { TransformType } from '@/pages/pipeline/transform';
 
-const Transition = React.forwardRef(function Transition(
+export const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement;
   },

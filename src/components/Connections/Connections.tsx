@@ -37,6 +37,7 @@ import {
   useConnSyncLogs,
   useConnSyncLogsUpdate,
 } from '@/contexts/ConnectionSyncLogsContext';
+import { ConnectionLogs } from './ConnectionLogs';
 import PendingActionsAccordion from './PendingActions';
 
 type PrefectFlowRun = {
@@ -159,6 +160,7 @@ export const Connections = () => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const [connectionId, setConnectionId] = useState<string>('');
+  const [logsConnection, setLogsConnection] = useState<Connection>();
   const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<
     Array<string>
@@ -166,6 +168,7 @@ export const Connections = () => {
   const syncLogs = useConnSyncLogs();
   const setSyncLogs = useConnSyncLogsUpdate();
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
+  const [showLogsDialog, setShowLogsDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
   const [resetLoading, setResetLoading] = useState<boolean>(false);
 
@@ -190,46 +193,6 @@ export const Connections = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
-
-  function removeEscapeSequences(log: string) {
-    // This regular expression matches typical ANSI escape codes
-    return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
-  }
-
-  const fetchAirbyteLogs = async (connectionId: string) => {
-    try {
-      const response = await httpGet(
-        session,
-        `airbyte/v1/connections/${connectionId}/jobs`
-      );
-      const formattedLogs: Array<string> = [];
-      if (response.status === 'not found') {
-        formattedLogs.push('No logs found');
-        setSyncLogs(formattedLogs);
-        return response.status;
-      }
-      response.logs.forEach((log: string) => {
-        log = removeEscapeSequences(log);
-        const pattern1 = /\)[:;]\d+ -/;
-        const pattern2 = /\)[:;]\d+/;
-        let match = log.match(pattern1);
-        let index = 0;
-        if (match?.index) {
-          index = match.index + match[0].length;
-        } else {
-          match = log.match(pattern2);
-          if (match?.index) {
-            index = match.index + match[0].length;
-          }
-        }
-        formattedLogs.push(log.slice(index));
-      });
-      setSyncLogs(formattedLogs);
-      return response.status;
-    } catch (err: any) {
-      console.error(err);
-    }
-  };
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -529,11 +492,11 @@ export const Connections = () => {
               alignItems: 'center',
             }}
             onClick={() => {
-              fetchAirbyteLogs(connection.connectionId);
-              setExpandSyncLogs(true);
+              setShowLogsDialog(true);
+              setLogsConnection(connection);
             }}
           >
-            Fetch Logs
+            View history
           </Button>
         )}
       </Box>
@@ -678,6 +641,12 @@ export const Connections = () => {
 
   return (
     <>
+      {showLogsDialog && (
+        <ConnectionLogs
+          setShowLogsDialog={setShowLogsDialog}
+          connection={logsConnection}
+        />
+      )}
       <PendingActionsAccordion />
       <ActionsMenu
         eleType="connection"

@@ -152,7 +152,7 @@ describe('Connections Setup', () => {
           (CONNECTIONS[i]['lastRun']['status'] === 'COMPLETED'
             ? 'success'
             : 'failed') +
-          'Fetch Logs'
+          'View history'
       );
     }
   });
