@@ -71,7 +71,7 @@ const MainDashboard = ({ children }: any) => {
         const currentOrgSlug = localStorage.getItem('org-slug');
         let currentOrgUser: OrgUser | null | undefined = null;
         currentOrgUser = orgusers?.find(
-          (orguser: OrgUser) => orguser.org.slug === currentOrgSlug,
+          (orguser: OrgUser) => orguser.org.slug === currentOrgSlug
         );
         // If not pick the first org from the api response
         if (!currentOrgUser && orgusers && orgusers.length > 0)
@@ -129,7 +129,7 @@ const MainDashboard = ({ children }: any) => {
         <>
           <Header openMenu={openMenu} setOpenMenu={setOpenMenu} />
           <Box sx={{ display: 'flex', pt: 6 }}>
-            <SideDrawer openMenu={openMenu} />
+            <SideDrawer openMenu={openMenu} setOpenMenu={setOpenMenu} />
             {children}
           </Box>
         </>

@@ -2,8 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import useSWR from 'swr';
 import { Box, Button, CircularProgress, Typography, Link } from '@mui/material';
 import { Table, TableBody, TableCell, TableRow } from '@mui/material';
-import CreateDestinationForm from './CreateDestinationForm';
-import EditDestinationForm from './EditDestinationForm';
+import DestinationForm from './DestinationForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpDelete } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
@@ -98,9 +97,7 @@ export const Destinations = () => {
   const [warehouse, setWarehouse] = useState<Warehouse>();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
-  const [showCreateWarehouseDialog, setShowCreateWarehouseDialog] =
-    useState(false);
-  const [showEditWarehouseDialog, setShowEditWarehouseDialog] = useState(false);
+  const [showWarehouseDialog, setShowWarehouseDialog] = useState(false);
   const [showDeleteWarehouseDialog, setShowDeleteWarehouseDialog] =
     useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -164,7 +161,7 @@ export const Destinations = () => {
           <Button
             variant="contained"
             disabled={!permissions.includes('can_edit_warehouse')}
-            onClick={() => setShowEditWarehouseDialog(true)}
+            onClick={() => setShowWarehouseDialog(true)}
             data-testid="edit-destination"
           >
             Edit
@@ -180,27 +177,21 @@ export const Destinations = () => {
           </Button>
         </Box>
       )}
-      {!warehouse && !showCreateWarehouseDialog && (
+      {!warehouse && !showWarehouseDialog && (
         <Button
           color="primary"
           variant="outlined"
           disabled={!permissions.includes('can_create_warehouse')}
-          onClick={() => setShowCreateWarehouseDialog(true)}
+          onClick={() => setShowWarehouseDialog(true)}
           data-testid="add-new-destination"
         >
           Add a new warehouse
         </Button>
       )}
-      {!warehouse && (
-        <CreateDestinationForm
-          showForm={showCreateWarehouseDialog}
-          setShowForm={setShowCreateWarehouseDialog}
-          mutate={mutate}
-        />
-      )}
-      <EditDestinationForm
-        showForm={showEditWarehouseDialog}
-        setShowForm={setShowEditWarehouseDialog}
+
+      <DestinationForm
+        showForm={showWarehouseDialog}
+        setShowForm={setShowWarehouseDialog}
         warehouse={warehouse}
         mutate={mutate}
       />
