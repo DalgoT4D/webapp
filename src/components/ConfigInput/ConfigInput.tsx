@@ -79,10 +79,10 @@ export const ConfigInput = ({
     <>
       {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
-        .map((spec: EntitySpec, idx: number) => {
+        .map((spec: EntitySpec) => {
           return spec.type === 'string' ? (
             spec.airbyte_secret ? (
-              <React.Fragment key={idx}>
+              <React.Fragment key={spec.field}>
                 <Controller
                   name={spec.field}
                   control={control}
@@ -128,7 +128,7 @@ export const ConfigInput = ({
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             ) : (
-              <React.Fragment key={idx}>
+              <React.Fragment key={spec.field}>
                 <Controller
                   name={spec.field}
                   control={control}
@@ -150,7 +150,7 @@ export const ConfigInput = ({
               </React.Fragment>
             )
           ) : spec.type === 'array' ? (
-            <React.Fragment key={idx}>
+            <React.Fragment key={spec.field}>
               <Controller
                 name={spec.field}
                 control={control}
@@ -168,7 +168,7 @@ export const ConfigInput = ({
               <Box sx={{ m: 2 }} />
             </React.Fragment>
           ) : spec.type === 'integer' ? (
-            <React.Fragment key={idx}>
+            <React.Fragment key={spec.field}>
               <Controller
                 name={spec.field}
                 control={control}
@@ -189,7 +189,7 @@ export const ConfigInput = ({
               <Box sx={{ m: 2 }} />
             </React.Fragment>
           ) : spec.type === 'object' ? (
-            <React.Fragment key={idx}>
+            <React.Fragment key={spec.field}>
               <Controller
                 name={spec.field}
                 control={control}
