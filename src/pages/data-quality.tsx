@@ -1,5 +1,5 @@
 import { Elementary } from '@/components/DBT/Elementary';
 
-export default function ElementaryHolder() {
+export default function DataQualityPage() {
   return <Elementary />;
 }

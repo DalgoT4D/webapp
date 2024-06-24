@@ -7,14 +7,14 @@ import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 
-export interface SourceConfigInputprops {
+export interface ConfigInputprops {
   specs: Array<any>;
   control: any;
   setFormValue: (...args: any) => any;
-  source?: any;
+  entity?: any;
 }
 
-export type SourceSpec = {
+export type EntitySpec = {
   type: string;
   const?: unknown;
   field: string;
@@ -24,18 +24,18 @@ export type SourceSpec = {
   required: boolean;
   enum?: Array<unknown>;
   parent?: string;
-  specs?: Array<SourceSpec>;
+  specs?: Array<EntitySpec>;
   order: number;
   pattern?: string;
 };
 
-export const SourceConfigInput = ({
+export const ConfigInput = ({
   specs,
   control,
   setFormValue,
-  source,
-}: SourceConfigInputprops) => {
-  const [connectorSpecs, setConnectorSpecs] = useState<Array<SourceSpec>>([]);
+  entity,
+}: ConfigInputprops) => {
+  const [connectorSpecs, setConnectorSpecs] = useState<Array<EntitySpec>>([]);
 
   const [showPasswords, setShowPasswords] = useState<any>({});
 
@@ -79,10 +79,10 @@ export const SourceConfigInput = ({
     <>
       {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
-        .map((spec: SourceSpec, idx: number) => {
+        .map((spec: EntitySpec) => {
           return spec.type === 'string' ? (
             spec.airbyte_secret ? (
-              <React.Fragment key={idx}>
+              <React.Fragment key={spec.field}>
                 <Controller
                   name={spec.field}
                   control={control}
@@ -101,7 +101,7 @@ export const SourceConfigInput = ({
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
-                            {!source ? (
+                            {!entity ? (
                               <Box>
                                 <IconButton
                                   onClick={() =>
@@ -128,7 +128,7 @@ export const SourceConfigInput = ({
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
             ) : (
-              <React.Fragment key={idx}>
+              <React.Fragment key={spec.field}>
                 <Controller
                   name={spec.field}
                   control={control}
@@ -150,7 +150,7 @@ export const SourceConfigInput = ({
               </React.Fragment>
             )
           ) : spec.type === 'array' ? (
-            <React.Fragment key={idx}>
+            <React.Fragment key={spec.field}>
               <Controller
                 name={spec.field}
                 control={control}
@@ -168,7 +168,7 @@ export const SourceConfigInput = ({
               <Box sx={{ m: 2 }} />
             </React.Fragment>
           ) : spec.type === 'integer' ? (
-            <React.Fragment key={idx}>
+            <React.Fragment key={spec.field}>
               <Controller
                 name={spec.field}
                 control={control}
@@ -189,14 +189,14 @@ export const SourceConfigInput = ({
               <Box sx={{ m: 2 }} />
             </React.Fragment>
           ) : spec.type === 'object' ? (
-            <React.Fragment key={idx}>
+            <React.Fragment key={spec.field}>
               <Controller
                 name={spec.field}
                 control={control}
                 rules={{ required: spec.required && 'Required' }}
                 render={({ field, fieldState }) => (
                   <Autocomplete
-                    disabled={source ? true : false}
+                    disabled={entity ? true : false}
                     data-testid="autocomplete"
                     id={spec.field}
                     value={field.value}
