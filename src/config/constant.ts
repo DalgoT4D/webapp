@@ -1,6 +1,8 @@
 export const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 export const showElementaryMenu =
   process.env.NEXT_PUBLIC_SHOW_ELEMENTARY_MENU === 'true';
+export const showDataInsightsTab =
+  process.env.NEXT_PUBLIC_SHOW_DATA_INSIGHTS_TAB === 'true';
 
 export const flowRunLogsOffsetLimit = 200;
 
