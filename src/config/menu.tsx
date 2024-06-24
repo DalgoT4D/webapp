@@ -23,6 +23,7 @@ export interface MenuOption {
   className?: string;
   permission?: string;
   hide?: boolean;
+  minimize?: boolean;
 }
 
 export const sideMenu: MenuOption[] = [
@@ -33,6 +34,7 @@ export const sideMenu: MenuOption[] = [
     path: '/analysis',
     icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
     className: 'analysis_walkthrough',
+    minimize: true,
   },
   {
     index: 1.1,
@@ -41,6 +43,7 @@ export const sideMenu: MenuOption[] = [
     icon: (selected: boolean) => <UsageIcon fill={getColor(selected)} />,
     parent: 1,
     className: 'usage_walkthrough',
+    minimize: true,
   },
   {
     index: 2,
@@ -78,10 +81,11 @@ export const sideMenu: MenuOption[] = [
   {
     index: 3,
     title: 'Data Quality',
-    path: '/elementary',
+    path: '/data-quality',
     icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
     className: 'data_quality_walkthrough',
     hide: !showElementaryMenu,
+    minimize: true,
   },
   {
     index: 4,

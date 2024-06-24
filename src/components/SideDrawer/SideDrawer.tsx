@@ -111,7 +111,7 @@ const Drawer = styled(MuiDrawer, {
   }),
 }));
 
-export const SideDrawer = ({ openMenu }: any) => {
+export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const router = useRouter();
   const [open, setOpen] = useState(
     new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
@@ -138,6 +138,9 @@ export const SideDrawer = ({ openMenu }: any) => {
   }, [router.pathname]);
 
   const handleListItemClick = (item: MenuOption) => {
+    if (item.minimize) {
+      setOpenMenu(false);
+    }
     setSelectedIndex(item.index);
     router.push(item.path);
   };
@@ -154,7 +157,7 @@ export const SideDrawer = ({ openMenu }: any) => {
 
   const getList = (
     <List component="div" data-testid="side-menu">
-      {sideMenu.map((item, idx: number) => {
+      {sideMenu.map((item) => {
         const hasChildren = sideMenu.filter(
           (sideItem) => sideItem.parent === item.index
         );
@@ -172,7 +175,9 @@ export const SideDrawer = ({ openMenu }: any) => {
                     !permissions.includes(item.permission)
                   }
                   isSelected={selectedIndex === item.index}
-                  onClick={() => handleListItemClick(item)}
+                  onClick={() => {
+                    handleListItemClick(item);
+                  }}
                 >
                   {hasChildren.length > 0 && openMenu && (
                     <IconButton
