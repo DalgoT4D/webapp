@@ -1,19 +1,19 @@
 import { Autocomplete, Box, Button } from '@mui/material';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { DestinationConfigInput } from './DestinationConfigInput';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
+import { ConfigInput } from '../ConfigInput/ConfigInput';
 
-interface EditDestinationFormProps {
+interface DestinationFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
-  warehouse: any;
+  warehouse?: any;
   mutate: (...args: any) => any;
 }
 
@@ -35,18 +35,18 @@ type AutoCompleteOption = {
   label: string;
 };
 
-type EditDestinatinFormInput = {
+type DestinationFormInput = {
   name: string;
   destinationDef: null | AutoCompleteOption;
   config: object;
 };
 
-const EditDestinationForm = ({
+const DestinationForm = ({
   showForm,
   setShowForm,
   warehouse,
   mutate,
-}: EditDestinationFormProps) => {
+}: DestinationFormProps) => {
   const { data: session }: any = useSession();
   const [loading, setLoading] = useState<boolean>(false);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
@@ -56,31 +56,22 @@ const EditDestinationForm = ({
   const [destinationDefs, setDestinationDefs] = useState<
     Array<{ id: string; label: string }>
   >([]);
-  const lastRenderedSpecRef = useRef([]);
+
   const globalContext = useContext(GlobalContext);
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    reset,
-    setValue,
-    unregister,
-    getValues,
-    formState: { errors },
-  } = useForm<EditDestinatinFormInput>({
-    defaultValues: {
-      name: '',
-      destinationDef: null,
-      config: {},
-    },
-  });
+  const { handleSubmit, control, watch, reset, setValue } =
+    useForm<DestinationFormInput>({
+      defaultValues: {
+        name: '',
+        destinationDef: null,
+        config: {},
+      },
+    });
 
   const watchSelectedDestinationDef = watch('destinationDef');
 
   useEffect(() => {
-    if (warehouse && showForm) {
+    if ((destinationDefs.length === 0 || warehouse) && showForm) {
       (async () => {
         setLoading(true);
         try {
@@ -137,22 +128,23 @@ const EditDestinationForm = ({
           connectorConfigInput.setOrderToChildProperties();
 
           // Prepare the specs config before setting it
-          connectorConfigInput.prepareSpecsToRender();
+          let specsConfigFields: any =
+            connectorConfigInput.prepareSpecsToRender();
 
-          const specsConfigFields: any =
-            connectorConfigInput.updateSpecsToRender(
+          if (warehouse) {
+            // Prefill the warehouse name
+            setValue('name', warehouse.name);
+            specsConfigFields = connectorConfigInput.updateSpecsToRender(
               warehouse.connectionConfiguration
             );
 
-          // Prefill the warehouse name
-          setValue('name', warehouse.name);
-
-          // Prefill the warehouse config
-          ConnectorConfigInput.prefillFormFields(
-            warehouse.connectionConfiguration,
-            'config',
-            setValue
-          );
+            // Prefill the warehouse config
+            ConnectorConfigInput.prefillFormFields(
+              warehouse.connectionConfiguration,
+              'config',
+              setValue
+            );
+          }
 
           setDestinationDefSpecs(specsConfigFields);
         } catch (err: any) {
@@ -172,16 +164,6 @@ const EditDestinationForm = ({
   };
 
   const editWarehouse = async (data: any) => {
-    // unregister form fields
-    ConnectorConfigInput.syncFormFieldsWithSpecs(
-      data,
-      lastRenderedSpecRef.current || [],
-      unregister
-    );
-
-    // update the data, some form fields might have been unregistered
-    data = getValues();
-
     try {
       setLoading(true);
       await httpPut(
@@ -201,28 +183,57 @@ const EditDestinationForm = ({
     setLoading(false);
   };
 
+  const createWarehouse = async (data: any) => {
+    await httpPost(session, 'organizations/warehouse/', {
+      wtype: data.destinationDef.label.toLowerCase(),
+      name: data.name,
+      destinationDefId: data.destinationDef.id,
+      airbyteConfig: {
+        ...data.config,
+        port: Number(data.config.port),
+      },
+    });
+  };
+
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
       setSetupLogs([]);
-      const connectivityCheck = await httpPost(
-        session,
-        `airbyte/destinations/${warehouse.destinationId}/check_connection_for_update/`,
-        {
+      let url = 'airbyte/destinations/check_connection/';
+      let params: any = {
+        name: data.name,
+        destinationDefId: data.destinationDef.id,
+        config: {
+          ...data.config,
+          port: Number(data.config.port),
+        },
+      };
+      if (warehouse) {
+        url = `airbyte/destinations/${warehouse.destinationId}/check_connection_for_update/`;
+        params = {
           name: data.name,
           config: data.config,
-        }
-      );
+        };
+      }
+
+      const connectivityCheck = await httpPost(session, url, params);
       if (connectivityCheck.status === 'succeeded') {
-        await editWarehouse(data);
+        if (warehouse) {
+          await editWarehouse(data);
+        } else {
+          await createWarehouse(data);
+        }
         handleClose();
         mutate();
         successToast(
-          'Warehouse details updated successfully',
+          warehouse
+            ? 'Warehouse details updated successfully'
+            : 'Warehouse created',
           [],
           globalContext
         );
       } else {
+        console.log(connectivityCheck);
         setSetupLogs(connectivityCheck.logs);
         errorToast('Failed to connect to warehouse', [], globalContext);
       }
@@ -234,60 +245,59 @@ const EditDestinationForm = ({
     setLoading(false);
   };
 
-  const EditDestinationForm = () => {
-    return (
-      <Box sx={{ pt: 2, pb: 4 }}>
-        <Input
-          error={!!errors.name}
-          helperText={errors.name?.message}
-          sx={{ width: '100%' }}
-          label="Name"
-          variant="outlined"
-          register={register}
-          name="name"
-          required
-          data-testid="dest-name"
-        ></Input>
-        <Box sx={{ m: 2 }} />
-        <Controller
-          name="destinationDef"
-          control={control}
-          rules={{ required: 'Destination type is required' }}
-          render={({ field }) => (
-            <Autocomplete
-              disabled={true}
-              id="destinationDef"
-              options={destinationDefs}
-              data-testid="dest-type-autocomplete"
-              value={field.value}
-              onChange={(e, data) => data && field.onChange(data)}
-              renderInput={(params) => (
-                <Input
-                  name="destinationDef"
-                  {...params}
-                  error={!!errors.destinationDef}
-                  helperText={errors.destinationDef?.message}
-                  label="Select destination type"
-                  variant="outlined"
-                />
-              )}
-            />
-          )}
-        />
-        <Box sx={{ m: 2 }} />
-        <DestinationConfigInput
-          errors={errors}
-          specs={destinationDefSpecs}
-          registerFormFieldValue={register}
-          control={control}
-          setFormValue={setValue}
-          unregisterFormField={unregister}
-          destination={warehouse}
-          lastRenderedSpecRef={lastRenderedSpecRef}
-        />
-      </Box>
-    );
-  };
+  const destinationForm = (
+    <Box sx={{ pt: 2, pb: 4 }}>
+      <Controller
+        name="name"
+        control={control}
+        rules={{ required: 'Destination type is required' }}
+        render={({ field: { ref, ...rest }, fieldState }) => (
+          <Input
+            {...rest}
+            error={!!fieldState.error}
+            helperText={fieldState.error?.message}
+            sx={{ width: '100%' }}
+            label="Name*"
+            variant="outlined"
+            data-testid="dest-name"
+          ></Input>
+        )}
+      />
+      <Box sx={{ m: 2 }} />
+      <Controller
+        name="destinationDef"
+        control={control}
+        rules={{ required: 'Destination type is required' }}
+        render={({ field, fieldState }) => (
+          <Autocomplete
+            disabled={!!warehouse}
+            id="destinationDef"
+            options={destinationDefs}
+            data-testid="dest-type-autocomplete"
+            value={field.value}
+            onChange={(e, data) => data && field.onChange(data)}
+            renderInput={(params) => (
+              <Input
+                name="destinationDef"
+                {...params}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                label="Select destination type"
+                variant="outlined"
+              />
+            )}
+          />
+        )}
+      />
+      <Box sx={{ m: 2 }} />
+      <ConfigInput
+        specs={destinationDefSpecs}
+        control={control}
+        setFormValue={setValue}
+        entity={warehouse}
+      />
+    </Box>
+  );
 
   return (
     <>
@@ -296,7 +306,7 @@ const EditDestinationForm = ({
         show={showForm}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
-        formContent={<EditDestinationForm />}
+        formContent={destinationForm}
         formActions={
           <Box>
             <Button variant="contained" type="submit" data-testid="save-button">
@@ -326,4 +336,4 @@ const EditDestinationForm = ({
   );
 };
 
-export default EditDestinationForm;
+export default DestinationForm;
