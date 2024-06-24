@@ -8,35 +8,21 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-// Mock create destination form component
-jest.mock('./../CreateDestinationForm', () => {
-  const MockCreateDestination = ({}: any) => {
+// Mock destination form component
+jest.mock('./../DestinationForm', () => {
+  const MockDestination = ({}: any) => {
     return (
-      <Dialog open={true} data-testid="test-create-dest-form">
-        create-form-dialog-component
+      <Dialog open={true} data-testid="test-dest-form">
+        form-dialog-component
       </Dialog>
     );
   };
 
-  MockCreateDestination.displayName = 'MockCreateDestination';
+  MockDestination.displayName = 'MockDestinationForm';
 
-  return MockCreateDestination;
+  return MockDestination;
 });
 
-// Mock edit destination form component
-jest.mock('./../EditDestinationForm', () => {
-  const MockEditDestination = ({ showForm }: any) => {
-    return (
-      <Dialog open={showForm} data-testid="test-edit-dest-form">
-        edit-form-dialog-component
-      </Dialog>
-    );
-  };
-
-  MockEditDestination.displayName = 'MockEditDestination';
-
-  return MockEditDestination;
-});
 
 describe('Destinations', () => {
   const mockSession: Session = {
@@ -169,7 +155,7 @@ describe('Destinations', () => {
     // Check if edit button renders the mocked component
     const editWarehouseButton = screen.getByTestId('edit-destination');
     await await userEvent.click(editWarehouseButton);
-    const mockEditDestinationForm = screen.getByTestId('test-edit-dest-form');
+    const mockEditDestinationForm = screen.getByTestId('test-dest-form');
     expect(mockEditDestinationForm).toBeInTheDocument();
   });
 
@@ -204,7 +190,7 @@ describe('Destinations', () => {
     // Check if edit button renders the mocked component
     const editWarehouseButton = screen.getByTestId('edit-destination');
     await act(async () => await userEvent.click(editWarehouseButton));
-    const mockEditDestinationForm = screen.getByTestId('test-edit-dest-form');
+    const mockEditDestinationForm = screen.getByTestId('test-dest-form');
     expect(mockEditDestinationForm).toBeInTheDocument();
   });
 
@@ -226,7 +212,7 @@ describe('Destinations', () => {
     // Open create destination form
     await act(async () => userEvent.click(addNewWarehouseButton));
     const mockCreateDestinationForm = screen.getByTestId(
-      'test-create-dest-form'
+      'test-dest-form'
     );
     expect(mockCreateDestinationForm).toBeInTheDocument();
   });

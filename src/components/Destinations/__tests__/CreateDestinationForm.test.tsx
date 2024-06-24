@@ -1,9 +1,16 @@
-import { act, render, screen, within, fireEvent } from '@testing-library/react';
+import {
+  act,
+  render,
+  screen,
+  within,
+  fireEvent,
+  waitFor,
+} from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
-import CreateDestinationForm from '../CreateDestinationForm';
+import CreateDestinationForm from '../DestinationForm';
 
 const pushMock = jest.fn();
 
@@ -83,10 +90,11 @@ describe('destination create form - fetch definitions success', () => {
     expect(destinationType).toBeInTheDocument();
 
     // Cancel button should close the form
-    const cancelButton = screen.getByTestId('cancel-button');
-    await act(async () => await userEvent.click(cancelButton));
-    expect(destinationName).not.toBeInTheDocument();
-    expect(destinationType).not.toBeInTheDocument();
+    const cancelButton = screen.getByTestId('cancel');
+    await userEvent.click(cancelButton);
+    await waitFor(() => {
+      expect(setShowForm).toHaveBeenCalled();
+    });
   });
 });
 
@@ -459,7 +467,7 @@ describe('destination create form - definitions + specifications', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: jest.fn().mockResolvedValueOnce({
-          status: 'successs',
+          status: 'succeeded',
         }),
       })
       .mockResolvedValueOnce({

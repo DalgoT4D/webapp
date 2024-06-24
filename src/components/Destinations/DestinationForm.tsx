@@ -13,7 +13,7 @@ import { ConfigInput } from '../ConfigInput/ConfigInput';
 interface DestinationFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
-  warehouse: any;
+  warehouse?: any;
   mutate: (...args: any) => any;
 }
 
@@ -233,6 +233,7 @@ const DestinationForm = ({
           globalContext
         );
       } else {
+        console.log(connectivityCheck);
         setSetupLogs(connectivityCheck.logs);
         errorToast('Failed to connect to warehouse', [], globalContext);
       }
@@ -244,61 +245,59 @@ const DestinationForm = ({
     setLoading(false);
   };
 
-  const DestinationForm = () => {
-    return (
-      <Box sx={{ pt: 2, pb: 4 }}>
-        <Controller
-          name="name"
-          control={control}
-          rules={{ required: 'Destination type is required' }}
-          render={({ field: { ref, ...rest }, fieldState }) => (
-            <Input
-              {...rest}
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
-              sx={{ width: '100%' }}
-              label="Name"
-              variant="outlined"
-              data-testid="dest-name"
-            ></Input>
-          )}
-        />
-        <Box sx={{ m: 2 }} />
-        <Controller
-          name="destinationDef"
-          control={control}
-          rules={{ required: 'Destination type is required' }}
-          render={({ field, fieldState }) => (
-            <Autocomplete
-              disabled={!!warehouse}
-              id="destinationDef"
-              options={destinationDefs}
-              data-testid="dest-type-autocomplete"
-              value={field.value}
-              onChange={(e, data) => data && field.onChange(data)}
-              renderInput={(params) => (
-                <Input
-                  name="destinationDef"
-                  {...params}
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message}
-                  label="Select destination type"
-                  variant="outlined"
-                />
-              )}
-            />
-          )}
-        />
-        <Box sx={{ m: 2 }} />
-        <ConfigInput
-          specs={destinationDefSpecs}
-          control={control}
-          setFormValue={setValue}
-          entity={warehouse}
-        />
-      </Box>
-    );
-  };
+  const destinationForm = (
+    <Box sx={{ pt: 2, pb: 4 }}>
+      <Controller
+        name="name"
+        control={control}
+        rules={{ required: 'Destination type is required' }}
+        render={({ field: { ref, ...rest }, fieldState }) => (
+          <Input
+            {...rest}
+            error={!!fieldState.error}
+            helperText={fieldState.error?.message}
+            sx={{ width: '100%' }}
+            label="Name*"
+            variant="outlined"
+            data-testid="dest-name"
+          ></Input>
+        )}
+      />
+      <Box sx={{ m: 2 }} />
+      <Controller
+        name="destinationDef"
+        control={control}
+        rules={{ required: 'Destination type is required' }}
+        render={({ field, fieldState }) => (
+          <Autocomplete
+            disabled={!!warehouse}
+            id="destinationDef"
+            options={destinationDefs}
+            data-testid="dest-type-autocomplete"
+            value={field.value}
+            onChange={(e, data) => data && field.onChange(data)}
+            renderInput={(params) => (
+              <Input
+                name="destinationDef"
+                {...params}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                label="Select destination type"
+                variant="outlined"
+              />
+            )}
+          />
+        )}
+      />
+      <Box sx={{ m: 2 }} />
+      <ConfigInput
+        specs={destinationDefSpecs}
+        control={control}
+        setFormValue={setValue}
+        entity={warehouse}
+      />
+    </Box>
+  );
 
   return (
     <>
@@ -307,7 +306,7 @@ const DestinationForm = ({
         show={showForm}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
-        formContent={<DestinationForm />}
+        formContent={destinationForm}
         formActions={
           <Box>
             <Button variant="contained" type="submit" data-testid="save-button">
