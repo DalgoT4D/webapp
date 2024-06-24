@@ -5,18 +5,13 @@ import {
   Divider,
   IconButton,
   Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   Tabs,
 } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import { OpenInFull } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
-import PreviewPane from './Components/PreviewPane';
+import PreviewPane from './Components/LowerSectionTabs/PreviewPane';
 import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { DbtSourceModel } from './Components/Canvas';
@@ -34,7 +29,9 @@ import {
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { delay } from '@/utils/common';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
-import moment from 'moment';
+import { LogsPane } from './Components/LowerSectionTabs/LogsPane';
+import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
+import { showDataInsightsTab } from '@/config/constant';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
@@ -110,7 +107,7 @@ const UpperSection = ({
   );
 };
 
-export type LowerSectionTabValues = 'preview' | 'logs';
+export type LowerSectionTabValues = 'preview' | 'logs' | 'statistics';
 
 type LowerSectionProps = {
   height: number;
@@ -123,6 +120,7 @@ type LowerSectionProps = {
 export type TaskProgressLog = {
   message: string;
   status: string;
+  timestamp: string;
 };
 
 const LowerSection = ({
@@ -159,6 +157,10 @@ const LowerSection = ({
         >
           <Tab label="Preview" value="preview" />
           <Tab label="Logs" value="logs" />
+
+          {showDataInsightsTab && (
+            <Tab label="Data statistics" value="statistics" />
+          )}
         </Tabs>
         <IconButton sx={{ ml: 'auto' }} onClick={setFullScreen}>
           <OpenInFull />
@@ -167,108 +169,13 @@ const LowerSection = ({
       <Box sx={{ height: '100vh' }}>
         {selectedTab === 'preview' && <PreviewPane height={height} />}
         {selectedTab === 'logs' && (
-          <Box
-            height={height - 50}
-            sx={{ overflow: 'auto', position: 'relative' }}
-          >
-            {dbtRunLogs.length > 0 ? (
-              <Table
-                stickyHeader
-                sx={{ borderCollapse: 'collapse', width: '100%' }}
-              >
-                <TableHead>
-                  <TableRow>
-                    {['Last Run', 'Description'].map((header: any) => (
-                      <TableCell
-                        key={header.id}
-                        colSpan={header.colSpan}
-                        sx={{
-                          backgroundColor: '#F5FAFA',
-                          padding: '10px 20px',
-                          textAlign: 'left',
-                          fontWeight: 700,
-                          minWidth: '200px',
-                        }}
-                      >
-                        {header}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody sx={{ borderColor: '#dddddd' }}>
-                  {dbtRunLogs.map((log: any) => {
-                    return (
-                      <TableRow
-                        key={log.timestamp}
-                        sx={{
-                          boxShadow: 'none',
-                          borderRadius: '0',
-                          borderBottom: '1px solid rgba(238, 238, 238, 1)',
-                          textAlign: 'left',
-                          fontSize: '0.8rem',
-                        }}
-                      >
-                        <TableCell
-                          sx={{
-                            padding: '10px 20px',
-                            fontWeight: 500,
-                          }}
-                        >
-                          {moment(log.timestamp).format('YYYY/MM/DD')}{' '}
-                          &nbsp;&nbsp;&nbsp;&nbsp;
-                          {moment(log.timestamp).format('hh:mm:ss A ')}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            padding: '10px 20px',
-                            fontWeight: 500,
-                          }}
-                        >
-                          {log.message}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            ) : workflowInProgress ? (
-              <Backdrop
-                sx={{
-                  background: 'white',
-                  position: 'absolute', // Position the Backdrop over the Box
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0, // Cover the entire Box
-                  zIndex: (theme) => theme.zIndex.drawer + 1,
-                }}
-                open={workflowInProgress}
-                onClick={() => {}}
-              >
-                <CircularProgress
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 2,
-                  }}
-                />
-              </Backdrop>
-            ) : (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: '100%',
-                }}
-              >
-                Please press run
-              </Box>
-            )}
-          </Box>
+          <LogsPane
+            height={height}
+            workflowInProgress={workflowInProgress}
+            dbtRunLogs={dbtRunLogs}
+          />
         )}
+        {selectedTab === 'statistics' && <StatisticsPane height={height} />}
       </Box>
     </Box>
   );
@@ -286,8 +193,10 @@ const FlowEditor = ({}) => {
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction } = useCanvasAction();
 
-  const onResize = (_event: any, { size }: any) => {
-    setLowerSectionHeight(size.height);
+  const onResize = (event: any) => {
+    const dailogHeight =
+      document.querySelector('.MuiDialog-root')?.clientHeight || 0;
+    setLowerSectionHeight(dailogHeight - event.clientY);
   };
   const fetchSourcesModels = () => {
     httpGet(session, 'transform/dbt_project/sources_models/')
@@ -369,6 +278,7 @@ const FlowEditor = ({}) => {
       successToast('Dbt run initiated', [], globalContext);
 
       if (response?.task_id) {
+        await delay(2000);
         await pollForTaskRun(response.task_id);
         setRefreshEditor(!refreshEditor);
       }
