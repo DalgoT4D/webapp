@@ -1,5 +1,6 @@
 import {
   Box,
+  CircularProgress,
   Dialog,
   IconButton,
   Table,
@@ -76,13 +77,7 @@ interface ConnectionLogsProps {
   connection: Connection | undefined;
 }
 
-const columns = [
-  'Date',
-  'Description',
-  'Records synced',
-  'Bytes synced',
-  'Duration',
-];
+const columns = ['Date', 'Logs', 'Records synced', 'Bytes synced', 'Duration'];
 
 const formatDuration = (seconds: number) => {
   const duration = moment.duration(seconds, 'seconds');
@@ -181,7 +176,7 @@ const Row = ({ logDetail }: { logDetail: LogObject }) => {
         </Box>
       </TableCell>
       <TableCell sx={{ verticalAlign: 'baseline', fontWeight: 500 }}>
-        {logDetail.recordsSynced}
+        {logDetail.recordsSynced.toLocaleString()}
       </TableCell>
       <TableCell sx={{ verticalAlign: 'baseline', fontWeight: 500 }}>
         {logDetail.bytesSynced}
@@ -217,9 +212,11 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
   const [logDetails, setLogDetails] = useState<LogObject[]>([]);
   const [offset, setOffset] = useState(1);
   const [showLoadMore, setShowLoadMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     (async () => {
       if (connection) {
+        setLoading(true);
         const response: LogObject[] = await fetchAirbyteLogs(
           connection.connectionId,
           session
@@ -231,6 +228,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
         if (response.length < limit) {
           setShowLoadMore(false);
         }
+        setLoading(false);
       }
     })();
   }, []);
@@ -296,46 +294,52 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
               ))}
             </TableBody>
           </Table>
-          {logDetails.length > 0
-            ? showLoadMore && (
+          {logDetails.length > 0 ? (
+            showLoadMore && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                }}
+              >
                 <Box
                   sx={{
                     display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    mt: 1,
+                  }}
+                  onClick={async () => {
+                    if (connection) {
+                      const response: LogObject[] = await fetchAirbyteLogs(
+                        connection.connectionId,
+                        session,
+                        offset
+                      );
+                      if (response) {
+                        setLogDetails((logs) => [...logs, ...response]);
+                        setOffset((offset) => offset + 1);
+                      }
+                      if (response.length < limit) {
+                        setShowLoadMore(false);
+                      }
+                    }
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      fontSize: '12px',
-                      mt: 1,
-                    }}
-                    onClick={async () => {
-                      if (connection) {
-                        const response: LogObject[] = await fetchAirbyteLogs(
-                          connection.connectionId,
-                          session,
-                          offset
-                        );
-                        if (response) {
-                          setLogDetails((logs) => [...logs, ...response]);
-                          setOffset((offset) => offset + 1);
-                        }
-                        if (response.length < limit) {
-                          setShowLoadMore(false);
-                        }
-                      }
-                    }}
-                  >
-                    load more <DownIcon />
-                  </Box>
+                  load more <DownIcon />
                 </Box>
-              )
-            : 'No information available'}
+              </Box>
+            )
+          ) : loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            'No information available'
+          )}
         </Box>
       </Box>
     </Dialog>

@@ -496,7 +496,7 @@ export const Connections = () => {
               setLogsConnection(connection);
             }}
           >
-            Fetch Logs
+            View history
           </Button>
         )}
       </Box>
