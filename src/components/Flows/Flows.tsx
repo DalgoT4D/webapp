@@ -21,6 +21,7 @@ import Image from 'next/image';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import styles from './Flows.module.css';
 import { localTimezone } from '@/utils/common';
+import { FlowLogs } from './FlowLogs';
 
 export interface TaskLock {
   lockedBy: string;
@@ -98,13 +99,13 @@ export const Flows = ({
   mutate,
   setSelectedFlowId,
 }: FlowsInterface) => {
-  const [lastFlowRun, setLastFlowRun] = useState<FlowRun>();
   const [runningDeploymentIds, setRunningDeploymentIds] = useState<string[]>(
     []
   );
   const [deploymentId, setDeploymentId] = useState<string>('');
   const { data: session }: any = useSession();
-
+  const [showLogsDialog, setShowLogsDialog] = useState(false);
+  const [flowLogs, setFlowLogs] = useState<FlowInterface>();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
@@ -237,7 +238,10 @@ export const Flows = ({
           marginRight: '5px',
         }}
         disabled={!permissions.includes('can_view_pipeline')}
-        onClick={() => fetchLastFlowRun(flow.deploymentId)}
+        onClick={() => {
+          setShowLogsDialog(true);
+          setFlowLogs(flow);
+        }}
       >
         last logs
       </Button>
@@ -347,23 +351,6 @@ export const Flows = ({
     return [];
   }, [flows]);
 
-  const fetchLastFlowRun = async (deploymentId: string) => {
-    try {
-      const response = await httpGet(
-        session,
-        `prefect/flows/${deploymentId}/flow_runs/history?limit=1&fetchlogs=false`
-      );
-      if (response.length > 0) {
-        setLastFlowRun(response[0]);
-      } else {
-        setLastFlowRun(undefined);
-      }
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], globalContext);
-    }
-  };
-
   const handleClickCreateFlow = () => {
     updateCrudVal('create');
   };
@@ -450,7 +437,9 @@ export const Flows = ({
         title={'Pipeline'}
       />
 
-      <SingleFlowRunHistory flowRun={lastFlowRun} />
+      {showLogsDialog && (
+        <FlowLogs setShowLogsDialog={setShowLogsDialog} flow={flowLogs} />
+      )}
 
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
