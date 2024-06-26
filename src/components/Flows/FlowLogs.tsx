@@ -15,29 +15,30 @@ import Close from '@mui/icons-material/Close';
 import { useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-import { Connection } from './Connections';
+
 import DownIcon from '@mui/icons-material/KeyboardArrowDown';
 import UpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import moment from 'moment';
+import { FlowInterface } from './Flows';
 
 function removeEscapeSequences(log: string) {
   // This regular expression matches typical ANSI escape codes
   return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
 }
 
-const fetchAirbyteLogs = async (
-  connectionId: string,
+const fetchDeploymentLogs = async (
+  deploymentId: string,
   session: any,
   offset = 0
 ) => {
   try {
     const response = await httpGet(
       session,
-      `airbyte/v1/connections/${connectionId}/sync/history?limit=${limit}&offset=${offset}`
+      `prefect/flows/${deploymentId}/flow_runs/history?limit=${limit}&fetchlogs=true&offset=${offset}`
     );
 
-    return response.history || [];
+    return response || [];
   } catch (err: any) {
     console.error(err);
   }
@@ -55,7 +56,7 @@ const TopNavBar = ({ handleClose }: any) => (
       }}
     >
       <Typography variant="h6" sx={{ fontWeight: 700 }}>
-        Connection History
+        Flow History
       </Typography>
     </Box>
     <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
@@ -72,9 +73,9 @@ const TopNavBar = ({ handleClose }: any) => (
   </Box>
 );
 
-interface ConnectionLogsProps {
+interface FlowLogsProps {
   setShowLogsDialog: (value: boolean) => any;
-  connection: Connection | undefined;
+  flow: FlowInterface | undefined;
 }
 
 const columns = ['Date', 'Logs', 'Records synced', 'Bytes synced', 'Duration'];
@@ -105,25 +106,41 @@ const formatDuration = (seconds: number) => {
 };
 
 interface LogObject {
-  bytesEmitted: string;
-  bytesSynced: string;
-  date: string;
-  job_id: number;
-  logs: string[];
-  recordsCommitted: number;
-  recordsEmitted: number;
-  recordsSynced: number;
+  level: number;
+  message: string;
+  timestamp: string;
+}
+
+interface RunObject {
+  end_time: string;
+  id: string;
+  kind: string;
+  label: string;
+  logs: LogObject[];
+  start_time: string;
+  state_name: string;
+  state_type: string;
+}
+
+interface DeploymentObject {
+  deployment_id: string;
+  expectedStartTime: string;
+  id: string;
+  runs: RunObject[];
+  name: string;
+  startTime: string;
+  state_name: string;
   status: string;
-  totalTimeInSeconds: number;
+  totalRunTime: number;
 }
 
 const limit = 10;
 
-const Row = ({ logDetail }: { logDetail: LogObject }) => {
+const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
   const [open, setOpen] = useState(false);
   return (
     <TableRow
-      key={logDetail.job_id}
+      key={logDetail.id}
       sx={{
         position: 'relative',
         p: 2,
@@ -140,7 +157,7 @@ const Row = ({ logDetail }: { logDetail: LogObject }) => {
           borderBottomLeftRadius: '10px',
         }}
       >
-        {moment(logDetail.date).format('MMMM D, YYYY')}
+        {moment(logDetail.startTime).format('MMMM D, YYYY')}
       </TableCell>
       <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
         <Box
@@ -153,33 +170,16 @@ const Row = ({ logDetail }: { logDetail: LogObject }) => {
             transition: 'height 0.5s ease-in-out',
           }}
         >
-          {logDetail.logs.map((log: string) => {
-            log = removeEscapeSequences(log);
-            const pattern1 = /\)[:;]\d+ -/;
-            const pattern2 = /\)[:;]\d+/;
-            let match = log.match(pattern1);
-            let index = 0;
-            if (match?.index) {
-              index = match.index + match[0].length;
-            } else {
-              match = log.match(pattern2);
-              if (match?.index) {
-                index = match.index + match[0].length;
-              }
-            }
-            return (
-              <Box key={index} sx={{ mb: 2 }}>
-                {log.slice(index)}
-              </Box>
-            );
-          })}
+          {logDetail.runs
+            .map((run) => run.logs.map((log) => <Box>{log.message}</Box>))
+            .flat()}
         </Box>
       </TableCell>
       <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.recordsSynced.toLocaleString()}
+        {logDetail.name}
       </TableCell>
       <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.bytesSynced}
+        {logDetail.state_name}
       </TableCell>
       <TableCell
         sx={{
@@ -189,7 +189,7 @@ const Row = ({ logDetail }: { logDetail: LogObject }) => {
           borderBottomRightRadius: '10px',
         }}
       >
-        {formatDuration(logDetail.totalTimeInSeconds)}
+        {formatDuration(logDetail.totalRunTime)}
       </TableCell>
       <Box
         sx={{ position: 'absolute', bottom: 0, left: '50%', cursor: 'pointer' }}
@@ -204,21 +204,21 @@ const Row = ({ logDetail }: { logDetail: LogObject }) => {
   );
 };
 
-export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
+export const FlowLogs: React.FC<FlowLogsProps> = ({
   setShowLogsDialog,
-  connection,
+  flow,
 }) => {
   const { data: session }: any = useSession();
-  const [logDetails, setLogDetails] = useState<LogObject[]>([]);
+  const [logDetails, setLogDetails] = useState<DeploymentObject[]>([]);
   const [offset, setOffset] = useState(1);
   const [showLoadMore, setShowLoadMore] = useState(true);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     (async () => {
-      if (connection) {
+      if (flow) {
         setLoading(true);
-        const response: LogObject[] = await fetchAirbyteLogs(
-          connection.connectionId,
+        const response: DeploymentObject[] = await fetchDeploymentLogs(
+          flow.deploymentId,
           session
         );
         if (response) {
@@ -253,11 +253,10 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
         <Box sx={{ mb: 1 }}>
           <Box sx={{ fontSize: '16px', display: 'flex' }}>
             <Typography sx={{ fontWeight: 700 }}>
-              {`${connection?.name} |`}
+              {`${flow?.name} |`}
             </Typography>
             <Typography sx={{ fontWeight: 600, ml: '4px' }}>
-              {connection?.source.sourceName} →{' '}
-              {connection?.destination.destinationName}
+              {flow?.status}
             </Typography>
           </Box>
         </Box>
@@ -290,7 +289,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
 
             <TableBody>
               {logDetails.map((logDetail) => (
-                <Row key={logDetail.job_id} logDetail={logDetail} />
+                <Row key={logDetail.id} logDetail={logDetail} />
               ))}
             </TableBody>
           </Table>
@@ -313,12 +312,13 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                     mt: 1,
                   }}
                   onClick={async () => {
-                    if (connection) {
-                      const response: LogObject[] = await fetchAirbyteLogs(
-                        connection.connectionId,
-                        session,
-                        offset
-                      );
+                    if (flow) {
+                      const response: DeploymentObject[] =
+                        await fetchDeploymentLogs(
+                          flow.deploymentId,
+                          session,
+                          offset
+                        );
                       if (response) {
                         setLogDetails((logs) => [...logs, ...response]);
                         setOffset((offset) => offset + 1);
