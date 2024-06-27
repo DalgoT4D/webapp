@@ -78,7 +78,7 @@ interface FlowLogsProps {
   flow: FlowInterface | undefined;
 }
 
-const columns = ['Date', 'Logs', 'Records synced', 'Bytes synced', 'Duration'];
+const columns = ['Date', 'Logs', 'Duration'];
 
 const formatDuration = (seconds: number) => {
   const duration = moment.duration(seconds, 'seconds');
@@ -146,11 +146,12 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
         p: 2,
 
         background:
-          logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
+          logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
       }}
     >
       <TableCell
         sx={{
+          width: '150px',
           verticalAlign: 'top',
           fontWeight: 600,
           borderTopLeftRadius: '10px',
@@ -159,29 +160,8 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
       >
         {moment(logDetail.startTime).format('MMMM D, YYYY')}
       </TableCell>
-      <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        <Box
-          sx={{
-            mb: 2,
-            maxWidth: '800px',
-            height: open ? '400px' : '54px',
-            overflow: open ? 'scroll' : 'hidden',
-            wordBreak: 'break-all',
-            transition: 'height 0.5s ease-in-out',
-          }}
-        >
-          {logDetail.runs
-            .map((run) => run.logs.map((log) => <Box>{log.message}</Box>))
-            .flat()}
-        </Box>
-      </TableCell>
-      <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.name}
-      </TableCell>
-      <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.state_name}
-      </TableCell>
       <TableCell
+        colSpan={2}
         sx={{
           verticalAlign: 'top',
           fontWeight: 500,
@@ -189,8 +169,40 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
           borderBottomRightRadius: '10px',
         }}
       >
-        {formatDuration(logDetail.totalRunTime)}
+        <Box
+          sx={{
+            mb: 2,
+            height: open ? '400px' : '54px',
+            overflow: open ? 'scroll' : 'hidden',
+            transition: 'height 0.5s ease-in-out',
+          }}
+        >
+          <Box sx={{ wordBreak: 'break-word' }}>
+            {logDetail.runs.map((run) => (
+              <Box key={run.id} sx={{ display: 'flex', mb: 2 }}>
+                <Box sx={{ width: '90%' }}>
+                  <Box>
+                    <strong>{run.kind}</strong>
+                  </Box>
+                  {run.logs.map((log, index) => (
+                    <Box key={log.timestamp + index}>{log.message}</Box>
+                  ))}
+                </Box>
+                <Box sx={{ ml: 'auto', width: '10%', textAlign: 'right' }}>
+                  {formatDuration(
+                    moment
+                      .duration(
+                        moment(run.end_time).diff(moment(run.start_time))
+                      )
+                      .asSeconds()
+                  )}
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </Box>
       </TableCell>
+
       <Box
         sx={{ position: 'absolute', bottom: 0, left: '50%', cursor: 'pointer' }}
       >
@@ -208,6 +220,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
   setShowLogsDialog,
   flow,
 }) => {
+  console.log(flow);
   const { data: session }: any = useSession();
   const [logDetails, setLogDetails] = useState<DeploymentObject[]>([]);
   const [offset, setOffset] = useState(1);
@@ -256,7 +269,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
               {`${flow?.name} |`}
             </Typography>
             <Typography sx={{ fontWeight: 600, ml: '4px' }}>
-              {flow?.status}
+              {flow?.status ? 'Active' : 'Inactive'}
             </Typography>
           </Box>
         </Box>
@@ -276,9 +289,15 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
                   },
                 }}
               >
-                {columns.map((column) => (
+                {columns.map((column, index) => (
                   <TableCell
-                    sx={{ p: '8px 16px', color: 'white', fontWeight: 700 }}
+                    sx={{
+                      p: '8px 16px',
+                      color: 'white',
+                      fontWeight: 700,
+                      textAlign:
+                        index === columns.length - 1 ? 'right' : 'unset',
+                    }}
                     key={column}
                   >
                     {column}
