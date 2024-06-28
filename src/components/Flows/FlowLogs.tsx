@@ -22,11 +22,6 @@ import UpIcon from '@mui/icons-material/KeyboardArrowUp';
 import moment from 'moment';
 import { FlowInterface } from './Flows';
 
-function removeEscapeSequences(log: string) {
-  // This regular expression matches typical ANSI escape codes
-  return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
-}
-
 const fetchDeploymentLogs = async (
   deploymentId: string,
   session: any,
