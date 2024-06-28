@@ -215,7 +215,6 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
   setShowLogsDialog,
   flow,
 }) => {
-  console.log(flow);
   const { data: session }: any = useSession();
   const [logDetails, setLogDetails] = useState<DeploymentObject[]>([]);
   const [offset, setOffset] = useState(1);
@@ -243,6 +242,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
 
   return (
     <Dialog
+      data-testid="flowlogs-dialog"
       sx={{
         m: '74px 24px 22px 24px',
         background: '#00000000',
