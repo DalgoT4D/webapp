@@ -20,6 +20,7 @@ import DownIcon from '@mui/icons-material/KeyboardArrowDown';
 import UpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import moment from 'moment';
+import { formatDuration } from '@/utils/common';
 
 function removeEscapeSequences(log: string) {
   // This regular expression matches typical ANSI escape codes
@@ -43,7 +44,7 @@ const fetchAirbyteLogs = async (
   }
 };
 
-const TopNavBar = ({ handleClose }: any) => (
+export const TopNavBar = ({ handleClose, title }: any) => (
   <Box sx={{ display: 'flex' }}>
     <Box
       sx={{
@@ -55,7 +56,7 @@ const TopNavBar = ({ handleClose }: any) => (
       }}
     >
       <Typography variant="h6" sx={{ fontWeight: 700 }}>
-        Connection History
+        {title}
       </Typography>
     </Box>
     <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
@@ -78,31 +79,6 @@ interface ConnectionLogsProps {
 }
 
 const columns = ['Date', 'Logs', 'Records synced', 'Bytes synced', 'Duration'];
-
-const formatDuration = (seconds: number) => {
-  const duration = moment.duration(seconds, 'seconds');
-  const days = Math.floor(duration.asDays());
-  const hours = Math.floor(duration.hours());
-  const minutes = Math.floor(duration.minutes());
-  const secs = Math.floor(duration.seconds());
-
-  let formattedDuration = '';
-
-  if (days > 0) {
-    formattedDuration += `${days}d `;
-  }
-  if (hours > 0) {
-    formattedDuration += `${hours}h `;
-  }
-  if (minutes > 0) {
-    formattedDuration += `${minutes}m `;
-  }
-  if (secs > 0 || formattedDuration === '') {
-    formattedDuration += `${secs}s`;
-  }
-
-  return formattedDuration.trim();
-};
 
 interface LogObject {
   bytesEmitted: string;
@@ -246,7 +222,10 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
       open
       TransitionComponent={Transition}
     >
-      <TopNavBar handleClose={() => setShowLogsDialog(false)} />
+      <TopNavBar
+        handleClose={() => setShowLogsDialog(false)}
+        title="Connection History"
+      />
       <Box sx={{ p: '0px 28px' }}>
         <Box sx={{ mb: 1 }}>
           <Box sx={{ fontSize: '16px', display: 'flex' }}>

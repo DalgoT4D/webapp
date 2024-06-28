@@ -21,6 +21,8 @@ import UpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import moment from 'moment';
 import { FlowInterface } from './Flows';
+import { formatDuration } from '@/utils/common';
+import { TopNavBar } from '../Connections/ConnectionLogs';
 
 const fetchDeploymentLogs = async (
   deploymentId: string,
@@ -39,66 +41,12 @@ const fetchDeploymentLogs = async (
   }
 };
 
-const TopNavBar = ({ handleClose }: any) => (
-  <Box sx={{ display: 'flex' }}>
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 4,
-        pl: '28px',
-        mt: '20px',
-      }}
-    >
-      <Typography variant="h6" sx={{ fontWeight: 700 }}>
-        Flow History
-      </Typography>
-    </Box>
-    <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
-      <IconButton
-        edge="start"
-        color="inherit"
-        onClick={handleClose}
-        sx={{ mr: 1, mt: 2 }}
-        aria-label="close"
-      >
-        <Close />
-      </IconButton>
-    </Box>
-  </Box>
-);
-
 interface FlowLogsProps {
   setShowLogsDialog: (value: boolean) => any;
   flow: FlowInterface | undefined;
 }
 
 const columns = ['Date', 'Logs', 'Duration'];
-
-const formatDuration = (seconds: number) => {
-  const duration = moment.duration(seconds, 'seconds');
-  const days = Math.floor(duration.asDays());
-  const hours = Math.floor(duration.hours());
-  const minutes = Math.floor(duration.minutes());
-  const secs = Math.floor(duration.seconds());
-
-  let formattedDuration = '';
-
-  if (days > 0) {
-    formattedDuration += `${days}d `;
-  }
-  if (hours > 0) {
-    formattedDuration += `${hours}h `;
-  }
-  if (minutes > 0) {
-    formattedDuration += `${minutes}m `;
-  }
-  if (secs > 0 || formattedDuration === '') {
-    formattedDuration += `${secs}s`;
-  }
-
-  return formattedDuration.trim();
-};
 
 interface LogObject {
   level: number;
@@ -256,7 +204,10 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
       open
       TransitionComponent={Transition}
     >
-      <TopNavBar handleClose={() => setShowLogsDialog(false)} />
+      <TopNavBar
+        handleClose={() => setShowLogsDialog(false)}
+        title="Logs History"
+      />
       <Box sx={{ p: '0px 28px' }}>
         <Box sx={{ mb: 1 }}>
           <Box sx={{ fontSize: '16px', display: 'flex' }}>
