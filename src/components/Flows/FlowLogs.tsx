@@ -30,7 +30,7 @@ const fetchDeploymentLogs = async (
   try {
     const response = await httpGet(
       session,
-      `prefect/flows/${deploymentId}/flow_runs/history?limit=${limit}&fetchlogs=true&offset=${offset}`
+      `prefect/v1/flows/${deploymentId}/flow_runs/history?limit=${limit}&fetchlogs=true&offset=${offset}`
     );
 
     return response || [];
