@@ -129,7 +129,9 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
                     <Box key={log.timestamp + index}>{log.message}</Box>
                   ))}
                 </Box>
-                <Box sx={{ ml: 'auto', width: '10%', textAlign: 'right' }}>
+                <Box
+                  sx={{ ml: 'auto', width: '10%', textAlign: 'right', mr: 4 }}
+                >
                   {formatDuration(
                     moment
                       .duration(
