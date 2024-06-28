@@ -5,6 +5,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   Typography,
@@ -219,8 +220,10 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
             </Typography>
           </Box>
         </Box>
-        <Box>
-          <Table>
+        <TableContainer
+          sx={{ height: 'calc(100vh - 210px)', overflow: 'scroll' }}
+        >
+          <Table stickyHeader sx={{ mt: '-10px' }}>
             <TableHead>
               <TableRow
                 sx={{
@@ -240,6 +243,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
                     sx={{
                       p: '8px 16px',
                       color: 'white',
+                      background: '#00897B',
                       fontWeight: 700,
                       textAlign:
                         index === columns.length - 1 ? 'right' : 'unset',
@@ -305,7 +309,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
           ) : (
             'No information available'
           )}
-        </Box>
+        </TableContainer>
       </Box>
     </Dialog>
   );

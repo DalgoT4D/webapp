@@ -6,6 +6,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   Typography,
@@ -238,8 +239,10 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
             </Typography>
           </Box>
         </Box>
-        <Box>
-          <Table>
+        <TableContainer
+          sx={{ height: 'calc(100vh - 210px)', overflow: 'scroll' }}
+        >
+          <Table stickyHeader sx={{ mt: '-10px' }}>
             <TableHead>
               <TableRow
                 sx={{
@@ -256,7 +259,12 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
               >
                 {columns.map((column) => (
                   <TableCell
-                    sx={{ p: '8px 16px', color: 'white', fontWeight: 700 }}
+                    sx={{
+                      p: '8px 16px',
+                      color: 'white',
+                      fontWeight: 700,
+                      background: '#00897B',
+                    }}
                     key={column}
                   >
                     {column}
@@ -317,7 +325,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
           ) : (
             'No information available'
           )}
-        </Box>
+        </TableContainer>
       </Box>
     </Dialog>
   );
