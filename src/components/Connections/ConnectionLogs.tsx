@@ -106,13 +106,11 @@ const formatDuration = (seconds: number) => {
 
 interface LogObject {
   bytesEmitted: string;
-  bytesSynced: string;
   date: string;
   job_id: number;
   logs: string[];
   recordsCommitted: number;
   recordsEmitted: number;
-  recordsSynced: number;
   status: string;
   totalTimeInSeconds: number;
 }
@@ -176,10 +174,10 @@ const Row = ({ logDetail }: { logDetail: LogObject }) => {
         </Box>
       </TableCell>
       <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.recordsSynced.toLocaleString()}
+        {logDetail.recordsEmitted.toLocaleString()}
       </TableCell>
       <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.bytesSynced}
+        {logDetail.bytesEmitted}
       </TableCell>
       <TableCell
         sx={{
