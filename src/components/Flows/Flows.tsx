@@ -152,9 +152,16 @@ export const Flows = ({
       jobStatus = 'queued';
     }
 
-    // if lock is not there; check for last run
     if (jobStatus === null && flow.lastRun) {
-      if (flow.lastRun?.status === 'COMPLETED') {
+      const state_name = flow.lastRun?.state_name;
+      const status =
+        state_name === 'DBT_TEST_FAILED'
+          ? 'dbt tests failed'
+          : flow.lastRun?.status;
+      if (status === 'dbt tests failed') {
+        jobStatus = 'dbt test failed';
+        jobStatusColor = '#df8e14';
+      } else if (status === 'COMPLETED') {
         jobStatus = 'success';
         jobStatusColor = '#399D47';
       } else {
