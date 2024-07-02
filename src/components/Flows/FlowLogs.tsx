@@ -23,6 +23,20 @@ import { FlowInterface } from './Flows';
 import { formatDuration } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionLogs';
 
+const makeReadable = (label: string) => {
+  if (label.startsWith('run-airbyte-connection-flow-v1')) {
+    return 'Airbyte connection sync';
+  }
+  const readableObject: any = {
+    'shellop-git-pull': 'Git pull',
+    'dbtjob-dbt-clean': 'DBT clean',
+    'dbtjob-dbt-deps': 'DBT deps',
+    'dbtjob-dbt-run': 'DBT run',
+    'dbtjob-dbt-test': 'DBT test',
+  };
+  return readableObject[label] ? readableObject[label] : label;
+};
+
 const fetchDeploymentLogs = async (
   deploymentId: string,
   session: any,
@@ -124,7 +138,7 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
               <Box key={run.id} sx={{ display: 'flex', mb: 2 }}>
                 <Box sx={{ width: '90%' }}>
                   <Box>
-                    <strong>{run.kind}</strong>
+                    <strong>{makeReadable(run.label)}</strong>
                   </Box>
                   {run.logs.map((log, index) => (
                     <Box key={log.timestamp + index}>{log.message}</Box>
