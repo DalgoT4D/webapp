@@ -106,7 +106,6 @@ export const Elementary = () => {
             display: 'flex',
             alignItems: 'flex-end',
             mb: 1,
-            pl: 5,
           }}
         >
           {elementaryToken && (
@@ -128,13 +127,13 @@ export const Elementary = () => {
           sx={{
             background: 'white',
             display: 'flex',
-            flexDirection: 'column', 
+            flexDirection: 'column',
             borderRadius: '8px',
             height: '100%',
             width: '100%',
             padding: '1rem',
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
           }}
         >
           {loading ? (
@@ -142,7 +141,7 @@ export const Elementary = () => {
           ) : elementaryToken ? (
             <Box width="100%" height="calc(100vh - 210px)" sx={{ flexGrow: 1 }}>
               <iframe
-                 src={backendUrl + `/elementary/${elementaryToken}`}
+                src={backendUrl + `/elementary/${elementaryToken}`}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
