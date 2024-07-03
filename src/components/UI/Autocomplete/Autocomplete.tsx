@@ -1,10 +1,24 @@
 import Input from '@/components/UI/Input/Input';
-
 import {
   Autocomplete as AutocompleteElement,
   AutocompleteProps as AutocompleteElementProps,
+  Popper,
+  styled,
 } from '@mui/material';
 import { forwardRef } from 'react';
+
+const CustomPopper = styled(Popper)({
+  '.MuiAutocomplete-paper': {
+    width: 'auto',
+    minWidth: '100%',
+    overflowX: 'auto',
+  },
+  '.MuiAutocomplete-listbox': {
+    display: 'inline-block',
+    whiteSpace: 'nowrap',
+    minWidth: '100%',
+  },
+});
 
 interface AutocompleteProps
   extends Omit<
@@ -40,6 +54,7 @@ export const Autocomplete = forwardRef(function Autocomplete(
       onChange={(e, data) => {
         onChange(data);
       }}
+      PopperComponent={(props) => <CustomPopper {...props} />}
       renderInput={(params) => (
         <Input
           {...params}
