@@ -16,13 +16,14 @@ export type FlowRun = {
   id: string;
   name: string;
   status: string;
+  state_name: string;
   lastRun: string;
   startTime: string | null;
   expectedStartTime: string;
 };
 
 interface SingleFlowRunHistoryProps {
-  flowRun: FlowRun | null | undefined;
+  flowRun: Partial<FlowRun> | null | undefined;
 }
 
 export const SingleFlowRunHistory = ({
