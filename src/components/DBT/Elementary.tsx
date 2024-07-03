@@ -109,9 +109,12 @@ export const Elementary = () => {
             pl: 5,
           }}
         >
-          <Typography variant="h6">
-            <strong> Last generated:</strong> {generatedAt}
-          </Typography>
+          {elementaryToken && (
+            <Typography variant="h6">
+              <strong> Last generated:</strong> {generatedAt}
+            </Typography>
+          )}
+
           <Button
             sx={{ ml: 'auto' }}
             onClick={() => refreshReport()}
@@ -125,18 +128,21 @@ export const Elementary = () => {
           sx={{
             background: 'white',
             display: 'flex',
+            flexDirection: 'column', 
             borderRadius: '8px',
-            height: 'calc(100vh - 140px)',
+            height: '100%',
             width: '100%',
+            padding: '1rem',
             justifyContent: 'center',
+            alignItems: 'center'
           }}
         >
           {loading ? (
             <CircularProgress />
           ) : elementaryToken ? (
-            <Box width="100%" height="100%">
+            <Box width="100%" height="calc(100vh - 210px)" sx={{ flexGrow: 1 }}>
               <iframe
-                src={backendUrl + `/elementary/${elementaryToken}`}
+                 src={backendUrl + `/elementary/${elementaryToken}`}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
