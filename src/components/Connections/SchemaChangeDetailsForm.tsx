@@ -445,10 +445,10 @@ const SchemaChangeDetailsForm = ({
               <Button
                 variant="contained"
                 type="submit"
-                disabled={hasBreakingChanges}
+                disabled={true}
                 sx={{ marginTop: '20px' }}
               >
-                Yes, I approve
+                Temporarily Disabled
               </Button>
             )}
             <Button
