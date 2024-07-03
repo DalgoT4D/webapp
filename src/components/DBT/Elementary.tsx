@@ -100,8 +100,18 @@ export const Elementary = () => {
 
   return (
     <>
-      <Box sx={{ width: '100%', p: 3 }}>
-        <Box sx={{ display: 'flex', mb: 2 }}>
+      <Box sx={{ width: '100%', pt: 3, pr: 3, pl: 3 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            mb: 1,
+            pl: 5,
+          }}
+        >
+          <Typography variant="h6">
+            <strong> Last generated:</strong> {generatedAt}
+          </Typography>
           <Button
             sx={{ ml: 'auto' }}
             onClick={() => refreshReport()}
@@ -116,23 +126,15 @@ export const Elementary = () => {
             background: 'white',
             display: 'flex',
             borderRadius: '8px',
-            padding: '16px',
-            height: '100%',
+            height: 'calc(100vh - 140px)',
             width: '100%',
             justifyContent: 'center',
-            alignItems: 'center',
           }}
         >
           {loading ? (
             <CircularProgress />
           ) : elementaryToken ? (
-            <Box width="100%" height="calc(100vh - 250px)">
-              <Box sx={{ display: 'flex', mb: 1 }}>
-                <Typography variant="h6">
-                  <strong> Last generated:</strong> {generatedAt}
-                </Typography>
-              </Box>
-
+            <Box width="100%" height="100%">
               <iframe
                 src={backendUrl + `/elementary/${elementaryToken}`}
                 width="100%"
