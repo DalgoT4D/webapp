@@ -3,9 +3,8 @@ import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
 import styles from '@/styles/Login.module.css';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { useSearchParams } from 'next/navigation';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import Input from '@/components/UI/Input/Input';
 import Auth from '@/components/Layouts/Auth';
@@ -15,20 +14,29 @@ export const ResetPassword = () => {
   const { register, handleSubmit } = useForm();
   const { data: session }: any = useSession();
   const toastContext = useContext(GlobalContext);
+  const [token, setToken] = useState<string | null>(null);
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlToken: string | null = searchParams.get('token');
+    setToken(urlToken);
+  }, []);
 
   const onSubmit = async (reqData: any) => {
     try {
+      if(!token){
+        errorToast("This password reset link is invalid", [], toastContext);
+        return;
+      }
       await httpPost(session, 'users/reset_password/', {
         token: token,
         password: reqData.password,
       });
       router.push('/login');
-    } catch (error: any) {
-      errorToast(error.cause.detail, [], toastContext);
+    } catch (error: any) {     
+      errorToast(error.cause.detail[0].msg, [], toastContext);
     }
   };
 
