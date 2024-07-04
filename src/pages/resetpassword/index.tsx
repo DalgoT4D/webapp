@@ -27,7 +27,7 @@ export const ResetPassword = () => {
   const onSubmit = async (reqData: any) => {
     try {
       if(!token){
-        errorToast("token value can't be null", [], toastContext);
+        errorToast("This password reset link is invalid", [], toastContext);
         return;
       }
       await httpPost(session, 'users/reset_password/', {
