@@ -91,12 +91,10 @@ describe('Form interactions', () => {
     });
 
     await fireMultipleKeyDown('dropColumn', 2);
+    await user.click(screen.getByTestId('ArrowDropDownIcon'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('columnName0')).toBeInTheDocument();
-      expect(
-        screen.getByTestId('columnName0').querySelector('input')
-      ).toHaveValue('_airbyte_extracted_at');
+      expect(screen.getByText('_airbyte_extracted_at')).toBeInTheDocument();
     });
 
     await user.click(saveButton);
