@@ -22,6 +22,7 @@ import UpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import moment from 'moment';
 import { formatDuration } from '@/utils/common';
+import { defaultLoadMoreLimit } from '@/config/constant';
 
 function removeEscapeSequences(log: string) {
   // This regular expression matches typical ANSI escape codes
@@ -36,7 +37,7 @@ const fetchAirbyteLogs = async (
   try {
     const response = await httpGet(
       session,
-      `airbyte/v1/connections/${connectionId}/sync/history?limit=${limit}&offset=${offset}`
+      `airbyte/v1/connections/${connectionId}/sync/history?limit=${defaultLoadMoreLimit}&offset=${offset}`
     );
 
     return response.history || [];
@@ -91,8 +92,6 @@ interface LogObject {
   status: string;
   totalTimeInSeconds: number;
 }
-
-const limit = 10;
 
 const Row = ({ logDetail }: { logDetail: LogObject }) => {
   const [open, setOpen] = useState(false);
@@ -200,7 +199,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
           setLogDetails(response);
         }
 
-        if (response.length < limit) {
+        if (response.length < defaultLoadMoreLimit) {
           setShowLoadMore(false);
         }
         setLoading(false);
@@ -308,7 +307,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                         setLogDetails((logs) => [...logs, ...response]);
                         setOffset((offset) => offset + 1);
                       }
-                      if (response.length < limit) {
+                      if (response.length < defaultLoadMoreLimit) {
                         setShowLoadMore(false);
                       }
                     }
