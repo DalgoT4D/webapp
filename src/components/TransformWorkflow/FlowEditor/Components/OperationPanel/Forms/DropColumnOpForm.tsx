@@ -1,18 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import { Box, Button, FormHelperText, Grid, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Checkbox,
+  FormHelperText,
+  Grid,
+  Typography,
+} from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
-import InputAdornment from '@mui/material/InputAdornment';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
-import Input from '@/components/UI/Input/Input';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 interface DropDataConfig {
   columns: string[];
@@ -33,7 +41,6 @@ const DropColumnOp = ({
   const [valid, setValid] = useState(true);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const [column, setColumn] = useState(null);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
@@ -59,14 +66,8 @@ const DropColumnOp = ({
     }
   };
 
-  const handleAddColumn = (column: string) => {
-    setSelectedColumns((prevColumns) => [...prevColumns, column]);
-  };
-
-  const handleRemoveColumn = (column: string) => {
-    setSelectedColumns((prevColumns) =>
-      prevColumns.filter((col) => col !== column)
-    );
+  const handleAddColumn = (columns: string[]) => {
+    setSelectedColumns(columns);
   };
 
   const handleSave = async () => {
@@ -151,52 +152,34 @@ const DropColumnOp = ({
         <Grid item xs={12}>
           <Typography variant="h6">Select Columns to Drop</Typography>
         </Grid>
-        {[...selectedColumns].map((column, index) => (
-          <Grid item xs={12} key={index}>
-            <Grid container spacing={1}>
-              <Grid item xs={12}>
-                <Input
-                  data-testid={`columnName${index}`}
-                  fieldStyle="transformation"
-                  disabled
-                  variant="outlined"
-                  value={column}
-                  fullWidth
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={
-                            action !== 'view'
-                              ? () => handleRemoveColumn(column)
-                              : undefined
-                          }
-                        >
-                          <CloseIcon />
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </Grid>
-        ))}
         <Grid item xs={12}>
           <Autocomplete
             data-testid="dropColumn"
             disabled={action === 'view'}
-            value={column}
-            inputValue={column === null ? '' : column}
+            value={selectedColumns}
+            limitTags={3}
+            multiple
+            disableCloseOnSelect
+            renderOption={(props: any, option: any, { selected }) => {
+              const { key, ...optionProps } = props;
+              return (
+                <li key={key} {...optionProps}>
+                  <Checkbox
+                    icon={icon}
+                    checkedIcon={checkedIcon}
+                    style={{ marginRight: 8 }}
+                    checked={selected}
+                  />
+                  {option}
+                </li>
+              );
+            }}
             fieldStyle="transformation"
-            options={srcColumns
-              .filter((col) => !selectedColumns.includes(col))
-              .sort((a, b) => a.localeCompare(b))}
+            options={srcColumns.sort((a, b) => a.localeCompare(b))}
             label="Select Column to Drop"
             onChange={(value: any) => {
               if (value) {
                 handleAddColumn(value);
-                setColumn(null);
                 setValid(true);
               }
             }}
