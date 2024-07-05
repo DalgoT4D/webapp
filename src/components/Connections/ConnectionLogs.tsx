@@ -186,6 +186,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
   const [logDetails, setLogDetails] = useState<LogObject[]>([]);
   const [offset, setOffset] = useState(1);
   const [showLoadMore, setShowLoadMore] = useState(true);
+  const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     (async () => {
@@ -297,6 +298,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                     mt: 1,
                   }}
                   onClick={async () => {
+                    setLoadMorePressed(true);
                     if (connection) {
                       const response: LogObject[] = await fetchAirbyteLogs(
                         connection.connectionId,
@@ -310,10 +312,17 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                       if (response.length < defaultLoadMoreLimit) {
                         setShowLoadMore(false);
                       }
+                      setLoadMorePressed(false);
                     }
                   }}
                 >
-                  load more <DownIcon />
+                  {loadMorePressed ? (
+                    <CircularProgress />
+                  ) : (
+                    <>
+                      load more <DownIcon />
+                    </>
+                  )}
                 </Box>
               </Box>
             )
