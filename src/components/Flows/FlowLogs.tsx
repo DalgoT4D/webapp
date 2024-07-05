@@ -2,7 +2,6 @@ import {
   Box,
   CircularProgress,
   Dialog,
-  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -12,150 +11,112 @@ import {
   Typography,
 } from '@mui/material';
 import { Transition } from '../DBT/DBTTransformType';
-import Close from '@mui/icons-material/Close';
 import { useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-import { Connection } from './Connections';
+
 import DownIcon from '@mui/icons-material/KeyboardArrowDown';
 import UpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import moment from 'moment';
+import { FlowInterface } from './Flows';
 import { formatDuration } from '@/utils/common';
+import { TopNavBar } from '../Connections/ConnectionLogs';
 import { defaultLoadMoreLimit } from '@/config/constant';
 
-function removeEscapeSequences(log: string) {
-  // This regular expression matches typical ANSI escape codes
-  return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
-}
+const makeReadable = (label: string) => {
+  if (label.startsWith('run-airbyte-connection-flow-v1')) {
+    return 'Airbyte connection sync';
+  }
+  const readableObject: any = {
+    'shellop-git-pull': 'Git pull',
+    'dbtjob-dbt-clean': 'DBT clean',
+    'dbtjob-dbt-deps': 'DBT deps',
+    'dbtjob-dbt-run': 'DBT run',
+    'dbtjob-dbt-test': 'DBT test',
+  };
+  return readableObject[label] ? readableObject[label] : label;
+};
 
-const fetchAirbyteLogs = async (
-  connectionId: string,
+const fetchDeploymentLogs = async (
+  deploymentId: string,
   session: any,
   offset = 0
 ) => {
   try {
     const response = await httpGet(
       session,
-      `airbyte/v1/connections/${connectionId}/sync/history?limit=${defaultLoadMoreLimit}&offset=${offset}`
+      `prefect/v1/flows/${deploymentId}/flow_runs/history?limit=${defaultLoadMoreLimit}&fetchlogs=true&offset=${offset}`
     );
 
-    return response.history || [];
+    return response || [];
   } catch (err: any) {
     console.error(err);
   }
 };
 
-export const TopNavBar = ({ handleClose, title }: any) => (
-  <Box sx={{ display: 'flex' }}>
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 4,
-        pl: '28px',
-        mt: '20px',
-      }}
-    >
-      <Typography variant="h6" sx={{ fontWeight: 700 }}>
-        {title}
-      </Typography>
-    </Box>
-    <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
-      <IconButton
-        edge="start"
-        color="inherit"
-        onClick={handleClose}
-        sx={{ mr: 1, mt: 2 }}
-        aria-label="close"
-      >
-        <Close />
-      </IconButton>
-    </Box>
-  </Box>
-);
-
-interface ConnectionLogsProps {
+interface FlowLogsProps {
   setShowLogsDialog: (value: boolean) => any;
-  connection: Connection | undefined;
+  flow: FlowInterface | undefined;
 }
 
-const columns = ['Date', 'Logs', 'Records synced', 'Bytes synced', 'Duration'];
+const columns = ['Date', 'Logs', 'Duration'];
 
 interface LogObject {
-  bytesEmitted: string;
-  date: string;
-  job_id: number;
-  logs: string[];
-  recordsCommitted: number;
-  recordsEmitted: number;
-  status: string;
-  totalTimeInSeconds: number;
+  level: number;
+  message: string;
+  timestamp: string;
 }
 
-const Row = ({ logDetail }: { logDetail: LogObject }) => {
+interface RunObject {
+  end_time: string;
+  id: string;
+  kind: string;
+  label: string;
+  logs: LogObject[];
+  start_time: string;
+  state_name: string;
+  state_type: string;
+}
+
+interface DeploymentObject {
+  deployment_id: string;
+  expectedStartTime: string;
+  id: string;
+  runs: RunObject[];
+  name: string;
+  startTime: string;
+  state_name: string;
+  status: string;
+  totalRunTime: number;
+}
+
+const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
   const [open, setOpen] = useState(false);
   return (
     <TableRow
-      key={logDetail.job_id}
+      key={logDetail.id}
       sx={{
         position: 'relative',
         p: 2,
 
         background:
-          logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
+          logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
       }}
     >
       <TableCell
         sx={{
+          width: '150px',
           verticalAlign: 'top',
           fontWeight: 600,
           borderTopLeftRadius: '10px',
           borderBottomLeftRadius: '10px',
         }}
       >
-        {moment(logDetail.date).format('MMMM D, YYYY')}
-      </TableCell>
-      <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        <Box
-          sx={{
-            mb: 2,
-            maxWidth: '800px',
-            height: open ? '400px' : '54px',
-            overflow: open ? 'scroll' : 'hidden',
-            wordBreak: 'break-all',
-            transition: 'height 0.5s ease-in-out',
-          }}
-        >
-          {logDetail.logs.map((log: string) => {
-            log = removeEscapeSequences(log);
-            const pattern1 = /\)[:;]\d+ -/;
-            const pattern2 = /\)[:;]\d+/;
-            let match = log.match(pattern1);
-            let index = 0;
-            if (match?.index) {
-              index = match.index + match[0].length;
-            } else {
-              match = log.match(pattern2);
-              if (match?.index) {
-                index = match.index + match[0].length;
-              }
-            }
-            return (
-              <Box key={index} sx={{ mb: 2 }}>
-                {log.slice(index)}
-              </Box>
-            );
-          })}
-        </Box>
-      </TableCell>
-      <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.recordsEmitted.toLocaleString()}
-      </TableCell>
-      <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.bytesEmitted}
+        {moment(logDetail.startTime).format('MMMM D, YYYY')}
       </TableCell>
       <TableCell
+        colSpan={2}
         sx={{
           verticalAlign: 'top',
           fontWeight: 500,
@@ -163,8 +124,42 @@ const Row = ({ logDetail }: { logDetail: LogObject }) => {
           borderBottomRightRadius: '10px',
         }}
       >
-        {formatDuration(logDetail.totalTimeInSeconds)}
+        <Box
+          sx={{
+            mb: 2,
+            height: open ? '400px' : '54px',
+            overflow: open ? 'scroll' : 'hidden',
+            transition: 'height 0.5s ease-in-out',
+          }}
+        >
+          <Box sx={{ wordBreak: 'break-word' }}>
+            {logDetail.runs.map((run) => (
+              <Box key={run.id} sx={{ display: 'flex', mb: 2 }}>
+                <Box sx={{ width: '90%' }}>
+                  <Box>
+                    <strong>{makeReadable(run.label)}</strong>
+                  </Box>
+                  {run.logs.map((log, index) => (
+                    <Box key={log.timestamp + index}>{log.message}</Box>
+                  ))}
+                </Box>
+                <Box
+                  sx={{ ml: 'auto', width: '10%', textAlign: 'right', mr: 4 }}
+                >
+                  {formatDuration(
+                    moment
+                      .duration(
+                        moment(run.end_time).diff(moment(run.start_time))
+                      )
+                      .asSeconds()
+                  )}
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </Box>
       </TableCell>
+
       <Box
         sx={{ position: 'absolute', bottom: 0, left: '50%', cursor: 'pointer' }}
       >
@@ -178,22 +173,22 @@ const Row = ({ logDetail }: { logDetail: LogObject }) => {
   );
 };
 
-export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
+export const FlowLogs: React.FC<FlowLogsProps> = ({
   setShowLogsDialog,
-  connection,
+  flow,
 }) => {
   const { data: session }: any = useSession();
-  const [logDetails, setLogDetails] = useState<LogObject[]>([]);
+  const [logDetails, setLogDetails] = useState<DeploymentObject[]>([]);
   const [offset, setOffset] = useState(1);
   const [showLoadMore, setShowLoadMore] = useState(true);
   const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     (async () => {
-      if (connection) {
+      if (flow) {
         setLoading(true);
-        const response: LogObject[] = await fetchAirbyteLogs(
-          connection.connectionId,
+        const response: DeploymentObject[] = await fetchDeploymentLogs(
+          flow.deploymentId,
           session
         );
         if (response) {
@@ -210,6 +205,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
 
   return (
     <Dialog
+      data-testid="flowlogs-dialog"
       sx={{
         m: '74px 24px 22px 24px',
         background: '#00000000',
@@ -225,17 +221,16 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
     >
       <TopNavBar
         handleClose={() => setShowLogsDialog(false)}
-        title="Connection History"
+        title="Logs History"
       />
       <Box sx={{ p: '0px 28px' }}>
         <Box sx={{ mb: 1 }}>
           <Box sx={{ fontSize: '16px', display: 'flex' }}>
             <Typography sx={{ fontWeight: 700 }}>
-              {`${connection?.name} |`}
+              {`${flow?.name} |`}
             </Typography>
             <Typography sx={{ fontWeight: 600, ml: '4px' }}>
-              {connection?.source.sourceName} →{' '}
-              {connection?.destination.destinationName}
+              {flow?.status ? 'Active' : 'Inactive'}
             </Typography>
           </Box>
         </Box>
@@ -257,13 +252,15 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                   },
                 }}
               >
-                {columns.map((column) => (
+                {columns.map((column, index) => (
                   <TableCell
                     sx={{
                       p: '8px 16px',
                       color: 'white',
-                      fontWeight: 700,
                       background: '#00897B',
+                      fontWeight: 700,
+                      textAlign:
+                        index === columns.length - 1 ? 'right' : 'unset',
                     }}
                     key={column}
                   >
@@ -275,7 +272,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
 
             <TableBody>
               {logDetails.map((logDetail) => (
-                <Row key={logDetail.job_id} logDetail={logDetail} />
+                <Row key={logDetail.id} logDetail={logDetail} />
               ))}
             </TableBody>
           </Table>
@@ -298,13 +295,14 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                     mt: 1,
                   }}
                   onClick={async () => {
-                    setLoadMorePressed(true);
-                    if (connection) {
-                      const response: LogObject[] = await fetchAirbyteLogs(
-                        connection.connectionId,
-                        session,
-                        offset
-                      );
+                    if (flow) {
+                      setLoadMorePressed(true);
+                      const response: DeploymentObject[] =
+                        await fetchDeploymentLogs(
+                          flow.deploymentId,
+                          session,
+                          offset
+                        );
                       if (response) {
                         setLogDetails((logs) => [...logs, ...response]);
                         setOffset((offset) => offset + 1);
