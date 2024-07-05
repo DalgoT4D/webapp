@@ -128,3 +128,29 @@ export const toCamelCase = (str: string) => {
     .replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ''))
     .replace(/(^\w)/, (m) => m.toLowerCase());
 };
+
+
+export const formatDuration = (seconds: number) => {
+  const duration = moment.duration(seconds, 'seconds');
+  const days = Math.floor(duration.asDays());
+  const hours = Math.floor(duration.hours());
+  const minutes = Math.floor(duration.minutes());
+  const secs = Math.floor(duration.seconds());
+
+  let formattedDuration = '';
+
+  if (days > 0) {
+    formattedDuration += `${days}d `;
+  }
+  if (hours > 0) {
+    formattedDuration += `${hours}h `;
+  }
+  if (minutes > 0) {
+    formattedDuration += `${minutes}m `;
+  }
+  if (secs > 0 || formattedDuration === '') {
+    formattedDuration += `${secs}s`;
+  }
+
+  return formattedDuration.trim();
+};
