@@ -22,6 +22,7 @@ import moment from 'moment';
 import { FlowInterface } from './Flows';
 import { formatDuration } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionLogs';
+import { defaultLoadMoreLimit } from '@/config/constant';
 
 const makeReadable = (label: string) => {
   if (label.startsWith('run-airbyte-connection-flow-v1')) {
@@ -45,7 +46,7 @@ const fetchDeploymentLogs = async (
   try {
     const response = await httpGet(
       session,
-      `prefect/v1/flows/${deploymentId}/flow_runs/history?limit=${limit}&fetchlogs=true&offset=${offset}`
+      `prefect/v1/flows/${deploymentId}/flow_runs/history?limit=${defaultLoadMoreLimit}&fetchlogs=true&offset=${offset}`
     );
 
     return response || [];
@@ -89,8 +90,6 @@ interface DeploymentObject {
   status: string;
   totalRunTime: number;
 }
-
-const limit = 10;
 
 const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
   const [open, setOpen] = useState(false);
@@ -182,6 +181,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
   const [logDetails, setLogDetails] = useState<DeploymentObject[]>([]);
   const [offset, setOffset] = useState(1);
   const [showLoadMore, setShowLoadMore] = useState(true);
+  const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     (async () => {
@@ -195,7 +195,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
           setLogDetails(response);
         }
 
-        if (response.length < limit) {
+        if (response.length < defaultLoadMoreLimit) {
           setShowLoadMore(false);
         }
         setLoading(false);
@@ -296,6 +296,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
                   }}
                   onClick={async () => {
                     if (flow) {
+                      setLoadMorePressed(true);
                       const response: DeploymentObject[] =
                         await fetchDeploymentLogs(
                           flow.deploymentId,
@@ -306,13 +307,20 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
                         setLogDetails((logs) => [...logs, ...response]);
                         setOffset((offset) => offset + 1);
                       }
-                      if (response.length < limit) {
+                      if (response.length < defaultLoadMoreLimit) {
                         setShowLoadMore(false);
                       }
+                      setLoadMorePressed(false);
                     }
                   }}
                 >
-                  load more <DownIcon />
+                  {loadMorePressed ? (
+                    <CircularProgress />
+                  ) : (
+                    <>
+                      load more <DownIcon />
+                    </>
+                  )}
                 </Box>
               </Box>
             )

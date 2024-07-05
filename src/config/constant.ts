@@ -3,6 +3,9 @@ export const showElementaryMenu =
   process.env.NEXT_PUBLIC_SHOW_ELEMENTARY_MENU === 'true';
 export const showDataInsightsTab =
   process.env.NEXT_PUBLIC_SHOW_DATA_INSIGHTS_TAB === 'true';
+export const defaultLoadMoreLimit = parseInt(
+  process.env.NEXT_PUBLIC_DEFAULT_LOAD_MORE_LIMIT || '3'
+);
 
 export const flowRunLogsOffsetLimit = 200;
 
