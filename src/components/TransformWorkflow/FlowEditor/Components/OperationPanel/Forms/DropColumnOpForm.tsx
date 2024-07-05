@@ -70,12 +70,6 @@ const DropColumnOp = ({
     setSelectedColumns(columns);
   };
 
-  const handleRemoveColumn = (column: string) => {
-    setSelectedColumns((prevColumns) =>
-      prevColumns.filter((col) => col !== column)
-    );
-  };
-
   const handleSave = async () => {
     try {
       if (selectedColumns.length < 1) {
