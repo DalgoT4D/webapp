@@ -115,14 +115,16 @@ describe('Flow Creation', () => {
           id: '',
           name: 'flow-run-0',
           status: 'COMPLETED',
+          runs: [],
           startTime: startTime.toString(),
           expectedStartTime: startTime.toString(),
-        } as FlowRun,
+        } as any,
       ]),
     });
+
     const fetchLastFlowRunButton = screen.getByTestId('btn-openhistory-flow-0');
     await userEvent.click(fetchLastFlowRunButton);
-    const flowRunInfo = screen.getByTestId('single-flow-run-logs');
+    const flowRunInfo = screen.getByTestId('flowlogs-dialog');
     expect(flowRunInfo).toBeInTheDocument();
 
     // quick run deployment
