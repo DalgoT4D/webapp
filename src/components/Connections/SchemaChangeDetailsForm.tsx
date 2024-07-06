@@ -348,9 +348,13 @@ const SchemaChangeDetailsForm = ({
                     >
                       Columns Removed
                     </Typography>
-                    <TableRow sx={{boxShadow: "1px", borderRadius: "0px"}} >
-                      <TableCell sx={{fontWeight: "bold"}}>Table Names</TableCell>
-                      <TableCell sx={{fontWeight: "bold"}}>Column Names</TableCell>
+                    <TableRow sx={{ boxShadow: '1px', borderRadius: '0px' }}>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Table Names
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Column Names
+                      </TableCell>
                     </TableRow>
                     {columnsRemoved.map((column, idx) => (
                       <TableRow key={idx} sx={{ boxShadow: 'none' }}>
@@ -393,9 +397,13 @@ const SchemaChangeDetailsForm = ({
                     >
                       Columns Added
                     </Typography>
-                    <TableRow sx={{boxShadow: "1px", borderRadius: "0px"}} >
-                      <TableCell sx={{fontWeight: "bold"}}>Table Names</TableCell>
-                      <TableCell sx={{fontWeight: "bold"}}>Column Names</TableCell>
+                    <TableRow sx={{ boxShadow: '1px', borderRadius: '0px' }}>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Table Names
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        Column Names
+                      </TableCell>
                     </TableRow>
                     {columnsAdded.map((column, idx) => (
                       <TableRow key={idx} sx={{ boxShadow: 'none' }}>
@@ -453,10 +461,10 @@ const SchemaChangeDetailsForm = ({
               <Button
                 variant="contained"
                 type="submit"
-                disabled={true}
+                disabled={hasBreakingChanges}
                 sx={{ marginTop: '20px' }}
               >
-                Temporarily Disabled
+                Yes, I approve
               </Button>
             )}
             <Button
