@@ -231,7 +231,7 @@ export const Header = ({
             )}
           </Box>
         )}
-        {orgs.map((org: AutoCompleteOption, idx: number) => (
+        {orgs.sort((org1, org2)=> org1["label"].localeCompare(org2["label"])).map((org: AutoCompleteOption, idx: number) => (
           <MenuItem
             key={idx}
             value={org.id}
