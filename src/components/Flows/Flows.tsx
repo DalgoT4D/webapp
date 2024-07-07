@@ -16,6 +16,7 @@ import { List } from '../List/List';
 import { lastRunTime, cronToString, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import Image from 'next/image';
+import { FlowRun } from './SingleFlowRunHistory';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import styles from './Flows.module.css';
 import { localTimezone } from '@/utils/common';
