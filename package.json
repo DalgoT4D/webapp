@@ -37,6 +37,7 @@
     "react-hook-form": "^7.51.3",
     "react-joyride": "^2.8.1",
     "react-resizable": "^3.0.5",
+    "react-use-websocket": "^4.8.1",
     "reactflow": "^11.11.3",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.2.4",
