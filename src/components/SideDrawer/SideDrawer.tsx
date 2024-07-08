@@ -166,7 +166,11 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
         return (
           !item.parent && (
             <Fragment key={item.title}>
-              <ListItem sx={{ px: 1.5 }} className={item.className}>
+              <ListItem
+                sx={{ px: 1.5 }}
+                className={item.className}
+                data-testid={`side-menu-item-${item.index}`}
+              >
                 <ItemButton
                   openMenu={openMenu}
                   item={item}
@@ -182,6 +186,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                   {hasChildren.length > 0 && openMenu && (
                     <IconButton
                       sx={{ padding: 0 }}
+                      data-testid={`expand-toggle-${item.index}`}
                       onClick={() => handleCollpaseArrowClick(item.index)}
                     >
                       {open[item.index] ? (
@@ -198,6 +203,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                   in={open[item.index]}
                   key={item.index}
                   timeout="auto"
+                  data-testid={`collapse-box-${item.index}`}
                   unmountOnExit
                 >
                   <List
@@ -215,6 +221,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                           key={subitem.title}
                           sx={{ px: 1.5 }}
                           className={subitem.className}
+                          data-testid={`side-menu-item-${subitem.index}`}
                         >
                           <ItemButton
                             openMenu={openMenu}
