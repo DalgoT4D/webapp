@@ -225,7 +225,7 @@ const DestinationForm = ({
   useEffect(() => {
     if (lastMessage) {
       const formData = getValues();
-      let checkResponse = JSON.parse(lastMessage.data);
+      const checkResponse = JSON.parse(lastMessage.data);
 
       if (checkResponse.status !== 'success') {
         errorToast(checkResponse.message, [], globalContext);
@@ -252,7 +252,7 @@ const DestinationForm = ({
     // trigger check connection
     setLoading(true);
     setSetupLogs([]);
-    let params: any = warehouse
+    const params: any = warehouse
       ? {
           name: data.name,
           config: data.config,

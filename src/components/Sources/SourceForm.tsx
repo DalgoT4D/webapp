@@ -201,8 +201,7 @@ const SourceForm = ({
   useEffect(() => {
     if (lastMessage) {
       const formData = getValues();
-      let checkResponse = JSON.parse(lastMessage.data);
-      console.log(checkResponse);
+      const checkResponse = JSON.parse(lastMessage.data);
 
       if (checkResponse.status !== 'success') {
         errorToast(checkResponse.message, [], globalContext);
