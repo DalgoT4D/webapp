@@ -9,6 +9,8 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 import { ConfigInput } from '../ConfigInput/ConfigInput';
+import useWebSocket from 'react-use-websocket';
+import { generateWebsocketUrl } from '@/helpers/websocket';
 
 interface DestinationFormProps {
   showForm: boolean;
@@ -56,10 +58,17 @@ const DestinationForm = ({
   const [destinationDefs, setDestinationDefs] = useState<
     Array<{ id: string; label: string }>
   >([]);
+  const [socketUrl, setSocketUrl] = useState<string | null>(null);
+  const { sendJsonMessage, lastMessage } = useWebSocket(socketUrl, {
+    share: false,
+    onError(event) {
+      console.error('Socket error:', event);
+    },
+  });
 
   const globalContext = useContext(GlobalContext);
 
-  const { handleSubmit, control, watch, reset, setValue } =
+  const { handleSubmit, control, watch, reset, setValue, getValues } =
     useForm<DestinationFormInput>({
       defaultValues: {
         name: '',
@@ -69,6 +78,14 @@ const DestinationForm = ({
     });
 
   const watchSelectedDestinationDef = watch('destinationDef');
+
+  useEffect(() => {
+    if (session) {
+      setSocketUrl(
+        generateWebsocketUrl('airbyte/destination/check_connection', session)
+      );
+    }
+  }, [session]);
 
   useEffect(() => {
     if ((destinationDefs.length === 0 || warehouse) && showForm) {
@@ -176,6 +193,7 @@ const DestinationForm = ({
         }
       );
       handleClose();
+      mutate();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
@@ -184,65 +202,72 @@ const DestinationForm = ({
   };
 
   const createWarehouse = async (data: any) => {
-    await httpPost(session, 'organizations/warehouse/', {
-      wtype: data.destinationDef.label.toLowerCase(),
-      name: data.name,
-      destinationDefId: data.destinationDef.id,
-      airbyteConfig: {
-        ...data.config,
-        port: Number(data.config.port),
-      },
-    });
-  };
-
-  const onSubmit = async (data: any) => {
-    setLoading(true);
     try {
-      setSetupLogs([]);
-      let url = 'airbyte/destinations/check_connection/';
-      let params: any = {
+      setLoading(true);
+      await httpPost(session, 'organizations/warehouse/', {
+        wtype: data.destinationDef.label.toLowerCase(),
         name: data.name,
         destinationDefId: data.destinationDef.id,
-        config: {
+        airbyteConfig: {
           ...data.config,
           port: Number(data.config.port),
         },
-      };
-      if (warehouse) {
-        url = `airbyte/destinations/${warehouse.destinationId}/check_connection_for_update/`;
-        params = {
-          name: data.name,
-          config: data.config,
-        };
-      }
-
-      const connectivityCheck = await httpPost(session, url, params);
-      if (connectivityCheck.status === 'succeeded') {
-        if (warehouse) {
-          await editWarehouse(data);
-        } else {
-          await createWarehouse(data);
-        }
-        handleClose();
-        mutate();
-        successToast(
-          warehouse
-            ? 'Warehouse details updated successfully'
-            : 'Warehouse created',
-          [],
-          globalContext
-        );
-      } else {
-        console.log(connectivityCheck);
-        setSetupLogs(connectivityCheck.logs);
-        errorToast('Failed to connect to warehouse', [], globalContext);
-      }
-      setLoading(false);
+      });
+      handleClose();
+      mutate();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
     }
     setLoading(false);
+  };
+
+  useEffect(() => {
+    if (lastMessage) {
+      const formData = getValues();
+      let checkResponse = JSON.parse(lastMessage.data);
+
+      if (checkResponse.status !== 'success') {
+        errorToast(checkResponse.message, [], globalContext);
+        setLoading(false);
+        return;
+      }
+
+      if (checkResponse.data.status === 'succeeded') {
+        if (warehouse) {
+          editWarehouse(formData);
+        } else {
+          createWarehouse(formData);
+        }
+        setLoading(false);
+      } else {
+        setSetupLogs(checkResponse.data.logs);
+        errorToast('Something went wrong', [], globalContext);
+      }
+      setLoading(false);
+    }
+  }, [lastMessage]);
+
+  const onSubmit = async (data: any) => {
+    // trigger check connection
+    setLoading(true);
+    setSetupLogs([]);
+    let params: any = warehouse
+      ? {
+          name: data.name,
+          config: data.config,
+          destinationId: warehouse.destinationId,
+        }
+      : {
+          name: data.name,
+          destinationDefId: data.destinationDef.id,
+          config: {
+            ...data.config,
+            port: Number(data.config.port),
+          },
+          destinationId: null,
+        };
+    sendJsonMessage(params);
   };
 
   const destinationForm = (

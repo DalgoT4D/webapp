@@ -9,6 +9,8 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 import { ConfigInput } from '../ConfigInput/ConfigInput';
+import { generateWebsocketUrl } from '@/helpers/websocket';
+import useWebSocket from 'react-use-websocket';
 
 interface SourceFormProps {
   mutate: (...args: any) => any;
@@ -53,7 +55,7 @@ const SourceForm = ({
 }: SourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const { handleSubmit, control, watch, reset, setValue } =
+  const { handleSubmit, control, watch, reset, setValue, getValues } =
     useForm<SourceFormInput>({
       defaultValues: {
         name: '',
@@ -61,6 +63,21 @@ const SourceForm = ({
         config: {},
       },
     });
+  const [socketUrl, setSocketUrl] = useState<string | null>(null);
+  const { sendJsonMessage, lastMessage } = useWebSocket(socketUrl, {
+    share: false,
+    onError(event) {
+      console.error('Socket error:', event);
+    },
+  });
+
+  useEffect(() => {
+    if (session) {
+      setSocketUrl(
+        generateWebsocketUrl('airbyte/source/check_connection', session)
+      );
+    }
+  }, [session]);
 
   const watchSelectedSourceDef = watch('sourceDef');
   const [logs, setLogs] = useState<Array<any>>([]);
@@ -181,41 +198,43 @@ const SourceForm = ({
     }
   };
 
-  const checkSourceConnectivityForUpdate = async (data: any) => {
-    setLoading(true);
-    setLogs([]);
-    try {
-      let url = `airbyte/sources/check_connection/`;
-      if (sourceId) {
-        url = `airbyte/sources/${sourceId}/check_connection_for_update/`;
+  useEffect(() => {
+    if (lastMessage) {
+      const formData = getValues();
+      let checkResponse = JSON.parse(lastMessage.data);
+      console.log(checkResponse);
+
+      if (checkResponse.status !== 'success') {
+        errorToast(checkResponse.message, [], globalContext);
+        setLoading(false);
+        return;
       }
-      const checkResponse = await httpPost(session, url, {
-        name: data.name,
-        sourceDefId: data.sourceDef.id,
-        config: data.config,
-      });
 
-      if (checkResponse.status === 'succeeded') {
+      if (checkResponse.data.status === 'succeeded') {
         if (sourceId) {
-          await editSource(data);
+          editSource(formData);
         } else {
-          await createSource(data);
+          createSource(formData);
         }
-
         setLoading(false);
       } else {
-        setLogs(checkResponse.logs);
+        setLogs(checkResponse.data.logs);
         errorToast('Something went wrong', [], globalContext);
       }
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], globalContext);
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [lastMessage]);
 
   const onSubmit = async (data: any) => {
-    await checkSourceConnectivityForUpdate(data);
+    // trigger check connection
+    setLoading(true);
+    setLogs([]);
+    sendJsonMessage({
+      name: data.name,
+      sourceDefId: data.sourceDef.id,
+      config: data.config,
+      sourceId: sourceId, // sourceId is null for new source
+    });
   };
 
   const formContent = (
