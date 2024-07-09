@@ -73,7 +73,7 @@ const ItemButton: React.FC<ItemButtonProps> = ({
   );
 };
 
-export const openedMixin = (theme: Theme): CSSObject => ({
+const openedMixin = (theme: Theme): CSSObject => ({
   width: drawerWidth,
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
@@ -82,7 +82,7 @@ export const openedMixin = (theme: Theme): CSSObject => ({
   overflowX: 'hidden',
 });
 
-export const closedMixin = (theme: Theme): CSSObject => ({
+const closedMixin = (theme: Theme): CSSObject => ({
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
@@ -93,8 +93,7 @@ export const closedMixin = (theme: Theme): CSSObject => ({
     width: `calc(${theme.spacing(8)} + 1px)`,
   },
 });
-
-export const Drawer = styled(MuiDrawer, {
+ const Drawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
   width: drawerWidth,
