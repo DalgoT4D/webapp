@@ -73,7 +73,7 @@ const ItemButton: React.FC<ItemButtonProps> = ({
   );
 };
 
-const openedMixin = (theme: Theme): CSSObject => ({
+export const openedMixin = (theme: Theme): CSSObject => ({
   width: drawerWidth,
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
@@ -82,7 +82,7 @@ const openedMixin = (theme: Theme): CSSObject => ({
   overflowX: 'hidden',
 });
 
-const closedMixin = (theme: Theme): CSSObject => ({
+export const closedMixin = (theme: Theme): CSSObject => ({
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
@@ -94,7 +94,7 @@ const closedMixin = (theme: Theme): CSSObject => ({
   },
 });
 
-const Drawer = styled(MuiDrawer, {
+export const Drawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
   width: drawerWidth,
@@ -169,7 +169,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
               <ListItem
                 sx={{ px: 1.5 }}
                 className={item.className}
-                data-testid={`side-menu-item-${item.index}`}
+                data-testid={`menu-item-${item.index}`}
               >
                 <ItemButton
                   openMenu={openMenu}
@@ -210,7 +210,6 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                     component="div"
                     disablePadding
                     sx={{ ml: openMenu ? 4 : 0 }}
-                    data-testid={`child-menu-${item.index}`}
                   >
                     {hasChildren.map((subitem) => {
                       if (subitem.hide) {
@@ -221,7 +220,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                           key={subitem.title}
                           sx={{ px: 1.5 }}
                           className={subitem.className}
-                          data-testid={`side-menu-item-${subitem.index}`}
+                          data-testid={`menu-item-${subitem.index}`}
                         >
                           <ItemButton
                             openMenu={openMenu}
