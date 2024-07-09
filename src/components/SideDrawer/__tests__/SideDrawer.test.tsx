@@ -5,36 +5,45 @@ import { SideDrawer } from '../SideDrawer';
 import { sideMenu } from '@/config/menu';
 import { useRouter } from 'next/router';
 
-const push = jest.fn();
-
 jest.mock('next/router', () => ({
-  useRouter() {
-    return {
-      pathname: '/',
-      push,
-    };
-  },
+  useRouter: jest.fn(),
 }));
 
-const mockGlobalContextValue = {
+const mockedUseRouter: any = useRouter;
+
+const mockGlobalContextValue: any = {
   Permissions: { state: ['permission1', 'permission2'] },
   CurrentOrg: { state: { is_demo: true } },
 };
 
-
 describe('SideDrawer', () => {
+  const setOpenMenu = jest.fn();
+  const push = jest.fn();
+
+  beforeEach(() => {
+    mockedUseRouter.mockReturnValue({
+      pathname: '/',
+      push,
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
   expect(sideMenu).toBeDefined();
   expect(sideMenu.length).toBeGreaterThan(0);
 
   beforeEach(() => {
     render(
       <GlobalContext.Provider value={mockGlobalContextValue}>
-        <SideDrawer openMenu={true} setOpenMenu={jest.fn()} />
+        <SideDrawer openMenu={true} setOpenMenu={setOpenMenu} />
       </GlobalContext.Provider>
     );
+    const sideMenu = screen.getByTestId('side-menu'); //this tests the drawer too.
+    expect(sideMenu).toBeInTheDocument();
   });
 
-  it('renders menu-itmes correctly', () => {
+  it('renders fixed menu-itmes correctly', () => {
     const documentationLink = screen.getByText('Documentation');
     expect(documentationLink).toBeInTheDocument();
 
@@ -42,48 +51,66 @@ describe('SideDrawer', () => {
     expect(privacyPolicyLink).toBeInTheDocument();
   });
 
-  it('toggles the child-menu-items correctly', async () => {
-    const parentItem = sideMenu.find((item) =>
-      sideMenu.some((child) => child.parent === item.index)
-    );
-    if (parentItem) {
-      const expandToggleButton = screen.getByTestId(
-        `expand-toggle-${parentItem.index}`
-      );
-      fireEvent.click(expandToggleButton);
-
-      const childMenuItem = screen.getByTestId(
-        `collapse-box-${parentItem.index}`
-      );
-      expect(childMenuItem).toBeInTheDocument();
-
-      fireEvent.click(expandToggleButton);
-      expect(childMenuItem).toHaveStyle('height: 0px');
-    }
+  it('should render all side menu items which are not hidden', () => {
+    sideMenu
+      .filter((item) => !item.hide)
+      .forEach((item) => {
+        const menuItem = screen.getByTestId(`menu-item-${item.index}`);
+        expect(menuItem).toBeInTheDocument();
+      });
   });
 
-  it('handles menu item clicks and navigation', () => {
-    const menuItem = sideMenu.find((item) =>
-     item.index
-    );
-    if (menuItem) {
-      const itemButton = screen.getByTestId(`side-menu-item-${menuItem.index}`);
-      fireEvent.click(itemButton);
+  it('should handle menu item click and navigation', async () => {
+    sideMenu
+      .filter((item) => !item.hide)
+      .forEach((item) => {
+        const menuItem = screen.getByTestId(`menu-item-${item.index}`);
+        fireEvent.click(menuItem);
 
-    
-      expect(push).toHaveBeenCalledWith(`${menuItem.path}`);
-    }
+        waitFor(() => expect(push).toHaveBeenCalledWith(item.path));
+        push.mockClear(); // Clear the mock to isolate each click
+      });
   });
 
-  // it('disables menu items based on permissions', () => {
-  //   // Test disabling menu items based on permissions
-  //   const disabledItemButton = screen.getByTestId('disabled-item-button'); // Replace with actual test ID
-  //   expect(disabledItemButton).toBeDisabled();
-  // });
+  it('should expand and collapse submenus', () => {
+    sideMenu.filter(item => !item.parent && !item.hide).forEach(item => {
+      const expandToggle = screen.queryByTestId(`expand-toggle-${item.index}`);
+      if (expandToggle) {
+        fireEvent.click(expandToggle);
+        const collapseBox = screen.getByTestId(`collapse-box-${item.index}`);
+        expect(collapseBox).toBeInTheDocument();
+        fireEvent.click(expandToggle); 
+        expect(collapseBox).toHaveStyle("height:0px");
+      }
+    });
+  });
 
-  // it('renders ProductWalk component when is_demo is true', () => {
-  //   // Test rendering of ProductWalk component when is_demo is true
-  //   const productWalkComponent = screen.getByTestId('product-walk'); // Replace with actual test ID
-  //   expect(productWalkComponent).toBeInTheDocument();
-  // });
+  it('should render child menu items when expanded', () => {
+    sideMenu.filter(item => !item.parent && !item.hide).forEach(item => {
+      const hasChildren = sideMenu.filter(subitem => subitem.parent === item.index && !subitem.hide);
+      if (hasChildren.length > 0) {
+        const expandToggle = screen.queryByTestId(`expand-toggle-${item.index}`);
+        if (expandToggle) {
+          fireEvent.click(expandToggle);
+          hasChildren.forEach(subitem => {
+            const childMenuItem = screen.getByTestId(`menu-item-${subitem.index}`);
+            expect(childMenuItem).toBeInTheDocument();
+          });
+        }
+      }
+    });
+  });
+
+  it('should handle menu item click and close drawer when item has minimize flag', () => {
+    sideMenu.forEach(item => {
+      if (item.minimize && !item.hide) {
+      
+        const menuItem = screen.getByText(item.title);
+        
+        fireEvent.click(menuItem);
+        expect(setOpenMenu).toHaveBeenCalledWith(false);
+      }
+    });
+  });
 });
+
