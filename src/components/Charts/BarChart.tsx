@@ -115,5 +115,5 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
     }
   }, [data]);
 
-  return <svg ref={ref} width={700} height={100} />;
+  return <svg role="img" ref={ref} width={700} height={100} />;
 };
