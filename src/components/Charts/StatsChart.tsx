@@ -156,5 +156,5 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
     }
   };
 
-  return <div ref={ref}></div>;
+  return <div data-testid="svg-container" ref={ref}></div>;
 };

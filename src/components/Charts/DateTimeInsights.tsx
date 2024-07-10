@@ -184,6 +184,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
         alignItems: 'center',
         minHeight: '110px',
       }}
+      role="outerbox"
     >
       {chartType === 'chart' ? (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
