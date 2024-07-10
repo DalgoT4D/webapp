@@ -22,6 +22,7 @@ export const NumberInsights: React.FC<NumberInsightsProps> = ({
         alignItems: 'center',
         minHeight: '110px',
       }}
+      data-testid="outerbox"
     >
       {chartType === 'chart' ? (
         data.minimum === data.maximum ? (
@@ -33,7 +34,7 @@ export const NumberInsights: React.FC<NumberInsightsProps> = ({
         <Box sx={{ minWidth: '700px', display: 'flex', alignItems: 'center' }}>
           {(Object.keys(data) as Array<keyof DataProps>)
             .filter((key) => key !== 'otherModes')
-            .map((key) => (
+            .map((key,index) => (
               <Box key={key} sx={{ mr: '50px' }}>
                 <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>
                   {key.charAt(0).toUpperCase() + key.slice(1)}
@@ -48,7 +49,7 @@ export const NumberInsights: React.FC<NumberInsightsProps> = ({
                     alignItems: 'center',
                   }}
                 >
-                  <Box sx={{ ml: 1 }}>
+                  <Box data-testid={`innermostbox-${index}`} sx={{ ml: 1 }}>
                     {data[key] ? (
                       key === 'mode' &&
                       data.otherModes &&
@@ -79,6 +80,7 @@ export const NumberInsights: React.FC<NumberInsightsProps> = ({
           setChartType(chartType === 'chart' ? 'numbers' : 'chart')
         }
         alt="switch icon"
+        data-testid = {`switchicon-${chartType === "chart"? "numbers": "chart"}`}
       />
     </Box>
   );
