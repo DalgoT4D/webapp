@@ -155,7 +155,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
     };
   }, [data]);
 
-  return <div ref={ref}></div>;
+  return <div data-testid ="range-chart-container" ref={ref}></div>;
 };
 
 export default RangeChart;
