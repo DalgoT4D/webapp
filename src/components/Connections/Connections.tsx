@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import {
   CircularProgress,
@@ -89,7 +89,7 @@ export type Connection = {
   syncCatalog: object;
   resetConnDeploymentId: string;
 };
-
+type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
   const maxlength = 20;
   if (input.length <= maxlength) {
@@ -153,6 +153,133 @@ const getSourceDest = (connection: Connection) => (
       </Tooltip>
     </Box>
   </Box>
+);
+const deepEqual = (obj1:any, obj2:any) => {
+  if (obj1 === obj2) return true;
+
+  if (
+    typeof obj1 !== 'object' ||
+    obj1 === null ||
+    typeof obj2 !== 'object' ||
+    obj2 === null
+  ) {
+    return false;
+  }
+
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) return false;
+
+  for (const key of keys1) {
+    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+// eslint-disable-next-line react/display-name
+const Actions = memo(
+  ({
+    connection,
+    idx,
+    syncConnection,
+    permissions,
+    syncingConnectionIds,
+    setSyncingConnectionIds,
+    open,
+    handleClick,
+  }: {
+    connection: Connection;
+    idx: string;
+    syncConnection: any;
+    permissions: string[];
+    syncingConnectionIds: string[];
+    setSyncingConnectionIds: any;
+    open: boolean;
+    handleClick: any;
+  }) => {
+    const { deploymentId, connectionId, lock } = connection;
+    const [tempSyncState, setTempSyncState] = useState(false); //on polling it will set to false automatically. //local state of each button.
+    const isSyncConnectionIdPresent =
+      syncingConnectionIds.includes(connectionId);
+
+    const lockLastStateRef = useRef<LockStatus>(null);
+    useEffect(() => {
+      if (lock) {
+        if (lock.status === 'running') {
+          lockLastStateRef.current = 'running';
+        } else if (lock.status === 'queued') {
+          lockLastStateRef.current = 'queued';
+        } else if (lock.status === 'locked' || lock?.status === 'complete') {
+          lockLastStateRef.current = 'locked';
+        }
+      }
+
+      if (!lock && lockLastStateRef.current && tempSyncState) {
+        setTempSyncState(false);
+
+        lockLastStateRef.current = null;
+      }
+    }, [lock, tempSyncState]);
+    return (
+      <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
+        <Button
+          variant="contained"
+          onClick={async () => {
+            syncConnection(deploymentId, connectionId);
+            // push connection id into list of syncing connection ids
+            if (!isSyncConnectionIdPresent) {
+              setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
+            }
+            if (!tempSyncState) {
+              setTempSyncState(true);
+            }
+          }}
+          data-testid={'sync-' + idx}
+          disabled={
+            tempSyncState || !!lock || !permissions.includes('can_sync_sources')
+          }
+          key={'sync-' + idx}
+          sx={{ marginRight: '10px' }}
+        >
+          {tempSyncState || lock ? (
+            <Image
+              src={SyncIcon}
+              className={styles.SyncIcon}
+              alt="sync icon"
+              data-testid="sync-icon"
+            />
+          ) : (
+            'Sync'
+          )}
+        </Button>
+
+        <Button
+          id={idx}
+          aria-controls={open ? 'basic-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={(event) => handleClick(connection, event.currentTarget)}
+          variant="contained"
+          key={'menu-' + idx}
+          color="info"
+          sx={{ p: 0, minWidth: 32 }}
+          disabled={tempSyncState || lock ? true : false}
+        >
+          <MoreHorizIcon />
+        </Button>
+      </Box>
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      deepEqual(prevProps.connection, nextProps.connection) &&
+      prevProps.idx === nextProps.idx
+    );
+  }
 );
 
 export const Connections = () => {
@@ -323,65 +450,7 @@ export const Connections = () => {
     handleCancelResetConnection();
   };
 
-  const Actions = ({
-    connection,
-    idx,
-  }: {
-    connection: Connection;
-    idx: string;
-  }) => {
-    const { deploymentId, connectionId, lock } = connection;
-    return (
-      <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
-        <Button
-          variant="contained"
-          onClick={async () => {
-            // push connection id into list of syncing connection ids
-            if (!syncingConnectionIds.includes(connectionId)) {
-              setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
-            }
-            syncConnection(deploymentId, connectionId);
-          }}
-          data-testid={'sync-' + idx}
-          disabled={
-            syncingConnectionIds.includes(connectionId) ||
-            !!lock ||
-            !permissions.includes('can_sync_sources')
-          }
-          key={'sync-' + idx}
-          sx={{ marginRight: '10px' }}
-        >
-          {syncingConnectionIds.includes(connectionId) || lock ? (
-            <Image
-              src={SyncIcon}
-              className={styles.SyncIcon}
-              alt="sync icon"
-              data-testid="sync-icon"
-            />
-          ) : (
-            'Sync'
-          )}
-        </Button>
-
-        <Button
-          id={idx}
-          aria-controls={open ? 'basic-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? 'true' : undefined}
-          onClick={(event) => handleClick(connection, event.currentTarget)}
-          variant="contained"
-          key={'menu-' + idx}
-          color="info"
-          sx={{ p: 0, minWidth: 32 }}
-          disabled={
-            syncingConnectionIds.includes(connectionId) || lock ? true : false
-          }
-        >
-          <MoreHorizIcon />
-        </Button>
-      </Box>
-    );
-  };
+  // eslint-disable-next-line react/display-name
 
   const getLastSync = (connection: Connection) => {
     let jobStatus: string | null = null;
@@ -525,6 +594,12 @@ export const Connections = () => {
           key={`actions-${connection.blockId}`}
           connection={connection}
           idx={connection.blockId}
+          permissions={permissions}
+          syncConnection={syncConnection}
+          syncingConnectionIds={syncingConnectionIds}
+          setSyncingConnectionIds={setSyncingConnectionIds}
+          open={open}
+          handleClick={handleClick}
         />,
         // ),
       ]);
