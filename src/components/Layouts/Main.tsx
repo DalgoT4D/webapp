@@ -103,6 +103,7 @@ const MainDashboard = ({ children }: any) => {
         fetcher: (resource) => {
           return httpGet(session, resource).then((res) => res);
         },
+        revalidateOnFocus: false,
       }}
     >
       {redirectTo === 'setup-account' && (
