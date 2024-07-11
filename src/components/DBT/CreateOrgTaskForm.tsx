@@ -92,6 +92,7 @@ const CreateOrgTaskForm = ({
   useEffect(() => {
     (async () => {
       setLoading(true);
+      console.log("******************************************")
       try {
         const data: Array<MasterTask> = await httpGet(session, `data/tasks/`);
         const tasksDropDownRows = data
@@ -184,7 +185,7 @@ const CreateOrgTaskForm = ({
                 value={field.value}
                 onChange={(e, data) => field.onChange(data)}
                 renderInput={(params) => (
-                  <Input {...params} label="Select task" variant="outlined" />
+                  <Input {...params} data-testid="selecttask" label="Select task" variant="outlined" />
                 )}
               />
             )}
