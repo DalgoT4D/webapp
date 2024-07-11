@@ -1,32 +1,39 @@
 import {
+  Alert,
   Box,
   CircularProgress,
   Dialog,
+  LinearProgress,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import { Transition } from '../DBT/DBTTransformType';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-
+import InsightsIcon from '@mui/icons-material/Insights';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import DownIcon from '@mui/icons-material/KeyboardArrowDown';
-import UpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import moment from 'moment';
 import { FlowInterface } from './Flows';
-import { formatDuration } from '@/utils/common';
+import { delay, formatDuration } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionLogs';
 import { defaultLoadMoreLimit } from '@/config/constant';
+import { errorToast } from '../ToastMessage/ToastHelper';
+import useSWR from 'swr';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 const makeReadable = (label: string) => {
   if (label.startsWith('run-airbyte-connection-flow-v1')) {
-    return 'Airbyte connection sync';
+    return 'Airbyte sync';
   }
   const readableObject: any = {
     'shellop-git-pull': 'Git pull',
@@ -60,7 +67,7 @@ interface FlowLogsProps {
   flow: FlowInterface | undefined;
 }
 
-const columns = ['Date', 'Logs', 'Duration'];
+const columns = ['Date', 'Task', 'Duration', 'Action'];
 
 interface LogObject {
   level: number;
@@ -91,85 +98,199 @@ interface DeploymentObject {
   totalRunTime: number;
 }
 
-const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <TableRow
-      key={logDetail.id}
-      sx={{
-        position: 'relative',
-        p: 2,
+const LogsContainer = ({
+  run,
+  allowLogsSummary,
+  flowRunId,
+}: {
+  run: RunObject;
+  allowLogsSummary: boolean;
+  flowRunId: string;
+}) => {
+  const globalContext = useContext(GlobalContext);
+  const [action, setAction] = useState<'detail' | 'summary' | null>(null);
+  const [summarizedLogs, setSummarizedLogs] = useState([]);
+  const [summarizedLogsLoading, setSummarizedLogsLoading] = useState(false);
+  const { data: session }: any = useSession();
 
-        background:
-          logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
-      }}
-    >
-      <TableCell
+  const pollForTaskRun = async (taskId: string) => {
+    try {
+      const response: any = await httpGet(session, 'tasks/stp/' + taskId);
+      const lastMessage: any =
+        response['progress'][response['progress'].length - 1];
+
+      if (!['completed', 'failed'].includes(lastMessage.status)) {
+        await delay(3000);
+        await pollForTaskRun(taskId);
+      } else {
+        setSummarizedLogs(lastMessage.result);
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+    setSummarizedLogsLoading(false);
+  };
+  const summarizeLogs = async () => {
+    setSummarizedLogsLoading(true);
+    try {
+      const response = await httpGet(
+        session,
+        `prefect/v1/flow_runs/${flowRunId}/logsummary?task_id=${run.id}`
+      );
+
+      await delay(3000);
+      pollForTaskRun(response.task_id);
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+  };
+  const handleAction = (
+    event: React.MouseEvent<HTMLElement>,
+    newAction: 'detail' | 'summary' | null
+  ) => {
+    if (newAction === 'summary' && summarizedLogs.length < 1) {
+      summarizeLogs();
+    }
+    setAction(newAction);
+  };
+
+  const open = !!action;
+
+  return (
+    <Box>
+      <Box
+        key={run.id}
         sx={{
-          width: '150px',
-          verticalAlign: 'top',
-          fontWeight: 600,
-          borderTopLeftRadius: '10px',
-          borderBottomLeftRadius: '10px',
+          display: 'flex',
+          pb: '3px',
+          pt: '3px',
+          alignItems: 'center',
         }}
       >
-        {moment(logDetail.startTime).format('MMMM D, YYYY')}
-      </TableCell>
-      <TableCell
-        colSpan={2}
-        sx={{
-          verticalAlign: 'top',
-          fontWeight: 500,
-          borderTopRightRadius: '10px',
-          borderBottomRightRadius: '10px',
-        }}
-      >
-        <Box
-          sx={{
-            mb: 2,
-            height: open ? '400px' : '54px',
-            overflow: open ? 'scroll' : 'hidden',
-            transition: 'height 0.5s ease-in-out',
-          }}
-        >
-          <Box sx={{ wordBreak: 'break-word' }}>
-            {logDetail.runs.map((run) => (
-              <Box key={run.id} sx={{ display: 'flex', mb: 2 }}>
-                <Box sx={{ width: '90%' }}>
-                  <Box>
-                    <strong>{makeReadable(run.label)}</strong>
-                  </Box>
-                  {run.logs.map((log, index) => (
-                    <Box key={log.timestamp + index}>{log.message}</Box>
-                  ))}
-                </Box>
-                <Box
-                  sx={{ ml: 'auto', width: '10%', textAlign: 'right', mr: 4 }}
-                >
-                  {formatDuration(
-                    moment
-                      .duration(
-                        moment(run.end_time).diff(moment(run.start_time))
-                      )
-                      .asSeconds()
-                  )}
-                </Box>
-              </Box>
-            ))}
+        <Box sx={{ width: '30%' }}>
+          <Box>
+            <strong>{makeReadable(run.label)}</strong>
           </Box>
         </Box>
-      </TableCell>
+        <Box
+          sx={{
+            ml: 'auto',
+            width: '30%',
+            mr: 4,
+          }}
+        >
+          {formatDuration(
+            moment
+              .duration(moment(run.end_time).diff(moment(run.start_time)))
+              .asSeconds()
+          )}
+        </Box>
+        <Box sx={{ width: '40%', textAlign: 'right' }}>
+          <ToggleButtonGroup
+            size="small"
+            color="primary"
+            value={action}
+            exclusive
+            disabled={summarizedLogsLoading}
+            onChange={handleAction}
+            aria-label="text alignment"
+          >
+            <ToggleButton value="detail" aria-label="left">
+              Logs
+              <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
+            </ToggleButton>
+            {allowLogsSummary && (
+              <ToggleButton value="summary" aria-label="right">
+                AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
+              </ToggleButton>
+            )}
+          </ToggleButtonGroup>
+        </Box>
+      </Box>
 
       <Box
-        sx={{ position: 'absolute', bottom: 0, left: '50%', cursor: 'pointer' }}
+        sx={{
+          mb: open ? 2 : 0,
+          maxHeight: open ? '400px' : '0px',
+          overflow: 'scroll',
+          wordBreak: 'break-all',
+          transition: 'max-height 0.6s ease-in-out',
+        }}
       >
-        {open ? (
-          <UpIcon onClick={() => setOpen(!open)} />
-        ) : (
-          <DownIcon onClick={() => setOpen(!open)} />
+        {summarizedLogsLoading ? <LinearProgress color="inherit" /> : null}
+        {action === 'summary'
+          ? summarizedLogs.length > 0 && (
+              <Alert icon={false} severity="success" sx={{ mb: 2 }}>
+                {summarizedLogs.map((result: any, index: number) => (
+                  <Box key={result.prompt} sx={{ mb: 2 }}>
+                    <Box>
+                      <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
+                    </Box>
+                    <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
+                  </Box>
+                ))}
+              </Alert>
+            )
+          : null}
+
+        {action === 'detail' && run.logs.length > 0 && (
+          <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
+            <Box sx={{ wordBreak: 'break-word' }}>
+              {run.logs.map((log, index) => (
+                <Box key={log.timestamp + index}>{log.message}</Box>
+              ))}
+            </Box>
+          </Alert>
         )}
       </Box>
-    </TableRow>
+    </Box>
+  );
+};
+
+const Row = ({
+  logDetail,
+  allowLogsSummary,
+}: {
+  logDetail: DeploymentObject;
+  allowLogsSummary: boolean;
+}) => {
+  return (
+    <>
+      <TableRow
+        key={logDetail.id}
+        sx={{
+          position: 'relative',
+          p: 2,
+
+          background:
+            logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
+        }}
+      >
+        <TableCell
+          sx={{
+            width: '150px',
+            fontWeight: 600,
+            borderTopLeftRadius: '10px',
+            borderBottomLeftRadius: '10px',
+          }}
+        >
+          {moment(logDetail.startTime).format('MMMM D, YYYY')}
+        </TableCell>
+
+        <TableCell colSpan={3} sx={{ fontWeight: 500 }}>
+          {logDetail.runs.map((run) => (
+            <LogsContainer
+              key={run.id}
+              run={run}
+              allowLogsSummary={allowLogsSummary}
+              flowRunId={logDetail.id}
+            />
+          ))}
+        </TableCell>
+      </TableRow>
+    </>
   );
 };
 
@@ -178,6 +299,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
   flow,
 }) => {
   const { data: session }: any = useSession();
+  const { data: flags } = useSWR('organizations/flags');
   const [logDetails, setLogDetails] = useState<DeploymentObject[]>([]);
   const [offset, setOffset] = useState(1);
   const [showLoadMore, setShowLoadMore] = useState(true);
@@ -272,7 +394,11 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
 
             <TableBody>
               {logDetails.map((logDetail) => (
-                <Row key={logDetail.id} logDetail={logDetail} />
+                <Row
+                  key={logDetail.id}
+                  logDetail={logDetail}
+                  allowLogsSummary={!!flags?.allowLogsSummary}
+                />
               ))}
             </TableBody>
           </Table>
