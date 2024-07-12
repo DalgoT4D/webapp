@@ -205,7 +205,7 @@ const Actions = memo(
     const [tempSyncState, setTempSyncState] = useState(false); //on polling it will set to false automatically. //local state of each button.
     const isSyncConnectionIdPresent =
       syncingConnectionIds.includes(connectionId);
-
+      
     const lockLastStateRef = useRef<LockStatus>(null);
     useEffect(() => {
       if (lock) {
