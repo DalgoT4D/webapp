@@ -154,31 +154,6 @@ const getSourceDest = (connection: Connection) => (
     </Box>
   </Box>
 );
-const deepEqual = (obj1:any, obj2:any) => {
-  if (obj1 === obj2) return true;
-
-  if (
-    typeof obj1 !== 'object' ||
-    obj1 === null ||
-    typeof obj2 !== 'object' ||
-    obj2 === null
-  ) {
-    return false;
-  }
-
-  const keys1 = Object.keys(obj1);
-  const keys2 = Object.keys(obj2);
-
-  if (keys1.length !== keys2.length) return false;
-
-  for (const key of keys1) {
-    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
-      return false;
-    }
-  }
-
-  return true;
-};
 
 // eslint-disable-next-line react/display-name
 const Actions = memo(
@@ -205,7 +180,6 @@ const Actions = memo(
     const [tempSyncState, setTempSyncState] = useState(false); //on polling it will set to false automatically. //local state of each button.
     const isSyncConnectionIdPresent =
       syncingConnectionIds.includes(connectionId);
-      
     const lockLastStateRef = useRef<LockStatus>(null);
     useEffect(() => {
       if (lock) {
@@ -276,8 +250,7 @@ const Actions = memo(
   },
   (prevProps, nextProps) => {
     return (
-      deepEqual(prevProps.connection, nextProps.connection) &&
-      prevProps.idx === nextProps.idx
+      prevProps.connection.lock === nextProps.connection.lock
     );
   }
 );
