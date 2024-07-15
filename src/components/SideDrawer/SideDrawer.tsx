@@ -121,7 +121,6 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const [runWalkThrough, setRunWalkThrough] = useState(false);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
-
   // handle drawer expand and collapse
 
   const handleCollpaseArrowClick = (idx: number) => {
@@ -141,6 +140,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
       setOpenMenu(false);
     }
     setSelectedIndex(item.index);
+
     router.push(item.path);
   };
 
@@ -272,7 +272,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                 justifyContent: 'center',
               }}
             >
-              <Typography sx={{ paddingRight: 1 }}>Documentation</Typography>
+              <Typography data-testid="documentation" sx={{ paddingRight: 1 }}>Documentation</Typography>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 height="16"
@@ -294,7 +294,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                 marginTop: 1,
               }}
             >
-              <Typography sx={{ paddingRight: 1 }}>Privacy Policy</Typography>
+              <Typography data-testid="privacypolicy" sx={{ paddingRight: 1 }}>Privacy Policy</Typography>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 height="16"
