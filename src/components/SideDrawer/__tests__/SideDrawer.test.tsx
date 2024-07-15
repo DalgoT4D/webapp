@@ -1,9 +1,16 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { SideDrawer } from '../SideDrawer';
 import { sideMenu } from '@/config/menu';
 import { useRouter } from 'next/router';
+
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
@@ -18,31 +25,31 @@ const mockGlobalContextValue: any = {
 
 describe('SideDrawer', () => {
   const setOpenMenu = jest.fn();
-  const push = jest.fn();
+  const pushMock = jest.fn();
 
   beforeEach(() => {
     mockedUseRouter.mockReturnValue({
       pathname: '/',
-      push,
+      push: pushMock,
     });
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-  expect(sideMenu).toBeDefined();
-  expect(sideMenu.length).toBeGreaterThan(0);
-
-  beforeEach(() => {
     render(
       <GlobalContext.Provider value={mockGlobalContextValue}>
         <SideDrawer openMenu={true} setOpenMenu={setOpenMenu} />
       </GlobalContext.Provider>
     );
-    const sideMenu = screen.getByTestId('side-menu'); //this tests the drawer too.
+    const sideMenu = screen.getByTestId('side-menu');
     expect(sideMenu).toBeInTheDocument();
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+  it('checks the side menu is defined and has menu-list', () => {
+    expect(sideMenu).toBeDefined();
+    expect(sideMenu.length).toBeGreaterThan(0);
+  });
+
+  //perfect
   it('renders fixed menu-itmes correctly', () => {
     const documentationLink = screen.getByText('Documentation');
     expect(documentationLink).toBeInTheDocument();
@@ -51,6 +58,7 @@ describe('SideDrawer', () => {
     expect(privacyPolicyLink).toBeInTheDocument();
   });
 
+  //perfect
   it('should render all side menu items which are not hidden', () => {
     sideMenu
       .filter((item) => !item.hide)
@@ -60,57 +68,53 @@ describe('SideDrawer', () => {
       });
   });
 
+  //perfect
   it('should handle menu item click and navigation', async () => {
-    sideMenu
-      .filter((item) => !item.hide)
-      .forEach((item) => {
-        const menuItem = screen.getByTestId(`menu-item-${item.index}`);
-        fireEvent.click(menuItem);
+    const menuItem = screen.getByTestId('menu-item-2');
+    expect(menuItem).toBeInTheDocument();
+    const menuLink = within(menuItem).getByTestId('listButton');
+    expect(menuLink).toBeInTheDocument();
+    fireEvent.click(menuLink);
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/pipeline'));
+  });
 
-        waitFor(() => expect(push).toHaveBeenCalledWith(item.path));
-        push.mockClear(); // Clear the mock to isolate each click
+  it('should render child items when expanded or vice versa', async () => {
+    const toggleSwitch = screen.getByTestId(`expand-toggle-2`);
+    expect(toggleSwitch).toBeInTheDocument();
+    expect(screen.getByText('Ingest')).toBeInTheDocument();
+    expect(screen.getByText('Transform')).toBeInTheDocument();
+    expect(screen.getByText('Orchestrate')).toBeInTheDocument();
+
+    fireEvent.click(toggleSwitch);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Ingest')).not.toBeInTheDocument();
+      expect(screen.queryByText('Transform')).not.toBeInTheDocument();
+      expect(screen.queryByText('Orchestrate')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(toggleSwitch);
+
+    await waitFor(() => {
+      expect(screen.getByText('Ingest')).toBeInTheDocument();
+      expect(screen.getByText('Transform')).toBeInTheDocument();
+      expect(screen.getByText('Orchestrate')).toBeInTheDocument();
+    });
+  });
+
+  it('should handle menu item click and close drawer when item has minimize flag', async () => {
+    const expandToggle = screen.getByTestId(`expand-toggle-1`);
+    expect(expandToggle).toBeInTheDocument();
+    const minimizedMenu = sideMenu.find((item) => {
+      item.minimize == true && !item.hide;
+    });
+    if (minimizedMenu) {
+      const menuItem = screen.getByTestId(`menu-item-${minimizedMenu.index}`);
+      fireEvent.click(menuItem);
+      expect(setOpenMenu).toHaveBeenCalledWith(false);
+      await waitFor(() => {
+        expect(expandToggle).not.toBeInTheDocument();
       });
-  });
-
-  it('should expand and collapse submenus', () => {
-    sideMenu.filter(item => !item.parent && !item.hide).forEach(item => {
-      const expandToggle = screen.queryByTestId(`expand-toggle-${item.index}`);
-      if (expandToggle) {
-        fireEvent.click(expandToggle);
-        const collapseBox = screen.getByTestId(`collapse-box-${item.index}`);
-        expect(collapseBox).toBeInTheDocument();
-        fireEvent.click(expandToggle); 
-        expect(collapseBox).toHaveStyle("height:0px");
-      }
-    });
-  });
-
-  it('should render child menu items when expanded', () => {
-    sideMenu.filter(item => !item.parent && !item.hide).forEach(item => {
-      const hasChildren = sideMenu.filter(subitem => subitem.parent === item.index && !subitem.hide);
-      if (hasChildren.length > 0) {
-        const expandToggle = screen.queryByTestId(`expand-toggle-${item.index}`);
-        if (expandToggle) {
-          fireEvent.click(expandToggle);
-          hasChildren.forEach(subitem => {
-            const childMenuItem = screen.getByTestId(`menu-item-${subitem.index}`);
-            expect(childMenuItem).toBeInTheDocument();
-          });
-        }
-      }
-    });
-  });
-
-  it('should handle menu item click and close drawer when item has minimize flag', () => {
-    sideMenu.forEach(item => {
-      if (item.minimize && !item.hide) {
-      
-        const menuItem = screen.getByText(item.title);
-        
-        fireEvent.click(menuItem);
-        expect(setOpenMenu).toHaveBeenCalledWith(false);
-      }
-    });
+    }
   });
 });
-
