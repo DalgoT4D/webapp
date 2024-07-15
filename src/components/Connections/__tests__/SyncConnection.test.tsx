@@ -176,10 +176,11 @@ describe('Sync connection suite', () => {
 
     (global as any).fetch = flowStatusAndLogsFetch;
 
+    expect(syncButton).toHaveTextContent('Sync');
     await user.click(syncButton);
 
     await waitFor(() => {
-      expect(screen.queryByTestId('sync-icon')).toBeNull();
+      within(syncButton).findByAltText("sync icon");
     });
   });
 
