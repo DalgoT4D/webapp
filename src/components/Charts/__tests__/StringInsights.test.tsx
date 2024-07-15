@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-import { StringInsights, StringInsightsProps } from '../StringInsights';
+import { StringInsights } from '../StringInsights';
 
 
 jest.mock('../RangeChart', () => jest.fn(() => <div>RangeChart</div>));
@@ -11,7 +11,7 @@ jest.mock('../BarChart', () => ({
 jest.mock('../StatsChart', () => ({
   StatsChart: jest.fn(() => <div>StatsChart</div>),
 }));
-// jest.mock('next/image', () => (props) => <img {...props} />);
+
 
 const mockData = [
   { name: 'Character 1', count: 10, percentage: 50 },

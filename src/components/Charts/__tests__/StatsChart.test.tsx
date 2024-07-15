@@ -15,12 +15,10 @@ describe('StatsChart', () => {
   beforeEach(() => {
     render(<StatsChart data={data} />);
   });
-  it('renders svg statcharts correctly',() => {
-    // Check that the main SVG container is present
+  it('renders svg statcharts correctly', () => {
     const svg = screen.getByTestId('svg-container');
     expect(svg).toBeInTheDocument();
 
-    // Check that all labels are rendered
     expect(screen.getByText('Min: 10')).toBeInTheDocument();
     expect(screen.getByText('Max: 90')).toBeInTheDocument();
     expect(screen.getByText('Mean: 50')).toBeInTheDocument();
