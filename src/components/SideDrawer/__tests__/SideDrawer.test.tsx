@@ -46,7 +46,6 @@ describe('SideDrawer', () => {
     expect(sideMenu.length).toBeGreaterThan(0);
   });
 
- 
   it('renders fixed menu-itmes correctly', () => {
     const documentationLink = screen.getByTestId('documentation');
     expect(documentationLink).toBeInTheDocument();
@@ -54,7 +53,6 @@ describe('SideDrawer', () => {
     const privacyPolicyLink = screen.getByTestId('privacypolicy');
     expect(privacyPolicyLink).toBeInTheDocument();
   });
-
 
   it('should render all side menu items which are not hidden', () => {
     sideMenu
@@ -103,20 +101,18 @@ describe('SideDrawer', () => {
       expect(screen.getByTestId('menu-item-2.3')).toBeInTheDocument();
     });
   });
- 
+
   it('should handle menu item click and close drawer when item has minimize flag', async () => {
-    const expandToggle = screen.getByTestId(`expand-toggle-1`);
-    expect(expandToggle).toBeInTheDocument();
-    const minimizedMenu = sideMenu.find((item) => {
-      item.minimize == true && !item.hide;
-    });
+    const minimizedMenu = sideMenu.find((item) => item.minimize && !item.hide);
+    expect(minimizedMenu).toBeDefined();
+
     if (minimizedMenu) {
       const menuItem = screen.getByTestId(`menu-item-${minimizedMenu.index}`);
-      fireEvent.click(menuItem);
+
+      const menuList = within(menuItem).getByTestId(`listButton`);
+      fireEvent.click(menuList);
+
       expect(setOpenMenu).toHaveBeenCalledWith(false);
-      await waitFor(() => {
-        expect(expandToggle).not.toBeInTheDocument();
-      });
     }
   });
 });
