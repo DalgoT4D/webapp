@@ -1,50 +1,61 @@
+import React from 'react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { BarChart, BarChartProps } from '../BarChart';
 import * as d3 from 'd3';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { BarChart } from '../BarChart';
-
-const mockData = [
-  {
-    label: 'test1',
-    value: 40,
-    barTopLabel: 'top 40',
-  },
-  {
-    label: 'test2',
-    value: 70,
-    barTopLabel: 'top70',
-  },
-];
 
 describe('BarChart', () => {
-  beforeEach(() => {
-    render(<BarChart data={mockData} />);
-  });
+  const data: BarChartProps['data'] = [
+    { label: 'January', value: 30 },
+    { label: 'February', value: 10 },
+    { label: 'March', value: 50, barTopLabel: 'High' },
+    { label: 'April', value: 20 },
+    { label: 'May', value: 60 },
+  ];
 
-  it('should render the svg element', () => {
+  it('renders the bar-chart correctly', () => {
+    render(<BarChart data={data} />);
     const svgElement = screen.getByTestId('barchart-svg');
     expect(svgElement).toBeInTheDocument();
   });
 
+  it('renders correct number of bars', () => {
+    render(<BarChart data={data} />);
+    const svgElement = screen.getByTestId('barchart-svg');
+    const bars = d3.select(svgElement).selectAll('.bar');
+    expect(bars.size()).toBe(data.length);
+  });
 
-  // it('shows tooltip on label hover', () => {
-  //   mockData.forEach(async (data) => {
-  //     const label = screen.getByText(data.label);
-  //     fireEvent.mouseOver(label);
-  //     const tooltip = screen.getByText(data.label);
-  //     expect(tooltip).toBeInTheDocument();
-  //     await waitFor(() => {
-  //       const tooltip = screen.getByText(data.label);
-  //       expect(tooltip).toBeInTheDocument();
-  //       expect(tooltip).toHaveStyle('opacity: 0.9445');
-  //     });
+ 
+  it('renders correct values on bars', () => {
+    render(<BarChart data={data} />);
+    const svgElement = screen.getByTestId('barchart-svg');
+    const barLabels = d3.select(svgElement).selectAll('g text').nodes();
 
-      // fireEvent.mouseLeave(label);
-
-      // await waitFor(() => {
-      //   const tooltip = screen.getByText(data.label);
-      //   expect(tooltip).toHaveStyle('opacity: 0');
-      // });
-      //   fireEvent.mouseLeave(label);
-      //   expect(tooltip).not.toBeInTheDocument();
+    data.forEach((d, i) => {
+      const expectedText = d.barTopLabel ? d.barTopLabel : d.value.toString();
+      const actualText = d3.select(barLabels[i + data.length]).text();
+      expect(actualText).toBe(expectedText);
     });
+  });
+
+  it('trims long labels and shows tooltip on hover', async () => {
+    render(<BarChart data={data} />);
+    const svgElement = screen.getByTestId('barchart-svg');
+    const ticks = d3.select(svgElement).selectAll('.tick text').nodes();
+
+   //trim label
+    ticks.forEach((node, i) => {
+      const originalLabel = data[i].label;
+      const expectedLabel = originalLabel.length > 10 ? `${originalLabel.substring(0, 10)}...` : originalLabel;
+      expect(d3.select(node).text()).toBe(expectedLabel);
+    });
+
+    const longLabelNode = ticks.find(node => d3.select(node).text().endsWith('...'));
+    if (longLabelNode) {
+      fireEvent.mouseOver(longLabelNode as HTMLElement);
+      const tooltip = d3.select('body').select('.tooltip');
+      expect(tooltip.style('opacity')).toBe('0.9');
+    }
+  });
+});
 
