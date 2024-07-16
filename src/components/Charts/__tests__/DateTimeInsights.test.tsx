@@ -1,53 +1,129 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DateTimeInsights } from '../DateTimeInsights';
 import { SessionProvider } from 'next-auth/react';
-import { httpGet, httpPost } from '@/helpers/http';
+import moment from 'moment';
 
-const { barProps, type, minDate, maxDate, postBody } = {
-  barProps:{data: [{ label: 'test_label1', value: 10, barTopLabel: 'top10' }]},
-  type: 'chart',
-  minDate: '2024-07-10T00:00:00Z',
-  maxDate: '2024-08-10T00:00:00Z',
-  postBody: {
-    db_schema: 'test_db_schema1',
-    db_table: 'test_db_table1',
-    column_name: 'test_column1',
-    filter: { range: 'year', limit: 10, offset: 2 },
-  },
-};
-const mockSession = {
-    expires : "1",
-    user: {email: "a", name: "Delta", image: "c"}
-}
-
-jest.mock('next-auth/react');
-// jest.mock('next/image', () => (props: any) => <img {...props} />);
+// Mock dependencies
 jest.mock('@/helpers/http', () => ({
   httpGet: jest.fn(),
   httpPost: jest.fn(),
 }));
-jest.mock('@/utils/common', () => ({
-  delay: jest.fn(() => Promise.resolve()),
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn().mockReturnValue({ data: { user: { name: 'Test User' } } }),
 }));
+jest.mock('next/image', () => ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />);
+
+const mockBarProps = {
+  data: [
+    { year: 2021, month: 1, day: 1, frequency: 10 },
+    { year: 2022, month: 1, day: 1, frequency: 15 },
+  ],
+};
+
+const mockPostBody = {};
+
 describe('DateTimeInsights', () => {
-  beforeEach(() => {
+  it('renders the component with chart type', () => {
     render(
-      <SessionProvider session={mockSession}>
+      <SessionProvider session={null}>
         <DateTimeInsights
-          barProps={barProps}
-          minDate={minDate}
-          maxDate={maxDate}
-          type={type}
-          postBody={postBody}
+          minDate="2021-01-01"
+          maxDate="2022-01-01"
+          barProps={mockBarProps}
+          type="chart"
+          postBody={mockPostBody}
         />
       </SessionProvider>
     );
-  });
 
-  it('renders the DateTimeInsights correctly', () => {
-    const element = screen.getByRole('outerbox');
-    expect(element).toBeInTheDocument();
+    expect(screen.getByRole('outerbox')).toBeInTheDocument();
     expect(screen.getByText('year')).toBeInTheDocument();
+    expect(screen.getByAltText('switch icon')).toBeInTheDocument();
   });
 
+  it('toggles to numbers view', () => {
+    render(
+      <SessionProvider session={null}>
+        <DateTimeInsights
+          minDate="2021-01-01"
+          maxDate="2022-01-01"
+          barProps={mockBarProps}
+          type="chart"
+          postBody={mockPostBody}
+        />
+      </SessionProvider>
+    );
+
+    fireEvent.click(screen.getByAltText('switch icon'));
+
+    expect(screen.getByText('Minimum date')).toBeInTheDocument();
+    expect(screen.getByText('Maximum date')).toBeInTheDocument();
+  });
+
+  it('updates offset when clicking right arrow', async () => {
+    render(
+      <SessionProvider session={null}>
+        <DateTimeInsights
+          minDate="2021-01-01"
+          maxDate="2022-01-01"
+          barProps={mockBarProps}
+          type="chart"
+          postBody={mockPostBody}
+        />
+      </SessionProvider>
+    );
+
+    const rightArrow = screen.getAllByRole('button')[1];
+    fireEvent.click(rightArrow);
+
+    await waitFor(() => {
+      expect(screen.getByText('loading')).toBeInTheDocument();
+    });
+  });
+
+  it('updates range when clicking range switch icon', async () => {
+    render(
+      <SessionProvider session={null}>
+        <DateTimeInsights
+          minDate="2021-01-01"
+          maxDate="2022-01-01"
+          barProps={mockBarProps}
+          type="chart"
+          postBody={mockPostBody}
+        />
+      </SessionProvider>
+    );
+
+    const rangeSwitchIcon = screen.getAllByAltText('switch icon')[0];
+    fireEvent.click(rangeSwitchIcon);
+
+    await waitFor(() => {
+      expect(screen.getByText('month')).toBeInTheDocument();
+    });
+  });
+
+  it('displays no data message when data is unavailable', async () => {
+    jest.spyOn(global, 'setTimeout').mockImplementation((cb) => cb());
+
+    render(
+      <SessionProvider session={null}>
+        <DateTimeInsights
+          minDate="2021-01-01"
+          maxDate="2022-01-01"
+          barProps={{ data: [] }}
+          type="chart"
+          postBody={mockPostBody}
+        />
+      </SessionProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('No Data available')).toBeInTheDocument();
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 });

@@ -13,12 +13,12 @@ jest.mock('../StatsChart', () => ({
 }));
 
 
-const mockData = [
+const mockData:any = [
   { name: 'Character 1', count: 10, percentage: 50 },
   { name: 'Character 2', count: 20, percentage: 50 },
 ];
 
-const mockStatsData = {
+const mockStatsData:any = {
   minimum: 1,
   maximum: 20,
   mean: 10,
