@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { DateTimeInsights } from '../DateTimeInsights';
-import { SessionProvider } from 'next-auth/react';
+
 
 
 // Mock dependencies
