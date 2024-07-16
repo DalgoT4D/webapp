@@ -93,8 +93,7 @@ const closedMixin = (theme: Theme): CSSObject => ({
     width: `calc(${theme.spacing(8)} + 1px)`,
   },
 });
-
-const Drawer = styled(MuiDrawer, {
+ const Drawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
   width: drawerWidth,
@@ -122,7 +121,6 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const [runWalkThrough, setRunWalkThrough] = useState(false);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
-
   // handle drawer expand and collapse
 
   const handleCollpaseArrowClick = (idx: number) => {
@@ -142,6 +140,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
       setOpenMenu(false);
     }
     setSelectedIndex(item.index);
+
     router.push(item.path);
   };
 
@@ -166,7 +165,11 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
         return (
           !item.parent && (
             <Fragment key={item.title}>
-              <ListItem sx={{ px: 1.5 }} className={item.className}>
+              <ListItem
+                sx={{ px: 1.5 }}
+                className={item.className}
+                data-testid={`menu-item-${item.index}`}
+              >
                 <ItemButton
                   openMenu={openMenu}
                   item={item}
@@ -182,6 +185,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                   {hasChildren.length > 0 && openMenu && (
                     <IconButton
                       sx={{ padding: 0 }}
+                      data-testid={`expand-toggle-${item.index}`}
                       onClick={() => handleCollpaseArrowClick(item.index)}
                     >
                       {open[item.index] ? (
@@ -198,13 +202,13 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                   in={open[item.index]}
                   key={item.index}
                   timeout="auto"
+                  data-testid={`collapse-box-${item.index}`}
                   unmountOnExit
                 >
                   <List
                     component="div"
                     disablePadding
                     sx={{ ml: openMenu ? 4 : 0 }}
-                    data-testid={`child-menu-${item.index}`}
                   >
                     {hasChildren.map((subitem) => {
                       if (subitem.hide) {
@@ -215,6 +219,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                           key={subitem.title}
                           sx={{ px: 1.5 }}
                           className={subitem.className}
+                          data-testid={`menu-item-${subitem.index}`}
                         >
                           <ItemButton
                             openMenu={openMenu}
@@ -267,7 +272,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                 justifyContent: 'center',
               }}
             >
-              <Typography sx={{ paddingRight: 1 }}>Documentation</Typography>
+              <Typography data-testid="documentation" sx={{ paddingRight: 1 }}>Documentation</Typography>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 height="16"
@@ -289,7 +294,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                 marginTop: 1,
               }}
             >
-              <Typography sx={{ paddingRight: 1 }}>Privacy Policy</Typography>
+              <Typography data-testid="privacypolicy" sx={{ paddingRight: 1 }}>Privacy Policy</Typography>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 height="16"
