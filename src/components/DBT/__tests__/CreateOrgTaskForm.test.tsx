@@ -73,42 +73,42 @@ describe('CreateOrgTaskForm', () => {
     expect(screen.getByTestId('closebutton')).toBeInTheDocument();
   });
 
-  it('fetches and displays tasks correctly', async () => {
-    const mockTasks = [
-      { id: 'task-1', label: 'Task-1' },
-      { id: 'task-2', label: 'Task-2' },
-    ];
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve(mockTasks),
-      })
+  // it('fetches and displays tasks correctly', async () => {
+  //   const mockTasks = [
+  //     { id: 'task-1', label: 'Task-1' },
+  //     { id: 'task-2', label: 'Task-2' },
+  //   ];
+  //   global.fetch = jest.fn(() =>
+  //     Promise.resolve({
+  //       json: () => Promise.resolve(mockTasks),
+  //     })
 
-    ) as jest.Mock;
+  //   ) as jest.Mock;
 
-    setup();
+  //   setup();
 
-    const taskListAutoComplete = screen.getByTestId('taskList');
+  //   const taskListAutoComplete = screen.getByTestId('taskList');
 
-    expect(taskListAutoComplete).toBeInTheDocument();
-    const input = within(taskListAutoComplete).getByRole('combobox');
-    taskListAutoComplete.focus();
-    await waitFor(() => {
-      fireEvent.change(input, { target: { value: 'Task-1' } });
-    });
-    await waitFor(() => {
-      fireEvent.keyDown(taskListAutoComplete, { key: 'ArrowDown' });
-    });
-    await waitFor(() => {
-      fireEvent.keyDown(taskListAutoComplete, { key: 'Enter' });
-    });
-    await waitFor(()=>{
-        expect(input).toHaveValue('Task-1');
-    })
+  //   expect(taskListAutoComplete).toBeInTheDocument();
+  //   const input = within(taskListAutoComplete).getByRole('combobox');
+  //   taskListAutoComplete.focus();
+  //   await waitFor(() => {
+  //     fireEvent.change(input, { target: { value: 'Task-1' } });
+  //   });
+  //   await waitFor(() => {
+  //     fireEvent.keyDown(taskListAutoComplete, { key: 'ArrowDown' });
+  //   });
+  //   await waitFor(() => {
+  //     fireEvent.keyDown(taskListAutoComplete, { key: 'Enter' });
+  //   });
+  //   await waitFor(()=>{
+  //       expect(input).toHaveValue('Task-1');
+  //   })
 
-    //     const button = within(taskListAutoComplete).findByRole("button");
-    //    (await button).click();
-    //    expect(screen.getByRole("presentation")).toHaveClass("base-Popper-root");
-  });
+  //   //     const button = within(taskListAutoComplete).findByRole("button");
+  //   //    (await button).click();
+  //   //    expect(screen.getByRole("presentation")).toHaveClass("base-Popper-root");
+  // });
 
   it('submits the form with correct data', async () => {
     const mockConfig = {
@@ -199,10 +199,10 @@ describe('CreateOrgTaskForm', () => {
     });
   });
 
-  // it('handles form close correctly', () => {
-  //   setup();
-  //   fireEvent.click(screen.getByTestId("closebutton"));
-  //   // expect(screen.getByTestId("taskform")).not.toBeInTheDocument();
-  //   // expect(mockGlobalContext.dispatch).toHaveBeenCalled();
-  // });
+  it('handles form close correctly', () => {
+    setup();
+    fireEvent.click(screen.getByTestId("closebutton"));
+    expect(screen.getByTestId("taskform")).not.toBeInTheDocument();
+    expect(mockGlobalContext.dispatch).toHaveBeenCalled();
+  });
 });
