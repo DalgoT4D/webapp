@@ -26,19 +26,7 @@ describe('RangeChart', () => {
     expect(bars.length).toBe(data.length * 2); // Considering both the main bars and the legend bars
   });
 
-  // it('renders correct values on bars', () => {
-  //   render(<RangeChart data={data} />);
-  //   const container = screen.getByTestId('range-chart-container');
-  //   const valueLabels = d3.select(container).selectAll('text.value').nodes();
-
-  //   data.forEach((d, i) => {
-  //     const expectedText = `${d.percentage}% | ${d.count}`;
-  //     if (d.count > 50) {
-  //       const actualText = d3.select(valueLabels[i]).text();
-  //       expect(actualText).toBe(expectedText);
-  //     }
-  //   });
-  // });
+  
 
   it('trims long labels and shows tooltip on hover', async () => {
     render(<RangeChart data={data} />);
