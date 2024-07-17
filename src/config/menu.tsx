@@ -84,7 +84,7 @@ export const sideMenu: MenuOption[] = [
     path: '/data-quality',
     icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
     className: 'data_quality_walkthrough',
-    hide: !showElementaryMenu,
+    // hide: !showElementaryMenu,
     minimize: true,
   },
   {
