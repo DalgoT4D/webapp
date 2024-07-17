@@ -8,6 +8,7 @@ import {
   errorToast,
 } from '@/components/ToastMessage/ToastHelper';
 import { Session } from 'next-auth';
+import { delay } from '@/utils/common';
 
 // Mock the dependencies
 jest.mock('next-auth/react', () => ({
@@ -127,6 +128,18 @@ describe('Elementary', () => {
         [],
         expect.any(Object)
       );
+    });
+
+    //case for polling
+
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        progress: [{ status: 'running' }],
+      }),
+    });
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(4);
     });
   });
 
