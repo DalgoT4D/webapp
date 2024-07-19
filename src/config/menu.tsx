@@ -46,6 +46,15 @@ export const sideMenu: MenuOption[] = [
     minimize: true,
   },
   {
+    index: 1.2,
+    title: 'Data Analysis',
+    path: '/analysis/data-analysis',
+    icon: (selected: boolean) => <UsageIcon fill={getColor(selected)} />,
+    parent: 1,
+    className: 'data_analysis',
+    minimize: true,
+  },
+  {
     index: 2,
     title: 'Pipeline overview',
     path: '/pipeline',
