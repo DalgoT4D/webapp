@@ -196,7 +196,7 @@ export const ConfigInput = ({
                 rules={{ required: spec.required && 'Required' }}
                 render={({ field, fieldState }) => (
                   <Autocomplete
-                    disabled={entity ? true : false}
+                    disabled={false}
                     data-testid="autocomplete"
                     id={spec.field}
                     value={field.value}
