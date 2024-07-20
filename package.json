@@ -13,7 +13,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@dagrejs/dagre": "^1.1.2",
+    "@dagrejs/dagre": "^1.1.3",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.5",
     "@mui/icons-material": "5.15.20",
