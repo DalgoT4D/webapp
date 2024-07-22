@@ -283,7 +283,6 @@ export const Connections = () => {
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [showConfirmResetDialog, setShowConfirmResetDialog] =
