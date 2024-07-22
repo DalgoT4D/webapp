@@ -1,11 +1,11 @@
 // TaskSequence.test.js
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import { TaskSequence } from '../TaskSequence';
 import { TransformTask } from '../../DBT/DBTTarget';
 import { ControllerRenderProps } from 'react-hook-form';
-import userEvent from '@testing-library/user-event';
+
 
 // Mock data for testing
 const mockTasks: TransformTask[] = [
