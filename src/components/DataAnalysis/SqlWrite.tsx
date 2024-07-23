@@ -1,12 +1,22 @@
-import { Box, Button, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  TextField,
+  Typography,
+} from '@mui/material';
 import Image from 'next/image';
 import SavedIcon from '@/assets/icons/folder.svg';
 import InfoIcon from '@/assets/icons/info.svg';
 import CloseIcon from '@/assets/icons/close_small.svg';
 import { useState } from 'react';
 import { SavedSession } from './SavedSession';
-import { FullPageLoader } from '../UI/FullScreenLoader/FullScreenLoader';
+import { FullPageBackground } from '../UI/FullScreenLoader/FullScreenLoader';
+import { OverWriteBox } from './OverwriteBox';
 
+const Areas_Of_Development= "Areas of Development";
+const Brightspots = "Brightspots";
+const Summarize = "Summarize";
 export const SqlWrite = () => {
   const [customPromptToggle, setCustomPromptToggle] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
@@ -17,6 +27,7 @@ export const SqlWrite = () => {
   const handleCloseSavedSession = () => {
     setOpenSavedSessionDialog(false);
   };
+
   const handlePromptSelection = (promptText: string) => {
     if (customPromptToggle) {
       setCustomPrompt('');
@@ -207,11 +218,11 @@ export const SqlWrite = () => {
                     defaultPrompt === 'Brightspots' ? '#05443e' : '#00897B',
                 }}
                 onClick={() => {
-                  handlePromptSelection('Brightspots');
+                  handlePromptSelection(Brightspots);
                 }}
               >
                 <Typography sx={{ fontWeight: 600, fontSize: '14px' }}>
-                  Brightspots
+                 {Brightspots}
                 </Typography>
               </Button>
               <Button
@@ -221,16 +232,16 @@ export const SqlWrite = () => {
                   flex: '1 1 auto',
                   padding: '0.75rem 1.37rem',
                   backgroundColor:
-                    defaultPrompt === 'Areas of Development'
+                    defaultPrompt === Areas_Of_Development
                       ? '#05443e'
                       : '#00897B',
                 }}
                 onClick={() => {
-                  handlePromptSelection('Areas of development');
+                  handlePromptSelection(Areas_Of_Development);
                 }}
               >
                 <Typography sx={{ fontWeight: 600, fontSize: '14px' }}>
-                  Areas of development
+                  {Areas_Of_Development}
                 </Typography>
               </Button>
               <Button
@@ -240,14 +251,14 @@ export const SqlWrite = () => {
                   flex: '1 1 auto',
                   padding: '0.75rem 1.37rem',
                   backgroundColor:
-                    defaultPrompt === 'Summarize' ? '#05443e' : '#00897B',
+                    defaultPrompt === Summarize ? '#05443e' : '#00897B',
                 }}
                 onClick={() => {
-                  handlePromptSelection('Summarize');
+                  handlePromptSelection(Summarize);
                 }}
               >
                 <Typography sx={{ fontWeight: 600, fontSize: '14px' }}>
-                  Summarize
+                  {Summarize}
                 </Typography>
               </Button>
             </Box>
@@ -326,7 +337,19 @@ export const SqlWrite = () => {
         open={openSavedSessionDialog}
         onClose={handleCloseSavedSession}
       />
-      {loading&& <FullPageLoader/>}
+      {loading && (
+        <>
+          <FullPageBackground>
+            <OverWriteBox/>
+            {/* <CircularProgress sx={{ color: '#FFFFFF' }} />
+            <Typography
+              sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}
+            >
+              Prepping your data output...
+            </Typography> */}
+          </FullPageBackground>
+        </>
+      )}
     </>
   );
 };

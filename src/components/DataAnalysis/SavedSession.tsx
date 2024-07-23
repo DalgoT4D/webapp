@@ -8,7 +8,6 @@ import {
   Paper,
   TableHead,
   TableRow,
-  Typography,
   Button,
 } from '@mui/material';
 
