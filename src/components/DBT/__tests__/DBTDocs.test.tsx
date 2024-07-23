@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { DBTDocs } from '../DBTDocs';
-import { backendUrl } from '@/config/constant';
+
 
 // Mock the useSession hook
 jest.mock('next-auth/react', () => ({
