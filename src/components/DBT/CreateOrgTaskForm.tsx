@@ -182,10 +182,11 @@ const CreateOrgTaskForm = ({
               <Autocomplete
                 data-testid="taskList"
                 options={masterTasks}
+                aria-labelledby='Select task'
                 value={field.value}
                 onChange={(e, data) => field.onChange(data)}
                 renderInput={(params) => (
-                  <Input {...params} data-testid="selecttask" label="Select task" variant="outlined" />
+                  <Input {...params} data-testid="selecttask" label="Select task" aria-labelledby='Select task'  variant="outlined" />
                 )}
               />
             )}
