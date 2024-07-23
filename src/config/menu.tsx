@@ -8,7 +8,6 @@ import DataQualityIcon from '@/assets/icons/dataQuality';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 
 import { primaryColor } from './theme';
-import { showElementaryMenu } from './constant';
 
 export const drawerWidth = 250;
 
