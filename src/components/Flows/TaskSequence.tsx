@@ -90,6 +90,7 @@ export const TaskSequence = ({
               cursor: 'grab',
             }}
             alt="drop icon"
+            data-testid = "dropicon"
           />
         )}
 
