@@ -13,6 +13,9 @@ import { useState } from 'react';
 import { SavedSession } from './SavedSession';
 import { FullPageBackground } from '../UI/FullScreenLoader/FullScreenLoader';
 import { OverWriteBox } from './OverwriteBox';
+import { ConfirmSaveAs } from './ConfirmSaveAs';
+import { UnsavedChanges } from './UnsavedChanges';
+import { FeedBackForm } from './Feedback';
 
 const Areas_Of_Development= "Areas of Development";
 const Brightspots = "Brightspots";
@@ -340,7 +343,10 @@ export const SqlWrite = () => {
       {loading && (
         <>
           <FullPageBackground>
-            <OverWriteBox/>
+            {/* <ConfirmSaveAs />
+            <UnsavedChanges /> */}
+            <FeedBackForm />
+            {/* <OverWriteBox/> */}
             {/* <CircularProgress sx={{ color: '#FFFFFF' }} />
             <Typography
               sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}
