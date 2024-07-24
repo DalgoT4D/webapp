@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen,  } from '@testing-library/react';
 import { ConfigInput } from '../ConfigInput';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 
 // Mock implementation for ConnectorConfigInput.fetchUpdatedSpecsOnObjectFieldChange
 jest.mock('../../../helpers/ConnectorConfigInput', () => ({
