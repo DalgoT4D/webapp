@@ -285,12 +285,12 @@ const Row = ({
             onChange={handleAction}
             aria-label="text alignment"
           >
-            <ToggleButton value="detail" aria-label="left">
+            <ToggleButton value="detail" aria-label="left" data-testid="logs">
                Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
             {allowLogsSummary && (
-              <ToggleButton value="summary" aria-label="right">
+              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`}>
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
             )}
