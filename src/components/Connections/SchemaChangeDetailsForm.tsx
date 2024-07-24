@@ -80,8 +80,9 @@ const SchemaChangeDetailsForm = ({
   const checkProgress = async function (
     taskId: string
   ): Promise<[boolean, any]> {
+  
     try {
-      const message = await httpGet(session, `tasks/stp/${taskId}`);
+      const message = await httpGet(session, `tasks/stp/${taskId}`)
       await delay(3000);
       setProgressMessages(message['progress']);
       const lastMessage = message['progress'][message['progress'].length - 1];
@@ -254,7 +255,6 @@ const SchemaChangeDetailsForm = ({
 
   const FormContent = () => {
     const tableCount = tableData.length;
-
     // Separate tables and columns added/removed
     const tablesRemoved = tableData.filter((table) =>
       table.changedColumns.some((column) => column.startsWith('-Stream'))
@@ -462,6 +462,7 @@ const SchemaChangeDetailsForm = ({
                 variant="contained"
                 type="submit"
                 disabled={hasBreakingChanges}
+                data-testid="approveschemachange"
                 sx={{ marginTop: '20px' }}
               >
                 Yes, I approve
