@@ -4,11 +4,13 @@ import { ConnectionLogs } from '../ConnectionLogs';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import moment from 'moment';
-
+import useSWR from 'swr';
 // Mock useSession
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
 }));
+
+jest.mock('swr');
 
 // Mock GlobalContext
 const mockGlobalContext = {
@@ -164,6 +166,11 @@ describe('ConnectionLogs Component', () => {
   });
 
   it('renders AI summary when "AI summary" button is clicked', async () => {
+    useSWR.mockReturnValue({
+      data: { allowLogsSummary: true },
+      error: null,
+    });
+
     renderWithProviders(
       <ConnectionLogs
         setShowLogsDialog={jest.fn()}
