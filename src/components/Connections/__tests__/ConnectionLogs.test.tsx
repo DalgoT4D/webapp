@@ -99,6 +99,10 @@ const renderWithProviders = (ui: React.ReactElement) => {
 describe('ConnectionLogs Component', () => {
   beforeEach(() => {
     mockedHttpGet.mockResolvedValue({ history: sampleLogs });
+    useSWR.mockReturnValue({
+      data: { allowLogsSummary: true },
+      error: null,
+    });
   });
 
   afterEach(() => {
@@ -166,10 +170,7 @@ describe('ConnectionLogs Component', () => {
   });
 
   it('renders AI summary when "AI summary" button is clicked', async () => {
-    useSWR.mockReturnValue({
-      data: { allowLogsSummary: true },
-      error: null,
-    });
+    
 
     renderWithProviders(
       <ConnectionLogs
