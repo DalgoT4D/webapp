@@ -80,9 +80,8 @@ const SchemaChangeDetailsForm = ({
   const checkProgress = async function (
     taskId: string
   ): Promise<[boolean, any]> {
-  
     try {
-      const message = await httpGet(session, `tasks/stp/${taskId}`)
+      const message = await httpGet(session, `tasks/stp/${taskId}`);
       await delay(3000);
       setProgressMessages(message['progress']);
       const lastMessage = message['progress'][message['progress'].length - 1];
