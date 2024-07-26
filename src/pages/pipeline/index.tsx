@@ -40,17 +40,20 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
         const color =
           state_name === 'DBT_TEST_FAILED'
             ? '#df8e14'
-            : status === 'FAILED'
-            ? '#C15E5E'
-            : '#00897B';
+            : status === 'COMPLETED'
+            ? '#00897B'
+            : '#C15E5E';
         const lastRun = moment(new Date(run.startTime)).calendar();
         const lastRunDateFormat = moment(new Date(run.startTime)).format(
           'YYYY-MM-DD HH:mm:ss'
         );
         const totalRunTime = Math.round(run.totalRunTime);
         const runTimeInHours = Math.floor(totalRunTime / 3600);
-        const runTimeInMinutes = Math.floor((totalRunTime - (runTimeInHours * 3600)) / 60);
-        const runTimeInSeconds = totalRunTime - (runTimeInHours * 3600) - (runTimeInMinutes * 60);
+        const runTimeInMinutes = Math.floor(
+          (totalRunTime - runTimeInHours * 3600) / 60
+        );
+        const runTimeInSeconds =
+          totalRunTime - runTimeInHours * 3600 - runTimeInMinutes * 60;
         return {
           id: run.id,
           name: run.name,
