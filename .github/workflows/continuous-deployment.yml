@@ -23,4 +23,4 @@ jobs:
         run: |
           eval `ssh-agent -s`
           ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "source ~/.nvm/nvm.sh; cd /home/ddp/webapp; git pull; /home/ddp/.yarn/bin/yarn install; /home/ddp/.yarn/bin/yarn build; pm2 restart ddp-webapp"
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "source ~/.nvm/nvm.sh; cd /home/ddp/webapp; git pull; /home/ddp/.yarn/bin/yarn install; /home/ddp/.yarn/bin/yarn build; /home/ddp/.yarn/bin/pm2 restart ddp-webapp"
