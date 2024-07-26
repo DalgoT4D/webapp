@@ -584,10 +584,10 @@
     debug "^3.1.0"
     lodash.once "^4.1.1"
 
-"@dagrejs/dagre@^1.1.2":
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/@dagrejs/dagre/-/dagre-1.1.2.tgz#5ec339979447091f48d2144deed8c70dfadae374"
-  integrity sha512-F09dphqvHsbe/6C2t2unbmpr5q41BNPEfJCdn8Z7aEBpVSy/zFQ/b4SWsweQjWNsYMDvE2ffNUN8X0CeFsEGNw==
+"@dagrejs/dagre@^1.1.3":
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/@dagrejs/dagre/-/dagre-1.1.3.tgz#bf593c1ce321972f00b88a34c8cf4bbfed075fbe"
+  integrity sha512-umT7fBPECI4zgxxXW07H3vJN7W1WZcnBjk613eOEAKcwoFrYNyMZO+1SHmoC8zPZWR18DquK2wRUp9VHUE+94g==
   dependencies:
     "@dagrejs/graphlib" "2.2.2"
 
