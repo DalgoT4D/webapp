@@ -254,7 +254,6 @@ const SchemaChangeDetailsForm = ({
 
   const FormContent = () => {
     const tableCount = tableData.length;
-
     // Separate tables and columns added/removed
     const tablesRemoved = tableData.filter((table) =>
       table.changedColumns.some((column) => column.startsWith('-Stream'))
@@ -462,6 +461,7 @@ const SchemaChangeDetailsForm = ({
                 variant="contained"
                 type="submit"
                 disabled={hasBreakingChanges}
+                data-testid="approveschemachange"
                 sx={{ marginTop: '20px' }}
               >
                 Yes, I approve
