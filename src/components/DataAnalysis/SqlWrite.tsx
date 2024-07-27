@@ -101,8 +101,8 @@ export const SqlWrite = () => {
                   fontSize: '14px',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '0.5rem',
                   flexGrow: 1,
+                  height: "2rem"
                 }}
                 onClick={() => {
                   setOpenSavedSessionDialog(true);
@@ -119,7 +119,8 @@ export const SqlWrite = () => {
                 <Button
                   variant="contained"
                   id="create-new-button"
-                  sx={{ width: '100%' }}
+                  
+                  sx={{ width: '100%',height: "2rem" }}
                 >
                   <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>
                     + New
@@ -129,12 +130,12 @@ export const SqlWrite = () => {
             </Box>
           </Box>
           {/* second box */}
-          <Box sx={{ width: '100%', padding: '1.5rem 0' }}>
+          <Box sx={{ width: '100%',padding: "1.25rem 0"}}>
             <hr></hr>
           </Box>
           {/* Third box with sql editor */}
 
-          <Box sx={{ width: '100%', marginTop: '1.5rem 0' }}>
+          <Box sx={{ width: '100%', marginTop: '1.5rem 0', }}>
             <Typography
               sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
             >
@@ -144,11 +145,12 @@ export const SqlWrite = () => {
             {/* This contains the sql filter */}
             <TextField
               id="outlined-multiline-static"
-              sx={{ backgroundColor: 'transparent' }}
+              sx={{ backgroundColor: 'transparent', height: "11rem" }}
               defaultValue=""
               fullWidth
               multiline
-              rows={7}
+              rows={6}
+              
               value={sqlText}
               onChange={(e) => {
                 setSqlText(e.target.value);
@@ -209,6 +211,7 @@ export const SqlWrite = () => {
                 gap: '12px',
                 width: '100%',
                 flexWrap: 'wrap',
+                height: "2.75rem"
               }}
             >
               <Button
@@ -216,7 +219,6 @@ export const SqlWrite = () => {
                 id="create-new-button"
                 sx={{
                   flex: '1 1 auto',
-                  padding: '0.75rem 1.37rem',
                   backgroundColor:
                     defaultPrompt === 'Brightspots' ? '#05443e' : '#00897B',
                 }}
@@ -233,7 +235,6 @@ export const SqlWrite = () => {
                 id="create-new-button"
                 sx={{
                   flex: '1 1 auto',
-                  padding: '0.75rem 1.37rem',
                   backgroundColor:
                     defaultPrompt === Areas_Of_Development
                       ? '#05443e'
@@ -252,7 +253,7 @@ export const SqlWrite = () => {
                 id="create-new-button"
                 sx={{
                   flex: '1 1 auto',
-                  padding: '0.75rem 1.37rem',
+                 
                   backgroundColor:
                     defaultPrompt === Summarize ? '#05443e' : '#00897B',
                 }}
@@ -307,7 +308,7 @@ export const SqlWrite = () => {
             ) : (
               <Button
                 variant="contained"
-                sx={{ width: '100%', padding: '13px 0', borderRadius: '6px' }}
+                sx={{ width: '100%', height: "2.75rem", borderRadius: '6px' }}
                 onClick={() => {
                   if (defaultPrompt) {
                     setDefaultPrompt('');
