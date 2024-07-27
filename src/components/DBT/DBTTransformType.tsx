@@ -240,6 +240,7 @@ const DBTTransformType = ({
                           variant="contained"
                           color="primary"
                           sx={{ width: 'auto' }}
+                          data-testid="gotoworkflow"
                           onClick={handleGoToWorkflow}
                         >
                           Go to workflow
