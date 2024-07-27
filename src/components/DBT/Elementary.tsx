@@ -75,6 +75,7 @@ export const Elementary = () => {
   }, [decreaseTTL, refreshTTL]);
 
   const fetchElementaryToken = async () => {
+
     if (!session) return;
     try {
       const response = await httpPost(
@@ -100,7 +101,7 @@ export const Elementary = () => {
 
   return (
     <>
-      <Box sx={{ width: '100%', pt: 3, pr: 3, pl: 3 }}>
+      <Box data-testid="outerbox" sx={{ width: '100%', pt: 3, pr: 3, pl: 3 }}>
         <Box
           sx={{
             display: 'flex',
