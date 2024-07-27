@@ -52,7 +52,7 @@ export const sideMenu: MenuOption[] = [
     icon: (selected: boolean) => <UsageIcon fill={getColor(selected)} />,
     parent: 1,
     className: 'data_analysis',
-    minimize: true,
+    minimize: false,
   },
   {
     index: 2,
