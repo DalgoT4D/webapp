@@ -287,17 +287,16 @@ const Row = ({
             onChange={handleAction}
             aria-label="text alignment"
           >
-<<<<<<< Updated upstream
             <ToggleButton value="detail" aria-label="left" data-testid="logs">
-               Logs
-=======
-            <ToggleButton value="detail" aria-label="left">
               Logs
->>>>>>> Stashed changes
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
             {allowLogsSummary && (
-              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`}>
+              <ToggleButton
+                value="summary"
+                aria-label="right"
+                data-testid={`aisummary-${connectionId}`}
+              >
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
             )}
