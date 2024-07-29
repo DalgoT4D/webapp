@@ -1,5 +1,5 @@
 import Dagre from '@dagrejs/dagre';
-import { Box, Button, Divider, Typography } from '@mui/material';
+import { Backdrop, Box, Button, CircularProgress, Divider, Typography } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
@@ -207,6 +207,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       color: 'black',
     },
   };
+  const [tempLockCanvas, setTempLockCanvas] = useState(false);
 
   const fetchDbtProjectGraph = async () => {
     try {
@@ -236,11 +237,20 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       setEdges([...layoutedEdges]);
     } catch (error) {
       console.log(error);
+    }finally{
+      // setLockUpperSection(false);
+      setTempLockCanvas(false);
     }
   };
 
   useEffect(() => {
-    if (session) fetchDbtProjectGraph();
+    setTempLockCanvas(true);
+    if (session) {
+      setTimeout(()=>{
+
+        fetchDbtProjectGraph();
+      },5000)
+    }
   }, [session, redrawGraph]);
 
   useEffect(() => {
@@ -450,6 +460,29 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         height: '100%',
       }}
     >
+        <Backdrop
+        sx={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          position: 'absolute', // Position the Backdrop over the Box
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0, // Cover the entire Box
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+        open={tempLockCanvas}
+        onClick={() => {}}
+      >
+        <CircularProgress
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 2,
+          }}
+        />
+      </Backdrop>
       <Box
         sx={{
           height: '44px',
