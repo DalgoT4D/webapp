@@ -36,9 +36,9 @@ describe('PreviewPane Component', () => {
     useSession.mockReturnValue(mockSession);
     usePreviewAction.mockReturnValue({ previewAction: mockPreviewAction });
 
-      <GlobalContext.Provider value={mockToastContext}>
+    
        <PreviewPane height={600}/>
-      </GlobalContext.Provider>
+   
   
   });
   test('renders preview pane with table and headers', async () => {
@@ -100,7 +100,6 @@ describe('PreviewPane Component', () => {
     render(<PreviewPane height={600} />);
 
     const downloadButton = screen.getByTestId("downloadbutton");
-    console.log(downloadButton.outerHTML, "but")
     fireEvent.click(downloadButton);
 
     await waitFor(()=>{
