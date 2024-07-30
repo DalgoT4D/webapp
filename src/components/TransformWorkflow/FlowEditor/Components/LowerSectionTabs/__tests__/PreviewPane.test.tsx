@@ -3,7 +3,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
-import { GlobalContext } from '@/contexts/ContextProvider';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import PreviewPane from '../PreviewPane';
 import { httpGet } from '@/helpers/http';
@@ -19,9 +18,7 @@ const mockSession = {
   data: { user: { name: 'Test User' } },
 };
 
-const mockToastContext = {
-  addToast: jest.fn(),
-};
+
 
 const mockPreviewAction = {
   type: 'preview',
@@ -34,10 +31,7 @@ const mockPreviewAction = {
 describe('PreviewPane Component', () => {
   beforeEach(() => {
     useSession.mockReturnValue(mockSession);
-    usePreviewAction.mockReturnValue({ previewAction: mockPreviewAction });
-
-    
-       <PreviewPane height={600}/>
+    usePreviewAction.mockReturnValue({ previewAction: mockPreviewAction })
    
   
   });
