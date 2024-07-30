@@ -207,7 +207,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       color: 'black',
     },
   };
-  const [tempLockCanvas, setTempLockCanvas] = useState(false);
+  const [tempLockCanvas, setTempLockCanvas] = useState(true);
 
   const fetchDbtProjectGraph = async () => {
     try {
@@ -237,19 +237,15 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       setEdges([...layoutedEdges]);
     } catch (error) {
       console.log(error);
-    }finally{
+    } finally {
       // setLockUpperSection(false);
       setTempLockCanvas(false);
     }
   };
 
   useEffect(() => {
-    setTempLockCanvas(true);
     if (session) {
-      setTimeout(()=>{
-
-        fetchDbtProjectGraph();
-      },5000)
+      fetchDbtProjectGraph();
     }
   }, [session, redrawGraph]);
 
@@ -460,7 +456,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         height: '100%',
       }}
     >
-        <Backdrop
+      <Backdrop
         sx={{
           background: 'rgba(255, 255, 255, 0.8)',
           position: 'absolute', // Position the Backdrop over the Box
