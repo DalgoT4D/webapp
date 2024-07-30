@@ -138,7 +138,6 @@ const LogsContainer = ({
         session,
         `prefect/v1/flow_runs/${flowRunId}/logsummary?task_id=${run.id}`
       );
-
       await delay(3000);
       pollForTaskRun(response.task_id);
     } catch (err: any) {
@@ -202,7 +201,7 @@ const LogsContainer = ({
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
             {allowLogsSummary && (
-              <ToggleButton value="summary" aria-label="right">
+              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${run.id}`}>
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
             )}
