@@ -64,7 +64,7 @@ const ReplaceValueOpForm = ({
       validate: {
         notAllEmpty: (value) =>
           value.some((item) => item.old !== '' || item.new !== '') ||
-          'Alteast one column is required',
+          'Alteast one value is required',
       },
     },
   });
