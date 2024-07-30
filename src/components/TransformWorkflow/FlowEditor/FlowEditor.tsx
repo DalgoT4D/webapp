@@ -42,6 +42,7 @@ const UpperSection = ({
   sourcesModels,
   refreshEditor,
   setRefreshEditor,
+  lockUpperSection
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
 
@@ -74,6 +75,7 @@ const UpperSection = ({
           <Canvas
             redrawGraph={refreshEditor}
             setRedrawGraph={setRefreshEditor}
+            lockUpperSection={lockUpperSection}
           />
         </ReactFlowProvider>
       </Box>
