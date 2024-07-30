@@ -4,7 +4,7 @@ import { OperationNode } from '../OperationNode';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
-import { useNodeId, useEdges, Handle, Position } from 'reactflow';
+import { useNodeId, useEdges, } from 'reactflow';
 
 // Mock necessary hooks and components
 jest.mock('reactflow', () => ({
@@ -48,16 +48,7 @@ const mockPreviewAction = {
     setPreviewAction: mockSetPreviewAction,
 };
 
-const node = {
-    id: '1',
-    type: 'operation',
-    data: {
-        config: {
-            type: 'flattenjson',
-        },
-        isDummy: false,
-    },
-};
+
 
 const edges = [
     //   { id: 'e1-2', source: '1', target: '2' },
