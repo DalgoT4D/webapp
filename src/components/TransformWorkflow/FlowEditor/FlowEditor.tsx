@@ -1,7 +1,5 @@
 import {
-  Backdrop,
   Box,
-  CircularProgress,
   Divider,
   IconButton,
   Tab,
@@ -44,7 +42,6 @@ const UpperSection = ({
   sourcesModels,
   refreshEditor,
   setRefreshEditor,
-  lockUpperSection,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
 
@@ -60,29 +57,6 @@ const UpperSection = ({
         position: 'relative',
       }}
     >
-      <Backdrop
-        sx={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          position: 'absolute', // Position the Backdrop over the Box
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0, // Cover the entire Box
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-        }}
-        open={lockUpperSection}
-        onClick={() => {}}
-      >
-        <CircularProgress
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 2,
-          }}
-        />
-      </Backdrop>
 
       <ResizableBox
         axis="x"
@@ -127,7 +101,6 @@ const LowerSection = ({
   height,
   selectedTab,
   setSelectedTab,
-  workflowInProgress,
   setFullScreen,
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
@@ -171,7 +144,6 @@ const LowerSection = ({
         {selectedTab === 'logs' && (
           <LogsPane
             height={height}
-            workflowInProgress={workflowInProgress}
             dbtRunLogs={dbtRunLogs}
           />
         )}
