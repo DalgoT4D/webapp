@@ -7,7 +7,6 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import PreviewPane from '../PreviewPane';
 import { httpGet } from '@/helpers/http';
-import SyncIcon from '@/assets/icons/sync.svg';
 
 // Mock dependencies
 jest.mock('next-auth/react');
@@ -36,11 +35,11 @@ describe('PreviewPane Component', () => {
   beforeEach(() => {
     useSession.mockReturnValue(mockSession);
     usePreviewAction.mockReturnValue({ previewAction: mockPreviewAction });
-    GlobalContext.Provider = ({ children }) => (
+
       <GlobalContext.Provider value={mockToastContext}>
-        {children}
+       <PreviewPane height={600}/>
       </GlobalContext.Provider>
-    );
+  
   });
   test('renders preview pane with table and headers', async () => {
     // Mock the httpGet function
