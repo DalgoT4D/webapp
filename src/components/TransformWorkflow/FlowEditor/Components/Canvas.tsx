@@ -41,7 +41,8 @@ import { getNextNodePosition } from '@/utils/editor';
 type CanvasProps = {
   redrawGraph: boolean;
   setRedrawGraph: (...args: any) => void;
-  lockUpperSection: boolean;
+  finalLockCanvas: boolean;
+  setTempLockCanvas:any
 };
 
 const nodeGap = 30;
@@ -187,7 +188,7 @@ const getLayoutedElements = ({
   };
 };
 
-const Canvas = ({ redrawGraph, setRedrawGraph, lockUpperSection }: CanvasProps) => {
+const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas }: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -208,8 +209,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph, lockUpperSection }: CanvasProps) 
       color: 'black',
     },
   };
-  const [tempLockCanvas, setTempLockCanvas] = useState(true);
-    const finalLockCanvas = tempLockCanvas || lockUpperSection;
+  // const [tempLockCanvas, setTempLockCanvas] = useState(true);
+    // const finalLockCanvas = tempLockCanvas || lockUpperSection;
   const fetchDbtProjectGraph = async () => {
     setTempLockCanvas(true);
     try {
