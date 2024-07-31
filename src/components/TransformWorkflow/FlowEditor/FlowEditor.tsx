@@ -30,19 +30,22 @@ import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import { LogsPane } from './Components/LowerSectionTabs/LogsPane';
 import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
 import { showDataInsightsTab } from '@/config/constant';
+import { useLockCanvas } from '@/customHooks/useLockCanvas';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
   refreshEditor: boolean;
   setRefreshEditor: any;
-  lockUpperSection: boolean;
+  finalLockCanvas: boolean;
+  setTempLockCanvas:any;
 };
 
 const UpperSection = ({
   sourcesModels,
   refreshEditor,
   setRefreshEditor,
-  lockUpperSection
+  finalLockCanvas,
+  setTempLockCanvas
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
 
@@ -75,7 +78,8 @@ const UpperSection = ({
           <Canvas
             redrawGraph={refreshEditor}
             setRedrawGraph={setRefreshEditor}
-            lockUpperSection={lockUpperSection}
+            finalLockCanvas={finalLockCanvas}
+            setTempLockCanvas={setTempLockCanvas}
           />
         </ReactFlowProvider>
       </Box>
@@ -89,7 +93,7 @@ type LowerSectionProps = {
   height: number;
   selectedTab: LowerSectionTabValues;
   setSelectedTab: (value: LowerSectionTabValues) => void;
-  workflowInProgress: boolean;
+  finalLockCanvas: boolean;
   setFullScreen?: any;
 };
 
@@ -104,6 +108,7 @@ const LowerSection = ({
   selectedTab,
   setSelectedTab,
   setFullScreen,
+  finalLockCanvas
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
 
@@ -147,6 +152,7 @@ const LowerSection = ({
           <LogsPane
             height={height}
             dbtRunLogs={dbtRunLogs}
+            finalLockCanvas={finalLockCanvas}
           />
         )}
         {selectedTab === 'statistics' && <StatisticsPane height={height} />}
@@ -161,8 +167,9 @@ const FlowEditor = ({}) => {
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
+  const {finalLockCanvas, setTempLockCanvas} = useLockCanvas(lockUpperSection);
   const [selectedTab, setSelectedTab] =
-    useState<LowerSectionTabValues>('preview');
+    useState<LowerSectionTabValues>('logs');
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction } = useCanvasAction();
@@ -381,7 +388,8 @@ const FlowEditor = ({}) => {
         setRefreshEditor={setRefreshEditor}
         sourcesModels={sourcesModels}
         refreshEditor={refreshEditor}
-        lockUpperSection={lockUpperSection}
+        finalLockCanvas={finalLockCanvas}
+        setTempLockCanvas = {setTempLockCanvas}
       />
 
       <ResizableBox
@@ -405,7 +413,7 @@ const FlowEditor = ({}) => {
           height={lowerSectionHeight}
           setSelectedTab={setSelectedTab}
           selectedTab={selectedTab}
-          workflowInProgress={lockUpperSection}
+          finalLockCanvas={finalLockCanvas}
         />
       </ResizableBox>
     </Box>
