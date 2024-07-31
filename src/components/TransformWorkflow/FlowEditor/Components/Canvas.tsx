@@ -247,6 +247,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
   };
 
   useEffect(() => {
+    setTempLockCanvas(true);
     if (session) {
         fetchDbtProjectGraph();
     }
