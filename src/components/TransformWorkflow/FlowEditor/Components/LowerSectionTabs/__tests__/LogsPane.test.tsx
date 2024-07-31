@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react';
 import { LogsPane } from '../LogsPane';
 
 
-// Mock the necessary imports and dependencies
 jest.mock('moment', () => {
   return () => jest.requireActual('moment')('2023-07-30T12:00:00Z');
 });
@@ -12,7 +11,7 @@ describe('LogsPane Component', () => {
   const defaultProps = {
     height: 500,
     dbtRunLogs: [],
-    workflowInProgress: false,
+    finalLockCanvas: false,
   };
 
   it('renders the table with logs when dbtRunLogs is not empty', () => {
@@ -22,7 +21,7 @@ describe('LogsPane Component', () => {
     ];
     render(<LogsPane {...defaultProps} dbtRunLogs={logs} />);
 
-    // Check if the table headers are present
+   
     expect(screen.getByText('Last Run')).toBeInTheDocument();
     expect(screen.getByText('Description')).toBeInTheDocument();
 
@@ -35,23 +34,21 @@ describe('LogsPane Component', () => {
   });
 
   it('renders the loading spinner when workflowInProgress is true and dbtRunLogs is empty', () => {
-    render(<LogsPane {...defaultProps} workflowInProgress={true} />);
+    render(<LogsPane {...defaultProps} finalLockCanvas={true} />);
 
-    // Check if the Backdrop and CircularProgress are present
+    
     expect(screen.getByTestId("progressbar")).toBeInTheDocument();
   });
 
   it('renders the "Please press run" message when dbtRunLogs is empty and workflowInProgress is false', () => {
     render(<LogsPane {...defaultProps} />);
 
-    // Check if the "Please press run" message is present
     expect(screen.getByText('Please press run')).toBeInTheDocument();
   });
 
   it('does not render the loading spinner when workflowInProgress is false', () => {
     render(<LogsPane {...defaultProps} />);
 
-    // Check that the Backdrop and CircularProgress are not present
     expect(screen.queryByTestId('progressbar')).not.toBeInTheDocument();
   });
 });
