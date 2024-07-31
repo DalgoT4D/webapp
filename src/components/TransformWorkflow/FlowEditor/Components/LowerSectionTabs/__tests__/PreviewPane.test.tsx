@@ -12,7 +12,11 @@ jest.mock('next-auth/react');
 jest.mock('@/contexts/ContextProvider');
 jest.mock('@/contexts/FlowEditorPreviewContext');
 jest.mock('@/helpers/http');
-jest.mock('next/image', () => (props) => <img {...props} />);
+jest.mock('next/image', () => {
+  const NextImage = (props) => <img {...props} />;
+  NextImage.displayName = 'NextImage';
+  return NextImage;
+});
 
 const mockSession = {
   data: { user: { name: 'Test User' } },
