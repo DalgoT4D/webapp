@@ -10,6 +10,7 @@ const createJestConfig = nextJest({
 const config: Config = {
   moduleNameMapper: {
     '^d3$': '<rootDir>/node_modules/d3/dist/d3.min.js',
+    '^@/(.*)$': '<rootDir>/src/$1'
   },
   // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
