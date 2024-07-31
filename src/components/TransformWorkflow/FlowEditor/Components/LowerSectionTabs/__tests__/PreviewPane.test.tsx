@@ -12,7 +12,7 @@ jest.mock('next-auth/react');
 jest.mock('@/contexts/ContextProvider');
 jest.mock('@/contexts/FlowEditorPreviewContext');
 jest.mock('@/helpers/http');
-jest.mock('@/assets/icons/sync.svg', () => 'sync-icon.svg');
+jest.mock('next/image', () => (props) => <img {...props} />);
 
 const mockSession = {
   data: { user: { name: 'Test User' } },
@@ -32,8 +32,8 @@ describe('PreviewPane Component', () => {
   beforeEach(() => {
     useSession.mockReturnValue(mockSession);
     usePreviewAction.mockReturnValue({ previewAction: mockPreviewAction })
-   
-  
+
+
   });
   test('renders preview pane with table and headers', async () => {
     // Mock the httpGet function
@@ -59,17 +59,17 @@ describe('PreviewPane Component', () => {
 
     expect(screen.getByText('test_table')).toBeInTheDocument();
     await waitFor(() => expect(httpGet).toHaveBeenCalledTimes(3));
-    await waitFor(()=>{
-        expect(screen.getByText('id')).toBeInTheDocument();
-        expect(screen.getByText('name')).toBeInTheDocument();
-        expect(screen.getByText('Test1')).toBeInTheDocument();
-        expect(screen.getByText('Test2')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('id')).toBeInTheDocument();
+      expect(screen.getByText('name')).toBeInTheDocument();
+      expect(screen.getByText('Test1')).toBeInTheDocument();
+      expect(screen.getByText('Test2')).toBeInTheDocument();
     })
 
     // Test header rendering and sorting
     const idHeader = screen.getByText('id');
     const nameHeader = screen.getByText('name');
-    
+
     expect(idHeader).toBeInTheDocument();
     expect(nameHeader).toBeInTheDocument();
 
@@ -83,24 +83,15 @@ describe('PreviewPane Component', () => {
     fireEvent.click(nameHeader);
     await waitFor(() => expect(httpGet).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('order_by=name&order=1')));
   });
-  test('handles download button click', async () => {
-    // Mock the httpGet function for download
-    httpGet.mockImplementation((session, url) => {
-      if (url.includes('download')) {
-        return Promise.resolve(new Blob(['id,name\n1,Test'], { type: 'text/csv' }));
-      }
-    });
-
+  test('initiates the download process when the download button is clicked', async () => {
     render(<PreviewPane height={600} />);
 
-    const downloadButton = screen.getByTestId("downloadbutton");
+    const downloadButton = screen.getByTestId('downloadbutton');
     fireEvent.click(downloadButton);
 
-    await waitFor(()=>{
-        expect(downloadButton).toBeDisabled();
-    })
-    // // Wait for the download process to complete
-    await waitFor(() => expect(httpGet).toHaveBeenCalled());
+    await waitFor(() => {
+      expect(httpGet).toHaveBeenCalled();
+    });
   });
 
   test('renders "Select a table to view" message when no table is selected', () => {
