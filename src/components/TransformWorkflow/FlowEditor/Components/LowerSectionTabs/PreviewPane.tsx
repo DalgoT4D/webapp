@@ -199,6 +199,7 @@ const PreviewPane = ({ height }: { height: number }) => {
           variant="contained"
           sx={{ padding: '5px' }}
           disabled={downloadInProgress}
+          data-testid="downloadbutton"
         >
           {downloadInProgress ? (
             <Image

@@ -25,13 +25,12 @@ import DownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 import moment from 'moment';
 import { delay, formatDuration } from '@/utils/common';
+import { defaultLoadMoreLimit } from '@/config/constant';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import InsightsIcon from '@mui/icons-material/Insights';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import useSWR from 'swr';
-
-const defaultLoadMoreLimit = 10;
 
 const fetchAirbyteLogs = async (
   connectionId: string,
@@ -121,7 +120,6 @@ const LogsColumn = ({
   return (
     <Box
       sx={{
-        maxWidth: '100vw',
         mb: open ? 2 : 0,
         maxHeight: open ? '400px' : '0px',
         overflow: 'scroll',
@@ -288,15 +286,11 @@ const Row = ({
             aria-label="text alignment"
           >
             <ToggleButton value="detail" aria-label="left" data-testid="logs">
-              Logs
+               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
             {allowLogsSummary && (
-              <ToggleButton
-                value="summary"
-                aria-label="right"
-                data-testid={`aisummary-${connectionId}`}
-              >
+              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`}>
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
             )}
