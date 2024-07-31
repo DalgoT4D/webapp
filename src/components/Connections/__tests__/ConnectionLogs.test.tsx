@@ -35,21 +35,52 @@ const sampleConnection = {
 };
 
 // Sample log data
-const sampleLogs: any[] = [];
-
-for (let i = 1; i <= 11; i++) {
-  sampleLogs.push({
-    attempt_no: i,
-    bytesEmitted: `${i * 100}MB`,
+const sampleLogs = [
+  {
+    attempt_no: 1,
+    bytesEmitted: '100MB',
     date: moment().subtract(1, 'days').toISOString(),
     job_id: 1,
-    logs: [`Log ${i * 2 - 1}`, `Log ${i * 2}`],
+    logs: ['Log 1', 'Log 2'],
     recordsCommitted: 1000,
     recordsEmitted: 1000,
     status: 'completed',
     totalTimeInSeconds: 60,
-  });
-}
+  },
+  {
+    attempt_no: 2,
+    bytesEmitted: '200MB',
+    date: moment().subtract(1, 'days').toISOString(),
+    job_id: 1,
+    logs: ['Log 3', 'Log 4'],
+    recordsCommitted: 1000,
+    recordsEmitted: 1000,
+    status: 'completed',
+    totalTimeInSeconds: 60,
+  },
+  {
+    attempt_no: 3,
+    bytesEmitted: '300MB',
+    date: moment().subtract(1, 'days').toISOString(),
+    job_id: 1,
+    logs: ['Log 5', 'Log 6'],
+    recordsCommitted: 1000,
+    recordsEmitted: 1000,
+    status: 'completed',
+    totalTimeInSeconds: 60,
+  },
+  {
+    attempt_no: 4,
+    bytesEmitted: '400MB',
+    date: moment().subtract(1, 'days').toISOString(),
+    job_id: 1,
+    logs: ['Log 7', 'Log 8'],
+    recordsCommitted: 1000,
+    recordsEmitted: 1000,
+    status: 'completed',
+    totalTimeInSeconds: 60,
+  },
+];
 
 // Mock useSession data
 (useSession as jest.Mock).mockReturnValue({
@@ -139,6 +170,8 @@ describe('ConnectionLogs Component', () => {
   });
 
   it('renders AI summary when "AI summary" button is clicked', async () => {
+    
+
     renderWithProviders(
       <ConnectionLogs
         setShowLogsDialog={jest.fn()}
