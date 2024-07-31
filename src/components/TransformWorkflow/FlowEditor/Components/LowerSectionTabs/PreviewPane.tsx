@@ -201,7 +201,7 @@ const PreviewPane = ({ height }: { height: number }) => {
           disabled={downloadInProgress}
           data-testid="downloadbutton"
         >
-          {false ? (
+          {downloadInProgress ? (
             <Image
               src={SyncIcon}
               className={styles.SyncIcon}
