@@ -400,14 +400,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
           : false
       );
     }
-
-    if (canvasAction.type === 'run-workflow') {
-     setTempLockCanvas(true);
-    }
-
-    if (canvasAction.type === 'sync-sources') {
-    setTempLockCanvas(true);
-    }
   }, [canvasAction]);
 
   const onNodeDragStop = (event: any, node: any) => {
