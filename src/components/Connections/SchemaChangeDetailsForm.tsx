@@ -115,7 +115,7 @@ const SchemaChangeDetailsForm = ({
             setFailureMessage(result);
             throw new Error(result);
           }
-          if (isSuccessful && result) {
+          if (result) {
             setCatalogId(result.catalogId || '');
             setValue('name', result.name || '');
             setSyncCatalog(result.syncCatalog?.streams || {});
