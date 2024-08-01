@@ -320,7 +320,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
   const { data: session }: any = useSession();
   const { data: flags } = useSWR('organizations/flags');
   const [logDetails, setLogDetails] = useState<LogObject[]>([]);
-  const [offset, setOffset] = useState(1);
+  const [offset, setOffset] = useState(defaultLoadMoreLimit);
   const [showLoadMore, setShowLoadMore] = useState(true);
   const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -450,7 +450,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                       );
                       if (response) {
                         setLogDetails((logs) => [...logs, ...response]);
-                        setOffset((offset) => offset + 1);
+                        setOffset((offset) => offset + defaultLoadMoreLimit);
                       }
                       if (response.length < defaultLoadMoreLimit) {
                         setShowLoadMore(false);
