@@ -32,6 +32,7 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import useSWR from 'swr';
 
+
 const fetchAirbyteLogs = async (
   connectionId: string,
   session: any,
@@ -43,7 +44,7 @@ const fetchAirbyteLogs = async (
       `airbyte/v1/connections/${connectionId}/sync/history?limit=${defaultLoadMoreLimit}&offset=${offset}`
     );
 
-    return response.history || [];
+    return response;
   } catch (err: any) {
     console.error(err);
   }
@@ -328,15 +329,15 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
     (async () => {
       if (connection) {
         setLoading(true);
-        const response: LogObject[] = await fetchAirbyteLogs(
+        const {history =[] , totalSyncs = 0}: {history: LogObject[],totalSyncs: number } = await fetchAirbyteLogs(
           connection.connectionId,
           session
         );
-        if (response) {
-          setLogDetails(response);
+        if (history) {
+          setLogDetails(history);
         }
 
-        if (response.length < defaultLoadMoreLimit) {
+        if (totalSyncs <= offset + defaultLoadMoreLimit) {
           setShowLoadMore(false);
         }
         setLoading(false);
@@ -443,16 +444,16 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                   onClick={async () => {
                     setLoadMorePressed(true);
                     if (connection) {
-                      const response: LogObject[] = await fetchAirbyteLogs(
+                      const {history =[], totalSyncs = 0}: {history:LogObject[], totalSyncs: number} = await fetchAirbyteLogs(
                         connection.connectionId,
                         session,
                         offset
                       );
-                      if (response) {
-                        setLogDetails((logs) => [...logs, ...response]);
+                      if (history) {
+                        setLogDetails((logs) => [...logs, ...history]);
                         setOffset((offset) => offset + defaultLoadMoreLimit);
                       }
-                      if (response.length < defaultLoadMoreLimit) {
+                      if (totalSyncs <= offset + defaultLoadMoreLimit) {
                         setShowLoadMore(false);
                       }
                       setLoadMorePressed(false);
