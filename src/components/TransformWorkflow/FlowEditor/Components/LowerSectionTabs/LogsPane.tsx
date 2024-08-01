@@ -94,6 +94,7 @@ export const LogsPane = ({
             bottom: 0, // Cover the entire Box
             zIndex: (theme) => theme.zIndex.drawer + 1,
           }}
+          data-testid = "progressbar"
           open={workflowInProgress}
           onClick={() => {}}
         >
