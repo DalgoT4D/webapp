@@ -290,7 +290,7 @@ const Row = ({
                Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
-            {allowLogsSummary && (
+            {(allowLogsSummary && logDetail.status === "failed"  )&& (
               <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`}>
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
