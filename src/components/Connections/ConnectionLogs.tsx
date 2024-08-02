@@ -133,17 +133,17 @@ const LogsColumn = ({
       ) : null}
       {action === 'summary'
         ? summarizedLogs.length > 0 && (
-            <Alert icon={false} severity="success" sx={{ mb: 2 }}>
-              {summarizedLogs.map((result: any, index: number) => (
-                <Box key={result.prompt} sx={{ mb: 2 }}>
-                  <Box>
-                    <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
-                  </Box>
-                  <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
+          <Alert icon={false} severity="success" sx={{ mb: 2 }}>
+            {summarizedLogs.map((result: any, index: number) => (
+              <Box key={result.prompt} sx={{ mb: 2 }}>
+                <Box>
+                  <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
                 </Box>
-              ))}
-            </Alert>
-          )
+                <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
+              </Box>
+            ))}
+          </Alert>
+        )
         : null}
 
       {action === 'detail' && logs.length > 0 && (
@@ -249,7 +249,7 @@ const Row = ({
           p: 2,
 
           background:
-            logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
+            logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.3)' : 'unset',
         }}
       >
         <TableCell
@@ -269,13 +269,14 @@ const Row = ({
         <TableCell
           sx={{
             fontWeight: 500,
-            borderTopRightRadius: '10px',
-            borderBottomRightRadius: '10px',
           }}
         >
           {formatDuration(logDetail.totalTimeInSeconds)}
         </TableCell>
-        <TableCell sx={{ width: '300px', fontWeight: 500 }}>
+        <TableCell sx={{
+          width: '300px', fontWeight: 500, borderTopRightRadius: '10px',
+          borderBottomRightRadius: '10px',
+        }}>
           <ToggleButtonGroup
             size="small"
             color="primary"
@@ -286,12 +287,12 @@ const Row = ({
             onChange={handleAction}
             aria-label="text alignment"
           >
-            <ToggleButton value="detail" aria-label="left" data-testid="logs">
-               Logs
+            <ToggleButton value="detail" aria-label="left" data-testid="logs" >
+              Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
-            {(allowLogsSummary && logDetail.status === "failed"  )&& (
-              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`}>
+            {(allowLogsSummary && logDetail.status === "failed") && (
+              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`} >
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
             )}
@@ -329,7 +330,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
     (async () => {
       if (connection) {
         setLoading(true);
-        const {history =[] , totalSyncs = 0}: {history: LogObject[],totalSyncs: number } = await fetchAirbyteLogs(
+        const { history = [], totalSyncs = 0 }: { history: LogObject[], totalSyncs: number } = await fetchAirbyteLogs(
           connection.connectionId,
           session
         );
@@ -444,7 +445,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                   onClick={async () => {
                     setLoadMorePressed(true);
                     if (connection) {
-                      const {history =[], totalSyncs = 0}: {history:LogObject[], totalSyncs: number} = await fetchAirbyteLogs(
+                      const { history = [], totalSyncs = 0 }: { history: LogObject[], totalSyncs: number } = await fetchAirbyteLogs(
                         connection.connectionId,
                         session,
                         offset
