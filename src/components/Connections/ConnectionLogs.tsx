@@ -1,33 +1,36 @@
 import {
+  Alert,
   Box,
   CircularProgress,
   Dialog,
   IconButton,
+  LinearProgress,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import { Transition } from '../DBT/DBTTransformType';
 import Close from '@mui/icons-material/Close';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { Connection } from './Connections';
 import DownIcon from '@mui/icons-material/KeyboardArrowDown';
-import UpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 import moment from 'moment';
-import { formatDuration } from '@/utils/common';
+import { delay, formatDuration } from '@/utils/common';
 import { defaultLoadMoreLimit } from '@/config/constant';
-
-function removeEscapeSequences(log: string) {
-  // This regular expression matches typical ANSI escape codes
-  return log.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
-}
+import { errorToast } from '../ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import InsightsIcon from '@mui/icons-material/Insights';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import useSWR from 'swr';
 
 const fetchAirbyteLogs = async (
   connectionId: string,
@@ -80,9 +83,16 @@ interface ConnectionLogsProps {
   connection: Connection | undefined;
 }
 
-const columns = ['Date', 'Logs', 'Records synced', 'Bytes synced', 'Duration'];
+const columns = [
+  'Date',
+  'Records synced',
+  'Bytes synced',
+  'Duration',
+  'Actions',
+];
 
 interface LogObject {
+  attempt_no: number;
   bytesEmitted: string;
   date: string;
   job_id: number;
@@ -93,88 +103,213 @@ interface LogObject {
   totalTimeInSeconds: number;
 }
 
-const Row = ({ logDetail }: { logDetail: LogObject }) => {
-  const [open, setOpen] = useState(false);
+const LogsColumn = ({
+  logsLoading,
+  summarizedLogsLoading,
+  summarizedLogs = [],
+  logs,
+  action,
+}: {
+  logsLoading: boolean;
+  summarizedLogsLoading: boolean;
+  summarizedLogs: any;
+  logs: string[];
+  action: 'detail' | 'summary' | null;
+}) => {
+  const open = !!action;
   return (
-    <TableRow
-      key={logDetail.job_id}
+    <Box
       sx={{
-        position: 'relative',
-        p: 2,
-
-        background:
-          logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
+        mb: open ? 2 : 0,
+        maxHeight: open ? '400px' : '0px',
+        overflow: 'scroll',
+        wordBreak: 'break-all',
+        transition: 'max-height 0.6s ease-in-out',
       }}
     >
-      <TableCell
+      {logsLoading || summarizedLogsLoading ? (
+        <LinearProgress color="inherit" />
+      ) : null}
+      {action === 'summary'
+        ? summarizedLogs.length > 0 && (
+            <Alert icon={false} severity="success" sx={{ mb: 2 }}>
+              {summarizedLogs.map((result: any, index: number) => (
+                <Box key={result.prompt} sx={{ mb: 2 }}>
+                  <Box>
+                    <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
+                  </Box>
+                  <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
+                </Box>
+              ))}
+            </Alert>
+          )
+        : null}
+
+      {action === 'detail' && logs.length > 0 && (
+        <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
+          {logs.map((log: string, idx: number) => (
+            <Box
+              key={log + idx}
+              sx={{ mb: '3px', fontWeight: 600, display: 'flex' }}
+            >
+              <Box>{log}</Box>
+            </Box>
+          ))}
+        </Alert>
+      )}
+    </Box>
+  );
+};
+
+const Row = ({
+  allowLogsSummary,
+  logDetail,
+  connectionId,
+}: {
+  allowLogsSummary: boolean;
+  logDetail: LogObject;
+  connectionId: string;
+}) => {
+  const globalContext = useContext(GlobalContext);
+  const [summarizedLogs, setSummarizedLogs] = useState([]);
+  const [detailedLogs, setDetailedLogs] = useState([]);
+  const [summarizedLogsLoading, setSummarizedLogsLoading] = useState(false);
+  const [detailedLogsLoading, setDetailedLogsLoading] = useState(false);
+  const { data: session }: any = useSession();
+
+  const pollForTaskRun = async (taskId: string) => {
+    try {
+      const response: any = await httpGet(session, 'tasks/stp/' + taskId);
+      const lastMessage: any =
+        response['progress'][response['progress'].length - 1];
+
+      if (!['completed', 'failed'].includes(lastMessage.status)) {
+        await delay(3000);
+        await pollForTaskRun(taskId);
+      } else {
+        setSummarizedLogs(lastMessage.result);
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+    setSummarizedLogsLoading(false);
+  };
+  const summarizeLogs = async () => {
+    setSummarizedLogsLoading(true);
+    try {
+      const response = await httpGet(
+        session,
+        `airbyte/v1/connections/${connectionId}/logsummary?job_id=${logDetail.job_id}&attempt_number=${logDetail.attempt_no}`
+      );
+
+      await delay(3000);
+      pollForTaskRun(response.task_id);
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+  };
+
+  const getDetailedLogs = async () => {
+    setDetailedLogsLoading(true);
+    try {
+      const response = await httpGet(
+        session,
+        `airbyte/v1/logs?job_id=${logDetail.job_id}&attempt_number=${logDetail.attempt_no}`
+      );
+      setDetailedLogs(response);
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+    setDetailedLogsLoading(false);
+  };
+
+  const [action, setAction] = useState<'detail' | 'summary' | null>(null);
+
+  const handleAction = (
+    event: React.MouseEvent<HTMLElement>,
+    newAction: 'detail' | 'summary' | null
+  ) => {
+    if (newAction === 'summary' && summarizedLogs.length < 1) {
+      summarizeLogs();
+    } else if (newAction === 'detail' && detailedLogs.length < 1) {
+      getDetailedLogs();
+    }
+    setAction(newAction);
+  };
+  return (
+    <>
+      <TableRow
+        key={logDetail.job_id}
         sx={{
-          verticalAlign: 'top',
-          fontWeight: 600,
-          borderTopLeftRadius: '10px',
-          borderBottomLeftRadius: '10px',
+          position: 'relative',
+          p: 2,
+
+          background:
+            logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
         }}
       >
-        {moment(logDetail.date).format('MMMM D, YYYY')}
-      </TableCell>
-      <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        <Box
+        <TableCell
           sx={{
-            mb: 2,
-            maxWidth: '800px',
-            height: open ? '400px' : '54px',
-            overflow: open ? 'scroll' : 'hidden',
-            wordBreak: 'break-all',
-            transition: 'height 0.5s ease-in-out',
+            fontWeight: 600,
+            borderTopLeftRadius: '10px',
+            borderBottomLeftRadius: '10px',
           }}
         >
-          {logDetail.logs.map((log: string) => {
-            log = removeEscapeSequences(log);
-            const pattern1 = /\)[:;]\d+ -/;
-            const pattern2 = /\)[:;]\d+/;
-            let match = log.match(pattern1);
-            let index = 0;
-            if (match?.index) {
-              index = match.index + match[0].length;
-            } else {
-              match = log.match(pattern2);
-              if (match?.index) {
-                index = match.index + match[0].length;
-              }
-            }
-            return (
-              <Box key={index} sx={{ mb: 2 }}>
-                {log.slice(index)}
-              </Box>
-            );
-          })}
-        </Box>
-      </TableCell>
-      <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.recordsEmitted.toLocaleString()}
-      </TableCell>
-      <TableCell sx={{ verticalAlign: 'top', fontWeight: 500 }}>
-        {logDetail.bytesEmitted}
-      </TableCell>
-      <TableCell
-        sx={{
-          verticalAlign: 'top',
-          fontWeight: 500,
-          borderTopRightRadius: '10px',
-          borderBottomRightRadius: '10px',
-        }}
-      >
-        {formatDuration(logDetail.totalTimeInSeconds)}
-      </TableCell>
-      <Box
-        sx={{ position: 'absolute', bottom: 0, left: '50%', cursor: 'pointer' }}
-      >
-        {open ? (
-          <UpIcon onClick={() => setOpen(!open)} />
-        ) : (
-          <DownIcon onClick={() => setOpen(!open)} />
-        )}
-      </Box>
-    </TableRow>
+          {moment(logDetail.date).format('MMMM D, YYYY')}
+        </TableCell>
+
+        <TableCell sx={{ fontWeight: 500 }}>
+          {logDetail.recordsEmitted.toLocaleString()}
+        </TableCell>
+        <TableCell sx={{ fontWeight: 500 }}>{logDetail.bytesEmitted}</TableCell>
+        <TableCell
+          sx={{
+            fontWeight: 500,
+            borderTopRightRadius: '10px',
+            borderBottomRightRadius: '10px',
+          }}
+        >
+          {formatDuration(logDetail.totalTimeInSeconds)}
+        </TableCell>
+        <TableCell sx={{ width: '300px', fontWeight: 500 }}>
+          <ToggleButtonGroup
+            size="small"
+            color="primary"
+            sx={{ textAlign: 'right' }}
+            value={action}
+            exclusive
+            disabled={detailedLogsLoading || summarizedLogsLoading}
+            onChange={handleAction}
+            aria-label="text alignment"
+          >
+            <ToggleButton value="detail" aria-label="left" data-testid="logs">
+               Logs
+              <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
+            </ToggleButton>
+            {allowLogsSummary && (
+              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`}>
+                AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
+              </ToggleButton>
+            )}
+          </ToggleButtonGroup>
+        </TableCell>
+      </TableRow>
+
+      <TableRow>
+        <TableCell colSpan={5} style={{ paddingBottom: 0, paddingTop: 0 }}>
+          <LogsColumn
+            logsLoading={detailedLogsLoading}
+            summarizedLogsLoading={summarizedLogsLoading}
+            logs={detailedLogs}
+            summarizedLogs={summarizedLogs}
+            action={action}
+          />
+        </TableCell>
+      </TableRow>
+    </>
   );
 };
 
@@ -183,8 +318,9 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
   connection,
 }) => {
   const { data: session }: any = useSession();
+  const { data: flags } = useSWR('organizations/flags');
   const [logDetails, setLogDetails] = useState<LogObject[]>([]);
-  const [offset, setOffset] = useState(1);
+  const [offset, setOffset] = useState(defaultLoadMoreLimit);
   const [showLoadMore, setShowLoadMore] = useState(true);
   const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -275,7 +411,14 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
 
             <TableBody>
               {logDetails.map((logDetail) => (
-                <Row key={logDetail.job_id} logDetail={logDetail} />
+                <Row
+                  allowLogsSummary={!!flags?.allowLogsSummary}
+                  key={logDetail.job_id}
+                  logDetail={logDetail}
+                  connectionId={
+                    connection?.connectionId ? connection.connectionId : ''
+                  }
+                />
               ))}
             </TableBody>
           </Table>
@@ -307,7 +450,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                       );
                       if (response) {
                         setLogDetails((logs) => [...logs, ...response]);
-                        setOffset((offset) => offset + 1);
+                        setOffset((offset) => offset + defaultLoadMoreLimit);
                       }
                       if (response.length < defaultLoadMoreLimit) {
                         setShowLoadMore(false);

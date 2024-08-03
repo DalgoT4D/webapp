@@ -9,7 +9,6 @@ import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 
 import { primaryColor } from './theme';
-import { showElementaryMenu } from './constant';
 
 export const drawerWidth = 250;
 
@@ -85,7 +84,7 @@ export const sideMenu: MenuOption[] = [
     path: '/data-quality',
     icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
     className: 'data_quality_walkthrough',
-    hide: !showElementaryMenu,
+    // hide: !showElementaryMenu,
     minimize: true,
   },
   {

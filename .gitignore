@@ -45,3 +45,6 @@ cloudbuild.yaml
 
 .yarn/*
 .yarnrc.yml
+
+# Sentry Config File
+.env.sentry-build-plugin
