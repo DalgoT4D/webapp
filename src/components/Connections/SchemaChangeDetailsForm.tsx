@@ -72,8 +72,6 @@ const SchemaChangeDetailsForm = ({
   const inputRef: any = useRef(null);
   const shouldFocusInput: any = useRef(null);
 
-  const [progressMessages, setProgressMessages] = useState<any[]>([]);
-  const [setupStatus, setSetupStatus] = useState('not-started');
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
   const toastContext = useContext(GlobalContext);
 
@@ -83,16 +81,13 @@ const SchemaChangeDetailsForm = ({
     try {
       const message = await httpGet(session, `tasks/stp/${taskId}`);
       await delay(3000);
-      setProgressMessages(message['progress']);
+      // setProgressMessages(message['progress']);
       const lastMessage = message['progress'][message['progress'].length - 1];
 
       if (lastMessage['status'] === 'completed') {
-        setSetupStatus('completed');
         return [true, lastMessage['result']];
       } else if (lastMessage['status'] === 'failed') {
-        setSetupStatus('failed');
-        setFailureMessage(lastMessage['message']);
-        return [false, null];
+        return [false, lastMessage['message']];
       } else {
         await delay(2000);
         return await checkProgress(taskId);
@@ -115,7 +110,12 @@ const SchemaChangeDetailsForm = ({
           );
           await delay(3000);
           const [isSuccessful, result] = await checkProgress(data.task_id);
-          if (isSuccessful && result) {
+          console.log('catalgo is succcessful', isSuccessful, result);
+          if (!isSuccessful) {
+            setFailureMessage(result);
+            throw new Error(result);
+          }
+          if (result) {
             setCatalogId(result.catalogId || '');
             setValue('name', result.name || '');
             setSyncCatalog(result.syncCatalog?.streams || {});
@@ -180,8 +180,9 @@ const SchemaChangeDetailsForm = ({
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       })();
     }
   }, [connectionId]);
@@ -254,7 +255,6 @@ const SchemaChangeDetailsForm = ({
 
   const FormContent = () => {
     const tableCount = tableData.length;
-
     // Separate tables and columns added/removed
     const tablesRemoved = tableData.filter((table) =>
       table.changedColumns.some((column) => column.startsWith('-Stream'))
@@ -288,155 +288,159 @@ const SchemaChangeDetailsForm = ({
     return (
       <>
         <Box>
-          <Typography variant="h5" gutterBottom>
-            {tableCount} {pluralizeTable} with changes
-          </Typography>
           {tableCount > 0 ? (
-            <Table>
-              <TableBody>
-                {tablesRemoved.length > 0 && (
-                  <React.Fragment>
-                    <Typography
-                      variant="h6"
-                      fontWeight={600}
-                      color="#5f7182"
-                      gutterBottom
-                    >
-                      Tables Removed
-                    </Typography>
-                    {tablesRemoved.map((table, idx) => (
-                      <TableRow key={idx} sx={{ boxShadow: 'none' }}>
-                        <TableCell colSpan={2} sx={{ bgcolor: '#f2f2eb' }}>
-                          <Typography variant="body2" align="left">
-                            {table.name}
-                          </Typography>
+            <>
+              <Typography variant="h5" gutterBottom>
+                {tableCount} {pluralizeTable} with changes
+              </Typography>
+              <Table>
+                <TableBody>
+                  {tablesRemoved.length > 0 && (
+                    <React.Fragment>
+                      <Typography
+                        variant="h6"
+                        fontWeight={600}
+                        color="#5f7182"
+                        gutterBottom
+                      >
+                        Tables Removed
+                      </Typography>
+                      {tablesRemoved.map((table, idx) => (
+                        <TableRow key={idx} sx={{ boxShadow: 'none' }}>
+                          <TableCell colSpan={2} sx={{ bgcolor: '#f2f2eb' }}>
+                            <Typography variant="body2" align="left">
+                              {table.name}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  )}
+                  {tablesAdded.length > 0 && (
+                    <React.Fragment>
+                      <Typography
+                        variant="h6"
+                        fontWeight={600}
+                        color="#5f7182"
+                        marginTop="10px"
+                        gutterBottom
+                      >
+                        Tables Added
+                      </Typography>
+                      {tablesAdded.map((table, idx) => (
+                        <TableRow key={idx} sx={{ boxShadow: 'none' }}>
+                          <TableCell colSpan={2} sx={{ bgcolor: '#f2f2eb' }}>
+                            <Typography variant="body2" align="left">
+                              {table.name}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  )}
+                  {columnsRemoved.length > 0 && (
+                    <React.Fragment>
+                      <Typography
+                        variant="h6"
+                        fontWeight={600}
+                        color="#5f7182"
+                        marginTop="10px"
+                        gutterBottom
+                      >
+                        Columns Removed
+                      </Typography>
+                      <TableRow sx={{ boxShadow: '1px', borderRadius: '0px' }}>
+                        <TableCell sx={{ fontWeight: 'bold' }}>
+                          Table Names
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>
+                          Column Names
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </React.Fragment>
-                )}
-                {tablesAdded.length > 0 && (
-                  <React.Fragment>
-                    <Typography
-                      variant="h6"
-                      fontWeight={600}
-                      color="#5f7182"
-                      marginTop="10px"
-                      gutterBottom
-                    >
-                      Tables Added
-                    </Typography>
-                    {tablesAdded.map((table, idx) => (
-                      <TableRow key={idx} sx={{ boxShadow: 'none' }}>
-                        <TableCell colSpan={2} sx={{ bgcolor: '#f2f2eb' }}>
-                          <Typography variant="body2" align="left">
-                            {table.name}
-                          </Typography>
+                      {columnsRemoved.map((column, idx) => (
+                        <TableRow key={idx} sx={{ boxShadow: 'none' }}>
+                          <TableCell
+                            sx={{
+                              bgcolor: '#f2f2eb',
+                              paddingRight: '8px',
+                              borderRight: '8px solid white',
+                              width: '50%',
+                            }}
+                          >
+                            <Typography variant="body2" align="left">
+                              {column.tableName}
+                            </Typography>
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              bgcolor: '#f2f2eb',
+                              paddingLeft: '8px',
+                              borderLeft: '8px solid white',
+                              width: '50%',
+                            }}
+                          >
+                            <Typography variant="body2" align="left">
+                              {column.columnName}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  )}
+                  {columnsAdded.length > 0 && (
+                    <React.Fragment>
+                      <Typography
+                        variant="h6"
+                        fontWeight={600}
+                        color="#5f7182"
+                        marginTop="10px"
+                        gutterBottom
+                      >
+                        Columns Added
+                      </Typography>
+                      <TableRow sx={{ boxShadow: '1px', borderRadius: '0px' }}>
+                        <TableCell sx={{ fontWeight: 'bold' }}>
+                          Table Names
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>
+                          Column Names
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </React.Fragment>
-                )}
-                {columnsRemoved.length > 0 && (
-                  <React.Fragment>
-                    <Typography
-                      variant="h6"
-                      fontWeight={600}
-                      color="#5f7182"
-                      marginTop="10px"
-                      gutterBottom
-                    >
-                      Columns Removed
-                    </Typography>
-                    <TableRow sx={{ boxShadow: '1px', borderRadius: '0px' }}>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
-                        Table Names
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
-                        Column Names
-                      </TableCell>
-                    </TableRow>
-                    {columnsRemoved.map((column, idx) => (
-                      <TableRow key={idx} sx={{ boxShadow: 'none' }}>
-                        <TableCell
-                          sx={{
-                            bgcolor: '#f2f2eb',
-                            paddingRight: '8px',
-                            borderRight: '8px solid white',
-                            width: '50%',
-                          }}
-                        >
-                          <Typography variant="body2" align="left">
-                            {column.tableName}
-                          </Typography>
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            bgcolor: '#f2f2eb',
-                            paddingLeft: '8px',
-                            borderLeft: '8px solid white',
-                            width: '50%',
-                          }}
-                        >
-                          <Typography variant="body2" align="left">
-                            {column.columnName}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </React.Fragment>
-                )}
-                {columnsAdded.length > 0 && (
-                  <React.Fragment>
-                    <Typography
-                      variant="h6"
-                      fontWeight={600}
-                      color="#5f7182"
-                      marginTop="10px"
-                      gutterBottom
-                    >
-                      Columns Added
-                    </Typography>
-                    <TableRow sx={{ boxShadow: '1px', borderRadius: '0px' }}>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
-                        Table Names
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
-                        Column Names
-                      </TableCell>
-                    </TableRow>
-                    {columnsAdded.map((column, idx) => (
-                      <TableRow key={idx} sx={{ boxShadow: 'none' }}>
-                        <TableCell
-                          sx={{
-                            bgcolor: '#f2f2eb',
-                            paddingRight: '8px',
-                            borderRight: '8px solid white',
-                            width: '50%',
-                          }}
-                        >
-                          <Typography variant="body2" align="left">
-                            {column.tableName}
-                          </Typography>
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            bgcolor: '#f2f2eb',
-                            paddingLeft: '8px',
-                            borderLeft: '8px solid white',
-                            width: '50%',
-                          }}
-                        >
-                          <Typography variant="body2" align="left">
-                            {column.columnName}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </React.Fragment>
-                )}
-              </TableBody>
-            </Table>
+                      {columnsAdded.map((column, idx) => (
+                        <TableRow key={idx} sx={{ boxShadow: 'none' }}>
+                          <TableCell
+                            sx={{
+                              bgcolor: '#f2f2eb',
+                              paddingRight: '8px',
+                              borderRight: '8px solid white',
+                              width: '50%',
+                            }}
+                          >
+                            <Typography variant="body2" align="left">
+                              {column.tableName}
+                            </Typography>
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              bgcolor: '#f2f2eb',
+                              paddingLeft: '8px',
+                              borderLeft: '8px solid white',
+                              width: '50%',
+                            }}
+                          >
+                            <Typography variant="body2" align="left">
+                              {column.columnName}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  )}
+                </TableBody>
+              </Table>
+            </>
+          ) : failureMessage && failureMessage.length > 0 ? (
+            <Typography variant="body1">{failureMessage}</Typography>
           ) : (
             <Typography variant="body1">No schema changes detected.</Typography>
           )}
@@ -450,7 +454,7 @@ const SchemaChangeDetailsForm = ({
       <CustomDialog
         maxWidth={false}
         data-testid="dialog"
-        title={'New Schema Changes Detected'}
+        title={'Schema Changes'}
         show={showForm}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
@@ -462,6 +466,7 @@ const SchemaChangeDetailsForm = ({
                 variant="contained"
                 type="submit"
                 disabled={hasBreakingChanges}
+                data-testid="approveschemachange"
                 sx={{ marginTop: '20px' }}
               >
                 Yes, I approve

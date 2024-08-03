@@ -242,6 +242,7 @@ export const Header = ({
                   fontWeight: 600,
                   borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
                 }}
+                data-testid = "createneworg"
               >
                 Create new org
               </Typography>

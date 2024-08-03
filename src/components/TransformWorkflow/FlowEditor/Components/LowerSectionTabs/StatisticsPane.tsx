@@ -84,7 +84,7 @@ interface TableDetailsResponse {
 
 const metricsApiUrl = `warehouse/insights/metrics/`;
 
-const pollTaskStatus = async (
+export const pollTaskStatus = async (
   session: Session | null,
   taskId: string,
   postBody: PostBody,
