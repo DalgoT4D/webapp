@@ -1,7 +1,5 @@
 import {
-  Backdrop,
   Box,
-  CircularProgress,
   Divider,
   IconButton,
   Tab,
@@ -32,19 +30,22 @@ import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import { LogsPane } from './Components/LowerSectionTabs/LogsPane';
 import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
 import { showDataInsightsTab } from '@/config/constant';
+import { useLockCanvas } from '@/customHooks/useLockCanvas';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
   refreshEditor: boolean;
   setRefreshEditor: any;
-  lockUpperSection: boolean;
+  finalLockCanvas: boolean;
+  setTempLockCanvas:any;
 };
 
 const UpperSection = ({
   sourcesModels,
   refreshEditor,
   setRefreshEditor,
-  lockUpperSection,
+  finalLockCanvas,
+  setTempLockCanvas
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
 
@@ -60,29 +61,6 @@ const UpperSection = ({
         position: 'relative',
       }}
     >
-      <Backdrop
-        sx={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          position: 'absolute', // Position the Backdrop over the Box
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0, // Cover the entire Box
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-        }}
-        open={lockUpperSection}
-        onClick={() => {}}
-      >
-        <CircularProgress
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 2,
-          }}
-        />
-      </Backdrop>
 
       <ResizableBox
         axis="x"
@@ -100,6 +78,8 @@ const UpperSection = ({
           <Canvas
             redrawGraph={refreshEditor}
             setRedrawGraph={setRefreshEditor}
+            finalLockCanvas={finalLockCanvas}
+            setTempLockCanvas={setTempLockCanvas}
           />
         </ReactFlowProvider>
       </Box>
@@ -113,7 +93,7 @@ type LowerSectionProps = {
   height: number;
   selectedTab: LowerSectionTabValues;
   setSelectedTab: (value: LowerSectionTabValues) => void;
-  workflowInProgress: boolean;
+  finalLockCanvas: boolean;
   setFullScreen?: any;
 };
 
@@ -127,8 +107,8 @@ const LowerSection = ({
   height,
   selectedTab,
   setSelectedTab,
-  workflowInProgress,
   setFullScreen,
+  finalLockCanvas
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
 
@@ -171,8 +151,8 @@ const LowerSection = ({
         {selectedTab === 'logs' && (
           <LogsPane
             height={height}
-            workflowInProgress={workflowInProgress}
             dbtRunLogs={dbtRunLogs}
+            finalLockCanvas={finalLockCanvas}
           />
         )}
         {selectedTab === 'statistics' && <StatisticsPane height={height} />}
@@ -187,8 +167,9 @@ const FlowEditor = ({}) => {
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
+  const {finalLockCanvas, setTempLockCanvas} = useLockCanvas(lockUpperSection);
   const [selectedTab, setSelectedTab] =
-    useState<LowerSectionTabValues>('preview');
+    useState<LowerSectionTabValues>('logs');
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction } = useCanvasAction();
@@ -407,7 +388,8 @@ const FlowEditor = ({}) => {
         setRefreshEditor={setRefreshEditor}
         sourcesModels={sourcesModels}
         refreshEditor={refreshEditor}
-        lockUpperSection={lockUpperSection}
+        finalLockCanvas={finalLockCanvas}
+        setTempLockCanvas = {setTempLockCanvas}
       />
 
       <ResizableBox
@@ -431,7 +413,7 @@ const FlowEditor = ({}) => {
           height={lowerSectionHeight}
           setSelectedTab={setSelectedTab}
           selectedTab={selectedTab}
-          workflowInProgress={lockUpperSection}
+          finalLockCanvas={finalLockCanvas}
         />
       </ResizableBox>
     </Box>
