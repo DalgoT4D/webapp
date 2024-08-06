@@ -323,9 +323,10 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
   const { data: flags } = useSWR('organizations/flags');
   const [logDetails, setLogDetails] = useState<LogObject[]>([]);
   const [offset, setOffset] = useState(defaultLoadMoreLimit);
-  const [showLoadMore, setShowLoadMore] = useState(true);
+  const [totalSyncs, setTotalSyncs] = useState(0);
   const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const showLoadMore = totalSyncs > offset; //derived value
   useEffect(() => {
     (async () => {
       if (connection) {
@@ -334,12 +335,10 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
           connection.connectionId,
           session
         );
+        console.log(totalSyncs, "toatl", offset, defaultLoadMoreLimit)
         if (history) {
           setLogDetails(history);
-        }
-
-        if (totalSyncs <= offset + defaultLoadMoreLimit) {
-          setShowLoadMore(false);
+          setTotalSyncs(totalSyncs);
         }
         setLoading(false);
       }
@@ -457,9 +456,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                       if (history) {
                         setLogDetails((logs) => [...logs, ...history]);
                         setOffset((offset) => offset + defaultLoadMoreLimit);
-                      }
-                      if (totalSyncs <= offset + defaultLoadMoreLimit) {
-                        setShowLoadMore(false);
+                        setTotalSyncs(totalSyncs)
                       }
                       setLoadMorePressed(false);
                     }
