@@ -50,7 +50,11 @@ const RenameColumnOp = ({
     control,
     name: 'config',
     rules: {
-      minLength: { value: 2, message: 'Alteast one column is required' },
+      validate: {
+        notAllEmpty: (value) =>
+          value.some((item) => item.old !== '' || item.new !== '') ||
+          'Alteast one column is required',
+      },
     },
   });
 

@@ -61,9 +61,10 @@ const ReplaceValueOpForm = ({
     control,
     name: 'config',
     rules: {
-      minLength: {
-        value: 2,
-        message: 'Atleast one value is required',
+      validate: {
+        notAllEmpty: (value) =>
+          value.some((item) => item.old !== '' || item.new !== '') ||
+          'Atleast one value is required',
       },
     },
   });
