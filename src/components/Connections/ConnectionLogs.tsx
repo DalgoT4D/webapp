@@ -345,7 +345,6 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
       }
     })();
   }, []);
-
   return (
     <Dialog
       sx={{
@@ -371,10 +370,15 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
             <Typography sx={{ fontWeight: 700 }}>
               {`${connection?.name} |`}
             </Typography>
-            <Typography sx={{ fontWeight: 600, ml: '4px' }}>
-              {connection?.source.sourceName} →{' '}
-              {connection?.destination.destinationName}
-            </Typography>
+            <Box sx={{ display: "flex", width: "90%", justifyContent: "space-between" }}>
+              <Typography sx={{ fontWeight: 600, ml: '4px' }}>
+                {connection?.source.sourceName} →{' '}
+                {connection?.destination.destinationName}
+              </Typography>
+              {!!flags?.allowLogsSummary &&
+                <Typography sx={{ fontWeight: 400 }}>*For AI summary of failed logs press the AI Summary button</Typography>
+              }
+            </Box>
           </Box>
         </Box>
         <TableContainer
