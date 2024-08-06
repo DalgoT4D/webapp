@@ -177,27 +177,21 @@ const Actions = memo(
     handleClick: any;
   }) => {
     const { deploymentId, connectionId, lock } = connection;
+
     const [tempSyncState, setTempSyncState] = useState(false); //on polling it will set to false automatically. //local state of each button.
     const isSyncConnectionIdPresent =
       syncingConnectionIds.includes(connectionId);
-    const lockLastStateRef = useRef<LockStatus>(null);
     useEffect(() => {
-      if (lock) {
-        if (lock.status === 'running') {
-          lockLastStateRef.current = 'running';
-        } else if (lock.status === 'queued') {
-          lockLastStateRef.current = 'queued';
-        } else if (lock.status === 'locked' || lock?.status === 'complete') {
-          lockLastStateRef.current = 'locked';
-        }
+      let tempLockValue;
+      if (!lock) {
+        tempLockValue = false;
+      } else if (lock?.status !== "complete") {
+        tempLockValue = true;
+      } else {
+        tempLockValue = false;
       }
-
-      if (!lock && lockLastStateRef.current && tempSyncState) {
-        setTempSyncState(false);
-
-        lockLastStateRef.current = null;
-      }
-    }, [lock, tempSyncState]);
+      setTempSyncState(tempLockValue);
+    }, [lock]);
     return (
       <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
         <Button
@@ -347,6 +341,7 @@ export const Connections = () => {
       return;
     }
     try {
+      throw new Error("error");
       const response = await httpPost(
         session,
         `prefect/v1/flows/${deploymentId}/flow_run/`,
