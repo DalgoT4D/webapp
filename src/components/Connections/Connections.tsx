@@ -480,7 +480,7 @@ export const Connections = () => {
 
     return (
       <Box
-        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'left' }}
+        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
       >
         {jobStatus &&
           (['success', 'failed'].includes(jobStatus) ? (
@@ -528,7 +528,7 @@ export const Connections = () => {
             sx={{
               paddingY: '4px',
               paddingX: '2px',
-              width: '60%',
+              width: '80%',
               justifyContent: 'center',
               alignItems: 'center',
             }}
