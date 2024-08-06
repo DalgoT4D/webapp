@@ -335,7 +335,6 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
           connection.connectionId,
           session
         );
-        console.log(totalSyncs, "toatl", offset, defaultLoadMoreLimit)
         if (history) {
           setLogDetails(history);
           setTotalSyncs(totalSyncs);
