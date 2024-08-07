@@ -189,7 +189,13 @@ const Actions = memo(({ flow,
       </>
     </Box>
   )
-});
+},
+
+  (prevProps, nextProps) => {
+    return (
+      prevProps.flow.lock === nextProps.flow.lock
+    )
+  });
 
 
 export const Flows = ({

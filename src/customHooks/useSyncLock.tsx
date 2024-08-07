@@ -5,7 +5,6 @@ type LockStatus = 'running' | 'queued' | 'locked' | null;
 export const useSyncLock = (lock: any) => {
     const [tempSyncState, setTempSyncState] = useState(false); //on polling it will set to false automatically. //local state of each button.
     //side Effect is because the lock state keeps on changing during polling.
-
     const lockLastStateRef = useRef<LockStatus>(null);
     //using ref because the value of lock is null both in starting and end. 
     //so to store the value before it becomes null again.
@@ -32,7 +31,7 @@ export const useSyncLock = (lock: any) => {
    
 
 
-    }, [lock, tempSyncState]);
+    }, [lock]);
 
     return { tempSyncState, setTempSyncState };
 }
