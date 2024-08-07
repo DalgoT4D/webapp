@@ -32,6 +32,7 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import useSWR from 'swr';
 
+
 const fetchAirbyteLogs = async (
   connectionId: string,
   session: any,
@@ -43,7 +44,7 @@ const fetchAirbyteLogs = async (
       `airbyte/v1/connections/${connectionId}/sync/history?limit=${defaultLoadMoreLimit}&offset=${offset}`
     );
 
-    return response.history || [];
+    return response;
   } catch (err: any) {
     console.error(err);
   }
@@ -132,17 +133,17 @@ const LogsColumn = ({
       ) : null}
       {action === 'summary'
         ? summarizedLogs.length > 0 && (
-            <Alert icon={false} severity="success" sx={{ mb: 2 }}>
-              {summarizedLogs.map((result: any, index: number) => (
-                <Box key={result.prompt} sx={{ mb: 2 }}>
-                  <Box>
-                    <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
-                  </Box>
-                  <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
+          <Alert icon={false} severity="success" sx={{ mb: 2 }}>
+            {summarizedLogs.map((result: any, index: number) => (
+              <Box key={result.prompt} sx={{ mb: 2 }}>
+                <Box>
+                  <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
                 </Box>
-              ))}
-            </Alert>
-          )
+                <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
+              </Box>
+            ))}
+          </Alert>
+        )
         : null}
 
       {action === 'detail' && logs.length > 0 && (
@@ -248,7 +249,7 @@ const Row = ({
           p: 2,
 
           background:
-            logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
+            logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
         }}
       >
         <TableCell
@@ -268,13 +269,14 @@ const Row = ({
         <TableCell
           sx={{
             fontWeight: 500,
-            borderTopRightRadius: '10px',
-            borderBottomRightRadius: '10px',
           }}
         >
           {formatDuration(logDetail.totalTimeInSeconds)}
         </TableCell>
-        <TableCell sx={{ width: '300px', fontWeight: 500 }}>
+        <TableCell sx={{
+          width: '300px', fontWeight: 500, borderTopRightRadius: '10px',
+          borderBottomRightRadius: '10px',
+        }}>
           <ToggleButtonGroup
             size="small"
             color="primary"
@@ -285,12 +287,12 @@ const Row = ({
             onChange={handleAction}
             aria-label="text alignment"
           >
-            <ToggleButton value="detail" aria-label="left" data-testid="logs">
-               Logs
+            <ToggleButton value="detail" aria-label="left" data-testid="logs" >
+              Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
-            {allowLogsSummary && (
-              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`}>
+            {(allowLogsSummary && logDetail.status === "failed") && (
+              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`} >
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
             )}
@@ -320,30 +322,27 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
   const { data: session }: any = useSession();
   const { data: flags } = useSWR('organizations/flags');
   const [logDetails, setLogDetails] = useState<LogObject[]>([]);
-  const [offset, setOffset] = useState(1);
-  const [showLoadMore, setShowLoadMore] = useState(true);
+  const [offset, setOffset] = useState(defaultLoadMoreLimit);
+  const [totalSyncs, setTotalSyncs] = useState(0);
   const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const showLoadMore = totalSyncs > offset; //derived value
   useEffect(() => {
     (async () => {
       if (connection) {
         setLoading(true);
-        const response: LogObject[] = await fetchAirbyteLogs(
+        const { history = [], totalSyncs = 0 }: { history: LogObject[], totalSyncs: number } = await fetchAirbyteLogs(
           connection.connectionId,
           session
         );
-        if (response) {
-          setLogDetails(response);
-        }
-
-        if (response.length < defaultLoadMoreLimit) {
-          setShowLoadMore(false);
+        if (history) {
+          setLogDetails(history);
+          setTotalSyncs(totalSyncs);
         }
         setLoading(false);
       }
     })();
   }, []);
-
   return (
     <Dialog
       sx={{
@@ -369,10 +368,12 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
             <Typography sx={{ fontWeight: 700 }}>
               {`${connection?.name} |`}
             </Typography>
-            <Typography sx={{ fontWeight: 600, ml: '4px' }}>
-              {connection?.source.sourceName} →{' '}
-              {connection?.destination.destinationName}
-            </Typography>
+            <Box sx={{ display: "flex", width: "90%" }}>
+              <Typography sx={{ fontWeight: 600, ml: '4px' }}>
+                {connection?.source.sourceName} →{' '}
+                {connection?.destination.destinationName}
+              </Typography>
+            </Box>
           </Box>
         </Box>
         <TableContainer
@@ -443,17 +444,15 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                   onClick={async () => {
                     setLoadMorePressed(true);
                     if (connection) {
-                      const response: LogObject[] = await fetchAirbyteLogs(
+                      const { history = [], totalSyncs = 0 }: { history: LogObject[], totalSyncs: number } = await fetchAirbyteLogs(
                         connection.connectionId,
                         session,
                         offset
                       );
-                      if (response) {
-                        setLogDetails((logs) => [...logs, ...response]);
-                        setOffset((offset) => offset + 1);
-                      }
-                      if (response.length < defaultLoadMoreLimit) {
-                        setShowLoadMore(false);
+                      if (history) {
+                        setLogDetails((logs) => [...logs, ...history]);
+                        setOffset((offset) => offset + defaultLoadMoreLimit);
+                        setTotalSyncs(totalSyncs)
                       }
                       setLoadMorePressed(false);
                     }
