@@ -197,7 +197,8 @@ export const DBTTarget = ({
         sx={{ ml: 2 }}
         onClick={() => {
           if (selectedTask) {
-            if (selectedTask.deploymentId) dbtRunWithDeployment(selectedTask);
+            if (selectedTask.slug == TASK_DBTRUN || selectedTask.deploymentId)
+              dbtRunWithDeployment(selectedTask);
             else executeDbtJob(selectedTask);
           } else {
             errorToast(
