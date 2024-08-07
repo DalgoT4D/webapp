@@ -19,11 +19,6 @@ export const Elementary = () => {
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
 
-  const checkRefresh = async function (task_id: string) {
-    await delay(2000);
-    await checkRefresh(task_id);
-  };
-
   const refreshReport = async () => {
     if (!session) return;
     try {
@@ -33,6 +28,7 @@ export const Elementary = () => {
         'dbt/v1/refresh-elementary-report/',
         {}
       );
+
       if (response.flow_run_id) {
         successToast(
           'Your latest report is being generated. This may take a few minutes. Thank you for your patience',
@@ -72,9 +68,11 @@ export const Elementary = () => {
     if (response && !generateReportLock) {
       setGenerateReportLock(true);
       await delay(5000);
+
       checkForLock();
-    } else {
+    } else if (generateReportLock) {
       setGenerateReportLock(false);
+      successToast('Report generated successfully', [], globalContext);
       fetchElementaryToken();
     }
   };
