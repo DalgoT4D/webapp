@@ -278,7 +278,7 @@ const Row = ({
           {moment(logDetail.startTime).format('MMMM D, YYYY')}
         </TableCell>
 
-        <TableCell colSpan={3} sx={{ fontWeight: 500,  borderTopRightRadius: "10px", borderBottomRightRadius: "10px" }}>
+        <TableCell colSpan={3} sx={{ fontWeight: 500, borderTopRightRadius: "10px", borderBottomRightRadius: "10px" }}>
           {logDetail.runs.map((run) => (
             <LogsContainer
               key={run.id}
@@ -346,18 +346,16 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
       />
       <Box sx={{ p: '0px 28px' }}>
         <Box sx={{ mb: 1 }}>
-          <Box sx={{ fontSize: '16px', display: 'flex',justifyContent:"space-between" }}>
-            <Box sx={{display: "flex"}}>
-              <Typography sx={{ fontWeight: 700 }}>
-                {`${flow?.name} |`}
-              </Typography>
-              <Typography sx={{ fontWeight: 600, ml: '4px' }}>
-                {flow?.status ? 'Active' : 'Inactive'}
-              </Typography>
-            </Box>
-            {!!flags?.allowLogsSummary &&
-              <Typography sx={{ fontWeight: 400 }}>*For AI summary of failed logs press the AI Summary button</Typography>
-            }
+          <Box sx={{ fontSize: '16px', display: 'flex', }}>
+
+            <Typography sx={{ fontWeight: 700 }}>
+              {`${flow?.name} |`}
+            </Typography>
+            <Typography sx={{ fontWeight: 600, ml: '4px' }}>
+              {flow?.status ? 'Active' : 'Inactive'}
+            </Typography>
+
+
           </Box>
         </Box>
         <TableContainer
