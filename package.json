@@ -42,7 +42,7 @@
     "reactflow": "^11.11.4",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.2.4",
-    "typescript": "5.5.2",
+    "typescript": "5.5.3",
     "use-resize-observer": "^9.1.0"
   },
   "resolutions": {
