@@ -200,7 +200,7 @@ const LogsContainer = ({
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
-            {allowLogsSummary && (
+            {allowLogsSummary && run.state_type === "FAILED" && (
               <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${run.id}`}>
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
@@ -221,17 +221,17 @@ const LogsContainer = ({
         {summarizedLogsLoading ? <LinearProgress color="inherit" /> : null}
         {action === 'summary'
           ? summarizedLogs.length > 0 && (
-              <Alert icon={false} severity="success" sx={{ mb: 2 }}>
-                {summarizedLogs.map((result: any, index: number) => (
-                  <Box key={result.prompt} sx={{ mb: 2 }}>
-                    <Box>
-                      <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
-                    </Box>
-                    <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
+            <Alert icon={false} severity="success" sx={{ mb: 2 }}>
+              {summarizedLogs.map((result: any, index: number) => (
+                <Box key={result.prompt} sx={{ mb: 2 }}>
+                  <Box>
+                    <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
                   </Box>
-                ))}
-              </Alert>
-            )
+                  <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
+                </Box>
+              ))}
+            </Alert>
+          )
           : null}
 
         {action === 'detail' && run.logs.length > 0 && (
@@ -264,7 +264,7 @@ const Row = ({
           p: 2,
 
           background:
-            logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
+            logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
         }}
       >
         <TableCell
@@ -278,7 +278,7 @@ const Row = ({
           {moment(logDetail.startTime).format('MMMM D, YYYY')}
         </TableCell>
 
-        <TableCell colSpan={3} sx={{ fontWeight: 500 }}>
+        <TableCell colSpan={3} sx={{ fontWeight: 500, borderTopRightRadius: "10px", borderBottomRightRadius: "10px" }}>
           {logDetail.runs.map((run) => (
             <LogsContainer
               key={run.id}
@@ -300,7 +300,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
   const { data: session }: any = useSession();
   const { data: flags } = useSWR('organizations/flags');
   const [logDetails, setLogDetails] = useState<DeploymentObject[]>([]);
-  const [offset, setOffset] = useState(1);
+  const [offset, setOffset] = useState(defaultLoadMoreLimit);
   const [showLoadMore, setShowLoadMore] = useState(true);
   const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -346,13 +346,16 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
       />
       <Box sx={{ p: '0px 28px' }}>
         <Box sx={{ mb: 1 }}>
-          <Box sx={{ fontSize: '16px', display: 'flex' }}>
+          <Box sx={{ fontSize: '16px', display: 'flex', }}>
+
             <Typography sx={{ fontWeight: 700 }}>
               {`${flow?.name} |`}
             </Typography>
             <Typography sx={{ fontWeight: 600, ml: '4px' }}>
               {flow?.status ? 'Active' : 'Inactive'}
             </Typography>
+
+
           </Box>
         </Box>
         <TableContainer
@@ -430,7 +433,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
                         );
                       if (response) {
                         setLogDetails((logs) => [...logs, ...response]);
-                        setOffset((offset) => offset + 1);
+                        setOffset((offset) => offset + defaultLoadMoreLimit);
                       }
                       if (response.length < defaultLoadMoreLimit) {
                         setShowLoadMore(false);
