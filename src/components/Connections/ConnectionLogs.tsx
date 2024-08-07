@@ -249,7 +249,7 @@ const Row = ({
           p: 2,
 
           background:
-            logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.3)' : 'unset',
+            logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
         }}
       >
         <TableCell
