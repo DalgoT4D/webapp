@@ -198,6 +198,7 @@ const Actions = memo(({ flow,
       prevProps.flow.lock === nextProps.flow.lock
     )
   });
+Actions.displayName = "Action"; //adding a display name to Actions which react cannot infer due to HOC memo.
 
 
 export const Flows = ({

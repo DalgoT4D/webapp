@@ -156,7 +156,6 @@ const getSourceDest = (connection: Connection) => (
   </Box>
 );
 
-// eslint-disable-next-line react/display-name
 const Actions = memo(
   ({
     connection,
@@ -243,6 +242,7 @@ const Actions = memo(
     );
   }
 );
+Actions.displayName = "Action" //display name added.
 
 export const Connections = () => {
   const { data: session }: any = useSession();
