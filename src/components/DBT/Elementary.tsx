@@ -7,40 +7,19 @@ import moment from 'moment';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { delay } from '@/utils/common';
+import SyncIcon from '@/assets/icons/sync.svg';
+import Image from 'next/image';
+import styles from '@/styles/Common.module.css';
 
 export const Elementary = () => {
   const [loading, setLoading] = useState(true);
   const [elementaryToken, setElementaryToken] = useState<string>('');
   const [generatedAt, setGeneratedAt] = useState<string>('');
-  const [refreshTTL, setRefreshTTL] = useState<number>(0);
+  const [generateReportLock, setGenerateReportLock] = useState(false);
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
 
-  const decreaseTTL = useCallback(() => {
-    setRefreshTTL((prevTTL) => {
-      if (prevTTL <= 0) {
-        return 0;
-      }
-      return prevTTL - 1;
-    });
-  }, []);
-
   const checkRefresh = async function (task_id: string) {
-    const refreshResponse = await httpGet(session, 'tasks/stp/' + task_id);
-    if (refreshResponse.progress && refreshResponse.progress.length > 0) {
-      const lastStatus =
-        refreshResponse.progress[refreshResponse.progress.length - 1].status;
-      // running | failed | completed
-      if (lastStatus === 'failed') {
-        errorToast('Failed to generate report', [], globalContext);
-        return;
-      } else if (lastStatus === 'completed') {
-        successToast('Report generated successfully', [], globalContext);
-        fetchElementaryToken();
-        return;
-      }
-    }
-    // else poll again
     await delay(2000);
     await checkRefresh(task_id);
   };
@@ -48,35 +27,27 @@ export const Elementary = () => {
   const refreshReport = async () => {
     if (!session) return;
     try {
+      setGenerateReportLock(true);
       const response = await httpPost(
         session,
-        'dbt/refresh-elementary-report/',
+        'dbt/v1/refresh-elementary-report/',
         {}
       );
-      if (response.task_id) {
+      if (response.flow_run_id) {
         successToast(
           'Your latest report is being generated. This may take a few minutes. Thank you for your patience',
           [],
           globalContext
         );
-        // 1. grey out the refresh button and show a countdown timer
-        setRefreshTTL(response.ttl);
-        // 2. poll for the task status
-        checkRefresh(response.task_id);
+        checkForLock();
       }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
+      setGenerateReportLock(false);
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(decreaseTTL, 1000);
-    return () => clearTimeout(timer);
-  }, [decreaseTTL, refreshTTL]);
-
   const fetchElementaryToken = async () => {
-
-    if (!session) return;
     try {
       const response = await httpPost(
         session,
@@ -95,8 +66,24 @@ export const Elementary = () => {
     }
   };
 
+  const checkForLock = async () => {
+    const response = await httpGet(session, `prefect/tasks/elementary-lock/`);
+
+    if (response && !generateReportLock) {
+      setGenerateReportLock(true);
+      await delay(5000);
+      checkForLock();
+    } else {
+      setGenerateReportLock(false);
+      fetchElementaryToken();
+    }
+  };
+
   useEffect(() => {
-    fetchElementaryToken();
+    if (session) {
+      fetchElementaryToken();
+      checkForLock();
+    }
   }, []);
 
   return (
@@ -118,10 +105,23 @@ export const Elementary = () => {
           <Button
             sx={{ ml: 'auto' }}
             onClick={() => refreshReport()}
-            disabled={refreshTTL > 0}
+            disabled={generateReportLock}
             variant="contained"
           >
-            Regenerate report {refreshTTL > 0 ? `(${refreshTTL}s)` : ''}
+            {generateReportLock ? (
+              <>
+                <Image
+                  src={SyncIcon}
+                  className={styles.SyncIcon}
+                  alt="sync icon"
+                  style={{ marginRight: '4px' }}
+                  data-testid="sync-icon"
+                />
+                Generating report
+              </>
+            ) : (
+              ' Regenerate report'
+            )}
           </Button>
         </Box>
         <Card
