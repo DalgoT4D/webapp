@@ -63,17 +63,20 @@ export const Elementary = () => {
   };
 
   const checkForLock = async () => {
-    const response = await httpGet(session, `prefect/tasks/elementary-lock/`);
+    try {
+      const response = await httpGet(session, `prefect/tasks/elementary-lock/`);
+      if (response && !generateReportLock) {
+        setGenerateReportLock(true);
+        await delay(5000);
 
-    if (response && !generateReportLock) {
-      setGenerateReportLock(true);
-      await delay(5000);
-
-      checkForLock();
-    } else if (generateReportLock) {
-      setGenerateReportLock(false);
-      successToast('Report generated successfully', [], globalContext);
-      fetchElementaryToken();
+        checkForLock();
+      } else if (generateReportLock) {
+        setGenerateReportLock(false);
+        successToast('Report generated successfully', [], globalContext);
+        fetchElementaryToken();
+      }
+    } catch (err: any) {
+      errorToast(err.message, [], globalContext);
     }
   };
 
