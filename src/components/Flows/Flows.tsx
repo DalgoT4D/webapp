@@ -48,6 +48,19 @@ export interface FlowsInterface {
   setSelectedFlowId: (arg: string) => any;
 }
 
+interface ActionInterface {
+  flow: FlowInterface;
+  idx: string,
+  setShowLogsDialog: (x: boolean) => void,
+  setFlowLogs: (flow: FlowInterface) => void,
+  permissions: string[],
+  runningDeploymentIds: string[],
+  setRunningDeploymentIds: (id: string[]) => void,
+  handleQuickRunDeployment: (id: string) => void,
+  open: boolean,
+  handleClick: (id: string, event: HTMLElement | null) => void
+}
+
 const flowStatus = (status: boolean) => (
   <Typography component="p" fontWeight={600} width={100}>
     {status ? 'Active' : 'Inactive'}
@@ -101,18 +114,7 @@ const Actions = memo(({ flow,
   setRunningDeploymentIds,
   handleQuickRunDeployment,
   open,
-  handleClick }: {
-    flow: FlowInterface;
-    idx: string,
-    setShowLogsDialog: Function,
-    setFlowLogs: Function,
-    permissions: any,
-    runningDeploymentIds: string[],
-    setRunningDeploymentIds: Function,
-    handleQuickRunDeployment: Function,
-    open: boolean,
-    handleClick: any
-  }) => {
+  handleClick }: ActionInterface) => {
   const { lock } = flow;
   const { tempSyncState, setTempSyncState } = useSyncLock(lock);
   const handlingSyncState = async () => {
