@@ -77,6 +77,7 @@ export const Elementary = () => {
       }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
+      setGenerateReportLock(false);
     }
   };
 
