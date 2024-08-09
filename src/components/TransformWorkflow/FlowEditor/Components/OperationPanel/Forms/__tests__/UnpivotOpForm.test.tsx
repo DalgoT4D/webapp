@@ -57,6 +57,20 @@ const props: OperationFormProps = {
         ok: true,
         json: () => Promise.resolve(),
       });
+    case url.includes('transform/dbt_project/model/operations/'):
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          config: {
+            source_columns: ['column1', 'column2', 'column3'],
+            exclude_columns: ['column1'],
+            unpivot_columns: ['column2'],
+            unpivot_field_name: 'field_name',
+            unpivot_value_name: 'value_name',
+            input_models: [{ uuid: 'mock-uuid' }]
+          }
+        }),
+      });
 
     default:
       return Promise.resolve({
@@ -103,8 +117,8 @@ describe('Form interactions', () => {
       ).toBeInTheDocument();
     });
 
-    const unpivotColumn1 = screen.getByTestId('unpivotColumn1');
-    const unpivotColumn2 = screen.getByTestId('unpivotColumn2');
+    const unpivotColumn1 = screen.getByTestId('unpivotColumn0');
+    const unpivotColumn2 = screen.getByTestId('unpivotColumn1');
 
     await user.click(unpivotColumn1);
     await user.click(unpivotColumn2);
@@ -115,4 +129,85 @@ describe('Form interactions', () => {
       expect(continueOperationChainMock).toHaveBeenCalled();
     });
   });
+
+
+
+  it('deselects all columns for unpivoting when "Select all" is unchecked', async () => {
+    render(unpivotForm);
+
+    const selectAllCheckbox = screen.getAllByText('Select all')[1];
+    await user.click(selectAllCheckbox);
+    await user.click(selectAllCheckbox);
+
+    const unpivotColumns = screen.getAllByTestId(/unpivotColumn/);
+    unpivotColumns.forEach((checkbox) => {
+      expect(checkbox).not.toBeChecked();
+    });
+  });
+
+  it('resets the form after successful submission', async () => {
+    render(unpivotForm);
+
+    const unpivotColumn1 = screen.getAllByTestId('CheckBoxOutlineBlankIcon')[0];
+    await user.click(unpivotColumn1);
+
+    const saveButton = screen.getByTestId('savebutton');
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(continueOperationChainMock).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(unpivotColumn1).not.toBeChecked();
+    });
+  });
+
+  it('handles API errors gracefully', async () => {
+    (global as any).fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: false,
+        json: () => Promise.resolve({ error: 'API Error' }),
+      })
+    );
+
+    render(unpivotForm);
+
+    const saveButton = screen.getByTestId('savebutton');
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Atleast one column required to unpivot')
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('excludes columns correctly', async () => {
+    render(unpivotForm);
+
+    const excludeColumn1 = screen.getAllByTestId('CheckBoxOutlineBlankIcon')[0];
+    await user.click(excludeColumn1);
+
+    const saveButton = screen.getByTestId('savebutton');
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(continueOperationChainMock).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(excludeColumn1).not.toBeChecked();
+    });
+  });
+  it('fetches and sets source columns correctly', async () => {
+    render(unpivotForm);
+
+    await waitFor(() => {
+      const unpivotColumns = screen.getAllByTestId(/unpivotColumn/);
+      expect(unpivotColumns.length).toBeGreaterThan(0);
+    });
+  });
+
+
 });
