@@ -1,5 +1,12 @@
 import Dagre from '@dagrejs/dagre';
-import { Backdrop, Box, Button, CircularProgress, Divider, Typography } from '@mui/material';
+import {
+  Backdrop,
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  Typography,
+} from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
@@ -42,7 +49,7 @@ type CanvasProps = {
   redrawGraph: boolean;
   setRedrawGraph: (...args: any) => void;
   finalLockCanvas: boolean;
-  setTempLockCanvas:any
+  setTempLockCanvas: any;
 };
 
 const nodeGap = 30;
@@ -52,6 +59,8 @@ export interface OperationNodeData {
   output_cols: Array<string>;
   type: typeof OPERATION_NODE;
   target_model_id: string;
+  target_model_name: string;
+  target_model_schema: string;
   config: {
     type: keyof typeof operationIconMapping;
     [key: string]: any;
@@ -188,7 +197,12 @@ const getLayoutedElements = ({
   };
 };
 
-const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas }: CanvasProps) => {
+const Canvas = ({
+  redrawGraph,
+  setRedrawGraph,
+  finalLockCanvas,
+  setTempLockCanvas,
+}: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -210,7 +224,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
     },
   };
   // const [tempLockCanvas, setTempLockCanvas] = useState(true);
-    // const finalLockCanvas = tempLockCanvas || lockUpperSection;
+  // const finalLockCanvas = tempLockCanvas || lockUpperSection;
   const fetchDbtProjectGraph = async () => {
     setTempLockCanvas(true);
     try {
@@ -249,10 +263,9 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
   useEffect(() => {
     setTempLockCanvas(true);
     if (session) {
-        fetchDbtProjectGraph();
+      fetchDbtProjectGraph();
     }
   }, [session, redrawGraph]);
-
 
   useEffect(() => {
     previewNodeRef.current = previewAction.data;
@@ -332,7 +345,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
         data: null,
       });
     }
-    
+
     if (shouldRefreshGraph) setRedrawGraph(!redrawGraph); //calls api in parent and this comp rerenders.
   };
 
@@ -373,14 +386,12 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
   };
 
   const handleRefreshCanvas = () => {
-   
     setRedrawGraph(!redrawGraph);
   };
 
   useEffect(() => {
     // This event is triggered via the ProjectTree component
     if (canvasAction.type === 'add-srcmodel-node') {
-
       addSrcModelNodeToCanvas(canvasAction.data);
     }
 
@@ -480,7 +491,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
           zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
         open={finalLockCanvas}
-        onClick={() => { }}
+        onClick={() => {}}
       >
         <CircularProgress
           sx={{
