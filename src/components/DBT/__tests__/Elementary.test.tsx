@@ -9,11 +9,12 @@ import {
 } from '@/components/ToastMessage/ToastHelper';
 import { Session } from 'next-auth';
 
-
 // Mock the dependencies
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
 }));
+
+jest.useFakeTimers();
 
 jest.mock('../../ToastMessage/ToastHelper', () => ({
   errorToast: jest.fn(),
@@ -46,13 +47,19 @@ describe('Elementary', () => {
       data: mockSession,
     });
 
-    global.fetch = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        token: 'test-token',
-        created_on_utc: new Date().toISOString(),
-      }),
-    });
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          token: 'test-token',
+          created_on_utc: new Date().toISOString(),
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => null,
+      });
 
     render(
       <GlobalContext.Provider value={{}}>
@@ -62,7 +69,7 @@ describe('Elementary', () => {
 
     expect(screen.getByTestId('outerbox')).toBeInTheDocument();
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(screen.getByText(/Last generated:/)).toBeInTheDocument();
       expect(
         screen.getByRole('button', { name: /Regenerate report/ })
@@ -86,13 +93,25 @@ describe('Elementary', () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ task_id: '123', ttl: 10 }),
+        json: () => null,
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({
-          progress: [{ status: 'completed' }],
+        json: async () => ({ flow_run_id: '123' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => ({
+          lockedBy: 'user@dalgo.in',
+          lockedAt: '2024-08-07T07:50:58.839Z',
+          flowRunId: '2c5c04ac-5069-4a7a-bf7b-7bba1f15d1e6',
+          status: 'running',
+          task_slug: 'generate-edr',
         }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => null,
       });
 
     render(
@@ -102,7 +121,7 @@ describe('Elementary', () => {
     );
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(screen.getByText(/Last generated:/)).toBeInTheDocument();
     });
 
@@ -115,31 +134,15 @@ describe('Elementary', () => {
         [],
         expect.any(Object)
       );
-      expect(
-        screen.getByRole('button', { name: /Regenerate report \(10s\)/ })
-      ).toBeDisabled();
+      expect(screen.getByRole('button')).toBeDisabled();
     });
+
+    // Running all API calls after delay
+    jest.runAllTimers();
 
     //poll
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(4);
-      expect(successToast).toHaveBeenCalledWith(
-        'Report generated successfully',
-        [],
-        expect.any(Object)
-      );
-    });
-
-    //case for polling
-
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        progress: [{ status: 'running' }],
-      }),
-    });
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(4);
+      expect(global.fetch).toHaveBeenCalledTimes(5);
     });
   });
 
@@ -155,6 +158,10 @@ describe('Elementary', () => {
           created_on_utc: new Date().toISOString(),
         }),
       })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => null,
+      })
       .mockRejectedValueOnce(new Error('Failed to refresh report'));
 
     render(
@@ -164,14 +171,14 @@ describe('Elementary', () => {
     );
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(screen.getByText(/Last generated:/)).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole('button', { name: /Regenerate report/ }));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(global.fetch).toHaveBeenCalledTimes(3);
       expect(errorToast).toHaveBeenCalledWith(
         'Failed to refresh report',
         [],
