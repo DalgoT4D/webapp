@@ -10,7 +10,7 @@ import {
   tableCellClasses,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useContext, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { SrcModelNodeType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
@@ -92,7 +92,7 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
 export function DbtSourceModelNode(node: SrcModelNodeType) {
   const { data: session } = useSession();
   const { setPreviewAction } = usePreviewAction();
-  const { setCanvasAction } = useCanvasAction();
+  const { canvasAction, setCanvasAction } = useCanvasAction();
   const { setCanvasNode } = useCanvasNode();
   const [columns, setColumns] = useState<Array<any>>([]);
   const globalContext = useContext(GlobalContext);
@@ -141,7 +141,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   };
 
   useMemo(() => {
-    const cacheKey = `${node.data.schema}/${node.data.input_name}`;
+    const cacheKey = `${node.data.schema}/${node.data.input_name}-${nodeId}`;
 
     if (cacheRef.current[cacheKey]) {
       setColumns(cacheRef.current[cacheKey]);
@@ -160,6 +160,12 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
       })();
     }
   }, [session, edges]);
+
+  useEffect(() => {
+    if (canvasAction.type === 'refresh-canvas') {
+      cacheRef.current = {};
+    }
+  }, [canvasAction]);
 
   return (
     <Box
