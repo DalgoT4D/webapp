@@ -226,11 +226,7 @@ const OperationConfigLayout = ({
       console.log(canvasAction, panelOpFormState);
       if (['view', 'edit'].includes(panelOpFormState.current)) {
         const nodeData = canvasNode?.data as OperationNodeData;
-        console.log(canvasNode);
-        if (
-          !nodeData?.is_last_in_chain ||
-          !permissions.includes('can_edit_dbt_operation')
-        ) {
+        if (permissions.includes('can_view_dbt_operation')) {
           setSelectedOp(
             operations.find((op) => op.slug === nodeData.config?.type)
           );
@@ -297,7 +293,7 @@ const OperationConfigLayout = ({
             alignItems: 'center',
           }}
         >
-          {((selectedOp && panelOpFormState.current !== 'view') ||
+          {((selectedOp && panelOpFormState.current === 'create') ||
             panelState === 'create-table-or-add-function') && (
             <IconButton
               onClick={
@@ -310,6 +306,7 @@ const OperationConfigLayout = ({
               <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
             </IconButton>
           )}
+          <Box />
           <Box sx={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
             <Typography
               fontWeight={600}
