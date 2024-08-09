@@ -70,6 +70,8 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
               fieldStyle="transformation"
               options={['intermediate', 'production']}
               {...field}
+              freeSolo
+              autoSelect
               label="Output Schema Name"
             />
           )}
