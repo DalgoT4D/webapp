@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import {
   CircularProgress,
@@ -39,6 +39,7 @@ import {
 } from '@/contexts/ConnectionSyncLogsContext';
 import { ConnectionLogs } from './ConnectionLogs';
 import PendingActionsAccordion from './PendingActions';
+import { useSyncLock } from '@/customHooks/useSyncLock';
 
 type PrefectFlowRun = {
   id: string;
@@ -89,7 +90,7 @@ export type Connection = {
   syncCatalog: object;
   resetConnDeploymentId: string;
 };
-type LockStatus = 'running' | 'queued' | 'locked' | null;
+// type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
   const maxlength = 20;
   if (input.length <= maxlength) {
@@ -155,7 +156,6 @@ const getSourceDest = (connection: Connection) => (
   </Box>
 );
 
-// eslint-disable-next-line react/display-name
 const Actions = memo(
   ({
     connection,
@@ -177,39 +177,27 @@ const Actions = memo(
     handleClick: any;
   }) => {
     const { deploymentId, connectionId, lock } = connection;
-    const [tempSyncState, setTempSyncState] = useState(false); //on polling it will set to false automatically. //local state of each button.
+    const { tempSyncState, setTempSyncState } = useSyncLock(lock);
+
     const isSyncConnectionIdPresent =
       syncingConnectionIds.includes(connectionId);
-    const lockLastStateRef = useRef<LockStatus>(null);
-    useEffect(() => {
-      if (lock) {
-        if (lock.status === 'running') {
-          lockLastStateRef.current = 'running';
-        } else if (lock.status === 'queued') {
-          lockLastStateRef.current = 'queued';
-        } else if (lock.status === 'locked' || lock?.status === 'complete') {
-          lockLastStateRef.current = 'locked';
-        }
-      }
 
-      if (!lock && lockLastStateRef.current && tempSyncState) {
+    const handlingSyncState = async () => {
+      const res: any = await syncConnection(deploymentId, connectionId);
+      if (res?.error == "ERROR") {
         setTempSyncState(false);
-
-        lockLastStateRef.current = null;
       }
-    }, [lock, tempSyncState]);
+    }
     return (
       <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
         <Button
           variant="contained"
           onClick={async () => {
-            syncConnection(deploymentId, connectionId);
+            handlingSyncState();
+            setTempSyncState(true);
             // push connection id into list of syncing connection ids
             if (!isSyncConnectionIdPresent) {
               setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
-            }
-            if (!tempSyncState) {
-              setTempSyncState(true);
             }
           }}
           data-testid={'sync-' + idx}
@@ -254,6 +242,7 @@ const Actions = memo(
     );
   }
 );
+Actions.displayName = "Action" //display name added.
 
 export const Connections = () => {
   const { data: session }: any = useSession();
@@ -290,8 +279,7 @@ export const Connections = () => {
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
+    const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -352,12 +340,16 @@ export const Connections = () => {
         `prefect/v1/flows/${deploymentId}/flow_run/`,
         {}
       );
-      if (response?.detail) errorToast(response.detail, [], globalContext);
+      // returning {error:"ERROR"} to stop loader if error occurs.
+      if (response?.detail) {
+        errorToast(response.detail, [], globalContext);
+        return { error: "ERROR" };
+      }
 
       // if flow run id is not present, something went wrong
       if (!response?.flow_run_id) {
         errorToast('Something went wrong', [], globalContext);
-        return;
+        return { error: "ERROR" };
       }
 
       successToast(`Sync initiated successfully`, [], globalContext);
@@ -367,6 +359,7 @@ export const Connections = () => {
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+      return { error: "ERROR" };
     } finally {
       setSyncingConnectionIds(
         syncingConnectionIds.filter((id) => id !== connectionId)
