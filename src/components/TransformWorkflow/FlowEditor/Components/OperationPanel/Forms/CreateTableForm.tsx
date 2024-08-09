@@ -13,10 +13,7 @@ import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
-const CreateTableForm = ({
-  sx,
-  clearAndClosePanel,
-}: OperationFormProps) => {
+const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   const { data: session } = useSession();
   const { canvasNode } = useCanvasNode();
   const { setCanvasAction } = useCanvasAction();
@@ -71,6 +68,8 @@ const CreateTableForm = ({
               fieldStyle="transformation"
               options={['intermediate', 'production']}
               {...field}
+              freeSolo
+              autoSelect
               label="Output Schema Name"
             />
           )}
