@@ -10,7 +10,7 @@ import {
   tableCellClasses,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useRef, useState } from 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { SrcModelNodeType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
@@ -112,6 +112,8 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     permissions.includes('can_delete_dbt_model') &&
     edgesEmanatingOutOfNode.length <= 0;
 
+  const cacheRef = useRef<{ [key: string]: ColumnData[] }>({});
+
   const handleDeleteAction = () => {
     setCanvasAction({
       type: 'delete-node',
@@ -139,17 +141,24 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   };
 
   useMemo(() => {
-    (async () => {
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${node.data.schema}/${node.data.input_name}`
-        );
-        setColumns(data);
-      } catch (error) {
-        console.log(error);
-      }
-    })();
+    const cacheKey = `${node.data.schema}/${node.data.input_name}`;
+
+    if (cacheRef.current[cacheKey]) {
+      setColumns(cacheRef.current[cacheKey]);
+    } else {
+      (async () => {
+        try {
+          const data: ColumnData[] = await httpGet(
+            session,
+            `warehouse/table_columns/${node.data.schema}/${node.data.input_name}`
+          );
+          cacheRef.current[cacheKey] = data;
+          setColumns(data);
+        } catch (error) {
+          console.log(error);
+        }
+      })();
+    }
   }, [session, edges]);
 
   return (
