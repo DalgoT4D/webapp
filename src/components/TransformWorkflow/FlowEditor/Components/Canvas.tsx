@@ -188,7 +188,12 @@ const getLayoutedElements = ({
   };
 };
 
-const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas }: CanvasProps) => {
+const Canvas = ({
+  redrawGraph,
+  setRedrawGraph,
+  finalLockCanvas,
+  setTempLockCanvas,
+}: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -210,7 +215,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
     },
   };
   // const [tempLockCanvas, setTempLockCanvas] = useState(true);
-    // const finalLockCanvas = tempLockCanvas || lockUpperSection;
+  // const finalLockCanvas = tempLockCanvas || lockUpperSection;
   const fetchDbtProjectGraph = async () => {
     setTempLockCanvas(true);
     try {
@@ -332,7 +337,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
         data: null,
       });
     }
-    
+
     if (shouldRefreshGraph) setRedrawGraph(!redrawGraph); //calls api in parent and this comp rerenders.
   };
 
@@ -372,22 +377,20 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
     }
   };
 
-  const handleRefreshCanvas = () => {
-   
-    setRedrawGraph(!redrawGraph);
-  };
+  // const handleRefreshCanvas = () => {
+  //   setRedrawGraph(!redrawGraph);
+  // };
 
   useEffect(() => {
     // This event is triggered via the ProjectTree component
     if (canvasAction.type === 'add-srcmodel-node') {
-
       addSrcModelNodeToCanvas(canvasAction.data);
     }
 
-    if (canvasAction.type === 'refresh-canvas') {
-      setTempLockCanvas(true);
-      handleRefreshCanvas();
-    }
+    // if (canvasAction.type === 'refresh-canvas') {
+    //   setTempLockCanvas(true);
+    //   handleRefreshCanvas();
+    // }
 
     if (canvasAction.type === 'delete-node') {
       setTempLockCanvas(true);
@@ -480,7 +483,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
           zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
         open={finalLockCanvas}
-        onClick={() => { }}
+        onClick={() => {}}
       >
         <CircularProgress
           sx={{
@@ -530,6 +533,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph, finalLockCanvas,setTempLockCanvas
               onClick={() => {
                 successToast('Graph has been refreshed', [], globalContext);
                 setRedrawGraph(!redrawGraph);
+                setCanvasAction({
+                  type: 'refresh-canvas',
+                  data: null,
+                });
               }}
             >
               <ReplayIcon />
