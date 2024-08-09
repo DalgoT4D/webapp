@@ -422,6 +422,7 @@ const OperationConfigLayout = ({
   };
 
   const prepareForNextOperation = async (opNodeData: OperationNodeData) => {
+    // opNodeData - the node that just got saved
     if (opNodeData.id !== canvasNode?.id) {
       const dummyNodeId: string = dummyNodeIdRef.current;
       // get all edges of this dummy node and save
@@ -482,6 +483,9 @@ const OperationConfigLayout = ({
     } else {
       handleClosePanel();
     }
+
+    // refresh canvas
+    setCanvasAction({ type: 'refresh-canvas', data: null });
   };
 
   const panelState = selectedOp

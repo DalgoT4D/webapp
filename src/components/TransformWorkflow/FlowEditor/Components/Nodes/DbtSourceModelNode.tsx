@@ -10,7 +10,7 @@ import {
   tableCellClasses,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { SrcModelNodeType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
@@ -92,7 +92,7 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
 export function DbtSourceModelNode(node: SrcModelNodeType) {
   const { data: session } = useSession();
   const { setPreviewAction } = usePreviewAction();
-  const { setCanvasAction } = useCanvasAction();
+  const { canvasAction, setCanvasAction } = useCanvasAction();
   const { setCanvasNode } = useCanvasNode();
   const [columns, setColumns] = useState<Array<any>>([]);
   const globalContext = useContext(GlobalContext);
@@ -111,6 +111,8 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   const isDeletable: boolean =
     permissions.includes('can_delete_dbt_model') &&
     edgesEmanatingOutOfNode.length <= 0;
+
+  const cacheRef = useRef<{ [key: string]: ColumnData[] }>({});
 
   const handleDeleteAction = () => {
     setCanvasAction({
@@ -139,18 +141,31 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   };
 
   useMemo(() => {
-    (async () => {
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${node.data.schema}/${node.data.input_name}`
-        );
-        setColumns(data);
-      } catch (error) {
-        console.log(error);
-      }
-    })();
+    const cacheKey = `${node.data.schema}/${node.data.input_name}-${nodeId}`;
+
+    if (cacheRef.current[cacheKey]) {
+      setColumns(cacheRef.current[cacheKey]);
+    } else {
+      (async () => {
+        try {
+          const data: ColumnData[] = await httpGet(
+            session,
+            `warehouse/table_columns/${node.data.schema}/${node.data.input_name}`
+          );
+          cacheRef.current[cacheKey] = data;
+          setColumns(data);
+        } catch (error) {
+          console.log(error);
+        }
+      })();
+    }
   }, [session, edges]);
+
+  useEffect(() => {
+    if (canvasAction.type === 'refresh-canvas') {
+      cacheRef.current = {};
+    }
+  }, [canvasAction]);
 
   return (
     <Box
