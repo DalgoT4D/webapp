@@ -1,5 +1,12 @@
 import Dagre from '@dagrejs/dagre';
-import { Backdrop, Box, Button, CircularProgress, Divider, Typography } from '@mui/material';
+import {
+  Backdrop,
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  Typography,
+} from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
@@ -42,7 +49,7 @@ type CanvasProps = {
   redrawGraph: boolean;
   setRedrawGraph: (...args: any) => void;
   finalLockCanvas: boolean;
-  setTempLockCanvas:any
+  setTempLockCanvas: any;
 };
 
 const nodeGap = 30;
@@ -52,6 +59,8 @@ export interface OperationNodeData {
   output_cols: Array<string>;
   type: typeof OPERATION_NODE;
   target_model_id: string;
+  target_model_name: string;
+  target_model_schema: string;
   config: {
     type: keyof typeof operationIconMapping;
     [key: string]: any;
@@ -254,10 +263,9 @@ const Canvas = ({
   useEffect(() => {
     setTempLockCanvas(true);
     if (session) {
-        fetchDbtProjectGraph();
+      fetchDbtProjectGraph();
     }
   }, [session, redrawGraph]);
-
 
   useEffect(() => {
     previewNodeRef.current = previewAction.data;
