@@ -47,6 +47,8 @@ export const generateDummyOperationlNode = (
       type: OPERATION_NODE,
       output_cols: [],
       target_model_id: '',
+      target_model_name: '',
+      target_model_schema: '',
       config: { type: op.slug },
       isDummy: true,
     },
