@@ -385,9 +385,9 @@ const Canvas = ({
     }
   };
 
-  const handleRefreshCanvas = () => {
-    setRedrawGraph(!redrawGraph);
-  };
+  // const handleRefreshCanvas = () => {
+  //   setRedrawGraph(!redrawGraph);
+  // };
 
   useEffect(() => {
     // This event is triggered via the ProjectTree component
@@ -395,10 +395,10 @@ const Canvas = ({
       addSrcModelNodeToCanvas(canvasAction.data);
     }
 
-    if (canvasAction.type === 'refresh-canvas') {
-      setTempLockCanvas(true);
-      handleRefreshCanvas();
-    }
+    // if (canvasAction.type === 'refresh-canvas') {
+    //   setTempLockCanvas(true);
+    //   handleRefreshCanvas();
+    // }
 
     if (canvasAction.type === 'delete-node') {
       setTempLockCanvas(true);
@@ -541,6 +541,10 @@ const Canvas = ({
               onClick={() => {
                 successToast('Graph has been refreshed', [], globalContext);
                 setRedrawGraph(!redrawGraph);
+                setCanvasAction({
+                  type: 'refresh-canvas',
+                  data: null,
+                });
               }}
             >
               <ReplayIcon />
