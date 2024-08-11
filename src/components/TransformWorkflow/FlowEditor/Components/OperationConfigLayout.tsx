@@ -1,6 +1,11 @@
 import {
   Backdrop,
   Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   IconButton,
   LinearProgress,
@@ -164,6 +169,7 @@ const OperationConfigLayout = ({
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
   const [showFunctionsList, setShowFunctionsList] = useState<boolean>(false);
   const [isPanelLoading, setIsPanelLoading] = useState<boolean>(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState<boolean>(false);
   const [showAddFunction, setShowAddFunction] = useState<boolean>(true);
   const dummyNodeIdRef: any = useRef(null);
   const contentRef: any = useRef(null);
@@ -251,6 +257,27 @@ const OperationConfigLayout = ({
 
   if (!openPanel) return null;
 
+  const DiscardDialog = ({ handleBackbuttonAction }: any) => {
+    return (
+      <Dialog open={showDiscardDialog} onClose={() => setShowDiscardDialog(false)}>
+        <DialogTitle>Discard Changes?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            All your changes will be discarded. Are you sure you want to continue?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button color="error" onClick={() => setShowDiscardDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleBackbuttonAction} color="primary" autoFocus>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+    )
+  }
+
   const PanelHeader = () => {
     const handleBackbuttonAction = () => {
       //dummy nodes are generate only while creating & not updating
@@ -268,6 +295,7 @@ const OperationConfigLayout = ({
         });
         setSelectedOp(null);
       }
+      setShowDiscardDialog(false);
     };
 
     const handleBackButtonOnCreateTableAddFunction = () => {
@@ -299,17 +327,18 @@ const OperationConfigLayout = ({
         >
           {((selectedOp && panelOpFormState.current !== 'view') ||
             panelState === 'create-table-or-add-function') && (
-            <IconButton
-              onClick={
-                panelState === 'create-table-or-add-function'
-                  ? handleBackButtonOnCreateTableAddFunction
-                  : handleBackbuttonAction
-              }
-              data-testid="openoperationlist"
-            >
-              <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
-            </IconButton>
-          )}
+              <IconButton
+                onClick={
+                  panelState === 'create-table-or-add-function'
+                    ? handleBackButtonOnCreateTableAddFunction
+                    : () => setShowDiscardDialog(true)
+                }
+                data-testid="openoperationlist"
+              >
+                <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
+              </IconButton>
+            )}
+          <DiscardDialog handleBackbuttonAction={handleBackbuttonAction} />
           <Box sx={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
             <Typography
               fontWeight={600}
@@ -320,8 +349,8 @@ const OperationConfigLayout = ({
               {selectedOp
                 ? selectedOp.label
                 : panelState === 'op-list'
-                ? 'Functions'
-                : ''}
+                  ? 'Functions'
+                  : ''}
             </Typography>
             <Box sx={{ width: '1px', height: '12px' }}>
               {panelState === 'op-form' && selectedOp ? (
@@ -391,8 +420,8 @@ const OperationConfigLayout = ({
                 onClick={
                   canSelectOperation
                     ? () => {
-                        handleSelectOp(op);
-                      }
+                      handleSelectOp(op);
+                    }
                     : undefined
                 }
               >
@@ -490,8 +519,8 @@ const OperationConfigLayout = ({
   const panelState = selectedOp
     ? 'op-form'
     : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE
-    ? 'op-list'
-    : 'create-table-or-add-function';
+      ? 'op-list'
+      : 'create-table-or-add-function';
 
   return (
     <Box
@@ -546,7 +575,7 @@ const OperationConfigLayout = ({
                   zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
                 open={isPanelLoading}
-                onClick={() => {}}
+                onClick={() => { }}
               ></Backdrop>
               <OperationForm
                 sx={{ marginBottom: '10px' }}
