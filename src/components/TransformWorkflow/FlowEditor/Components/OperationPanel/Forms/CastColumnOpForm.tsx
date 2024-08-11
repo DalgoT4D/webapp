@@ -31,13 +31,14 @@ const CastColumnOp = ({
   const { data: session } = useSession();
   const [dataTypes, setDataTypes] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
+  const [configData, setConfigData] = useState<any>([]);
   const globalContext = useContext(GlobalContext);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   type FormData = {
     config: { name: string; data_type: string | null }[];
@@ -182,6 +183,15 @@ const CastColumnOp = ({
     }
   };
 
+  const handleSearch = (value: string) => {
+    const trimmedSubstring = value?.toLowerCase();
+    const filteredConfigs = config?.filter((ele) => {
+      const stringToSearch = ele?.name?.toLowerCase();
+      return stringToSearch.includes(trimmedSubstring);
+    })
+    setConfigData(filteredConfigs)
+  }
+
   useEffect(() => {
     fetchDataTypes();
     if (['edit', 'view'].includes(action)) {
@@ -191,12 +201,22 @@ const CastColumnOp = ({
     }
   }, [session, node]);
 
+  useEffect(() => {
+    setConfigData(config)
+  }, [config])
+
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
+      <Input
+        fieldStyle="transformation"
+        sx={{ px: 1, pb: 1 }}
+        placeholder="Search Here"
+        onChange={event => handleSearch(event.target.value)}
+      />
       <form onSubmit={handleSubmit(handleSave)}>
         <GridTable
           headers={['Column name', 'Type']}
-          data={config.map((column, index) => [
+          data={configData?.map((column: any, index: number) => [
             <Input
               data-testid={`columnName${index}`}
               key={`config.${index}.name`}
@@ -224,7 +244,8 @@ const CastColumnOp = ({
             />,
           ])}
         ></GridTable>
-        <Box sx={{ ...sx, padding: '16px 16px 0px 16px' }}>
+        <Box sx={{ m: 2 }} />
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', p: 2 }}>
           <Button
             variant="contained"
             type="submit"

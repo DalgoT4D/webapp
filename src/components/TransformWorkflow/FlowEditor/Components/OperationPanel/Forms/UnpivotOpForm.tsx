@@ -18,6 +18,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
+import Input from '@/components/UI/Input/Input';
 
 interface UnpivotDataConfig {
   source_columns: string[];
@@ -39,6 +40,7 @@ const UnpivotOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
+  const [colFieldData, setColFieldData] = useState<any[]>([]);
   const [selectAllCheckbox, setSelectAllCheckbox] = useState<{
     is_unpivot: boolean;
     is_exclude: boolean;
@@ -47,8 +49,8 @@ const UnpivotOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   type FormProps = {
     unpivot_field_name: string;
@@ -87,16 +89,14 @@ const UnpivotOpForm = ({
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
         setSrcColumns(data.map((col: ColumnData) => col.name));
-        setValue(
-          'unpivot_columns',
-          data
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((col: ColumnData) => ({
-              col: col.name,
-              is_unpivot_checked: false,
-              is_exclude_checked: false,
-            }))
-        );
+        const unpivot_col_fields = data.sort((a, b) => a.name.localeCompare(b.name))
+          .map((col: ColumnData) => ({
+            col: col.name,
+            is_unpivot_checked: false,
+            is_exclude_checked: false,
+          }))
+        setValue('unpivot_columns', unpivot_col_fields);
+        setColFieldData(unpivot_col_fields)
       } catch (error) {
         console.log(error);
       }
@@ -191,22 +191,81 @@ const UnpivotOpForm = ({
         a.localeCompare(b)
       );
 
+      const unpivot_col_fields = orginalSrcColumns.map((col: string) => ({
+        col,
+        is_unpivot_checked: unpivot_columns.includes(col),
+        is_exclude_checked: exclude_columns.includes(col),
+      }))
+
       // pre-fill form
       reset({
         unpivot_field_name: unpivot_field_name,
         unpivot_value_name: unpivot_value_name,
-        unpivot_columns: orginalSrcColumns.map((col: string) => ({
-          col,
-          is_unpivot_checked: unpivot_columns.includes(col),
-          is_exclude_checked: exclude_columns.includes(col),
-        })),
+        unpivot_columns: unpivot_col_fields
       });
+
+      setColFieldData(unpivot_col_fields)
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSearch = (value: string) => {
+    const trimmedSubstring = value?.toLowerCase();
+    const filteredColumns = unpivotColFields?.filter((colField) => {
+      const stringToSearch = colField?.col?.toLowerCase();
+      return stringToSearch.includes(trimmedSubstring);
+    })
+    setColFieldData(filteredColumns)
+  }
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>, is_exclude: boolean) => {
+    // Filter the fields based on the search results stored in colFieldData
+    const filteredFields = unpivotColFields.filter((field) =>
+      colFieldData.some((colField) => colField.col === field.col)
+    );
+
+    // Update the filtered fields based on the select all checkbox
+    const updatedFields = filteredFields.map((field) => ({
+      col: field.col,
+      is_unpivot_checked: is_exclude ? (event.target.checked ? false : field.is_unpivot_checked) : event.target.checked,
+      is_exclude_checked: is_exclude ? event.target.checked : (event.target.checked ? false : field.is_exclude_checked),
+    }));
+
+    setColFieldData(updatedFields)
+
+    // Merge the updated fields with the original unpivotColFields
+    const mergedFields = unpivotColFields.map((field) =>
+      updatedFields.find((updatedField) => updatedField.col === field.col) || field
+    );
+
+    unpivotColReplace(mergedFields);
+  };
+
+  const handleUnpivotColUpdate = (event: React.ChangeEvent<HTMLInputElement>, index: number, is_exclude: boolean) => {
+    const field = colFieldData[index];
+    const updatedFields = colFieldData.map((colField) => {
+      if (colField.col == field.col) {
+        return {
+          col: field.col,
+          is_unpivot_checked: is_exclude ? (event.target.checked ? false : field.is_unpivot_checked) : event.target.checked,
+          is_exclude_checked: is_exclude ? event.target.checked : (event.target.checked ? false : field.is_exclude_checked),
+        }
+      }
+      return colField;
+    }
+    );
+    const originalIndex = unpivotColFields?.findIndex((colField) => colField.col == field.col)
+
+    unpivotColUpdate(originalIndex, {
+      col: field.col,
+      is_unpivot_checked: is_exclude ? (event.target.checked ? false : field.is_unpivot_checked) : event.target.checked,
+      is_exclude_checked: is_exclude ? event.target.checked : (event.target.checked ? false : field.is_exclude_checked)
+    });
+    setColFieldData(updatedFields);
+  }
 
   useEffect(() => {
     if (['edit', 'view'].includes(action)) {
@@ -216,9 +275,26 @@ const UnpivotOpForm = ({
     }
   }, [session, node]);
 
+  useEffect(() => {
+    if (colFieldData?.length > 0) {
+      let selectAll = { is_exclude: true, is_unpivot: true }
+      colFieldData?.forEach((colField) => {
+        if (!colField.is_exclude_checked) selectAll.is_exclude = false;
+        if (!colField.is_unpivot_checked) selectAll.is_unpivot = false;
+      })
+      setSelectAllCheckbox(selectAll)
+    }
+  }, [colFieldData])
+
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
       <form onSubmit={handleSubmit(handleSave)}>
+        <Input
+          fieldStyle="transformation"
+          sx={{ px: 1, pb: 1 }}
+          placeholder="Search by column name"
+          onChange={event => handleSearch(event.target.value)}
+        />
         <GridTable
           headers={['Columns to unpivot']}
           data={[
@@ -242,15 +318,7 @@ const UnpivotOpForm = ({
                         onChange={(
                           event: React.ChangeEvent<HTMLInputElement>
                         ) => {
-                          unpivotColReplace(
-                            unpivotColFields.map((field) => ({
-                              col: field.col,
-                              is_unpivot_checked: event.target.checked,
-                              is_exclude_checked: event.target.checked
-                                ? false
-                                : field.is_exclude_checked,
-                            }))
-                          );
+                          handleSelectAll(event, false)
                           setSelectAllCheckbox({
                             is_unpivot: event.target.checked,
                             is_exclude: event.target.checked
@@ -273,7 +341,7 @@ const UnpivotOpForm = ({
                 </Box>,
               ],
             ],
-            ...unpivotColFields.map((field, idx) => [
+            ...colFieldData.map((field, idx) => [
               <Box
                 key={field.col + idx}
                 sx={{
@@ -293,13 +361,7 @@ const UnpivotOpForm = ({
                       onChange={(
                         event: React.ChangeEvent<HTMLInputElement>
                       ) => {
-                        unpivotColUpdate(idx, {
-                          col: field.col,
-                          is_unpivot_checked: event.target.checked,
-                          is_exclude_checked: event.target.checked
-                            ? false
-                            : field.is_exclude_checked,
-                        });
+                        handleUnpivotColUpdate(event, idx, false)
                       }}
                     />
                   }
@@ -352,15 +414,7 @@ const UnpivotOpForm = ({
                               : selectAllCheckbox.is_unpivot,
                             is_exclude: event.target.checked,
                           });
-                          unpivotColReplace(
-                            unpivotColFields.map((field) => ({
-                              col: field.col,
-                              is_exclude_checked: event.target.checked,
-                              is_unpivot_checked: event.target.checked
-                                ? false
-                                : field.is_unpivot_checked,
-                            }))
-                          );
+                          handleSelectAll(event, true)
                         }}
                       />
                     }
@@ -377,7 +431,7 @@ const UnpivotOpForm = ({
                 </Box>,
               ],
             ],
-            ...unpivotColFields.map((field, idx) => [
+            ...colFieldData.map((field, idx) => [
               <Box
                 key={field.col + idx}
                 sx={{
@@ -396,13 +450,7 @@ const UnpivotOpForm = ({
                       onChange={(
                         event: React.ChangeEvent<HTMLInputElement>
                       ) => {
-                        unpivotColUpdate(idx, {
-                          col: field.col,
-                          is_exclude_checked: event.target.checked,
-                          is_unpivot_checked: event.target.checked
-                            ? false
-                            : field.is_unpivot_checked,
-                        });
+                        handleUnpivotColUpdate(event, idx, true)
                       }}
                     />
                   }
@@ -420,19 +468,18 @@ const UnpivotOpForm = ({
             ]),
           ]}
         ></GridTable>
-        <Box>
-          <Box>
-            <Button
-              disabled={action === 'view'}
-              variant="contained"
-              type="submit"
-              data-testid="savebutton"
-              fullWidth
-              sx={{ marginTop: '17px' }}
-            >
-              Save
-            </Button>
-          </Box>
+        <Box sx={{ m: 2 }} />
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Button
+            disabled={action === 'view'}
+            variant="contained"
+            type="submit"
+            data-testid="savebutton"
+            fullWidth
+            sx={{ marginTop: '17px' }}
+          >
+            Save
+          </Button>
         </Box>
       </form>
     </Box>

@@ -38,13 +38,15 @@ const PivotOpForm = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
+  const [colFieldData, setColFieldData] = useState<any[]>([]);
+  const [selectAllCheckbox, setSelectAllCheckbox] = useState<boolean>(false);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   type FormProps = {
     pivot_column_name: string;
@@ -98,12 +100,10 @@ const PivotOpForm = ({
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
         setSrcColumns(data.map((col: ColumnData) => col.name));
-        setValue(
-          'source_columns',
-          data
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((col: ColumnData) => ({ col: col.name, is_checked: false }))
-        );
+        const col_fields = data.sort((a, b) => a.name.localeCompare(b.name))
+          .map((col: ColumnData) => ({ col: col.name, is_checked: false }))
+        setValue('source_columns', col_fields);
+        setColFieldData(col_fields)
       } catch (error) {
         console.log(error);
       }
@@ -210,12 +210,66 @@ const PivotOpForm = ({
           .concat([{ col: '' }]),
         source_columns: groupbySourceColumns,
       });
+      setColFieldData(groupbySourceColumns)
+
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSearch = (value: string) => {
+    const trimmedSubstring = value?.toLowerCase();
+    const filteredColumns = srcColFields?.filter((colField) => {
+      const stringToSearch = colField?.col?.toLowerCase();
+      return stringToSearch.includes(trimmedSubstring);
+    })
+    setColFieldData(filteredColumns)
+  }
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Filter the fields based on the search results stored in colFieldData
+    const filteredFields = srcColFields.filter((field) =>
+      colFieldData.some((colField) => colField.col === field.col)
+    );
+
+    // Update the filtered fields based on the select all checkbox
+    const updatedFields = filteredFields.map((field) => ({
+      col: field.col,
+      is_checked: event.target.checked,
+    }));
+
+    setColFieldData(updatedFields)
+
+    // Merge the updated fields with the original unpivotColFields
+    const mergedFields = srcColFields.map((field) =>
+      updatedFields.find((updatedField) => updatedField.col === field.col) || field
+    );
+
+    replace(mergedFields);
+  };
+
+  const handleUpdate = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const field = colFieldData[index];
+    const updatedFields = colFieldData.map((colField) => {
+      if (colField.col == field.col) {
+        return {
+          col: field.col,
+          is_checked: event.target.checked,
+        }
+      }
+      return colField;
+    }
+    );
+    const originalIndex = srcColFields?.findIndex((colField) => colField.col == field.col)
+
+    update(originalIndex, {
+      col: field.col,
+      is_checked: event.target.checked,
+    });
+    setColFieldData(updatedFields);
+  }
 
   useEffect(() => {
     if (['edit', 'view'].includes(action)) {
@@ -224,6 +278,16 @@ const PivotOpForm = ({
       fetchAndSetSourceColumns();
     }
   }, [session, node]);
+
+  useEffect(() => {
+    if (colFieldData?.length > 0) {
+      let selectAll = true
+      colFieldData?.forEach((colField) => {
+        if (!colField.is_checked) selectAll = false;
+      })
+      setSelectAllCheckbox(selectAll)
+    }
+  }, [colFieldData])
 
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
@@ -303,7 +367,12 @@ const PivotOpForm = ({
         >
           Add row
         </Button>
-
+        <Input
+          fieldStyle="transformation"
+          sx={{ px: 1, pb: 1 }}
+          placeholder="Search by column name"
+          onChange={event => handleSearch(event.target.value)}
+        />
         <GridTable
           headers={['Columns to groupby']}
           data={[
@@ -322,17 +391,12 @@ const PivotOpForm = ({
                     key={'select_all'}
                     control={
                       <Checkbox
+                        checked={selectAllCheckbox}
                         disabled={action === 'view'}
                         onChange={(
                           event: React.ChangeEvent<HTMLInputElement>
-                        ) => {
-                          replace(
-                            srcColFields.map((field) => ({
-                              col: field.col,
-                              is_checked: event.target.checked,
-                            }))
-                          );
-                        }}
+                        ) => handleSelectAll(event)
+                        }
                       />
                     }
                     label=""
@@ -348,7 +412,7 @@ const PivotOpForm = ({
                 </Box>,
               ],
             ],
-            ...srcColFields.map((field, idx) => [
+            ...colFieldData.map((field, idx) => [
               <Box
                 key={field.col + idx}
                 sx={{
@@ -366,12 +430,7 @@ const PivotOpForm = ({
                       checked={field.is_checked}
                       onChange={(
                         event: React.ChangeEvent<HTMLInputElement>
-                      ) => {
-                        update(idx, {
-                          col: field.col,
-                          is_checked: event.target.checked,
-                        });
-                      }}
+                      ) => handleUpdate(event, idx)}
                     />
                   }
                   label=""
@@ -388,19 +447,18 @@ const PivotOpForm = ({
             ]),
           ]}
         ></GridTable>
-        <Box>
-          <Box>
-            <Button
-              disabled={action === 'view'}
-              variant="contained"
-              type="submit"
-              data-testid="savebutton"
-              fullWidth
-              sx={{ marginTop: '17px' }}
-            >
-              Save
-            </Button>
-          </Box>
+        <Box sx={{m: 2}}/>
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Button
+            disabled={action === 'view'}
+            variant="contained"
+            type="submit"
+            data-testid="savebutton"
+            fullWidth
+            sx={{ marginTop: '17px' }}
+          >
+            Save
+          </Button>
         </Box>
       </form>
     </Box>

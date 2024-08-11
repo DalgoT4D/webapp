@@ -459,7 +459,7 @@ const JoinOpForm = ({
           )}
         />
 
-        <Box>
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
           <Button
             disabled={action === 'view'}
             variant="contained"
