@@ -52,10 +52,11 @@ const mockLogDetails = [
                 label: 'task 2',
                 start_time: moment().subtract(2, 'hours').toISOString(),
                 end_time: moment().toISOString(),
+                state_type: "FAILED",
                 logs: [{ level: 1, message: 'Log message 2', timestamp: moment().toISOString() }],
             },
         ],
-        status: 'COMPLETED',
+        status: 'FAILED',
     },
     {
         id: 'log-3',
@@ -275,13 +276,12 @@ describe('FlowLogs Component', () => {
         });
 
         // Check that the AI summary button is present
-        expect(screen.getByTestId('aisummary-run-1')).toBeInTheDocument();
+        expect(screen.getByTestId('aisummary-run-2')).toBeInTheDocument();
 
         // Simulate clicking the AI summary button
-        fireEvent.click(screen.getByTestId("aisummary-run-1"));
-        console.log(screen.getByTestId("aisummary-run-1").outerHTML, "summary");
+        fireEvent.click(screen.getByTestId("aisummary-run-2"));
         await waitFor(() => {
-            expect(screen.queryByTestId("aisummary-run-1")).toBeDisabled();
+            expect(screen.queryByTestId("aisummary-run-2")).toBeDisabled();
         })
         
 

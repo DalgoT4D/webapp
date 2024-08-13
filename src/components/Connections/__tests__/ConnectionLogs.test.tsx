@@ -66,7 +66,7 @@ const sampleLogs = [
     logs: ['Log 5', 'Log 6'],
     recordsCommitted: 1000,
     recordsEmitted: 1000,
-    status: 'completed',
+    status: 'failed',
     totalTimeInSeconds: 60,
   },
   {
@@ -95,10 +95,10 @@ const renderWithProviders = (ui: React.ReactElement) => {
     </GlobalContext.Provider>
   );
 };
-
+const sampleTotalSyncs = 20;
 describe('ConnectionLogs Component', () => {
   beforeEach(() => {
-    mockedHttpGet.mockResolvedValue({ history: sampleLogs });
+    mockedHttpGet.mockResolvedValue({ history: sampleLogs, totalSyncs: sampleTotalSyncs  });
     useSWR.mockReturnValue({
       data: { allowLogsSummary: true },
       error: null,
@@ -139,7 +139,7 @@ describe('ConnectionLogs Component', () => {
   });
 
   it('loads more logs when "load more" is clicked', async () => {
-    mockedHttpGet.mockResolvedValueOnce({ history: sampleLogs });
+    mockedHttpGet.mockResolvedValueOnce({ history: sampleLogs, totalSyncs: sampleTotalSyncs });
     renderWithProviders(
       <ConnectionLogs
         setShowLogsDialog={jest.fn()}
@@ -183,11 +183,11 @@ describe('ConnectionLogs Component', () => {
 
     const button = screen.getAllByTestId('aisummary-123');
     if (button.length) {
-      fireEvent.click(button[0]);
+      fireEvent.click(button[0]); //only failed ones.
       await waitFor(() =>
         expect(mockedHttpGet).toHaveBeenCalledWith(
           expect.anything(),
-          `airbyte/v1/connections/123/logsummary?job_id=1&attempt_number=1`
+          `airbyte/v1/connections/123/logsummary?job_id=1&attempt_number=3`
         )
       );
     }
@@ -211,14 +211,14 @@ describe('ConnectionLogs Component', () => {
       />
     );
 
-    await waitFor(() => expect(screen.getByText('100MB')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('300MB')).toBeInTheDocument());
     const firstLabelTextButton = screen.getAllByTestId('logs');
-    fireEvent.click(firstLabelTextButton[0]);
+    fireEvent.click(firstLabelTextButton[2]);
 
     await waitFor(() =>
       expect(mockedHttpGet).toHaveBeenCalledWith(
         expect.anything(),
-        `airbyte/v1/logs?job_id=1&attempt_number=1`
+        `airbyte/v1/logs?job_id=1&attempt_number=3`
       )
     );
 
