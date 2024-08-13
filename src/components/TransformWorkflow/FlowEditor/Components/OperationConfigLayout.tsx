@@ -485,7 +485,7 @@ const OperationConfigLayout = ({
     }
 
     // refresh canvas
-    setCanvasAction({ type: 'refresh-canvas', data: null });
+    // setCanvasAction({ type: 'refresh-canvas', data: null });
   };
 
   const panelState = selectedOp
