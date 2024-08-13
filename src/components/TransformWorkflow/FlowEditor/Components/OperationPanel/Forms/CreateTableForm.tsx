@@ -8,23 +8,22 @@ import {
   useCanvasNode,
 } from '@/contexts/FlowEditorCanvasContext';
 import { OPERATION_NODE } from '../../../constant';
-import { OperationNodeData } from '../../Canvas';
+import { OperationNodeData, OperationNodeType } from '../../Canvas';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 
-const CreateTableForm = ({
-  sx,
-  clearAndClosePanel,
-}: OperationFormProps) => {
+const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   const { data: session } = useSession();
-  const { canvasNode } = useCanvasNode();
+  const { canvasNode } = useCanvasNode() as { canvasNode: OperationNodeType };
   const { setCanvasAction } = useCanvasAction();
   const { control, register, handleSubmit, reset } = useForm({
-    defaultValues: {
-      output_name: '',
-      dest_schema: '',
-    },
+    defaultValues: canvasNode?.data.is_last_in_chain
+      ? {
+          output_name: canvasNode?.data.target_model_name || '',
+          dest_schema: canvasNode?.data.target_model_schema || '',
+        }
+      : { output_name: '', dest_schema: '' },
   });
 
   const handleCreateTableAndRun = async (data: any) => {
@@ -71,6 +70,8 @@ const CreateTableForm = ({
               fieldStyle="transformation"
               options={['intermediate', 'production']}
               {...field}
+              freeSolo
+              autoSelect
               label="Output Schema Name"
             />
           )}
