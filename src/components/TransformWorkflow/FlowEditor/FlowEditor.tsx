@@ -1,10 +1,4 @@
-import {
-  Box,
-  Divider,
-  IconButton,
-  Tab,
-  Tabs,
-} from '@mui/material';
+import { Box, Divider, IconButton, Tab, Tabs } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import { OpenInFull } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
@@ -37,7 +31,7 @@ type UpperSectionProps = {
   refreshEditor: boolean;
   setRefreshEditor: any;
   finalLockCanvas: boolean;
-  setTempLockCanvas:any;
+  setTempLockCanvas: any;
 };
 
 const UpperSection = ({
@@ -45,7 +39,7 @@ const UpperSection = ({
   refreshEditor,
   setRefreshEditor,
   finalLockCanvas,
-  setTempLockCanvas
+  setTempLockCanvas,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
 
@@ -61,7 +55,6 @@ const UpperSection = ({
         position: 'relative',
       }}
     >
-
       <ResizableBox
         axis="x"
         width={width}
@@ -108,7 +101,7 @@ const LowerSection = ({
   selectedTab,
   setSelectedTab,
   setFullScreen,
-  finalLockCanvas
+  finalLockCanvas,
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
 
@@ -167,12 +160,12 @@ const FlowEditor = ({}) => {
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
-  const {finalLockCanvas, setTempLockCanvas} = useLockCanvas(lockUpperSection);
-  const [selectedTab, setSelectedTab] =
-    useState<LowerSectionTabValues>('logs');
+  const { finalLockCanvas, setTempLockCanvas } =
+    useLockCanvas(lockUpperSection);
+  const [selectedTab, setSelectedTab] = useState<LowerSectionTabValues>('logs');
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
-  const { canvasAction } = useCanvasAction();
+  const { canvasAction, setCanvasAction } = useCanvasAction();
 
   const onResize = (event: any) => {
     const dailogHeight =
@@ -263,6 +256,7 @@ const FlowEditor = ({}) => {
         await pollForTaskRun(response.task_id);
         setRefreshEditor(!refreshEditor);
       }
+      setCanvasAction({ type: 'refresh-canvas', data: null });
     } catch (error) {
       console.log(error);
     } finally {
@@ -389,7 +383,7 @@ const FlowEditor = ({}) => {
         sourcesModels={sourcesModels}
         refreshEditor={refreshEditor}
         finalLockCanvas={finalLockCanvas}
-        setTempLockCanvas = {setTempLockCanvas}
+        setTempLockCanvas={setTempLockCanvas}
       />
 
       <ResizableBox
