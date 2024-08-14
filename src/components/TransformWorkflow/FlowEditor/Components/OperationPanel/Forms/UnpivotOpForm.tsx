@@ -277,7 +277,7 @@ const UnpivotOpForm = ({
 
   useEffect(() => {
     if (colFieldData?.length > 0) {
-      let selectAll = { is_exclude: true, is_unpivot: true }
+      const selectAll = { is_exclude: true, is_unpivot: true }
       colFieldData?.forEach((colField) => {
         if (!colField.is_exclude_checked) selectAll.is_exclude = false;
         if (!colField.is_unpivot_checked) selectAll.is_unpivot = false;
