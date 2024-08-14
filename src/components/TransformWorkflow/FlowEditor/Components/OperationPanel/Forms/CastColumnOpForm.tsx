@@ -187,7 +187,7 @@ const CastColumnOp = ({
     const trimmedSubstring = value?.toLowerCase();
     const filteredConfigs = config?.filter((ele) => {
       const stringToSearch = ele?.name?.toLowerCase();
-      return stringToSearch.includes(trimmedSubstring);
+      return stringToSearch?.includes(trimmedSubstring);
     })
     setConfigData(filteredConfigs)
   }
