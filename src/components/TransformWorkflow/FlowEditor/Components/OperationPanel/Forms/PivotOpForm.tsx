@@ -223,7 +223,7 @@ const PivotOpForm = ({
     const trimmedSubstring = value?.toLowerCase();
     const filteredColumns = srcColFields?.filter((colField) => {
       const stringToSearch = colField?.col?.toLowerCase();
-      return stringToSearch.includes(trimmedSubstring);
+      return stringToSearch?.includes(trimmedSubstring);
     })
     setColFieldData(filteredColumns)
   }
