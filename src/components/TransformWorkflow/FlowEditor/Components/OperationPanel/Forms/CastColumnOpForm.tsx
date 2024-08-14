@@ -234,6 +234,7 @@ const CastColumnOp = ({
               render={({ field }) => (
                 <Autocomplete
                   {...field}
+                  value={column.data_type}
                   data-testid={`type${index}`}
                   disabled={action === 'view'}
                   disableClearable
