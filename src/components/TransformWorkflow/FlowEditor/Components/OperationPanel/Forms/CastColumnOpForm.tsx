@@ -192,8 +192,9 @@ const CastColumnOp = ({
     setConfigData(filteredConfigs)
   }
 
-  const findColumnIndex = (columnName: string) =>{
-    return config.findIndex((column) => column.name == columnName);
+  const findColumnIndex = (columnName: string) => {
+    const index = config?.findIndex((column) => column.name == columnName);
+    return index == -1 ? 0 : index;
   }
 
   useEffect(() => {
