@@ -192,6 +192,10 @@ const CastColumnOp = ({
     setConfigData(filteredConfigs)
   }
 
+  const findColumnIndex = (columnName: string) =>{
+    return config.findIndex((column) => column.name == columnName);
+  }
+
   useEffect(() => {
     fetchDataTypes();
     if (['edit', 'view'].includes(action)) {
@@ -218,7 +222,7 @@ const CastColumnOp = ({
           headers={['Column name', 'Type']}
           data={configData?.map((column: any, index: number) => [
             <Input
-              data-testid={`columnName${index}`}
+              data-testid={`columnName${column.name}`}
               key={`config.${index}.name`}
               fieldStyle="none"
               sx={{ padding: '0' }}
@@ -228,13 +232,12 @@ const CastColumnOp = ({
               disabled={action === 'view'}
             />,
             <Controller
-              key={`config.${index}.data_type`}
+              key={`config.${findColumnIndex(column.name)}.data_type`}
               control={control}
-              name={`config.${index}.data_type`}
+              name={`config.${findColumnIndex(column.name)}.data_type`}
               render={({ field }) => (
                 <Autocomplete
                   {...field}
-                  value={column.data_type}
                   data-testid={`type${index}`}
                   disabled={action === 'view'}
                   disableClearable
