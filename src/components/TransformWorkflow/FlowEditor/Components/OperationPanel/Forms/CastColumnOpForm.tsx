@@ -222,11 +222,11 @@ const CastColumnOp = ({
           headers={['Column name', 'Type']}
           data={configData?.map((column: any, index: number) => [
             <Input
-              data-testid={`columnName${column.name}`}
-              key={`config.${index}.name`}
+              data-testid={`columnName${findColumnIndex(column.name)}`}
+              key={`config.${findColumnIndex(column.name)}.name`}
               fieldStyle="none"
               sx={{ padding: '0' }}
-              name={`config.${index}.name`}
+              name={`config.${findColumnIndex(column.name)}.name`}
               register={register}
               value={column.name}
               disabled={action === 'view'}
@@ -238,7 +238,7 @@ const CastColumnOp = ({
               render={({ field }) => (
                 <Autocomplete
                   {...field}
-                  data-testid={`type${index}`}
+                  data-testid={`type${findColumnIndex(column.name)}`}
                   disabled={action === 'view'}
                   disableClearable
                   fieldStyle="none"
