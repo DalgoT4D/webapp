@@ -140,7 +140,8 @@ export const DBTTaskList = ({
 
   useEffect(() => {
     if (runningTask) {
-      if (runningTask.slug === TASK_DBTRUN) dbtRunWithDeployment(runningTask);
+      if (runningTask.slug === TASK_DBTRUN || runningTask.deploymentId)
+        dbtRunWithDeployment(runningTask);
       else executeDbtJob(runningTask);
     }
   }, [runningTask]);
