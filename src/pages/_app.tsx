@@ -4,7 +4,7 @@ import { rajdhani } from '@/config/theme';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from '@/config/theme';
-import { SessionProvider, useSession } from 'next-auth/react';
+import { SessionProvider } from 'next-auth/react';
 import { StyledEngineProvider } from '@mui/material/styles';
 import { Main } from '@/components/Layouts/Main';
 import ContextProvider from '@/contexts/ContextProvider';
