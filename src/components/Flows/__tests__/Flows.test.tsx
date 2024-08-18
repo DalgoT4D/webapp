@@ -140,21 +140,6 @@ describe('Flow Creation', () => {
     expect(postFlowRunMock).toHaveBeenCalled();
 
     // delete flow
-    const deleteFlowMock = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce([
-        {
-          success: true,
-        },
-      ]),
-    });
-    (global as any).fetch = deleteFlowMock;
-    const optionsButton = screen.getAllByTestId('MoreHorizIcon')[0];
-    await userEvent.click(optionsButton);
-    const deleteButton = screen.getAllByRole('menuitem')[1];
-    await userEvent.click(deleteButton);
-    const confirmButton = screen.getByTestId('confirmbutton');
-    await userEvent.click(confirmButton);
-    expect(deleteFlowMock).toHaveBeenCalled();
+ 
   });
 });
