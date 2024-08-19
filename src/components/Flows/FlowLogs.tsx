@@ -28,7 +28,6 @@ import { delay, formatDuration } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionLogs';
 import { defaultLoadMoreLimit } from '@/config/constant';
 import { errorToast } from '../ToastMessage/ToastHelper';
-import useSWR from 'swr';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
 const makeReadable = (label: string) => {
