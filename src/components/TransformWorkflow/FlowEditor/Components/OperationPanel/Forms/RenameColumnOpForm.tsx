@@ -35,8 +35,8 @@ const RenameColumnOp = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
@@ -181,8 +181,8 @@ const RenameColumnOp = ({
             action === 'view'
               ? undefined
               : (index: number) => {
-                  remove(index);
-                }
+                remove(index);
+              }
           }
           headers={['Current Name', 'New Name']}
           data={fields.map((field, index) => [
@@ -251,8 +251,8 @@ const RenameColumnOp = ({
         >
           Add column
         </Button>
-
-        <Box sx={{ m: 2 }}>
+        <Box sx={{ m: 2 }} />
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2, px: 2 }}>
           <Button
             variant="contained"
             type="submit"
