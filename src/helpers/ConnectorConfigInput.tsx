@@ -139,11 +139,11 @@ class ConnectorConfigInput {
       if (data['oneOf'].length > 1) {
         data['oneOf']?.forEach((ele: any) => {
           if (commonField.length > 0) {
-            commonField = Object.keys(ele?.properties).filter((value: any) =>
-              commonField.includes(value)
+            commonField = Object.keys(ele?.properties || {}).filter(
+              (value: any) => commonField.includes(value)
             );
           } else {
-            commonField = Object.keys(ele?.properties);
+            commonField = Object.keys(ele?.properties || {});
           }
         });
       }
