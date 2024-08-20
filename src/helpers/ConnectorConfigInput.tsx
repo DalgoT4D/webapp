@@ -37,12 +37,14 @@ class ConnectorConfigInput {
     const dataProperties: any = this.specsData['properties'];
     let maxOrder = -1;
 
-    // specs get jumbled when we render them by order and the order starts with 0. So we increment by 1 to start ordering from 1
-    for (const key of Object.keys(dataProperties)) {
-      const value: any = dataProperties[key];
-      dataProperties[key]['order'] = value?.order >= 0 ? value.order + 1 : -1;
-      if (dataProperties[key]['order'] > maxOrder)
-        maxOrder = dataProperties[key]['order'];
+    if (dataProperties) {
+      // specs get jumbled when we render them by order and the order starts with 0. So we increment by 1 to start ordering from 1
+      for (const key of Object.keys(dataProperties)) {
+        const value: any = dataProperties[key];
+        dataProperties[key]['order'] = value?.order >= 0 ? value.order + 1 : -1;
+        if (dataProperties[key]['order'] > maxOrder)
+          maxOrder = dataProperties[key]['order'];
+      }
     }
 
     // the specs don't have an order attributes
@@ -92,19 +94,22 @@ class ConnectorConfigInput {
     ordCounter = 0
   ) {
     const dataProperties: any = data.properties;
-    for (const key of Object.keys(dataProperties)) {
-      const parent: any = dataProperties[key];
-      if (parentOrder) parent['order'] = parentOrder + ordCounter;
 
-      // check for which property we have the 'oneOf' key i.e. nested level
-      // each nested property should have parentOrder + 0.1
-      if (parent && parent?.oneOf) {
-        for (const oneOfObject of parent.oneOf) {
-          ConnectorConfigInput.traverseSpecsToSetOrder(
-            oneOfObject,
-            parent['order'],
-            0.1
-          );
+    if (dataProperties) {
+      for (const key of Object.keys(dataProperties)) {
+        const parent: any = dataProperties[key];
+        if (parentOrder) parent['order'] = parentOrder + ordCounter;
+
+        // check for which property we have the 'oneOf' key i.e. nested level
+        // each nested property should have parentOrder + 0.1
+        if (parent && parent?.oneOf) {
+          for (const oneOfObject of parent.oneOf) {
+            ConnectorConfigInput.traverseSpecsToSetOrder(
+              oneOfObject,
+              parent['order'],
+              0.1
+            );
+          }
         }
       }
     }
@@ -125,6 +130,49 @@ class ConnectorConfigInput {
             data?.properties[exclude[0]]?.enum[0]
         );
       }
+    }
+
+    // for top level parent only. Applicable for parents that have no property value like e2e testing
+    if (data?.type === 'object' && data['oneOf']) {
+      let commonField: string[] = [];
+
+      if (data['oneOf'].length > 1) {
+        data['oneOf']?.forEach((ele: any) => {
+          if (commonField.length > 0) {
+            commonField = Object.keys(ele?.properties).filter((value: any) =>
+              commonField.includes(value)
+            );
+          } else {
+            commonField = Object.keys(ele?.properties);
+          }
+        });
+      }
+
+      const objResult = {
+        field: `${parent}.${commonField}`,
+        type: data?.type,
+        order: data?.order,
+        title: data?.title,
+        description: data?.description,
+        parent:
+          dropdownEnums.length > 0
+            ? dropdownEnums[dropdownEnums.length - 1]
+            : '',
+        enum: [],
+        specs: [],
+      };
+
+      result.push(objResult);
+
+      data?.oneOf?.forEach((eachEnum: any) => {
+        ConnectorConfigInput.traverseSpecs(
+          objResult.specs,
+          eachEnum,
+          parent,
+          commonField,
+          objResult.enum
+        );
+      });
     }
 
     for (const [key, value] of Object.entries<any>(data?.properties || {})) {
@@ -149,31 +197,41 @@ class ConnectorConfigInput {
           });
         }
 
-        const objResult = {
-          field: `${objParentKey}.${commonField}`,
-          type: value?.type,
-          order: value?.order,
-          title: value?.title,
-          description: value?.description,
-          parent:
-            dropdownEnums.length > 0
-              ? dropdownEnums[dropdownEnums.length - 1]
-              : '',
-          enum: [],
-          specs: [],
-        };
-
-        result.push(objResult);
-
-        value?.oneOf?.forEach((eachEnum: any) => {
-          ConnectorConfigInput.traverseSpecs(
-            objResult.specs,
-            eachEnum,
+        // an object type can either have oneOf or properties
+        if (value.properties) {
+          const specs = ConnectorConfigInput.traverseSpecs(
+            [],
+            value,
             objParentKey,
-            commonField,
-            objResult.enum
+            [],
+            []
           );
-        });
+          result.push(...specs);
+        } else if (value['oneOf']) {
+          const objResult = {
+            field: `${objParentKey}.${commonField}`,
+            type: value?.type,
+            order: value?.order,
+            title: value?.title,
+            description: value?.description,
+            parent:
+              dropdownEnums.length > 0
+                ? dropdownEnums[dropdownEnums.length - 1]
+                : '',
+            enum: [],
+            specs: [],
+          };
+          result.push(objResult);
+          value?.oneOf?.forEach((eachEnum: any) => {
+            ConnectorConfigInput.traverseSpecs(
+              objResult.specs,
+              eachEnum,
+              objParentKey,
+              commonField,
+              objResult.enum
+            );
+          });
+        }
 
         continue;
       }
