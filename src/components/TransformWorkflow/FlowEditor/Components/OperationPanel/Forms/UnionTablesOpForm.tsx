@@ -42,8 +42,8 @@ const UnionTablesOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   const { control, handleSubmit, reset, setValue } = useForm<{
     tables: Array<{ id: string; label: string }>;
@@ -367,7 +367,9 @@ const UnionTablesOpForm = ({
             )}
           </Box>
         ))}
-        <Box>
+        <InfoBox text="Columns not belonging to both tables will yield NULLs in the union" />
+        <Box sx={{ m: 2 }} />
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
           <Button
             variant="contained"
             type="submit"
@@ -378,7 +380,6 @@ const UnionTablesOpForm = ({
             Save
           </Button>
         </Box>
-        <InfoBox text="Columns not belonging to both tables will yield NULLs in the union" />
       </form>
     </Box>
   );

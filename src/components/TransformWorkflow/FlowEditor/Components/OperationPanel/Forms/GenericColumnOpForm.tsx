@@ -56,8 +56,8 @@ const GenericColumnOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   type FormProps = {
     computed_columns: {
@@ -389,20 +389,18 @@ const GenericColumnOpForm = ({
             )}
           />
         </Box>
-        <Box>
-          <Box sx={{ m: 2 }} />
-          <Box>
-            <Button
-              disabled={action === 'view'}
-              variant="contained"
-              type="submit"
-              data-testid="savebutton"
-              fullWidth
-              sx={{ marginTop: '17px' }}
-            >
-              Save
-            </Button>
-          </Box>
+        <Box sx={{ m: 2 }} />
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Button
+            disabled={action === 'view'}
+            variant="contained"
+            type="submit"
+            data-testid="savebutton"
+            fullWidth
+            sx={{ marginTop: '17px' }}
+          >
+            Save
+          </Button>
         </Box>
       </form>
     </Box>
