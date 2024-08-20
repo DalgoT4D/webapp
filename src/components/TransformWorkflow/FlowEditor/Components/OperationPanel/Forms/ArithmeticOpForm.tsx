@@ -50,8 +50,8 @@ const ArithmeticOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   type FormProps = {
     arithmeticOp: { id: string; label: string } | null;
@@ -322,10 +322,10 @@ const ArithmeticOpForm = ({
                   />
                 )}
                 {arithmeticOp &&
-                ((['sub', 'div'].includes(arithmeticOp?.id) &&
-                  fields.length < 2) ||
-                  ['add', 'mul'].includes(arithmeticOp?.id)) &&
-                index === fields.length - 1 ? (
+                  ((['sub', 'div'].includes(arithmeticOp?.id) &&
+                    fields.length < 2) ||
+                    ['add', 'mul'].includes(arithmeticOp?.id)) &&
+                  index === fields.length - 1 ? (
                   <Button
                     disabled={action === 'view'}
                     variant="shadow"
@@ -375,8 +375,16 @@ const ArithmeticOpForm = ({
               />
             )}
           />
+
+          {formState.errors.operands && formState.errors.operands.root && (
+            <FormHelperText sx={{ color: 'red' }}>
+              {formState.errors.operands.root.message}
+            </FormHelperText>
+          )}
+
+          <InfoBox text="Please select only numeric columns" />
           <Box sx={{ m: 2 }} />
-          <Box>
+          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
             <Button
               disabled={action === 'view'}
               variant="contained"
@@ -388,14 +396,6 @@ const ArithmeticOpForm = ({
               Save
             </Button>
           </Box>
-
-          {formState.errors.operands && formState.errors.operands.root && (
-            <FormHelperText sx={{ color: 'red' }}>
-              {formState.errors.operands.root.message}
-            </FormHelperText>
-          )}
-
-          <InfoBox text="Please select only numeric columns" />
         </Box>
       </form>
     </Box>

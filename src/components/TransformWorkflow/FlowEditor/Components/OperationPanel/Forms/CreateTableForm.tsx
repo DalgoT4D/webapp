@@ -77,14 +77,16 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
           )}
         />
         <Box sx={{ m: 2 }} />
-        <Button
-          variant="contained"
-          type="submit"
-          data-testid="savebutton"
-          fullWidth
-        >
-          Save
-        </Button>
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Button
+            variant="contained"
+            type="submit"
+            data-testid="savebutton"
+            fullWidth
+          >
+            Save
+          </Button>
+        </Box>
       </form>
     </Box>
   );

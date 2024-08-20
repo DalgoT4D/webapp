@@ -422,7 +422,7 @@ const GroupByOpForm = ({
           ))}
 
           <Box sx={{ m: 2 }} />
-          <Box>
+          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
             <Button
               variant="outlined"
               type="submit"
