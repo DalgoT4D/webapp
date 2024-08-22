@@ -1,7 +1,7 @@
 // pages/ingest.tsx (or /pages/ingest/index.tsx)
 import styles from '@/styles/Home.module.css';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Connections } from '@/components/Connections/Connections';
 import { Sources } from '@/components/Sources/Sources';
 import { Destinations } from '@/components/Destinations/Destinations';
