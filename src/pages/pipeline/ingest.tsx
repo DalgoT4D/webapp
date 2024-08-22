@@ -1,11 +1,13 @@
+// pages/ingest.tsx (or /pages/ingest/index.tsx)
 import styles from '@/styles/Home.module.css';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Connections } from '@/components/Connections/Connections';
 import { Sources } from '@/components/Sources/Sources';
 import { Destinations } from '@/components/Destinations/Destinations';
 import { PageHead } from '@/components/PageHead';
 import { ConnectionSyncLogsProvider } from '@/contexts/ConnectionSyncLogsContext';
+import { useRouter } from 'next/router';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -30,10 +32,32 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function Ingest() {
-  const [value, setValue] = React.useState(0);
+  const router = useRouter();
+  const { tab }: any = router.query;
+
+  const tabsObj: { [key: string]: number } = {
+    connections: 0,
+    sources: 1,
+    warehouse: 2
+  }
+  const reverseTabsObj = Object.entries(tabsObj).reduce(
+    (acc, [key, value]) => ({ ...acc, [value]: key }),
+    {} as { [key: number]: string }
+  );
+  const currentTab = tab ? tabsObj[tab] : 0;
+  const [value, setValue] = React.useState(currentTab);
+
+  useEffect(() => {
+    if (!tab) {
+      router.push(`/pipeline/ingest?tab=${"connections"}`, undefined, { shallow: true });
+    }
+    setValue(currentTab);
+  }, [currentTab]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
+    const tabName = reverseTabsObj[newValue];
+    router.push(`/pipeline/ingest?tab=${tabName}`, undefined, { shallow: true });
   };
 
   return (
