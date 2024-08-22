@@ -48,7 +48,7 @@ export default function Ingest() {
   const [value, setValue] = React.useState(currentTab);
 
   useEffect(() => {
-    if (!tab) {
+    if (!tab || !tabsObj[tab]) {
       router.push(`/pipeline/ingest?tab=${"connections"}`, undefined, { shallow: true });
     }
     setValue(currentTab);
