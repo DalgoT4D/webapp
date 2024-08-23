@@ -53,7 +53,9 @@ const PendingActionsAccordion = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    if(session){
+      fetchData();
+    }
   }, [session]);
 
   if (!schemaChangeData || schemaChangeData.length === 0) {
