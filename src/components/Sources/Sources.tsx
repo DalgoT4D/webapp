@@ -191,8 +191,10 @@ export const Sources = () => {
   };
 
   useEffect(() => {
-    fetchSourceDefinitions();
-  }, []);
+    if(session){
+      fetchSourceDefinitions();
+    }
+  }, [session]);
 
   if (isLoading) {
     return <CircularProgress />;
