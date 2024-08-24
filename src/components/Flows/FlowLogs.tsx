@@ -159,7 +159,7 @@ const LogsContainer = ({
     setAction(newAction);
   };
 
-  const fetchLogs = async (flow_run_id: string) => {
+  const fetchLogs = async () => {
     setLogsLoaded(false);
     (async () => {
       try {
@@ -234,7 +234,7 @@ const LogsContainer = ({
             onChange={handleAction}
             aria-label="text alignment"
           >
-            <ToggleButton value="detail" aria-label="left" onClick={() => !action && fetchLogs(run.id)}>
+            <ToggleButton value="detail" aria-label="left" onClick={() => !action && fetchLogs()}>
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
@@ -283,7 +283,7 @@ const LogsContainer = ({
                 ))}
               </Box>
               {flowRunOffset > 0 && (
-                <Button data-testid="offset" onClick={() => fetchLogs(run.id)}>
+                <Button data-testid="offset" onClick={() => fetchLogs()}>
                   Fetch more
                 </Button>
               )}
