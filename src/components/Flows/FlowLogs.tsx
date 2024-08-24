@@ -1,6 +1,7 @@
 import {
   Alert,
   Box,
+  Button,
   CircularProgress,
   Dialog,
   LinearProgress,
@@ -26,7 +27,7 @@ import moment from 'moment';
 import { FlowInterface } from './Flows';
 import { delay, formatDuration } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionLogs';
-import { defaultLoadMoreLimit } from '@/config/constant';
+import { defaultLoadMoreLimit, flowRunLogsOffsetLimit } from '@/config/constant';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import useSWR from 'swr';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -53,7 +54,7 @@ const fetchDeploymentLogs = async (
   try {
     const response = await httpGet(
       session,
-      `prefect/v1/flows/${deploymentId}/flow_runs/history?limit=${defaultLoadMoreLimit}&fetchlogs=true&offset=${offset}`
+      `prefect/v1/flows/${deploymentId}/flow_runs/history?limit=${defaultLoadMoreLimit}&offset=${offset}`
     );
 
     return response || [];
@@ -109,6 +110,9 @@ const LogsContainer = ({
 }) => {
   const globalContext = useContext(GlobalContext);
   const [action, setAction] = useState<'detail' | 'summary' | null>(null);
+  const [logsLoaded, setLogsLoaded] = useState<boolean>(false)
+  const [flowRunOffset, setFlowRunOffset] = useState<number>(0);
+  const [logs, setLogs] = useState<Array<any>>([]);
   const [summarizedLogs, setSummarizedLogs] = useState([]);
   const [summarizedLogsLoading, setSummarizedLogsLoading] = useState(false);
   const { data: session }: any = useSession();
@@ -155,6 +159,40 @@ const LogsContainer = ({
     setAction(newAction);
   };
 
+  const fetchLogs = async (flow_run_id: string) => {
+    setLogsLoaded(false);
+    (async () => {
+      try {
+        const data = await httpGet(
+          session,
+          `prefect/flow_runs/${flowRunId}/logs?task_run_id=${run.id}&offset=${Math.max(
+            flowRunOffset,
+            0
+          )}&limit=${flowRunLogsOffsetLimit + 1}`
+        );
+
+        if (data?.logs?.logs && data.logs.logs.length >= 0) {
+          const newlogs =
+            flowRunOffset <= 0 ? data.logs.logs : logs.concat(data.logs.logs);
+          setLogs(newlogs);
+
+          // increment the offset by 200 if we have more to fetch
+          // otherwise set it to -1 i.e. no more logs to show
+          const offsetToUpdate =
+            data.logs.logs.length >= flowRunLogsOffsetLimit
+              ? flowRunOffset + flowRunLogsOffsetLimit
+              : -1;
+          setFlowRunOffset(offsetToUpdate);
+          setLogsLoaded(true);
+        }
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], globalContext);
+        setLogsLoaded(true);
+      }
+    })();
+  };
+
   const open = !!action;
 
   return (
@@ -196,7 +234,7 @@ const LogsContainer = ({
             onChange={handleAction}
             aria-label="text alignment"
           >
-            <ToggleButton value="detail" aria-label="left">
+            <ToggleButton value="detail" aria-label="left" onClick={() => !action && fetchLogs(run.id)}>
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
@@ -234,15 +272,28 @@ const LogsContainer = ({
           )
           : null}
 
-        {action === 'detail' && run.logs.length > 0 && (
-          <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
-            <Box sx={{ wordBreak: 'break-word' }}>
-              {run.logs.map((log, index) => (
-                <Box key={log.timestamp + index}>{log.message}</Box>
-              ))}
-            </Box>
-          </Alert>
-        )}
+        {action === 'detail' ?
+          logsLoaded ? (
+            <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
+              <Box sx={{ wordBreak: 'break-word' }}>
+                {logs?.map((log: any, idx) => (
+                  <Box className="color-on-hover" key={idx}>
+                    - {log?.message || log}
+                  </Box>
+                ))}
+              </Box>
+              {flowRunOffset > 0 && (
+                <Button data-testid="offset" onClick={() => fetchLogs(run.id)}>
+                  Fetch more
+                </Button>
+              )}
+            </Alert>
+          )
+            :
+            (
+              <CircularProgress />
+            )
+          : null}
       </Box>
     </Box>
   );

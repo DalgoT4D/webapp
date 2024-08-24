@@ -70,7 +70,7 @@ export const SingleFlowRunHistory = ({
           `prefect/flow_runs/${flowRun.id}/logs?offset=${Math.max(
             flowRunOffset,
             0
-          )}`
+          )}&limit=${flowRunLogsOffsetLimit + 1}`
         );
 
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
@@ -81,7 +81,7 @@ export const SingleFlowRunHistory = ({
           // increment the offset by 200 if we have more to fetch
           // otherwise set it to -1 i.e. no more logs to show
           const offsetToUpdate =
-            data.logs.logs.length >= 200
+            data.logs.logs.length >= flowRunLogsOffsetLimit
               ? flowRunOffset + flowRunLogsOffsetLimit
               : -1;
           setFlowRunOffset(offsetToUpdate);

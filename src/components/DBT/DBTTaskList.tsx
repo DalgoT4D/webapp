@@ -25,6 +25,8 @@ import CreateOrgTaskForm from './CreateOrgTaskForm';
 import LockIcon from '@mui/icons-material/Lock';
 
 type params = {
+  setFlowRunId: (...args: any) => any;
+  fetchLogs: (...args: any) => any;
   setDbtRunLogs: (...args: any) => any;
   setExpandLogs: (...args: any) => any;
   tasks: TransformTask[];
@@ -53,6 +55,8 @@ type PrefectFlowRunLog = {
 
 export const DBTTaskList = ({
   tasks,
+  setFlowRunId,
+  fetchLogs,
   setDbtRunLogs,
   setExpandLogs,
   isAnyTaskLocked,
@@ -100,7 +104,7 @@ export const DBTTaskList = ({
         sx={{ marginRight: '10px', width: '75px', height: '40px' }}
       >
         {runningTask?.uuid === task.uuid ||
-        (task.lock?.status && task.lock?.status !== 'complete') ? (
+          (task.lock?.status && task.lock?.status !== 'complete') ? (
           <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
         ) : (
           'Execute'
@@ -164,9 +168,7 @@ export const DBTTaskList = ({
         // Custom state has been returned
         // need another api call to fetch the logs
         if (message?.result[0]?.id) {
-          await fetchAndSetFlowRunLogs(
-            message.result[0]?.state_details?.flow_run_id
-          );
+          await fetchAndSetFlowRunLogs(message.result[0]?.state_details?.flow_run_id);
         } else {
           setDbtRunLogs(message?.result);
         }
@@ -237,11 +239,11 @@ export const DBTTaskList = ({
         let flowRunStatus: string = await fetchFlowRunStatus(
           response.flow_run_id
         );
-
+        setFlowRunId(response.flow_run_id);
         fetchDbtTasks();
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
           await delay(5000);
-          await fetchAndSetFlowRunLogs(response.flow_run_id);
+          await fetchLogs(response.flow_run_id);
           flowRunStatus = await fetchFlowRunStatus(response.flow_run_id);
         }
         setRunningTask(null);
