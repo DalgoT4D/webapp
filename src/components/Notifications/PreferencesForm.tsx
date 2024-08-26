@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
-import useSWR, { mutate } from 'swr';
+import useSWR from 'swr';
 import {
   Box,
   Button,

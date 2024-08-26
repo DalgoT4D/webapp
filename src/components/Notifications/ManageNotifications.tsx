@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import useSWR from 'swr';
-import { formatDistanceToNow } from 'date-fns';
+import moment from 'moment';
 import { httpPut } from '@/helpers/http';
 // import axios from 'axios';
 import {
@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { errorToast } from '../ToastMessage/ToastHelper';
 
 interface Notification {
     id: number;
@@ -94,7 +94,7 @@ const ManageNotifications = ({ mutateUnreadCount }: any) => {
                                             </Typography>
                                             <Typography color={"#4a4a4a"} variant='h6'
                                                 sx={{ fontWeight: 700, fontSize: 13 }}>
-                                                {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
+                                                {moment(new Date(notification.timestamp)).fromNow()}
                                             </Typography>
                                         </Box>
                                     </Box>
