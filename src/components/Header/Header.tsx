@@ -5,7 +5,9 @@ import {
   Paper,
   Typography,
   IconButton,
+  Badge
 } from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
 import LogoutIcon from '@/assets/icons/logout.svg';
@@ -19,6 +21,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 
 // assets
 import HamburgerIcon from '../../assets/icons/hamburger.svg';
+import useSWR from 'swr';
 
 type Org = {
   name: string;
@@ -50,9 +53,10 @@ type HeaderProps = {
 
 export const Header = ({
   openMenu = false,
-  setOpenMenu = () => {},
+  setOpenMenu = () => { },
   hideMenu = false,
 }: HeaderProps | any) => {
+  const { data: unread_count } = useSWR(`notifications/unread_count`, {refreshInterval: 20000});
   const handleSignout = () => {
     // Hit backend api to invalidate the token
     localStorage.clear();
@@ -73,6 +77,9 @@ export const Header = ({
   const handleClick = (event: HTMLElement | null) => {
     setAnchorEl(event);
   };
+  const handleViewAll = () =>{
+    router.push('/notifications');
+}
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -167,6 +174,16 @@ export const Header = ({
         alignItems="center"
         sx={{ marginLeft: 'auto', gap: '20px' }}
       >
+        <IconButton
+          onClick={handleViewAll}
+          sx={{
+            borderRadius: '50%',
+          }}
+        >
+          <Badge color='primary' badgeContent={unread_count?.res}>
+            <NotificationsIcon style={{ color: "#312c2cde" }} />
+          </Badge>
+        </IconButton>
         <Typography variant="h6">{selectedOrg?.label}</Typography>
         <Image
           style={{ marginRight: 24, cursor: 'pointer' }}
@@ -232,7 +249,7 @@ export const Header = ({
             )}
           </Box>
         )}
-        {orgs.sort((org1, org2)=> org1["label"].localeCompare(org2["label"])).map((org: AutoCompleteOption, idx: number) => (
+        {orgs.sort((org1, org2) => org1["label"].localeCompare(org2["label"])).map((org: AutoCompleteOption, idx: number) => (
           <MenuItem
             key={idx}
             value={org.id}
