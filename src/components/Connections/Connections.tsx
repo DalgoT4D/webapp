@@ -184,10 +184,10 @@ const Actions = memo(
 
     const handlingSyncState = async () => {
       const res: any = await syncConnection(deploymentId, connectionId);
-      if (res?.error == "ERROR") {
+      if (res?.error == 'ERROR') {
         setTempSyncState(false);
       }
-    }
+    };
     return (
       <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
         <Button
@@ -237,12 +237,10 @@ const Actions = memo(
     );
   },
   (prevProps, nextProps) => {
-    return (
-      prevProps.connection.lock === nextProps.connection.lock
-    );
+    return prevProps.connection.lock === nextProps.connection.lock;
   }
 );
-Actions.displayName = "Action" //display name added.
+Actions.displayName = 'Action'; //display name added.
 
 export const Connections = () => {
   const { data: session }: any = useSession();
@@ -279,7 +277,7 @@ export const Connections = () => {
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-    const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
+  const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -343,13 +341,13 @@ export const Connections = () => {
       // returning {error:"ERROR"} to stop loader if error occurs.
       if (response?.detail) {
         errorToast(response.detail, [], globalContext);
-        return { error: "ERROR" };
+        return { error: 'ERROR' };
       }
 
       // if flow run id is not present, something went wrong
       if (!response?.flow_run_id) {
         errorToast('Something went wrong', [], globalContext);
-        return { error: "ERROR" };
+        return { error: 'ERROR' };
       }
 
       successToast(`Sync initiated successfully`, [], globalContext);
@@ -359,7 +357,7 @@ export const Connections = () => {
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
-      return { error: "ERROR" };
+      return { error: 'ERROR' };
     } finally {
       setSyncingConnectionIds(
         syncingConnectionIds.filter((id) => id !== connectionId)
@@ -687,7 +685,7 @@ export const Connections = () => {
           connection={logsConnection}
         />
       )}
-      <PendingActionsAccordion />
+      <PendingActionsAccordion refreshConnectionsList={mutate} />
       <ActionsMenu
         eleType="connection"
         anchorEl={anchorEl}
