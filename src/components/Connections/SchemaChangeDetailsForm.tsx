@@ -111,7 +111,6 @@ const SchemaChangeDetailsForm = ({
           );
           await delay(3000);
           const [isSuccessful, result] = await checkProgress(data.task_id);
-          console.log('catalgo is succcessful', isSuccessful, result);
           if (!isSuccessful) {
             setFailureMessage(result);
             throw new Error(result);
