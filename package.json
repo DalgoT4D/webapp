@@ -17,7 +17,7 @@
     "@dagrejs/dagre": "^1.1.3",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.5",
-    "@mui/icons-material": "5.16.4",
+    "@mui/icons-material": "5.16.5",
     "@mui/material": "^5.15.20",
     "@mui/x-date-pickers": "^6.20.1",
     "@sentry/nextjs": "8",
@@ -42,7 +42,7 @@
     "reactflow": "^11.11.4",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.2.4",
-    "typescript": "5.5.3",
+    "typescript": "5.5.4",
     "use-resize-observer": "^9.1.0"
   },
   "resolutions": {

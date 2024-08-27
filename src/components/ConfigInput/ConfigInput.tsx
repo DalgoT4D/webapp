@@ -172,10 +172,15 @@ export const ConfigInput = ({
               <Controller
                 name={spec.field}
                 control={control}
-                rules={{ required: spec.required && 'Required' }}
-                render={({ field: { ref, ...rest }, fieldState }) => (
+                rules={{
+                  required: spec.required && 'Required',
+                }}
+                render={({ field: { ref, onChange, ...rest }, fieldState }) => (
                   <Input
                     {...rest}
+                    onChange={(event) => {
+                      onChange(parseInt(event.target.value));
+                    }}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                     disabled={false}
