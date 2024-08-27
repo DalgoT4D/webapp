@@ -4,7 +4,7 @@ import SchemaChangeDetailsForm from '../SchemaChangeDetailsForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 // import CustomDialog from '../Dialog/CustomDialog';
-import { httpGet, httpPut } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../../ToastMessage/ToastHelper';
 
 // Mock dependencies
@@ -175,7 +175,7 @@ describe('SchemaChangeDetailsForm', () => {
 
     httpGet.mockResolvedValueOnce(nonBreakingData);
 
-    httpPut.mockResolvedValueOnce({});
+    httpPost.mockResolvedValueOnce({});
 
     render(
       <GlobalContext.Provider value={mockContextValue}>
@@ -212,10 +212,10 @@ describe('SchemaChangeDetailsForm', () => {
     // Submit the form
     fireEvent.click(screen.getByText('Yes, I approve'));
 
-    await waitFor(() => expect(httpPut).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(httpPost).toHaveBeenCalledTimes(1));
     await waitFor(() =>
       expect(successToast).toHaveBeenCalledWith(
-        'Connection updated',
+        'Initiated schema update changes',
         [],
         mockContextValue
       )
@@ -231,7 +231,7 @@ describe('SchemaChangeDetailsForm', () => {
 
     httpGet.mockResolvedValueOnce(nonBreakingData);
 
-    httpPut.mockResolvedValueOnce({});
+    httpPost.mockResolvedValueOnce({});
 
     render(
       <GlobalContext.Provider value={mockContextValue}>
@@ -268,7 +268,7 @@ describe('SchemaChangeDetailsForm', () => {
     // Submit the form
     fireEvent.click(screen.getByText('Yes, I approve'));
     const mockError = new Error('Submission failed');
-    httpPut.mockRejectedValueOnce(mockError);
+    httpPost.mockRejectedValueOnce(mockError);
 
     render(
       <GlobalContext.Provider value={mockContextValue}>
@@ -278,7 +278,7 @@ describe('SchemaChangeDetailsForm', () => {
 
     fireEvent.click(screen.getByTestId('approveschemachange'));
 
-    await waitFor(() => expect(httpPut).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(httpPost).toHaveBeenCalledTimes(2));
     await waitFor(() =>
       expect(errorToast).toHaveBeenCalledWith(
         mockError.message,

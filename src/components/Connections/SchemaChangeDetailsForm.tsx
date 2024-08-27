@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { httpGet, httpPut } from '@/helpers/http';
+import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
@@ -18,7 +18,7 @@ import { delay } from '@/utils/common';
 
 interface SchemaChangeDetailsFormProps {
   connectionId: string;
-  mutate: (...args: any) => any;
+  refreshConnectionsList: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
   setConnectionId: (...args: any) => any;
@@ -45,7 +45,7 @@ interface SourceStream {
 const SchemaChangeDetailsForm = ({
   setConnectionId,
   connectionId,
-  mutate,
+  refreshConnectionsList,
   showForm,
   setShowForm,
   fetchPendingActions,
@@ -65,6 +65,7 @@ const SchemaChangeDetailsForm = ({
     Array<{ name: string; changedColumns: string[] }>
   >([]);
   const [syncCatalog, setSyncCatalog] = useState<any>(null);
+  const [catalogDiff, setCatalogDiff] = useState<any>(null);
   const [catalogId, setCatalogId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [hasBreakingChanges, setHasBreakingChanges] = useState<boolean>(false);
@@ -110,7 +111,6 @@ const SchemaChangeDetailsForm = ({
           );
           await delay(3000);
           const [isSuccessful, result] = await checkProgress(data.task_id);
-          console.log('catalgo is succcessful', isSuccessful, result);
           if (!isSuccessful) {
             setFailureMessage(result);
             throw new Error(result);
@@ -119,6 +119,7 @@ const SchemaChangeDetailsForm = ({
             setCatalogId(result.catalogId || '');
             setValue('name', result.name || '');
             setSyncCatalog(result.syncCatalog?.streams || {});
+            setCatalogDiff(result.catalogDiff);
 
             const catalogDiffData = result.catalogDiff?.transforms || [];
 
@@ -214,19 +215,18 @@ const SchemaChangeDetailsForm = ({
     try {
       if (connectionId) {
         setLoading(true);
-        await httpPut(
+        await httpPost(
           session,
-          `airbyte/v1/connections/${connectionId}/schema_update`,
-          payload
+          `airbyte/v1/connections/${connectionId}/schema_update/schedule`,
+          {
+            catalogDiff: catalogDiff,
+          }
         );
-        successToast('Connection updated', [], globalContext);
-        await delay(5000);
-        await fetchPendingActions();
-
+        successToast('Initiated schema update changes', [], globalContext);
         setLoading(false);
       }
-      mutate();
       handleClose();
+      refreshConnectionsList();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
