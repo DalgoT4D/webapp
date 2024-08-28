@@ -92,15 +92,12 @@ const CreateOrgTaskForm = ({
   useEffect(() => {
     (async () => {
       setLoading(true);
-      console.log("******************************************")
       try {
         const data: Array<MasterTask> = await httpGet(session, `data/tasks/`);
         const tasksDropDownRows = data
           .filter(
             (task: MasterTask) =>
-              ![TASK_GITPULL, TASK_DBTCLEAN, TASK_DOCSGENERATE].includes(
-                task.slug
-              )
+              ![TASK_GITPULL, TASK_DBTCLEAN].includes(task.slug)
           )
           .map((task: MasterTask) => {
             return { id: task.slug, label: task.slug };
@@ -182,11 +179,17 @@ const CreateOrgTaskForm = ({
               <Autocomplete
                 data-testid="taskList"
                 options={masterTasks}
-                aria-labelledby='Select task'
+                aria-labelledby="Select task"
                 value={field.value}
                 onChange={(e, data) => field.onChange(data)}
                 renderInput={(params) => (
-                  <Input {...params} data-testid="selecttask" label="Select task" aria-labelledby='Select task'  variant="outlined" />
+                  <Input
+                    {...params}
+                    data-testid="selecttask"
+                    label="Select task"
+                    aria-labelledby="Select task"
+                    variant="outlined"
+                  />
                 )}
               />
             )}
