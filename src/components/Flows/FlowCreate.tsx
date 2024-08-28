@@ -69,6 +69,9 @@ const WEEKDAYS: any = {
   6: 'Saturday',
 };
 
+export const ValidateDefaultTasksToApplyInPipeline = (task: TransformTask) =>
+  task.generated_by === 'system' && task.pipeline_default;
+
 const FlowCreate = ({
   flowId,
   updateCrudVal,
@@ -175,7 +178,7 @@ const FlowCreate = ({
           );
 
           let tasksToApply = tasks.filter(
-            (task) => task.generated_by === 'system'
+            ValidateDefaultTasksToApplyInPipeline
           );
 
           if (data.transformTasks.length === 0) {
@@ -487,7 +490,7 @@ const FlowCreate = ({
                                 } else {
                                   field.onChange(
                                     tasks.filter(
-                                      (task) => task.generated_by === 'system'
+                                      ValidateDefaultTasksToApplyInPipeline
                                     )
                                   );
                                 }
