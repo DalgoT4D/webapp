@@ -6,7 +6,6 @@ import { TaskSequence } from '../TaskSequence';
 import { TransformTask } from '../../DBT/DBTTarget';
 import { ControllerRenderProps } from 'react-hook-form';
 
-
 // Mock data for testing
 const mockTasks: TransformTask[] = [
   {
@@ -71,7 +70,9 @@ describe('TaskSequence Component', () => {
     fireEvent.click(resetButton);
 
     expect(mockField.onChange).toHaveBeenCalledWith(
-      mockTasks.filter((task) => task.generated_by === 'system')
+      mockTasks.filter(
+        (task) => task.generated_by === 'system' && task.pipeline_default
+      )
     );
   });
 });
