@@ -236,8 +236,10 @@ const Actions = memo(
       </Box>
     );
   },
+  //rerenderes when fn returns false. 
+  // checking lock when doing sync and checking connectionId wehen we sort the list or a new connection gets added.
   (prevProps, nextProps) => {
-    return prevProps.connection.lock === nextProps.connection.lock;
+    return prevProps.connection.lock?.status === nextProps.connection.lock?.status && prevProps.connection.connectionId === nextProps.connection.connectionId
   }
 );
 Actions.displayName = 'Action'; //display name added.
