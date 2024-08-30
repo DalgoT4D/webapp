@@ -1,3 +1,4 @@
+// pages/ingest.tsx (or /pages/ingest/index.tsx)
 import styles from '@/styles/Home.module.css';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import React from 'react';
@@ -6,6 +7,7 @@ import { Sources } from '@/components/Sources/Sources';
 import { Destinations } from '@/components/Destinations/Destinations';
 import { PageHead } from '@/components/PageHead';
 import { ConnectionSyncLogsProvider } from '@/contexts/ConnectionSyncLogsContext';
+import { useQueryParams } from '@/customHooks/useQueryParams';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -30,11 +32,17 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function Ingest() {
-  const [value, setValue] = React.useState(0);
+  const tabsObj: { [key: string]: number } = {
+    connections: 0,
+    sources: 1,
+    warehouse: 2
+  }
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-  };
+  const { value, handleChange } = useQueryParams({
+    tabsObj,
+    basePath: "/pipeline/ingest",
+    defaultTab: "connections"
+  })
 
   return (
     <>
