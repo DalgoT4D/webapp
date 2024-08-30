@@ -407,159 +407,158 @@ const CreateConnectionForm = ({
           />
 
           <Box sx={{ m: 2 }} />
-
-          {filteredSourceStreams.length >= 0 && (
-            <>
-              <Table data-testid="sourceStreamTable" sx={{ marginTop: '5px' }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell key="streamname" align="center">
-                      Stream
-                    </TableCell>
-                    <TableCell key="selected" align="center">
-                      Sync?
-                    </TableCell>
-                    <TableCell key="incremental" align="center">
-                      Incremental?
-                    </TableCell>
-                    <TableCell key="destsyncmode" align="center">
-                      Destination
-                    </TableCell>
-                    <TableCell key="cursorfield" align="center">
-                      Cursor Field
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell key="searchstream" align="center">
-                      <Box>
-                        <TextField
-                          inputRef={inputRef}
-                          key="search-input"
-                          data-testid="search-stream"
-                          label="Search"
-                          name="search-stream"
-                          value={searchInputRef.current}
-                          onChange={(event) => handleSearchChange(event)}
-                        />
-                      </Box>
-                    </TableCell>
-                    <TableCell key="selectall" align="center">
-                      <Box>
-                        <Switch
-                          data-testid={`sync-all-streams`}
-                          checked={selectAllStreams}
-                          onChange={(event) =>
-                            handleSyncAllStreams(event.target.checked)
-                          }
-                        />
-                      </Box>
-                    </TableCell>
-                    <TableCell key="incrementall" align="center">
-                      <Box>
-                        <Switch
-                          data-testid={`incremental-all-streams`}
-                          checked={incrementalAllStreams}
-                          disabled={sourceStreams[0]?.cursorField ? false: true}
-                          onChange={(event) =>
-                            handleIncrementalAllStreams(event.target.checked)
-                          }
-                        />
-                      </Box>
-                    </TableCell>
-                    <TableCell key="" align="center"></TableCell>
-                    <TableCell key="" align="center"></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredSourceStreams
-                    .slice()
-                    .sort((a, b) => a.name.localeCompare(b.name)) // this will sort the stream on the basis of the name property.
-                    .map((stream, idx: number) => (
-                      <TableRow key={stream.name}>
-                        <TableCell
-                          key="name"
-                          align="center"
-                          sx={
-                            stream.selected
-                              ? { color: 'green', fontWeight: 700 }
-                              : {}
-                          }
-                        >
-                          {stream.name}
-                        </TableCell>
-                        <TableCell key="sel" align="center">
+            {filteredSourceStreams.length >= 0 && (
+              <>
+                <Table data-testid="sourceStreamTable" sx={{ marginTop: '5px' }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell key="streamname" align="center">
+                        Stream
+                      </TableCell>
+                      <TableCell key="selected" align="center">
+                        Sync?
+                      </TableCell>
+                      <TableCell key="incremental" align="center">
+                        Incremental?
+                      </TableCell>
+                      <TableCell key="destsyncmode" align="center">
+                        Destination
+                      </TableCell>
+                      <TableCell key="cursorfield" align="center">
+                        Cursor Field
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell key="searchstream" align="center">
+                        <Box>
+                          <TextField
+                            inputRef={inputRef}
+                            key="search-input"
+                            data-testid="search-stream"
+                            label="Search"
+                            name="search-stream"
+                            value={searchInputRef.current}
+                            onChange={(event) => handleSearchChange(event)}
+                          />
+                        </Box>
+                      </TableCell>
+                      <TableCell key="selectall" align="center">
+                        <Box>
                           <Switch
-                            data-testid={`stream-sync-${idx}`}
-                            checked={stream.selected}
-                            disabled={stream.syncMode === "incremental" ? true : false}
+                            data-testid={`sync-all-streams`}
+                            checked={selectAllStreams}
                             onChange={(event) =>
-                              selectStream(event.target.checked, stream)
+                              handleSyncAllStreams(event.target.checked)
                             }
                           />
-                        </TableCell>
-                        <TableCell key="inc" align="center">
+                        </Box>
+                      </TableCell>
+                      <TableCell key="incrementall" align="center">
+                        <Box>
                           <Switch
-                            data-testid={`stream-incremental-${idx}`}
-                            disabled={
-                              !stream.cursorField||!stream.supportsIncremental || !stream.selected
+                            data-testid={`incremental-all-streams`}
+                            checked={incrementalAllStreams}
+                            disabled={sourceStreams[0]?.cursorField ? false : true}
+                            onChange={(event) =>
+                              handleIncrementalAllStreams(event.target.checked)
                             }
-                            checked={
-                              stream.supportsIncremental &&
-                              stream.syncMode === 'incremental' &&
+                          />
+                        </Box>
+                      </TableCell>
+                      <TableCell key="" align="center"></TableCell>
+                      <TableCell key="" align="center"></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredSourceStreams
+                      .slice()
+                      .sort((a, b) => a.name.localeCompare(b.name)) // this will sort the stream on the basis of the name property.
+                      .map((stream, idx: number) => (
+                        <TableRow key={stream.name}>
+                          <TableCell
+                            key="name"
+                            align="center"
+                            sx={
                               stream.selected
+                                ? { color: 'green', fontWeight: 700 }
+                                : {}
                             }
-                            onChange={(event) =>
-                              setStreamIncr(event.target.checked, stream)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell key="destination" align="center">
-                          <Select
-                            data-testid={`stream-destmode-${idx}`}
-                            disabled={!stream.selected}
-                            value={stream.destinationSyncMode}
-                            onChange={(event) => {
-                              setDestinationSyncMode(
-                                event.target.value,
-                                stream
-                              );
-                            }}
                           >
-                            <MenuItem value="append">Append</MenuItem>
-                            <MenuItem value="overwrite">Overwrite</MenuItem>
-                            <MenuItem value="append_dedup">
-                              Append / Dedup
-                            </MenuItem>
-                          </Select>
-                        </TableCell>
-                        <TableCell key="cursorfield" align="center">
-                          <Select
-                            data-testid={`stream-cursorfield-${idx}`}
-                            disabled={
-                              !stream.selected ||
-                              !stream.supportsIncremental ||
-                              stream.syncMode !== 'incremental'
-                            }
-                            value={stream.cursorField}
-                            onChange={(event) => {
-                              updateCursorField(event.target.value, stream);
-                            }}
-                          >
-                            {stream.cursorFieldConfig?.cursorFieldOptions.map(
-                              (option: string) => (
-                                <MenuItem key={option} value={option}>
-                                  {option}
-                                </MenuItem>
-                              )
-                            )}
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </>
-          )}
+                            {stream.name}
+                          </TableCell>
+                          <TableCell key="sel" align="center">
+                            <Switch
+                              data-testid={`stream-sync-${idx}`}
+                              checked={stream.selected}
+                              disabled={stream.syncMode === "incremental" ? true : false}
+                              onChange={(event) =>
+                                selectStream(event.target.checked, stream)
+                              }
+                            />
+                          </TableCell>
+                          <TableCell key="inc" align="center">
+                            <Switch
+                              data-testid={`stream-incremental-${idx}`}
+                              disabled={
+                                !stream.cursorField || !stream.supportsIncremental || !stream.selected
+                              }
+                              checked={
+                                stream.supportsIncremental &&
+                                stream.syncMode === 'incremental' &&
+                                stream.selected
+                              }
+                              onChange={(event) =>
+                                setStreamIncr(event.target.checked, stream)
+                              }
+                            />
+                          </TableCell>
+                          <TableCell key="destination" align="center">
+                            <Select
+                              data-testid={`stream-destmode-${idx}`}
+                              disabled={!stream.selected}
+                              value={stream.destinationSyncMode}
+                              onChange={(event) => {
+                                setDestinationSyncMode(
+                                  event.target.value,
+                                  stream
+                                );
+                              }}
+                            >
+                              <MenuItem value="append">Append</MenuItem>
+                              <MenuItem value="overwrite">Overwrite</MenuItem>
+                              <MenuItem value="append_dedup">
+                                Append / Dedup
+                              </MenuItem>
+                            </Select>
+                          </TableCell>
+                          <TableCell key="cursorfield" align="center">
+                            <Select
+                              data-testid={`stream-cursorfield-${idx}`}
+                              disabled={
+                                !stream.selected ||
+                                !stream.supportsIncremental ||
+                                stream.syncMode !== 'incremental'
+                              }
+                              value={stream.cursorField}
+                              onChange={(event) => {
+                                updateCursorField(event.target.value, stream);
+                              }}
+                            >
+                              {stream.cursorFieldConfig?.cursorFieldOptions.map(
+                                (option: string) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                )
+                              )}
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </>
+            )}
         </Box>
       </>
     );
