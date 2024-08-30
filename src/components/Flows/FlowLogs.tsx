@@ -165,10 +165,10 @@ const LogsContainer = ({
       try {
         const data = await httpGet(
           session,
-          `prefect/flow_runs/${flowRunId}/logs?task_run_id=${run.id}&offset=${Math.max(
+          `prefect/flow_runs/${run?.kind == 'task-run' ? flowRunId : run.id}/logs?task_run_id=${run?.kind == 'task-run' ? run.id : ''}&offset=${Math.max(
             flowRunOffset,
             0
-          )}&limit=${flowRunLogsOffsetLimit + 1}`
+          )}&limit=${flowRunLogsOffsetLimit}`
         );
 
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
@@ -273,26 +273,26 @@ const LogsContainer = ({
           : null}
 
         {action === 'detail' ?
-          logsLoaded ? (
-            <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
-              <Box sx={{ wordBreak: 'break-word' }}>
-                {logs?.map((log: any, idx) => (
-                  <Box className="color-on-hover" key={idx}>
-                    - {log?.message || log}
-                  </Box>
-                ))}
-              </Box>
-              {flowRunOffset > 0 && (
+          <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
+            <Box sx={{ wordBreak: 'break-word' }}>
+              {logs?.map((log: any, idx) => (
+                <Box className="color-on-hover" key={idx}>
+                  - {log?.message || log}
+                </Box>
+              ))}
+            </Box>
+            {flowRunOffset > 0 && (
+              logsLoaded ? (
                 <Button data-testid="offset" onClick={() => fetchLogs()}>
                   Fetch more
                 </Button>
-              )}
-            </Alert>
-          )
-            :
-            (
-              <CircularProgress />
-            )
+              )
+                : (
+                  <CircularProgress />
+                )
+
+            )}
+          </Alert>
           : null}
       </Box>
     </Box>

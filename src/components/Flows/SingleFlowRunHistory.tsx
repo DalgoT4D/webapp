@@ -70,7 +70,7 @@ export const SingleFlowRunHistory = ({
           `prefect/flow_runs/${flowRun.id}/logs?offset=${Math.max(
             flowRunOffset,
             0
-          )}&limit=${flowRunLogsOffsetLimit + 1}`
+          )}&limit=${flowRunLogsOffsetLimit}`
         );
 
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
