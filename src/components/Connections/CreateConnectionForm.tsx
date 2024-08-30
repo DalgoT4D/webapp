@@ -459,6 +459,7 @@ const CreateConnectionForm = ({
                         <Switch
                           data-testid={`incremental-all-streams`}
                           checked={incrementalAllStreams}
+                          disabled={sourceStreams[0]?.cursorField ? false: true}
                           onChange={(event) =>
                             handleIncrementalAllStreams(event.target.checked)
                           }
@@ -499,7 +500,7 @@ const CreateConnectionForm = ({
                           <Switch
                             data-testid={`stream-incremental-${idx}`}
                             disabled={
-                              !stream.supportsIncremental || !stream.selected
+                              !stream.cursorField||!stream.supportsIncremental || !stream.selected
                             }
                             checked={
                               stream.supportsIncremental &&
