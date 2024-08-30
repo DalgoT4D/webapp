@@ -491,6 +491,7 @@ const CreateConnectionForm = ({
                           <Switch
                             data-testid={`stream-sync-${idx}`}
                             checked={stream.selected}
+                            disabled={stream.syncMode === "incremental" ? true : false}
                             onChange={(event) =>
                               selectStream(event.target.checked, stream)
                             }
