@@ -102,7 +102,7 @@ const CreateConnectionForm = ({
         selected: action === 'edit' ? el.config.selected : false,
         syncMode: action === 'edit' ? el.config.syncMode : 'full_refresh',
         destinationSyncMode:
-          action === 'edit' ? el.config.destinationSyncMode : 'append',
+          action === 'edit' ? el.config.destinationSyncMode : 'overwrite',
         cursorFieldConfig: {
           sourceDefinedCursor: false,
           cursorFieldOptions: [],
@@ -292,9 +292,14 @@ const CreateConnectionForm = ({
     updateThisStreamTo_(stream, { ...stream, selected: checked });
   };
   const setStreamIncr = (checked: boolean, stream: SourceStream) => {
+    if (checked && stream.destinationSyncMode === "overwrite") {
+      errorToast("Cannot use Overwrite when sync mode is incremental", [], globalContext);
+      return;
+    }
     updateThisStreamTo_(stream, {
       ...stream,
       syncMode: checked ? 'incremental' : 'full_refresh',
+      // destinationSyncMode: checked ? 'append' : stream.destinationSyncMode
     });
   };
   const setDestinationSyncMode = (value: string, stream: SourceStream) => {
@@ -314,13 +319,25 @@ const CreateConnectionForm = ({
   };
 
   const handleIncrementalAllStreams = (checked: boolean) => {
-    setIncrementalAllStreams(checked);
-    const sourceStreamsSlice: Array<SourceStream> = sourceStreams.map(
-      (stream: SourceStream) => ({
-        ...stream,
-        syncMode: checked ? 'incremental' : 'full_refresh',
-      })
+    let ifAnyOverwritePresent = false;
+    const sourceStreamsSlice: Array<SourceStream>  = sourceStreams.map(
+      (stream: SourceStream) => {
+        if(stream.destinationSyncMode === "overwrite"){
+          ifAnyOverwritePresent = true;
+        }
+        return {
+          ...stream,
+          syncMode: checked ? 'incremental' : 'full_refresh',
+        };
+      }
     );
+
+    if(ifAnyOverwritePresent){
+      errorToast("Cannot use Overwrite when sync mode is incremental", [], globalContext)
+      return;
+    }
+
+    setIncrementalAllStreams(checked);
     setSourceStreams(sourceStreamsSlice);
   };
 
@@ -459,7 +476,7 @@ const CreateConnectionForm = ({
                         <Switch
                           data-testid={`incremental-all-streams`}
                           checked={incrementalAllStreams}
-                          disabled={sourceStreams[0]?.cursorField ? false: true}
+                          disabled={sourceStreams[0]?.cursorField ? false : true}
                           onChange={(event) =>
                             handleIncrementalAllStreams(event.target.checked)
                           }
@@ -474,88 +491,91 @@ const CreateConnectionForm = ({
                   {filteredSourceStreams
                     .slice()
                     .sort((a, b) => a.name.localeCompare(b.name)) // this will sort the stream on the basis of the name property.
-                    .map((stream, idx: number) => (
-                      <TableRow key={stream.name}>
-                        <TableCell
-                          key="name"
-                          align="center"
-                          sx={
-                            stream.selected
-                              ? { color: 'green', fontWeight: 700 }
-                              : {}
-                          }
-                        >
-                          {stream.name}
-                        </TableCell>
-                        <TableCell key="sel" align="center">
-                          <Switch
-                            data-testid={`stream-sync-${idx}`}
-                            checked={stream.selected}
-                            disabled={stream.syncMode === "incremental" ? true : false}
-                            onChange={(event) =>
-                              selectStream(event.target.checked, stream)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell key="inc" align="center">
-                          <Switch
-                            data-testid={`stream-incremental-${idx}`}
-                            disabled={
-                            !stream.cursorField|| !stream.supportsIncremental || !stream.selected
-                            }
-                            checked={
-                              stream.supportsIncremental &&
-                              stream.syncMode === 'incremental' &&
+                    .map((stream, idx: number) => {
+                      const ifIncremental = stream.syncMode === 'incremental' ? true : false;
+                      return <>
+                        <TableRow key={stream.name}>
+                          <TableCell
+                            key="name"
+                            align="center"
+                            sx={
                               stream.selected
+                                ? { color: 'green', fontWeight: 700 }
+                                : {}
                             }
-                            onChange={(event) =>
-                              setStreamIncr(event.target.checked, stream)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell key="destination" align="center">
-                          <Select
-                            data-testid={`stream-destmode-${idx}`}
-                            disabled={!stream.selected}
-                            value={stream.destinationSyncMode}
-                            onChange={(event) => {
-                              setDestinationSyncMode(
-                                event.target.value,
-                                stream
-                              );
-                            }}
                           >
-                            <MenuItem value="append">Append</MenuItem>
-                            <MenuItem value="overwrite">Overwrite</MenuItem>
-                            <MenuItem value="append_dedup">
-                              Append / Dedup
-                            </MenuItem>
-                          </Select>
-                        </TableCell>
-                        <TableCell key="cursorfield" align="center">
-                          <Select
-                            data-testid={`stream-cursorfield-${idx}`}
-                            disabled={
-                              !stream.selected ||
-                              !stream.supportsIncremental ||
-                              stream.syncMode !== 'incremental'
-                            }
-                            value={stream.cursorField}
-                            onChange={(event) => {
-                              updateCursorField(event.target.value, stream);
-                            }}
-                          >
-                            {stream.cursorFieldConfig?.cursorFieldOptions.map(
-                              (option: string) => (
-                                <MenuItem key={option} value={option}>
-                                  {option}
-                                </MenuItem>
-                              )
-                            )}
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                            {stream.name}
+                          </TableCell>
+                          <TableCell key="sel" align="center">
+                            <Switch
+                              data-testid={`stream-sync-${idx}`}
+                              checked={stream.selected}
+                              onChange={(event) =>
+                                selectStream(event.target.checked, stream)
+                              }
+                            />
+                          </TableCell>
+                          <TableCell key="inc" align="center">
+                            <Switch
+                              data-testid={`stream-incremental-${idx}`}
+                              disabled={
+                                !stream.cursorField || !stream.supportsIncremental || !stream.selected
+                              }
+                              checked={
+                                stream.supportsIncremental &&
+                                ifIncremental &&
+                                stream.selected
+                              }
+                              onChange={(event) => {
+                                setStreamIncr(event.target.checked, stream)
+                              }
+                              }
+                            />
+                          </TableCell>
+                          <TableCell key="destination" align="center">
+                            <Select
+                              data-testid={`stream-destmode-${idx}`}
+                              disabled={!stream.selected}
+                              value={stream.destinationSyncMode}
+                              onChange={(event) => {
+                                setDestinationSyncMode(
+                                  event.target.value,
+                                  stream
+                                );
+                              }}
+                            >
+                              <MenuItem value="append">Append</MenuItem>
+                              <MenuItem disabled={ifIncremental} value="overwrite">Overwrite</MenuItem>
+                              <MenuItem value="append_dedup">
+                                Append / Dedup
+                              </MenuItem>
+                            </Select>
+                          </TableCell>
+                          <TableCell key="cursorfield" align="center">
+                            <Select
+                              data-testid={`stream-cursorfield-${idx}`}
+                              disabled={
+                                !stream.selected ||
+                                !stream.supportsIncremental ||
+                                stream.syncMode !== 'incremental'
+                              }
+                              value={stream.cursorField}
+                              onChange={(event) => {
+                                updateCursorField(event.target.value, stream);
+                              }}
+                            >
+                              {stream.cursorFieldConfig?.cursorFieldOptions.map(
+                                (option: string) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                )
+                              )}
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      </> }
+                    )}
                 </TableBody>
               </Table>
             </>
