@@ -7,8 +7,6 @@ import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import * as amplitude from '@amplitude/analytics-browser';
-const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_ENV!;
 
 type Org = {
   name: string;
@@ -36,39 +34,6 @@ const MainDashboard = ({ children }: any) => {
   const globalContext = useContext(GlobalContext);
 
   const [openMenu, setOpenMenu] = useState<boolean>(true);
-  // amplitude.init(amplitudeApiKey, {
-  //   defaultTracking: {
-  //     pageViews: false,
-  //     sessions: true,
-  //     attribution: true,
-  //     formInteractions: true
-  //   }
-  // });
-
-  // const identifyEvent = new amplitude.Identify();
-  // useEffect(() => {
-  //   if (session) {
-  //     const userEmail = session?.user?.email;
-  //     amplitude.setUserId(userEmail);
-  //   }
-  //   if (globalContext?.CurrentOrg) {
-  //     identifyEvent.postInsert('User_orgs', globalContext.CurrentOrg.state.name);
-  //     amplitude.identify(identifyEvent);
-  //     amplitude.logEvent(`[${router.pathname}] Page Viewed`, {
-  //       userCurrentOrg: globalContext.CurrentOrg.state.name,
-  //       userEmail: session?.user.email,
-  //       page_domain: window.location.hostname,
-  //       page_location: window.location.href,
-  //       page_path: window.location.pathname,
-  //       page_title: document.title,
-  //       page_url: window.location.href,
-  //       referrer: document.referrer,
-  //       referring_domain: document.referrer ? new URL(document.referrer).hostname : ''
-  //     })
-  //   }
-  // }, [session, globalContext?.CurrentOrg])
-
-
 
   useEffect(() => {
     (async () => {

@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as amplitude from '@amplitude/analytics-browser';
-import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useRouter } from 'next/router';
 
@@ -8,11 +7,9 @@ const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_ENV!;
 
 const TrackingContext = createContext((eventName: string, additionalData: Record<string, any> = {}) => {});
 
-export const TrackingProvider = ({ children }: any) => {
+export const TrackingProvider = ({session, children }: any) => {
     const router = useRouter();
-    const { data: session }: any = useSession();
     const globalContext = useContext(GlobalContext);
-
     const [eventProperties, setEventProperties] = useState({});
 
     useEffect(() => {
@@ -42,19 +39,19 @@ export const TrackingProvider = ({ children }: any) => {
                 userEmail: session?.user?.email,
                 page_domain: window.location.hostname,
                 page_location: window.location.href,
-                page_path: window.location.pathname,
+                page_path: window.location.pathname + window.location.search,
                 page_title: document.title,
                 page_url: window.location.href,
                 referrer: document.referrer,
                 referring_domain: document.referrer ? new URL(document.referrer).hostname : '',
             });
 
-            amplitude.logEvent(`[${router.pathname}] Page Viewed`, {
+            amplitude.logEvent(`[${router.pathname}${window.location.search}] Page Viewed`, {
                 userCurrentOrg: globalContext.CurrentOrg.state.name,
                 userEmail: session?.user?.email,
                 page_domain: window.location.hostname,
                 page_location: window.location.href,
-                page_path: window.location.pathname,
+                page_path: window.location.pathname + window.location.search,
                 page_title: document.title,
                 page_url: window.location.href,
                 referrer: document.referrer,
@@ -62,7 +59,6 @@ export const TrackingProvider = ({ children }: any) => {
             });
         }
     }, [router.pathname, session, globalContext?.CurrentOrg]);
-
     const trackEvent = (eventName: string, additionalData: Record<string, any> = {}) => {
         amplitude.track(eventName, {
             timestamp: new Date(),
