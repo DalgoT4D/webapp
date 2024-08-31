@@ -16,7 +16,13 @@ import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import SchemaChangeDetailsForm from './SchemaChangeDetailsForm';
 
-const PendingActionsAccordion = () => {
+interface PendingActionsAccordionProps {
+  refreshConnectionsList: (...args: any) => any;
+}
+
+const PendingActionsAccordion = ({
+  refreshConnectionsList,
+}: PendingActionsAccordionProps) => {
   const [schemaChangeData, setSchemaChangeData] = useState<any[]>([]);
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
@@ -53,7 +59,9 @@ const PendingActionsAccordion = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    if (session) {
+      fetchData();
+    }
   }, [session]);
 
   if (!schemaChangeData || schemaChangeData.length === 0) {
@@ -138,7 +146,7 @@ const PendingActionsAccordion = () => {
           <SchemaChangeDetailsForm
             setConnectionId={setSelectedConnectionId}
             connectionId={selectedConnectionId}
-            mutate={() => {}}
+            refreshConnectionsList={refreshConnectionsList}
             showForm={openPopup}
             setShowForm={setOpenPopup}
             fetchPendingActions={fetchData}

@@ -21,6 +21,7 @@ export type TransformTask = {
   generated_by: string;
   uuid: string;
   seq: number;
+  pipeline_default: boolean;
 };
 
 type params = {
