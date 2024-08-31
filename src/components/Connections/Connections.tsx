@@ -624,6 +624,7 @@ export const Connections = () => {
   const handleResetConnection = () => {
     handleClose();
     setShowConfirmResetDialog(true);
+    trackAmplitudeEvent("[Reset-connection] Button Clicked");
   };
 
   const handleEditConnection = () => {
