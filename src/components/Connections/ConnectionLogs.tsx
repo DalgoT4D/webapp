@@ -31,6 +31,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import InsightsIcon from '@mui/icons-material/Insights';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import useSWR from 'swr';
+import { useTracking } from '@/contexts/TrackingContext';
 
 
 const fetchAirbyteLogs = async (
@@ -177,7 +178,7 @@ const Row = ({
   const [summarizedLogsLoading, setSummarizedLogsLoading] = useState(false);
   const [detailedLogsLoading, setDetailedLogsLoading] = useState(false);
   const { data: session }: any = useSession();
-
+  const trackAmplitudeEvent = useTracking();
   const pollForTaskRun = async (taskId: string) => {
     try {
       const response: any = await httpGet(session, 'tasks/stp/' + taskId);
@@ -235,8 +236,10 @@ const Row = ({
   ) => {
     if (newAction === 'summary' && summarizedLogs.length < 1) {
       summarizeLogs();
+      trackAmplitudeEvent("[ai-summary] Button clicked")
     } else if (newAction === 'detail' && detailedLogs.length < 1) {
       getDetailedLogs();
+      trackAmplitudeEvent("[connection-logs] Button clicked")
     }
     setAction(newAction);
   };
