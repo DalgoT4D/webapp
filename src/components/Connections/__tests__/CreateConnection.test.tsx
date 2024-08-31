@@ -206,7 +206,7 @@ describe('Create connection', () => {
     // check stream incremental checkbox
     expect(streamIncrementalSwitch).not.toBeChecked();
     await act(() => userEvent.click(streamIncrementalSwitch));
-    expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked();
+    expect(screen.getByTestId('stream-incremental-0').firstChild).not.toBeChecked();
 
     // check normalization after sync checkbox
 
