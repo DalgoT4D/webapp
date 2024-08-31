@@ -42,13 +42,10 @@ describe('Create connection', () => {
     {
       name: 'stream-1',
       supportedSyncModes: ['full_refresh', 'incremental'],
-      defaultCursorField: ["date"]
-
     },
     {
       name: 'stream-2',
       supportedSyncModes: ['full_refresh'],
-
     },
   ];
 
