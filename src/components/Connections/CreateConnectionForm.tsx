@@ -493,8 +493,8 @@ const CreateConnectionForm = ({
                     .sort((a, b) => a.name.localeCompare(b.name)) // this will sort the stream on the basis of the name property.
                     .map((stream, idx: number) => {
                       const ifIncremental = stream.syncMode === 'incremental' ? true : false;
-                      return <>
-                        <TableRow key={stream.name}>
+                      return (
+                      <TableRow key={stream.name}>
                           <TableCell
                             key="name"
                             align="center"
@@ -574,7 +574,8 @@ const CreateConnectionForm = ({
                             </Select>
                           </TableCell>
                         </TableRow>
-                      </> }
+                      )
+                      }
                     )}
                 </TableBody>
               </Table>
