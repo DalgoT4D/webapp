@@ -15,6 +15,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { useTracking } from '@/contexts/TrackingContext';
 
 interface CreateOrgTaskFormProps {
   mutate: (...args: any) => any;
@@ -72,6 +73,7 @@ const CreateOrgTaskForm = ({
   const [masterTasks, setMasterTasks] = useState<Array<AutocompleteOption>>([]);
   const [masterFlags, setMasterFlags] = useState<Array<string>>([]);
   const [masterOptions, setMasterOptions] = useState<any>({});
+  const trackAmplitudeEvent = useTracking();
   const { register, handleSubmit, control, watch, reset, setValue, getValues } =
     useForm({
       defaultValues: {
@@ -144,6 +146,7 @@ const CreateOrgTaskForm = ({
 
   const onSubmit = async (data: any) => {
     setLoading(true);
+    trackAmplitudeEvent("[Save-OrgTask] Button Clicked")
     const paramOptions: any = {};
     data.options
       .filter((opt: any) => opt.key && opt.value)
