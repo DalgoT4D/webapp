@@ -40,6 +40,7 @@ import {
 import { ConnectionLogs } from './ConnectionLogs';
 import PendingActionsAccordion from './PendingActions';
 import { useSyncLock } from '@/customHooks/useSyncLock';
+import { useTracking } from '@/contexts/TrackingContext';
 
 type PrefectFlowRun = {
   id: string;
@@ -178,7 +179,7 @@ const Actions = memo(
   }) => {
     const { deploymentId, connectionId, lock } = connection;
     const { tempSyncState, setTempSyncState } = useSyncLock(lock);
-
+    const trackAmplitudeEvent:any = useTracking();
     const isSyncConnectionIdPresent =
       syncingConnectionIds.includes(connectionId);
 
@@ -195,6 +196,7 @@ const Actions = memo(
           onClick={async () => {
             handlingSyncState();
             setTempSyncState(true);
+            trackAmplitudeEvent(`[Sync-connection] Button Clicked`);
             // push connection id into list of syncing connection ids
             if (!isSyncConnectionIdPresent) {
               setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
@@ -280,7 +282,7 @@ export const Connections = () => {
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
-
+  const trackAmplitudeEvent = useTracking();
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
       const flowRun: PrefectFlowRun = await httpGet(
@@ -528,6 +530,7 @@ export const Connections = () => {
             onClick={() => {
               setShowLogsDialog(true);
               setLogsConnection(connection);
+              trackAmplitudeEvent("[View history] Button clicked")
             }}
           >
             View history
@@ -623,6 +626,7 @@ export const Connections = () => {
   const handleResetConnection = () => {
     handleClose();
     setShowConfirmResetDialog(true);
+    trackAmplitudeEvent("[Reset-connection] Button Clicked");
   };
 
   const handleEditConnection = () => {
