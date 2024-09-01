@@ -53,9 +53,12 @@ export const List = ({
 
     // Sort row values lexicographically based on the sort column:
     const sorted = [...rowValues].sort((a, b) => {
-      if (a[sortColumn] < b[sortColumn])
+      const aValue = a[sortColumn].toString().toLowerCase();
+      const bValue = b[sortColumn].toString().toLowerCase();
+    
+      if (aValue < bValue) 
         return sortDirection === 'asc' ? -1 : 1;
-      if (a[sortColumn] > b[sortColumn])
+      if (aValue > bValue)
         return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });

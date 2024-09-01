@@ -25,6 +25,7 @@ import { LogsPane } from './Components/LowerSectionTabs/LogsPane';
 import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
 import { showDataInsightsTab } from '@/config/constant';
 import { useLockCanvas } from '@/customHooks/useLockCanvas';
+import { useTracking } from '@/contexts/TrackingContext';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
@@ -104,12 +105,13 @@ const LowerSection = ({
   finalLockCanvas,
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
-
+  const trackAmplitudeEvent = useTracking();
   const handleTabChange = (
     event: React.SyntheticEvent,
     newValue: LowerSectionTabValues
   ) => {
-    setSelectedTab(newValue);
+    trackAmplitudeEvent(`[${newValue}-tab] Button Clicked`)
+        setSelectedTab(newValue);
   };
   return (
     <Box sx={{ height: 'unset' }}>
