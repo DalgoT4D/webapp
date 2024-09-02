@@ -285,8 +285,6 @@ const CreateConnectionForm = ({
     newStream: SourceStream
   ) => {
     const newstreams: SourceStream[] = [];
-    // let areAllStreamsChecked = true;
-    // let areAllIncrementalsChecked = true;  // for all checked streams
     for (let idx = 0; idx < sourceStreams.length; idx++) {
     
       if (sourceStreams[idx].name === stream.name) {
@@ -294,28 +292,7 @@ const CreateConnectionForm = ({
       } else {
         newstreams.push(sourceStreams[idx]);
       }
-//checking if the updated source stream has any incremental field or selected stream.
-
-      // if(areAllStreamsChecked && newstreams[idx].selected === false){
-      //   areAllStreamsChecked = false;
-      // }
-   
-      // if(areAllIncrementalsChecked && newstreams[idx].syncMode !== "incremental"){  //are selected streams are incremental
-      //   areAllIncrementalsChecked = false;
-      // }
     };
-    // if(incrementalAllStreams && newStream.syncMode !== "incremental" ){
-    //   setIncrementalAllStreams(false);
-    // };
-    // if(selectAllStreams && !newStream.selected){
-    //   setSelectAllStreams(false);
-    // };
-    // if(areAllIncrementalsChecked && !incrementalAllStreams){
-    //   setIncrementalAllStreams(true);
-    // };
-    // if(areAllStreamsChecked && !selectAllStreams){
-    //   setSelectAllStreams(true);
-    // };
     setSourceStreams(newstreams);
   };
 
