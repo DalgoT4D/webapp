@@ -28,7 +28,6 @@ import { delay, formatDuration } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionLogs';
 import { defaultLoadMoreLimit } from '@/config/constant';
 import { errorToast } from '../ToastMessage/ToastHelper';
-import useSWR from 'swr';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
 const makeReadable = (label: string) => {
@@ -100,11 +99,9 @@ interface DeploymentObject {
 
 const LogsContainer = ({
   run,
-  allowLogsSummary,
   flowRunId,
 }: {
   run: RunObject;
-  allowLogsSummary: boolean;
   flowRunId: string;
 }) => {
   const globalContext = useContext(GlobalContext);
@@ -138,7 +135,6 @@ const LogsContainer = ({
         session,
         `prefect/v1/flow_runs/${flowRunId}/logsummary?task_id=${run.id}`
       );
-
       await delay(3000);
       pollForTaskRun(response.task_id);
     } catch (err: any) {
@@ -201,8 +197,12 @@ const LogsContainer = ({
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
-            {allowLogsSummary && (
-              <ToggleButton value="summary" aria-label="right">
+            {run.state_type === 'FAILED' && (
+              <ToggleButton
+                value="summary"
+                aria-label="right"
+                data-testid={`aisummary-${run.id}`}
+              >
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
             )}
@@ -221,7 +221,7 @@ const LogsContainer = ({
       >
         {summarizedLogsLoading ? <LinearProgress color="inherit" /> : null}
         {action === 'summary'
-          ? summarizedLogs.length > 0 && (
+          ? summarizedLogs?.length > 0 && (
               <Alert icon={false} severity="success" sx={{ mb: 2 }}>
                 {summarizedLogs.map((result: any, index: number) => (
                   <Box key={result.prompt} sx={{ mb: 2 }}>
@@ -249,13 +249,7 @@ const LogsContainer = ({
   );
 };
 
-const Row = ({
-  logDetail,
-  allowLogsSummary,
-}: {
-  logDetail: DeploymentObject;
-  allowLogsSummary: boolean;
-}) => {
+const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
   return (
     <>
       <TableRow
@@ -265,7 +259,7 @@ const Row = ({
           p: 2,
 
           background:
-            logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.04)' : 'unset',
+            logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
         }}
       >
         <TableCell
@@ -279,14 +273,16 @@ const Row = ({
           {moment(logDetail.startTime).format('MMMM D, YYYY')}
         </TableCell>
 
-        <TableCell colSpan={3} sx={{ fontWeight: 500 }}>
+        <TableCell
+          colSpan={3}
+          sx={{
+            fontWeight: 500,
+            borderTopRightRadius: '10px',
+            borderBottomRightRadius: '10px',
+          }}
+        >
           {logDetail.runs.map((run) => (
-            <LogsContainer
-              key={run.id}
-              run={run}
-              allowLogsSummary={allowLogsSummary}
-              flowRunId={logDetail.id}
-            />
+            <LogsContainer key={run.id} run={run} flowRunId={logDetail.id} />
           ))}
         </TableCell>
       </TableRow>
@@ -299,9 +295,8 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
   flow,
 }) => {
   const { data: session }: any = useSession();
-  const { data: flags } = useSWR('organizations/flags');
   const [logDetails, setLogDetails] = useState<DeploymentObject[]>([]);
-  const [offset, setOffset] = useState(1);
+  const [offset, setOffset] = useState(defaultLoadMoreLimit);
   const [showLoadMore, setShowLoadMore] = useState(true);
   const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -394,11 +389,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
 
             <TableBody>
               {logDetails.map((logDetail) => (
-                <Row
-                  key={logDetail.id}
-                  logDetail={logDetail}
-                  allowLogsSummary={!!flags?.allowLogsSummary}
-                />
+                <Row key={logDetail.id} logDetail={logDetail} />
               ))}
             </TableBody>
           </Table>
@@ -431,7 +422,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
                         );
                       if (response) {
                         setLogDetails((logs) => [...logs, ...response]);
-                        setOffset((offset) => offset + 1);
+                        setOffset((offset) => offset + defaultLoadMoreLimit);
                       }
                       if (response.length < defaultLoadMoreLimit) {
                         setShowLoadMore(false);

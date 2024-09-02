@@ -23,6 +23,7 @@ import { ActionsMenu } from '../UI/Menu/Menu';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import CreateOrgTaskForm from './CreateOrgTaskForm';
 import LockIcon from '@mui/icons-material/Lock';
+import { useTracking } from '@/contexts/TrackingContext';
 
 type params = {
   setDbtRunLogs: (...args: any) => any;
@@ -71,7 +72,7 @@ export const DBTTaskList = ({
   const [showCreateOrgTaskDialog, setShowCreateOrgTaskDialog] =
     useState<boolean>(false);
   const [deleteTaskLoad, setDeleteTaskLoading] = useState(false);
-
+  const trackAmplitudeEvent = useTracking();
   const handleClick = (taskId: string, event: HTMLElement | null) => {
     setTaskId(taskId);
     setAnchorEl(event);
@@ -89,6 +90,7 @@ export const DBTTaskList = ({
         variant="contained"
         onClick={() => {
           setRunningTask(task);
+          trackAmplitudeEvent(`[${task.label}] Button Clicked`)
         }}
         data-testid={'task-' + task.uuid}
         disabled={
@@ -140,7 +142,8 @@ export const DBTTaskList = ({
 
   useEffect(() => {
     if (runningTask) {
-      if (runningTask.slug === TASK_DBTRUN) dbtRunWithDeployment(runningTask);
+      if (runningTask.slug === TASK_DBTRUN || runningTask.deploymentId)
+        dbtRunWithDeployment(runningTask);
       else executeDbtJob(runningTask);
     }
   }, [runningTask]);
@@ -342,6 +345,7 @@ export const DBTTaskList = ({
 
   const handleCreateOpenOrgTaskDialog = () => {
     setShowCreateOrgTaskDialog(true);
+    trackAmplitudeEvent("[+ New Task] Button Clicked")
   };
 
   return (

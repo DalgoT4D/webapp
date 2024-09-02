@@ -1,5 +1,12 @@
 import Dagre from '@dagrejs/dagre';
-import { Box, Button, Divider, Typography } from '@mui/material';
+import {
+  Backdrop,
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  Typography,
+} from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
@@ -41,6 +48,8 @@ import { getNextNodePosition } from '@/utils/editor';
 type CanvasProps = {
   redrawGraph: boolean;
   setRedrawGraph: (...args: any) => void;
+  finalLockCanvas: boolean;
+  setTempLockCanvas: any;
 };
 
 const nodeGap = 30;
@@ -50,6 +59,8 @@ export interface OperationNodeData {
   output_cols: Array<string>;
   type: typeof OPERATION_NODE;
   target_model_id: string;
+  target_model_name: string;
+  target_model_schema: string;
   config: {
     type: keyof typeof operationIconMapping;
     [key: string]: any;
@@ -186,7 +197,12 @@ const getLayoutedElements = ({
   };
 };
 
-const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
+const Canvas = ({
+  redrawGraph,
+  setRedrawGraph,
+  finalLockCanvas,
+  setTempLockCanvas,
+}: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -207,8 +223,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       color: 'black',
     },
   };
-
+  // const [tempLockCanvas, setTempLockCanvas] = useState(true);
+  // const finalLockCanvas = tempLockCanvas || lockUpperSection;
   const fetchDbtProjectGraph = async () => {
+    setTempLockCanvas(true);
     try {
       const response: DbtProjectGraphApiResponse = await httpGet(
         session,
@@ -236,11 +254,17 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       setEdges([...layoutedEdges]);
     } catch (error) {
       console.log(error);
+    } finally {
+      // setLockUpperSection(false);
+      setTempLockCanvas(false);
     }
   };
 
   useEffect(() => {
-    if (session) fetchDbtProjectGraph();
+    setTempLockCanvas(true);
+    if (session) {
+      fetchDbtProjectGraph();
+    }
   }, [session, redrawGraph]);
 
   useEffect(() => {
@@ -288,7 +312,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   ) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
-
     if (!isDummy) {
       // remove node from canvas
       if (type === SRC_MODEL_NODE) {
@@ -297,6 +320,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           await httpDelete(session, `transform/dbt_project/model/${nodeId}/`);
         } catch (error) {
           console.log(error);
+        } finally {
+          setTempLockCanvas(false);
         }
       } else if (type === OPERATION_NODE) {
         // hit the backend api to remove the node in a try catch
@@ -307,6 +332,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           );
         } catch (error) {
           console.log(error);
+        } finally {
+          setTempLockCanvas(false);
         }
       }
     }
@@ -318,7 +345,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         data: null,
       });
     }
-    if (shouldRefreshGraph) setRedrawGraph(!redrawGraph);
+
+    if (shouldRefreshGraph) setRedrawGraph(!redrawGraph); //calls api in parent and this comp rerenders.
   };
 
   const addSrcModelNodeToCanvas = (
@@ -357,9 +385,9 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
   };
 
-  const handleRefreshCanvas = () => {
-    setRedrawGraph(!redrawGraph);
-  };
+  // const handleRefreshCanvas = () => {
+  //   setRedrawGraph(!redrawGraph);
+  // };
 
   useEffect(() => {
     // This event is triggered via the ProjectTree component
@@ -367,11 +395,13 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       addSrcModelNodeToCanvas(canvasAction.data);
     }
 
-    if (canvasAction.type === 'refresh-canvas') {
-      handleRefreshCanvas();
-    }
+    // if (canvasAction.type === 'refresh-canvas') {
+    //   setTempLockCanvas(true);
+    //   handleRefreshCanvas();
+    // }
 
     if (canvasAction.type === 'delete-node') {
+      setTempLockCanvas(true);
       handleDeleteNode(
         canvasAction.data.nodeId,
         canvasAction.data.nodeType,
@@ -450,6 +480,29 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         height: '100%',
       }}
     >
+      <Backdrop
+        sx={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          position: 'absolute', // Position the Backdrop over the Box
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0, // Cover the entire Box
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+        open={finalLockCanvas}
+        onClick={() => {}}
+      >
+        <CircularProgress
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 2,
+          }}
+        />
+      </Backdrop>
       <Box
         sx={{
           height: '44px',
@@ -488,6 +541,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
               onClick={() => {
                 successToast('Graph has been refreshed', [], globalContext);
                 setRedrawGraph(!redrawGraph);
+                setCanvasAction({
+                  type: 'refresh-canvas',
+                  data: null,
+                });
               }}
             >
               <ReplayIcon />
