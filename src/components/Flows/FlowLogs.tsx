@@ -259,7 +259,7 @@ const LogsContainer = ({
       >
         {summarizedLogsLoading ? <LinearProgress color="inherit" /> : null}
         {action === 'summary'
-          ? summarizedLogs.length > 0 && (
+          ? summarizedLogs?.length > 0 && (
               <Alert icon={false} severity="success" sx={{ mb: 2 }}>
                 {summarizedLogs.map((result: any, index: number) => (
                   <Box key={result.prompt} sx={{ mb: 2 }}>
