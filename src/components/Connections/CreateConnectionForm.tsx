@@ -529,8 +529,8 @@ const CreateConnectionForm = ({
                         />
                       </Box>
                     </TableCell>
-                    <TableCell key="" align="center"></TableCell>
-                    <TableCell key="" align="center"></TableCell>
+                    <TableCell key="center1" align="center"></TableCell>
+                    <TableCell key="center2" align="center"></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
