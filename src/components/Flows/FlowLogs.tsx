@@ -277,7 +277,7 @@ const LogsContainer = ({
           <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
             <Box sx={{ wordBreak: 'break-word' }}>
               {logs?.map((log: any, idx) => (
-                <Box className="color-on-hover" key={idx}>
+                <Box key={idx}>
                   - {log?.message || log}
                 </Box>
               ))}
