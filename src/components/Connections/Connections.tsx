@@ -40,6 +40,7 @@ import {
 import { ConnectionLogs } from './ConnectionLogs';
 import PendingActionsAccordion from './PendingActions';
 import { useSyncLock } from '@/customHooks/useSyncLock';
+import { useTracking } from '@/contexts/TrackingContext';
 
 type PrefectFlowRun = {
   id: string;
@@ -178,16 +179,16 @@ const Actions = memo(
   }) => {
     const { deploymentId, connectionId, lock } = connection;
     const { tempSyncState, setTempSyncState } = useSyncLock(lock);
-
+    const trackAmplitudeEvent:any = useTracking();
     const isSyncConnectionIdPresent =
       syncingConnectionIds.includes(connectionId);
 
     const handlingSyncState = async () => {
       const res: any = await syncConnection(deploymentId, connectionId);
-      if (res?.error == "ERROR") {
+      if (res?.error == 'ERROR') {
         setTempSyncState(false);
       }
-    }
+    };
     return (
       <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
         <Button
@@ -195,6 +196,7 @@ const Actions = memo(
           onClick={async () => {
             handlingSyncState();
             setTempSyncState(true);
+            trackAmplitudeEvent(`[Sync-connection] Button Clicked`);
             // push connection id into list of syncing connection ids
             if (!isSyncConnectionIdPresent) {
               setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
@@ -236,13 +238,13 @@ const Actions = memo(
       </Box>
     );
   },
+  //rerenderes when fn returns false. 
+  // checking lock when doing sync and checking connectionId wehen we sort the list or a new connection gets added.
   (prevProps, nextProps) => {
-    return (
-      prevProps.connection.lock === nextProps.connection.lock
-    );
+    return prevProps.connection.lock?.status === nextProps.connection.lock?.status && prevProps.connection.connectionId === nextProps.connection.connectionId
   }
 );
-Actions.displayName = "Action" //display name added.
+Actions.displayName = 'Action'; //display name added.
 
 export const Connections = () => {
   const { data: session }: any = useSession();
@@ -279,8 +281,8 @@ export const Connections = () => {
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-    const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
-
+  const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
+  const trackAmplitudeEvent = useTracking();
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
       const flowRun: PrefectFlowRun = await httpGet(
@@ -343,13 +345,13 @@ export const Connections = () => {
       // returning {error:"ERROR"} to stop loader if error occurs.
       if (response?.detail) {
         errorToast(response.detail, [], globalContext);
-        return { error: "ERROR" };
+        return { error: 'ERROR' };
       }
 
       // if flow run id is not present, something went wrong
       if (!response?.flow_run_id) {
         errorToast('Something went wrong', [], globalContext);
-        return { error: "ERROR" };
+        return { error: 'ERROR' };
       }
 
       successToast(`Sync initiated successfully`, [], globalContext);
@@ -359,7 +361,7 @@ export const Connections = () => {
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
-      return { error: "ERROR" };
+      return { error: 'ERROR' };
     } finally {
       setSyncingConnectionIds(
         syncingConnectionIds.filter((id) => id !== connectionId)
@@ -528,6 +530,7 @@ export const Connections = () => {
             onClick={() => {
               setShowLogsDialog(true);
               setLogsConnection(connection);
+              trackAmplitudeEvent("[View history] Button clicked")
             }}
           >
             View history
@@ -623,6 +626,7 @@ export const Connections = () => {
   const handleResetConnection = () => {
     handleClose();
     setShowConfirmResetDialog(true);
+    trackAmplitudeEvent("[Reset-connection] Button Clicked");
   };
 
   const handleEditConnection = () => {
@@ -687,7 +691,7 @@ export const Connections = () => {
           connection={logsConnection}
         />
       )}
-      <PendingActionsAccordion />
+      <PendingActionsAccordion refreshConnectionsList={mutate} />
       <ActionsMenu
         eleType="connection"
         anchorEl={anchorEl}

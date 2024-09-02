@@ -465,8 +465,8 @@ const CreateConnectionForm = ({
                         />
                       </Box>
                     </TableCell>
-                    <TableCell key="" align="center"></TableCell>
-                    <TableCell key="" align="center"></TableCell>
+                    <TableCell key="center1" align="center"></TableCell>
+                    <TableCell key="center2" align="center"></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -499,7 +499,7 @@ const CreateConnectionForm = ({
                           <Switch
                             data-testid={`stream-incremental-${idx}`}
                             disabled={
-                              !stream.supportsIncremental || !stream.selected
+                            !stream.supportsIncremental || !stream.selected
                             }
                             checked={
                               stream.supportsIncremental &&
