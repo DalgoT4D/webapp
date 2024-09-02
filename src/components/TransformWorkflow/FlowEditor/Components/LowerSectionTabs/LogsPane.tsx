@@ -16,13 +16,13 @@ interface LogsPaneProps {
     timestamp: string;
     message: string;
   }>;
-  workflowInProgress: boolean;
+  finalLockCanvas: boolean;
 }
 
 export const LogsPane = ({
   height,
   dbtRunLogs,
-  workflowInProgress,
+  finalLockCanvas
 }: LogsPaneProps) => {
   return (
     <Box height={height - 50} sx={{ overflow: 'auto', position: 'relative' }}>
@@ -83,42 +83,43 @@ export const LogsPane = ({
             })}
           </TableBody>
         </Table>
-      ) : workflowInProgress ? (
-        <Backdrop
+    ) : finalLockCanvas ? (
+      <Backdrop
+        sx={{
+          background: 'white',
+          position: 'absolute', // Position the Backdrop over the Box
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0, // Cover the entire Box
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+        data-testid = "progressbar"
+        open={finalLockCanvas}
+        onClick={() => {}}
+      >
+        <CircularProgress
           sx={{
-            background: 'white',
-            position: 'absolute', // Position the Backdrop over the Box
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0, // Cover the entire Box
-            zIndex: (theme) => theme.zIndex.drawer + 1,
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 2,
           }}
-          open={workflowInProgress}
-          onClick={() => {}}
-        >
-          <CircularProgress
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              zIndex: 2,
-            }}
-          />
-        </Backdrop>
-      ) : (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-          }}
-        >
-          Please press run
-        </Box>
-      )}
-    </Box>
-  );
+        />
+      </Backdrop>
+    ) : (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+        }}
+      >
+        Please press run
+      </Box>
+    )}
+  </Box>
+);
 };

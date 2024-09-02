@@ -84,6 +84,7 @@ export function OperationNode(node: OperationNodeType) {
   return (
     <Box
       onClick={handleSelectNode}
+      data-testid="nodeselectbox"
       sx={{
         border:
           node.id === canvasNode?.id || node.data?.isDummy

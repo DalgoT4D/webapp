@@ -1,12 +1,4 @@
-import {
-  Backdrop,
-  Box,
-  CircularProgress,
-  Divider,
-  IconButton,
-  Tab,
-  Tabs,
-} from '@mui/material';
+import { Box, Divider, IconButton, Tab, Tabs } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import { OpenInFull } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
@@ -32,19 +24,23 @@ import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import { LogsPane } from './Components/LowerSectionTabs/LogsPane';
 import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
 import { showDataInsightsTab } from '@/config/constant';
+import { useLockCanvas } from '@/customHooks/useLockCanvas';
+import { useTracking } from '@/contexts/TrackingContext';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
   refreshEditor: boolean;
   setRefreshEditor: any;
-  lockUpperSection: boolean;
+  finalLockCanvas: boolean;
+  setTempLockCanvas: any;
 };
 
 const UpperSection = ({
   sourcesModels,
   refreshEditor,
   setRefreshEditor,
-  lockUpperSection,
+  finalLockCanvas,
+  setTempLockCanvas,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
 
@@ -60,30 +56,6 @@ const UpperSection = ({
         position: 'relative',
       }}
     >
-      <Backdrop
-        sx={{
-          background: 'rgba(255, 255, 255, 0.8)',
-          position: 'absolute', // Position the Backdrop over the Box
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0, // Cover the entire Box
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-        }}
-        open={lockUpperSection}
-        onClick={() => {}}
-      >
-        <CircularProgress
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 2,
-          }}
-        />
-      </Backdrop>
-
       <ResizableBox
         axis="x"
         width={width}
@@ -100,6 +72,8 @@ const UpperSection = ({
           <Canvas
             redrawGraph={refreshEditor}
             setRedrawGraph={setRefreshEditor}
+            finalLockCanvas={finalLockCanvas}
+            setTempLockCanvas={setTempLockCanvas}
           />
         </ReactFlowProvider>
       </Box>
@@ -113,7 +87,7 @@ type LowerSectionProps = {
   height: number;
   selectedTab: LowerSectionTabValues;
   setSelectedTab: (value: LowerSectionTabValues) => void;
-  workflowInProgress: boolean;
+  finalLockCanvas: boolean;
   setFullScreen?: any;
 };
 
@@ -127,16 +101,17 @@ const LowerSection = ({
   height,
   selectedTab,
   setSelectedTab,
-  workflowInProgress,
   setFullScreen,
+  finalLockCanvas,
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
-
+  const trackAmplitudeEvent = useTracking();
   const handleTabChange = (
     event: React.SyntheticEvent,
     newValue: LowerSectionTabValues
   ) => {
-    setSelectedTab(newValue);
+    trackAmplitudeEvent(`[${newValue}-tab] Button Clicked`)
+        setSelectedTab(newValue);
   };
   return (
     <Box sx={{ height: 'unset' }}>
@@ -171,8 +146,8 @@ const LowerSection = ({
         {selectedTab === 'logs' && (
           <LogsPane
             height={height}
-            workflowInProgress={workflowInProgress}
             dbtRunLogs={dbtRunLogs}
+            finalLockCanvas={finalLockCanvas}
           />
         )}
         {selectedTab === 'statistics' && <StatisticsPane height={height} />}
@@ -187,11 +162,12 @@ const FlowEditor = ({}) => {
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
-  const [selectedTab, setSelectedTab] =
-    useState<LowerSectionTabValues>('preview');
+  const { finalLockCanvas, setTempLockCanvas } =
+    useLockCanvas(lockUpperSection);
+  const [selectedTab, setSelectedTab] = useState<LowerSectionTabValues>('logs');
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
-  const { canvasAction } = useCanvasAction();
+  const { canvasAction, setCanvasAction } = useCanvasAction();
 
   const onResize = (event: any) => {
     const dailogHeight =
@@ -282,6 +258,7 @@ const FlowEditor = ({}) => {
         await pollForTaskRun(response.task_id);
         setRefreshEditor(!refreshEditor);
       }
+      setCanvasAction({ type: 'refresh-canvas', data: null });
     } catch (error) {
       console.log(error);
     } finally {
@@ -407,7 +384,8 @@ const FlowEditor = ({}) => {
         setRefreshEditor={setRefreshEditor}
         sourcesModels={sourcesModels}
         refreshEditor={refreshEditor}
-        lockUpperSection={lockUpperSection}
+        finalLockCanvas={finalLockCanvas}
+        setTempLockCanvas={setTempLockCanvas}
       />
 
       <ResizableBox
@@ -431,7 +409,7 @@ const FlowEditor = ({}) => {
           height={lowerSectionHeight}
           setSelectedTab={setSelectedTab}
           selectedTab={selectedTab}
-          workflowInProgress={lockUpperSection}
+          finalLockCanvas={finalLockCanvas}
         />
       </ResizableBox>
     </Box>
