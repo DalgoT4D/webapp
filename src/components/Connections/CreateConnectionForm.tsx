@@ -292,7 +292,7 @@ const CreateConnectionForm = ({
       } else {
         newstreams.push(sourceStreams[idx]);
       }
-    };
+    }
     setSourceStreams(newstreams);
   };
 
