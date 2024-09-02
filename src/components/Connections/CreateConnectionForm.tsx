@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import CustomDialog from '../Dialog/CustomDialog';
 import {
@@ -72,6 +72,12 @@ const CreateConnectionForm = ({
   const [filteredSourceStreams, setFilteredSourceStreams] = useState<
     Array<SourceStream>
   >([]);
+
+//if any stream has absent cursorfiled then we want increment-all to be disabled.
+  const isAnyCursorAbsent = useMemo(() => {
+  return filteredSourceStreams.some((stream) => !stream.cursorField);
+  }, [filteredSourceStreams]);
+
 
   const [loading, setLoading] = useState<boolean>(false);
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
@@ -279,27 +285,68 @@ const CreateConnectionForm = ({
     newStream: SourceStream
   ) => {
     const newstreams: SourceStream[] = [];
+    // let areAllStreamsChecked = true;
+    // let areAllIncrementalsChecked = true;  // for all checked streams
     for (let idx = 0; idx < sourceStreams.length; idx++) {
+    
       if (sourceStreams[idx].name === stream.name) {
         newstreams.push(newStream);
       } else {
         newstreams.push(sourceStreams[idx]);
       }
-    }
+//checking if the updated source stream has any incremental field or selected stream.
+
+      // if(areAllStreamsChecked && newstreams[idx].selected === false){
+      //   areAllStreamsChecked = false;
+      // }
+   
+      // if(areAllIncrementalsChecked && newstreams[idx].syncMode !== "incremental"){  //are selected streams are incremental
+      //   areAllIncrementalsChecked = false;
+      // }
+    };
+    // if(incrementalAllStreams && newStream.syncMode !== "incremental" ){
+    //   setIncrementalAllStreams(false);
+    // };
+    // if(selectAllStreams && !newStream.selected){
+    //   setSelectAllStreams(false);
+    // };
+    // if(areAllIncrementalsChecked && !incrementalAllStreams){
+    //   setIncrementalAllStreams(true);
+    // };
+    // if(areAllStreamsChecked && !selectAllStreams){
+    //   setSelectAllStreams(true);
+    // };
     setSourceStreams(newstreams);
   };
+
   const selectStream = (checked: boolean, stream: SourceStream) => {
-    updateThisStreamTo_(stream, { ...stream, selected: checked });
+    const destinationMode = !checked && stream.destinationSyncMode !== "overwrite"
+      ? "overwrite"
+      : stream.destinationSyncMode;
+
+    const syncMode = checked && incrementalAllStreams
+      ? "incremental"
+      : !checked && stream.syncMode === "incremental"
+        ? "full_refresh"
+        : stream.syncMode;    
+    updateThisStreamTo_(stream, { ...stream, selected: checked, destinationSyncMode: destinationMode, syncMode });
   };
+
   const setStreamIncr = (checked: boolean, stream: SourceStream) => {
     if (checked && stream.destinationSyncMode === "overwrite") {
       errorToast("Cannot use Overwrite when sync mode is incremental", [], globalContext);
-      return;
     }
+    //checking the sync mode based on incremental.
+    const destinationMode = checked && stream.destinationSyncMode === "overwrite"
+      ? "append_dedup"
+      : !checked && stream.destinationSyncMode !== "overwrite"
+        ? "overwrite"
+        : stream.destinationSyncMode;
+
     updateThisStreamTo_(stream, {
       ...stream,
       syncMode: checked ? 'incremental' : 'full_refresh',
-      // destinationSyncMode: checked ? 'append' : stream.destinationSyncMode
+      destinationSyncMode: destinationMode,
     });
   };
   const setDestinationSyncMode = (value: string, stream: SourceStream) => {
@@ -312,29 +359,52 @@ const CreateConnectionForm = ({
 
   const handleSyncAllStreams = (checked: boolean) => {
     setSelectAllStreams(checked);
+    if(!checked && incrementalAllStreams){
+      setIncrementalAllStreams(false);
+    }
+
     const sourceStreamsSlice: Array<SourceStream> = sourceStreams.map(
-      (stream: SourceStream) => ({ ...stream, selected: checked })
+      (stream: SourceStream) => {
+        const destinationMode = !checked && stream.destinationSyncMode !== "overwrite"
+          ? "overwrite"
+          : stream.destinationSyncMode;
+
+        const syncMode = !checked && stream.syncMode === "incremental"
+          ? "full_refresh"
+          : stream.syncMode;
+
+        return { ...stream, selected: checked, destinationSyncMode: destinationMode, syncMode }
+
+      }
     );
+  
     setSourceStreams(sourceStreamsSlice);
   };
 
   const handleIncrementalAllStreams = (checked: boolean) => {
     let ifAnyOverwritePresent = false;
-    const sourceStreamsSlice: Array<SourceStream>  = sourceStreams.map(
+    const sourceStreamsSlice: Array<SourceStream> = sourceStreams.map(
       (stream: SourceStream) => {
-        if(stream.destinationSyncMode === "overwrite"){
+        if (stream.destinationSyncMode === "overwrite") {
           ifAnyOverwritePresent = true;
         }
+        //checking if any sync mode is overwrite.
+        const destinationMode = checked && stream.destinationSyncMode === "overwrite"
+          ? "append_dedup"
+          : !checked && stream.destinationSyncMode !== "overwrite"
+            ? "overwrite"
+            : stream.destinationSyncMode;
+
         return {
           ...stream,
           syncMode: checked ? 'incremental' : 'full_refresh',
+          destinationSyncMode: destinationMode
         };
       }
     );
 
-    if(ifAnyOverwritePresent){
+    if (ifAnyOverwritePresent) {
       errorToast("Cannot use Overwrite when sync mode is incremental", [], globalContext)
-      return;
     }
 
     setIncrementalAllStreams(checked);
@@ -365,7 +435,6 @@ const CreateConnectionForm = ({
       setFilteredSourceStreams(sourceStreams);
     }
   };
-
   useEffect(() => {
     const filteredStreamNames = filteredSourceStreams.map(
       (stream: SourceStream) => stream.name
@@ -476,7 +545,7 @@ const CreateConnectionForm = ({
                         <Switch
                           data-testid={`incremental-all-streams`}
                           checked={incrementalAllStreams}
-                          disabled={sourceStreams[0]?.cursorField ? false : true}
+                          disabled={isAnyCursorAbsent}
                           onChange={(event) =>
                             handleIncrementalAllStreams(event.target.checked)
                           }
@@ -494,7 +563,7 @@ const CreateConnectionForm = ({
                     .map((stream, idx: number) => {
                       const ifIncremental = stream.syncMode === 'incremental' ? true : false;
                       return (
-                      <TableRow key={stream.name}>
+                        <TableRow key={stream.name}>
                           <TableCell
                             key="name"
                             align="center"
@@ -575,7 +644,7 @@ const CreateConnectionForm = ({
                           </TableCell>
                         </TableRow>
                       )
-                      }
+                    }
                     )}
                 </TableBody>
               </Table>
