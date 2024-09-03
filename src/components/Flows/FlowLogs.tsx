@@ -153,7 +153,7 @@ const LogsContainer = ({
     event: React.MouseEvent<HTMLElement>,
     newAction: 'detail' | 'summary' | null
   ) => {
-    if (newAction === 'summary' && summarizedLogs.length < 1) {
+    if (newAction === 'summary' && summarizedLogs?.length < 1) {
       summarizeLogs();
     }
     setAction(newAction);
