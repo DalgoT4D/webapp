@@ -163,7 +163,7 @@ const LogsContainer = ({
     setLogsLoaded(false);
     (async () => {
       try {
-        const pathParam: String = run?.kind == 'task-run' ? flowRunId : run.id;
+        const pathParam: string = run?.kind == 'task-run' ? flowRunId : run.id;
         const queryParams: any = {
           ...(run?.kind == 'task-run' && { task_run_id: run.id }),
           offset: Math.max(flowRunOffset, 0),
