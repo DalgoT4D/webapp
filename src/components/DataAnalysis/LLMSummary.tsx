@@ -1,12 +1,13 @@
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import Image from 'next/image';
 import InfoIcon from '@/assets/icons/info.svg';
 import DalgoIcon from '@/assets/icons/dalgoIcon.svg';
 import CopyIcon from '@/assets/icons/content_copy.svg';
 import ThumbsupIcon from '@/assets/icons/thumb_up.svg';
 import ThumbsDownIcon from '@/assets/icons/thumb_up (1).svg';
+import { memo } from 'react';
 
-export const LLMSummary = () => {
+export const LLMSummary = memo(({ llmSummary }: { llmSummary: string }) => {
   return (
     <>
       <Box sx={{ ...customCss, width: '58%' }}>
@@ -49,7 +50,7 @@ export const LLMSummary = () => {
               src={DalgoIcon}
               alt="logout icon"
             />
-
+            <Typography>{llmSummary}</Typography>
             <Box
               sx={{
                 display: 'flex',
@@ -113,7 +114,7 @@ export const LLMSummary = () => {
       </Box>
     </>
   );
-};
+});
 
 const customCss = {
   display: 'flex',
