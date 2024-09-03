@@ -27,7 +27,10 @@ import moment from 'moment';
 import { FlowInterface } from './Flows';
 import { delay, formatDuration } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionLogs';
-import { defaultLoadMoreLimit, flowRunLogsOffsetLimit } from '@/config/constant';
+import {
+  defaultLoadMoreLimit,
+  flowRunLogsOffsetLimit,
+} from '@/config/constant';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
@@ -107,7 +110,7 @@ const LogsContainer = ({
 }) => {
   const globalContext = useContext(GlobalContext);
   const [action, setAction] = useState<'detail' | 'summary' | null>(null);
-  const [logsLoaded, setLogsLoaded] = useState<boolean>(false)
+  const [logsLoaded, setLogsLoaded] = useState<boolean>(false);
   const [flowRunOffset, setFlowRunOffset] = useState<number>(0);
   const [logs, setLogs] = useState<Array<any>>([]);
   const [summarizedLogs, setSummarizedLogs] = useState([]);
@@ -160,12 +163,17 @@ const LogsContainer = ({
     setLogsLoaded(false);
     (async () => {
       try {
+        const pathParam: String = run?.kind == 'task-run' ? flowRunId : run.id;
+        const queryParams: any = {
+          ...(run?.kind == 'task-run' && { task_id: run.id }),
+          offset: Math.max(flowRunOffset, 0),
+          limit: flowRunLogsOffsetLimit,
+        };
         const data = await httpGet(
           session,
-          `prefect/flow_runs/${run?.kind == 'task-run' ? flowRunId : run.id}/logs?task_run_id=${run?.kind == 'task-run' ? run.id : ''}&offset=${Math.max(
-            flowRunOffset,
-            0
-          )}&limit=${flowRunLogsOffsetLimit}`
+          `prefect/flow_runs/${pathParam}/logs?${new URLSearchParams(
+            queryParams
+          ).toString()}`
         );
 
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
@@ -231,7 +239,11 @@ const LogsContainer = ({
             onChange={handleAction}
             aria-label="text alignment"
           >
-            <ToggleButton value="detail" aria-label="left" onClick={() => !action && fetchLogs()}>
+            <ToggleButton
+              value="detail"
+              aria-label="left"
+              onClick={() => !action && fetchLogs()}
+            >
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
@@ -273,28 +285,23 @@ const LogsContainer = ({
             )
           : null}
 
-        {action === 'detail' ?
+        {action === 'detail' ? (
           <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
             <Box sx={{ wordBreak: 'break-word' }}>
               {logs?.map((log: any, idx) => (
-                <Box key={idx}>
-                  - {log?.message || log}
-                </Box>
+                <Box key={idx}>- {log?.message || log}</Box>
               ))}
             </Box>
-            {flowRunOffset > 0 && (
-              logsLoaded ? (
+            {flowRunOffset > 0 &&
+              (logsLoaded ? (
                 <Button data-testid="offset" onClick={() => fetchLogs()}>
                   Fetch more
                 </Button>
-              )
-                : (
-                  <CircularProgress />
-                )
-
-            )}
+              ) : (
+                <CircularProgress />
+              ))}
           </Alert>
-          : null}
+        ) : null}
       </Box>
     </Box>
   );
