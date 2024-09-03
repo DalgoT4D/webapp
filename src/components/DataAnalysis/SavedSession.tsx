@@ -9,12 +9,14 @@ import {
   TableHead,
   TableRow,
   Button,
+  TablePagination,
 } from '@mui/material';
 
 import Image from 'next/image';
 import InfoIcon from '@/assets/icons/info.svg';
 import CloseIcon from "@/assets/icons/close_small.svg";
 import ArrowIcon from "@/assets/icons/arrow_back_ios.svg"
+import { useState } from 'react';
 
 const dataArray = [
   {
@@ -80,23 +82,13 @@ const dataArray = [
     name: 'Charlie Davis',
     createdBy: 'user@example.com',
   },
-  {
-    sno: 10,
-    createdOn: '2024-07-04',
-    updatedOn: '2024-07-05',
-    name: 'Bob Brown',
-    createdBy: 'admin@example.com',
-  },
-  {
-    sno: 11,
-    createdOn: '2024-07-05',
-    updatedOn: '2024-07-06',
-    name: 'Charlie Davis',
-    createdBy: 'user@example.com',
-  },
 ];
 
-export const SavedSession = ({ open, onClose }:{open: boolean, onClose:any}) => {
+export const SavedSession = ({ open, onClose }: { open: boolean, onClose: any }) => {
+  const [pageSize, setPageSize] = useState(5);
+  const [totalCount, setTotalCount] = useState(0); // Total count of rows
+  const [pageCount, setPageCount] = useState(0); // Total number of pages
+  const [currentPageIndex, setCurrentPageIndex] = useState(1); // Page index
   return (
     <>
       <Dialog
@@ -150,8 +142,8 @@ export const SavedSession = ({ open, onClose }:{open: boolean, onClose:any}) => 
                 alt="info icon"
               />
             </Box>
-           <Image src={CloseIcon} style={{cursor: "pointer"}} onClick={onClose} alt="close icon"/>
-            
+            <Image src={CloseIcon} style={{ cursor: "pointer" }} onClick={onClose} alt="close icon" />
+
           </Box>
 
           <TableContainer
@@ -305,14 +297,29 @@ export const SavedSession = ({ open, onClose }:{open: boolean, onClose:any}) => 
                           top: 8
                         }}
                       >
-                        OPEN    <Image src={ArrowIcon} alt="close icon"/>
+                        OPEN    <Image src={ArrowIcon} alt="close icon" />
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))}
+
+
               </TableBody>
+           
             </Table>
           </TableContainer>
+          <TablePagination
+                rowsPerPageOptions={[5, 10, 25, 100]}
+                component="div"
+                count={totalCount}
+                rowsPerPage={pageSize}
+                page={currentPageIndex - 1}
+                onPageChange={(e, newPage) => setCurrentPageIndex(newPage + 1)}
+                onRowsPerPageChange={(e: any) => {
+                  setPageSize(e.target.value);
+                  setCurrentPageIndex(1);
+                }}
+              />
         </Box>
       </Dialog>
     </>

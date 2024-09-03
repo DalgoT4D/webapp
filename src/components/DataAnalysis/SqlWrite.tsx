@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  CircularProgress,
   TextField,
   Typography,
 } from '@mui/material';
@@ -9,24 +8,23 @@ import Image from 'next/image';
 import SavedIcon from '@/assets/icons/folder.svg';
 import InfoIcon from '@/assets/icons/info.svg';
 import CloseIcon from '@/assets/icons/close_small.svg';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { SavedSession } from './SavedSession';
-import { FullPageBackground } from '../UI/FullScreenLoader/FullScreenLoader';
-import { OverWriteBox } from './OverwriteBox';
-import { ConfirmSaveAs } from './ConfirmSaveAs';
-import { UnsavedChanges } from './UnsavedChanges';
-import { FeedBackForm } from './Feedback';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { errorToast } from '../ToastMessage/ToastHelper';
 
-const Areas_Of_Development= "Areas of Development";
-const Brightspots = "Brightspots";
-const Summarize = "Summarize";
-export const SqlWrite = () => {
+
+const Areas_Of_Development = 'Areas of Development';
+const Brightspots = 'Brightspots';
+const Summarize = 'Summarize';
+
+export const SqlWrite = ({ getLLMSummary }: { getLLMSummary: any }) => {
   const [customPromptToggle, setCustomPromptToggle] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [defaultPrompt, setDefaultPrompt] = useState('');
   const [sqlText, setSqlText] = useState('');
-  const [loading, setLoading] = useState(false);
   const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
+  const globalContext = useContext(GlobalContext);
   const handleCloseSavedSession = () => {
     setOpenSavedSessionDialog(false);
   };
@@ -38,14 +36,24 @@ export const SqlWrite = () => {
     }
     setDefaultPrompt(promptText);
   };
-  const handleSubmit = () => {
-    if ((sqlText && customPrompt) || (sqlText && defaultPrompt)) {
-      //api call
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
+
+  const handleSubmit = async () => {
+    if (!sqlText) {
+      errorToast('Please enter a SELECT sql query', [], globalContext);
+      return;
     }
+    if (!customPrompt && !defaultPrompt) {
+      errorToast(
+        'Either select a default prompt or write a custom prompt',
+        [],
+        globalContext
+      );
+      return;
+    }
+    getLLMSummary({
+      sqlText,
+      user_prompt: customPrompt || defaultPrompt,
+    });
   };
   return (
     <>
@@ -102,7 +110,7 @@ export const SqlWrite = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexGrow: 1,
-                  height: "2rem"
+                  height: '2rem',
                 }}
                 onClick={() => {
                   setOpenSavedSessionDialog(true);
@@ -119,8 +127,7 @@ export const SqlWrite = () => {
                 <Button
                   variant="contained"
                   id="create-new-button"
-                  
-                  sx={{ width: '100%',height: "2rem" }}
+                  sx={{ width: '100%', height: '2rem' }}
                 >
                   <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>
                     + New
@@ -130,12 +137,12 @@ export const SqlWrite = () => {
             </Box>
           </Box>
           {/* second box */}
-          <Box sx={{ width: '100%',padding: "1.25rem 0"}}>
+          <Box sx={{ width: '100%', padding: '1.25rem 0' }}>
             <hr></hr>
           </Box>
           {/* Third box with sql editor */}
 
-          <Box sx={{ width: '100%', marginTop: '1.5rem 0', }}>
+          <Box sx={{ width: '100%', marginTop: '1.5rem 0' }}>
             <Typography
               sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
             >
@@ -145,12 +152,10 @@ export const SqlWrite = () => {
             {/* This contains the sql filter */}
             <TextField
               id="outlined-multiline-static"
-              sx={{ backgroundColor: 'transparent', height: "11rem" }}
-              defaultValue=""
+              sx={{ backgroundColor: 'transparent', height: '11rem' }}
               fullWidth
               multiline
               rows={6}
-              
               value={sqlText}
               onChange={(e) => {
                 setSqlText(e.target.value);
@@ -211,7 +216,7 @@ export const SqlWrite = () => {
                 gap: '12px',
                 width: '100%',
                 flexWrap: 'wrap',
-                height: "2.75rem"
+                height: '2.75rem',
               }}
             >
               <Button
@@ -227,7 +232,7 @@ export const SqlWrite = () => {
                 }}
               >
                 <Typography sx={{ fontWeight: 600, fontSize: '14px' }}>
-                 {Brightspots}
+                  {Brightspots}
                 </Typography>
               </Button>
               <Button
@@ -253,7 +258,7 @@ export const SqlWrite = () => {
                 id="create-new-button"
                 sx={{
                   flex: '1 1 auto',
-                 
+
                   backgroundColor:
                     defaultPrompt === Summarize ? '#05443e' : '#00897B',
                 }}
@@ -308,7 +313,7 @@ export const SqlWrite = () => {
             ) : (
               <Button
                 variant="contained"
-                sx={{ width: '100%', height: "2.75rem", borderRadius: '6px' }}
+                sx={{ width: '100%', height: '2.75rem', borderRadius: '6px' }}
                 onClick={() => {
                   if (defaultPrompt) {
                     setDefaultPrompt('');
@@ -340,23 +345,7 @@ export const SqlWrite = () => {
       <SavedSession
         open={openSavedSessionDialog}
         onClose={handleCloseSavedSession}
-      />
-      {loading && (
-        <>
-          <FullPageBackground>
-            {/* <ConfirmSaveAs />
-            <UnsavedChanges /> */}
-            <FeedBackForm />
-            {/* <OverWriteBox/> */}
-            {/* <CircularProgress sx={{ color: '#FFFFFF' }} />
-            <Typography
-              sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}
-            >
-              Prepping your data output...
-            </Typography> */}
-          </FullPageBackground>
-        </>
-      )}
+      /> 
     </>
   );
 };
