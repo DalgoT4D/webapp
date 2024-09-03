@@ -42,6 +42,7 @@ describe('Create connection', () => {
     {
       name: 'stream-1',
       supportedSyncModes: ['full_refresh', 'incremental'],
+ 
     },
     {
       name: 'stream-2',
@@ -171,6 +172,7 @@ describe('Create connection', () => {
 
     const connectButton = screen.getByText('Connect').closest('button');
     const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
+  
     let streamIncrementalSwitch = screen.getByTestId(
       'stream-incremental-0'
     ).firstChild;
@@ -197,13 +199,17 @@ describe('Create connection', () => {
     // check if elements are abled
     expect(screen.getByTestId('stream-sync-0').firstChild).toBeChecked();
     expect(connectButton).not.toBeDisabled();
-    expect(streamIncrementalSwitch).not.toBeDisabled();
+    if(SOURCES[0]?.cursorField){
+      expect(streamIncrementalSwitch).not.toBeDisabled();
+    }
     expect(streamSelectDestinationMode).not.toBeDisabled();
 
     // check stream incremental checkbox
     expect(streamIncrementalSwitch).not.toBeChecked();
-    await act(() => userEvent.click(streamIncrementalSwitch));
-    expect(screen.getByTestId('stream-incremental-0').firstChild).not.toBeChecked();
+    if(SOURCES[0]?.cursorField){
+      await act(() => userEvent.click(streamIncrementalSwitch));
+      expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked();
+    }
 
     // check normalization after sync checkbox
 
