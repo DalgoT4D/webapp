@@ -110,8 +110,8 @@ const LowerSection = ({
     event: React.SyntheticEvent,
     newValue: LowerSectionTabValues
   ) => {
-    trackAmplitudeEvent(`[${newValue}-tab] Button Clicked`)
-        setSelectedTab(newValue);
+    trackAmplitudeEvent(`[${newValue}-tab] Button Clicked`);
+    setSelectedTab(newValue);
   };
   return (
     <Box sx={{ height: 'unset' }}>
@@ -237,7 +237,7 @@ const FlowEditor = ({}) => {
     }
   };
 
-  const handleRunWorkflow = async () => {
+  const handleRunWorkflow = async (runParams: object) => {
     try {
       setLockUpperSection(true);
       // tab to logs
@@ -245,10 +245,12 @@ const FlowEditor = ({}) => {
       // Clear previous logs
       setDbtRunLogs([]);
 
+      console.log('data passed for run_dbt_via_celery', runParams);
+
       const response: any = await httpPost(
         session,
         'dbt/run_dbt_via_celery/',
-        {}
+        runParams
       );
 
       successToast('Dbt run initiated', [], globalContext);
@@ -360,7 +362,7 @@ const FlowEditor = ({}) => {
 
   useEffect(() => {
     if (canvasAction.type === 'run-workflow') {
-      handleRunWorkflow();
+      handleRunWorkflow(canvasAction.data);
     }
 
     if (canvasAction.type === 'sync-sources') {
