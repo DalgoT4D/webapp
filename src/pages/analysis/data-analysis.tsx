@@ -12,7 +12,6 @@ import {
 } from '@/components/ToastMessage/ToastHelper';
 import { useContext, useState } from 'react';
 import { FullPageBackground } from '@/components/UI/FullScreenLoader/FullScreenLoader';
-import { useLockCanvas } from '@/customHooks/useLockCanvas';
 
 export default function DataAnalysis() {
   const { data: session } = useSession();
@@ -101,7 +100,7 @@ export default function DataAnalysis() {
         {/* Sql filter */}
         <SqlWrite getLLMSummary={getLLMSummary} prompt={prompt} sessionId={sessionId}  loading={loading}/>
         {/* LLM summary  */}
-        <LLMSummary llmSummary={summary} sessionId={sessionId} prompt={prompt}  />
+        <LLMSummary llmSummary={summary} oldSessionId="" newSessionId={sessionId} prompt={prompt}  />
         {loading && (
           <>
             <FullPageBackground>
