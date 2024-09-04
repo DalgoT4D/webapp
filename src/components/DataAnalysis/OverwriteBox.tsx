@@ -1,96 +1,107 @@
-import { Box, Button, TextField, Typography } from '@mui/material';
-import CloseIcon from '@/assets/icons/close_small.svg';
+import React, { useState } from 'react';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+} from '@mui/material';
 import Image from 'next/image';
-export const OverWriteBox = () => {
+import CloseIcon from '@/assets/icons/close_small.svg';
+
+export const OverWriteDialog = ({ open, setIsBoxOpen, sessionName }: { open: boolean, sessionName: string, setIsBoxOpen: (a: boolean) => void }) => {
+  const [newSessionName, setNewSessionName] = useState(sessionName);
+  const handleClose = () => (setIsBoxOpen(false));
   return (
     <>
-      {/* main box */}
-      <Box
-        sx={{
-          backgroundColor: '#FFFFFF',
-          padding: '2.5rem 2rem',
-          width: '40%',
-          borderRadius: '10px',
-          position: 'relative',
-        }}
-      >
-        {/* headings */}
-        <Image
-          style={{
-            width: '2.5rem',
-            height: '2.5rem',
-            position: 'absolute',
-            top: '8%',
-            right: '3%',
-          }}
-          src={CloseIcon}
-          alt="info icon"
-        />
-        <Box>
-          <Box>
+      {/* Dialog Box */}
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        {/* Dialog Title with close button */}
+        <DialogTitle>
+          <Box display="flex" alignItems="center">
             <Typography
               sx={{ color: '#000000', fontWeight: '600', fontSize: '1.5rem' }}
             >
               Overwrite Existing Session
             </Typography>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontSize: '14px',
-                color: 'rgba(0, 0, 0, 0.6)',
-              }}
+            <IconButton
+              sx={{ marginLeft: 'auto' }}
+              onClick={handleClose}
+              aria-label="close"
             >
-              The session with this name already exists. Do you want to
-              overwrite?
-            </Typography>
+              <Image src={CloseIcon} alt="Close" width={20} height={20} />
+            </IconButton>
           </Box>
+        </DialogTitle>
 
-          {/* Input */}
-          <Box sx={{ marginTop: '1.75rem' }}>
-            <TextField name="overwrite" />
-          </Box>
-          {/* final box */}
-          <Box
+        {/* Dialog Content */}
+        <DialogContent>
+          <Typography
             sx={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '12px',
-              flexWrap: 'wrap',
+              fontWeight: '600',
+              fontSize: '14px',
+              color: 'rgba(0, 0, 0, 0.6)',
             }}
           >
-            <Button
-              variant="contained"
-              sx={{
-                width: '6.75rem',
-                padding: '8px 0',
-                borderRadius: '5px',
-              }}
-            >
-              OverWrite
-            </Button>
-            <Button
+            The session with this name already exists. Do you want to overwrite?
+          </Typography>
+
+          {/* Input Field */}
+          <Box sx={{ marginTop: '1.75rem' }}>
+            <TextField
+              name="overwrite"
+              fullWidth
+              label="Session Name"
               variant="outlined"
-              sx={{
-                width: '6.75rem',
-                padding: '8px 0',
-                borderRadius: '5px',
-              }}
-            >
-              Save as new
-            </Button>
-            <Button
-              variant="outlined"
-              sx={{
-                width: '6.75rem',
-                padding: '8px 0',
-                borderRadius: '5px',
-              }}
-            >
-              Cancel
-            </Button>
+              value={newSessionName}
+              onChange={(e) => { setNewSessionName(e.target.value) }}
+            />
           </Box>
-        </Box>
-      </Box>
+        </DialogContent>
+
+        {/* Dialog Actions */}
+        <DialogActions sx={{ padding: '1.5rem', display: 'flex', gap: '12px' }}>
+          <Button
+            variant="contained"
+            sx={{
+              width: '6.75rem',
+              padding: '8px 0',
+              borderRadius: '5px',
+            }}
+            onClick={handleClose} // Overwrite logic here
+          >
+            Overwrite
+          </Button>
+          <Button
+            variant="outlined"
+            sx={{
+              width: '6.75rem',
+              padding: '8px 0',
+              borderRadius: '5px',
+            }}
+            onClick={handleClose} // Save as new logic here
+          >
+            Save as new
+          </Button>
+          <Button
+            variant="outlined"
+            sx={{
+              width: '6.75rem',
+              padding: '8px 0',
+              borderRadius: '5px',
+            }}
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
+
+
