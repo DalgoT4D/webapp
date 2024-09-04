@@ -1,4 +1,4 @@
-import { Backdrop, Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import Image from 'next/image';
 import InfoIcon from '@/assets/icons/info.svg';
 import DalgoIcon from '@/assets/icons/dalgoIcon.svg';
@@ -6,13 +6,12 @@ import CopyIcon from '@/assets/icons/content_copy.svg';
 import ThumbsupIcon from '@/assets/icons/thumb_up.svg';
 import ThumbsDownIcon from '@/assets/icons/thumb_up (1).svg';
 import { memo, useState } from 'react';
-import { httpPost } from '@/helpers/http';
 import {  OverWriteDialog } from './OverwriteBox';
-import { FullPageBackground } from '../UI/FullScreenLoader/FullScreenLoader';
 
-export const LLMSummary = memo(({ llmSummary, sessionId , prompt }: { llmSummary: string, sessionId: string, prompt: string }) => {
+export const LLMSummary = memo(({ llmSummary, oldSessionId, newSessionId , prompt }: { llmSummary: string, oldSessionId: string, newSessionId: string , prompt: string }) => {
   const [isBoxOpen, setIsBoxOpen] = useState(false); 
-  const sessionName = prompt ?`${prompt}_${Date.now()}` : "";
+  const sessionName = `${prompt}_${Date.now()}`;
+  const modalName = oldSessionId ? "OVERWRITE": "SAVE"
   return (
     <>
       <Box sx={{ ...customCss, width: '58%' }}>
@@ -121,7 +120,7 @@ export const LLMSummary = memo(({ llmSummary, sessionId , prompt }: { llmSummary
           </Box>
         </Box>
         {isBoxOpen && (
-          <OverWriteDialog open={isBoxOpen} setIsBoxOpen={setIsBoxOpen} sessionName={sessionName} />
+          <OverWriteDialog open={isBoxOpen} setIsBoxOpen={setIsBoxOpen} session_name={sessionName} modalName={modalName} oldSessionId={oldSessionId} newSessionId={newSessionId}/>
         )}
       </Box>
     </>
