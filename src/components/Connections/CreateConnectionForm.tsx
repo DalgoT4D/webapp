@@ -175,6 +175,14 @@ const CreateConnectionForm = ({
         }
         setLoading(false);
       })();
+    }else{
+      reset();
+      setConnectionId('');
+      setSourceStreams([]);
+      setFilteredSourceStreams([]);
+      setSelectAllStreams(false);
+      setIncrementalAllStreams(false);
+      searchInputRef.current = '';
     }
   }, [connectionId]);
 
@@ -363,7 +371,7 @@ const CreateConnectionForm = ({
   const FormContent = () => {
     return (
       <>
-        <Box sx={{ pt: 2, pb: 4 }}>
+        <Box key={connectionId ? "edit-mode" : "add-new-mode"} sx={{ pt: 2, pb: 4 }}>
           <Input
             data-testid="connectionName"
             sx={{ width: '100%' }}
@@ -566,6 +574,7 @@ const CreateConnectionForm = ({
   return (
     <>
       <CustomDialog
+        key={connectionId ? "edit-custom" : "new-custom"}
         maxWidth={false}
         data-testid="dialog"
         title={connectionId ? 'Edit this connection' : 'Add a new connection'}
