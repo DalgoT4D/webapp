@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Banner from '@/assets/images/banner.png';
 import Logo from '@/assets/images/logo.svg';
 import { ReactNode } from 'react';
+import moment from 'moment';
 
 type AuthProps = {
   children: ReactNode;
@@ -59,7 +60,7 @@ export const Auth: React.FC<AuthProps> = ({
               </Box>
             </Paper>
             <Typography variant="body1" mt={4} pb={3}>
-              2023, DALGO ALL RIGHTS RESERVED
+              {moment().year()}, DALGO ALL RIGHTS RESERVED
             </Typography>
           </Grid>
         </Grid>
