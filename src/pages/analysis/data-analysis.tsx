@@ -1,27 +1,54 @@
-import { Box, CircularProgress, Typography } from '@mui/material';
-
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { LLMSummary } from '@/components/DataAnalysis/LLMSummary';
 import { SqlWrite } from '@/components/DataAnalysis/SqlWrite';
 import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
 import { GlobalContext } from '@/contexts/ContextProvider';
+
 import {
   errorToast,
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { FullPageBackground } from '@/components/UI/FullScreenLoader/FullScreenLoader';
+import { SavedSession } from '@/components/DataAnalysis/SavedSession';
+import { TopBar } from '@/components/DataAnalysis/TopBar';
 
 export default function DataAnalysis() {
   const { data: session } = useSession();
-  const [{ prompt, summary, sessionId }, setllmSummaryResult] = useState({
+  const [{ prompt, summary, newSessionId }, setllmSummaryResult] = useState({
     prompt: "",
     summary: "",
-    sessionId: ""
+    newSessionId: "",
   });
+
   const globalContext = useContext(GlobalContext);
   const [loading, setLoading] = useState(false);
+  const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
+  const [oldSessionMetaInfo, setOldSessionMetaInfo] = useState({
+    session_status: "",
+    sqlText: "",
+    taskId: "",
+    session_name: "",
+    oldSessionId: "",
+  });
+  const handleCloseSavedSession = () => {
+    setOpenSavedSessionDialog(false);
+  };
+  const handleOpenSavedSession = () => {
+    setOpenSavedSessionDialog(true);
+  }
+  const handleEditSession = (info: any) => {
+    setOldSessionMetaInfo({
+      ...oldSessionMetaInfo, ...info
+    })
+    setllmSummaryResult({
+      prompt: info.prompt,
+      summary: info.summary,
+      newSessionId: ""
+    })
+  }
 
   //polling
   const pollForTaskRun = async (taskId: string) => {
@@ -39,10 +66,9 @@ export default function DataAnalysis() {
         return;
       } else {
         successToast(lastMessage.message, [], globalContext);
-        setllmSummaryResult({
-          prompt: lastMessage?.result?.response[0]?.prompt,
-          summary: lastMessage?.result?.response[0].response,
-          sessionId: lastMessage?.result?.session_id
+        setllmSummaryResult((prev)=>{
+          return {...prev, summary: lastMessage?.result?.response[0].response,
+          newSessionId: lastMessage?.result?.session_id}
         });
       }
     } catch (err: any) {
@@ -64,7 +90,6 @@ export default function DataAnalysis() {
     try {
       const response = await httpPost(session, `warehouse/ask/`, {
         sql: sqlText,
-        // session_name: `unique-${Date.now()}`,
         user_prompt,
       });
       console.log(response, 'taskid');
@@ -84,8 +109,10 @@ export default function DataAnalysis() {
       console.error(err);
       setLoading(false);
       errorToast(err.message, [], globalContext);
-    } 
+    }
   };
+
+
 
   return (
     <>
@@ -97,10 +124,34 @@ export default function DataAnalysis() {
           gap: '1rem',
         }}
       >
-        {/* Sql filter */}
-        <SqlWrite getLLMSummary={getLLMSummary} prompt={prompt} sessionId={sessionId}  loading={loading}/>
-        {/* LLM summary  */}
-        <LLMSummary llmSummary={summary} oldSessionId="" newSessionId={sessionId} prompt={prompt}  />
+        <Box
+          sx={{
+            ...customCss,
+            width: '42%',
+            flexDirection: "column"
+          }}
+        >
+          {/* Top saved Session Option */}
+          <TopBar handleOpenSavedSession={handleOpenSavedSession} />
+
+          {/* SQL write Area */}
+          <SqlWrite 
+          getLLMSummary={getLLMSummary} 
+          prompt={ prompt} 
+          newSessionId={newSessionId}
+          oldSessionMetaInfo={oldSessionMetaInfo} 
+          loading={loading} />
+        </Box>
+
+          {/* Final Summary */}
+        <LLMSummary
+          llmSummary={summary}
+          newSessionId={newSessionId}
+          oldSessionMetaInfo={oldSessionMetaInfo}
+          prompt={prompt}
+        />
+
+          {/* Loader full screen */}
         {loading && (
           <>
             <FullPageBackground>
@@ -113,7 +164,23 @@ export default function DataAnalysis() {
             </FullPageBackground>
           </>
         )}
+
+        {/* Saved Session Dailog */}
+        {openSavedSessionDialog && <SavedSession
+          open={openSavedSessionDialog}
+          onClose={handleCloseSavedSession}
+          handleEditSession={handleEditSession}
+        />}
       </Box>
     </>
   );
 }
+
+const customCss = {
+  display: 'flex',
+  boxShadow: '0 4px 8px rgba(9, 37, 64, 0.08)',
+  backgroundColor: '#FFFFFF',
+  borderRadius: '12px',
+  padding: '2rem',
+  //   borderColor: '#FFFFFF',
+};
