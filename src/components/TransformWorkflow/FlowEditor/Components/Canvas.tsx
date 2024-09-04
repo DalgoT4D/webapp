@@ -5,6 +5,8 @@ import {
   Button,
   CircularProgress,
   Divider,
+  MenuItem,
+  Select,
   Typography,
 } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
@@ -120,13 +122,38 @@ const nodeTypes: NodeTypes = {
   [`${OPERATION_NODE}`]: OperationNode,
 };
 
-const CanvasHeader = ({
-  setCanvasAction,
-}: {
-  setCanvasAction: (...args: any) => void;
-}) => {
+const CanvasHeader = () => {
+  const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { canvasNode, setCanvasNode } = useCanvasNode();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
+  const [selectedAction, setSelectedAction] = useState('');
+
+  const nodeData: any = canvasNode?.data;
+
+  const handleActionChange = (event: any) => {
+    console.log(canvasNode);
+    const action = event.target.value;
+    if (action === 'run') {
+      setCanvasAction({ type: 'run-workflow', data: null });
+    } else if (action === 'run-to-node') {
+      setCanvasAction({
+        type: 'run-workflow',
+        data: { options: { select: `+${nodeData?.input_name}` } },
+      });
+    } else if (action === 'run-from-node') {
+      setCanvasAction({
+        type: 'run-workflow',
+        data: { options: { select: `${nodeData?.input_name}+` } },
+      });
+    }
+  };
+
+  const disableToAndFromNodeRunOptions =
+    !canvasNode ||
+    canvasNode?.data.type != SRC_MODEL_NODE ||
+    canvasNode?.data.input_type != 'model';
+
   return (
     <Box
       sx={{
@@ -144,14 +171,28 @@ const CanvasHeader = ({
       </Typography>
 
       <Box sx={{ marginLeft: 'auto', display: 'flex', gap: '20px' }}>
-        <Button
-          variant="contained"
-          type="button"
-          onClick={() => setCanvasAction({ type: 'run-workflow', data: null })}
+        <Select
+          labelId="run-workflow-action"
+          value={selectedAction}
+          onChange={handleActionChange}
+          label="Action"
           disabled={!permissions.includes('can_run_pipeline')}
+          placeholder="Select Action"
         >
-          Run
-        </Button>
+          <MenuItem value="run">Run</MenuItem>
+          <MenuItem
+            value="run-to-node"
+            disabled={disableToAndFromNodeRunOptions}
+          >
+            Run to node
+          </MenuItem>
+          <MenuItem
+            value="run-from-node"
+            disabled={disableToAndFromNodeRunOptions}
+          >
+            Run from node
+          </MenuItem>
+        </Select>
       </Box>
     </Box>
   );
@@ -510,7 +551,7 @@ const Canvas = ({
           borderTop: '1px #CCD6E2 solid',
         }}
       >
-        <CanvasHeader setCanvasAction={setCanvasAction} />
+        <CanvasHeader />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box
