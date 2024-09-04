@@ -2,7 +2,7 @@ import { Box, Button, Typography } from "@mui/material";
 import Image from "next/image";
 import SavedIcon from '@/assets/icons/folder.svg';
 import InfoIcon from '@/assets/icons/info.svg';
-export const TopBar = ({handleOpenSavedSession}:any) => {
+export const TopBar = ({handleOpenSavedSession, handleNewSession}:any) => {
     return <>
         <Box
             sx={{
@@ -66,6 +66,7 @@ export const TopBar = ({handleOpenSavedSession}:any) => {
                         variant="contained"
                         id="create-new-button"
                         sx={{ width: '100%', height: '2rem' }}
+                        onClick={handleNewSession}
                     >
                         <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>
                             + New

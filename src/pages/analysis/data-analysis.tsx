@@ -10,45 +10,60 @@ import {
   errorToast,
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { FullPageBackground } from '@/components/UI/FullScreenLoader/FullScreenLoader';
 import { SavedSession } from '@/components/DataAnalysis/SavedSession';
 import { TopBar } from '@/components/DataAnalysis/TopBar';
 
 export default function DataAnalysis() {
   const { data: session } = useSession();
-  const [{ prompt, summary, newSessionId }, setllmSummaryResult] = useState({
-    prompt: "",
-    summary: "",
-    newSessionId: "",
-  });
 
+  const [{ prompt, summary, newSessionId }, setllmSummaryResult] = useState({    //initail props
+    prompt: '',
+    summary: '',
+    newSessionId: '',
+  });
   const globalContext = useContext(GlobalContext);
   const [loading, setLoading] = useState(false);
   const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
-  const [oldSessionMetaInfo, setOldSessionMetaInfo] = useState({
-    session_status: "",
-    sqlText: "",
-    taskId: "",
-    session_name: "",
-    oldSessionId: "",
+  const [oldSessionMetaInfo, setOldSessionMetaInfo] = useState({    //while editing,  this contains previous session's metadata
+    session_status: '',
+    sqlText: '',
+    taskId: '',
+    session_name: '',
+    oldSessionId: '',
   });
   const handleCloseSavedSession = () => {
     setOpenSavedSessionDialog(false);
   };
   const handleOpenSavedSession = () => {
     setOpenSavedSessionDialog(true);
-  }
+  };
+  const handleNewSession =()=>{
+    setllmSummaryResult({
+      prompt: '',
+      summary: '',
+      newSessionId: '',
+    })
+    setOldSessionMetaInfo({
+      session_status: '',
+      sqlText: '',
+      taskId: '',
+      session_name: '',
+      oldSessionId: '',
+    })
+  };
   const handleEditSession = (info: any) => {
     setOldSessionMetaInfo({
-      ...oldSessionMetaInfo, ...info
-    })
+      ...oldSessionMetaInfo,
+      ...info,
+    });
     setllmSummaryResult({
       prompt: info.prompt,
       summary: info.summary,
-      newSessionId: ""
-    })
-  }
+      newSessionId: '',
+    });
+  };
 
   //polling
   const pollForTaskRun = async (taskId: string) => {
@@ -59,16 +74,17 @@ export default function DataAnalysis() {
       if (!['completed', 'failed'].includes(lastMessage.status)) {
         await delay(3000);
         await pollForTaskRun(taskId);
-      }
-
-      else if (['failed'].includes(lastMessage.status)) {
+      } else if (['failed'].includes(lastMessage.status)) {
         errorToast(lastMessage.message, [], globalContext);
         return;
       } else {
         successToast(lastMessage.message, [], globalContext);
-        setllmSummaryResult((prev)=>{
-          return {...prev, summary: lastMessage?.result?.response[0].response,
-          newSessionId: lastMessage?.result?.session_id}
+        setllmSummaryResult((prev) => {
+          return {
+            ...prev,
+            summary: lastMessage?.result?.response[0].response,
+            newSessionId: lastMessage?.result?.session_id,
+          };
         });
       }
     } catch (err: any) {
@@ -78,6 +94,7 @@ export default function DataAnalysis() {
       setLoading(false);
     }
   };
+
   // get llm summary
   const getLLMSummary = async ({
     sqlText,
@@ -112,11 +129,9 @@ export default function DataAnalysis() {
     }
   };
 
-
-
   return (
     <>
-      <Box // main box
+      <Box
         sx={{
           p: '3rem 3rem',
           width: '100%',
@@ -128,22 +143,23 @@ export default function DataAnalysis() {
           sx={{
             ...customCss,
             width: '42%',
-            flexDirection: "column"
+            flexDirection: 'column',
           }}
         >
           {/* Top saved Session Option */}
-          <TopBar handleOpenSavedSession={handleOpenSavedSession} />
+          <TopBar handleOpenSavedSession={handleOpenSavedSession} handleNewSession={handleNewSession} />
 
           {/* SQL write Area */}
-          <SqlWrite 
-          getLLMSummary={getLLMSummary} 
-          prompt={ prompt} 
-          newSessionId={newSessionId}
-          oldSessionMetaInfo={oldSessionMetaInfo} 
-          loading={loading} />
+          <SqlWrite
+            getLLMSummary={getLLMSummary}
+            prompt={prompt}
+            newSessionId={newSessionId}
+            oldSessionMetaInfo={oldSessionMetaInfo}
+            loading={loading}
+          />
         </Box>
 
-          {/* Final Summary */}
+        {/* Final Summary */}
         <LLMSummary
           llmSummary={summary}
           newSessionId={newSessionId}
@@ -151,7 +167,7 @@ export default function DataAnalysis() {
           prompt={prompt}
         />
 
-          {/* Loader full screen */}
+        {/* Loader full screen */}
         {loading && (
           <>
             <FullPageBackground>
@@ -166,11 +182,13 @@ export default function DataAnalysis() {
         )}
 
         {/* Saved Session Dailog */}
-        {openSavedSessionDialog && <SavedSession
-          open={openSavedSessionDialog}
-          onClose={handleCloseSavedSession}
-          handleEditSession={handleEditSession}
-        />}
+        {openSavedSessionDialog && (
+          <SavedSession
+            open={openSavedSessionDialog}
+            onClose={handleCloseSavedSession}
+            handleEditSession={handleEditSession}
+          />
+        )}
       </Box>
     </>
   );
