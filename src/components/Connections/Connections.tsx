@@ -268,7 +268,11 @@ export const Connections = () => {
     setResetDeploymentId(connection.resetConnDeploymentId);
     setAnchorEl(event);
   };
-  const handleClose = () => {
+  const handleClose = (isEditMode?: string) => {
+    if(isEditMode !== "EDIT"){
+      setConnectionId("");
+      setResetDeploymentId("");
+    }
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
@@ -626,7 +630,7 @@ export const Connections = () => {
   };
 
   const handleEditConnection = () => {
-    handleClose();
+    handleClose("EDIT");
     setShowDialog(true);
   };
 
