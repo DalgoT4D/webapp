@@ -39,6 +39,8 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
     } catch (err:any) {
       console.log(err);
       errorToast(err.message, [], globalContext);
+    }finally{
+      handleClose();
     }
   }
   const ModalData: any = {
@@ -92,7 +94,7 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
             borderRadius: '5px',
           },
           onClick: () => {
-            console.log('Save as new clicked');
+            handleSaveSession(false, null)
           },
         },
         {
