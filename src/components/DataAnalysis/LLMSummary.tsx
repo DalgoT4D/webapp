@@ -6,12 +6,13 @@ import CopyIcon from '@/assets/icons/content_copy.svg';
 import ThumbsupIcon from '@/assets/icons/thumb_up.svg';
 import ThumbsDownIcon from '@/assets/icons/thumb_up (1).svg';
 import { memo, useState } from 'react';
-import {  OverWriteDialog } from './OverwriteBox';
+import { OverWriteDialog } from './OverwriteBox';
 
-export const LLMSummary = memo(({ llmSummary, oldSessionId, newSessionId , prompt }: { llmSummary: string, oldSessionId: string, newSessionId: string , prompt: string }) => {
-  const [isBoxOpen, setIsBoxOpen] = useState(false); 
+export const LLMSummary = memo(({ llmSummary, newSessionId, prompt, oldSessionMetaInfo }: { llmSummary: string, newSessionId: string, prompt: string, oldSessionMetaInfo: any }) => {
+  const [isBoxOpen, setIsBoxOpen] = useState(false);
   const sessionName = `${prompt}_${Date.now()}`;
-  const modalName = oldSessionId ? "OVERWRITE": "SAVE"
+  const modalName = oldSessionMetaInfo.oldSessionId ? "OVERWRITE" : "SAVE"
+  console.log("hello")
   return (
     <>
       <Box sx={{ ...customCss, width: '58%' }}>
@@ -93,7 +94,7 @@ export const LLMSummary = memo(({ llmSummary, oldSessionId, newSessionId , promp
           <Box sx={{ display: 'flex', gap: '12px', marginTop: '2rem' }}>
             <Button
               variant="contained"
-              // disabled={sessionId ? false: true}
+              disabled={newSessionId ? false : true}
               onClick={() => { setIsBoxOpen(true) }}
               sx={{
                 width: '6.75rem',
@@ -113,14 +114,14 @@ export const LLMSummary = memo(({ llmSummary, oldSessionId, newSessionId , promp
             <Button
               variant="contained"
               sx={{ width: '6.75rem', padding: '8px 0', borderRadius: '6px' }}
-            // disabled={sessionId ? false: true}
+              disabled={newSessionId ? false : true}
             >
               Download
             </Button>
           </Box>
         </Box>
         {isBoxOpen && (
-          <OverWriteDialog open={isBoxOpen} setIsBoxOpen={setIsBoxOpen} session_name={sessionName} modalName={modalName} oldSessionId={oldSessionId} newSessionId={newSessionId}/>
+          <OverWriteDialog open={isBoxOpen} setIsBoxOpen={setIsBoxOpen} session_name={sessionName} modalName={modalName} oldSessionId={oldSessionMetaInfo.oldSessionId} newSessionId={newSessionId} />
         )}
       </Box>
     </>

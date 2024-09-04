@@ -16,79 +16,29 @@ import Image from 'next/image';
 import InfoIcon from '@/assets/icons/info.svg';
 import CloseIcon from "@/assets/icons/close_small.svg";
 import ArrowIcon from "@/assets/icons/arrow_back_ios.svg"
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { httpGet } from '@/helpers/http';
+import { useSession } from 'next-auth/react';
 
-const dataArray = [
-  {
-    sno: 1,
-    createdOn: '2024-07-01',
-    updatedOn: '2024-07-02',
-    name: 'John Doe',
-    createdBy: 'admin@example.com',
-  },
-  {
-    sno: 2,
-    createdOn: '2024-07-02',
-    updatedOn: '2024-07-03',
-    name: 'Jane Smith',
-    createdBy: 'admin@example.com',
-  },
-  {
-    sno: 3,
-    createdOn: '2024-07-03',
-    updatedOn: '2024-07-04',
-    name: 'Alice Johnson',
-    createdBy: 'moderator@example.com',
-  },
-  {
-    sno: 4,
-    createdOn: '2024-07-04',
-    updatedOn: '2024-07-05',
-    name: 'Bob Brown',
-    createdBy: 'admin@example.com',
-  },
-  {
-    sno: 5,
-    createdOn: '2024-07-05',
-    updatedOn: '2024-07-06',
-    name: 'Charlie Davis',
-    createdBy: 'user@example.com',
-  },
-  {
-    sno: 6,
-    createdOn: '2024-07-04',
-    updatedOn: '2024-07-05',
-    name: 'Bob Brown',
-    createdBy: 'admin@example.com',
-  },
-  {
-    sno: 7,
-    createdOn: '2024-07-05',
-    updatedOn: '2024-07-06',
-    name: 'Charlie Davis',
-    createdBy: 'user@example.com',
-  },
-  {
-    sno: 8,
-    createdOn: '2024-07-04',
-    updatedOn: '2024-07-05',
-    name: 'Bob Brown',
-    createdBy: 'admin@example.com',
-  },
-  {
-    sno: 9,
-    createdOn: '2024-07-05',
-    updatedOn: '2024-07-06',
-    name: 'Charlie Davis',
-    createdBy: 'user@example.com',
-  },
-];
 
-export const SavedSession = ({ open, onClose }: { open: boolean, onClose: any }) => {
-  const [pageSize, setPageSize] = useState(5);
+
+export const SavedSession = ({ open, onClose, handleEditSession }: { open: boolean, onClose: any, handleEditSession:any }) => {
+  const {data: session} = useSession();
+  const [pageSize, setPageSize] = useState(0);
   const [totalCount, setTotalCount] = useState(0); // Total count of rows
   const [pageCount, setPageCount] = useState(0); // Total number of pages
   const [currentPageIndex, setCurrentPageIndex] = useState(1); // Page index
+  const [savedSessions, setSavedSession] = useState([]);
+
+  useEffect(()=>{
+  const getSavedSessions = async ()=>{
+    const response = await httpGet(session, `warehouse/ask/sessions?limit=${10}&offset=${pageSize}`);
+    console.log(response, "response");
+    setSavedSession(response)
+  }
+  getSavedSessions();
+  },[session])
+
   return (
     <>
       <Dialog
@@ -214,9 +164,9 @@ export const SavedSession = ({ open, onClose }: { open: boolean, onClose: any })
                 </TableRow>
               </TableHead>
               <TableBody>
-                {dataArray.map((row) => (
+                {savedSessions.map((row:any, idx) => (
                   <TableRow
-                    key={row.sno}
+                    key={row.session_id}
                     sx={{
                       '&:last-child td, &:last-child th': { border: 0 },
                       padding: 0,
@@ -242,7 +192,7 @@ export const SavedSession = ({ open, onClose }: { open: boolean, onClose: any })
                         padding: '12px',
                       }}
                     >
-                      {row.sno}
+                      {idx}
                     </TableCell>
                     <TableCell
                       sx={{
@@ -273,7 +223,7 @@ export const SavedSession = ({ open, onClose }: { open: boolean, onClose: any })
                         padding: '12px',
                       }}
                     >
-                      {row.name}
+                      {row.session_name}
                     </TableCell>
                     <TableCell
                       sx={{
@@ -296,6 +246,21 @@ export const SavedSession = ({ open, onClose }: { open: boolean, onClose: any })
                           right: 16,
                           top: 8
                         }}
+                        onClick={()=>{
+                          handleEditSession({
+                          prompt: row.response[0].prompt,
+                          summary: row?.response[0]?.response,
+                          oldSessionId: row.session_id,
+                          session_status: row.session_status,
+                          session_name: row.session_name,
+                          sqlText: row?.request_meta?.sql,
+                          taskId: row.request_uuid 
+                        });
+                        console.log(row.request_meta.sql, "meta")
+                        onClose();
+                        }
+                      
+                      }
                       >
                         OPEN    <Image src={ArrowIcon} alt="close icon" />
                       </Button>
@@ -305,7 +270,6 @@ export const SavedSession = ({ open, onClose }: { open: boolean, onClose: any })
 
 
               </TableBody>
-           
             </Table>
           </TableContainer>
           <TablePagination
