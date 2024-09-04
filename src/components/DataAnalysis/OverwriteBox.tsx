@@ -21,6 +21,7 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
   const {data:session} = useSession();
   const globalContext = useContext(GlobalContext);
   const [sessionName, setSessionName] = useState(session_name);
+  const [openModalName, setOpenModalName] = useState(modalName)
   const handleClose = () => (setIsBoxOpen(false));
 
   const handleSaveSession =async(overwrite:boolean, old_session_id:string | null)=>{
@@ -82,7 +83,7 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
             borderRadius: '5px',
           },
           onClick: () => {
-          handleSaveSession(true, oldSessionId)
+            setOpenModalName("CONFIRM_SAVEAS")
           },
         },
         {
@@ -108,6 +109,31 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
           onClick: handleClose, // Use existing handleClose function for the Cancel button
         },]
     },
+    CONFIRM_SAVEAS:{
+      mainheading: "Confirm save as",
+      subHeading: "Please rename the configuration before saving it in the warehouse",
+      buttons: [{
+        label: 'Save',
+        variant: 'contained',
+        sx: {
+          width: '6.75rem',
+          padding: '8px 0',
+          borderRadius: '5px',
+        },
+        onClick: () => {
+          handleSaveSession(true, oldSessionId)
+        },
+      }, {
+        label: 'Cancel',
+        variant: 'outlined',
+        sx: {
+          width: '6.75rem',
+          padding: '8px 0',
+          borderRadius: '5px',
+        },
+        onClick: handleClose,
+      },]
+    },
     UNSAVED_CHANGES: {
       mainheading: "",
       subHeading: "",
@@ -124,7 +150,7 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
             <Typography
               sx={{ color: '#000000', fontWeight: '600', fontSize: '1.5rem' }}
             >
-              {ModalData[modalName].mainheading}
+              {ModalData[openModalName].mainheading}
             </Typography>
             <IconButton
               sx={{ marginLeft: 'auto' }}
@@ -145,7 +171,7 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
               color: 'rgba(0, 0, 0, 0.6)',
             }}
           >
-            {ModalData[modalName].subHeading}
+            {ModalData[openModalName].subHeading}
           </Typography>
 
           {/* Input Field */}
@@ -163,7 +189,7 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
 
         {/* Dialog Actions */}
         <DialogActions sx={{ padding: '1.5rem 2rem', display: 'flex',justifyContent: "flex-start", gap: '12px'}}>
-          {ModalData[modalName].buttons.map((button: any, index: number) => (
+          {ModalData[openModalName].buttons.map((button: any, index: number) => (
             <Button
               key={index}
               variant={button.variant}
