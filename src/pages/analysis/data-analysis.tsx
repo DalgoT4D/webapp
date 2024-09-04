@@ -12,10 +12,15 @@ import {
 } from '@/components/ToastMessage/ToastHelper';
 import { useContext, useState } from 'react';
 import { FullPageBackground } from '@/components/UI/FullScreenLoader/FullScreenLoader';
+import { useLockCanvas } from '@/customHooks/useLockCanvas';
 
 export default function DataAnalysis() {
   const { data: session } = useSession();
-  const [llmSummary, setllmSummary] = useState('');
+  const [{ prompt, summary, sessionId }, setllmSummaryResult] = useState({
+    prompt: "",
+    summary: "",
+    sessionId: ""
+  });
   const globalContext = useContext(GlobalContext);
   const [loading, setLoading] = useState(false);
 
@@ -25,14 +30,21 @@ export default function DataAnalysis() {
       const response: any = await httpGet(session, 'tasks/stp/' + taskId);
       const lastMessage: any =
         response['progress'][response['progress'].length - 1];
-
       if (!['completed', 'failed'].includes(lastMessage.status)) {
         await delay(3000);
         await pollForTaskRun(taskId);
-      } else if(['failed'].includes(lastMessage.status)){
+      }
+
+      else if (['failed'].includes(lastMessage.status)) {
         errorToast(lastMessage.message, [], globalContext);
-      } else{
-        setllmSummary(lastMessage.result);
+        return;
+      } else {
+        successToast(lastMessage.message, [], globalContext);
+        setllmSummaryResult({
+          prompt: lastMessage?.result?.response[0]?.prompt,
+          summary: lastMessage?.result?.response[0].response,
+          sessionId: lastMessage?.result?.session_id
+        });
       }
     } catch (err: any) {
       console.error(err);
@@ -53,7 +65,7 @@ export default function DataAnalysis() {
     try {
       const response = await httpPost(session, `warehouse/ask/`, {
         sql: sqlText,
-        session_name: `unique-${Date.now()}`,
+        // session_name: `unique-${Date.now()}`,
         user_prompt,
       });
       console.log(response, 'taskid');
@@ -61,20 +73,19 @@ export default function DataAnalysis() {
         errorToast(response.detail, [], globalContext);
         return { error: 'ERROR' };
       }
-      if (!response?.task_id) {
+      if (!response?.request_uuid) {
         errorToast('Something went wrong', [], globalContext);
         return { error: 'ERROR' };
       }
 
       successToast(`Data analysis initiated successfully`, [], globalContext);
       await delay(3000);
-      pollForTaskRun(response.task_id);
+      pollForTaskRun(response.request_uuid);
     } catch (err: any) {
       console.error(err);
-      errorToast(err.message, [], globalContext);
-    } finally {
       setLoading(false);
-    }
+      errorToast(err.message, [], globalContext);
+    } 
   };
 
   return (
@@ -88,9 +99,9 @@ export default function DataAnalysis() {
         }}
       >
         {/* Sql filter */}
-        <SqlWrite getLLMSummary={getLLMSummary} />
+        <SqlWrite getLLMSummary={getLLMSummary} prompt={prompt} sessionId={sessionId}  loading={loading}/>
         {/* LLM summary  */}
-        <LLMSummary llmSummary={llmSummary} />
+        <LLMSummary llmSummary={summary} sessionId={sessionId} prompt={prompt}  />
         {loading && (
           <>
             <FullPageBackground>

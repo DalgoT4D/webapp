@@ -1,13 +1,18 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Backdrop, Box, Button, Typography } from '@mui/material';
 import Image from 'next/image';
 import InfoIcon from '@/assets/icons/info.svg';
 import DalgoIcon from '@/assets/icons/dalgoIcon.svg';
 import CopyIcon from '@/assets/icons/content_copy.svg';
 import ThumbsupIcon from '@/assets/icons/thumb_up.svg';
 import ThumbsDownIcon from '@/assets/icons/thumb_up (1).svg';
-import { memo } from 'react';
+import { memo, useState } from 'react';
+import { httpPost } from '@/helpers/http';
+import {  OverWriteDialog } from './OverwriteBox';
+import { FullPageBackground } from '../UI/FullScreenLoader/FullScreenLoader';
 
-export const LLMSummary = memo(({ llmSummary }: { llmSummary: string }) => {
+export const LLMSummary = memo(({ llmSummary, sessionId , prompt }: { llmSummary: string, sessionId: string, prompt: string }) => {
+  const [isBoxOpen, setIsBoxOpen] = useState(false); 
+  const sessionName = prompt ?`${prompt}_${Date.now()}` : "";
   return (
     <>
       <Box sx={{ ...customCss, width: '58%' }}>
@@ -50,7 +55,7 @@ export const LLMSummary = memo(({ llmSummary }: { llmSummary: string }) => {
               src={DalgoIcon}
               alt="logout icon"
             />
-            <Typography>{llmSummary}</Typography>
+            <Typography sx={{ margin: "1.75rem 2rem", height: "80%", overflowY: "scroll", padding: '0 .5rem' }}> {llmSummary}</Typography>
             <Box
               sx={{
                 display: 'flex',
@@ -89,6 +94,8 @@ export const LLMSummary = memo(({ llmSummary }: { llmSummary: string }) => {
           <Box sx={{ display: 'flex', gap: '12px', marginTop: '2rem' }}>
             <Button
               variant="contained"
+              // disabled={sessionId ? false: true}
+              onClick={() => { setIsBoxOpen(true) }}
               sx={{
                 width: '6.75rem',
                 padding: '8px 0',
@@ -100,17 +107,22 @@ export const LLMSummary = memo(({ llmSummary }: { llmSummary: string }) => {
                   color: '#FFFFFF',
                 },
               }}
+
             >
               Save as
             </Button>
             <Button
               variant="contained"
               sx={{ width: '6.75rem', padding: '8px 0', borderRadius: '6px' }}
+            // disabled={sessionId ? false: true}
             >
               Download
             </Button>
           </Box>
         </Box>
+        {isBoxOpen && (
+          <OverWriteDialog open={isBoxOpen} setIsBoxOpen={setIsBoxOpen} sessionName={sessionName} />
+        )}
       </Box>
     </>
   );

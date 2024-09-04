@@ -18,7 +18,7 @@ const Areas_Of_Development = 'Areas of Development';
 const Brightspots = 'Brightspots';
 const Summarize = 'Summarize';
 
-export const SqlWrite = ({ getLLMSummary }: { getLLMSummary: any }) => {
+export const SqlWrite = ({ getLLMSummary, prompt, sessionId, loading }: { getLLMSummary: any, prompt: string, sessionId: string, loading:boolean }) => {
   const [customPromptToggle, setCustomPromptToggle] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [defaultPrompt, setDefaultPrompt] = useState('');
@@ -329,6 +329,7 @@ export const SqlWrite = ({ getLLMSummary }: { getLLMSummary: any }) => {
             onClick={() => {
               handleSubmit();
             }}
+            // disabled={sessionId ? true: false}
             variant="contained"
             sx={{
               width: '6.75rem',
@@ -345,7 +346,7 @@ export const SqlWrite = ({ getLLMSummary }: { getLLMSummary: any }) => {
       <SavedSession
         open={openSavedSessionDialog}
         onClose={handleCloseSavedSession}
-      /> 
+      />
     </>
   );
 };
