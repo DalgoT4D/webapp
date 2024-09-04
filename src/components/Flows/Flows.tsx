@@ -22,6 +22,7 @@ import styles from './Flows.module.css';
 import { localTimezone } from '@/utils/common';
 import { FlowLogs } from './FlowLogs';
 import { useSyncLock } from '@/customHooks/useSyncLock';
+import { useTracking } from '@/contexts/TrackingContext';
 
 export interface TaskLock {
   lockedBy: string;
@@ -117,6 +118,7 @@ const Actions = memo(({ flow,
   handleClick }: ActionInterface) => {
   const { lock } = flow;
   const { tempSyncState, setTempSyncState } = useSyncLock(lock);
+  const trackAmplitudeEvent = useTracking();
   const handlingSyncState = async () => {
     const res: any = await handleQuickRunDeployment(flow.deploymentId);
     if (res?.error == "ERROR") {
@@ -137,6 +139,7 @@ const Actions = memo(({ flow,
         onClick={() => {
           setShowLogsDialog(true);
           setFlowLogs(flow);
+          trackAmplitudeEvent("[last logs-flows] Button clicked")
         }}
       >
         last logs
@@ -154,6 +157,7 @@ const Actions = memo(({ flow,
           onClick={async () => {
             setTempSyncState(true);
             handlingSyncState();
+            trackAmplitudeEvent("[Run-pipleline] Button clicked")
             // push deployment id into list of running deployment ids
             if (!runningDeploymentIds.includes(flow.deploymentId)) {
               setRunningDeploymentIds([
