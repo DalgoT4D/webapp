@@ -55,10 +55,14 @@ describe('Create connection', () => {
       json: jest.fn().mockResolvedValueOnce([]),
     });
 
+
+
     render(
       <SessionProvider session={mockSession}>
         <CreateConnectionForm
           mutate={() => {}}
+          connectionId=''
+          setConnectionId={() => {}}
           showForm={true}
           setShowForm={() => {}}
           blockId=""
@@ -117,6 +121,8 @@ describe('Create connection', () => {
               showForm={true}
               setShowForm={() => {}}
               setBlockId={() => {}}
+              connectionId=''
+              setConnectionId={() => {}}
               blockId=""
               filteredSourceStreams={SOURCES.slice().sort((a, b) => a.name.localeCompare(b.name))}
             />
@@ -260,6 +266,8 @@ describe('Create connection', () => {
               showForm={true}
               setShowForm={() => {}}
               setBlockId={() => {}}
+              connectionId=''
+              setConnectionId={() => {}}
               blockId=""
             />
           </SWRConfig>
@@ -357,6 +365,8 @@ describe('Create connection', () => {
               showForm={true}
               setShowForm={() => {}}
               setBlockId={() => {}}
+              connectionId=''
+              setConnectionId={() => {}}
               blockId=""
             />
           </SWRConfig>
