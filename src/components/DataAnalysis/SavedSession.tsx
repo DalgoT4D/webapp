@@ -16,7 +16,7 @@ import {
 
 import Image from 'next/image';
 import InfoIcon from '@/assets/icons/info.svg';
-import CloseIcon from '@/assets/icons/close_small.svg';
+import CloseIcon from '@mui/icons-material/Close';
 import ArrowIcon from '@/assets/icons/arrow_back_ios.svg';
 import { memo, useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
@@ -140,20 +140,15 @@ export const SavedSession = memo(
                   alt="info icon"
                 />
               </Box>
-              <Image
-                src={CloseIcon}
-                style={{ cursor: 'pointer' }}
-                onClick={onClose}
-                alt="close icon"
-              />
+              <CloseIcon onClick={onClose} sx={{ cursor: 'pointer' }} />
             </Box>
             <TableContainer
               component={Paper}
               sx={{
                 borderRadius: '4px',
-                overflowY: 'auto', // Make the table body scrollable
-                height: '400px', // Set max height for the table body
-                flexGrow: 1, // Take remaining space in the dialog
+                overflowY: 'auto',
+                height: '400px',
+                flexGrow: 1,
               }}
             >
               <Table
@@ -230,7 +225,7 @@ export const SavedSession = memo(
                     </TableCell>
                   </TableRow>
                 </TableHead>
-                <TableBody >
+                <TableBody>
                   {loading ? (
                     <CircularProgress />
                   ) : (
@@ -243,18 +238,18 @@ export const SavedSession = memo(
                           backgroundColor:
                             activeRow === row.session_id
                               ? '#E0F7FA'
-                              : 'inherit', // Active row color on click
+                              : 'inherit',
                           '&:hover': {
-                            backgroundColor: '#F5FAFA', // Hover background color
+                            backgroundColor: '#F5FAFA',
                           },
                           '&:hover .hover-button': {
                             visibility: 'visible',
                             opacity: 1,
                           },
-                          border: 'none', // Ensure no border is applied
-                          boxShadow: 'none', // Remove any default shadows
+                          border: 'none',
+                          boxShadow: 'none',
                         }}
-                        onClick={() => setActiveRow(row.session_id)} // Set the active row on click
+                        onClick={() => setActiveRow(row.session_id)}
                       >
                         <TableCell
                           sx={{
@@ -355,22 +350,22 @@ export const SavedSession = memo(
                 </TableBody>
               </Table>
             </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10]}
-            component="div"
-            count={totalCount}
-            rowsPerPage={pageSize}
-            page={currentPageIndex}
-            onPageChange={(e, newPage) => {
-              handlePagination(newPage, pageSize);
-            }}
-            onRowsPerPageChange={(e: any) => {
-              const newPageSize = parseInt(e.target.value, 10);
-              setPageSize(newPageSize);
-              setCurrentPageIndex(0); // Reset to first page on rows per page change
-              handlePagination(0, newPageSize);
-            }}
-          />
+            <TablePagination
+              rowsPerPageOptions={[5, 10]}
+              component="div"
+              count={totalCount}
+              rowsPerPage={pageSize}
+              page={currentPageIndex}
+              onPageChange={(e, newPage) => {
+                handlePagination(newPage, pageSize);
+              }}
+              onRowsPerPageChange={(e: any) => {
+                const newPageSize = parseInt(e.target.value, 10);
+                setPageSize(newPageSize);
+                setCurrentPageIndex(0);
+                handlePagination(0, newPageSize);
+              }}
+            />
           </Box>
         </Dialog>
       </>

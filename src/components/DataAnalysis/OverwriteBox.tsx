@@ -10,8 +10,7 @@ import {
   DialogTitle,
   IconButton,
 } from '@mui/material';
-import Image from 'next/image';
-import CloseIcon from '@/assets/icons/close_small.svg';
+import CloseIcon from '@mui/icons-material/Close';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -23,13 +22,13 @@ export const OverWriteDialog = ({
   modalName,
   oldSessionId,
   newSessionId,
-  handleNewSession
+  handleNewSession,
 }: {
   open: boolean;
   modalName: string;
   oldSessionId: string;
   newSessionId: string;
-  handleNewSession:any
+  handleNewSession: any;
   setIsBoxOpen: (a: boolean) => void;
 }) => {
   const { data: session } = useSession();
@@ -39,7 +38,7 @@ export const OverWriteDialog = ({
   const [isSessionSaved, setIsSessionSaved] = useState(false);
   const handleClose = () => setIsBoxOpen(false);
 
-console.log(modalName, "modalname");
+  console.log(modalName, 'modalname');
   const handleSaveSession = async (
     overwrite: boolean,
     old_session_id: string | null
@@ -68,8 +67,6 @@ console.log(modalName, "modalname");
       handleClose();
     }
   };
-
-
 
   const ModalData: any = {
     SAVE: {
@@ -175,7 +172,7 @@ console.log(modalName, "modalname");
       mainheading: 'Provide additional feedback',
       subHeading: 'Tell us why this response was unsatisfactory',
       rowsNum: 5,
-      label: "Feedback",
+      label: 'Feedback',
       buttons: [
         {
           label: 'Submit',
@@ -185,37 +182,38 @@ console.log(modalName, "modalname");
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: () => {
-            
-          },
+          onClick: () => {},
         },
       ],
     },
     UNSAVED_CHANGES: {
       mainheading: 'Unsaved changes',
-      subHeading: 'You are about to leave this page without saving the changes.\nAll the changes that were made will be lost. Do you wish to continue?',
-      buttons: [   {
-        label: 'Save changes',
-        variant: 'contained',
-        sx: {
-          width: '6.75rem',
-          padding: '8px 0',
-          borderRadius: '5px',
+      subHeading:
+        'You are about to leave this page without saving the changes.\nAll the changes that were made will be lost. Do you wish to continue?',
+      buttons: [
+        {
+          label: 'Save changes',
+          variant: 'contained',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: () => {
+            handleSaveSession(false, oldSessionId);
+          },
         },
-        onClick: () => {
-          handleSaveSession(false, oldSessionId);
+        {
+          label: 'Leave anyway',
+          variant: 'outlined',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: handleClose,
         },
-      },
-      {
-        label: 'Leave anyway',
-        variant: 'outlined',
-        sx: {
-          width: '6.75rem',
-          padding: '8px 0',
-          borderRadius: '5px',
-        },
-        onClick: handleClose,
-      },],
+      ],
     },
   };
   return (
@@ -235,7 +233,7 @@ console.log(modalName, "modalname");
               onClick={handleClose}
               aria-label="close"
             >
-              <Image src={CloseIcon} alt="Close" width={20} height={20} />
+              <CloseIcon onClick={handleClose} sx={{ cursor: 'pointer' }} />
             </IconButton>
           </Box>
         </DialogTitle>
@@ -259,7 +257,7 @@ console.log(modalName, "modalname");
               fullWidth
               multiline
               rows={ModalData[openModalName]?.rowsNum || 1}
-              label={ModalData[openModalName]?.label || "Session Name"}
+              label={ModalData[openModalName]?.label || 'Session Name'}
               variant="outlined"
               value={textBoxData}
               onChange={(e) => {

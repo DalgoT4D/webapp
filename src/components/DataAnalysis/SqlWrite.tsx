@@ -5,9 +5,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import Image from 'next/image';
 
-import CloseIcon from '@/assets/icons/close_small.svg';
+import CloseIcon from '@mui/icons-material/Close';
+
 import { memo, useContext, useEffect, useState } from 'react';
 
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -230,14 +230,12 @@ export const SqlWrite = memo(
                     }}
                   >
                     <Typography>Custom Prompt</Typography>
-                    <Image
-                      src={CloseIcon}
-                      style={{ cursor: 'pointer' }}
+                    <CloseIcon
                       onClick={() => {
                         setCustomPromptToggle(false);
                         setCustomPrompt('');
                       }}
-                      alt="close icon"
+                      sx={{ cursor: 'pointer' }}
                     />
                   </Box>
                   <TextField
