@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -17,62 +17,91 @@ import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,oldSessionId, newSessionId }: { open: boolean, session_name: string, modalName: string, oldSessionId: string, newSessionId:string,setIsBoxOpen: (a: boolean) => void }) => {
-  const {data:session} = useSession();
+export const OverWriteDialog = ({
+  open,
+  setIsBoxOpen,
+  modalName,
+  oldSessionId,
+  newSessionId,
+}: {
+  open: boolean;
+  modalName: string;
+  oldSessionId: string;
+  newSessionId: string;
+  setIsBoxOpen: (a: boolean) => void;
+}) => {
+  const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
-  const [sessionName, setSessionName] = useState(session_name);
-  const [openModalName, setOpenModalName] = useState(modalName)
-  const handleClose = () => (setIsBoxOpen(false));
+  const [textBoxData, setTextBoxData] = useState('');
+  const [openModalName, setOpenModalName] = useState(modalName);
+  const [isSessionSaved, setIsSessionSaved] = useState(false);
+  const handleClose = () => setIsBoxOpen(false);
 
-  const handleSaveSession =async(overwrite:boolean, old_session_id:string | null)=>{
+console.log(modalName, "modalname");
+  const handleSaveSession = async (
+    overwrite: boolean,
+    old_session_id: string | null
+  ) => {
     try {
-      const response = await httpPost(session, `warehouse/ask/${newSessionId}/save`, {
-        "session_name": sessionName,
-        overwrite,
-        old_session_id
-      });
-      console.log(response, "response");
+      const response = await httpPost(
+        session,
+        `warehouse/ask/${newSessionId}/save`,
+        {
+          session_name: textBoxData,
+          overwrite,
+          old_session_id,
+        }
+      );
+      console.log(response, 'response');
       //write error condition
-      if(response.success){
-        successToast(`${sessionName} saved successfully`, [], globalContext);
+      if (response.success) {
+        successToast(`${textBoxData} saved successfully`, [], globalContext);
+        setIsSessionSaved(true);
       }
-    
-    } catch (err:any) {
+    } catch (err: any) {
       console.log(err);
       errorToast(err.message, [], globalContext);
-    }finally{
+    } finally {
       handleClose();
     }
-  }
+  };
+
+
+
   const ModalData: any = {
     SAVE: {
-      mainheading: "Save as",
-      subHeading: "Please name the configuration before saving it in the warehouse",
-      buttons: [{
-        label: 'Save',
-        variant: 'contained',
-        sx: {
-          width: '6.75rem',
-          padding: '8px 0',
-          borderRadius: '5px',
+      mainheading: 'Save as',
+      subHeading:
+        'Please name the configuration before saving it in the warehouse',
+      buttons: [
+        {
+          label: 'Save',
+          variant: 'contained',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: () => {
+            handleSaveSession(false, null);
+          },
         },
-        onClick: () => {
-          handleSaveSession(false, null)
+        {
+          label: 'Cancel',
+          variant: 'outlined',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: handleClose,
         },
-      }, {
-        label: 'Cancel',
-        variant: 'outlined',
-        sx: {
-          width: '6.75rem',
-          padding: '8px 0',
-          borderRadius: '5px',
-        },
-        onClick: handleClose,
-      },]
+      ],
     },
     OVERWRITE: {
-      mainheading: "Overwrite existing session",
-      subHeading: "The session with this name already exists. Do you want to overwrite?",
+      mainheading: 'Overwrite existing session',
+      subHeading:
+        'The session with this name already exists. Do you want to overwrite?',
       buttons: [
         {
           label: 'Overwrite',
@@ -83,7 +112,7 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
             borderRadius: '5px',
           },
           onClick: () => {
-            setOpenModalName("CONFIRM_SAVEAS")
+            setOpenModalName('CONFIRM_SAVEAS');
           },
         },
         {
@@ -95,7 +124,7 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
             borderRadius: '5px',
           },
           onClick: () => {
-            handleSaveSession(false, null)
+            handleSaveSession(false, null);
           },
         },
         {
@@ -107,13 +136,63 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
             borderRadius: '5px',
           },
           onClick: handleClose, // Use existing handleClose function for the Cancel button
-        },]
+        },
+      ],
     },
-    CONFIRM_SAVEAS:{
-      mainheading: "Confirm save as",
-      subHeading: "Please rename the configuration before saving it in the warehouse",
-      buttons: [{
-        label: 'Save',
+    CONFIRM_SAVEAS: {
+      mainheading: 'Confirm save as',
+      subHeading:
+        'Please rename the configuration before saving it in the warehouse',
+      buttons: [
+        {
+          label: 'Save',
+          variant: 'contained',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: () => {
+            handleSaveSession(true, oldSessionId); //overwriting, opens when clicked overwrite.
+          },
+        },
+        {
+          label: 'Cancel',
+          variant: 'outlined',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: handleClose,
+        },
+      ],
+    },
+    FEEDBACK_FORM: {
+      mainheading: 'Provide additional feedback',
+      subHeading: 'Tell us why this response was unsatisfactory',
+      rowsNum: 5,
+      label: "Feedback",
+      buttons: [
+        {
+          label: 'Submit',
+          variant: 'contained',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: () => {
+            
+          },
+        },
+      ],
+    },
+    UNSAVED_CHANGES: {
+      mainheading: 'Unsaved changes',
+      subHeading: 'You are about to leave this page without saving the changes.\nAll the changes that were made will be lost. Do you wish to continue?',
+      buttons: [   {
+        label: 'Save changes',
         variant: 'contained',
         sx: {
           width: '6.75rem',
@@ -121,10 +200,11 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
           borderRadius: '5px',
         },
         onClick: () => {
-          handleSaveSession(true, oldSessionId)
+          handleSaveSession(false, oldSessionId);
         },
-      }, {
-        label: 'Cancel',
+      },
+      {
+        label: 'Leave anyway',
         variant: 'outlined',
         sx: {
           width: '6.75rem',
@@ -132,14 +212,9 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
           borderRadius: '5px',
         },
         onClick: handleClose,
-      },]
+      },],
     },
-    UNSAVED_CHANGES: {
-      mainheading: "",
-      subHeading: "",
-      buttons: [{}, {}]
-    }
-  }
+  };
   return (
     <>
       {/* Dialog Box */}
@@ -179,30 +254,41 @@ export const OverWriteDialog = ({ open, setIsBoxOpen, session_name, modalName,ol
             <TextField
               name="overwrite"
               fullWidth
-              label="Session Name"
+              multiline
+              rows={ModalData[openModalName]?.rowsNum || 1}
+              label={ModalData[openModalName]?.label || "Session Name"}
               variant="outlined"
-              value={sessionName}
-              onChange={(e) => { setSessionName(e.target.value) }}
+              value={textBoxData}
+              onChange={(e) => {
+                setTextBoxData(e.target.value);
+              }}
             />
           </Box>
         </DialogContent>
 
         {/* Dialog Actions */}
-        <DialogActions sx={{ padding: '1.5rem 2rem', display: 'flex',justifyContent: "flex-start", gap: '12px'}}>
-          {ModalData[openModalName].buttons.map((button: any, index: number) => (
-            <Button
-              key={index}
-              variant={button.variant}
-              sx={button.sx}
-              onClick={button.onClick}
-            >
-              {button.label}
-            </Button>
-          ))}
+        <DialogActions
+          sx={{
+            padding: '1.5rem 2rem',
+            display: 'flex',
+            justifyContent: 'flex-start',
+            gap: '12px',
+          }}
+        >
+          {ModalData[openModalName].buttons.map(
+            (button: any, index: number) => (
+              <Button
+                key={index}
+                variant={button.variant}
+                sx={button.sx}
+                onClick={button.onClick}
+              >
+                {button.label}
+              </Button>
+            )
+          )}
         </DialogActions>
       </Dialog>
     </>
   );
 };
-
-

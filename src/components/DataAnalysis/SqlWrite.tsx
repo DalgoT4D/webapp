@@ -1,30 +1,39 @@
 import {
   Box,
   Button,
+  CircularProgress,
   TextField,
   Typography,
 } from '@mui/material';
 import Image from 'next/image';
 
 import CloseIcon from '@/assets/icons/close_small.svg';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { memo, useContext, useEffect, useState } from 'react';
 
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 
-
-
-export const SqlWrite = ({ getLLMSummary, prompt, loading, newSessionId, oldSessionMetaInfo }: { getLLMSummary: any, prompt: string, loading: boolean, oldSessionMetaInfo: any, newSessionId: string }) => {
+export const SqlWrite = memo(({
+  getLLMSummary,
+  prompt,
+  newSessionId,
+  oldSessionMetaInfo,
+}: {
+  getLLMSummary: any;
+  prompt: string;
+  oldSessionMetaInfo: any;
+  newSessionId: string;
+}) => {
   const { data: session } = useSession();
   const [defaultPromptsLists, setDefaultPromptLists] = useState([]);
   const [customPromptToggle, setCustomPromptToggle] = useState(false);
-  const [customPrompt, setCustomPrompt] = useState("");
-  const [defaultPrompt, setDefaultPrompt] = useState("");
-  const [sqlText, setSqlText] = useState("");
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [defaultPrompt, setDefaultPrompt] = useState('');
+  const [sqlText, setSqlText] = useState('');
   const globalContext = useContext(GlobalContext);
-
+  const [tempLoading, setTempLoading] = useState(false);
 
   const handlePromptSelection = (promptText: string) => {
     if (customPromptToggle) {
@@ -53,38 +62,49 @@ export const SqlWrite = ({ getLLMSummary, prompt, loading, newSessionId, oldSess
     });
   };
 
-
   useEffect(() => {
-    console.log("hellooooooooooooooooooooooooooo")
     try {
+      setTempLoading(true);
       const getDefaultPrompts = async () => {
         const response = await httpGet(session, `data/user_prompts/`);
-        console.log(response, "response");
-        if (response.length) {
-          const isDefaultPrompt = response.some((item: any) => {
-            return item?.prompt === prompt;
-          });
-
-          console.log(isDefaultPrompt, "isdeafult")
-          setCustomPromptToggle(isDefaultPrompt || !oldSessionMetaInfo.sqlText ? false : true);
-          setCustomPrompt(isDefaultPrompt ? "" : prompt);
-          setDefaultPrompt(isDefaultPrompt ? prompt : "");
-          setSqlText(oldSessionMetaInfo?.sqlText || "");
+        if (!response.length) {
+          errorToast('No Custom Prompts found', [], globalContext);
+          return;
         }
+        setDefaultPromptLists(response);
+      };
 
-        setDefaultPromptLists(response)
-      }
       if (session) {
         getDefaultPrompts();
       }
-    } catch (error) {
-      console.log(error)
+    } catch (error: any) {
+      console.log(error);
+      errorToast(error.message, [], globalContext);
+    } finally {
+      setTempLoading(false);
     }
-  }, [session, oldSessionMetaInfo.sqlText])
+  }, [session]);
 
+  useEffect(() => {
+    const isDefaultPrompt = defaultPromptsLists.some((item: any) => {
+      return item?.prompt === prompt;
+    });
+    setCustomPromptToggle(
+      isDefaultPrompt || !oldSessionMetaInfo.sqlText ? false : true
+    );
+    setCustomPrompt(isDefaultPrompt ? '' : prompt);
+    setDefaultPrompt(isDefaultPrompt ? prompt : '');
+    setSqlText(oldSessionMetaInfo?.sqlText || '');
+  }, [defaultPromptsLists, oldSessionMetaInfo]);
+
+
+  if (tempLoading) return <CircularProgress />;
   return (
     <>
-      <Box sx={{ width: '100%' }} key={defaultPromptsLists.length ? "goodkey" : "badkey"}>
+      <Box
+        sx={{ width: '100%' }}
+        key={defaultPromptsLists.length ? 'goodkey' : 'badkey'}
+      >
         {/* second box */}
         <Box sx={{ width: '100%', padding: '1.25rem 0' }}>
           <hr></hr>
@@ -177,7 +197,9 @@ export const SqlWrite = ({ getLLMSummary, prompt, loading, newSessionId, oldSess
                   sx={{
                     flex: '1 1 auto',
                     backgroundColor:
-                      defaultPrompt === defaultPrompts.prompt ? '#05443e' : '#00897B',
+                      defaultPrompt === defaultPrompts.prompt
+                        ? '#05443e'
+                        : '#00897B',
                   }}
                   onClick={() => {
                     handlePromptSelection(defaultPrompts.prompt);
@@ -187,7 +209,7 @@ export const SqlWrite = ({ getLLMSummary, prompt, loading, newSessionId, oldSess
                     {defaultPrompts.label}
                   </Typography>
                 </Button>
-              )
+              );
             })}
           </Box>
 
@@ -252,7 +274,7 @@ export const SqlWrite = ({ getLLMSummary, prompt, loading, newSessionId, oldSess
           variant="contained"
           sx={{
             width: '6.75rem',
-            marginTop: '6rem',
+            marginTop: '8rem',
             padding: '8px 0',
             borderRadius: '5px',
           }}
@@ -260,9 +282,6 @@ export const SqlWrite = ({ getLLMSummary, prompt, loading, newSessionId, oldSess
           Submit
         </Button>
       </Box>
-
     </>
   );
-};
-
-
+});

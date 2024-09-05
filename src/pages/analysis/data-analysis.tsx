@@ -69,6 +69,12 @@ export default function DataAnalysis() {
   const pollForTaskRun = async (taskId: string) => {
     try {
       const response: any = await httpGet(session, 'tasks/stp/' + taskId);
+      console.log(response, "pollresp")
+      const response1 = await httpGet(
+        session,
+        `warehouse/ask/sessions?limit=${100}&offset=${0}`
+      );
+      console.log(response1, "reps111")
       const lastMessage: any =
         response['progress'][response['progress'].length - 1];
       if (!['completed', 'failed'].includes(lastMessage.status)) {
@@ -129,6 +135,7 @@ export default function DataAnalysis() {
     }
   };
 
+
   return (
     <>
       <Box
@@ -155,7 +162,6 @@ export default function DataAnalysis() {
             prompt={prompt}
             newSessionId={newSessionId}
             oldSessionMetaInfo={oldSessionMetaInfo}
-            loading={loading}
           />
         </Box>
 
