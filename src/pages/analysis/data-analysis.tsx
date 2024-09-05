@@ -17,15 +17,15 @@ import { TopBar } from '@/components/DataAnalysis/TopBar';
 
 export default function DataAnalysis() {
   const { data: session } = useSession();
+  const globalContext = useContext(GlobalContext);
+  const [loading, setLoading] = useState(false);
+  const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
 
   const [{ prompt, summary, newSessionId }, setllmSummaryResult] = useState({    //initail props
     prompt: '',
     summary: '',
     newSessionId: '',
   });
-  const globalContext = useContext(GlobalContext);
-  const [loading, setLoading] = useState(false);
-  const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
   const [oldSessionMetaInfo, setOldSessionMetaInfo] = useState({    //while editing,  this contains previous session's metadata
     session_status: '',
     sqlText: '',
@@ -70,11 +70,6 @@ export default function DataAnalysis() {
     try {
       const response: any = await httpGet(session, 'tasks/stp/' + taskId);
       console.log(response, "pollresp")
-      const response1 = await httpGet(
-        session,
-        `warehouse/ask/sessions?limit=${100}&offset=${0}`
-      );
-      console.log(response1, "reps111")
       const lastMessage: any =
         response['progress'][response['progress'].length - 1];
       if (!['completed', 'failed'].includes(lastMessage.status)) {
