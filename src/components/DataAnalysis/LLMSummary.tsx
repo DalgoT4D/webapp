@@ -16,11 +16,13 @@ export const LLMSummary = memo(
     newSessionId,
     prompt,
     oldSessionMetaInfo,
+    handleNewSession
   }: {
     llmSummary: string;
     newSessionId: string;
     prompt: string;
     oldSessionMetaInfo: any;
+    handleNewSession: any
   }) => {
     const [isBoxOpen, setIsBoxOpen] = useState(false);
     const [modalName, setModalName] = useState('SAVE');
@@ -181,6 +183,7 @@ export const LLMSummary = memo(
               modalName={modalName}
               oldSessionId={oldSessionMetaInfo.oldSessionId}
               newSessionId={newSessionId}
+              handleNewSession={handleNewSession}
             />
           )}
         </Box>

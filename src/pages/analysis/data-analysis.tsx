@@ -171,6 +171,7 @@ export default function DataAnalysis() {
           newSessionId={newSessionId}
           oldSessionMetaInfo={oldSessionMetaInfo}
           prompt={prompt}
+          handleNewSession={handleNewSession}
         />
 
         {/* Loader full screen */}
