@@ -1,11 +1,10 @@
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { LLMSummary } from '@/components/DataAnalysis/LLMSummary';
 import { SqlWrite } from '@/components/DataAnalysis/SqlWrite';
 import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
 import { GlobalContext } from '@/contexts/ContextProvider';
-
 import {
   errorToast,
   successToast,
@@ -69,7 +68,6 @@ export default function DataAnalysis() {
   const pollForTaskRun = async (taskId: string) => {
     try {
       const response: any = await httpGet(session, 'tasks/stp/' + taskId);
-      console.log(response, "pollresp")
       const lastMessage: any =
         response['progress'][response['progress'].length - 1];
       if (!['completed', 'failed'].includes(lastMessage.status)) {

@@ -5,11 +5,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-
 import CloseIcon from '@mui/icons-material/Close';
-
 import { memo, useContext, useEffect, useState } from 'react';
-
+import { useForm, Controller } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { httpGet } from '@/helpers/http';
@@ -30,25 +28,35 @@ export const SqlWrite = memo(
     const { data: session } = useSession();
     const [defaultPromptsLists, setDefaultPromptLists] = useState([]);
     const [customPromptToggle, setCustomPromptToggle] = useState(false);
-    const [customPrompt, setCustomPrompt] = useState('');
-    const [defaultPrompt, setDefaultPrompt] = useState('');
-    const [sqlText, setSqlText] = useState('');
     const globalContext = useContext(GlobalContext);
     const [tempLoading, setTempLoading] = useState(false);
 
+    const {
+      control,
+      setValue,
+      watch,
+      handleSubmit,
+      formState: { errors },
+      reset,
+    } = useForm({
+      defaultValues: {
+        defaultPrompt: '',
+        customPrompt: '',
+        sqlText: '',
+      },
+    });
+
+    const selectedDefaultPrompt = watch('defaultPrompt');
+    const customPromptValue = watch('customPrompt');
+
     const handlePromptSelection = (promptText: string) => {
-      if (customPromptToggle) {
-        setCustomPrompt('');
-        setCustomPromptToggle(false);
-      }
-      setDefaultPrompt(promptText);
+      setCustomPromptToggle(false);
+      setValue('defaultPrompt', promptText);
+      setValue('customPrompt', '');
     };
 
-    const handleSubmit = async () => {
-      if (!sqlText) {
-        errorToast('Please enter a SELECT sql query', [], globalContext);
-        return;
-      }
+    const onSubmit = (data: any) => {
+      const { sqlText, customPrompt, defaultPrompt } = data;
       if (!customPrompt && !defaultPrompt) {
         errorToast(
           'Either select a default prompt or write a custom prompt',
@@ -64,25 +72,24 @@ export const SqlWrite = memo(
     };
 
     useEffect(() => {
-      try {
-        setTempLoading(true);
-        const getDefaultPrompts = async () => {
+      const getDefaultPrompts = async () => {
+        try {
+          setTempLoading(true);
           const response = await httpGet(session, `data/user_prompts/`);
           if (!response.length) {
             errorToast('No Custom Prompts found', [], globalContext);
             return;
           }
           setDefaultPromptLists(response);
-        };
-
-        if (session) {
-          getDefaultPrompts();
+        } catch (error: any) {
+          errorToast(error.message, [], globalContext);
+        } finally {
+          setTempLoading(false);
         }
-      } catch (error: any) {
-        console.log(error);
-        errorToast(error.message, [], globalContext);
-      } finally {
-        setTempLoading(false);
+      };
+
+      if (session) {
+        getDefaultPrompts();
       }
     }, [session]);
 
@@ -93,24 +100,27 @@ export const SqlWrite = memo(
       setCustomPromptToggle(
         isDefaultPrompt || !oldSessionMetaInfo.sqlText ? false : true
       );
-      setCustomPrompt(isDefaultPrompt ? '' : prompt);
-      setDefaultPrompt(isDefaultPrompt ? prompt : '');
-      setSqlText(oldSessionMetaInfo?.sqlText || '');
+      reset({
+        defaultPrompt: isDefaultPrompt ? prompt : '',
+        customPrompt: isDefaultPrompt ? '' : prompt,
+        sqlText: oldSessionMetaInfo?.sqlText || '',
+      });
     }, [defaultPromptsLists, oldSessionMetaInfo]);
 
     if (tempLoading) return <CircularProgress />;
+
     return (
       <>
         <Box
           sx={{ width: '100%' }}
           key={defaultPromptsLists.length ? 'goodkey' : 'badkey'}
         >
-          {/* second box */}
+          {/* Second box */}
           <Box sx={{ width: '100%', padding: '1.25rem 0' }}>
             <hr></hr>
           </Box>
-          {/* Third box with sql editor */}
 
+          {/* SQL Editor */}
           <Box sx={{ width: '100%', marginTop: '1.5rem 0' }}>
             <Typography
               sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
@@ -118,21 +128,26 @@ export const SqlWrite = memo(
               SQL Filter*
             </Typography>
 
-            {/* This contains the sql filter */}
-            <TextField
-              id="outlined-multiline-static"
-              sx={{ backgroundColor: 'transparent', height: '11rem' }}
-              fullWidth
-              multiline
-              rows={6}
-              value={sqlText}
-              onChange={(e) => {
-                setSqlText(e.target.value);
-              }}
+            <Controller
+              name="sqlText"
+              control={control}
+              rules={{ required: 'SQL query is required' }}
+              render={({ field }) => (
+                <TextField
+                  id="outlined-multiline-static"
+                  sx={{ backgroundColor: 'transparent', height: '11rem' }}
+                  fullWidth
+                  multiline
+                  rows={6}
+                  {...field}
+                  error={!!errors.sqlText}
+                  helperText={errors.sqlText?.message}
+                />
+              )}
             />
           </Box>
 
-          {/* foruth box with some buttons */}
+          {/* Prompt Selection */}
           <Box
             sx={{
               display: 'flex',
@@ -188,29 +203,27 @@ export const SqlWrite = memo(
                 height: '2.75rem',
               }}
             >
-              {defaultPromptsLists.map((defaultPrompts: any) => {
-                return (
-                  <Button
-                    key={defaultPrompts.id}
-                    variant="contained"
-                    id="create-new-button"
-                    sx={{
-                      flex: '1 1 auto',
-                      backgroundColor:
-                        defaultPrompt === defaultPrompts.prompt
-                          ? '#05443e'
-                          : '#00897B',
-                    }}
-                    onClick={() => {
-                      handlePromptSelection(defaultPrompts.prompt);
-                    }}
-                  >
-                    <Typography sx={{ fontWeight: 600, fontSize: '14px' }}>
-                      {defaultPrompts.label}
-                    </Typography>
-                  </Button>
-                );
-              })}
+              {defaultPromptsLists.map((defaultPrompts: any) => (
+                <Button
+                  key={defaultPrompts.id}
+                  variant="contained"
+                  id="create-new-button"
+                  sx={{
+                    flex: '1 1 auto',
+                    backgroundColor:
+                      selectedDefaultPrompt === defaultPrompts.prompt
+                        ? '#05443e'
+                        : '#00897B',
+                  }}
+                  onClick={() => {
+                    handlePromptSelection(defaultPrompts.prompt);
+                  }}
+                >
+                  <Typography sx={{ fontWeight: 600, fontSize: '14px' }}>
+                    {defaultPrompts.label}
+                  </Typography>
+                </Button>
+              ))}
             </Box>
 
             <Typography
@@ -233,31 +246,40 @@ export const SqlWrite = memo(
                     <CloseIcon
                       onClick={() => {
                         setCustomPromptToggle(false);
-                        setCustomPrompt('');
+                        setValue('customPrompt', '');
                       }}
                       sx={{ cursor: 'pointer' }}
                     />
                   </Box>
-                  <TextField
-                    name="custom-prompt"
-                    key="custom-prompt"
-                    data-testid="search-stream"
-                    multiline
-                    rows={2}
-                    value={customPrompt}
-                    onChange={(e) => {
-                      setCustomPrompt(e.target.value);
-                    }}
+
+                  <Controller
+                    name="customPrompt"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        multiline
+                        rows={2}
+                        {...field}
+                        error={!!errors.customPrompt && !selectedDefaultPrompt}
+                        helperText={
+                          errors.customPrompt && !selectedDefaultPrompt
+                            ? 'Custom prompt is required if no default is selected'
+                            : ''
+                        }
+                      />
+                    )}
                   />
                 </Box>
               ) : (
                 <Button
                   variant="contained"
-                  sx={{ width: '100%', height: '2.75rem', borderRadius: '6px' }}
+                  sx={{
+                    width: '100%',
+                    height: '2.75rem',
+                    borderRadius: '6px',
+                  }}
                   onClick={() => {
-                    if (defaultPrompt) {
-                      setDefaultPrompt('');
-                    }
+                    setValue('defaultPrompt', '');
                     setCustomPromptToggle(true);
                   }}
                 >
@@ -266,11 +288,11 @@ export const SqlWrite = memo(
               )}
             </Box>
           </Box>
+
+          {/* Submit Button */}
           <Button
-            onClick={() => {
-              handleSubmit();
-            }}
-            disabled={newSessionId ? true : false}
+            onClick={handleSubmit(onSubmit)}
+            disabled={!!newSessionId}
             variant="contained"
             sx={{
               width: '6.75rem',

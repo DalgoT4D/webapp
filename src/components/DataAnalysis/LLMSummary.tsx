@@ -7,8 +7,9 @@ import ThumbsupIcon from '@/assets/icons/thumb_up.svg';
 import ThumbsDownIcon from '@/assets/icons/thumb_up (1).svg';
 import { memo, useContext, useState } from 'react';
 import { OverWriteDialog } from './OverwriteBox';
-import { successToast } from '../ToastMessage/ToastHelper';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { copyToClipboard } from '@/utils/common';
 
 export const LLMSummary = memo(
   ({
@@ -16,26 +17,28 @@ export const LLMSummary = memo(
     newSessionId,
     prompt,
     oldSessionMetaInfo,
-    handleNewSession
+    handleNewSession,
   }: {
     llmSummary: string;
     newSessionId: string;
     prompt: string;
     oldSessionMetaInfo: any;
-    handleNewSession: any
+    handleNewSession: any;
   }) => {
     const [isBoxOpen, setIsBoxOpen] = useState(false);
     const [modalName, setModalName] = useState('SAVE');
     const globalContext = useContext(GlobalContext);
-    const handleCopyClick = () => {
-      navigator.clipboard
-        .writeText(llmSummary)
-        .then(() => {
-          successToast('Summary copied to clipboard', [], globalContext);
-        })
-        .catch((err) => {
-          console.error('Failed to copy text: ', err);
-        });
+    const handleCopyClick = async () => {
+      const copyRes: boolean = await copyToClipboard(llmSummary);
+      if (copyRes) {
+        successToast('Successfully copied to clipboard', [], globalContext);
+      } else {
+        errorToast(
+          'Some problem with copying. Please try again',
+          [],
+          globalContext
+        );
+      }
     };
     console.log(modalName, 'modalname');
     return (
