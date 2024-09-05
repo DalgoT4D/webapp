@@ -23,11 +23,13 @@ export const OverWriteDialog = ({
   modalName,
   oldSessionId,
   newSessionId,
+  handleNewSession
 }: {
   open: boolean;
   modalName: string;
   oldSessionId: string;
   newSessionId: string;
+  handleNewSession:any
   setIsBoxOpen: (a: boolean) => void;
 }) => {
   const { data: session } = useSession();
@@ -57,6 +59,7 @@ console.log(modalName, "modalname");
       if (response.success) {
         successToast(`${textBoxData} saved successfully`, [], globalContext);
         setIsSessionSaved(true);
+        handleNewSession();
       }
     } catch (err: any) {
       console.log(err);
