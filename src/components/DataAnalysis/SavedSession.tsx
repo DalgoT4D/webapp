@@ -12,6 +12,7 @@ import {
   Button,
   TablePagination,
   CircularProgress,
+  Typography,
 } from '@mui/material';
 
 import Image from 'next/image';
@@ -294,7 +295,7 @@ export const SavedSession = memo(
                           }}
                         >
                           <Tooltip title={row.session_name}>
-                            <span>{trimText(row.session_name, 20)}</span>
+                            <span>{trimText(row.session_name, 30)}</span>
                           </Tooltip>
                         </TableCell>
                         <TableCell
@@ -350,22 +351,24 @@ export const SavedSession = memo(
                 </TableBody>
               </Table>
             </TableContainer>
-            <TablePagination
-              rowsPerPageOptions={[5, 10]}
-              component="div"
-              count={totalCount}
-              rowsPerPage={pageSize}
-              page={currentPageIndex}
-              onPageChange={(e, newPage) => {
-                handlePagination(newPage, pageSize);
-              }}
-              onRowsPerPageChange={(e: any) => {
-                const newPageSize = parseInt(e.target.value, 10);
-                setPageSize(newPageSize);
-                setCurrentPageIndex(0);
-                handlePagination(0, newPageSize);
-              }}
-            />
+            {!!savedSessions.length && (
+              <TablePagination
+                rowsPerPageOptions={[5, 10]}
+                component="div"
+                count={totalCount}
+                rowsPerPage={pageSize}
+                page={currentPageIndex}
+                onPageChange={(e, newPage) => {
+                  handlePagination(newPage, pageSize);
+                }}
+                onRowsPerPageChange={(e: any) => {
+                  const newPageSize = parseInt(e.target.value, 10);
+                  setPageSize(newPageSize);
+                  setCurrentPageIndex(0);
+                  handlePagination(0, newPageSize);
+                }}
+              />
+            )}
           </Box>
         </Dialog>
       </>
@@ -373,4 +376,4 @@ export const SavedSession = memo(
   }
 );
 
-SavedSession.displayName = "Saved-Session";
+SavedSession.displayName = 'Saved-Session';
