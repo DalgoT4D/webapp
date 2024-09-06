@@ -1,71 +1,48 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Box,
   Button,
   TextField,
   Typography,
-  Dialog,
   DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import CustomDialog from '../Dialog/CustomDialog';
+import { useForm, Controller } from 'react-hook-form'; // Import React Hook Form
+
+// Define the form data type
+interface FormData {
+  sessionName: string;
+}
 
 export const OverWriteDialog = ({
   open,
   setIsBoxOpen,
   modalName,
-  oldSessionId,
-  newSessionId,
-  handleNewSession,
+  onSubmit,
 }: {
   open: boolean;
   modalName: string;
-  oldSessionId: string;
-  newSessionId: string;
-  handleNewSession: any;
+  onSubmit: any;
   setIsBoxOpen: (a: boolean) => void;
 }) => {
-  const { data: session } = useSession();
-  const globalContext = useContext(GlobalContext);
-  const [textBoxData, setTextBoxData] = useState('');
-  const [openModalName, setOpenModalName] = useState(modalName);
-  const [isSessionSaved, setIsSessionSaved] = useState(false);
-  const handleClose = () => setIsBoxOpen(false);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting, errors },
+  } = useForm<FormData>({
+    defaultValues: {
+      sessionName: '',
+    },
+  });
 
-  console.log(modalName, 'modalname');
-  const handleSaveSession = async (
-    overwrite: boolean,
-    old_session_id: string | null
-  ) => {
-    try {
-      const response = await httpPost(
-        session,
-        `warehouse/ask/${newSessionId}/save`,
-        {
-          session_name: textBoxData,
-          overwrite,
-          old_session_id,
-        }
-      );
-      console.log(response, 'response');
-      //write error condition
-      if (response.success) {
-        successToast(`${textBoxData} saved successfully`, [], globalContext);
-        setIsSessionSaved(true);
-        handleNewSession();
-      }
-    } catch (err: any) {
-      console.log(err);
-      errorToast(err.message, [], globalContext);
-    } finally {
-      handleClose();
-    }
+  const handleClose = () => {
+    reset();
+    setIsBoxOpen(false);
   };
 
   const ModalData: any = {
@@ -82,9 +59,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: () => {
-            handleSaveSession(false, null);
-          },
+          onClick: handleSubmit((data) => onSubmit(data, false)), // Use handleSubmit from react-hook-form
         },
         {
           label: 'Cancel',
@@ -111,9 +86,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: () => {
-            setOpenModalName('CONFIRM_SAVEAS');
-          },
+          onClick: handleSubmit((data) => onSubmit(data, true)), // Handle form submission
         },
         {
           label: 'Save as new',
@@ -123,9 +96,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: () => {
-            handleSaveSession(false, null);
-          },
+          onClick: handleSubmit((data) => onSubmit(data, false)), // Use handleSubmit from react-hook-form
         },
         {
           label: 'Cancel',
@@ -135,7 +106,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleClose, // Use existing handleClose function for the Cancel button
+          onClick: handleClose,
         },
       ],
     },
@@ -152,9 +123,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: () => {
-            handleSaveSession(true, oldSessionId); //overwriting, opens when clicked overwrite.
-          },
+          onClick: handleSubmit((data) => onSubmit(data, false)), // Use handleSubmit from react-hook-form
         },
         {
           label: 'Cancel',
@@ -186,110 +155,78 @@ export const OverWriteDialog = ({
         },
       ],
     },
-    UNSAVED_CHANGES: {
-      mainheading: 'Unsaved changes',
-      subHeading:
-        'You are about to leave this page without saving the changes.\nAll the changes that were made will be lost. Do you wish to continue?',
-      buttons: [
-        {
-          label: 'Save changes',
-          variant: 'contained',
-          sx: {
-            width: '6.75rem',
-            padding: '8px 0',
-            borderRadius: '5px',
-          },
-          onClick: () => {
-            handleSaveSession(false, oldSessionId);
-          },
-        },
-        {
-          label: 'Leave anyway',
-          variant: 'outlined',
-          sx: {
-            width: '6.75rem',
-            padding: '8px 0',
-            borderRadius: '5px',
-          },
-          onClick: handleClose,
-        },
-      ],
-    },
   };
+
+  const FormContent = () => {
+    return (
+      <>
+        <Typography
+          sx={{
+            fontWeight: '600',
+            fontSize: '14px',
+            color: 'rgba(0, 0, 0, 0.6)',
+          }}
+        >
+          {ModalData[modalName].subHeading}
+        </Typography>
+        <Box sx={{ marginTop: '1.75rem' }}>
+          {/* Using Controller to handle TextField with validation */}
+          <Controller
+            name="sessionName"
+            control={control}
+            rules={{ required: 'Session Name is required' }} // Validation rule
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                multiline
+                rows={ModalData[modalName]?.rowsNum || 1}
+                label={ModalData[modalName]?.label || 'Session Name'}
+                variant="outlined"
+                error={!!errors.sessionName} // Show error if validation fails
+                helperText={
+                  errors.sessionName ? errors.sessionName.message : ''
+                } // Display error message
+              />
+            )}
+          />
+        </Box>
+      </>
+    );
+  };
+
   return (
-    <>
-      {/* Dialog Box */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        {/* Dialog Title with close button */}
-        <DialogTitle>
-          <Box display="flex" alignItems="center">
-            <Typography
-              sx={{ color: '#000000', fontWeight: '600', fontSize: '1.5rem' }}
-            >
-              {ModalData[openModalName].mainheading}
-            </Typography>
-            <IconButton
-              sx={{ marginLeft: 'auto' }}
-              onClick={handleClose}
-              aria-label="close"
-            >
-              <CloseIcon onClick={handleClose} sx={{ cursor: 'pointer' }} />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-
-        {/* Dialog Content */}
-        <DialogContent>
-          <Typography
-            sx={{
-              fontWeight: '600',
-              fontSize: '14px',
-              color: 'rgba(0, 0, 0, 0.6)',
-            }}
-          >
-            {ModalData[openModalName].subHeading}
-          </Typography>
-
-          {/* Input Field */}
-          <Box sx={{ marginTop: '1.75rem' }}>
-            <TextField
-              name="overwrite"
-              fullWidth
-              multiline
-              rows={ModalData[openModalName]?.rowsNum || 1}
-              label={ModalData[openModalName]?.label || 'Session Name'}
-              variant="outlined"
-              value={textBoxData}
-              onChange={(e) => {
-                setTextBoxData(e.target.value);
-              }}
-            />
-          </Box>
-        </DialogContent>
-
-        {/* Dialog Actions */}
+    <CustomDialog
+      maxWidth={false}
+      data-testid="dialog"
+      title={ModalData[modalName].mainheading}
+      show={open}
+      handleClose={handleClose}
+      handleSubmit={()=>{}}
+      formContent={<FormContent />}
+      formActions={
         <DialogActions
           sx={{
-            padding: '1.5rem 2rem',
+            padding: '2rem 0',
             display: 'flex',
             justifyContent: 'flex-start',
             gap: '12px',
           }}
         >
-          {ModalData[openModalName].buttons.map(
-            (button: any, index: number) => (
-              <Button
-                key={index}
-                variant={button.variant}
-                sx={button.sx}
-                onClick={button.onClick}
-              >
-                {button.label}
-              </Button>
-            )
-          )}
+          {ModalData[modalName].buttons.map((button: any, index: number) => (
+            <Button
+              key={index}
+              variant={button.variant}
+              sx={button.sx}
+              onClick={button.onClick}
+              disabled={isSubmitting}
+            >
+              {button.label}
+            </Button>
+          ))}
         </DialogActions>
-      </Dialog>
-    </>
+      }
+      loading={isSubmitting} // Set loading state based on form submission
+    />
   );
 };
