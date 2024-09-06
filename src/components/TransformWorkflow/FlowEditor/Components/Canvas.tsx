@@ -134,7 +134,6 @@ const CanvasHeader = () => {
   const nodeData: any = canvasNode?.data;
 
   const handleSelectRunTypeChange = (event: any) => {
-    console.log(canvasNode);
     const action = event.target.value;
     setSelectedAction(action);
   };
