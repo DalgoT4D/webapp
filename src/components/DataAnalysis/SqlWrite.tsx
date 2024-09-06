@@ -308,3 +308,6 @@ export const SqlWrite = memo(
     );
   }
 );
+
+
+SqlWrite.displayName  = "Sql-write";

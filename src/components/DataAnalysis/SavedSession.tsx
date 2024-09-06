@@ -229,7 +229,7 @@ export const SavedSession = memo(
                   {loading ? (
                     <CircularProgress />
                   ) : (
-                    savedSessions.map((row: any, idx) => (
+                    savedSessions?.map((row: any, idx) => (
                       <TableRow
                         key={row.session_id}
                         sx={{
@@ -372,3 +372,5 @@ export const SavedSession = memo(
     );
   }
 );
+
+SavedSession.displayName = "Saved-Session";
