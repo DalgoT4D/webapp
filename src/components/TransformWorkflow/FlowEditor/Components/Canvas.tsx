@@ -125,8 +125,8 @@ const nodeTypes: NodeTypes = {
 };
 
 const CanvasHeader = () => {
-  const { canvasAction, setCanvasAction } = useCanvasAction();
-  const { canvasNode, setCanvasNode } = useCanvasNode();
+  const { setCanvasAction } = useCanvasAction();
+  const { canvasNode } = useCanvasNode();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const [selectedAction, setSelectedAction] = useState('run');
@@ -208,7 +208,7 @@ const CanvasHeader = () => {
             color: '#00897B',
             fontWeight: 700,
             border: '1px solid #00897B',
-            width: "9.5rem",
+            minWidth: "9.5rem",
             textAlign: 'center'
           }}
         >
