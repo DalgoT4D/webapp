@@ -10,6 +10,7 @@ import { OverWriteDialog } from './OverwriteBox';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { copyToClipboard } from '@/utils/common';
+import InfoTooltip from '../UI/Tooltip/Tooltip';
 
 export const LLMSummary = memo(
   ({
@@ -56,11 +57,14 @@ export const LLMSummary = memo(
               }}
             >
               LLM Summary
-              <Image
+              {/* <Image
                 style={{ width: '1rem', height: '1rem' }}
                 src={InfoIcon}
                 alt="info icon"
-              />
+              /> */}
+              <InfoTooltip title='hello'>
+
+              </InfoTooltip>
             </Box>
             {/* THIS IS THE SUMMARY UI PORTION */}
             <Box
@@ -148,7 +152,7 @@ export const LLMSummary = memo(
             </Box>
             <Box sx={{ display: 'flex', gap: '12px', marginTop: '2rem' }}>
               <Button
-                variant="contained"
+                variant="outlined"
                 disabled={newSessionId ? false : true}
                 onClick={() => {
                   setModalName(
@@ -159,13 +163,7 @@ export const LLMSummary = memo(
                 sx={{
                   width: '6.75rem',
                   padding: '8px 0',
-                  borderRadius: '6px',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #626262',
-                  color: '#626262',
-                  '&:hover': {
-                    color: '#FFFFFF',
-                  },
+                  borderRadius: '6px'
                 }}
               >
                 Save as
@@ -203,3 +201,6 @@ const customCss = {
   padding: '2rem',
   //   borderColor: '#FFFFFF',
 };
+
+
+LLMSummary.displayName = "LLM-summary";
