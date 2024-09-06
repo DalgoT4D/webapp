@@ -181,7 +181,16 @@ const CanvasHeader = () => {
         Workflow01
       </Typography>
 
-      <Box sx={{ marginLeft: 'auto', display: 'flex', gap: '20px' }}>
+      <Box
+        sx={{
+          marginLeft: 'auto',
+          display: 'flex',
+          gap: '20px',
+          minWidth: '30%',
+          justifyContent: 'flex-end',
+        }}
+      >
+        {' '}
         <Select
           labelId="run-workflow-action"
           value={selectedAction}
@@ -191,13 +200,16 @@ const CanvasHeader = () => {
           placeholder="Select Action"
           IconComponent={(props: any) => {
             return (
-              <ArrowDropDownIcon {...props} style={{ color: '#F5FAFA' }} />
+              <ArrowDropDownIcon {...props} style={{ color: '#00897B' }} />
             );
           }}
           sx={{
-            background: '#00897B',
-            color: '#F5FAFA',
+            background: '#F5FAFA',
+            color: '#00897B',
             fontWeight: 700,
+            border: '1px solid #00897B',
+            width: "9.5rem",
+            textAlign: 'center'
           }}
         >
           <MenuItem value="run">Run</MenuItem>
