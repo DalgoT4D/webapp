@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React from 'react';
 import {
   Box,
   Button,
@@ -6,12 +6,8 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import { httpPost } from '@/helpers/http';
-import { useSession } from 'next-auth/react';
-import { errorToast, successToast } from '../ToastMessage/ToastHelper';
-import { GlobalContext } from '@/contexts/ContextProvider';
 import CustomDialog from '../Dialog/CustomDialog';
-import { useForm, Controller } from 'react-hook-form'; // Import React Hook Form
+import { useForm, Controller } from 'react-hook-form';
 
 // Define the form data type
 interface FormData {
@@ -23,10 +19,14 @@ export const OverWriteDialog = ({
   setIsBoxOpen,
   modalName,
   onSubmit,
+  onConfirmNavigation,
+  setModalName,
 }: {
   open: boolean;
   modalName: string;
   onSubmit: any;
+  onConfirmNavigation: any;
+  setModalName: any;
   setIsBoxOpen: (a: boolean) => void;
 }) => {
   const {
@@ -155,6 +155,39 @@ export const OverWriteDialog = ({
         },
       ],
     },
+    UNSAVED_CHANGES: {
+      mainheading: 'Unsaved changes',
+      subHeading:
+        'You are about to leave this page without saving the changes.\nAll the changes that were made will be lost. Do you wish to continue?',
+      // rowsNum: 5,
+      label: 'Unsaved changes',
+      buttons: [
+        {
+          label: 'Save changes',
+          variant: 'contained',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: () => {
+            setModalName('OVERWRITE');
+          },
+        },
+        {
+          label: 'Leave anyway',
+          variant: 'contained',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: () => {
+            onConfirmNavigation();
+          },
+        },
+      ],
+    },
   };
 
   const FormContent = () => {
@@ -169,28 +202,29 @@ export const OverWriteDialog = ({
         >
           {ModalData[modalName].subHeading}
         </Typography>
-        <Box sx={{ marginTop: '1.75rem' }}>
-          {/* Using Controller to handle TextField with validation */}
-          <Controller
-            name="sessionName"
-            control={control}
-            rules={{ required: 'Session Name is required' }} // Validation rule
-            render={({ field }) => (
-              <TextField
-                {...field}
-                fullWidth
-                multiline
-                rows={ModalData[modalName]?.rowsNum || 1}
-                label={ModalData[modalName]?.label || 'Session Name'}
-                variant="outlined"
-                error={!!errors.sessionName} // Show error if validation fails
-                helperText={
-                  errors.sessionName ? errors.sessionName.message : ''
-                } // Display error message
-              />
-            )}
-          />
-        </Box>
+        {modalName !== 'UNSAVED_CHANGES' && (
+          <Box sx={{ marginTop: '1.75rem' }}>
+            <Controller
+              name="sessionName"
+              control={control}
+              rules={{ required: 'Session Name is required' }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  multiline
+                  rows={ModalData[modalName]?.rowsNum || 1}
+                  label={ModalData[modalName]?.label || 'Session Name'}
+                  variant="outlined"
+                  error={!!errors.sessionName}
+                  helperText={
+                    errors.sessionName ? errors.sessionName.message : ''
+                  }
+                />
+              )}
+            />
+          </Box>
+        )}
       </>
     );
   };
@@ -202,7 +236,7 @@ export const OverWriteDialog = ({
       title={ModalData[modalName].mainheading}
       show={open}
       handleClose={handleClose}
-      handleSubmit={()=>{}}
+      handleSubmit={() => {}}
       formContent={<FormContent />}
       formActions={
         <DialogActions
@@ -213,7 +247,7 @@ export const OverWriteDialog = ({
             gap: '12px',
           }}
         >
-          {ModalData[modalName].buttons.map((button: any, index: number) => (
+          {ModalData[modalName]?.buttons.map((button: any, index: number) => (
             <Button
               key={index}
               variant={button.variant}

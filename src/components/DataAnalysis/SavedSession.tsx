@@ -12,7 +12,6 @@ import {
   Button,
   TablePagination,
   CircularProgress,
-  Typography,
 } from '@mui/material';
 
 import Image from 'next/image';

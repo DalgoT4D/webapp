@@ -47,7 +47,6 @@ export const SqlWrite = memo(
     });
 
     const selectedDefaultPrompt = watch('defaultPrompt');
-    const customPromptValue = watch('customPrompt');
 
     const handlePromptSelection = (promptText: string) => {
       setCustomPromptToggle(false);

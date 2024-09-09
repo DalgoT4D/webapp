@@ -1,6 +1,4 @@
 import { Box, Button, Typography } from '@mui/material';
-import Image from 'next/image';
-import InfoIcon from '@/assets/icons/info.svg';
 import InfoTooltip from '../UI/Tooltip/Tooltip';
 export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
   return (
