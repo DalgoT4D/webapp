@@ -17,24 +17,23 @@ import { useSession } from 'next-auth/react';
 export const LLMSummary = ({
   llmSummary,
   newSessionId,
-  prompt,
   oldSessionMetaInfo,
   handleNewSession,
 }: {
   llmSummary: string;
   newSessionId: string;
-  prompt: string;
   oldSessionMetaInfo: any;
   handleNewSession: any;
 }) => {
   const router = useRouter();
-  const {data:session} = useSession();
+  const { data: session } = useSession();
   const [isBoxOpen, setIsBoxOpen] = useState(false);
   const [modalName, setModalName] = useState('SAVE');
-  const [isSessionSaved, setIsSessionSaved] = useState(false);
+  const [attemptedRoute, setAttemptedRoute] = useState(null);
   const globalContext = useContext(GlobalContext);
+  const { dispatch, state } = globalContext?.UnsavedChanges as any;
 
-
+  //handling save session->
   const handleSaveSession = async (
     overwrite: boolean,
     old_session_id: string | null,
@@ -53,7 +52,6 @@ export const LLMSummary = ({
 
       if (response.success) {
         successToast(`${session_name} saved successfully`, [], globalContext);
-        setIsSessionSaved(true);
         handleNewSession();
       }
     } catch (err: any) {
@@ -63,13 +61,16 @@ export const LLMSummary = ({
     }
   };
 
-  const onSubmit = (data:any, overwrite:boolean) => {
-    console.log(data, overwrite, "data")
-    const oldSessionIdToSend = overwrite ? oldSessionMetaInfo?.oldSessionId : null;
+  // submitting the session name ->
+  const onSubmit = (data: any, overwrite: boolean) => {
+    console.log(data, overwrite, 'data');
+    const oldSessionIdToSend = overwrite
+      ? oldSessionMetaInfo?.oldSessionId
+      : null;
     handleSaveSession(overwrite, oldSessionIdToSend, data.sessionName);
   };
 
-  // Function to handle copying text
+  // Function to handle copying text ->
   const handleCopyClick = async () => {
     const copyRes: boolean = await copyToClipboard(llmSummary);
     if (copyRes) {
@@ -83,6 +84,38 @@ export const LLMSummary = ({
     }
   };
 
+  // checks for the route change->
+  //cover both cases, while editing, and the first time too wehn the user creats a analysis.
+  useEffect(() => {
+    const handleRouteChange = (url: any) => {
+      if (
+        (oldSessionMetaInfo.oldSessionId && newSessionId && state === false) ||
+        (newSessionId && !oldSessionMetaInfo.oldSessionId && state === false)
+      ) {
+        router.events.emit('routeChangeError');
+        setModalName('UNSAVED_CHANGES');
+        setIsBoxOpen(true);
+        dispatch({ type: 'SET_UNSAVED_CHANGES' });
+        setAttemptedRoute(url);
+        throw 'Unsaved changes, route change aborted';
+      }
+    };
+
+    router.events.on('routeChangeStart', handleRouteChange);
+
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange);
+      dispatch({ type: 'CLEAR_UNSAVED_CHANGES' });
+    };
+  }, [router, oldSessionMetaInfo.oldSessionId, state, newSessionId]);
+
+  //the unsaved modal function->
+  const onConfirmNavigation = () => {
+    if (attemptedRoute) {
+      dispatch({ type: 'SET_UNSAVED_CHANGES' });
+      router.push(attemptedRoute);
+    }
+  };
 
   return (
     <Box sx={{ ...customCss, width: '58%' }}>
@@ -209,9 +242,10 @@ export const LLMSummary = ({
             setIsBoxOpen={setIsBoxOpen}
             modalName={modalName}
             onSubmit={onSubmit}
+            onConfirmNavigation={onConfirmNavigation}
+            setModalName={setModalName}
           />
         )}
-        
       </Box>
     </Box>
   );

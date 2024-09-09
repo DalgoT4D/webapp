@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Backdrop, Box, CircularProgress, Typography } from '@mui/material';
 import { LLMSummary } from '@/components/DataAnalysis/LLMSummary';
 import { SqlWrite } from '@/components/DataAnalysis/SqlWrite';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -10,7 +10,6 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import { useContext, useState } from 'react';
-import { FullPageBackground } from '@/components/UI/FullScreenLoader/FullScreenLoader';
 import { SavedSession } from '@/components/DataAnalysis/SavedSession';
 import { TopBar } from '@/components/DataAnalysis/TopBar';
 
@@ -20,12 +19,14 @@ export default function DataAnalysis() {
   const [loading, setLoading] = useState(false);
   const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
 
-  const [{ prompt, summary, newSessionId }, setllmSummaryResult] = useState({    //initail props
+  const [{ prompt, summary, newSessionId }, setllmSummaryResult] = useState({
+    //initail props
     prompt: '',
     summary: '',
     newSessionId: '',
   });
-  const [oldSessionMetaInfo, setOldSessionMetaInfo] = useState({    //while editing,  this contains previous session's metadata
+  const [oldSessionMetaInfo, setOldSessionMetaInfo] = useState({
+    //while editing,  this contains previous session's metadata
     session_status: '',
     sqlText: '',
     taskId: '',
@@ -38,19 +39,19 @@ export default function DataAnalysis() {
   const handleOpenSavedSession = () => {
     setOpenSavedSessionDialog(true);
   };
-  const handleNewSession =()=>{
+  const handleNewSession = () => {
     setllmSummaryResult({
       prompt: '',
       summary: '',
       newSessionId: '',
-    })
+    });
     setOldSessionMetaInfo({
       session_status: '',
       sqlText: '',
       taskId: '',
       session_name: '',
       oldSessionId: '',
-    })
+    });
   };
   const handleEditSession = (info: any) => {
     setOldSessionMetaInfo({
@@ -108,7 +109,6 @@ export default function DataAnalysis() {
         sql: sqlText,
         user_prompt,
       });
-      console.log(response, 'taskid');
       if (response?.detail) {
         errorToast(response.detail, [], globalContext);
         return { error: 'ERROR' };
@@ -128,7 +128,6 @@ export default function DataAnalysis() {
     }
   };
 
-
   return (
     <>
       <Box
@@ -147,7 +146,10 @@ export default function DataAnalysis() {
           }}
         >
           {/* Top saved Session Option */}
-          <TopBar handleOpenSavedSession={handleOpenSavedSession} handleNewSession={handleNewSession} />
+          <TopBar
+            handleOpenSavedSession={handleOpenSavedSession}
+            handleNewSession={handleNewSession}
+          />
 
           {/* SQL write Area */}
           <SqlWrite
@@ -163,21 +165,47 @@ export default function DataAnalysis() {
           llmSummary={summary}
           newSessionId={newSessionId}
           oldSessionMetaInfo={oldSessionMetaInfo}
-          prompt={prompt}
           handleNewSession={handleNewSession}
         />
 
         {/* Loader full screen */}
         {loading && (
           <>
-            <FullPageBackground>
+            {/* <FullPageBackground> */}
+            <Backdrop
+              open={loading !== undefined ? loading : false}
+              sx={{ 
+                zIndex: 1300,
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <>
               <CircularProgress sx={{ color: '#FFFFFF' }} />
               <Typography
                 sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}
               >
                 Prepping your data output...
               </Typography>
-            </FullPageBackground>
+              </>
+            </Backdrop>
+            {/* <Backdrop> */}
+              {/* <CircularProgress sx={{ color: '#FFFFFF' }} />
+              <Typography
+                sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}
+              >
+                Prepping your data output...
+              </Typography> */}
+              {/* </FullPageBackground> */}
+            {/* </Backdrop> */}
           </>
         )}
 
