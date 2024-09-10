@@ -49,6 +49,7 @@ export const SqlWrite = memo(
     const selectedDefaultPrompt = watch('defaultPrompt');
 
     const handlePromptSelection = (promptText: string) => {
+      console.log(promptText, "newtest");
       setCustomPromptToggle(false);
       setValue('defaultPrompt', promptText);
       setValue('customPrompt', '');
@@ -56,6 +57,7 @@ export const SqlWrite = memo(
 
     const onSubmit = (data: any) => {
       const { sqlText, customPrompt, defaultPrompt } = data;
+      console.log(sqlText, customPrompt, defaultPrompt, "hello" )
       if (!customPrompt && !defaultPrompt) {
         errorToast(
           'Either select a default prompt or write a custom prompt',
@@ -105,7 +107,7 @@ export const SqlWrite = memo(
         sqlText: oldSessionMetaInfo?.sqlText || '',
       });
     }, [defaultPromptsLists, oldSessionMetaInfo]);
-
+console.log(tempLoading, "temploading")
     if (tempLoading) return <CircularProgress />;
 
     return (
@@ -122,6 +124,7 @@ export const SqlWrite = memo(
           {/* SQL Editor */}
           <Box sx={{ width: '100%', marginTop: '1.5rem 0' }}>
             <Typography
+            data-testid = "sql-filter"
               sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
             >
               SQL Filter*
@@ -206,6 +209,7 @@ export const SqlWrite = memo(
                 <Button
                   key={defaultPrompts.id}
                   variant="contained"
+                  data-testid={`${defaultPrompts.id}-default`}
                   id="create-new-button"
                   sx={{
                     flex: '1 1 auto',
@@ -307,6 +311,5 @@ export const SqlWrite = memo(
     );
   }
 );
-
 
 SqlWrite.displayName  = "Sql-write";

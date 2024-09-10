@@ -198,6 +198,7 @@ export const OverWriteDialog = ({
             fontWeight: '600',
             fontSize: '14px',
             color: 'rgba(0, 0, 0, 0.6)',
+            whiteSpace: "pre-line"
           }}
         >
           {ModalData[modalName].subHeading}
