@@ -21,9 +21,9 @@ export default function App({
             <CssBaseline />
             <SessionProvider session={session} refetchOnWindowFocus={false}>
                 <Main>
-              <TrackingProvider session={session} >
+              {/* <TrackingProvider session={session} > */}
                   <Component {...pageProps} />
-              </TrackingProvider>
+              {/* </TrackingProvider> */}
                 </Main>
             </SessionProvider>
           </ThemeProvider>
