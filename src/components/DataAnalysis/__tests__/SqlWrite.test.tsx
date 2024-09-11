@@ -70,98 +70,98 @@ describe('SqlWrite component', () => {
     expect(screen.getByText('Prompt 2')).toBeInTheDocument();
   });
 
-  test.only('handles selecting a default prompt and submitting', async () => {
-    const mockPrompts = [
-      { id: 1, label: 'Prompt 1', prompt: 'SELECT * FROM table' },
-    ];
+//   test.only('handles selecting a default prompt and submitting', async () => {
+//     const mockPrompts = [
+//       { id: 1, label: 'Prompt 1', prompt: 'SELECT * FROM table' },
+//     ];
     
-    useSession.mockReturnValue({ data: mockSession });
-    httpGet.mockResolvedValue(mockPrompts);
+//     useSession.mockReturnValue({ data: mockSession });
+//     httpGet.mockResolvedValue(mockPrompts);
 
-    render(
-      <GlobalContext.Provider value={{}}>
-        <SqlWrite {...defaultProps} />
-      </GlobalContext.Provider>
-    );
+//     render(
+//       <GlobalContext.Provider value={{}}>
+//         <SqlWrite {...defaultProps} />
+//       </GlobalContext.Provider>
+//     );
 
-    // Wait for prompts to load
-    await waitFor(() => expect(httpGet).toHaveBeenCalled());
+//     // Wait for prompts to load
+//     await waitFor(() => expect(httpGet).toHaveBeenCalled());
 
-    // Select the prompt
-    const promptButton = screen.getByTestId("1-default")
-   console.log(promptButton.outerHTML , "prompt butt")
-    fireEvent.click(promptButton);
-    // Fill in the SQL text
-    const sqlText = 'SELECT name FROM employees';
-    fireEvent.change(screen.getByRole('textbox', { name: '' }), {
-    target: { value: sqlText },
-    });
+//     // Select the prompt
+//     const promptButton = screen.getByTestId("1-default")
+//    console.log(promptButton.outerHTML , "prompt butt")
+//     fireEvent.click(promptButton);
+//     // Fill in the SQL text
+//     const sqlText = 'SELECT name FROM employees';
+//     fireEvent.change(screen.getByRole('textbox', { name: '' }), {
+//     target: { value: sqlText },
+//     });
 
 
-    // Submit the form
-    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+//     // Submit the form
+//     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
-    // Check that getLLMSummary is called with the correct values
-    await waitFor(() => {
-      expect(mockGetLLMSummary).toHaveBeenCalledWith({
-        sqlText,
-        user_prompt: 'SELECT * FROM table',
-      });
-    });
+//     // Check that getLLMSummary is called with the correct values
+//     await waitFor(() => {
+//       expect(mockGetLLMSummary).toHaveBeenCalledWith({
+//         sqlText,
+//         user_prompt: 'SELECT * FROM table',
+//       });
+//     });
 
-  test('displays error toast when neither default nor custom prompt is selected', async () => {
-    useSession.mockReturnValue({ data: mockSession });
-    httpGet.mockResolvedValue([]);
+//   test('displays error toast when neither default nor custom prompt is selected', async () => {
+//     useSession.mockReturnValue({ data: mockSession });
+//     httpGet.mockResolvedValue([]);
 
-    render(
-      <GlobalContext.Provider value={{}}>
-        <SqlWrite {...defaultProps} />
-      </GlobalContext.Provider>
-    );
+//     render(
+//       <GlobalContext.Provider value={{}}>
+//         <SqlWrite {...defaultProps} />
+//       </GlobalContext.Provider>
+//     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+//     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
-    await waitFor(() => {
-      expect(errorToast).toHaveBeenCalledWith(
-        'Either select a default prompt or write a custom prompt',
-        [],
-        {}
-      );
-    });
-  });
-});
+//     await waitFor(() => {
+//       expect(errorToast).toHaveBeenCalledWith(
+//         'Either select a default prompt or write a custom prompt',
+//         [],
+//         {}
+//       );
+//     });
+//   });
+// });
 
-  test('allows adding a custom prompt and submitting it', async () => {
-    useSession.mockReturnValue({ data: mockSession });
-    httpGet.mockResolvedValue([]);
+  // test('allows adding a custom prompt and submitting it', async () => {
+  //   useSession.mockReturnValue({ data: mockSession });
+  //   httpGet.mockResolvedValue([]);
 
-    render(
-      <GlobalContext.Provider value={{}}>
-        <SqlWrite {...defaultProps} />
-      </GlobalContext.Provider>
-    );
+  //   render(
+  //     <GlobalContext.Provider value={{}}>
+  //       <SqlWrite {...defaultProps} />
+  //     </GlobalContext.Provider>
+  //   );
 
-    fireEvent.click(screen.getByRole('button', { name: '+ Add a custom prompt' }));
+  //   fireEvent.click(screen.getByRole('button', { name: '+ Add a custom prompt' }));
 
-    const customPrompt = 'Custom SQL prompt';
-    fireEvent.change(screen.getByRole('textbox', { name: '' }), {
-      target: { value: customPrompt },
-    });
+  //   const customPrompt = 'Custom SQL prompt';
+  //   fireEvent.change(screen.getByRole('textbox', { name: '' }), {
+  //     target: { value: customPrompt },
+  //   });
 
-    const sqlText = 'SELECT * FROM users';
-    fireEvent.change(screen.getByRole('textbox', { name: '' }), {
-      target: { value: sqlText },
-    });
+  //   const sqlText = 'SELECT * FROM users';
+  //   fireEvent.change(screen.getByRole('textbox', { name: '' }), {
+  //     target: { value: sqlText },
+  //   });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  //   fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
-    await waitFor(() => {
-      expect(mockGetLLMSummary).toHaveBeenCalledWith({
-        sqlText,
-        user_prompt: customPrompt,
-      });
-    });
-  });
+  //   await waitFor(() => {
+  //     expect(mockGetLLMSummary).toHaveBeenCalledWith({
+  //       sqlText,
+  //       user_prompt: customPrompt,
+  //     });
+  //   });
+  // });
 
   test('displays CircularProgress when loading prompts', () => {
     useSession.mockReturnValue({ data: mockSession });

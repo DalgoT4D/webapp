@@ -88,7 +88,7 @@ describe('SavedSession Component', () => {
     expect(screen.getByRole('progressbar')).toBeInTheDocument(); // CircularProgress appears while loading
   });
 
-  test.only('handles pagination correctly', async () => {
+  test('handles pagination correctly', async () => {
     httpGet.mockResolvedValue(mockSavedSessions);
 
     render(

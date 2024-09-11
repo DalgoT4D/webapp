@@ -265,3 +265,5 @@ export const OverWriteDialog = ({
     />
   );
 };
+
+OverWriteDialog.displayName = "OverwriteBox";
