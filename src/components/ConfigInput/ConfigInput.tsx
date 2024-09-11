@@ -100,6 +100,7 @@ export const ConfigInput = ({
                         showPasswords[`${spec.field}`] ? 'text' : 'password'
                       }
                       multiline={spec?.multiline}
+                      rows={4}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
@@ -145,6 +146,7 @@ export const ConfigInput = ({
                       variant="outlined"
                       disabled={false}
                       multiline={spec?.multiline}
+                      rows={4}
                       inputProps={{ pattern: spec.pattern }}
                     ></Input>
                   )}
