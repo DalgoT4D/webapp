@@ -242,7 +242,7 @@ export const OverWriteDialog = ({
       formActions={
         <DialogActions
           sx={{
-            padding: '2rem 0',
+            padding: '2rem 0 0.5rem 0',
             display: 'flex',
             justifyContent: 'flex-start',
             gap: '12px',
