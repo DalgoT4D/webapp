@@ -1,9 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { OverWriteDialog } from '../OverwriteBox';
-import { useForm } from 'react-hook-form';
-import CustomDialog from '@/components/Dialog/CustomDialog';
 
-// Mock the CustomDialog component
+import { useForm } from 'react-hook-form';
+import { OverWriteDialog } from '../OverwriteBox';
+
+// eslint-disable-next-line react/display-name
 jest.mock('@/components/Dialog/CustomDialog', () => ({ formContent, formActions, title }) => (
   <div data-testid="dialog">
     <h2>{title}</h2>

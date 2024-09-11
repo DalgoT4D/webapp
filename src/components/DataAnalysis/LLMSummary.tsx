@@ -261,4 +261,4 @@ const customCss = {
 };
 
 LLMSummary.displayName = 'LLM-summary';
-export default LLMSummary;
+
