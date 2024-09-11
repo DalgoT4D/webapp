@@ -122,7 +122,7 @@ const ManageNotifications = ({
           }
           onChange={handleCheckUncheckAll}
         />
-        <Typography>
+        <Typography sx={{fontWeight: 500, color: "#0F2440CC"}}>
           Select all <strong>|</strong> Showing {showingNotificationCount} of{' '}
           {data?.total_notifications || 0} notifications
         </Typography>
@@ -145,7 +145,7 @@ const ManageNotifications = ({
         >
           <TableBody>
             {data?.res?.map((notification: Notification) => {
-              const isMessageLong = notification.message.length > 150;
+              const isMessageLong = notification.message.length > 100;
 
               return (
                 <TableRow
@@ -202,7 +202,7 @@ const ManageNotifications = ({
                           {/* Truncate the text only when it's not expanded */}
                           {expandedRow === notification.id
                             ? notification.message
-                            : truncateText(notification.message, 150)}
+                            : truncateText(notification.message, 100)}
                         </Typography>
                         <Typography sx={{ fontWeight: 600, fontSize: '12px' }}>
                           {moment(new Date(notification.timestamp)).fromNow()}
