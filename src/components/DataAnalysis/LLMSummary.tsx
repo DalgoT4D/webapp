@@ -157,7 +157,7 @@ export const LLMSummary = ({
           <Typography
             sx={{
               margin: '1.75rem 2rem',
-              height: '80%',
+              height: '70%',
               overflowY: 'scroll',
               padding: '0 .5rem',
             }}
