@@ -1,17 +1,16 @@
 import styles from '@/styles/Home.module.css';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
 import { Box, Button, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import ManageNotifications from '@/components/Notifications/ManageNotificaitons';
 import PreferencesForm from '@/components/Notifications/PreferencesForm';
 import useSWR from 'swr';
-import ManageUsers from '@/components/UserManagement/ManageUsers';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useQueryParams } from '@/customHooks/useQueryParams';
 import { httpPut } from '@/helpers/http';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { useSession } from 'next-auth/react';
-import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
+import { GlobalContext } from '@/contexts/ContextProvider';
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -39,27 +38,30 @@ function TabPanel(props: TabPanelProps) {
 }
 const NotificationManagement = () => {
   const { data: session }: any = useSession();
+  const globalContext = useContext(GlobalContext);
   const { data: unread_count, mutate } = useSWR(`notifications/unread_count`);
   const [showPreferencesForm, setShowPreferencesForm] =
     useState<boolean>(false);
   const [checkedRows, setCheckedRows] = useState([]);
+  const [mutateAllRow, setMutateAllRows] = useState(false);
 
   const handleClick = () => {
     setShowPreferencesForm(true);
   };
 
-  const handleMarkAsRead = async () => {
+  const handleMarkAsRead = async (read_status: boolean) => {
     try {
-      await httpPut(session, `notifications/`, {
-        //we might send here notification array.
-        // notification_id: notification.id,
-        // read_status: !notification.read_status,
+      await httpPut(session, `notifications/v1`, {
+        notification_ids: checkedRows,
+        read_status: read_status,
       });
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
     } finally {
+      setCheckedRows([]);
       mutate();
+      setMutateAllRows(true);
     }
   };
 
@@ -95,14 +97,20 @@ const NotificationManagement = () => {
           <Button
             data-testid={'invite-user'}
             variant="contained"
-            onClick={handleMarkAsRead}
+            disabled={value == 1 || !checkedRows.length}
+            onClick={() => {
+              handleMarkAsRead(true);
+            }}
           >
             Mark as read
           </Button>
           <Button
             data-testid={'invite-user'}
             variant="outlined"
-            // onClick={handleClick}
+            disabled={value == 2 || !checkedRows.length}
+            onClick={() => {
+              handleMarkAsRead(false);
+            }}
           >
             Mark as unread
           </Button>
@@ -113,7 +121,7 @@ const NotificationManagement = () => {
               alignItems: 'center',
             }}
           >
-            <Tooltip title="Manage Preferences" placement='top'>
+            <Tooltip title="Manage Preferences" placement="top">
               <SettingsIcon
                 sx={{ cursor: 'pointer' }}
                 onClick={handleClick}
@@ -128,7 +136,7 @@ const NotificationManagement = () => {
             onChange={handleChange}
             aria-label="user-management-tabs"
           >
-            <Tab label="all" sx={{ mr: 4 }} />
+            <Tab label="all" sx={{ padding: 0 }} />
             <Tab label="read" />
             <Tab label="unread" />
           </Tabs>
@@ -141,6 +149,8 @@ const NotificationManagement = () => {
                   checkedRows={checkedRows}
                   setCheckedRows={setCheckedRows}
                   tabWord={item}
+                  mutateAllRow={mutateAllRow}
+                  setMutateAllRows={setMutateAllRows}
                 />
               </TabPanel>
             </>
