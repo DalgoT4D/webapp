@@ -117,12 +117,16 @@ const ManageNotifications = ({
         }}
       >
         <Checkbox
+          data-testid="select-all-checkbox"
           checked={
             data?.res.length > 0 && data?.res.length === checkedRows.length
           }
           onChange={handleCheckUncheckAll}
         />
-        <Typography sx={{fontWeight: 500, color: "#0F2440CC"}}>
+        <Typography
+          data-testid="textheading"
+          sx={{ fontWeight: 500, color: '#0F2440CC' }}
+        >
           Select all <strong>|</strong> Showing {showingNotificationCount} of{' '}
           {data?.total_notifications || 0} notifications
         </Typography>
@@ -166,6 +170,8 @@ const ManageNotifications = ({
                     }}
                   >
                     <Checkbox
+                      role="checkbox"
+                      data-testid={`${notification.id}-checkbox`}
                       checked={checkedRows.includes(notification.id)}
                       onChange={(e) => {
                         e.stopPropagation();
