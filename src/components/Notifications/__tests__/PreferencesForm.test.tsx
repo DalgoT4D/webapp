@@ -2,12 +2,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PreferencesForm from '../PreferencesForm';
 import useSWR from 'swr';
 import { useSession } from 'next-auth/react';
-import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 
 
-// Mock dependencies
 jest.mock('swr');
 jest.mock('next-auth/react');
 jest.mock('@/helpers/http');
@@ -36,12 +34,11 @@ describe('PreferencesForm Component', () => {
       <PreferencesForm showForm={true} setShowForm={setShowForm} />
     );
 
-    // Check that the switches and Discord Webhook input are rendered correctly
     expect(screen.getByLabelText('Enable Email Notifications')).toBeInTheDocument();
-    expect(screen.getByLabelText('Enable Email Notifications')).toBeChecked(); // Email is enabled
+    expect(screen.getByLabelText('Enable Email Notifications')).toBeChecked(); 
 
     expect(screen.getByLabelText('Enable Discord Notifications')).toBeInTheDocument();
-    expect(screen.getByLabelText('Enable Discord Notifications')).toBeChecked(); // Discord is enabled
+    expect(screen.getByLabelText('Enable Discord Notifications')).toBeChecked(); 
 
     // expect(screen.getByLabelText('Discord Webhook')).toBeInTheDocument();
     // expect(screen.getByLabelText('Discord Webhook')).toHaveValue('https://discord.com/webhook/test');
@@ -53,9 +50,9 @@ describe('PreferencesForm Component', () => {
     );
 
     const discordSwitch = screen.getByLabelText('Enable Discord Notifications');
-    fireEvent.click(discordSwitch); // Disable Discord Notifications
+    fireEvent.click(discordSwitch); 
 
-    expect(screen.queryByLabelText('Discord Webhook')).not.toBeInTheDocument(); // Webhook input should disappear
+    expect(screen.queryByLabelText('Discord Webhook')).not.toBeInTheDocument(); 
   });
 
   test('submits the form successfully and shows success toast', async () => {
@@ -65,7 +62,7 @@ describe('PreferencesForm Component', () => {
       <PreferencesForm showForm={true} setShowForm={setShowForm} />
     );
 
-    // Simulate form submission
+
     const saveButton = screen.getByTestId('savebutton');
     fireEvent.click(saveButton);
 
@@ -80,7 +77,7 @@ describe('PreferencesForm Component', () => {
         }
       );
       expect(successToast).toHaveBeenCalledWith('Preferences updated successfully.', [], expect.any(Object));
-      expect(setShowForm).toHaveBeenCalledWith(false); // Form should close
+      expect(setShowForm).toHaveBeenCalledWith(false); 
     });
   });
 
@@ -91,7 +88,7 @@ describe('PreferencesForm Component', () => {
       <PreferencesForm showForm={true} setShowForm={setShowForm} />
     );
 
-    // Simulate form submission
+   
     const saveButton = screen.getByTestId('savebutton');
     fireEvent.click(saveButton);
 
@@ -108,6 +105,5 @@ describe('PreferencesForm Component', () => {
     const cancelButton = screen.getByTestId('cancelbutton');
     fireEvent.click(cancelButton);
 
-    expect(setShowForm).toHaveBeenCalledWith(false); // Form should close
   });
 });

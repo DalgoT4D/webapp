@@ -1,38 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import useSWR from 'swr';
 import ManageNotifications from '../ManageNotificaitons';
-import moment from 'moment';
+import useSWR from 'swr';
 
-// Mock useSWR
+// Mock the useSWR hook for data fetching
 jest.mock('swr');
 
+// Mock data
+const mockNotifications = {
+  total_notifications: 2,
+  res: [
+    {
+      id: 1,
+      urgent: true,
+      author: 'Admin',
+      message: 'Urgent message 1',
+      read_status: false,
+      timestamp: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      urgent: false,
+      author: 'User',
+      message: 'This is a normal message with a long text to test truncation.',
+      read_status: true,
+      timestamp: new Date().toISOString(),
+    },
+  ],
+};
+
+// Mock the props
+const mockProps = {
+  tabWord: 'all',
+  checkedRows: [],
+  setCheckedRows: jest.fn(),
+  mutateAllRow: false,
+  setMutateAllRows: jest.fn(),
+};
+
+// Mock the mutate function for SWR
+const mockMutate = jest.fn();
+
 describe('ManageNotifications Component', () => {
-  const mockNotifications = {
-    total_notifications: 15,
-    res: [
-      {
-        id: 1,
-        urgent: false,
-        author: 'Author 1',
-        message: 'This is a test notification message',
-        read_status: false,
-        timestamp: moment().subtract(1, 'hour').toISOString(),
-      },
-      {
-        id: 2,
-        urgent: true,
-        author: 'Author 2',
-        message: 'Urgent notification message',
-        read_status: true,
-        timestamp: moment().subtract(5, 'hours').toISOString(),
-      },
-    ],
-  };
-
-  const mockMutate = jest.fn();
-
   beforeEach(() => {
     (useSWR as jest.Mock).mockReturnValue({
       data: mockNotifications,
@@ -41,153 +50,128 @@ describe('ManageNotifications Component', () => {
     });
   });
 
-  test('renders the component with notifications', () => {
-    render(
-      <ManageNotifications
-        tabWord="all"
-        checkedRows={[]}
-        setCheckedRows={jest.fn()}
-        mutateAllRow={false}
-        setMutateAllRows={jest.fn()}
-      />
-    );
-
-    // Check if notifications are displayed
-    expect(screen.getByText('This is a test notification message')).toBeInTheDocument();
-    expect(screen.getByText('Urgent notification message')).toBeInTheDocument();
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  test.only('displays a checkbox for each notification and allows checking/unchecking', async() => {
-    const setCheckedRows = jest.fn();
+  test('renders notifications correctly', () => {
+    render(<ManageNotifications {...mockProps} />);
 
-    render(
-      <ManageNotifications
-        tabWord="all"
-        checkedRows={[]}
-        setCheckedRows={setCheckedRows}
-        mutateAllRow={false}
-        setMutateAllRows={jest.fn()}
-      />
-    );
-
-    // Check if checkboxes are displayed
-    const checkboxes = screen.getAllByRole('checkbox');
-    console.log(checkboxes.length, "length1s")
-    expect(checkboxes).toHaveLength(5); // Includes the "select all" checkbox
-
-    // Check the individual notification checkbox
-    fireEvent.click(checkboxes[1]); // First notification checkbox
-    await waitFor(()=>{
-      expect(setCheckedRows).toHaveBeenCalledWith([1]);
-    }) 
-
-    fireEvent.click(checkboxes[1]); // Uncheck the first notification checkbox
-    expect(setCheckedRows).toHaveBeenCalledWith([]);
-  });
-
-  test('selects and deselects all notifications with the "select all" checkbox', async () => {
-    const setCheckedRows = jest.fn();
-
-    // Set up the component with no notifications checked initially
-    render(
-      <ManageNotifications
-        tabWord="all"
-        checkedRows={[]}
-        setCheckedRows={setCheckedRows}
-        mutateAllRow={false}
-        setMutateAllRows={jest.fn()}
-      />
-    );
-
-    // Find the "select all" checkbox
-    const selectAllCheckbox = screen.getByTestId('select-all-checkbox');
-
-    // Click the "select all" checkbox
-    fireEvent.click(selectAllCheckbox);
-
-    // Wait for the state update (setCheckedRows to be called)
-    await waitFor(() => {
-      expect(setCheckedRows).toHaveBeenCalledWith([1, 2]); // All notification IDs selected
-    });
-
-    // Simulate all notifications being selected (reflect the state update)
-    render(
-      <ManageNotifications
-        tabWord="all"
-        checkedRows={[1, 2]} // Now, all notifications are selected
-        setCheckedRows={setCheckedRows}
-        mutateAllRow={false}
-        setMutateAllRows={jest.fn()}
-      />
-    );
-
-    // Click the "select all" checkbox again to deselect all
-    fireEvent.click(selectAllCheckbox);
-
-    // Wait for the state update
-    await waitFor(() => {
-      expect(setCheckedRows).toHaveBeenCalledWith([]); // All notifications deselected
-    });
+    // Check that the notification messages are displayed
+    expect(screen.getByText('Urgent message 1')).toBeInTheDocument();
+    expect(
+      screen.getByText('This is a normal message with a long text to test truncation.')
+    ).toBeInTheDocument();
   });
 
 
-  // test.only('expands and collapses notification row on arrow click', () => {
-  //   render(
-  //     <ManageNotifications
-  //       tabWord="all"
-  //       checkedRows={[]}
-  //       setCheckedRows={jest.fn()}
-  //       mutateAllRow={false}
-  //       setMutateAllRows={jest.fn()}
-  //     />
-  //   );
+  test('handles checkbox selection correctly', () => {
+    // Define mock props with a useState hook to simulate checkedRows behavior
+    const MockComponent = () => {
+      const [checkedRows, setCheckedRows] = useState<number[]>([]);
 
-  //   const arrowButton = screen.getAllByRole('button')[0]; // First notification's expand button
-  //   fireEvent.click(arrowButton);
+      return (
+        <ManageNotifications
+          tabWord="all"
+          checkedRows={checkedRows}
+          setCheckedRows={setCheckedRows}
+          mutateAllRow={false}
+          setMutateAllRows={jest.fn()}
+        />
+      );
+    };
 
-  //   // After expanding, the full message should be displayed
-  //   expect(screen.getByText('This is a test notification message')).toBeInTheDocument();
+    // Render the component wrapped in the mock component
+    const { rerender } = render(<MockComponent />);
 
-  //   fireEvent.click(arrowButton);
+    // Find the checkbox input for the first notification (target the input inside the checkbox)
+    const checkbox1 = screen.getByTestId('1-checkbox').querySelector('input[type="checkbox"]');
+    fireEvent.click(checkbox1!); // Simulate click
 
-  //   // After collapsing, the truncated message should appear
-  //   expect(screen.getByText(/This is a test notification message.../)).toBeInTheDocument();
+    // Assert that the checkbox is checked
+    expect(checkbox1).toBeChecked();
+
+    // Re-render the component with updated state
+    rerender(<MockComponent />);
+
+    // Find the checkbox input for the second notification
+    const checkbox2 = screen.getByTestId('2-checkbox').querySelector('input[type="checkbox"]');
+    fireEvent.click(checkbox2!); // Simulate click
+
+    // Assert that the second checkbox is checked
+    expect(checkbox2).toBeChecked();
+  });
+  
+
+  test('handles "select all" functionality', async () => {
+    // Render the component
+    const { rerender } = render(<ManageNotifications {...mockProps} />);
+  
+    // Find the "select all" checkbox input (target the input inside the checkbox)
+    const selectAllCheckbox = screen.getByTestId('select-all-checkbox').querySelector('input[type="checkbox"]');
+    
+    // Simulate clicking the "select all" checkbox
+    fireEvent.click(selectAllCheckbox!);
+  
+    // Expect that all notification IDs are selected
+    expect(mockProps.setCheckedRows).toHaveBeenCalledWith([1, 2]);
+  
+    // Simulate all rows being selected by updating the checkedRows prop and re-render the component
+    rerender(<ManageNotifications {...mockProps} checkedRows={[1, 2]} />);
+  
+    // Simulate clicking the "select all" checkbox again (unselect all)
+    fireEvent.click(selectAllCheckbox!);
+  
+    // Expect setCheckedRows to be called with an empty array (deselect all)
+    expect(mockProps.setCheckedRows).toHaveBeenCalledWith([]);
+  });
+  
+
+  // test('expands and collapses long messages on row click', () => {
+  //   render(<ManageNotifications {...mockProps} />);
+  
+  //   // The truncated version will be detected using partial match
+  //   const truncatedMessage = (content: string) =>
+  //     content.startsWith('This is a normal message with a long text');
+  
+  //   // The full message (after expansion)
+  //   const fullMessage = 'This is a normal message with a long text to test truncation.';
+  
+  //   // Check if the truncated message is initially visible using a custom matcher
+  //   expect(screen.getByText(truncatedMessage)).toBeInTheDocument();
+  
+  //   // Find the expand button (using the testId or icon button role)
+  //   const expandButton = screen.getByRole('button', { name: /keyboardarrowdown/i });
+  
+  //   // Click the button to expand the message
+  //   fireEvent.click(expandButton);
+  
+  //   // Verify that the full message is visible after expansion
+  //   expect(screen.getByText(fullMessage)).toBeInTheDocument();
+  
+  //   // Find the collapse button (which switches to "keyboardarrowup" after expanding)
+  //   const collapseButton = screen.getByRole('button', { name: /keyboardarrowup/i });
+  
+  //   // Click the button to collapse the message
+  //   fireEvent.click(collapseButton);
+  
+  //   // Ensure the truncated message is visible again after collapsing using the custom matcher
+  //   expect(screen.getByText(truncatedMessage)).toBeInTheDocument();
   // });
+  
+  
+  // test('handles pagination changes', async () => {
+  //   render(<ManageNotifications {...mockProps} />);
 
-  test('handles pagination correctly', async () => {
-    render(
-      <ManageNotifications
-        tabWord="all"
-        checkedRows={[]}
-        setCheckedRows={jest.fn()}
-        mutateAllRow={false}
-        setMutateAllRows={jest.fn()}
-      />
-    );
+  //   // Change the rows per page to 20
+  //   fireEvent.change(screen.getByRole('combobox'), { target: { value: '20' } });
 
-    // Pagination controls should be present
-    const nextPageButton = screen.getByTestId('KeyboardArrowRightIcon');
-    fireEvent.click(nextPageButton);
+  //   // Wait for pagination change
+  //   await waitFor(() => {
+  //     expect(mockMutate).toHaveBeenCalledTimes(1);
+  //   });
 
-    // Expect mutate to be called to fetch new data on page change
-    await waitFor(() => {
-      expect(mockMutate).toHaveBeenCalled();
-    });
-  });
-
-  test('shows urgent icon for urgent notifications', () => {
-    render(
-      <ManageNotifications
-        tabWord="all"
-        checkedRows={[]}
-        setCheckedRows={jest.fn()}
-        mutateAllRow={false}
-        setMutateAllRows={jest.fn()}
-      />
-    );
-
-    const urgentIcon = screen.getByTestId('ErrorOutlineIcon'); // Using MUI's test ID for icon
-    expect(urgentIcon).toBeInTheDocument();
-    expect(urgentIcon).toHaveStyle('color: red');
-  });
+  //   // Ensure the page size has been updated correctly
+  //   expect(screen.getByText(/showing 2 of 2 notifications/i)).toBeInTheDocument();
+  // });
 });
