@@ -107,7 +107,7 @@ export const SqlWrite = memo(
         sqlText: oldSessionMetaInfo?.sqlText || '',
       });
     }, [defaultPromptsLists, oldSessionMetaInfo]);
-console.log(tempLoading, "temploading")
+
     if (tempLoading) return <CircularProgress />;
 
     return (
@@ -123,12 +123,20 @@ console.log(tempLoading, "temploading")
 
           {/* SQL Editor */}
           <Box sx={{ width: '100%', marginTop: '1.5rem 0' }}>
+            <Box display="flex" justifyContent="space-between">
             <Typography
             data-testid = "sql-filter"
               sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
             >
-              SQL Filter*
+              SQL Filter* 
             </Typography>
+            <Typography
+            data-testid = "sql-filter"
+              sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
+            >
+              *You can query a maximum of 1000 rows only.
+            </Typography>
+            </Box>
 
             <Controller
               name="sqlText"
