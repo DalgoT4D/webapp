@@ -88,6 +88,12 @@ export const sideMenu: MenuOption[] = [
   },
   {
     index: 4,
+    title: 'Data Statistics',
+    path: '/data-statistics',
+    icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
+  },
+  {
+    index: 5,
     title: 'User management',
     path: '/user-management',
     icon: () => <SupervisorAccountIcon />,
