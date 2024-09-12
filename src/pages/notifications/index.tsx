@@ -143,7 +143,6 @@ const NotificationManagement = () => {
         </Box>
         {['all', 'read', 'unread']?.map((item, idx) => {
           return (
-            <>
               <TabPanel key={idx} value={value} index={idx}>
                 <ManageNotifications
                   checkedRows={checkedRows}
@@ -153,7 +152,6 @@ const NotificationManagement = () => {
                   setMutateAllRows={setMutateAllRows}
                 />
               </TabPanel>
-            </>
           );
         })}
         <PreferencesForm
