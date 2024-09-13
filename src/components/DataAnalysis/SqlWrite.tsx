@@ -12,6 +12,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
+import InfoTooltip from '../UI/Tooltip/Tooltip';
 
 export const SqlWrite = memo(
   ({
@@ -49,7 +50,7 @@ export const SqlWrite = memo(
     const selectedDefaultPrompt = watch('defaultPrompt');
 
     const handlePromptSelection = (promptText: string) => {
-      console.log(promptText, "newtest");
+      console.log(promptText, 'newtest');
       setCustomPromptToggle(false);
       setValue('defaultPrompt', promptText);
       setValue('customPrompt', '');
@@ -57,7 +58,7 @@ export const SqlWrite = memo(
 
     const onSubmit = (data: any) => {
       const { sqlText, customPrompt, defaultPrompt } = data;
-      console.log(sqlText, customPrompt, defaultPrompt, "hello" )
+      console.log(sqlText, customPrompt, defaultPrompt, 'hello');
       if (!customPrompt && !defaultPrompt) {
         errorToast(
           'Either select a default prompt or write a custom prompt',
@@ -124,18 +125,18 @@ export const SqlWrite = memo(
           {/* SQL Editor */}
           <Box sx={{ width: '100%', marginTop: '1.5rem 0' }}>
             <Box display="flex" justifyContent="space-between">
-            <Typography
-            data-testid = "sql-filter"
-              sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
-            >
-              SQL Filter* 
-            </Typography>
-            <Typography
-            data-testid = "sql-filter"
-              sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
-            >
-              *You can query a maximum of 1000 rows only.
-            </Typography>
+              <Typography
+                data-testid="sql-filter"
+                sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
+              >
+                SQL Filter*
+              </Typography>
+              <Typography
+                data-testid="sql-filter"
+                sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
+              >
+                *You can query a maximum of 1000 rows only.
+              </Typography>
             </Box>
 
             <Controller
@@ -251,9 +252,48 @@ export const SqlWrite = memo(
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
+                      marginBottom: '0.5rem',
                     }}
                   >
-                    <Typography>Custom Prompt</Typography>
+                    <Box
+                      display={'flex'}
+                      gap="0.5rem"
+                      height="1rem"
+                      alignItems="center"
+                    >
+                      <Typography>Custom Prompt</Typography>
+                      <InfoTooltip
+                        title={
+                          <div>
+                            <Typography variant="body2" gutterBottom>
+                              Tips for Writing a Good Prompt:
+                            </Typography>
+                            <Typography variant="body2">
+                              1. Be Clear: Clearly state what you need to avoid
+                              confusion.
+                            </Typography>
+                            <Typography variant="body2">
+                              2. Add Context: Include relevant details to guide
+                              the response.
+                            </Typography>
+                            <Typography variant="body2">
+                              3. Adjust & Refine: If the result isn’t what you
+                              expected, tweak your prompt.
+                            </Typography>
+                            <Typography variant="body2" gutterBottom>
+                              Example: If your data has some rows that contain
+                              people's feelings during COVID, then instead of
+                              "Describe people's feelings during COVID," try:
+                              "This data is a list of responses from people
+                              about how they are feeling. Analyse the data and
+                              give me the different emotions that people felt
+                              during covid, and also which was the frequently
+                              felt emotion? Limit it to one short paragraph"
+                            </Typography>
+                          </div>
+                        }
+                      />
+                    </Box>
                     <CloseIcon
                       onClick={() => {
                         setCustomPromptToggle(false);
@@ -320,4 +360,4 @@ export const SqlWrite = memo(
   }
 );
 
-SqlWrite.displayName  = "Sql-write";
+SqlWrite.displayName = 'Sql-write';
