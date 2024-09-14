@@ -68,7 +68,7 @@ export const ConfigInput = ({
 
   useEffect(() => {
     const tempShowPasswords: any = {};
-    specs.forEach((element) => {
+    specs?.forEach((element) => {
       if (element?.airbyte_secret) {
         tempShowPasswords[element.field] = false;
       }
@@ -81,8 +81,8 @@ export const ConfigInput = ({
       {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
         .map((spec: EntitySpec) => {
-          return spec.type === 'string' ? (
-            spec.airbyte_secret ? (
+          return spec?.type === 'string' ? (
+            spec?.airbyte_secret ? (
               <React.Fragment key={spec.field}>
                 <Controller
                   name={spec.field}

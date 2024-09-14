@@ -1,0 +1,27 @@
+.Paper {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+    overflow: visible;
+}
+
+.Paper::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-bottom: 15px solid #fff;
+    border-bottom: 15px solid #fff;
+    border-left: 15px solid transparent;
+    top: -10px;
+    right: 165px;
+}
+
+.Paper::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-bottom: 15px solid #fff;
+    border-right: 15px solid transparent;
+    top: -10px;
+    right: 152px;
+}
