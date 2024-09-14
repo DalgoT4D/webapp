@@ -27,6 +27,7 @@ export type EntitySpec = {
   specs?: Array<EntitySpec>;
   order: number;
   pattern?: string;
+  multiline?: boolean;
 };
 
 export const ConfigInput = ({
@@ -98,6 +99,8 @@ export const ConfigInput = ({
                       type={
                         showPasswords[`${spec.field}`] ? 'text' : 'password'
                       }
+                      multiline={spec?.multiline}
+                      rows={4}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
@@ -142,6 +145,8 @@ export const ConfigInput = ({
                       label={`${spec.title}${spec.required ? '*' : ''}`}
                       variant="outlined"
                       disabled={false}
+                      multiline={spec?.multiline}
+                      rows={4}
                       inputProps={{ pattern: spec.pattern }}
                     ></Input>
                   )}
