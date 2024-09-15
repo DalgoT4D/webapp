@@ -4,7 +4,7 @@ import CustomDialog from '../Dialog/CustomDialog';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
-import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
