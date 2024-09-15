@@ -7,6 +7,7 @@ import PipelineIcon from '@/assets/icons/pipeline';
 import OrchestrateIcon from '@/assets/icons/orchestrate';
 import DataQualityIcon from '@/assets/icons/dataQuality';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 
 import { primaryColor } from './theme';
 
@@ -102,5 +103,12 @@ export const sideMenu: MenuOption[] = [
     path: '/user-management',
     icon: () => <SupervisorAccountIcon />,
     className: 'usermanagement_walkthrough',
+  },
+  {
+    index: 5,
+    title: 'Notifications',
+    path: '/notifications',
+    icon: () => <MarkEmailUnreadIcon />,
+    className: 'notification_walkthrough',
   },
 ];
