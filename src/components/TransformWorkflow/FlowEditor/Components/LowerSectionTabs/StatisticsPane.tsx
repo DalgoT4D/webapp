@@ -587,15 +587,5 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({
         No data (0 rows) available to generate insights
       </Box>
     )
-  ) : (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      Select a table to view
-    </Box>
-  );
+  ) : null;
 };
