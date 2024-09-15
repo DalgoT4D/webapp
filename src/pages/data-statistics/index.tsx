@@ -32,31 +32,35 @@ export default function DataStatisticsPage() {
   return (
     <>
       <PageHead title="Dalgo" />
-      <main className={styles.main}>
-        <Typography
-          sx={{ fontWeight: 700 }}
-          variant="h4"
-          gutterBottom
-          color="#000"
-        >
-          Data statistics
-        </Typography>
-        <Box sx={{}}>
+      <main>
+        <Box sx={{ pt: '4rem', pb: 2, pl: '3rem' }}>
           <Typography
             sx={{ fontWeight: 700 }}
-            variant="body1"
+            variant="h4"
             gutterBottom
             color="#000"
           >
-            Select table
+            Data statistics
           </Typography>
-          <Autocomplete
-            options={sourceModels}
-            sx={{ width: 300 }}
-            getOptionLabel={(option) => option.input_name}
-            groupBy={(option) => option.schema}
-            onChange={(model) => setSelectedSourceModel(model)}
-          />
+          <Box sx={{}}>
+            <Typography
+              sx={{ fontWeight: 700 }}
+              variant="body1"
+              gutterBottom
+              color="#000"
+            >
+              Select table
+            </Typography>
+            <Autocomplete
+              options={sourceModels}
+              sx={{ width: 300 }}
+              getOptionLabel={(option) => option.input_name}
+              groupBy={(option) => option.schema}
+              onChange={(model) => setSelectedSourceModel(model)}
+            />
+          </Box>
+        </Box>
+        <Box sx={{ ml: '3rem', width: '90%' }}>
           <StatisticsPane modelToPreview={selectedSourceModel} />
         </Box>
       </main>
