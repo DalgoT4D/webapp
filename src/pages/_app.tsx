@@ -8,7 +8,7 @@ import { SessionProvider } from 'next-auth/react';
 import { StyledEngineProvider } from '@mui/material/styles';
 import { Main } from '@/components/Layouts/Main';
 import ContextProvider from '@/contexts/ContextProvider';
-
+import { TrackingProvider } from '@/contexts/TrackingContext';
 export default function App({
   Component,
   pageProps: { session, ...pageProps },
@@ -20,9 +20,11 @@ export default function App({
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <SessionProvider session={session} refetchOnWindowFocus={false}>
-              <Main>
-                <Component {...pageProps} />
-              </Main>
+                <Main>
+              <TrackingProvider session={session} >
+                  <Component {...pageProps} />
+              </TrackingProvider>
+                </Main>
             </SessionProvider>
           </ThemeProvider>
         </StyledEngineProvider>

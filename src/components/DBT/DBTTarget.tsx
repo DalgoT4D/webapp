@@ -21,6 +21,7 @@ export type TransformTask = {
   generated_by: string;
   uuid: string;
   seq: number;
+  pipeline_default: boolean;
 };
 
 type params = {
@@ -197,7 +198,7 @@ export const DBTTarget = ({
         sx={{ ml: 2 }}
         onClick={() => {
           if (selectedTask) {
-            if (selectedTask.slug === TASK_DBTRUN)
+            if (selectedTask.slug == TASK_DBTRUN || selectedTask.deploymentId)
               dbtRunWithDeployment(selectedTask);
             else executeDbtJob(selectedTask);
           } else {

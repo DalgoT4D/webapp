@@ -108,10 +108,11 @@ export const FlowRunHistory = ({
       (async () => {
         try {
           setLoadingFlowRuns(true);
-          const data: Array<FlowRun> = await httpGet(
-            session,
-            `prefect/flows/${deploymentId}/flow_runs/history`
-          );
+          const data: Array<FlowRun> =
+            (await httpGet(
+              session,
+              `prefect/flows/${deploymentId}/flow_runs/history`
+            )) || [];
           setFlowRuns(data);
           setShowLogs(new Array(data.length).fill(false));
 

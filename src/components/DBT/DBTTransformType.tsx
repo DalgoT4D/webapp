@@ -15,7 +15,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { useSession } from 'next-auth/react';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Dbt from '@/assets/images/dbt.png';
 import Image from 'next/image';
 import { ActionsMenu } from '../../components/UI/Menu/Menu';
@@ -29,6 +29,7 @@ import WorkflowEditor from '@/components/Workflow/Editor';
 import Close from '@mui/icons-material/Close';
 import Logo from '@/assets/images/logo.svg';
 import { TransformType } from '@/pages/pipeline/transform';
+import { flowRunLogsOffsetLimit } from '@/config/constant';
 
 export const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -81,6 +82,9 @@ const DBTTransformType = ({
     default_schema: '',
   });
   const [tasks, setTasks] = useState<Tasks>([]);
+  const [flowRunId, setFlowRunId] = useState('');
+  const [maxLogs, setMaxLogs] = useState<number>(flowRunLogsOffsetLimit);
+  const dbtSetupLogsRef = useRef<string[]>([]);
   const [dbtSetupStage, setDbtSetupStage] = useState<DBTSetupStage>(''); // create-workspace, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
   const [showConnectRepoDialog, setShowConnectRepoDialog] =
@@ -199,9 +203,50 @@ const DBTTransformType = ({
     }
   };
 
+  const fetchMoreLogs = async(flow_run_id: string, updateLimit: boolean) => {
+    let newMaxLimit = maxLogs;
+    if(updateLimit){
+      newMaxLimit += flowRunLogsOffsetLimit;
+    }
+    setMaxLogs(newMaxLimit);
+    await fetchLogs(flow_run_id, newMaxLimit);
+  }
+
+  const fetchLogs = async (flow_run_id = flowRunId, maxLogsLimit = maxLogs) => {
+    if (!flow_run_id) {
+      return;
+    }
+    setExpandLogs(true);
+    (async () => {
+      try {
+        const currLogsCount = dbtSetupLogsRef?.current?.length;
+        if (currLogsCount >= maxLogsLimit) {
+          return;
+        }
+        const data = await httpGet(
+          session,
+          `prefect/flow_runs/${flow_run_id}/logs?offset=${currLogsCount}&limit=${maxLogsLimit - currLogsCount}`
+        );
+
+        if (data?.logs?.logs && data.logs.logs.length > 0) {
+          const newlogs =  dbtSetupLogsRef.current.concat(data.logs.logs);
+          setDbtSetupLogs(newlogs);
+          dbtSetupLogsRef.current = newlogs
+        }
+      } catch (err: any) {
+        console.error(err);
+        errorToast(err.message, [], globalContext);
+      }
+    })();
+  }
+
   useEffect(() => {
     fetchDbtWorkspace();
   }, [session, rerender]);
+
+  useEffect(() => {
+    dbtSetupLogsRef.current = dbtSetupLogs;
+  }, [dbtSetupLogs]);
 
   return (
     <>
@@ -240,6 +285,7 @@ const DBTTransformType = ({
                           variant="contained"
                           color="primary"
                           sx={{ width: 'auto' }}
+                          data-testid="gotoworkflow"
                           onClick={handleGoToWorkflow}
                         >
                           Go to workflow
@@ -395,6 +441,8 @@ const DBTTransformType = ({
                   )}
                   {dbtSetupStage === 'complete' ? (
                     <DBTTaskList
+                      fetchLogs={(flow_run_id) => fetchMoreLogs(flow_run_id ,false)}
+                      setFlowRunId={(flow_run_id) => setFlowRunId(flow_run_id)}
                       setExpandLogs={setExpandLogs}
                       setDbtRunLogs={(logs: string[]) => {
                         setDbtSetupLogs(logs);
@@ -410,6 +458,8 @@ const DBTTransformType = ({
                     logs={dbtSetupLogs}
                     expand={expandLogs}
                     setExpand={setExpandLogs}
+                    fetchMore={dbtSetupLogs?.length >= maxLogs}
+                    fetchMoreLogs={() => fetchMoreLogs(flowRunId ,true)}
                   />
                 </Box>
               </Box>

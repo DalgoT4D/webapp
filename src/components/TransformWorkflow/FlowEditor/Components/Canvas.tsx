@@ -1,6 +1,17 @@
 import Dagre from '@dagrejs/dagre';
-import { Box, Button, Divider, Typography } from '@mui/material';
+import {
+  Backdrop,
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  MenuItem,
+  Select,
+  Typography,
+} from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   useNodesState,
@@ -41,6 +52,8 @@ import { getNextNodePosition } from '@/utils/editor';
 type CanvasProps = {
   redrawGraph: boolean;
   setRedrawGraph: (...args: any) => void;
+  finalLockCanvas: boolean;
+  setTempLockCanvas: any;
 };
 
 const nodeGap = 30;
@@ -50,6 +63,8 @@ export interface OperationNodeData {
   output_cols: Array<string>;
   type: typeof OPERATION_NODE;
   target_model_id: string;
+  target_model_name: string;
+  target_model_schema: string;
   config: {
     type: keyof typeof operationIconMapping;
     [key: string]: any;
@@ -109,13 +124,47 @@ const nodeTypes: NodeTypes = {
   [`${OPERATION_NODE}`]: OperationNode,
 };
 
-const CanvasHeader = ({
-  setCanvasAction,
-}: {
-  setCanvasAction: (...args: any) => void;
-}) => {
+const CanvasHeader = () => {
+  const { setCanvasAction } = useCanvasAction();
+  const { canvasNode } = useCanvasNode();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
+  const [selectedAction, setSelectedAction] = useState('run');
+
+  const nodeData: any = canvasNode?.data;
+
+  const handleSelectRunTypeChange = (event: any) => {
+    const action = event.target.value;
+    setSelectedAction(action);
+  };
+
+  const handleRunClick = (event: any) => {
+    if (selectedAction === 'run') {
+      setCanvasAction({ type: 'run-workflow', data: null });
+    } else if (selectedAction === 'run-to-node') {
+      setCanvasAction({
+        type: 'run-workflow',
+        data: { options: { select: `+${nodeData?.input_name}` } },
+      });
+    } else if (selectedAction === 'run-from-node') {
+      setCanvasAction({
+        type: 'run-workflow',
+        data: { options: { select: `${nodeData?.input_name}+` } },
+      });
+    }
+  };
+
+  const disableToAndFromNodeRunOptions =
+    !canvasNode ||
+    canvasNode?.data.type != SRC_MODEL_NODE ||
+    canvasNode?.data.input_type != 'model';
+
+  useEffect(() => {
+    if (disableToAndFromNodeRunOptions) {
+      setSelectedAction('run');
+    }
+  }, [canvasNode]);
+
   return (
     <Box
       sx={{
@@ -132,14 +181,62 @@ const CanvasHeader = ({
         Workflow01
       </Typography>
 
-      <Box sx={{ marginLeft: 'auto', display: 'flex', gap: '20px' }}>
-        <Button
-          variant="contained"
-          type="button"
-          onClick={() => setCanvasAction({ type: 'run-workflow', data: null })}
+      <Box
+        sx={{
+          marginLeft: 'auto',
+          display: 'flex',
+          gap: '20px',
+          minWidth: '30%',
+          justifyContent: 'flex-end',
+        }}
+      >
+        {' '}
+        <Select
+          labelId="run-workflow-action"
+          value={selectedAction}
+          onChange={handleSelectRunTypeChange}
+          label="Action"
           disabled={!permissions.includes('can_run_pipeline')}
+          placeholder="Select Action"
+          IconComponent={(props: any) => {
+            return (
+              <ArrowDropDownIcon {...props} style={{ color: '#00897B' }} />
+            );
+          }}
+          sx={{
+            background: '#F5FAFA',
+            color: '#00897B',
+            fontWeight: 700,
+            border: '1px solid #00897B',
+            minWidth: "9.5rem",
+            textAlign: 'center'
+          }}
         >
-          Run
+          <MenuItem value="run">Run</MenuItem>
+          <MenuItem
+            value="run-to-node"
+            disabled={disableToAndFromNodeRunOptions}
+          >
+            Run to node
+          </MenuItem>
+          <MenuItem
+            value="run-from-node"
+            disabled={disableToAndFromNodeRunOptions}
+          >
+            Run from node
+          </MenuItem>
+        </Select>
+        <Button
+          onClick={handleRunClick}
+          type="button"
+          variant="contained"
+          color="primary"
+          disabled={
+            !selectedAction || !permissions.includes('can_run_pipeline')
+          }
+          sx={{ marginLeft: '10px' }}
+        >
+          <PlayArrowIcon />
         </Button>
       </Box>
     </Box>
@@ -186,7 +283,12 @@ const getLayoutedElements = ({
   };
 };
 
-const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
+const Canvas = ({
+  redrawGraph,
+  setRedrawGraph,
+  finalLockCanvas,
+  setTempLockCanvas,
+}: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -207,8 +309,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       color: 'black',
     },
   };
-
+  // const [tempLockCanvas, setTempLockCanvas] = useState(true);
+  // const finalLockCanvas = tempLockCanvas || lockUpperSection;
   const fetchDbtProjectGraph = async () => {
+    setTempLockCanvas(true);
     try {
       const response: DbtProjectGraphApiResponse = await httpGet(
         session,
@@ -236,11 +340,17 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       setEdges([...layoutedEdges]);
     } catch (error) {
       console.log(error);
+    } finally {
+      // setLockUpperSection(false);
+      setTempLockCanvas(false);
     }
   };
 
   useEffect(() => {
-    if (session) fetchDbtProjectGraph();
+    setTempLockCanvas(true);
+    if (session) {
+      fetchDbtProjectGraph();
+    }
   }, [session, redrawGraph]);
 
   useEffect(() => {
@@ -288,7 +398,6 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
   ) => {
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
-
     if (!isDummy) {
       // remove node from canvas
       if (type === SRC_MODEL_NODE) {
@@ -297,6 +406,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           await httpDelete(session, `transform/dbt_project/model/${nodeId}/`);
         } catch (error) {
           console.log(error);
+        } finally {
+          setTempLockCanvas(false);
         }
       } else if (type === OPERATION_NODE) {
         // hit the backend api to remove the node in a try catch
@@ -307,6 +418,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           );
         } catch (error) {
           console.log(error);
+        } finally {
+          setTempLockCanvas(false);
         }
       }
     }
@@ -318,7 +431,8 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         data: null,
       });
     }
-    if (shouldRefreshGraph) setRedrawGraph(!redrawGraph);
+
+    if (shouldRefreshGraph) setRedrawGraph(!redrawGraph); //calls api in parent and this comp rerenders.
   };
 
   const addSrcModelNodeToCanvas = (
@@ -357,9 +471,9 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
     }
   };
 
-  const handleRefreshCanvas = () => {
-    setRedrawGraph(!redrawGraph);
-  };
+  // const handleRefreshCanvas = () => {
+  //   setRedrawGraph(!redrawGraph);
+  // };
 
   useEffect(() => {
     // This event is triggered via the ProjectTree component
@@ -367,11 +481,13 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
       addSrcModelNodeToCanvas(canvasAction.data);
     }
 
-    if (canvasAction.type === 'refresh-canvas') {
-      handleRefreshCanvas();
-    }
+    // if (canvasAction.type === 'refresh-canvas') {
+    //   setTempLockCanvas(true);
+    //   handleRefreshCanvas();
+    // }
 
     if (canvasAction.type === 'delete-node') {
+      setTempLockCanvas(true);
       handleDeleteNode(
         canvasAction.data.nodeId,
         canvasAction.data.nodeType,
@@ -450,6 +566,29 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
         height: '100%',
       }}
     >
+      <Backdrop
+        sx={{
+          background: 'rgba(255, 255, 255, 0.8)',
+          position: 'absolute', // Position the Backdrop over the Box
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0, // Cover the entire Box
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+        open={finalLockCanvas}
+        onClick={() => {}}
+      >
+        <CircularProgress
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 2,
+          }}
+        />
+      </Backdrop>
       <Box
         sx={{
           height: '44px',
@@ -457,7 +596,7 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
           borderTop: '1px #CCD6E2 solid',
         }}
       >
-        <CanvasHeader setCanvasAction={setCanvasAction} />
+        <CanvasHeader />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box
@@ -488,6 +627,10 @@ const Canvas = ({ redrawGraph, setRedrawGraph }: CanvasProps) => {
               onClick={() => {
                 successToast('Graph has been refreshed', [], globalContext);
                 setRedrawGraph(!redrawGraph);
+                setCanvasAction({
+                  type: 'refresh-canvas',
+                  data: null,
+                });
               }}
             >
               <ReplayIcon />
