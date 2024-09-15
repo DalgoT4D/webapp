@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import useSWR from 'swr';
 import {
   CircularProgress,
@@ -39,6 +39,8 @@ import {
 } from '@/contexts/ConnectionSyncLogsContext';
 import { ConnectionLogs } from './ConnectionLogs';
 import PendingActionsAccordion from './PendingActions';
+import { useSyncLock } from '@/customHooks/useSyncLock';
+import { useTracking } from '@/contexts/TrackingContext';
 
 type PrefectFlowRun = {
   id: string;
@@ -89,7 +91,7 @@ export type Connection = {
   syncCatalog: object;
   resetConnDeploymentId: string;
 };
-
+// type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
   const maxlength = 20;
   if (input.length <= maxlength) {
@@ -155,6 +157,95 @@ const getSourceDest = (connection: Connection) => (
   </Box>
 );
 
+const Actions = memo(
+  ({
+    connection,
+    idx,
+    syncConnection,
+    permissions,
+    syncingConnectionIds,
+    setSyncingConnectionIds,
+    open,
+    handleClick,
+  }: {
+    connection: Connection;
+    idx: string;
+    syncConnection: any;
+    permissions: string[];
+    syncingConnectionIds: string[];
+    setSyncingConnectionIds: any;
+    open: boolean;
+    handleClick: any;
+  }) => {
+    const { deploymentId, connectionId, lock } = connection;
+    const { tempSyncState, setTempSyncState } = useSyncLock(lock);
+    const trackAmplitudeEvent:any = useTracking();
+    const isSyncConnectionIdPresent =
+      syncingConnectionIds.includes(connectionId);
+
+    const handlingSyncState = async () => {
+      const res: any = await syncConnection(deploymentId, connectionId);
+      if (res?.error == 'ERROR') {
+        setTempSyncState(false);
+      }
+    };
+    return (
+      <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
+        <Button
+          variant="contained"
+          onClick={async () => {
+            handlingSyncState();
+            setTempSyncState(true);
+            trackAmplitudeEvent(`[Sync-connection] Button Clicked`);
+            // push connection id into list of syncing connection ids
+            if (!isSyncConnectionIdPresent) {
+              setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
+            }
+          }}
+          data-testid={'sync-' + idx}
+          disabled={
+            tempSyncState || !!lock || !permissions.includes('can_sync_sources')
+          }
+          key={'sync-' + idx}
+          sx={{ marginRight: '10px' }}
+        >
+          {tempSyncState || lock ? (
+            <Image
+              src={SyncIcon}
+              className={styles.SyncIcon}
+              alt="sync icon"
+              data-testid="sync-icon"
+            />
+          ) : (
+            'Sync'
+          )}
+        </Button>
+
+        <Button
+          id={idx}
+          aria-controls={open ? 'basic-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={(event) => handleClick(connection, event.currentTarget)}
+          variant="contained"
+          key={'menu-' + idx}
+          color="info"
+          sx={{ p: 0, minWidth: 32 }}
+          disabled={tempSyncState || lock ? true : false}
+        >
+          <MoreHorizIcon />
+        </Button>
+      </Box>
+    );
+  },
+  //rerenderes when fn returns false. 
+  // checking lock when doing sync and checking connectionId wehen we sort the list or a new connection gets added.
+  (prevProps, nextProps) => {
+    return prevProps.connection.lock?.status === nextProps.connection.lock?.status && prevProps.connection.connectionId === nextProps.connection.connectionId
+  }
+);
+Actions.displayName = 'Action'; //display name added.
+
 export const Connections = () => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -179,11 +270,14 @@ export const Connections = () => {
     setResetDeploymentId(connection.resetConnDeploymentId);
     setAnchorEl(event);
   };
-  const handleClose = () => {
+  const handleClose = (isEditMode?: string) => {
+    if(isEditMode !== "EDIT"){
+      setConnectionId("");
+      setResetDeploymentId("");
+    }
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
     useState<boolean>(false);
   const [showConfirmResetDialog, setShowConfirmResetDialog] =
@@ -191,9 +285,8 @@ export const Connections = () => {
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
-
+  const trackAmplitudeEvent = useTracking();
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
       const flowRun: PrefectFlowRun = await httpGet(
@@ -253,12 +346,16 @@ export const Connections = () => {
         `prefect/v1/flows/${deploymentId}/flow_run/`,
         {}
       );
-      if (response?.detail) errorToast(response.detail, [], globalContext);
+      // returning {error:"ERROR"} to stop loader if error occurs.
+      if (response?.detail) {
+        errorToast(response.detail, [], globalContext);
+        return { error: 'ERROR' };
+      }
 
       // if flow run id is not present, something went wrong
       if (!response?.flow_run_id) {
         errorToast('Something went wrong', [], globalContext);
-        return;
+        return { error: 'ERROR' };
       }
 
       successToast(`Sync initiated successfully`, [], globalContext);
@@ -268,6 +365,7 @@ export const Connections = () => {
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+      return { error: 'ERROR' };
     } finally {
       setSyncingConnectionIds(
         syncingConnectionIds.filter((id) => id !== connectionId)
@@ -323,65 +421,7 @@ export const Connections = () => {
     handleCancelResetConnection();
   };
 
-  const Actions = ({
-    connection,
-    idx,
-  }: {
-    connection: Connection;
-    idx: string;
-  }) => {
-    const { deploymentId, connectionId, lock } = connection;
-    return (
-      <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
-        <Button
-          variant="contained"
-          onClick={async () => {
-            // push connection id into list of syncing connection ids
-            if (!syncingConnectionIds.includes(connectionId)) {
-              setSyncingConnectionIds([...syncingConnectionIds, connectionId]);
-            }
-            syncConnection(deploymentId, connectionId);
-          }}
-          data-testid={'sync-' + idx}
-          disabled={
-            syncingConnectionIds.includes(connectionId) ||
-            !!lock ||
-            !permissions.includes('can_sync_sources')
-          }
-          key={'sync-' + idx}
-          sx={{ marginRight: '10px' }}
-        >
-          {syncingConnectionIds.includes(connectionId) || lock ? (
-            <Image
-              src={SyncIcon}
-              className={styles.SyncIcon}
-              alt="sync icon"
-              data-testid="sync-icon"
-            />
-          ) : (
-            'Sync'
-          )}
-        </Button>
-
-        <Button
-          id={idx}
-          aria-controls={open ? 'basic-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? 'true' : undefined}
-          onClick={(event) => handleClick(connection, event.currentTarget)}
-          variant="contained"
-          key={'menu-' + idx}
-          color="info"
-          sx={{ p: 0, minWidth: 32 }}
-          disabled={
-            syncingConnectionIds.includes(connectionId) || lock ? true : false
-          }
-        >
-          <MoreHorizIcon />
-        </Button>
-      </Box>
-    );
-  };
+  // eslint-disable-next-line react/display-name
 
   const getLastSync = (connection: Connection) => {
     let jobStatus: string | null = null;
@@ -439,7 +479,7 @@ export const Connections = () => {
 
     return (
       <Box
-        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'left' }}
+        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
       >
         {jobStatus &&
           (['success', 'failed'].includes(jobStatus) ? (
@@ -487,13 +527,14 @@ export const Connections = () => {
             sx={{
               paddingY: '4px',
               paddingX: '2px',
-              width: '60%',
+              width: '80%',
               justifyContent: 'center',
               alignItems: 'center',
             }}
             onClick={() => {
               setShowLogsDialog(true);
               setLogsConnection(connection);
+              trackAmplitudeEvent("[View history] Button clicked")
             }}
           >
             View history
@@ -525,6 +566,12 @@ export const Connections = () => {
           key={`actions-${connection.blockId}`}
           connection={connection}
           idx={connection.blockId}
+          permissions={permissions}
+          syncConnection={syncConnection}
+          syncingConnectionIds={syncingConnectionIds}
+          setSyncingConnectionIds={setSyncingConnectionIds}
+          open={open}
+          handleClick={handleClick}
         />,
         // ),
       ]);
@@ -583,10 +630,11 @@ export const Connections = () => {
   const handleResetConnection = () => {
     handleClose();
     setShowConfirmResetDialog(true);
+    trackAmplitudeEvent("[Reset-connection] Button Clicked");
   };
 
   const handleEditConnection = () => {
-    handleClose();
+    handleClose("EDIT");
     setShowDialog(true);
   };
 
@@ -647,7 +695,7 @@ export const Connections = () => {
           connection={logsConnection}
         />
       )}
-      <PendingActionsAccordion />
+      <PendingActionsAccordion refreshConnectionsList={mutate} />
       <ActionsMenu
         eleType="connection"
         anchorEl={anchorEl}

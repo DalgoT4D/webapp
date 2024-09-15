@@ -8,6 +8,7 @@ import DragIcon from '@/assets/icons/drag.svg';
 import { NodeApi, Tree } from 'react-arborist';
 import { Box, Button, Typography } from '@mui/material';
 import Image from 'next/image';
+import { ValidateDefaultTasksToApplyInPipeline } from './FlowCreate';
 
 interface TaskSequenceProps {
   field: ControllerRenderProps<any, any>;
@@ -90,6 +91,7 @@ export const TaskSequence = ({
               cursor: 'grab',
             }}
             alt="drop icon"
+            data-testid="dropicon"
           />
         )}
 
@@ -179,7 +181,7 @@ export const TaskSequence = ({
           size="small"
           onClick={() =>
             field.onChange(
-              initialOptions.filter((task) => task.generated_by === 'system')
+              initialOptions.filter(ValidateDefaultTasksToApplyInPipeline)
             )
           }
         >
@@ -187,8 +189,8 @@ export const TaskSequence = ({
         </Button>
       </Box>
       <Typography sx={{ mt: 1 }} variant="body2" gutterBottom>
-        These are your default transformation tasks. Most users don&apos;t need to
-        change this list
+        These are your default transformation tasks. Most users don&apos;t need
+        to change this list
       </Typography>
 
       <Tree

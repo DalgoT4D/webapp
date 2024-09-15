@@ -21,6 +21,7 @@ import { useSession } from 'next-auth/react';
 import { InfoOutlined } from '@mui/icons-material';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { useTracking } from '@/contexts/TrackingContext';
 
 const headers = {
   values: [
@@ -91,7 +92,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
     useState<boolean>(false);
   const [orguserSelectedInAction, setOrguserSelectedInAction] =
     useState<OrgUser | null>(null);
-
+  const trackAmplitudeEvent = useTracking();
   const [selectedUserRole, setSelectedUserRole] = useState<string>('');
   const openActionMenu = Boolean(anchorEl);
   const handleClick = (orguser: OrgUser, event: HTMLElement | null) => {
@@ -104,6 +105,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   };
 
   const handleUpdateRole = async () => {
+    trackAmplitudeEvent("[Update-Role] Button Clicked")
     try {
       const message = await httpPost(
         session,

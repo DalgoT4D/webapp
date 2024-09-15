@@ -6,6 +6,7 @@ import ManageUsers from '@/components/UserManagement/ManageUsers';
 import Invitations from '@/components/Invitations/Invitations';
 import InviteUserForm from '@/components/Invitations/InviteUserForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { useQueryParams } from '@/customHooks/useQueryParams';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -30,20 +31,22 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const UserManagement = () => {
-  const [value, setValue] = React.useState(0);
   const [showInviteUserForm, setShowInviteUserForm] = useState<boolean>(false);
   const [mutateInvitations, setMutateInvitations] = useState<boolean>(false);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-  };
-
+  const tabsObj: { [key: string]: number } = {
+    users: 0,
+    pending_invitations: 1,
+  }
+  const { value, handleChange } = useQueryParams({
+    tabsObj,
+    basePath: "/user-management",
+    defaultTab: "users"
+  })
   const handleClickInviteUser = () => {
     setShowInviteUserForm(true);
   };
-
   return (
     <>
       <PageHead title="Dalgo | User Management" />

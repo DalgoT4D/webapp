@@ -44,8 +44,8 @@ const ReplaceValueOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   const { control, register, handleSubmit, reset, formState } = useForm<{
     config: Array<{ old: string; new: string }>;
@@ -61,9 +61,10 @@ const ReplaceValueOpForm = ({
     control,
     name: 'config',
     rules: {
-      minLength: {
-        value: 2,
-        message: 'Atleast one value is required',
+      validate: {
+        notAllEmpty: (value) =>
+          value.some((item) => item.old !== '' || item.new !== '') ||
+          'Atleast one value is required',
       },
     },
   });
@@ -267,8 +268,8 @@ const ReplaceValueOpForm = ({
         >
           Add row
         </Button>
-
-        <Box sx={{ m: 2 }}>
+        <Box sx={{ m: 2 }} />
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2, px: 2 }}>
           <Button
             variant="contained"
             type="submit"

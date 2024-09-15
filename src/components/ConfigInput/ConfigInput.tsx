@@ -27,6 +27,7 @@ export type EntitySpec = {
   specs?: Array<EntitySpec>;
   order: number;
   pattern?: string;
+  multiline?: boolean;
 };
 
 export const ConfigInput = ({
@@ -67,7 +68,7 @@ export const ConfigInput = ({
 
   useEffect(() => {
     const tempShowPasswords: any = {};
-    specs.forEach((element) => {
+    specs?.forEach((element) => {
       if (element?.airbyte_secret) {
         tempShowPasswords[element.field] = false;
       }
@@ -80,8 +81,8 @@ export const ConfigInput = ({
       {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
         .map((spec: EntitySpec) => {
-          return spec.type === 'string' ? (
-            spec.airbyte_secret ? (
+          return spec?.type === 'string' ? (
+            spec?.airbyte_secret ? (
               <React.Fragment key={spec.field}>
                 <Controller
                   name={spec.field}
@@ -98,6 +99,8 @@ export const ConfigInput = ({
                       type={
                         showPasswords[`${spec.field}`] ? 'text' : 'password'
                       }
+                      multiline={spec?.multiline}
+                      rows={4}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
@@ -142,6 +145,8 @@ export const ConfigInput = ({
                       label={`${spec.title}${spec.required ? '*' : ''}`}
                       variant="outlined"
                       disabled={false}
+                      multiline={spec?.multiline}
+                      rows={4}
                       inputProps={{ pattern: spec.pattern }}
                     ></Input>
                   )}
@@ -172,10 +177,15 @@ export const ConfigInput = ({
               <Controller
                 name={spec.field}
                 control={control}
-                rules={{ required: spec.required && 'Required' }}
-                render={({ field: { ref, ...rest }, fieldState }) => (
+                rules={{
+                  required: spec.required && 'Required',
+                }}
+                render={({ field: { ref, onChange, ...rest }, fieldState }) => (
                   <Input
                     {...rest}
+                    onChange={(event) => {
+                      onChange(parseInt(event.target.value));
+                    }}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                     disabled={false}
@@ -196,7 +206,7 @@ export const ConfigInput = ({
                 rules={{ required: spec.required && 'Required' }}
                 render={({ field, fieldState }) => (
                   <Autocomplete
-                    disabled={entity ? true : false}
+                    disabled={false}
                     data-testid="autocomplete"
                     id={spec.field}
                     value={field.value}

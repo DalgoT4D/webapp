@@ -15,6 +15,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { useTracking } from '@/contexts/TrackingContext';
 
 interface CreateOrgTaskFormProps {
   mutate: (...args: any) => any;
@@ -72,6 +73,7 @@ const CreateOrgTaskForm = ({
   const [masterTasks, setMasterTasks] = useState<Array<AutocompleteOption>>([]);
   const [masterFlags, setMasterFlags] = useState<Array<string>>([]);
   const [masterOptions, setMasterOptions] = useState<any>({});
+  const trackAmplitudeEvent = useTracking();
   const { register, handleSubmit, control, watch, reset, setValue, getValues } =
     useForm({
       defaultValues: {
@@ -97,9 +99,7 @@ const CreateOrgTaskForm = ({
         const tasksDropDownRows = data
           .filter(
             (task: MasterTask) =>
-              ![TASK_GITPULL, TASK_DBTCLEAN, TASK_DOCSGENERATE].includes(
-                task.slug
-              )
+              ![TASK_GITPULL, TASK_DBTCLEAN].includes(task.slug)
           )
           .map((task: MasterTask) => {
             return { id: task.slug, label: task.slug };
@@ -146,6 +146,7 @@ const CreateOrgTaskForm = ({
 
   const onSubmit = async (data: any) => {
     setLoading(true);
+    trackAmplitudeEvent("[Save-OrgTask] Button Clicked")
     const paramOptions: any = {};
     data.options
       .filter((opt: any) => opt.key && opt.value)
@@ -181,10 +182,17 @@ const CreateOrgTaskForm = ({
               <Autocomplete
                 data-testid="taskList"
                 options={masterTasks}
+                aria-labelledby="Select task"
                 value={field.value}
                 onChange={(e, data) => field.onChange(data)}
                 renderInput={(params) => (
-                  <Input {...params} label="Select task" variant="outlined" />
+                  <Input
+                    {...params}
+                    data-testid="selecttask"
+                    label="Select task"
+                    aria-labelledby="Select task"
+                    variant="outlined"
+                  />
                 )}
               />
             )}

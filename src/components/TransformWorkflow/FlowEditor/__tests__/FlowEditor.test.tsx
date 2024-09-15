@@ -216,8 +216,8 @@ describe('FlowEditor', () => {
     const previewTab = screen.getByText('Preview');
     const logsTab = screen.getByText('Logs');
 
-    expect(previewTab).toHaveAttribute('aria-selected', 'true');
-    expect(logsTab).toHaveAttribute('aria-selected', 'false');
+    expect(previewTab).toHaveAttribute('aria-selected', 'false');
+    expect(logsTab).toHaveAttribute('aria-selected', 'true');
 
     await userEvent.click(logsTab);
 

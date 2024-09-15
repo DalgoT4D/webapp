@@ -39,7 +39,6 @@ const MainDashboard = ({ children }: any) => {
     (async () => {
       try {
         let orgusers = await httpGet(session, `currentuserv2`);
-
         // if there are no orgs, redirect to create org page
         let hasOrg = false;
         if (orgusers && orgusers.length > 0) {
@@ -103,6 +102,7 @@ const MainDashboard = ({ children }: any) => {
         fetcher: (resource) => {
           return httpGet(session, resource).then((res) => res);
         },
+        revalidateOnFocus: false,
       }}
     >
       {redirectTo === 'setup-account' && (
@@ -140,6 +140,7 @@ const MainDashboard = ({ children }: any) => {
 
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
+
 
   const router = useRouter();
 
