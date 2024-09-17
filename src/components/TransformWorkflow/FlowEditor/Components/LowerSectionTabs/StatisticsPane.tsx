@@ -32,9 +32,26 @@ import { Session } from 'next-auth';
 import { DateTimeInsights } from '@/components/Charts/DateTimeInsights';
 import { StringInsights } from '@/components/Charts/StringInsights';
 import { NumberInsights } from '@/components/Charts/NumberInsights';
+import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
+
+const useDebounce = (value: number, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 interface StatisticsPaneProps {
-  modelToPreview: DbtSourceModel | null;
+  height: number;
 }
 
 export interface DateTimeFilter {
@@ -131,10 +148,10 @@ export const pollTaskStatus = async (
   return new Promise(poll);
 };
 
-export const StatisticsPane: React.FC<StatisticsPaneProps> = ({
-  modelToPreview,
-}) => {
-  // const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
+export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
+  const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
+
+  const debouncedHeight = useDebounce(height, 500);
 
   const [rowCount, setRowCount] = useState(-1);
   const { data: session } = useSession();
@@ -142,6 +159,8 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({
 
   // Row Data: The data to be displayed.
   const [data, setData] = useState<ColumnData[]>([]);
+
+  const { previewAction } = usePreviewAction();
 
   const columns: ColumnDef<ColumnData, any>[] = useMemo(
     () => [
@@ -394,6 +413,14 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({
   }, []);
 
   useEffect(() => {
+    if (previewAction.type === 'preview') {
+      setModelToPreview(previewAction.data);
+    } else if (previewAction.type === 'clear-preview') {
+      setModelToPreview(null);
+    }
+  }, [previewAction]);
+
+  useEffect(() => {
     if (modelToPreview) {
       setData([]);
       fetchRowCountAndColumns(modelToPreview.schema, modelToPreview.input_name);
@@ -475,7 +502,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({
             </Box>
           </Box>
           <Box>
-            <Box sx={{ overflow: 'auto' }}>
+            <Box sx={{ height: debouncedHeight - 100, overflow: 'auto' }}>
               <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
                 <TableHead>
                   {getHeaderGroups().map((headerGroup) => (
@@ -567,6 +594,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({
       ) : (
         <Box
           sx={{
+            height: debouncedHeight,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -580,6 +608,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({
       <Box
         sx={{
           display: 'flex',
+          height: debouncedHeight,
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -587,5 +616,16 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({
         No data (0 rows) available to generate insights
       </Box>
     )
-  ) : null;
+  ) : (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: debouncedHeight,
+      }}
+    >
+      Select a table to view
+    </Box>
+  );
 };
