@@ -1,5 +1,6 @@
 import { Box, Button, Typography } from '@mui/material';
 import InfoTooltip from '../UI/Tooltip/Tooltip';
+import Folder from '@mui/icons-material/Folder';
 export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
   return (
     <>
@@ -35,13 +36,25 @@ export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
             flexWrap: 'wrap',
           }}
         >
-          <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{}}>
             <Button
               variant="outlined"
               id="create-new-button"
-              sx={{ width: '100%', height: '2rem' }}
+              sx={{
+                width: '100%',
+                height: '2rem',
+                gap: '.5rem',
+                padding: '0.4rem',
+                backgroundColor: '#F5FAFA',
+                color: '#00897B',
+                '&:hover': {
+                  backgroundColor: '#00897B',
+                  color: '#FFFFFF',
+                },
+              }}
               onClick={handleOpenSavedSession}
             >
+              <Folder />
               <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>
                 Saved Sessions
               </Typography>

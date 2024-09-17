@@ -16,11 +16,13 @@ import { useSession } from 'next-auth/react';
 
 export const LLMSummary = ({
   llmSummary,
+  downloadCSV,
   newSessionId,
   oldSessionMetaInfo,
   handleNewSession,
 }: {
   llmSummary: string;
+  downloadCSV: () => void;
   newSessionId: string;
   oldSessionMetaInfo: any;
   handleNewSession: any;
@@ -63,7 +65,6 @@ export const LLMSummary = ({
 
   // submitting the session name ->
   const onSubmit = (data: any, overwrite: boolean) => {
-    console.log(data, overwrite, 'data');
     const oldSessionIdToSend = overwrite
       ? oldSessionMetaInfo?.oldSessionId
       : null;
@@ -83,7 +84,7 @@ export const LLMSummary = ({
       );
     }
   };
-
+  console.log();
   // checks for the route change->
   //cover both cases, while editing, and the first time too wehn the user creats a analysis.
   useEffect(() => {
@@ -116,6 +117,9 @@ export const LLMSummary = ({
       router.push(attemptedRoute);
     }
   };
+  console.log(oldSessionMetaInfo, 'oldse');
+
+  // Function to handle CSV download
 
   return (
     <Box sx={{ ...customCss, width: '58%' }}>
@@ -155,10 +159,11 @@ export const LLMSummary = ({
             alt="dalgo icon"
           />
           <Typography
+            whiteSpace="pre-wrap"
             sx={{
               margin: '1.75rem 2rem',
               height: '70%',
-              overflowY: 'scroll',
+              overflowY: 'scroll', // Enable horizontal scrolling
               padding: '0 .5rem',
             }}
           >
@@ -229,7 +234,8 @@ export const LLMSummary = ({
           <Button
             variant="contained"
             sx={{ width: '6.75rem', padding: '8px 0', borderRadius: '6px' }}
-            disabled={!newSessionId}
+            disabled={!llmSummary}
+            onClick={downloadCSV}
           >
             Download
           </Button>
@@ -261,4 +267,3 @@ const customCss = {
 };
 
 LLMSummary.displayName = 'LLM-summary';
-

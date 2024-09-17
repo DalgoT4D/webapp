@@ -12,7 +12,7 @@ import {
 import { useContext, useState } from 'react';
 import { SavedSession } from '@/components/DataAnalysis/SavedSession';
 import { TopBar } from '@/components/DataAnalysis/TopBar';
-
+import { unparse, parse } from 'papaparse';
 export default function DataAnalysis() {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
@@ -64,6 +64,28 @@ export default function DataAnalysis() {
       newSessionId: '',
     });
   };
+  console.log(oldSessionMetaInfo, 'oldsession');
+  const downloadCSV = () => {
+    const csv = unparse([
+      {
+        newSessionId,
+        summary,
+        ...oldSessionMetaInfo,
+      },
+    ]);
+
+    // Create a blob from the CSV string
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+    // Create a link and trigger download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'summary.csv'); // Specify file name
+    document.body.appendChild(link); // Append link to the body
+    link.click(); // Trigger the click event to start download
+    document.body.removeChild(link); // Remove the link after download
+  };
 
   //polling
   const pollForTaskRun = async (taskId: string) => {
@@ -71,6 +93,7 @@ export default function DataAnalysis() {
       const response: any = await httpGet(session, 'tasks/stp/' + taskId);
       const lastMessage: any =
         response['progress'][response['progress'].length - 1];
+      console.log(lastMessage, 'lastmessage');
       if (!['completed', 'failed'].includes(lastMessage.status)) {
         await delay(3000);
         await pollForTaskRun(taskId);
@@ -141,7 +164,7 @@ export default function DataAnalysis() {
         <Box
           sx={{
             ...customCss,
-            width: '42%',
+            width: '45%',
             flexDirection: 'column',
           }}
         >
@@ -163,6 +186,7 @@ export default function DataAnalysis() {
         {/* Final Summary */}
         <LLMSummary
           llmSummary={summary}
+          downloadCSV={downloadCSV}
           newSessionId={newSessionId}
           oldSessionMetaInfo={oldSessionMetaInfo}
           handleNewSession={handleNewSession}
@@ -174,7 +198,7 @@ export default function DataAnalysis() {
             {/* <FullPageBackground> */}
             <Backdrop
               open={loading !== undefined ? loading : false}
-              sx={{ 
+              sx={{
                 zIndex: 1300,
                 position: 'fixed',
                 top: 0,
@@ -189,23 +213,14 @@ export default function DataAnalysis() {
               }}
             >
               <>
-              <CircularProgress sx={{ color: '#FFFFFF' }} />
-              <Typography
-                sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}
-              >
-                Prepping your data output...
-              </Typography>
+                <CircularProgress sx={{ color: '#FFFFFF' }} />
+                <Typography
+                  sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}
+                >
+                  Prepping your data output...
+                </Typography>
               </>
             </Backdrop>
-            {/* <Backdrop> */}
-              {/* <CircularProgress sx={{ color: '#FFFFFF' }} />
-              <Typography
-                sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}
-              >
-                Prepping your data output...
-              </Typography> */}
-              {/* </FullPageBackground> */}
-            {/* </Backdrop> */}
           </>
         )}
 

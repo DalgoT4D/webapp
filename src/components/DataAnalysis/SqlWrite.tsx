@@ -224,8 +224,17 @@ export const SqlWrite = memo(
                     flex: '1 1 auto',
                     backgroundColor:
                       selectedDefaultPrompt === defaultPrompts.prompt
-                        ? '#05443e'
-                        : '#00897B',
+                        ? '#00897B'
+                        : '#F5FAFA',
+                    color:
+                      selectedDefaultPrompt === defaultPrompts.prompt
+                        ? '#FFFFFF'
+                        : '#3C4C63',
+
+                    '&:hover': {
+                      backgroundColor: '#00897B',
+                      color: '#FFFFFF',
+                    },
                   }}
                   onClick={() => {
                     handlePromptSelection(defaultPrompts.prompt);
@@ -328,6 +337,13 @@ export const SqlWrite = memo(
                     width: '100%',
                     height: '2.75rem',
                     borderRadius: '6px',
+                    color: '#3C4C63',
+                    backgroundColor: customPromptToggle ? '#05443e' : '#F5FAFA',
+
+                    '&:hover': {
+                      backgroundColor: '#00897B',
+                      color: '#FFFFFF',
+                    },
                   }}
                   onClick={() => {
                     setValue('defaultPrompt', '');

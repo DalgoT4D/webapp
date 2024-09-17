@@ -38,6 +38,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.52.0",
     "react-joyride": "^2.8.1",
+    "react-papaparse": "^4.4.0",
     "react-resizable": "^3.0.5",
     "reactflow": "^11.11.4",
     "superset-ui": "^0.0.0-1",
