@@ -24,7 +24,6 @@ import {
 } from '@tanstack/react-table';
 import { httpGet, httpPost } from '@/helpers/http';
 import { DbtSourceModel } from '../Canvas';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { RangeChart } from '@/components/Charts/RangeChart';
 import { delay } from '@/utils/common';
