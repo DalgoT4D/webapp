@@ -1,6 +1,6 @@
 import { Box, Tooltip, Typography } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
-import { Tree, NodeApi } from 'react-arborist';
+import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@/assets/icons/datatable.svg';
@@ -72,12 +72,15 @@ const Node = ({ node, style, dragHandle }: any) => {
 
 interface ProjectTreeProps {
   dbtSourceModels: DbtSourceModel[];
+  handleNodeClick: any;
 }
 
 // type TreeData = Partial<DbtSourceModel> & { children: TreeData[] };
 
-const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
-  const { setCanvasAction } = useCanvasAction();
+const ProjectTree = ({
+  dbtSourceModels,
+  handleNodeClick,
+}: ProjectTreeProps) => {
   const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
   const globalContext = useContext(GlobalContext);
@@ -117,16 +120,6 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
       constructAndSetProjectTreeData(dbtSourceModels);
     }
   }, [dbtSourceModels]);
-
-  const handleNodeClick = (nodes: NodeApi<any>[]) => {
-    if (nodes.length > 0 && nodes[0].isLeaf) {
-      console.log(
-        'adding a node to canvas from project tree component',
-        nodes[0].data
-      );
-      setCanvasAction({ type: 'add-srcmodel-node', data: nodes[0].data });
-    }
-  };
 
   return (
     <Box

@@ -26,6 +26,7 @@ import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
 import { showDataInsightsTab } from '@/config/constant';
 import { useLockCanvas } from '@/customHooks/useLockCanvas';
 import { useTracking } from '@/contexts/TrackingContext';
+import { NodeApi } from 'react-arborist';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
@@ -43,9 +44,19 @@ const UpperSection = ({
   setTempLockCanvas,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
-
+  const { setCanvasAction } = useCanvasAction();
   const onResize = (event: any, { size }: any) => {
     setWidth(size.width);
+  };
+
+  const handleNodeClick = (nodes: NodeApi<any>[]) => {
+    if (nodes.length > 0 && nodes[0].isLeaf) {
+      console.log(
+        'adding a node to canvas from project tree component',
+        nodes[0].data
+      );
+      setCanvasAction({ type: 'add-srcmodel-node', data: nodes[0].data });
+    }
   };
   return (
     <Box
@@ -64,7 +75,10 @@ const UpperSection = ({
         maxConstraints={[550, Infinity]}
         resizeHandles={['e']}
       >
-        <ProjectTree dbtSourceModels={sourcesModels} />
+        <ProjectTree
+          dbtSourceModels={sourcesModels}
+          handleNodeClick={handleNodeClick}
+        />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />
       <Box sx={{ width: '100%' }}>
