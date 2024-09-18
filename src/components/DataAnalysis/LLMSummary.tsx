@@ -13,6 +13,13 @@ import { copyToClipboard } from '@/utils/common';
 import { successToast, errorToast } from '../ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
+export const MODALS = {
+  SAVE: 'SAVE',
+  OVERWRITE: 'OVERWRITE',
+  CONFIRM_SAVEAS: 'CONFIRM_SAVEAS',
+  FEEDBACK_FORM: 'FEEDBACK_FORM',
+  UNSAVED_CHANGES: 'UNSAVED_CHANGES',
+};
 
 export const LLMSummary = ({
   llmSummary,
@@ -30,7 +37,7 @@ export const LLMSummary = ({
   const router = useRouter();
   const { data: session } = useSession();
   const [isBoxOpen, setIsBoxOpen] = useState(false);
-  const [modalName, setModalName] = useState('SAVE');
+  const [modalName, setModalName] = useState(MODALS.SAVE);
   const [attemptedRoute, setAttemptedRoute] = useState(null);
   const globalContext = useContext(GlobalContext);
   const { dispatch, state } = globalContext?.UnsavedChanges as any;
@@ -42,7 +49,7 @@ export const LLMSummary = ({
     session_name: string
   ) => {
     try {
-      const response = await httpPost(
+      const response: { success: number } = await httpPost(
         session,
         `warehouse/ask/${newSessionId}/save`,
         {
@@ -51,7 +58,6 @@ export const LLMSummary = ({
           old_session_id,
         }
       );
-
       if (response.success) {
         successToast(`${session_name} saved successfully`, [], globalContext);
         handleNewSession();
@@ -63,14 +69,45 @@ export const LLMSummary = ({
     }
   };
 
+  const handleFeedback = async (session_id: string, feedback: string) => {
+    try {
+      const response: { success: number } = await httpPost(
+        session,
+        `warehouse/ask/${session_id}/feedback`,
+        {
+          feedback,
+        }
+      );
+      if (response.success) {
+        successToast(`Feedback sent successfully`, [], globalContext);
+        handleNewSession();
+      }
+    } catch (err: any) {
+      errorToast(err.message, [], globalContext);
+    } finally {
+      setIsBoxOpen(false);
+    }
+  };
+
   // submitting the session name ->
-  const onSubmit = (data: any, overwrite: boolean) => {
+  const onSubmit = (sessionName: string, overwrite: boolean) => {
     const oldSessionIdToSend = overwrite
       ? oldSessionMetaInfo?.oldSessionId
       : null;
-    handleSaveSession(overwrite, oldSessionIdToSend, data.sessionName);
+    handleSaveSession(overwrite, oldSessionIdToSend, sessionName);
   };
 
+  const submitFeedback = (feedback: string) => {
+    let sessionIdToSend;
+    if (newSessionId) {
+      // if we have a newsession or if we have oldsession but again create a new summary (both oldsessionid and newsessionid).
+      sessionIdToSend = newSessionId;
+    } else if (oldSessionMetaInfo.oldSessionId) {
+      //during edit when we have a oldsession id.
+      sessionIdToSend = oldSessionMetaInfo.oldSessionId;
+    }
+    handleFeedback(sessionIdToSend, feedback);
+  };
   // Function to handle copying text ->
   const handleCopyClick = async () => {
     const copyRes: boolean = await copyToClipboard(llmSummary);
@@ -84,7 +121,7 @@ export const LLMSummary = ({
       );
     }
   };
-  console.log();
+
   // checks for the route change->
   //cover both cases, while editing, and the first time too wehn the user creats a analysis.
   useEffect(() => {
@@ -94,7 +131,7 @@ export const LLMSummary = ({
         (newSessionId && !oldSessionMetaInfo.oldSessionId && state === false)
       ) {
         router.events.emit('routeChangeError');
-        setModalName('UNSAVED_CHANGES');
+        setModalName(MODALS.UNSAVED_CHANGES);
         setIsBoxOpen(true);
         dispatch({ type: 'SET_UNSAVED_CHANGES' });
         setAttemptedRoute(url);
@@ -117,7 +154,6 @@ export const LLMSummary = ({
       router.push(attemptedRoute);
     }
   };
-  console.log(oldSessionMetaInfo, 'oldse');
 
   // Function to handle CSV download
 
@@ -145,6 +181,7 @@ export const LLMSummary = ({
             borderRadius: '6px',
             marginTop: '2rem',
             position: 'relative',
+            backgroundColor: '#F4F9F9',
           }}
         >
           <Image
@@ -198,7 +235,7 @@ export const LLMSummary = ({
 
             <IconButton
               onClick={() => {
-                setModalName('FEEDBACK_FORM');
+                setModalName(MODALS.FEEDBACK_FORM);
                 setIsBoxOpen(true);
               }}
               disabled={!llmSummary}
@@ -219,7 +256,7 @@ export const LLMSummary = ({
             disabled={!newSessionId}
             onClick={() => {
               setModalName(
-                oldSessionMetaInfo.oldSessionId ? 'OVERWRITE' : 'SAVE'
+                oldSessionMetaInfo.oldSessionId ? MODALS.OVERWRITE : MODALS.SAVE
               );
               setIsBoxOpen(true);
             }}
@@ -248,8 +285,10 @@ export const LLMSummary = ({
             setIsBoxOpen={setIsBoxOpen}
             modalName={modalName}
             onSubmit={onSubmit}
+            submitFeedback={submitFeedback}
             onConfirmNavigation={onConfirmNavigation}
             setModalName={setModalName}
+            oldSessionName={oldSessionMetaInfo.session_name}
           />
         )}
       </Box>

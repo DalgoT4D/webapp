@@ -13,24 +13,36 @@ import { errorToast } from '../ToastMessage/ToastHelper';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import InfoTooltip from '../UI/Tooltip/Tooltip';
+interface Prompt {
+  id: string;
+  label: string;
+  prompt: string;
+}
 
+type PromptsResult = Prompt[];
+type LimitResult = number;
 export const SqlWrite = memo(
   ({
     getLLMSummary,
     prompt,
+    setResetState,
+    resetState,
     newSessionId,
     oldSessionMetaInfo,
   }: {
     getLLMSummary: any;
+    setResetState: (x: boolean) => void;
+    resetState: boolean;
     prompt: string;
     oldSessionMetaInfo: any;
     newSessionId: string;
   }) => {
     const { data: session } = useSession();
-    const [defaultPromptsLists, setDefaultPromptLists] = useState([]);
+    const [defaultPromptsLists, setDefaultPromptLists] = useState<Prompt[]>([]);
     const [customPromptToggle, setCustomPromptToggle] = useState(false);
     const globalContext = useContext(GlobalContext);
     const [tempLoading, setTempLoading] = useState(false);
+    const [sqlQueryLimit, setSqlQueryLimit] = useState<number>(500); //deafult value
 
     const {
       control,
@@ -50,7 +62,6 @@ export const SqlWrite = memo(
     const selectedDefaultPrompt = watch('defaultPrompt');
 
     const handlePromptSelection = (promptText: string) => {
-      console.log(promptText, 'newtest');
       setCustomPromptToggle(false);
       setValue('defaultPrompt', promptText);
       setValue('customPrompt', '');
@@ -58,7 +69,6 @@ export const SqlWrite = memo(
 
     const onSubmit = (data: any) => {
       const { sqlText, customPrompt, defaultPrompt } = data;
-      console.log(sqlText, customPrompt, defaultPrompt, 'hello');
       if (!customPrompt && !defaultPrompt) {
         errorToast(
           'Either select a default prompt or write a custom prompt',
@@ -73,18 +83,43 @@ export const SqlWrite = memo(
       });
     };
 
+    //get deafult prompts initially
     useEffect(() => {
       const getDefaultPrompts = async () => {
         try {
           setTempLoading(true);
-          const response = await httpGet(session, `data/user_prompts/`);
-          if (!response.length) {
-            errorToast('No Custom Prompts found', [], globalContext);
-            return;
+          const [promptsResult, limitResult]: [
+            PromiseSettledResult<PromptsResult>,
+            PromiseSettledResult<LimitResult>
+          ] = await Promise.allSettled([
+            httpGet(session, 'data/user_prompts/'),
+            httpGet(session, 'data/llm_data_analysis_query_limit/'),
+          ]);
+
+          if (
+            promptsResult.status === 'fulfilled' &&
+            promptsResult.value.length
+          ) {
+            setDefaultPromptLists(promptsResult.value);
+          } else {
+            errorToast(
+              'No Custom Prompts found or failed to fetch prompts',
+              [],
+              globalContext
+            );
           }
-          setDefaultPromptLists(response);
+          if (limitResult.status === 'fulfilled' && limitResult.value) {
+            setSqlQueryLimit(limitResult.value);
+          } else {
+            errorToast('Failed to fetch SQL query limit', [], globalContext);
+          }
         } catch (error: any) {
-          errorToast(error.message, [], globalContext);
+          console.error('Error fetching data:', error);
+          errorToast(
+            error.message || 'An unexpected error occurred',
+            [],
+            globalContext
+          );
         } finally {
           setTempLoading(false);
         }
@@ -95,6 +130,7 @@ export const SqlWrite = memo(
       }
     }, [session]);
 
+    //works while editing
     useEffect(() => {
       const isDefaultPrompt = defaultPromptsLists.some((item: any) => {
         return item?.prompt === prompt;
@@ -107,7 +143,19 @@ export const SqlWrite = memo(
         customPrompt: isDefaultPrompt ? '' : prompt,
         sqlText: oldSessionMetaInfo?.sqlText || '',
       });
-    }, [defaultPromptsLists, oldSessionMetaInfo]);
+    }, [defaultPromptsLists, oldSessionMetaInfo.sqlText]);
+
+    //resets the state when clicked new button.
+    useEffect(() => {
+      if (resetState) {
+        reset({
+          defaultPrompt: '',
+          customPrompt: '',
+          sqlText: '',
+        });
+        setResetState(false);
+      }
+    }, [resetState]);
 
     if (tempLoading) return <CircularProgress />;
 
@@ -135,7 +183,7 @@ export const SqlWrite = memo(
                 data-testid="sql-filter"
                 sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
               >
-                *You can query a maximum of 1000 rows only.
+                {`*You can query a maximum of ${sqlQueryLimit} rows only.`}
               </Typography>
             </Box>
 

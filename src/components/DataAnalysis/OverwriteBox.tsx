@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Button,
@@ -8,10 +8,11 @@ import {
 } from '@mui/material';
 import CustomDialog from '../Dialog/CustomDialog';
 import { useForm, Controller } from 'react-hook-form';
-
+import { MODALS } from './LLMSummary';
 // Define the form data type
 interface FormData {
   sessionName: string;
+  feedback: string;
 }
 
 export const OverWriteDialog = ({
@@ -21,13 +22,17 @@ export const OverWriteDialog = ({
   onSubmit,
   onConfirmNavigation,
   setModalName,
+  submitFeedback,
+  oldSessionName,
 }: {
   open: boolean;
   modalName: string;
   onSubmit: any;
   onConfirmNavigation: any;
-  setModalName: any;
+  setModalName: (x: string) => void;
   setIsBoxOpen: (a: boolean) => void;
+  submitFeedback: (x: string) => void;
+  oldSessionName: string;
 }) => {
   const {
     control,
@@ -37,6 +42,7 @@ export const OverWriteDialog = ({
   } = useForm<FormData>({
     defaultValues: {
       sessionName: '',
+      feedback: '',
     },
   });
 
@@ -44,10 +50,18 @@ export const OverWriteDialog = ({
     reset();
     setIsBoxOpen(false);
   };
+  useEffect(() => {
+    if (oldSessionName) {
+      reset({
+        sessionName: oldSessionName,
+      });
+    }
+  }, [oldSessionName]);
 
   const ModalData: any = {
     SAVE: {
       mainheading: 'Save as',
+      label: 'Save',
       subHeading:
         'Please name the configuration before saving it in the warehouse',
       buttons: [
@@ -59,7 +73,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data, false)), // Use handleSubmit from react-hook-form
+          onClick: handleSubmit((data) => onSubmit(data.sessionName, false)), // Use handleSubmit from react-hook-form
         },
         {
           label: 'Cancel',
@@ -75,6 +89,7 @@ export const OverWriteDialog = ({
     },
     OVERWRITE: {
       mainheading: 'Overwrite existing session',
+      label: 'Overwrite',
       subHeading:
         'The session with this name already exists. Do you want to overwrite?',
       buttons: [
@@ -86,7 +101,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data, true)), // Handle form submission
+          onClick: handleSubmit((data) => onSubmit(data.sessionName, true)), // Handle form submission
         },
         {
           label: 'Save as new',
@@ -96,7 +111,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data, false)), // Use handleSubmit from react-hook-form
+          onClick: handleSubmit((data) => onSubmit(data.sessionName, false)), // Use handleSubmit from react-hook-form
         },
         {
           label: 'Cancel',
@@ -123,7 +138,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data, false)), // Use handleSubmit from react-hook-form
+          onClick: handleSubmit((data) => onSubmit(data.sessionName, false)), // Use handleSubmit from react-hook-form
         },
         {
           label: 'Cancel',
@@ -151,7 +166,7 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: () => {},
+          onClick: handleSubmit((data) => submitFeedback(data.feedback)),
         },
       ],
     },
@@ -171,7 +186,7 @@ export const OverWriteDialog = ({
             borderRadius: '5px',
           },
           onClick: () => {
-            setModalName('OVERWRITE');
+            setModalName(MODALS.OVERWRITE);
           },
         },
         {
@@ -198,7 +213,7 @@ export const OverWriteDialog = ({
             fontWeight: '600',
             fontSize: '14px',
             color: 'rgba(0, 0, 0, 0.6)',
-            whiteSpace: "pre-line"
+            whiteSpace: 'pre-line',
           }}
         >
           {ModalData[modalName].subHeading}
@@ -206,20 +221,35 @@ export const OverWriteDialog = ({
         {modalName !== 'UNSAVED_CHANGES' && (
           <Box sx={{ marginTop: '1.75rem' }}>
             <Controller
-              name="sessionName"
+              name={modalName === 'FEEDBACK_FORM' ? 'feedback' : 'sessionName'}
               control={control}
-              rules={{ required: 'Session Name is required' }}
+              rules={{
+                required:
+                  modalName === 'FEEDBACK_FORM'
+                    ? 'Feedback is required'
+                    : 'Session Name is required',
+              }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
                   multiline
                   rows={ModalData[modalName]?.rowsNum || 1}
-                  label={ModalData[modalName]?.label || 'Session Name'}
+                  label={ModalData[modalName]?.label || ''}
                   variant="outlined"
-                  error={!!errors.sessionName}
+                  error={
+                    modalName === 'FEEDBACK_FORM'
+                      ? !!errors.feedback
+                      : !!errors.sessionName
+                  }
                   helperText={
-                    errors.sessionName ? errors.sessionName.message : ''
+                    modalName === 'FEEDBACK_FORM'
+                      ? errors.feedback
+                        ? errors.feedback.message
+                        : ''
+                      : errors.sessionName
+                      ? errors.sessionName.message
+                      : ''
                   }
                 />
               )}
@@ -266,4 +296,4 @@ export const OverWriteDialog = ({
   );
 };
 
-OverWriteDialog.displayName = "OverwriteBox";
+OverWriteDialog.displayName = 'OverwriteBox';
