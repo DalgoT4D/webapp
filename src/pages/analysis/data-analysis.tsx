@@ -217,7 +217,7 @@ export default function DataAnalysis() {
           <>
             {/* <FullPageBackground> */}
             <Backdrop
-              open={loading !== undefined ? loading : false}
+              open={!!loading}
               sx={{
                 zIndex: 1300,
                 position: 'fixed',

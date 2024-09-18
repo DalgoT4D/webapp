@@ -40,7 +40,7 @@ export const LLMSummary = ({
   const [modalName, setModalName] = useState(MODALS.SAVE);
   const [attemptedRoute, setAttemptedRoute] = useState(null);
   const globalContext = useContext(GlobalContext);
-  const { dispatch, state } = globalContext?.UnsavedChanges as any;
+  const { dispatch, state } = globalContext?.UnsavedChanges ?? {};
 
   //handling save session->
   const handleSaveSession = async (
