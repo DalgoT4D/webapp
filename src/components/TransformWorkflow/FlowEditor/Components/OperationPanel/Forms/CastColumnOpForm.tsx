@@ -37,8 +37,8 @@ const CastColumnOp = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-        ? (node?.data as OperationNodeData)
-        : {};
+      ? (node?.data as OperationNodeData)
+      : {};
 
   type FormData = {
     config: { name: string; data_type: string | null }[];
@@ -188,14 +188,14 @@ const CastColumnOp = ({
     const filteredConfigs = config?.filter((ele) => {
       const stringToSearch = ele?.name?.toLowerCase();
       return stringToSearch?.includes(trimmedSubstring);
-    })
-    setConfigData(filteredConfigs)
-  }
+    });
+    setConfigData(filteredConfigs);
+  };
 
   const findColumnIndex = (columnName: string) => {
     const index = config?.findIndex((column) => column.name == columnName);
     return index == -1 ? 0 : index;
-  }
+  };
 
   useEffect(() => {
     fetchDataTypes();
@@ -207,16 +207,17 @@ const CastColumnOp = ({
   }, [session, node]);
 
   useEffect(() => {
-    setConfigData(config)
-  }, [config])
+    setConfigData(config);
+  }, [config]);
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
+      Hello
       <Input
         fieldStyle="transformation"
         sx={{ px: 1, pb: 1 }}
         placeholder="Search Here"
-        onChange={event => handleSearch(event.target.value)}
+        onChange={(event) => handleSearch(event.target.value)}
       />
       <form onSubmit={handleSubmit(handleSave)}>
         <GridTable
@@ -226,7 +227,10 @@ const CastColumnOp = ({
               data-testid={`columnName${findColumnIndex(column.name)}`}
               key={`config.${findColumnIndex(column.name)}.name`}
               fieldStyle="none"
-              sx={{ padding: '0' }}
+              sx={{
+                padding: '0',
+                caretColor: 'transparent',
+              }}
               name={`config.${findColumnIndex(column.name)}.name`}
               register={register}
               value={column.name}
