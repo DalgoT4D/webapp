@@ -5,9 +5,13 @@ import {
   Button,
   CircularProgress,
   Divider,
+  MenuItem,
+  Select,
   Typography,
 } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   useNodesState,
@@ -120,13 +124,47 @@ const nodeTypes: NodeTypes = {
   [`${OPERATION_NODE}`]: OperationNode,
 };
 
-const CanvasHeader = ({
-  setCanvasAction,
-}: {
-  setCanvasAction: (...args: any) => void;
-}) => {
+const CanvasHeader = () => {
+  const { setCanvasAction } = useCanvasAction();
+  const { canvasNode } = useCanvasNode();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
+  const [selectedAction, setSelectedAction] = useState('run');
+
+  const nodeData: any = canvasNode?.data;
+
+  const handleSelectRunTypeChange = (event: any) => {
+    const action = event.target.value;
+    setSelectedAction(action);
+  };
+
+  const handleRunClick = (event: any) => {
+    if (selectedAction === 'run') {
+      setCanvasAction({ type: 'run-workflow', data: null });
+    } else if (selectedAction === 'run-to-node') {
+      setCanvasAction({
+        type: 'run-workflow',
+        data: { options: { select: `+${nodeData?.input_name}` } },
+      });
+    } else if (selectedAction === 'run-from-node') {
+      setCanvasAction({
+        type: 'run-workflow',
+        data: { options: { select: `${nodeData?.input_name}+` } },
+      });
+    }
+  };
+
+  const disableToAndFromNodeRunOptions =
+    !canvasNode ||
+    canvasNode?.data.type != SRC_MODEL_NODE ||
+    canvasNode?.data.input_type != 'model';
+
+  useEffect(() => {
+    if (disableToAndFromNodeRunOptions) {
+      setSelectedAction('run');
+    }
+  }, [canvasNode]);
+
   return (
     <Box
       sx={{
@@ -143,14 +181,62 @@ const CanvasHeader = ({
         Workflow01
       </Typography>
 
-      <Box sx={{ marginLeft: 'auto', display: 'flex', gap: '20px' }}>
-        <Button
-          variant="contained"
-          type="button"
-          onClick={() => setCanvasAction({ type: 'run-workflow', data: null })}
+      <Box
+        sx={{
+          marginLeft: 'auto',
+          display: 'flex',
+          gap: '20px',
+          minWidth: '30%',
+          justifyContent: 'flex-end',
+        }}
+      >
+        {' '}
+        <Select
+          labelId="run-workflow-action"
+          value={selectedAction}
+          onChange={handleSelectRunTypeChange}
+          label="Action"
           disabled={!permissions.includes('can_run_pipeline')}
+          placeholder="Select Action"
+          IconComponent={(props: any) => {
+            return (
+              <ArrowDropDownIcon {...props} style={{ color: '#00897B' }} />
+            );
+          }}
+          sx={{
+            background: '#F5FAFA',
+            color: '#00897B',
+            fontWeight: 700,
+            border: '1px solid #00897B',
+            minWidth: "9.5rem",
+            textAlign: 'center'
+          }}
         >
-          Run
+          <MenuItem value="run">Run</MenuItem>
+          <MenuItem
+            value="run-to-node"
+            disabled={disableToAndFromNodeRunOptions}
+          >
+            Run to node
+          </MenuItem>
+          <MenuItem
+            value="run-from-node"
+            disabled={disableToAndFromNodeRunOptions}
+          >
+            Run from node
+          </MenuItem>
+        </Select>
+        <Button
+          onClick={handleRunClick}
+          type="button"
+          variant="contained"
+          color="primary"
+          disabled={
+            !selectedAction || !permissions.includes('can_run_pipeline')
+          }
+          sx={{ marginLeft: '10px' }}
+        >
+          <PlayArrowIcon />
         </Button>
       </Box>
     </Box>
@@ -510,7 +596,7 @@ const Canvas = ({
           borderTop: '1px #CCD6E2 solid',
         }}
       >
-        <CanvasHeader setCanvasAction={setCanvasAction} />
+        <CanvasHeader />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box

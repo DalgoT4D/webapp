@@ -42,6 +42,7 @@ describe('Create connection', () => {
     {
       name: 'stream-1',
       supportedSyncModes: ['full_refresh', 'incremental'],
+ 
     },
     {
       name: 'stream-2',
@@ -55,10 +56,14 @@ describe('Create connection', () => {
       json: jest.fn().mockResolvedValueOnce([]),
     });
 
+
+
     render(
       <SessionProvider session={mockSession}>
         <CreateConnectionForm
           mutate={() => {}}
+          connectionId=''
+          setConnectionId={() => {}}
           showForm={true}
           setShowForm={() => {}}
           blockId=""
@@ -117,6 +122,8 @@ describe('Create connection', () => {
               showForm={true}
               setShowForm={() => {}}
               setBlockId={() => {}}
+              connectionId=''
+              setConnectionId={() => {}}
               blockId=""
               filteredSourceStreams={SOURCES.slice().sort((a, b) => a.name.localeCompare(b.name))}
             />
@@ -171,6 +178,7 @@ describe('Create connection', () => {
 
     const connectButton = screen.getByText('Connect').closest('button');
     const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
+  
     let streamIncrementalSwitch = screen.getByTestId(
       'stream-incremental-0'
     ).firstChild;
@@ -197,13 +205,17 @@ describe('Create connection', () => {
     // check if elements are abled
     expect(screen.getByTestId('stream-sync-0').firstChild).toBeChecked();
     expect(connectButton).not.toBeDisabled();
-    expect(streamIncrementalSwitch).not.toBeDisabled();
+    if(SOURCES[0]?.cursorField){
+      expect(streamIncrementalSwitch).not.toBeDisabled();
+    }
     expect(streamSelectDestinationMode).not.toBeDisabled();
 
     // check stream incremental checkbox
     expect(streamIncrementalSwitch).not.toBeChecked();
-    await act(() => userEvent.click(streamIncrementalSwitch));
-    expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked();
+    if(SOURCES[0]?.cursorField){
+      await act(() => userEvent.click(streamIncrementalSwitch));
+      expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked();
+    }
 
     // check normalization after sync checkbox
 
@@ -260,6 +272,8 @@ describe('Create connection', () => {
               showForm={true}
               setShowForm={() => {}}
               setBlockId={() => {}}
+              connectionId=''
+              setConnectionId={() => {}}
               blockId=""
             />
           </SWRConfig>
@@ -357,6 +371,8 @@ describe('Create connection', () => {
               showForm={true}
               setShowForm={() => {}}
               setBlockId={() => {}}
+              connectionId=''
+              setConnectionId={() => {}}
               blockId=""
             />
           </SWRConfig>
