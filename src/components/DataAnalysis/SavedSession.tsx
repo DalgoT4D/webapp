@@ -256,7 +256,7 @@ export const SavedSession = memo(
                   {loading ? (
                     <CircularProgress />
                   ) : (
-                    savedSessions?.map((row: any, idx) => (
+                    savedSessions.map((row: any, idx) => (
                       <TableRow
                         key={row.session_id}
                         sx={{
@@ -358,11 +358,11 @@ export const SavedSession = memo(
                             onClick={() => {
                               handleEditSession({
                                 prompt: row.response[0].prompt,
-                                summary: row?.response[0]?.response,
+                                summary: row.response[0].response,
                                 oldSessionId: row.session_id,
                                 session_status: row.session_status,
                                 session_name: row.session_name,
-                                sqlText: row?.request_meta?.sql,
+                                sqlText: row.request_meta.sql,
                                 taskId: row.request_uuid,
                               });
                               onClose();

@@ -334,18 +334,20 @@ export const SqlWrite = memo(
                               the response.
                             </Typography>
                             <Typography variant="body2">
-                              3. Adjust & Refine: If the result isn’t what you
-                              expected, tweak your prompt.
+                              3. Adjust & Refine: If the result isn&apos;t what
+                              you expected, tweak your prompt.
                             </Typography>
+
                             <Typography variant="body2" gutterBottom>
                               Example: If your data has some rows that contain
-                              people's feelings during COVID, then instead of
-                              "Describe people's feelings during COVID," try:
-                              "This data is a list of responses from people
-                              about how they are feeling. Analyse the data and
-                              give me the different emotions that people felt
-                              during covid, and also which was the frequently
-                              felt emotion? Limit it to one short paragraph"
+                              people&apos;s feelings during COVID, then instead
+                              of &quot;Describe people&apos;s feelings during
+                              COVID,&quot; try: &quot;This data is a list of
+                              responses from people about how they are feeling.
+                              Analyse the data and give me the different
+                              emotions that people felt during covid, and also
+                              which was the frequently felt emotion? Limit it to
+                              one short paragraph.&quot;
                             </Typography>
                           </div>
                         }
@@ -386,7 +388,7 @@ export const SqlWrite = memo(
                     height: '2.75rem',
                     borderRadius: '6px',
                     color: '#3C4C63',
-                    backgroundColor: customPromptToggle ? '#05443e' : '#F5FAFA',
+                    backgroundColor: '#F5FAFA',
 
                     '&:hover': {
                       backgroundColor: '#00897B',

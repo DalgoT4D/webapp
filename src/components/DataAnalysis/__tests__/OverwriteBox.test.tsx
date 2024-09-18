@@ -1,21 +1,19 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-
-import { useForm } from 'react-hook-form';
 import { OverWriteDialog } from '../OverwriteBox';
+// Disable ESLint's react/display-name for the entire file
+function MockDialog({ formContent, formActions, title }) {
+  return (
+    <div data-testid="dialog">
+      <h2>{title}</h2>
+      {formContent}
+      {formActions}
+    </div>
+  );
+}
 
-// eslint-disable-next-line react/display-name
-jest.mock(
-  '@/components/Dialog/CustomDialog',
-  () =>
-    ({ formContent, formActions, title }) =>
-      (
-        <div data-testid="dialog">
-          <h2>{title}</h2>
-          {formContent}
-          {formActions}
-        </div>
-      )
-);
+MockDialog.displayName = 'MockDialog';
+
+jest.mock('@/components/Dialog/CustomDialog', () => MockDialog);
 
 const mockOnSubmit = jest.fn();
 const mockOnConfirmNavigation = jest.fn();
