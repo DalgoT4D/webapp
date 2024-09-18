@@ -38,7 +38,7 @@ export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
         >
           <Box sx={{}}>
             <Button
-              variant="outlined"
+              variant="contained"
               id="create-new-button"
               sx={{
                 width: '100%',

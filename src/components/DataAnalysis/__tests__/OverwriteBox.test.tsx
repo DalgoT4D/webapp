@@ -4,13 +4,18 @@ import { useForm } from 'react-hook-form';
 import { OverWriteDialog } from '../OverwriteBox';
 
 // eslint-disable-next-line react/display-name
-jest.mock('@/components/Dialog/CustomDialog', () => ({ formContent, formActions, title }) => (
-  <div data-testid="dialog">
-    <h2>{title}</h2>
-    {formContent}
-    {formActions}
-  </div>
-));
+jest.mock(
+  '@/components/Dialog/CustomDialog',
+  () =>
+    ({ formContent, formActions, title }) =>
+      (
+        <div data-testid="dialog">
+          <h2>{title}</h2>
+          {formContent}
+          {formActions}
+        </div>
+      )
+);
 
 const mockOnSubmit = jest.fn();
 const mockOnConfirmNavigation = jest.fn();
@@ -35,14 +40,18 @@ describe('OverWriteDialog Component', () => {
     render(<OverWriteDialog {...defaultProps} />);
 
     expect(screen.getByText('Save as')).toBeInTheDocument();
-    expect(screen.getByText('Please name the configuration before saving it in the warehouse')).toBeInTheDocument();
-    expect(screen.getByLabelText('Session Name')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Please name the configuration before saving it in the warehouse'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Save')).toBeInTheDocument();
   });
 
   test('displays validation error if session name is not provided', async () => {
     render(<OverWriteDialog {...defaultProps} />);
 
-    const saveButton = screen.getByText('Save');
+    const saveButton = screen.getByText('Save', { selector: 'button' });
     fireEvent.click(saveButton);
 
     await waitFor(() => {
@@ -53,34 +62,30 @@ describe('OverWriteDialog Component', () => {
   test('calls onSubmit with correct data when "Save" is clicked', async () => {
     render(<OverWriteDialog {...defaultProps} />);
 
-    const sessionNameInput = screen.getByLabelText('Session Name');
+    const sessionNameInput = screen.getByRole('textbox');
     fireEvent.change(sessionNameInput, { target: { value: 'Test Session' } });
 
-    const saveButton = screen.getByText('Save');
+    const saveButton = screen.getByText('Save', { selector: 'button' });
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith(
-        { sessionName: 'Test Session' },
-        false
-      );
+      expect(mockOnSubmit).toHaveBeenCalledWith('Test Session', false);
     });
   });
 
   test('calls onSubmit with overwrite when "Overwrite" is clicked in OVERWRITE modal', async () => {
     render(<OverWriteDialog {...defaultProps} modalName="OVERWRITE" />);
 
-    const sessionNameInput = screen.getByLabelText('Session Name');
+    const sessionNameInput = screen.getByLabelText('Overwrite');
     fireEvent.change(sessionNameInput, { target: { value: 'Test Session' } });
 
-    const overwriteButton = screen.getByText('Overwrite');
+    const overwriteButton = screen.getByText('Overwrite', {
+      selector: 'button',
+    });
     fireEvent.click(overwriteButton);
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith(
-        { sessionName: 'Test Session' },
-        true
-      );
+      expect(mockOnSubmit).toHaveBeenCalledWith('Test Session', true);
     });
   });
 

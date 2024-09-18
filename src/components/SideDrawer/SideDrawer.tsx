@@ -113,7 +113,6 @@ const Drawer = styled(MuiDrawer, {
 export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const router = useRouter();
   const globalContext = useContext(GlobalContext);
-  console.log(globalContext, "globalcontext");
   const { state } = globalContext?.UnsavedChanges as any;
   const [open, setOpen] = useState(
     new Array(sideMenu.filter((item) => !item.parent).length).fill(true)

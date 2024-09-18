@@ -12,21 +12,35 @@ import {
 import { useContext, useState } from 'react';
 import { SavedSession } from '@/components/DataAnalysis/SavedSession';
 import { TopBar } from '@/components/DataAnalysis/TopBar';
-import { unparse, parse } from 'papaparse';
+import { unparse } from 'papaparse';
 export default function DataAnalysis() {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
   const [loading, setLoading] = useState(false);
   const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
+  const [resetState, setResetState] = useState(false);
 
-  const [{ prompt, summary, newSessionId }, setllmSummaryResult] = useState({
-    //initail props
+  interface ProgressResult {
+    response?: Array<any>; // You can type the response array according to its structure if it's known
+    session_id?: string;
+  }
+
+  interface ProgressEntry {
+    message: string;
+    status: 'running' | 'completed' | 'failed'; // Assuming these are the possible status values
+    result?: ProgressResult; // Optional as it might not always be present
+  }
+
+  interface ProgressResponse {
+    progress: ProgressEntry[];
+  }
+  const [
+    { prompt, summary, newSessionId, ...oldSessionMetaInfo },
+    setSessionMetaInfo,
+  ] = useState({
     prompt: '',
     summary: '',
     newSessionId: '',
-  });
-  const [oldSessionMetaInfo, setOldSessionMetaInfo] = useState({
-    //while editing,  this contains previous session's metadata
     session_status: '',
     sqlText: '',
     taskId: '',
@@ -40,12 +54,11 @@ export default function DataAnalysis() {
     setOpenSavedSessionDialog(true);
   };
   const handleNewSession = () => {
-    setllmSummaryResult({
+    setResetState(true);
+    setSessionMetaInfo({
       prompt: '',
       summary: '',
       newSessionId: '',
-    });
-    setOldSessionMetaInfo({
       session_status: '',
       sqlText: '',
       taskId: '',
@@ -54,46 +67,44 @@ export default function DataAnalysis() {
     });
   };
   const handleEditSession = (info: any) => {
-    setOldSessionMetaInfo({
+    setSessionMetaInfo({
+      newSessionId: '',
       ...oldSessionMetaInfo,
       ...info,
     });
-    setllmSummaryResult({
-      prompt: info.prompt,
-      summary: info.summary,
-      newSessionId: '',
-    });
   };
-  console.log(oldSessionMetaInfo, 'oldsession');
   const downloadCSV = () => {
     const csv = unparse([
       {
-        newSessionId,
+        prompt,
         summary,
-        ...oldSessionMetaInfo,
+        newSessionId: newSessionId || null,
+        session_status: oldSessionMetaInfo.session_status || null,
+        sqlText: oldSessionMetaInfo.sqlText || null,
+        taskId: oldSessionMetaInfo.taskId || null,
+        session_name: oldSessionMetaInfo.session_name || null,
+        oldSessionId: oldSessionMetaInfo.oldSessionId || null,
       },
     ]);
-
-    // Create a blob from the CSV string
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-
-    // Create a link and trigger download
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'summary.csv'); // Specify file name
-    document.body.appendChild(link); // Append link to the body
-    link.click(); // Trigger the click event to start download
-    document.body.removeChild(link); // Remove the link after download
+    link.setAttribute('download', 'summary.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   //polling
   const pollForTaskRun = async (taskId: string) => {
     try {
-      const response: any = await httpGet(session, 'tasks/stp/' + taskId);
+      const response: ProgressResponse = await httpGet(
+        session,
+        'tasks/stp/' + taskId
+      );
       const lastMessage: any =
         response['progress'][response['progress'].length - 1];
-      console.log(lastMessage, 'lastmessage');
       if (!['completed', 'failed'].includes(lastMessage.status)) {
         await delay(3000);
         await pollForTaskRun(taskId);
@@ -102,7 +113,7 @@ export default function DataAnalysis() {
         return;
       } else {
         successToast(lastMessage.message, [], globalContext);
-        setllmSummaryResult((prev) => {
+        setSessionMetaInfo((prev) => {
           return {
             ...prev,
             summary: lastMessage?.result?.response[0].response,
@@ -128,19 +139,26 @@ export default function DataAnalysis() {
   }) => {
     setLoading(true);
     try {
-      const response = await httpPost(session, `warehouse/ask/`, {
-        sql: sqlText,
-        user_prompt,
-      });
-      if (response?.detail) {
-        errorToast(response.detail, [], globalContext);
-        return { error: 'ERROR' };
-      }
+      const response: { request_uuid: string } = await httpPost(
+        session,
+        `warehouse/ask/`,
+        {
+          sql: sqlText,
+          user_prompt,
+        }
+      );
       if (!response?.request_uuid) {
         errorToast('Something went wrong', [], globalContext);
         return { error: 'ERROR' };
       }
-
+      setSessionMetaInfo((prev) => {
+        return {
+          ...prev,
+          sqlText,
+          prompt: user_prompt,
+          taskId: response.request_uuid,
+        };
+      });
       successToast(`Data analysis initiated successfully`, [], globalContext);
       await delay(3000);
       pollForTaskRun(response.request_uuid);
@@ -177,6 +195,8 @@ export default function DataAnalysis() {
           {/* SQL write Area */}
           <SqlWrite
             getLLMSummary={getLLMSummary}
+            resetState={resetState}
+            setResetState={setResetState}
             prompt={prompt}
             newSessionId={newSessionId}
             oldSessionMetaInfo={oldSessionMetaInfo}

@@ -24,6 +24,30 @@ import { useSession } from 'next-auth/react';
 import moment from 'moment';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+interface QueryResponse {
+  prompt: string;
+  response: string;
+}
+interface Session {
+  session_id: string;
+  session_name: string;
+  session_status: string;
+  request_uuid: string;
+  request_meta: string;
+  assistant_prompt: string;
+  response: QueryResponse[];
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
+// Interface for paginated session data
+interface PaginatedSessions {
+  limit: number;
+  offset: number;
+  total_rows: number;
+  rows: Session[];
+}
 
 export const SavedSession = memo(
   ({
@@ -40,7 +64,7 @@ export const SavedSession = memo(
     const [pageSize, setPageSize] = useState(10); // Default rows per page
     const [totalCount, setTotalCount] = useState(0); // Total count of rows
     const [currentPageIndex, setCurrentPageIndex] = useState(0); // Page index starts from 0
-    const [savedSessions, setSavedSession] = useState([]);
+    const [savedSessions, setSavedSession] = useState<Session[]>([]);
     const [loading, setLoading] = useState(false);
     const [activeRow, setActiveRow] = useState<string | null>(null); // State to track the clicked row
 
@@ -48,11 +72,10 @@ export const SavedSession = memo(
       setLoading(true);
       try {
         const offset = pageIndex * rowsPerPage;
-        const response = await httpGet(
+        const response: PaginatedSessions = await httpGet(
           session,
           `warehouse/ask/sessions?limit=${rowsPerPage}&offset=${offset}`
         );
-        console.log(response, 'response');
         if (!response.rows) {
           errorToast('Something went wrong', [], globalContext);
           return;
@@ -60,7 +83,7 @@ export const SavedSession = memo(
         setSavedSession(response.rows);
         setTotalCount(response.total_rows);
       } catch (error: any) {
-        console.log(error);
+        console.error(error);
         errorToast(error.message, [], globalContext);
       } finally {
         setLoading(false);
@@ -147,12 +170,16 @@ export const SavedSession = memo(
               sx={{
                 borderRadius: '4px',
                 overflowY: 'auto',
-                height: '400px',
+                minHeight: '60vh',
+                height: '50%',
                 flexGrow: 1,
               }}
             >
               <Table
-                sx={{ minWidth: 650, borderCollapse: 'collapse' }}
+                sx={{
+                  minWidth: 650,
+                  borderCollapse: 'collapse',
+                }}
                 aria-label="simple table"
               >
                 <TableHead sx={{ backgroundColor: '#00897B' }}>
