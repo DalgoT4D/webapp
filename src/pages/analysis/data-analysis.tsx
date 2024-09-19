@@ -12,7 +12,8 @@ import {
 import { useContext, useState } from 'react';
 import { SavedSession } from '@/components/DataAnalysis/SavedSession';
 import { TopBar } from '@/components/DataAnalysis/TopBar';
-import { unparse } from 'papaparse';
+import { jsonToCSV } from 'react-papaparse';
+import { PageHead } from '@/components/PageHead';
 export default function DataAnalysis() {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
@@ -21,14 +22,14 @@ export default function DataAnalysis() {
   const [resetState, setResetState] = useState(false);
 
   interface ProgressResult {
-    response?: Array<any>; // You can type the response array according to its structure if it's known
+    response?: Array<any>;
     session_id?: string;
   }
 
   interface ProgressEntry {
     message: string;
-    status: 'running' | 'completed' | 'failed'; // Assuming these are the possible status values
-    result?: ProgressResult; // Optional as it might not always be present
+    status: 'running' | 'completed' | 'failed';
+    result?: ProgressResult;
   }
 
   interface ProgressResponse {
@@ -74,7 +75,7 @@ export default function DataAnalysis() {
     });
   };
   const downloadCSV = () => {
-    const csv = unparse([
+    const csv = jsonToCSV([
       {
         prompt,
         summary,
@@ -171,6 +172,7 @@ export default function DataAnalysis() {
 
   return (
     <>
+      <PageHead title="Dalgo | LLM Analysis" />
       <Box
         sx={{
           p: '3rem 3rem',
