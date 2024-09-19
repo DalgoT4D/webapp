@@ -74,7 +74,6 @@ export const TrackingProvider = ({ children }: any) => {
         }
       );
     }
-    console.log(document.title, 'title');
   }, [router.pathname, session, globalContext?.CurrentOrg]);
   const trackEvent = (
     eventName: string,
