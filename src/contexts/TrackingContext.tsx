@@ -2,19 +2,21 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as amplitude from '@amplitude/analytics-browser';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 
 const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_ENV!;
-
 const TrackingContext = createContext(
   (eventName: string, additionalData: Record<string, any> = {}) => {}
 );
 
-export const TrackingProvider = ({ session, children }: any) => {
+export const TrackingProvider = ({ children }: any) => {
+  const { data: session } = useSession();
   const router = useRouter();
   const globalContext = useContext(GlobalContext);
   const [eventProperties, setEventProperties] = useState({});
 
   useEffect(() => {
+    if (!amplitudeApiKey) return;
     amplitude.init(amplitudeApiKey, {
       defaultTracking: {
         pageViews: false,
@@ -24,10 +26,12 @@ export const TrackingProvider = ({ session, children }: any) => {
       },
     });
     if (session?.user?.email) {
-      const userEmail = session?.user.email;
+      const userEmail: string = session.user.email;
+      const ist4dMember = userEmail.includes('projecttech4dev.org');
       const identifyEvent = new amplitude.Identify();
-      amplitude.setUserId(session?.user.email);
-      identifyEvent.set('User_id', session.user?.email);
+      amplitude.setUserId(session.user.email);
+      identifyEvent.setOnce('User_id', session.user.email);
+      identifyEvent.setOnce('ist4dMember', ist4dMember);
       amplitude.setUserId(userEmail);
       amplitude.identify(identifyEvent);
     }
@@ -70,6 +74,7 @@ export const TrackingProvider = ({ session, children }: any) => {
         }
       );
     }
+    console.log(document.title, 'title');
   }, [router.pathname, session, globalContext?.CurrentOrg]);
   const trackEvent = (
     eventName: string,

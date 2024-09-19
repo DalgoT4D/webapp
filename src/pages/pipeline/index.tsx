@@ -111,13 +111,13 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
       .on('mouseover', (event, d: any) => {
         const [x, y] = d3.pointer(event, d);
         let runTime = `${d.runTimeInHours}hr ${d.runTimeInMinutes}min ${d.runTimeInSeconds}s`;
-        if(d.runTimeInHours === 0){
+        if (d.runTimeInHours === 0) {
           runTime = `${d.runTimeInMinutes}min ${d.runTimeInSeconds}s`;
         }
-        if(d.runTimeInMinutes === 0 && d.runTimeInHours === 0){
+        if (d.runTimeInMinutes === 0 && d.runTimeInHours === 0) {
           runTime = `${d.runTimeInSeconds}s`;
         }
-        if(d.runTimeInMinutes === 0 && d.runTimeInHours !== 0){
+        if (d.runTimeInMinutes === 0 && d.runTimeInHours !== 0) {
           runTime = `${d.runTimeInHours}hr ${d.runTimeInSeconds}s`;
         }
         // Show tooltip on mouseover
@@ -223,7 +223,7 @@ export default function Home() {
 
   return (
     <>
-      <PageHead title="Dalgo" />
+      <PageHead title="Dalgo | Pipeline Overview" />
       <main className={styles.main}>
         <Box
           className={styles.Box}
