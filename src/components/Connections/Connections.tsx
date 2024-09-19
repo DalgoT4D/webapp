@@ -179,7 +179,7 @@ const Actions = memo(
   }) => {
     const { deploymentId, connectionId, lock } = connection;
     const { tempSyncState, setTempSyncState } = useSyncLock(lock);
-    const trackAmplitudeEvent:any = useTracking();
+    const trackAmplitudeEvent: any = useTracking();
     const isSyncConnectionIdPresent =
       syncingConnectionIds.includes(connectionId);
 
@@ -238,10 +238,13 @@ const Actions = memo(
       </Box>
     );
   },
-  //rerenderes when fn returns false. 
+  //rerenderes when fn returns false.
   // checking lock when doing sync and checking connectionId wehen we sort the list or a new connection gets added.
   (prevProps, nextProps) => {
-    return prevProps.connection.lock?.status === nextProps.connection.lock?.status && prevProps.connection.connectionId === nextProps.connection.connectionId
+    return (
+      prevProps.connection.lock?.status === nextProps.connection.lock?.status &&
+      prevProps.connection.connectionId === nextProps.connection.connectionId
+    );
   }
 );
 Actions.displayName = 'Action'; //display name added.
@@ -271,9 +274,9 @@ export const Connections = () => {
     setAnchorEl(event);
   };
   const handleClose = (isEditMode?: string) => {
-    if(isEditMode !== "EDIT"){
-      setConnectionId("");
-      setResetDeploymentId("");
+    if (isEditMode !== 'EDIT') {
+      setConnectionId('');
+      setResetDeploymentId('');
     }
     setAnchorEl(null);
   };
@@ -395,13 +398,13 @@ export const Connections = () => {
     handleCancelDeleteConnection();
   };
 
-  const resetConnection = (deploymentId: string) => {
+  const resetConnection = (connectionId: string) => {
     (async () => {
       try {
         setResetLoading(true);
         const message = await httpPost(
           session,
-          `prefect/v1/flows/${deploymentId}/flow_run/`,
+          `airbyte/v1/connections/${connectionId}/reset`,
           {}
         );
         if (message.success) {
@@ -534,7 +537,7 @@ export const Connections = () => {
             onClick={() => {
               setShowLogsDialog(true);
               setLogsConnection(connection);
-              trackAmplitudeEvent("[View history] Button clicked")
+              trackAmplitudeEvent('[View history] Button clicked');
             }}
           >
             View history
@@ -628,13 +631,13 @@ export const Connections = () => {
   };
 
   const handleResetConnection = () => {
-    handleClose();
+    handleClose('EDIT');
     setShowConfirmResetDialog(true);
-    trackAmplitudeEvent("[Reset-connection] Button Clicked");
+    trackAmplitudeEvent('[Reset-connection] Button Clicked');
   };
 
   const handleEditConnection = () => {
-    handleClose("EDIT");
+    handleClose('EDIT');
     setShowDialog(true);
   };
 
@@ -736,7 +739,7 @@ export const Connections = () => {
         loading={resetLoading}
         show={showConfirmResetDialog}
         handleClose={() => handleCancelResetConnection()}
-        handleConfirm={() => resetConnection(resetDeploymentId)}
+        handleConfirm={() => resetConnection(connectionId)}
         message="Resetting the connection will clear all data at the warehouse."
       />
       <LogCard
