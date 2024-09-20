@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
@@ -33,17 +33,17 @@ const CastColumnOp = ({
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [configData, setConfigData] = useState<any>([]);
   const globalContext = useContext(GlobalContext);
+  const sourceModelNodeRef: any = useRef(); //table
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-        ? (node?.data as OperationNodeData)
-        : {};
-
+      ? (node?.data as OperationNodeData)
+      : {};
   type FormData = {
     config: { name: string; data_type: string | null }[];
   };
-
+  console.log(node?.type, '%%%%$$^$%^$%^$%^$%^TYPE');
   const { control, handleSubmit, register, reset, getValues, setValue } =
     useForm<FormData>({
       defaultValues: {
@@ -57,7 +57,6 @@ const CastColumnOp = ({
     });
 
   const { config } = getValues();
-
   const fetchDataTypes = async () => {
     try {
       const response = await httpGet(
@@ -93,6 +92,8 @@ const CastColumnOp = ({
   };
 
   const handleSave = async (formData: FormData) => {
+    let finalNode = node?.data.isDummy ? sourceModelNodeRef.current : node;
+    console.log(finalNode, 'nodeifnal');
     try {
       const sourceColumnsNames = config.map((column) => column.name);
 
@@ -101,7 +102,8 @@ const CastColumnOp = ({
         source_columns: sourceColumnsNames,
         other_inputs: [],
         config: { columns: [] },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
+        input_uuid:
+          finalNode?.type === SRC_MODEL_NODE ? finalNode?.data.id : '',
         target_model_uuid: nodeData?.target_model_id || '',
       };
 
@@ -138,7 +140,7 @@ const CastColumnOp = ({
             : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -157,9 +159,11 @@ const CastColumnOp = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
+      const nodeId = node?.data.isDummy ? sourceModelNodeRef.current : node?.id;
       const { config }: OperationNodeData = await httpGet(
+        //this here fetches the columns data.
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/dbt_project/model/operations/${nodeId}/`
       );
       const { config: opConfig, input_models } = config;
       setInputModels(input_models);
@@ -188,27 +192,37 @@ const CastColumnOp = ({
     const filteredConfigs = config?.filter((ele) => {
       const stringToSearch = ele?.name?.toLowerCase();
       return stringToSearch?.includes(trimmedSubstring);
-    })
-    setConfigData(filteredConfigs)
-  }
+    });
+    setConfigData(filteredConfigs);
+  };
 
   const findColumnIndex = (columnName: string) => {
     const index = config?.findIndex((column) => column.name == columnName);
     return index == -1 ? 0 : index;
-  }
+  };
 
+  /**
+    So operation nodes can be dummy (not yet saved to db) or real (saved in db).
+    Both have nodeId, but the dummy nodes have isDummy= true field. 
+    So we dont call any api in that case.
+   **/
   useEffect(() => {
+    if (node?.type === SRC_MODEL_NODE) {
+      sourceModelNodeRef.current = node; //saving table's id
+    }
+    if (node?.data.isDummy) return;
     fetchDataTypes();
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     } else {
+      console.log('!@!@!@!@!@!@!@!@!@!@!@!@!else');
       fetchAndSetSourceColumns();
     }
   }, [session, node]);
 
   useEffect(() => {
-    setConfigData(config)
-  }, [config])
+    setConfigData(config);
+  }, [config]);
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
@@ -216,7 +230,7 @@ const CastColumnOp = ({
         fieldStyle="transformation"
         sx={{ px: 1, pb: 1 }}
         placeholder="Search Here"
-        onChange={event => handleSearch(event.target.value)}
+        onChange={(event) => handleSearch(event.target.value)}
       />
       <form onSubmit={handleSubmit(handleSave)}>
         <GridTable

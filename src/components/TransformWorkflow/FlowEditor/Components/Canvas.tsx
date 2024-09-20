@@ -208,8 +208,8 @@ const CanvasHeader = () => {
             color: '#00897B',
             fontWeight: 700,
             border: '1px solid #00897B',
-            minWidth: "9.5rem",
-            textAlign: 'center'
+            minWidth: '9.5rem',
+            textAlign: 'center',
           }}
         >
           <MenuItem value="run">Run</MenuItem>
@@ -290,10 +290,10 @@ const Canvas = ({
   setTempLockCanvas,
 }: CanvasProps) => {
   const { data: session } = useSession();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]); //works when we click the node or move it.
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]); //workds when we click the edges.
   const [openOperationConfig, setOpenOperationConfig] =
-    useState<boolean>(false);
+    useState<boolean>(false); // this is the left form with sql operations.
   const { addNodes, setCenter, getZoom } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
@@ -554,6 +554,7 @@ const Canvas = ({
   };
 
   const handlePaneClick = () => {
+    // clicking the background canvas.
     setCanvasAction({ type: 'close-reset-opconfig-panel', data: null });
     setPreviewAction({ type: 'clear-preview', data: null });
   };
@@ -607,12 +608,12 @@ const Canvas = ({
         }}
       >
         <ReactFlow
-          nodes={nodes}
+          nodes={nodes} // are the tables and the operations.
           selectNodesOnDrag={false}
-          edges={edges}
+          edges={edges} // flexible lines connecting tables, table-node.
           onNodeDragStop={onNodeDragStop}
-          onPaneClick={handlePaneClick}
-          onNodesChange={handleNodesChange}
+          onPaneClick={handlePaneClick} //back canvas click.
+          onNodesChange={handleNodesChange} // when node (table or operation) is clicked or moved.
           onEdgesChange={handleEdgesChange}
           onConnect={handleNewConnection}
           nodeTypes={nodeTypes}
@@ -637,6 +638,7 @@ const Canvas = ({
             </ControlButton>
           </Controls>
         </ReactFlow>
+        {/* This is what renders the right form */}
         <OperationConfigLayout
           openPanel={openOperationConfig}
           setOpenPanel={setOpenOperationConfig}
