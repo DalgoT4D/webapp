@@ -212,7 +212,6 @@ const CastColumnOp = ({
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
-      Hello
       <Input
         fieldStyle="transformation"
         sx={{ px: 1, pb: 1 }}
