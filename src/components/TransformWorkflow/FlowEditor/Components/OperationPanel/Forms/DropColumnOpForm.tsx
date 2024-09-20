@@ -151,51 +151,6 @@ const DropColumnOp = ({
     }
   };
 
-  // const handleSave = async () => {
-  //   try {
-  //     if (selectedColumns.length < 1) {
-  //       setValid(false);
-  //       return;
-  //     }
-  //     const postData = {
-  //       op_type: operation.slug,
-  //       source_columns: srcColumns,
-  //       other_inputs: [],
-  //       config: { columns: selectedColumns },
-  //       input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-  //       target_model_uuid: nodeData.target_model_id || '',
-  //     };
-
-  //     // api call
-  //     setLoading(true);
-  //     let operationNode: any;
-  //     if (action === 'create') {
-  //       operationNode = await httpPost(
-  //         session,
-  //         `transform/dbt_project/model/`,
-  //         postData
-  //       );
-  //     } else if (action === 'edit') {
-  //       // need this input to be sent for the first step in chain
-  //       postData.input_uuid =
-  //         inputModels.length > 0 && inputModels[0]?.uuid
-  //           ? inputModels[0].uuid
-  //           : '';
-  //       operationNode = await httpPut(
-  //         session,
-  //         `transform/dbt_project/model/operations/${node?.id}/`,
-  //         postData
-  //       );
-  //     }
-
-  //     continueOperationChain(operationNode);
-  //   } catch (error) {
-  //     console.log(error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
@@ -273,6 +228,7 @@ const DropColumnOp = ({
         />
         <Tooltip title="Select All Columns">
           <Checkbox
+            data-testid="select-all-checkbox"
             checked={selectAll}
             onChange={(e) => {
               setSelectAll(e.target.checked);
@@ -312,6 +268,9 @@ const DropColumnOp = ({
                     control={
                       <Checkbox
                         {...field}
+                        data-testid={`checkBoxInputContainer${findColumnIndex(
+                          column.col_name
+                        )}`}
                         checked={field.value}
                         onChange={(e) => {
                           field.onChange(e.target.checked);
