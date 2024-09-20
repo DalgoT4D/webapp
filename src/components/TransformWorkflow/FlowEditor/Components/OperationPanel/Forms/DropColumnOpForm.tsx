@@ -5,8 +5,10 @@ import {
   Box,
   Button,
   Checkbox,
+  FormControlLabel,
   FormHelperText,
   Grid,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
@@ -18,6 +20,9 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { Controller, useForm } from 'react-hook-form';
+import { GridTable } from '@/components/UI/GridTable/GridTable';
+import Input from '@/components/UI/Input/Input';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -39,14 +44,39 @@ const DropColumnOp = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [valid, setValid] = useState(true);
-  const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+  // const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
+  const [configData, setConfigData] = useState<any>([]);
+  const [selectAll, setSelectAll] = useState<boolean>(false);
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
       ? (node?.data as OperationNodeData)
       : {};
+
+  type FormData = {
+    config: { col_name: string; drop_col: boolean }[];
+  };
+
+  const { control, handleSubmit, register, reset, getValues, setValue } =
+    useForm<FormData>({
+      defaultValues: {
+        config: [
+          {
+            col_name: 'Select All',
+            drop_col: false,
+          },
+        ],
+      },
+    });
+
+  const { config } = getValues();
+
+  const findColumnIndex = (columnName: string) => {
+    const index = config?.findIndex((column) => column.col_name == columnName);
+    return index == -1 ? 0 : index;
+  };
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
@@ -56,6 +86,13 @@ const DropColumnOp = ({
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
         setSrcColumns(data.map((col: ColumnData) => col.name));
+        setValue(
+          'config',
+          data.map((col: ColumnData) => ({
+            col_name: col.name,
+            drop_col: false,
+          }))
+        );
       } catch (error) {
         console.log(error);
       }
@@ -66,11 +103,10 @@ const DropColumnOp = ({
     }
   };
 
-  const handleAddColumn = (columns: string[]) => {
-    setSelectedColumns(columns);
-  };
-
-  const handleSave = async () => {
+  const handleSave = async (formData: FormData) => {
+    const selectedColumns = formData.config
+      .filter((column) => column.drop_col)
+      .map((column) => column.col_name);
     try {
       if (selectedColumns.length < 1) {
         setValid(false);
@@ -115,6 +151,51 @@ const DropColumnOp = ({
     }
   };
 
+  // const handleSave = async () => {
+  //   try {
+  //     if (selectedColumns.length < 1) {
+  //       setValid(false);
+  //       return;
+  //     }
+  //     const postData = {
+  //       op_type: operation.slug,
+  //       source_columns: srcColumns,
+  //       other_inputs: [],
+  //       config: { columns: selectedColumns },
+  //       input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
+  //       target_model_uuid: nodeData.target_model_id || '',
+  //     };
+
+  //     // api call
+  //     setLoading(true);
+  //     let operationNode: any;
+  //     if (action === 'create') {
+  //       operationNode = await httpPost(
+  //         session,
+  //         `transform/dbt_project/model/`,
+  //         postData
+  //       );
+  //     } else if (action === 'edit') {
+  //       // need this input to be sent for the first step in chain
+  //       postData.input_uuid =
+  //         inputModels.length > 0 && inputModels[0]?.uuid
+  //           ? inputModels[0].uuid
+  //           : '';
+  //       operationNode = await httpPut(
+  //         session,
+  //         `transform/dbt_project/model/operations/${node?.id}/`,
+  //         postData
+  //       );
+  //     }
+
+  //     continueOperationChain(operationNode);
+  //   } catch (error) {
+  //     console.log(error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
@@ -130,12 +211,27 @@ const DropColumnOp = ({
       setSrcColumns(source_columns);
 
       // pre-fill form
-      setSelectedColumns(columns);
+      setValue(
+        'config',
+        source_columns.map((col) => ({
+          col_name: col,
+          drop_col: columns.includes(col),
+        }))
+      );
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = (search: string) => {
+    const trimmedSubstring = search?.toLowerCase();
+    const filteredConfigs = config?.filter((ele) => {
+      const stringToSearch = ele?.col_name?.toLowerCase();
+      return stringToSearch?.includes(trimmedSubstring);
+    });
+    setConfigData(filteredConfigs);
   };
 
   useEffect(() => {
@@ -146,61 +242,108 @@ const DropColumnOp = ({
     }
   }, [session, node]);
 
+  useEffect(() => {
+    setConfigData(config);
+  }, [config]);
+
+  useEffect(() => {
+    const currentFilteredCols: string[] = configData.map(
+      (col: { col_name: string; drop_col: boolean }) => col.col_name
+    );
+    setValue(
+      'config',
+      config.map((col) => ({
+        ...col,
+        drop_col:
+          configData?.length > 0 && currentFilteredCols.includes(col.col_name)
+            ? selectAll
+            : col.drop_col,
+      }))
+    );
+  }, [selectAll]);
+
   return (
-    <Box sx={{ ...sx, marginTop: '17px', padding: '20px' }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <Typography variant="h6">Select Columns to Drop</Typography>
-        </Grid>
-        <Grid item xs={12}>
-          <Autocomplete
-            data-testid="dropColumn"
-            disabled={action === 'view'}
-            value={selectedColumns}
-            limitTags={3}
-            multiple
-            disableCloseOnSelect
-            renderOption={(props: any, option: any, { selected }) => {
-              const { key, ...optionProps } = props;
-              return (
-                <li key={key} {...optionProps}>
-                  <Checkbox
-                    icon={icon}
-                    checkedIcon={checkedIcon}
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
-                  {option}
-                </li>
-              );
-            }}
-            fieldStyle="transformation"
-            options={srcColumns.sort((a, b) => a.localeCompare(b))}
-            label="Select Column to Drop"
-            onChange={(value: any) => {
-              if (value) {
-                handleAddColumn(value);
-                setValid(true);
-              }
+    <Box sx={{ ...sx, marginTop: '17px' }}>
+      <Box display="flex">
+        <Input
+          fieldStyle="transformation"
+          sx={{ px: 1, pb: 1, width: '80%' }}
+          placeholder="Search Here"
+          onChange={(event) => handleSearch(event.target.value)}
+        />
+        <Tooltip title="Select All Columns">
+          <Checkbox
+            checked={selectAll}
+            onChange={(e) => {
+              setSelectAll(e.target.checked);
             }}
           />
-        </Grid>
+        </Tooltip>
+      </Box>
+      <form onSubmit={handleSubmit(handleSave)}>
         {!valid && (
           <FormHelperText sx={{ color: 'red', ml: 3 }}>
             Please select atleast 1 column
           </FormHelperText>
         )}
-        <Grid item xs={12}>
+        <GridTable
+          headers={['Column name', 'Drop ?']}
+          data={configData.map(
+            (
+              column: { col_name: string; drop_col: boolean },
+              index: number
+            ) => [
+              <Input
+                data-testid={`columnName${findColumnIndex(column.col_name)}`}
+                key={`config.${findColumnIndex(column.col_name)}.col_name`}
+                fieldStyle="none"
+                sx={{ padding: '0' }}
+                name={`config.${findColumnIndex(column.col_name)}.col_name`}
+                register={register}
+                value={column.col_name}
+                disabled={true}
+              />,
+              <Controller
+                name={`config.${findColumnIndex(column.col_name)}.drop_col`}
+                key={`config.${findColumnIndex(column.col_name)}.drop_col`}
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        {...field}
+                        checked={field.value}
+                        onChange={(e) => {
+                          field.onChange(e.target.checked);
+                        }}
+                      />
+                    }
+                    label=""
+                  />
+                )}
+              />,
+            ]
+          )}
+        ></GridTable>
+        {!valid && (
+          <FormHelperText sx={{ color: 'red', ml: 3 }}>
+            Please select atleast 1 column
+          </FormHelperText>
+        )}
+
+        <Box sx={{ m: 2 }} />
+        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', p: 2 }}>
           <Button
-            data-testid="savebutton"
-            onClick={handleSave}
             variant="contained"
+            type="submit"
+            data-testid="savebutton"
+            fullWidth
             disabled={action === 'view'}
           >
             Save
           </Button>
-        </Grid>
-      </Grid>
+        </Box>
+      </form>
     </Box>
   );
 };
