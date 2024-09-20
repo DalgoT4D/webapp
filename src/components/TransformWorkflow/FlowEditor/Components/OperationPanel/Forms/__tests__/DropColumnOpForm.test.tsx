@@ -103,11 +103,50 @@ describe('Form interactions', () => {
       expect(inputElement).toBeChecked();
     });
 
-    // await waitFor(() => {
-    //   expect(screen.getByText('_airbyte_extracted_at')).toBeInTheDocument();
-    // });
-
     await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(continueOperationChainMock).toHaveBeenCalled();
+    });
+  });
+});
+
+describe('Form interactions 2', () => {
+  it('select all columns to drop', async () => {
+    render(dropColumnForm);
+
+    await waitFor(() => {
+      expect(screen.getByText('Column name')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByText('Drop ?')).toBeInTheDocument();
+    });
+
+    // Get the input element inside the parent element
+    const parentElementAllSelect = screen.getByTestId(
+      'selectAllCheckboxInputContainer'
+    );
+    const inputElementSelectAll = parentElementAllSelect.querySelector(
+      'input[type="checkbox"]'
+    );
+    await fireEvent.click(inputElementSelectAll);
+    await fireEvent.click(inputElementSelectAll);
+    await fireEvent.click(inputElementSelectAll);
+
+    await waitFor(() => {
+      expect(inputElementSelectAll).toBeChecked();
+    });
+
+    // all columns should be checked
+    const parentElement = screen.getByTestId(`checkBoxInputContainer1`);
+    const inputElement = parentElement.querySelector('input[type="checkbox"]');
+    await expect(inputElement).toBeChecked();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+    });
+    const saveButton = screen.getByTestId('savebutton');
+    await userEvent.click(saveButton);
 
     await waitFor(() => {
       expect(continueOperationChainMock).toHaveBeenCalled();

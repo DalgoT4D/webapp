@@ -64,7 +64,7 @@ const DropColumnOp = ({
       defaultValues: {
         config: [
           {
-            col_name: 'Select All',
+            col_name: '',
             drop_col: false,
           },
         ],
@@ -228,7 +228,7 @@ const DropColumnOp = ({
         />
         <Tooltip title="Select All Columns">
           <Checkbox
-            data-testid="select-all-checkbox"
+            data-testid="selectAllCheckboxInputContainer"
             checked={selectAll}
             onChange={(e) => {
               setSelectAll(e.target.checked);
