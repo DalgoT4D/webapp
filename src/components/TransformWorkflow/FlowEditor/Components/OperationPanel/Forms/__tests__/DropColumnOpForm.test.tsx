@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import DropColumnOpForm from '../DropColumnOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
@@ -68,7 +68,10 @@ describe('Drop column form', () => {
   it('renders correct initial form state', async () => {
     render(dropColumnForm);
     await waitFor(() => {
-      expect(screen.getByText('Select Column to Drop')).toBeInTheDocument();
+      expect(screen.getByText('Column name')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByText('Drop ?')).toBeInTheDocument();
     });
   });
 });
@@ -85,17 +88,24 @@ describe('Form interactions', () => {
 
     // validations to be called
     await waitFor(() => {
-      expect(
-        screen.getByText('Please select atleast 1 column')
-      ).toBeInTheDocument();
+      const elements = screen.getAllByText('Please select atleast 1 column');
+      expect(elements.length).toBeGreaterThan(1);
     });
 
-    await fireMultipleKeyDown('dropColumn', 2);
-    await user.click(screen.getByTestId('ArrowDropDownIcon'));
+    // Get the input element inside the parent element
+    const parentElement = screen.getByTestId('checkBoxInputContainer0');
+    const inputElement = parentElement.querySelector('input[type="checkbox"]');
+    if (inputElement) {
+      await fireEvent.click(inputElement);
+    }
 
     await waitFor(() => {
-      expect(screen.getByText('_airbyte_extracted_at')).toBeInTheDocument();
+      expect(inputElement).toBeChecked();
     });
+
+    // await waitFor(() => {
+    //   expect(screen.getByText('_airbyte_extracted_at')).toBeInTheDocument();
+    // });
 
     await user.click(saveButton);
 
