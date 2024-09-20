@@ -34,7 +34,7 @@ export const generateDummyOperationlNode = (
   op: UIOperationType,
   height = 200
 ) => {
-  const nodeId = String(Date.now());
+  const nodeId = String(Date.now()); //this is the node.id, that is used to hit backend.
   const { x: xnew, y: ynew } = getNextNodePosition([
     { position: { x: node?.xPos, y: node?.yPos }, height: height },
   ]);

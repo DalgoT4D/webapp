@@ -226,7 +226,7 @@ const OperationConfigLayout = ({
 
   useEffect(() => {
     if (canvasAction.type === 'open-opconfig-panel') {
-      setOpenPanel(true);
+      setOpenPanel(true); // when a table or node is clicked , this opens the sql ops form.
       setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
       console.log(canvasAction, panelOpFormState);
@@ -244,7 +244,7 @@ const OperationConfigLayout = ({
       handleClosePanel();
     }
   }, [canvasAction]);
-
+  console.log(selectedOp, 'selectedOp');
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
@@ -255,11 +255,15 @@ const OperationConfigLayout = ({
 
   const DiscardDialog = ({ handleBackbuttonAction }: any) => {
     return (
-      <Dialog open={showDiscardDialog} onClose={() => setShowDiscardDialog(false)}>
+      <Dialog
+        open={showDiscardDialog}
+        onClose={() => setShowDiscardDialog(false)}
+      >
         <DialogTitle>Discard Changes?</DialogTitle>
         <DialogContent>
           <Typography>
-            All your changes will be discarded. Are you sure you want to continue?
+            All your changes will be discarded. Are you sure you want to
+            continue?
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -271,8 +275,8 @@ const OperationConfigLayout = ({
           </Button>
         </DialogActions>
       </Dialog>
-    )
-  }
+    );
+  };
 
   const PanelHeader = () => {
     const handleBackbuttonAction = () => {
@@ -323,17 +327,17 @@ const OperationConfigLayout = ({
         >
           {((selectedOp && panelOpFormState.current === 'create') ||
             panelState === 'create-table-or-add-function') && (
-              <IconButton
-                onClick={
-                  panelState === 'create-table-or-add-function'
-                    ? handleBackButtonOnCreateTableAddFunction
-                    : () => setShowDiscardDialog(true)
-                }
-                data-testid="openoperationlist"
-              >
-                <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
-              </IconButton>
-            )}
+            <IconButton
+              onClick={
+                panelState === 'create-table-or-add-function'
+                  ? handleBackButtonOnCreateTableAddFunction
+                  : () => setShowDiscardDialog(true)
+              }
+              data-testid="openoperationlist"
+            >
+              <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
+            </IconButton>
+          )}
           <DiscardDialog handleBackbuttonAction={handleBackbuttonAction} />
           <Box sx={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
             <Typography
@@ -345,8 +349,8 @@ const OperationConfigLayout = ({
               {selectedOp
                 ? selectedOp.label
                 : panelState === 'op-list'
-                  ? 'Functions'
-                  : ''}
+                ? 'Functions'
+                : ''}
             </Typography>
             <Box sx={{ width: '1px', height: '12px' }}>
               {panelState === 'op-form' && selectedOp ? (
@@ -416,8 +420,8 @@ const OperationConfigLayout = ({
                 onClick={
                   canSelectOperation
                     ? () => {
-                      handleSelectOp(op);
-                    }
+                        handleSelectOp(op);
+                      }
                     : undefined
                 }
               >
@@ -519,8 +523,8 @@ const OperationConfigLayout = ({
   const panelState = selectedOp
     ? 'op-form'
     : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE
-      ? 'op-list'
-      : 'create-table-or-add-function';
+    ? 'op-list'
+    : 'create-table-or-add-function';
 
   return (
     <Box
@@ -575,7 +579,7 @@ const OperationConfigLayout = ({
                   zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
                 open={isPanelLoading}
-                onClick={() => { }}
+                onClick={() => {}}
               ></Backdrop>
               <OperationForm
                 sx={{ marginBottom: '10px' }}
