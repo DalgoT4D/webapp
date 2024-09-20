@@ -2,7 +2,6 @@ import Dagre from '@dagrejs/dagre';
 import {
   Backdrop,
   Box,
-  Button,
   CircularProgress,
   Divider,
   MenuItem,
@@ -10,8 +9,6 @@ import {
   Typography,
 } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   useNodesState,
@@ -48,6 +45,7 @@ import {
 } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { getNextNodePosition } from '@/utils/editor';
+import { KeyboardArrowDown } from '@mui/icons-material';
 
 type CanvasProps = {
   redrawGraph: boolean;
@@ -124,29 +122,32 @@ const nodeTypes: NodeTypes = {
   [`${OPERATION_NODE}`]: OperationNode,
 };
 
-const CanvasHeader = () => {
+const WorkflowValues: any = {
+  run: 'Run workflow',
+  'run-to-node': 'Run to node',
+  'run-from-node': 'Run from node',
+};
+
+const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
   const { setCanvasAction } = useCanvasAction();
   const { canvasNode } = useCanvasNode();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
-  const [selectedAction, setSelectedAction] = useState('run');
+  const [selectedAction, setSelectedAction] = useState('');
 
   const nodeData: any = canvasNode?.data;
 
-  const handleSelectRunTypeChange = (event: any) => {
+  const handleRunClick = (event: any) => {
     const action = event.target.value;
     setSelectedAction(action);
-  };
-
-  const handleRunClick = (event: any) => {
-    if (selectedAction === 'run') {
+    if (action === 'run') {
       setCanvasAction({ type: 'run-workflow', data: null });
-    } else if (selectedAction === 'run-to-node') {
+    } else if (action === 'run-to-node') {
       setCanvasAction({
         type: 'run-workflow',
         data: { options: { select: `+${nodeData?.input_name}` } },
       });
-    } else if (selectedAction === 'run-from-node') {
+    } else if (action === 'run-from-node') {
       setCanvasAction({
         type: 'run-workflow',
         data: { options: { select: `${nodeData?.input_name}+` } },
@@ -160,11 +161,10 @@ const CanvasHeader = () => {
     canvasNode?.data.input_type != 'model';
 
   useEffect(() => {
-    if (disableToAndFromNodeRunOptions) {
-      setSelectedAction('run');
+    if (!finalLockCanvas) {
+      setSelectedAction('');
     }
-  }, [canvasNode]);
-
+  }, [finalLockCanvas]);
   return (
     <Box
       sx={{
@@ -194,25 +194,35 @@ const CanvasHeader = () => {
         <Select
           labelId="run-workflow-action"
           value={selectedAction}
-          onChange={handleSelectRunTypeChange}
+          onChange={handleRunClick}
           label="Action"
           disabled={!permissions.includes('can_run_pipeline')}
+          displayEmpty
           placeholder="Select Action"
+          renderValue={(value) => {
+            return value === '' ? 'Select Action' : WorkflowValues[value];
+          }}
           IconComponent={(props: any) => {
             return (
-              <ArrowDropDownIcon {...props} style={{ color: '#00897B' }} />
+              <KeyboardArrowDown
+                {...props}
+                style={{ color: '#FFFFFF', width: '22px' }}
+              />
             );
           }}
           sx={{
-            background: '#F5FAFA',
-            color: '#00897B',
+            background: '#00897B',
+            color: '#FFFFFF',
             fontWeight: 700,
+            fontSize: '12px',
             border: '1px solid #00897B',
-            minWidth: "9.5rem",
-            textAlign: 'center'
+            borderRadius: '6px',
+            minWidth: '8rem',
+            textAlign: 'center',
+            boxShadow: '0px 2px 4px 0px ',
           }}
         >
-          <MenuItem value="run">Run</MenuItem>
+          <MenuItem value="run">Run workflow</MenuItem>
           <MenuItem
             value="run-to-node"
             disabled={disableToAndFromNodeRunOptions}
@@ -226,18 +236,6 @@ const CanvasHeader = () => {
             Run from node
           </MenuItem>
         </Select>
-        <Button
-          onClick={handleRunClick}
-          type="button"
-          variant="contained"
-          color="primary"
-          disabled={
-            !selectedAction || !permissions.includes('can_run_pipeline')
-          }
-          sx={{ marginLeft: '10px' }}
-        >
-          <PlayArrowIcon />
-        </Button>
       </Box>
     </Box>
   );
@@ -596,7 +594,7 @@ const Canvas = ({
           borderTop: '1px #CCD6E2 solid',
         }}
       >
-        <CanvasHeader />
+        <CanvasHeader finalLockCanvas={finalLockCanvas} />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box
