@@ -8,7 +8,19 @@ const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_ENV!;
 const TrackingContext = createContext(
   (eventName: string, additionalData: Record<string, any> = {}) => {}
 );
-
+// so login, invitations and resetpassword have dynamic url, due to different token, we want a same event for all those.
+function extractPath(url: string) {
+  const validPaths = ['login', 'invitations', 'resetpassword']; //add dynamic paths here.
+  const regex = /^\/([^?]+)/;
+  const match = url.match(regex);
+  if (match) {
+    const path = match[1];
+    if (validPaths.includes(path)) {
+      return `/${path}`;
+    }
+  }
+  return url;
+}
 export const TrackingProvider = ({ children }: any) => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -27,17 +39,16 @@ export const TrackingProvider = ({ children }: any) => {
     });
     if (session?.user?.email) {
       const userEmail: string = session.user.email;
-      const ist4dMember = userEmail.includes('projecttech4dev.org');
+      const ist4dMember = userEmail.includes('projecttech4dev.org'); // a field to check if a user is t4d member.
       const identifyEvent = new amplitude.Identify();
       amplitude.setUserId(session.user.email);
-      identifyEvent.setOnce('User_id', session.user.email);
       identifyEvent.setOnce('ist4dMember', ist4dMember);
-      amplitude.setUserId(userEmail);
       amplitude.identify(identifyEvent);
     }
   }, [session?.user?.email]);
 
   useEffect(() => {
+    if (!amplitudeApiKey) return;
     if (globalContext?.CurrentOrg) {
       const identifyEvent = new amplitude.Identify();
       identifyEvent.set('User_orgs', globalContext.CurrentOrg.state.name);
@@ -48,7 +59,9 @@ export const TrackingProvider = ({ children }: any) => {
         userEmail: session?.user?.email,
         page_domain: window.location.hostname,
         page_location: window.location.href,
-        page_path: window.location.pathname + window.location.search,
+        page_path: extractPath(
+          window.location.pathname + window.location.search
+        ),
         page_title: document.title,
         page_url: window.location.href,
         referrer: document.referrer,
@@ -64,7 +77,9 @@ export const TrackingProvider = ({ children }: any) => {
           userEmail: session?.user?.email,
           page_domain: window.location.hostname,
           page_location: window.location.href,
-          page_path: window.location.pathname + window.location.search,
+          page_path: extractPath(
+            window.location.pathname + window.location.search
+          ),
           page_title: document.title,
           page_url: window.location.href,
           referrer: document.referrer,
