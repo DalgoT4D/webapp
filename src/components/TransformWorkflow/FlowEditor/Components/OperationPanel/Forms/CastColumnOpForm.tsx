@@ -92,8 +92,12 @@ const CastColumnOp = ({
   };
 
   const handleSave = async (formData: FormData) => {
-    let finalNode = node?.data.isDummy ? sourceModelNodeRef.current : node;
-    console.log(finalNode, 'nodeifnal');
+    // when a new dummy node is being created we will keep the final node as table node and the final action as create action.
+    // clicking operational nodes (saved in db) has action == edit.
+    //clicking source node (table) has action == create.
+
+    const finalNode = node?.data.isDummy ? sourceModelNodeRef.current : node;
+    const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const sourceColumnsNames = config.map((column) => column.name);
 
@@ -126,13 +130,13 @@ const CastColumnOp = ({
       // Make the API call
       setLoading(true);
       let operationNode: any;
-      if (action === 'create') {
+      if (finalAction === 'create') {
         operationNode = await httpPost(
           session,
           `transform/dbt_project/model/`,
           postData
         );
-      } else if (action === 'edit') {
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid
