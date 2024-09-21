@@ -225,12 +225,10 @@ const OperationConfigLayout = ({
   };
 
   useEffect(() => {
-    console.log(canvasAction, 'CNAVASACTION');
     if (canvasAction.type === 'open-opconfig-panel') {
       setOpenPanel(true); // when a table or node is clicked , this opens the sql ops form.
       setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
-      console.log(canvasAction, panelOpFormState);
       if (['view', 'edit'].includes(panelOpFormState.current)) {
         const nodeData = canvasNode?.data as OperationNodeData;
         if (permissions.includes('can_view_dbt_operation')) {
@@ -254,7 +252,6 @@ const OperationConfigLayout = ({
       handleClosePanel();
     }
   }, [canvasAction]);
-  console.log(selectedOp, 'selectedOp');
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;

@@ -43,7 +43,6 @@ const CastColumnOp = ({
   type FormData = {
     config: { name: string; data_type: string | null }[];
   };
-  console.log(node?.type, '%%%%$$^$%^$%^$%^$%^TYPE');
   const { control, handleSubmit, register, reset, getValues, setValue } =
     useForm<FormData>({
       defaultValues: {
@@ -219,7 +218,6 @@ const CastColumnOp = ({
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     } else {
-      console.log('!@!@!@!@!@!@!@!@!@!@!@!@!else');
       fetchAndSetSourceColumns();
     }
   }, [session, node]);
@@ -244,7 +242,10 @@ const CastColumnOp = ({
               data-testid={`columnName${findColumnIndex(column.name)}`}
               key={`config.${findColumnIndex(column.name)}.name`}
               fieldStyle="none"
-              sx={{ padding: '0' }}
+              sx={{
+                padding: '0',
+                caretColor: 'transparent',
+              }}
               name={`config.${findColumnIndex(column.name)}.name`}
               register={register}
               value={column.name}
