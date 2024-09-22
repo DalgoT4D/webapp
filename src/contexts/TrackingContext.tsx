@@ -31,7 +31,7 @@ export const TrackingProvider = ({ children }: any) => {
     if (!amplitudeApiKey) return;
     amplitude.init(amplitudeApiKey, {
       defaultTracking: {
-        pageViews: false,
+        pageViews: true,
         sessions: true,
         attribution: true,
         formInteractions: true,
@@ -50,10 +50,6 @@ export const TrackingProvider = ({ children }: any) => {
   useEffect(() => {
     if (!amplitudeApiKey) return;
     if (globalContext?.CurrentOrg) {
-      const identifyEvent = new amplitude.Identify();
-      identifyEvent.set('User_orgs', globalContext.CurrentOrg.state.name);
-      amplitude.identify(identifyEvent);
-
       setEventProperties({
         userCurrentOrg: globalContext.CurrentOrg.state.name,
         userEmail: session?.user?.email,
@@ -90,6 +86,13 @@ export const TrackingProvider = ({ children }: any) => {
       );
     }
   }, [router.pathname, session, globalContext?.CurrentOrg]);
+  useEffect(() => {
+    if (globalContext?.CurrentOrg) {
+      const identifyEvent = new amplitude.Identify();
+      identifyEvent.preInsert('User_orgs', globalContext.CurrentOrg.state.name);
+      amplitude.identify(identifyEvent);
+    }
+  }, [globalContext?.CurrentOrg]);
   const trackEvent = (
     eventName: string,
     additionalData: Record<string, any> = {}
