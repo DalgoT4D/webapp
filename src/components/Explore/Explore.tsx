@@ -5,7 +5,7 @@ import { StatisticsPane } from '@/components/TransformWorkflow/FlowEditor/Compon
 import { httpGet } from '@/helpers/http';
 import { Box, Dialog, Divider, IconButton, Tab, Tabs } from '@mui/material';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Transition } from '@/components/DBT/DBTTransformType';
 import { ResizableBox } from 'react-resizable';
