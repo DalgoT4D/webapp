@@ -1,11 +1,8 @@
-import { getByText, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { Explore } from '../Explore';
-import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-
-const user = userEvent.setup();
 
 jest.mock('next/router', () => ({
   useRouter() {
