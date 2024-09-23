@@ -12,6 +12,7 @@ import {
   Button,
   TablePagination,
   CircularProgress,
+  Typography,
 } from '@mui/material';
 
 import Image from 'next/image';
@@ -24,6 +25,7 @@ import { useSession } from 'next-auth/react';
 import moment from 'moment';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import InfoTooltip from '../UI/Tooltip/Tooltip';
 interface QueryResponse {
   prompt: string;
   response: string;
@@ -157,10 +159,16 @@ export const SavedSession = memo(
                 }}
               >
                 Saved Sessions
-                <Image
-                  style={{ width: '1rem', height: '1rem' }}
-                  src={InfoIcon}
-                  alt="info icon"
+                <InfoTooltip
+                  placement="right"
+                  title={
+                    <div>
+                      <Typography variant="body2">
+                        Access previous AI analytics sessions that have been
+                        saved and build on them to develop new analyses.
+                      </Typography>
+                    </div>
+                  }
                 />
               </Box>
               <CloseIcon onClick={onClose} sx={{ cursor: 'pointer' }} />
