@@ -26,7 +26,23 @@ export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
           }}
         >
           Parameters
-          <InfoTooltip title="Parameters" />
+          <InfoTooltip
+            title={
+              <div>
+                <Typography variant="body2" gutterBottom>
+                  Provide the required parameters:
+                </Typography>
+                <Typography variant="body2">
+                  1. Enter the SQL query to access data stored in your
+                  warehouse.
+                </Typography>
+                <Typography variant="body2">
+                  2. Select/enter a prompt to generate AI enabled insights on
+                  your data.
+                </Typography>
+              </div>
+            }
+          />
         </Box>
         <Box
           sx={{
