@@ -13,6 +13,9 @@ import { copyToClipboard } from '@/utils/common';
 import { successToast, errorToast } from '../ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 export const MODALS = {
   SAVE: 'SAVE',
   OVERWRITE: 'OVERWRITE',
@@ -212,15 +215,16 @@ export const LLMSummary = ({
             alt="dalgo icon"
           />
           <Typography
-            whiteSpace="pre-wrap"
             sx={{
               margin: '1.75rem 2rem',
-              height: '70%',
+              height: '72%',
               overflowY: 'scroll', // Enable horizontal scrolling
               padding: '0 .5rem',
             }}
           >
-            {llmSummary}
+            <Markdown remarkPlugins={[remarkGfm]}>{llmSummary}</Markdown>
+
+            {/* {llmSummary} */}
           </Typography>
 
           {/* Icons */}
@@ -229,7 +233,7 @@ export const LLMSummary = ({
               display: 'flex',
               gap: '0.87rem',
               position: 'absolute',
-              bottom: '1.5rem',
+              bottom: '22px',
               right: '1.25rem',
             }}
           >
