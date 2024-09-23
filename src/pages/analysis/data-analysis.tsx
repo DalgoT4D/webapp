@@ -77,13 +77,13 @@ export default function DataAnalysis() {
   const downloadCSV = () => {
     const csv = jsonToCSV([
       {
+        session_name: oldSessionMetaInfo.session_name || null,
+        sqlText: oldSessionMetaInfo.sqlText || null,
         prompt,
         summary,
-        newSessionId: newSessionId || null,
         session_status: oldSessionMetaInfo.session_status || null,
-        sqlText: oldSessionMetaInfo.sqlText || null,
         taskId: oldSessionMetaInfo.taskId || null,
-        session_name: oldSessionMetaInfo.session_name || null,
+        newSessionId: newSessionId || null,
         oldSessionId: oldSessionMetaInfo.oldSessionId || null,
       },
     ]);
