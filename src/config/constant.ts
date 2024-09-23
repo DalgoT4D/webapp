@@ -1,5 +1,11 @@
-export const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-export const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+// export const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+export const backendUrl =
+  process.env.NEXT_PUBLIC_BACKEND_UR || 'http://127.0.0.1:8001';
+
+export const websocketUrl =
+  process.env.NEXT_PUBLIC_WEBSOCKET_UR || 'ws://127.0.0.1:8001';
+
+// export const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
 export const showElementaryMenu =
   process.env.NEXT_PUBLIC_SHOW_ELEMENTARY_MENU === 'true';
 export const showDataInsightsTab =
