@@ -195,6 +195,7 @@ export const SqlWrite = memo(
                 <TextField
                   id="outlined-multiline-static"
                   sx={{ backgroundColor: 'transparent', height: '11rem' }}
+                  placeholder={`SELECT * \nFROM table_name`}
                   fullWidth
                   multiline
                   rows={6}
