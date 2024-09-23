@@ -178,8 +178,15 @@ export const LLMSummary = ({
             fontSize: '20px',
           }}
         >
-          LLM Summary
-          <InfoTooltip title="LLM Summary Info" />
+          AI Analysis
+          <InfoTooltip
+            title={
+              <Typography variant="body2">
+                The AI response based on the parameters you have provided for
+                analytics. Edit the parameters to fine-tune the response
+              </Typography>
+            }
+          />
         </Box>
 
         {/* Summary UI */}
