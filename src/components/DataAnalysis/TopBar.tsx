@@ -65,7 +65,9 @@ export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
               variant="contained"
               id="create-new-button"
               sx={{ width: '100%', height: '2rem' }}
-              onClick={handleNewSession}
+              onClick={() => {
+                handleNewSession();
+              }}
             >
               <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>
                 + New
