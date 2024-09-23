@@ -54,18 +54,22 @@ export default function DataAnalysis() {
   const handleOpenSavedSession = () => {
     setOpenSavedSessionDialog(true);
   };
-  const handleNewSession = () => {
+  const handleNewSession = (shouldRefreshState: boolean | undefined) => {
+    //should refreshstate is when the save or overwrite api works.
+    // !newSessionId is for the case when a old session is opened so it has only oldsessionId.
+    if (shouldRefreshState || !newSessionId) {
+      setSessionMetaInfo({
+        prompt: '',
+        summary: '',
+        newSessionId: '',
+        session_status: '',
+        sqlText: '',
+        taskId: '',
+        session_name: '',
+        oldSessionId: '',
+      });
+    }
     setResetState(true);
-    setSessionMetaInfo({
-      prompt: '',
-      summary: '',
-      newSessionId: '',
-      session_status: '',
-      sqlText: '',
-      taskId: '',
-      session_name: '',
-      oldSessionId: '',
-    });
   };
   const handleEditSession = (info: any) => {
     setSessionMetaInfo({
@@ -207,6 +211,7 @@ export default function DataAnalysis() {
 
         {/* Final Summary */}
         <LLMSummary
+          resetState={resetState}
           llmSummary={summary}
           downloadCSV={downloadCSV}
           newSessionId={newSessionId}

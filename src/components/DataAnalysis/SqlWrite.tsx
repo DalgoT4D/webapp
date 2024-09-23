@@ -147,16 +147,20 @@ export const SqlWrite = memo(
 
     //resets the state when clicked new button.
     useEffect(() => {
-      if (resetState) {
+      //if resetState is true and there is session_name, which means the session is already saved.
+      // session_name - 1sst time works, 2nd tiem, we have session_name
+      const savedSessionResetCase =
+        oldSessionMetaInfo.session_name && !newSessionId;
+      if (resetState && savedSessionResetCase) {
         reset({
           defaultPrompt: '',
           customPrompt: '',
           sqlText: '',
         });
-        setResetState(false);
       }
+      setResetState(false);
     }, [resetState]);
-
+    console.log(resetState, 'resetstate');
     if (tempLoading) return <CircularProgress />;
 
     return (

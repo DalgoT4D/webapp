@@ -19,15 +19,18 @@ export const MODALS = {
   CONFIRM_SAVEAS: 'CONFIRM_SAVEAS',
   FEEDBACK_FORM: 'FEEDBACK_FORM',
   UNSAVED_CHANGES: 'UNSAVED_CHANGES',
+  RESET_WARNING: 'RESET_WARNING',
 };
 
 export const LLMSummary = ({
+  resetState,
   llmSummary,
   downloadCSV,
   newSessionId,
   oldSessionMetaInfo,
   handleNewSession,
 }: {
+  resetState: boolean;
   llmSummary: string;
   downloadCSV: () => void;
   newSessionId: string;
@@ -60,7 +63,7 @@ export const LLMSummary = ({
       );
       if (response.success) {
         successToast(`${session_name} saved successfully`, [], globalContext);
-        handleNewSession();
+        handleNewSession(true);
       }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
@@ -80,7 +83,7 @@ export const LLMSummary = ({
       );
       if (response.success) {
         successToast(`Feedback sent successfully`, [], globalContext);
-        handleNewSession();
+        handleNewSession(true);
       }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
@@ -155,6 +158,12 @@ export const LLMSummary = ({
     }
   };
 
+  useEffect(() => {
+    if (resetState && newSessionId) {
+      setModalName(MODALS.RESET_WARNING);
+      setIsBoxOpen(true);
+    }
+  }, [resetState]);
   // Function to handle CSV download
 
   return (
@@ -287,6 +296,7 @@ export const LLMSummary = ({
             onSubmit={onSubmit}
             submitFeedback={submitFeedback}
             onConfirmNavigation={onConfirmNavigation}
+            handleNewSession={handleNewSession}
             setModalName={setModalName}
             oldSessionName={oldSessionMetaInfo.session_name}
           />
