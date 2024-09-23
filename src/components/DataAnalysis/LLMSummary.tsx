@@ -231,7 +231,7 @@ export const LLMSummary = ({
           <Box
             sx={{
               display: 'flex',
-              gap: '0.87rem',
+              gap: '0.5rem',
               position: 'absolute',
               bottom: '22px',
               right: '1.25rem',
@@ -244,15 +244,6 @@ export const LLMSummary = ({
                 alt="copy icon"
               />
             </IconButton>
-
-            <IconButton disabled={!llmSummary}>
-              <Image
-                style={{ width: '1.25rem', height: '1rem' }}
-                src={ThumbsupIcon}
-                alt="thumbs up icon"
-              />
-            </IconButton>
-
             <IconButton
               onClick={() => {
                 setModalName(MODALS.FEEDBACK_FORM);
