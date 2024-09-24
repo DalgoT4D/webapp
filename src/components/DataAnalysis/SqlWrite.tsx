@@ -5,7 +5,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import { memo, useContext, useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -39,38 +38,26 @@ export const SqlWrite = memo(
   }) => {
     const { data: session } = useSession();
     const [defaultPromptsLists, setDefaultPromptLists] = useState<Prompt[]>([]);
-    const [customPromptToggle, setCustomPromptToggle] = useState(false);
     const globalContext = useContext(GlobalContext);
     const [tempLoading, setTempLoading] = useState(false);
     const [sqlQueryLimit, setSqlQueryLimit] = useState<number>(500); //deafult value
 
-    const {
-      control,
-      setValue,
-      watch,
-      handleSubmit,
-      // formState: { errors },
-      reset,
-    } = useForm({
+    const { control, setValue, watch, handleSubmit, reset } = useForm({
       defaultValues: {
-        defaultPrompt: '',
-        customPrompt: '',
+        prompt: '',
         sqlText: '',
       },
     });
 
-    const selectedDefaultPrompt = watch('defaultPrompt');
+    const selectedPrompt = watch('prompt');
 
     const handlePromptSelection = (promptText: string) => {
-      setCustomPromptToggle(false);
-      setValue('defaultPrompt', promptText);
-      setValue('customPrompt', '');
+      setValue('prompt', promptText);
     };
 
     const onSubmit = (data: any) => {
-      const { sqlText, customPrompt, defaultPrompt } = data;
-      console.log(sqlText, 'sqltest');
-      if (!sqlText && !customPrompt && !defaultPrompt) {
+      const { sqlText, prompt } = data;
+      if (!sqlText && !prompt) {
         errorToast(
           'Please provide a SQL query and select either a default or custom prompt.',
           [],
@@ -88,7 +75,7 @@ export const SqlWrite = memo(
         return;
       }
 
-      if (!customPrompt && !defaultPrompt) {
+      if (!prompt) {
         errorToast(
           'Please either select a default prompt or enter a custom prompt.',
           [],
@@ -98,7 +85,7 @@ export const SqlWrite = memo(
       }
       getLLMSummary({
         sqlText,
-        user_prompt: customPrompt || defaultPrompt,
+        user_prompt: prompt,
       });
     };
 
@@ -151,18 +138,11 @@ export const SqlWrite = memo(
 
     //works while editing
     useEffect(() => {
-      const isDefaultPrompt = defaultPromptsLists.some((item: any) => {
-        return item?.prompt === prompt;
-      });
-      setCustomPromptToggle(
-        isDefaultPrompt || !oldSessionMetaInfo.sqlText ? false : true
-      );
       reset({
-        defaultPrompt: isDefaultPrompt ? prompt : '',
-        customPrompt: isDefaultPrompt ? '' : prompt,
+        prompt,
         sqlText: oldSessionMetaInfo?.sqlText || '',
       });
-    }, [defaultPromptsLists, oldSessionMetaInfo.sqlText]);
+    }, [prompt, oldSessionMetaInfo.sqlText]);
 
     //resets the state when clicked new button.
     useEffect(() => {
@@ -170,16 +150,17 @@ export const SqlWrite = memo(
       // session_name - 1sst time works, 2nd tiem, we have session_name
       const savedSessionResetCase =
         oldSessionMetaInfo.session_name && !newSessionId;
-      if (resetState && savedSessionResetCase) {
+      if (
+        (resetState && savedSessionResetCase) ||
+        (resetState && !oldSessionMetaInfo.session_name && !newSessionId)
+      ) {
         reset({
-          defaultPrompt: '',
-          customPrompt: '',
+          prompt: '',
           sqlText: '',
         });
       }
       setResetState(false);
     }, [resetState]);
-    console.log(resetState, 'resetstate');
     if (tempLoading) return <CircularProgress />;
 
     return (
@@ -292,11 +273,11 @@ export const SqlWrite = memo(
                   sx={{
                     flex: '1 1 auto',
                     backgroundColor:
-                      selectedDefaultPrompt === defaultPrompts.prompt
+                      selectedPrompt === defaultPrompts.prompt
                         ? '#00897B'
                         : '#F5FAFA',
                     color:
-                      selectedDefaultPrompt === defaultPrompts.prompt
+                      selectedPrompt === defaultPrompts.prompt
                         ? '#FFFFFF'
                         : '#3C4C63',
 
@@ -316,104 +297,74 @@ export const SqlWrite = memo(
               ))}
             </Box>
 
-            <Typography
-              sx={{ fontWeight: 600, fontSize: '16px', color: '#3C4C63' }}
+            <Box
+              sx={{ width: '100%', minHeight: '9.5rem', marginTop: '.5rem' }}
             >
-              OR
-            </Typography>
-
-            <Box sx={{ width: '100%', minHeight: '8rem' }}>
-              {customPromptToggle ? (
-                <Box sx={{ width: '100%' }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '0.5rem',
-                    }}
-                  >
-                    <Box
-                      display={'flex'}
-                      gap="0.5rem"
-                      height="1rem"
-                      alignItems="center"
-                    >
-                      <Typography>Custom Prompt</Typography>
-                      <InfoTooltip
-                        title={
-                          <div>
-                            <Typography variant="body2" gutterBottom>
-                              Tips for Writing a Good Prompt:
-                            </Typography>
-                            <Typography variant="body2">
-                              1. Be Clear: Clearly state what you need to avoid
-                              confusion.
-                            </Typography>
-                            <Typography variant="body2">
-                              2. Add Context: Include relevant details to guide
-                              the response.
-                            </Typography>
-                            <Typography variant="body2">
-                              3. Adjust & Refine: If the result isn&apos;t what
-                              you expected, tweak your prompt.
-                            </Typography>
-
-                            <Typography variant="body2" gutterBottom>
-                              Example: If your data has some rows that contain
-                              people&apos;s feelings during COVID, then instead
-                              of &quot;Describe people&apos;s feelings during
-                              COVID,&quot; try: &quot;This data is a list of
-                              responses from people about how they are feeling.
-                              Analyse the data and give me the different
-                              emotions that people felt during covid, and also
-                              which was the frequently felt emotion? Limit it to
-                              one short paragraph.&quot;
-                            </Typography>
-                          </div>
-                        }
-                      />
-                    </Box>
-                    <CloseIcon
-                      onClick={() => {
-                        setCustomPromptToggle(false);
-                        setValue('customPrompt', '');
-                      }}
-                      sx={{ cursor: 'pointer' }}
-                    />
-                  </Box>
-
-                  <Controller
-                    name="customPrompt"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField multiline rows={2} {...field} />
-                    )}
-                  />
-                </Box>
-              ) : (
-                <Button
-                  variant="contained"
+              <Box sx={{ width: '100%' }}>
+                <Box
                   sx={{
-                    width: '100%',
-                    height: '2.75rem',
-                    borderRadius: '6px',
-                    color: '#3C4C63',
-                    backgroundColor: '#F5FAFA',
-
-                    '&:hover': {
-                      backgroundColor: '#00897B',
-                      color: '#FFFFFF',
-                    },
-                  }}
-                  onClick={() => {
-                    setValue('defaultPrompt', '');
-                    setCustomPromptToggle(true);
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '0.5rem',
                   }}
                 >
-                  + Add a custom prompt
-                </Button>
-              )}
+                  <Box
+                    display={'flex'}
+                    gap="0.5rem"
+                    height="1rem"
+                    alignItems="center"
+                  >
+                    <Typography>Custom Prompt</Typography>
+                    <InfoTooltip
+                      title={
+                        <div>
+                          <Typography variant="body2" gutterBottom>
+                            Tips for Writing a Good Prompt:
+                          </Typography>
+                          <Typography variant="body2">
+                            1. Be Clear: Clearly state what you need to avoid
+                            confusion.
+                          </Typography>
+                          <Typography variant="body2">
+                            2. Add Context: Include relevant details to guide
+                            the response.
+                          </Typography>
+                          <Typography variant="body2">
+                            3. Adjust & Refine: If the result isn&apos;t what
+                            you expected, tweak your prompt.
+                          </Typography>
+
+                          <Typography variant="body2" gutterBottom>
+                            Example: If your data has some rows that contain
+                            people&apos;s feelings during COVID, then instead of
+                            &quot;Describe people&apos;s feelings during
+                            COVID,&quot; try: &quot;This data is a list of
+                            responses from people about how they are feeling.
+                            Analyse the data and give me the different emotions
+                            that people felt during covid, and also which was
+                            the frequently felt emotion? Limit it to one short
+                            paragraph.&quot;
+                          </Typography>
+                        </div>
+                      }
+                    />
+                  </Box>
+                </Box>
+
+                <Controller
+                  name="prompt"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      placeholder="Enter your customized prompt here"
+                      multiline
+                      rows={3}
+                      {...field}
+                    />
+                  )}
+                />
+              </Box>
             </Box>
           </Box>
 
