@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 
 import Image from 'next/image';
-import InfoIcon from '@/assets/icons/info.svg';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowIcon from '@/assets/icons/arrow_back_ios.svg';
 import { memo, useContext, useEffect, useState } from 'react';
@@ -136,6 +135,7 @@ export const SavedSession = memo(
             sx={{
               width: '100%',
               padding: '2rem 1.75rem',
+              position: 'relative',
             }}
           >
             <Box
@@ -150,28 +150,39 @@ export const SavedSession = memo(
               <Box
                 sx={{
                   display: 'flex',
-                  gap: '0.2rem',
-                  justifyContent: 'center',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  color: '#0F2440',
-                  fontWeight: 700,
-                  fontSize: '24px',
+                  width: '95%',
                 }}
               >
-                Saved Sessions
-                <InfoTooltip
-                  placement="right"
-                  title={
-                    <div>
-                      <Typography variant="body2">
-                        Access previous AI analytics sessions that have been
-                        saved and build on them to develop new analyses.
-                      </Typography>
-                    </div>
-                  }
-                />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: '0.2rem',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    color: '#0F2440',
+                    fontWeight: 700,
+                    fontSize: '24px',
+                  }}
+                >
+                  Saved sessions
+                  <InfoTooltip
+                    placement="right"
+                    title={
+                      <div>
+                        <Typography variant="body2">
+                          Access previous AI analytics sessions that have been
+                          saved and build on them to develop new analyses.
+                        </Typography>
+                      </div>
+                    }
+                  />
+                </Box>
+                <Typography>
+                  *Click on the row to open a saved session
+                </Typography>
               </Box>
-              <CloseIcon onClick={onClose} sx={{ cursor: 'pointer' }} />
             </Box>
             <TableContainer
               component={Paper}
@@ -266,14 +277,23 @@ export const SavedSession = memo(
                   ) : (
                     savedSessions.map((row: any, idx) => (
                       <TableRow
+                        onClick={() => {
+                          handleEditSession({
+                            prompt: row.response[0].prompt,
+                            summary: row.response[0].response,
+                            oldSessionId: row.session_id,
+                            session_status: row.session_status,
+                            session_name: row.session_name,
+                            sqlText: row.request_meta.sql,
+                            taskId: row.request_uuid,
+                          });
+                          onClose();
+                        }}
                         key={row.session_id}
                         sx={{
                           padding: 0,
                           position: 'relative',
-                          backgroundColor:
-                            activeRow === row.session_id
-                              ? '#E0F7FA'
-                              : 'inherit',
+                          backgroundColor: 'inherit',
                           '&:hover': {
                             backgroundColor: '#F5FAFA',
                           },
@@ -284,7 +304,6 @@ export const SavedSession = memo(
                           border: 'none',
                           boxShadow: 'none',
                         }}
-                        onClick={() => setActiveRow(row.session_id)}
                       >
                         <TableCell
                           sx={{
@@ -352,32 +371,6 @@ export const SavedSession = memo(
                           }}
                         >
                           {row.created_by.email}
-                          <Button
-                            className="hover-button"
-                            size="small"
-                            sx={{
-                              visibility: 'hidden',
-                              opacity: 0,
-                              transition: 'visibility 0s, opacity 0.3s',
-                              position: 'absolute',
-                              right: 16,
-                              top: 8,
-                            }}
-                            onClick={() => {
-                              handleEditSession({
-                                prompt: row.response[0].prompt,
-                                summary: row.response[0].response,
-                                oldSessionId: row.session_id,
-                                session_status: row.session_status,
-                                session_name: row.session_name,
-                                sqlText: row.request_meta.sql,
-                                taskId: row.request_uuid,
-                              });
-                              onClose();
-                            }}
-                          >
-                            OPEN <Image src={ArrowIcon} alt="close icon" />
-                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -403,6 +396,15 @@ export const SavedSession = memo(
                 }}
               />
             )}
+            <CloseIcon
+              onClick={onClose}
+              sx={{
+                cursor: 'pointer',
+                position: 'absolute',
+                top: '1rem',
+                right: '1.5rem',
+              }}
+            />
           </Box>
         </Dialog>
       </>

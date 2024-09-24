@@ -175,17 +175,21 @@ export const SqlWrite = memo(
           </Box>
 
           {/* SQL Editor */}
-          <Box sx={{ width: '100%', marginTop: '1.5rem 0' }}>
-            <Box display="flex" justifyContent="space-between">
+          <Box sx={{ width: '100%', marginTop: '1.5rem', borderRadius: '6px' }}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              marginBottom="5px"
+            >
               <Typography
                 data-testid="sql-filter"
-                sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
+                sx={{ color: '#0F2440', fontWeight: '600', fontSize: '14px' }}
               >
                 SQL Filter*
               </Typography>
               <Typography
                 data-testid="sql-filter"
-                sx={{ color: '#758397', fontWeight: '600', fontSize: '14px' }}
+                sx={{ color: '#0F2440', fontWeight: '500', fontSize: '12px' }}
               >
                 {`*You can query a maximum of ${sqlQueryLimit} rows only.`}
               </Typography>
@@ -197,11 +201,14 @@ export const SqlWrite = memo(
               render={({ field }) => (
                 <TextField
                   id="outlined-multiline-static"
-                  sx={{ backgroundColor: 'transparent', height: '11rem' }}
+                  sx={{
+                    backgroundColor: 'transparent',
+                    borderRadius: '6px',
+                  }}
                   placeholder={`SELECT * \nFROM table_name`}
                   fullWidth
                   multiline
-                  rows={6}
+                  rows={3}
                   {...field}
                 />
               )}
@@ -231,26 +238,26 @@ export const SqlWrite = memo(
                   display: 'flex',
                   width: '100%',
                   alignItems: 'center',
-                  justifyContent: 'flex-start',
+                  justifyContent: 'space-between',
                 }}
               >
                 <Typography
                   sx={{
                     fontWeight: '600',
                     fontSize: '14px',
-                    color: '#758397',
+                    color: '#0F2440',
                   }}
                 >
-                  Select a prompt*
+                  Prompt*
                 </Typography>
                 <Typography
                   sx={{
                     fontWeight: '500',
                     fontSize: '12px',
-                    color: '#758397',
+                    color: '#0F2440',
                   }}
                 >
-                  (Choose any one from the given prompts)
+                  Select a given prompt or add a custom prompt
                 </Typography>
               </Box>
             </Box>
@@ -272,6 +279,8 @@ export const SqlWrite = memo(
                   id="create-new-button"
                   sx={{
                     flex: '1 1 auto',
+                    fontSize: '14px',
+                    fontWeight: '600',
                     backgroundColor:
                       selectedPrompt === defaultPrompts.prompt
                         ? '#00897B'
@@ -279,7 +288,7 @@ export const SqlWrite = memo(
                     color:
                       selectedPrompt === defaultPrompts.prompt
                         ? '#FFFFFF'
-                        : '#3C4C63',
+                        : '#0F2440CC',
 
                     '&:hover': {
                       backgroundColor: '#00897B',
@@ -313,7 +322,15 @@ export const SqlWrite = memo(
                     height="1rem"
                     alignItems="center"
                   >
-                    <Typography>Custom Prompt</Typography>
+                    <Typography
+                      sx={{
+                        fontSize: '14px',
+                        color: '#0F2440',
+                        fontWeight: '600',
+                      }}
+                    >
+                      Custom Prompt
+                    </Typography>
                     <InfoTooltip
                       title={
                         <div>
@@ -357,7 +374,7 @@ export const SqlWrite = memo(
                     <TextField
                       placeholder="Enter your customized prompt here"
                       multiline
-                      rows={3}
+                      rows={6}
                       {...field}
                     />
                   )}
