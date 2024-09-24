@@ -297,9 +297,7 @@ export const SqlWrite = memo(
               ))}
             </Box>
 
-            <Box
-              sx={{ width: '100%', minHeight: '9.5rem', marginTop: '.5rem' }}
-            >
+            <Box sx={{ width: '100%', minHeight: '10rem', marginTop: '.5rem' }}>
               <Box sx={{ width: '100%' }}>
                 <Box
                   sx={{
@@ -371,7 +369,6 @@ export const SqlWrite = memo(
           {/* Submit Button */}
           <Button
             onClick={handleSubmit(onSubmit)}
-            disabled={!!newSessionId}
             variant="contained"
             sx={{
               width: '6.75rem',
