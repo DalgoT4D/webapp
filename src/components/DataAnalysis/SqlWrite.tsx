@@ -49,7 +49,7 @@ export const SqlWrite = memo(
       setValue,
       watch,
       handleSubmit,
-      formState: { errors },
+      // formState: { errors },
       reset,
     } = useForm({
       defaultValues: {
@@ -69,9 +69,28 @@ export const SqlWrite = memo(
 
     const onSubmit = (data: any) => {
       const { sqlText, customPrompt, defaultPrompt } = data;
+      console.log(sqlText, 'sqltest');
+      if (!sqlText && !customPrompt && !defaultPrompt) {
+        errorToast(
+          'Please provide a SQL query and select either a default or custom prompt.',
+          [],
+          globalContext
+        );
+        return;
+      }
+
+      if (!sqlText) {
+        errorToast(
+          'Please provide a SQL query to query the data.',
+          [],
+          globalContext
+        );
+        return;
+      }
+
       if (!customPrompt && !defaultPrompt) {
         errorToast(
-          'Either select a default prompt or write a custom prompt',
+          'Please either select a default prompt or enter a custom prompt.',
           [],
           globalContext
         );
@@ -194,7 +213,6 @@ export const SqlWrite = memo(
             <Controller
               name="sqlText"
               control={control}
-              rules={{ required: 'SQL query is required' }}
               render={({ field }) => (
                 <TextField
                   id="outlined-multiline-static"
@@ -204,8 +222,6 @@ export const SqlWrite = memo(
                   multiline
                   rows={6}
                   {...field}
-                  error={!!errors.sqlText}
-                  helperText={errors.sqlText?.message}
                 />
               )}
             />
@@ -371,17 +387,7 @@ export const SqlWrite = memo(
                     name="customPrompt"
                     control={control}
                     render={({ field }) => (
-                      <TextField
-                        multiline
-                        rows={2}
-                        {...field}
-                        error={!!errors.customPrompt && !selectedDefaultPrompt}
-                        helperText={
-                          errors.customPrompt && !selectedDefaultPrompt
-                            ? 'Custom prompt is required if no default is selected'
-                            : ''
-                        }
-                      />
+                      <TextField multiline rows={2} {...field} />
                     )}
                   />
                 </Box>
