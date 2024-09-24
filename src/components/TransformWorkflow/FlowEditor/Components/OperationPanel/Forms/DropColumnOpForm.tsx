@@ -5,12 +5,16 @@ import {
   Box,
   Button,
   Checkbox,
+  Divider,
   FormControlLabel,
   FormHelperText,
   Grid,
+  InputAdornment,
   Tooltip,
   Typography,
+  useTheme,
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -20,7 +24,7 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, set, useFieldArray, useForm } from 'react-hook-form';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 import Input from '@/components/UI/Input/Input';
 
@@ -46,17 +50,22 @@ const DropColumnOp = ({
   const [valid, setValid] = useState(true);
   // const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const [configData, setConfigData] = useState<any>([]);
-  const [selectAll, setSelectAll] = useState<boolean>(false);
+  const [search, setSearch] = useState('');
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
       ? (node?.data as OperationNodeData)
       : {};
+  const theme = useTheme();
+
+  type FormColumnData = {
+    col_name: string;
+    drop_col: boolean;
+  };
 
   type FormData = {
-    config: { col_name: string; drop_col: boolean }[];
+    config: FormColumnData[];
   };
 
   const { control, handleSubmit, register, reset, getValues, setValue } =
@@ -70,6 +79,13 @@ const DropColumnOp = ({
         ],
       },
     });
+
+  const { fields } = useFieldArray({
+    control,
+    name: 'config',
+  });
+
+  console.log('fields', fields);
 
   const { config } = getValues();
 
@@ -166,27 +182,17 @@ const DropColumnOp = ({
       setSrcColumns(source_columns);
 
       // pre-fill form
-      setValue(
-        'config',
-        source_columns.map((col) => ({
-          col_name: col,
-          drop_col: columns.includes(col),
-        }))
-      );
+      const dropCols = source_columns.map((col) => ({
+        col_name: col,
+        drop_col: columns.includes(col),
+      }));
+      console.log('drop cols', dropCols);
+      setValue('config', dropCols);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSearch = (search: string) => {
-    const trimmedSubstring = search?.toLowerCase();
-    const filteredConfigs = config?.filter((ele) => {
-      const stringToSearch = ele?.col_name?.toLowerCase();
-      return stringToSearch?.includes(trimmedSubstring);
-    });
-    setConfigData(filteredConfigs);
   };
 
   useEffect(() => {
@@ -197,44 +203,57 @@ const DropColumnOp = ({
     }
   }, [session, node]);
 
-  useEffect(() => {
-    setConfigData(config);
-  }, [config]);
+  const filteredFields = fields.filter((field) =>
+    field.col_name.toLowerCase().includes(search.toLowerCase())
+  );
 
-  useEffect(() => {
-    const currentFilteredCols: string[] = configData.map(
-      (col: { col_name: string; drop_col: boolean }) => col.col_name
-    );
-    setValue(
-      'config',
-      config.map((col) => ({
-        ...col,
-        drop_col:
-          configData?.length > 0 && currentFilteredCols.includes(col.col_name)
-            ? selectAll
-            : col.drop_col,
-      }))
-    );
-  }, [selectAll]);
+  const handleSelectAll = () => {
+    filteredFields.forEach((field, index) => {
+      setValue(`config.${findColumnIndex(field.col_name)}.drop_col`, true);
+    });
+  };
+
+  const handleClear = () => {
+    filteredFields.forEach((field, index) => {
+      setValue(`config.${findColumnIndex(field.col_name)}.drop_col`, false);
+    });
+  };
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
-      <Box display="flex">
+      <Box
+        sx={{ display: 'flex', flexDirection: 'column', padding: '0px 12px' }}
+      >
         <Input
           fieldStyle="transformation"
-          sx={{ px: 1, pb: 1, width: '80%' }}
+          sx={{ px: 1, pb: 1, width: '100%' }}
           placeholder="Search Here"
-          onChange={(event) => handleSearch(event.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
         />
-        <Tooltip title="Select All Columns">
-          <Checkbox
-            data-testid="selectAllCheckboxInputContainer"
-            checked={selectAll}
-            onChange={(e) => {
-              setSelectAll(e.target.checked);
-            }}
-          />
-        </Tooltip>
+      </Box>
+      <Box
+        sx={{
+          padding: '0px 12px',
+          borderRight: '1px solid #E8E8E8',
+          background: '#EEF3F3',
+        }}
+      >
+        <Typography
+          sx={{
+            fontWeight: '600',
+            padding: '12px 16px',
+            fontSize: '14px',
+          }}
+        >
+          Column Name
+        </Typography>
       </Box>
       <form onSubmit={handleSubmit(handleSave)}>
         {!valid && (
@@ -242,48 +261,96 @@ const DropColumnOp = ({
             Please select atleast 1 column
           </FormHelperText>
         )}
-        <GridTable
-          headers={['Column name', 'Drop ?']}
-          data={configData.map(
-            (
-              column: { col_name: string; drop_col: boolean },
-              index: number
-            ) => [
-              <Input
-                data-testid={`columnName${findColumnIndex(column.col_name)}`}
-                key={`config.${findColumnIndex(column.col_name)}.col_name`}
-                fieldStyle="none"
-                sx={{ padding: '0' }}
-                name={`config.${findColumnIndex(column.col_name)}.col_name`}
-                register={register}
-                value={column.col_name}
-                disabled={true}
-              />,
-              <Controller
-                name={`config.${findColumnIndex(column.col_name)}.drop_col`}
-                key={`config.${findColumnIndex(column.col_name)}.drop_col`}
-                control={control}
-                render={({ field }) => (
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        {...field}
-                        data-testid={`checkBoxInputContainer${findColumnIndex(
-                          column.col_name
-                        )}`}
-                        checked={field.value}
-                        onChange={(e) => {
-                          field.onChange(e.target.checked);
+        <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '12px 12px',
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Box
+                sx={{ ':hover': { cursor: 'pointer' } }}
+                onClick={handleSelectAll}
+              >
+                <Typography fontWeight={600} fontSize={'14px'}>
+                  SELECT ALL
+                </Typography>
+              </Box>
+              <Box
+                sx={{ ':hover': { cursor: 'pointer' } }}
+                onClick={handleClear}
+              >
+                <Typography fontWeight={600} fontSize={'14px'}>
+                  CLEAR
+                </Typography>
+              </Box>
+            </Box>
+            <Box>
+              <Divider
+                sx={{ border: '1px solid #00000014', marginTop: '8px' }}
+                orientation="horizontal"
+              />
+            </Box>
+          </Box>
+          <Box sx={{}}>
+            {filteredFields.map(
+              (
+                column: { col_name: string; drop_col: boolean },
+                index: number
+              ) => [
+                <Controller
+                  name={`config.${findColumnIndex(column.col_name)}.drop_col`}
+                  key={`config.${findColumnIndex(column.col_name)}.key`}
+                  control={control}
+                  render={({ field }) => (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1px',
+                        background: field.value ? '#F5FAFA' : '',
+                        padding: '0px 12px',
+                      }}
+                    >
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            {...field}
+                            data-testid={`checkBoxInputContainer${findColumnIndex(
+                              column.col_name
+                            )}`}
+                            checked={field.value}
+                            onChange={(e) => {
+                              field.onChange(e.target.checked);
+                            }}
+                            sx={{
+                              transform: 'scale(0.8)',
+                            }}
+                          />
+                        }
+                        label={column.col_name}
+                        sx={{
+                          '& .MuiFormControlLabel-label': {
+                            fontSize: theme.typography.pxToRem(14),
+                            fontWeight: 500,
+                            color: theme.palette.text.primary,
+                          },
                         }}
                       />
-                    }
-                    label=""
-                  />
-                )}
-              />,
-            ]
-          )}
-        ></GridTable>
+                    </Box>
+                  )}
+                />,
+              ]
+            )}
+          </Box>
+        </Box>
         {!valid && (
           <FormHelperText sx={{ color: 'red', ml: 3 }}>
             Please select atleast 1 column
