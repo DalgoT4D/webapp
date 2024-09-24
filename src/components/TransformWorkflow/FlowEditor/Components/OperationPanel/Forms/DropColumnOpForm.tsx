@@ -71,12 +71,7 @@ const DropColumnOp = ({
   const { control, handleSubmit, register, reset, getValues, setValue } =
     useForm<FormData>({
       defaultValues: {
-        config: [
-          {
-            col_name: '',
-            drop_col: false,
-          },
-        ],
+        config: [],
       },
     });
 
@@ -84,8 +79,6 @@ const DropColumnOp = ({
     control,
     name: 'config',
   });
-
-  console.log('fields', fields);
 
   const { config } = getValues();
 
@@ -186,7 +179,6 @@ const DropColumnOp = ({
         col_name: col,
         drop_col: columns.includes(col),
       }));
-      console.log('drop cols', dropCols);
       setValue('config', dropCols);
     } catch (error) {
       console.error(error);
