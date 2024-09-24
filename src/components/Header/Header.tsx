@@ -5,7 +5,7 @@ import {
   Paper,
   Typography,
   IconButton,
-  Badge
+  Badge,
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import styles from './Header.module.css';
@@ -53,10 +53,12 @@ type HeaderProps = {
 
 export const Header = ({
   openMenu = false,
-  setOpenMenu = () => { },
+  setOpenMenu = () => {},
   hideMenu = false,
 }: HeaderProps | any) => {
-  const { data: unread_count } = useSWR(`notifications/unread_count`, {refreshInterval: 20000});
+  const { data: unread_count } = useSWR(`notifications/unread_count`, {
+    refreshInterval: 20000,
+  });
   const handleSignout = () => {
     // Hit backend api to invalidate the token
     localStorage.clear();
@@ -66,6 +68,7 @@ export const Header = ({
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [orgs, setOrgs] = useState<Array<AutoCompleteOption>>([]);
+
   const [orgusers, setOrgusers] = useState<Array<OrgUser> | undefined>([]);
   const [showOrgCreateForm, setShowOrgCreateForm] = useState<boolean>(false);
   const [selectedOrg, setSelectedOrg] = useState<
@@ -77,9 +80,9 @@ export const Header = ({
   const handleClick = (event: HTMLElement | null) => {
     setAnchorEl(event);
   };
-  const handleViewAll = () =>{
+  const handleViewAll = () => {
     router.push('/notifications');
-}
+  };
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -180,8 +183,8 @@ export const Header = ({
             borderRadius: '50%',
           }}
         >
-          <Badge color='primary' badgeContent={unread_count?.res}>
-            <NotificationsIcon style={{ color: "#312c2cde" }} />
+          <Badge color="primary" badgeContent={unread_count?.res}>
+            <NotificationsIcon style={{ color: '#312c2cde' }} />
           </Badge>
         </IconButton>
         <Typography variant="h6">{selectedOrg?.label}</Typography>
@@ -196,7 +199,12 @@ export const Header = ({
         id="basic-menu"
         anchorEl={anchorEl}
         open={open}
-        sx={{ marginTop: 4, marginLeft: -2, paddingRight: 2, py: 0 }}
+        sx={{
+          marginTop: 4,
+          marginLeft: -2,
+          paddingRight: 2,
+          py: 0,
+        }}
         onClose={handleClose}
         anchorOrigin={{
           vertical: 'bottom',
@@ -242,25 +250,41 @@ export const Header = ({
                   fontWeight: 600,
                   borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
                 }}
-                data-testid = "createneworg"
+                data-testid="createneworg"
               >
                 Create new org
               </Typography>
             )}
           </Box>
         )}
-        {orgs.sort((org1, org2) => org1["label"].localeCompare(org2["label"])).map((org: AutoCompleteOption, idx: number) => (
-          <MenuItem
-            key={idx}
-            value={org.id}
-            onClick={() => setSelectedOrg(org)}
-            selected={selectedOrg?.id === org.id}
-            sx={selectedOrg?.id === org.id ? { fontWeight: 600 } : {}}
-          >
-            {org.label}
-          </MenuItem>
-        ))}
-        <MenuItem onClick={() => handleSignout()}>
+        <Box
+          sx={{
+            overflow: 'scroll',
+            maxHeight: '60vh',
+          }}
+        >
+          <Box>
+            {orgs
+              .sort((org1, org2) => org1['label'].localeCompare(org2['label']))
+              .map((org: AutoCompleteOption, idx: number) => (
+                <MenuItem
+                  key={idx}
+                  value={org.id}
+                  onClick={() => setSelectedOrg(org)}
+                  selected={selectedOrg?.id === org.id}
+                  sx={selectedOrg?.id === org.id ? { fontWeight: 600 } : {}}
+                >
+                  {org.label}
+                </MenuItem>
+              ))}
+          </Box>
+        </Box>
+        <MenuItem
+          sx={{
+            borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
+          }}
+          onClick={() => handleSignout()}
+        >
           <Image
             style={{ marginRight: 8 }}
             src={LogoutIcon}
