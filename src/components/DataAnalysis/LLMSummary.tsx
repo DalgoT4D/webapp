@@ -5,10 +5,7 @@ import { OverWriteDialog } from './OverwriteBox';
 import { useRouter } from 'next/router';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import InfoTooltip from '../UI/Tooltip/Tooltip';
-import CopyIcon from '@/assets/icons/content_copy.svg';
 import DalgoIcon from '@/assets/icons/dalgoIcon.svg';
-import ThumbsupIcon from '@/assets/icons/thumb_up.svg';
-import ThumbsDownIcon from '@/assets/icons/thumb_up (1).svg';
 
 import { copyToClipboard } from '@/utils/common';
 import { successToast, errorToast } from '../ToastMessage/ToastHelper';
@@ -16,11 +13,7 @@ import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import {
-  ContentCopy,
-  ThumbDown,
-  ThumbDownAltOutlined,
-} from '@mui/icons-material';
+import { ContentCopy, ThumbDownAltOutlined } from '@mui/icons-material';
 
 export const MODALS = {
   SAVE: 'SAVE',
