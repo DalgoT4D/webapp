@@ -221,6 +221,7 @@ const DropColumnOp = ({
           sx={{ px: 1, pb: 1, width: '100%' }}
           placeholder="Search Here"
           onChange={(e) => setSearch(e.target.value)}
+          data-testid="searchDropColBar"
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -270,6 +271,7 @@ const DropColumnOp = ({
               <Box
                 sx={{ ':hover': { cursor: 'pointer' } }}
                 onClick={handleSelectAll}
+                data-testid="selectAllDropColClick"
               >
                 <Typography fontWeight={600} fontSize={'14px'}>
                   SELECT ALL
@@ -278,6 +280,7 @@ const DropColumnOp = ({
               <Box
                 sx={{ ':hover': { cursor: 'pointer' } }}
                 onClick={handleClear}
+                data-testid="clearAllDropColClick"
               >
                 <Typography fontWeight={600} fontSize={'14px'}>
                   CLEAR
@@ -291,7 +294,7 @@ const DropColumnOp = ({
               />
             </Box>
           </Box>
-          <Box sx={{}}>
+          <Box>
             {filteredFields.map(
               (
                 column: { col_name: string; drop_col: boolean },

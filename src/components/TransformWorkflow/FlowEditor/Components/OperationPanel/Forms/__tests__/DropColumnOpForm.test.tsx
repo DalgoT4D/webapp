@@ -67,11 +67,23 @@ const dropColumnForm = (
 describe('Drop column form', () => {
   it('renders correct initial form state', async () => {
     render(dropColumnForm);
+    continueOperationChainMock.mockClear();
+
     await waitFor(() => {
-      expect(screen.getByText('Column name')).toBeInTheDocument();
+      expect(screen.getByText('Column Name')).toBeInTheDocument();
     });
     await waitFor(() => {
-      expect(screen.getByText('Drop ?')).toBeInTheDocument();
+      expect(screen.getByTestId('searchDropColBar')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      const parent = screen.getByTestId('selectAllDropColClick');
+      expect(parent).toBeInTheDocument();
+      expect(parent.textContent).toBe('SELECT ALL');
+    });
+    await waitFor(() => {
+      const parent = screen.getByTestId('clearAllDropColClick');
+      expect(parent).toBeInTheDocument();
+      expect(parent.textContent).toBe('CLEAR');
     });
   });
 });
@@ -79,6 +91,7 @@ describe('Drop column form', () => {
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
     render(dropColumnForm);
+    continueOperationChainMock.mockClear();
 
     await waitFor(() => {
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();
@@ -112,35 +125,37 @@ describe('Form interactions', () => {
 });
 
 describe('Form interactions 2', () => {
-  it('select all columns to drop', async () => {
+  it('check select all and clear functionality', async () => {
     render(dropColumnForm);
+    continueOperationChainMock.mockClear();
 
     await waitFor(() => {
-      expect(screen.getByText('Column name')).toBeInTheDocument();
-    });
-    await waitFor(() => {
-      expect(screen.getByText('Drop ?')).toBeInTheDocument();
+      expect(screen.getByText('Column Name')).toBeInTheDocument();
     });
 
     // Get the input element inside the parent element
-    const parentElementAllSelect = screen.getByTestId(
-      'selectAllCheckboxInputContainer'
-    );
-    const inputElementSelectAll = parentElementAllSelect.querySelector(
-      'input[type="checkbox"]'
-    );
-    await fireEvent.click(inputElementSelectAll);
-    await fireEvent.click(inputElementSelectAll);
-    await fireEvent.click(inputElementSelectAll);
-
-    await waitFor(() => {
-      expect(inputElementSelectAll).toBeChecked();
-    });
+    const parentElementAllSelect = screen.getByTestId('selectAllDropColClick');
+    const parentElementClearAll = screen.getByTestId('clearAllDropColClick');
+    await userEvent.click(parentElementAllSelect);
 
     // all columns should be checked
-    const parentElement = screen.getByTestId(`checkBoxInputContainer1`);
-    const inputElement = parentElement.querySelector('input[type="checkbox"]');
-    await expect(inputElement).toBeChecked();
+    for (let i = 0; i < intermediateTableResponse.length; i++) {
+      const parentElement = screen.getByTestId(`checkBoxInputContainer${i}`);
+      const inputElement = parentElement.querySelector(
+        'input[type="checkbox"]'
+      );
+      expect(inputElement).toBeChecked();
+    }
+
+    // clear all selected
+    await userEvent.click(parentElementClearAll);
+    for (let i = 0; i < intermediateTableResponse.length; i++) {
+      const parentElement = screen.getByTestId(`checkBoxInputContainer${i}`);
+      const inputElement = parentElement.querySelector(
+        'input[type="checkbox"]'
+      );
+      expect(inputElement).not.toBeChecked();
+    }
 
     await waitFor(() => {
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();
@@ -148,8 +163,51 @@ describe('Form interactions 2', () => {
     const saveButton = screen.getByTestId('savebutton');
     await userEvent.click(saveButton);
 
+    // validations to be called
     await waitFor(() => {
-      expect(continueOperationChainMock).toHaveBeenCalled();
+      const elements = screen.getAllByText('Please select atleast 1 column');
+      expect(elements.length).toBeGreaterThan(1);
+      expect(continueOperationChainMock).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('Form interactions 3', () => {
+  it('search and select columns', async () => {
+    render(dropColumnForm);
+    continueOperationChainMock.mockClear();
+
+    await waitFor(() => {
+      expect(screen.getByText('Column Name')).toBeInTheDocument();
+    });
+
+    // Get the input element inside the parent element
+    const searchInputParent = screen.getByTestId('searchDropColBar');
+    const searchInput = searchInputParent.querySelector('input[type="text"]');
+    expect(searchInput).toBeInTheDocument();
+    if (searchInput) await userEvent.type(searchInput, 'District');
+
+    // Select all columns that are filtered by the search
+    const parentElementAllSelect = screen.getByTestId('selectAllDropColClick');
+    await userEvent.click(parentElementAllSelect);
+    for (let i = 0; i < intermediateTableResponse.length; i++) {
+      if (
+        intermediateTableResponse[i].name.includes('District'.toLowerCase())
+      ) {
+        const parentElement = screen.getByTestId(`checkBoxInputContainer${i}`);
+        const inputElement = parentElement.querySelector(
+          'input[type="checkbox"]'
+        );
+        expect(inputElement).toBeChecked();
+      }
+    }
+
+    await waitFor(() => {
+      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+    });
+    const saveButton = screen.getByTestId('savebutton');
+    await userEvent.click(saveButton);
+
+    expect(continueOperationChainMock).toHaveBeenCalled();
   });
 });
