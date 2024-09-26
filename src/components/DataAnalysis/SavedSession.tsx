@@ -12,6 +12,7 @@ import {
   TablePagination,
   CircularProgress,
   Typography,
+  Button,
 } from '@mui/material';
 
 import CloseIcon from '@mui/icons-material/Close';
@@ -176,9 +177,6 @@ export const SavedSession = memo(
                     }
                   />
                 </Box>
-                <Typography>
-                  *Click on the row to open a saved session
-                </Typography>
               </Box>
             </Box>
             <TableContainer
@@ -386,6 +384,20 @@ export const SavedSession = memo(
                               -
                             </Typography>
                           )}
+                          <Button
+                            className="hover-button"
+                            size="small"
+                            sx={{
+                              visibility: 'hidden',
+                              opacity: 0,
+                              transition: 'visibility 0s, opacity 0.3s',
+                              position: 'absolute',
+                              right: 16,
+                              top: 8,
+                            }}
+                          >
+                            OPEN
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
