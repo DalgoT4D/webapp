@@ -9,32 +9,54 @@ import {
   errorToast,
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { SavedSession } from '@/components/DataAnalysis/SavedSession';
 import { TopBar } from '@/components/DataAnalysis/TopBar';
 import { jsonToCSV } from 'react-papaparse';
 import { PageHead } from '@/components/PageHead';
+import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
+interface ProgressResult {
+  response?: Array<any>;
+  session_id?: string;
+}
+
+interface ProgressEntry {
+  message: string;
+  status: 'running' | 'completed' | 'failed';
+  result?: ProgressResult;
+}
+
+interface ProgressResponse {
+  progress: ProgressEntry[];
+}
 export default function DataAnalysis() {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
   const [loading, setLoading] = useState(false);
   const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
-  const [resetState, setResetState] = useState(false);
+  const [resetState, setResetState] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
-  interface ProgressResult {
-    response?: Array<any>;
-    session_id?: string;
-  }
+  useEffect(() => {
+    const orgSlug = localStorage.getItem('org-slug');
+    try {
+      if (orgSlug && session?.user?.email) {
+        (async () => {
+          const response = await httpGet(
+            session,
+            `currentuserv2?org_slug=${orgSlug}`
+          );
+          if (response?.length === 1 && !response[0]?.llm_optin) {
+            setIsOpen(true);
+          }
+        })();
+      }
+    } catch (error: any) {
+      errorToast(error.message, [], globalContext);
+      console.error(error, 'error');
+    }
+  }, [session]);
 
-  interface ProgressEntry {
-    message: string;
-    status: 'running' | 'completed' | 'failed';
-    result?: ProgressResult;
-  }
-
-  interface ProgressResponse {
-    progress: ProgressEntry[];
-  }
   const [
     { prompt, summary, newSessionId, ...oldSessionMetaInfo },
     setSessionMetaInfo,
@@ -109,15 +131,15 @@ export default function DataAnalysis() {
         'tasks/stp/' + taskId
       );
       const lastMessage: any =
-        response['progress'][response['progress'].length - 1];
-      if (!['completed', 'failed'].includes(lastMessage.status)) {
+        response['progress'][response['progress']?.length - 1];
+      if (!['completed', 'failed'].includes(lastMessage?.status)) {
         await delay(3000);
         await pollForTaskRun(taskId);
-      } else if (['failed'].includes(lastMessage.status)) {
-        errorToast(lastMessage.message, [], globalContext);
+      } else if (['failed'].includes(lastMessage?.status)) {
+        errorToast(lastMessage?.message, [], globalContext);
         return;
       } else {
-        successToast(lastMessage.message, [], globalContext);
+        successToast(lastMessage?.message, [], globalContext);
         setSessionMetaInfo((prev) => {
           return {
             ...prev,
@@ -259,6 +281,7 @@ export default function DataAnalysis() {
             handleEditSession={handleEditSession}
           />
         )}
+        {isOpen && <Disclaimer open={isOpen} setIsOpen={setIsOpen} />}
       </Box>
     </>
   );
