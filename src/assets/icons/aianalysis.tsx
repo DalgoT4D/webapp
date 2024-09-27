@@ -11,41 +11,41 @@ const AiAnalysis = (props: any) => (
     <path
       d="M10.0598 17.9178H3.66699C2.56242 17.9178 1.66699 17.0224 1.66699 15.9178V3.75C1.66699 2.64543 2.56242 1.75 3.66699 1.75H12.9556C14.0602 1.75 14.9556 2.64543 14.9556 3.75V9.10913"
       stroke={props.fill || '#2C3E57'}
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       fill="white"
     />
     <path
       d="M4.10352 4.85156H12.2981"
       stroke={props.fill || '#2C3E57'}
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       fill={props.fill || '#7D8998'}
     />
     <path
       d="M4.1037 8.17383H12.2983"
       stroke={props.fill || '#2C3E57'}
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       fill={props.fill || '#7D8998'}
     />
     <path
       d="M4.10254 11.4941H7.42469"
       stroke={props.fill || '#2C3E57'}
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       fill={props.fill || '#7D8998'}
     />
     <path
       d="M4.1037 14.5957H7.42585"
       stroke={props.fill || '#2C3E57'}
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       fill={props.fill || '#7D8998'}
     />
     <path

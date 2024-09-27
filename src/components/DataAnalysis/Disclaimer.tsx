@@ -1,5 +1,4 @@
-import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpGet, httpPut } from '@/helpers/http';
+import { httpPut } from '@/helpers/http';
 import {
   Box,
   Button,
