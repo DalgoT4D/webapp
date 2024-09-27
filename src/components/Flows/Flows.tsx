@@ -51,15 +51,15 @@ export interface FlowsInterface {
 
 interface ActionInterface {
   flow: FlowInterface;
-  idx: string,
-  setShowLogsDialog: (x: boolean) => void,
-  setFlowLogs: (flow: FlowInterface) => void,
-  permissions: string[],
-  runningDeploymentIds: string[],
-  setRunningDeploymentIds: (id: string[]) => void,
-  handleQuickRunDeployment: (id: string) => void,
-  open: boolean,
-  handleClick: (id: string, event: HTMLElement | null) => void
+  idx: string;
+  setShowLogsDialog: (x: boolean) => void;
+  setFlowLogs: (flow: FlowInterface) => void;
+  permissions: string[];
+  runningDeploymentIds: string[];
+  setRunningDeploymentIds: (id: string[]) => void;
+  handleQuickRunDeployment: (id: string) => void;
+  open: boolean;
+  handleClick: (id: string, event: HTMLElement | null) => void;
 }
 
 const flowStatus = (status: boolean) => (
@@ -106,104 +106,109 @@ const flowLastRun = (flow: FlowInterface) => {
     </>
   );
 };
-const Actions = memo(({ flow,
-  idx,
-  setShowLogsDialog,
-  setFlowLogs,
-  permissions,
-  runningDeploymentIds,
-  setRunningDeploymentIds,
-  handleQuickRunDeployment,
-  open,
-  handleClick }: ActionInterface) => {
-  const { lock } = flow;
-  const { tempSyncState, setTempSyncState } = useSyncLock(lock);
-  const trackAmplitudeEvent = useTracking();
-  const handlingSyncState = async () => {
-    const res: any = await handleQuickRunDeployment(flow.deploymentId);
-    if (res?.error == "ERROR") {
-      setTempSyncState(false);
-    }
-  }
-  return (
-    <Box key={idx} sx={{ width: '200px' }}>
-      <Button
-        variant="contained"
-        color="info"
-        data-testid={'btn-openhistory-' + flow.name}
-        sx={{
-          fontWeight: 600,
-          marginRight: '5px',
-        }}
-        disabled={tempSyncState || !!lock || !permissions.includes('can_view_pipeline')}
-        onClick={() => {
-          setShowLogsDialog(true);
-          setFlowLogs(flow);
-          trackAmplitudeEvent("[last logs-flows] Button clicked")
-        }}
-      >
-        last logs
-      </Button>
-      <>
+const Actions = memo(
+  ({
+    flow,
+    idx,
+    setShowLogsDialog,
+    setFlowLogs,
+    permissions,
+    runningDeploymentIds,
+    setRunningDeploymentIds,
+    handleQuickRunDeployment,
+    open,
+    handleClick,
+  }: ActionInterface) => {
+    const { lock } = flow;
+    const { tempSyncState, setTempSyncState } = useSyncLock(lock);
+    const trackAmplitudeEvent = useTracking();
+    const handlingSyncState = async () => {
+      const res: any = await handleQuickRunDeployment(flow.deploymentId);
+      if (res?.error == 'ERROR') {
+        setTempSyncState(false);
+      }
+    };
+    return (
+      <Box key={idx} sx={{ width: '200px' }}>
         <Button
-          sx={{ mr: 1 }}
-          data-testid={'btn-quickrundeployment-' + flow.name}
           variant="contained"
+          color="info"
+          data-testid={'btn-openhistory-' + flow.name}
+          sx={{
+            fontWeight: 600,
+            marginRight: '5px',
+          }}
           disabled={
             tempSyncState ||
             !!lock ||
-            !permissions.includes('can_run_pipeline')
+            !permissions.includes('can_view_pipeline')
           }
-          onClick={async () => {
-            setTempSyncState(true);
-            handlingSyncState();
-            trackAmplitudeEvent("[Run-pipleline] Button clicked")
-            // push deployment id into list of running deployment ids
-            if (!runningDeploymentIds.includes(flow.deploymentId)) {
-              setRunningDeploymentIds([
-                ...runningDeploymentIds,
-                flow.deploymentId,
-              ]);
-            }
+          onClick={() => {
+            setShowLogsDialog(true);
+            setFlowLogs(flow);
+            trackAmplitudeEvent('[last logs-flows] Button clicked');
           }}
         >
-          {tempSyncState || lock ? (
-            <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
-          ) : (
-            'Run'
-          )}
+          last logs
         </Button>
-        <Button
-          aria-controls={open ? 'basic-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? 'true' : undefined}
-          onClick={(event) =>
-            handleClick(flow.deploymentId, event.currentTarget)
-          }
-          variant="contained"
-          key={'menu-' + idx}
-          color="info"
-          sx={{ px: 0, minWidth: 32 }}
-          disabled={
-            tempSyncState || lock
-              ? true
-              : false
-          }
-        >
-          <MoreHorizIcon />
-        </Button>
-      </>
-    </Box>
-  )
-},
+        <>
+          <Button
+            sx={{ mr: 1 }}
+            data-testid={'btn-quickrundeployment-' + flow.name}
+            variant="contained"
+            disabled={
+              tempSyncState ||
+              !!lock ||
+              !permissions.includes('can_run_pipeline')
+            }
+            onClick={async () => {
+              setTempSyncState(true);
+              handlingSyncState();
+              trackAmplitudeEvent('[Run-pipleline] Button clicked');
+              // push deployment id into list of running deployment ids
+              if (!runningDeploymentIds.includes(flow.deploymentId)) {
+                setRunningDeploymentIds([
+                  ...runningDeploymentIds,
+                  flow.deploymentId,
+                ]);
+              }
+            }}
+          >
+            {tempSyncState || lock ? (
+              <Image
+                src={SyncIcon}
+                className={styles.SyncIcon}
+                alt="sync icon"
+              />
+            ) : (
+              'Run'
+            )}
+          </Button>
+          <Button
+            aria-controls={open ? 'basic-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? 'true' : undefined}
+            onClick={(event) =>
+              handleClick(flow.deploymentId, event.currentTarget)
+            }
+            variant="contained"
+            key={'menu-' + idx}
+            color="info"
+            sx={{ px: 0, minWidth: 32 }}
+            disabled={tempSyncState || lock ? true : false}
+          >
+            <MoreHorizIcon />
+          </Button>
+        </>
+      </Box>
+    );
+  },
 
   (prevProps, nextProps) => {
-    return (
-      prevProps.flow.lock === nextProps.flow.lock
-    )
-  });
-Actions.displayName = "Action"; //adding a display name to Actions which react cannot infer due to HOC memo.
-
+    return prevProps.flow.lock === nextProps.flow.lock;
+  }
+);
+Actions.displayName = 'Action'; //adding a display name to Actions which react cannot infer due to HOC memo.
 
 export const Flows = ({
   flows,
@@ -346,7 +351,6 @@ export const Flows = ({
     );
   };
 
-
   const handleQuickRunDeployment = async (deploymentId: string) => {
     try {
       await httpPost(session, `prefect/v1/flows/${deploymentId}/flow_run/`, {});
@@ -355,7 +359,7 @@ export const Flows = ({
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
-      return { error: "ERROR" };
+      return { error: 'ERROR' };
     } finally {
       setRunningDeploymentIds(
         runningDeploymentIds.filter((id) => id !== deploymentId)
@@ -430,7 +434,6 @@ export const Flows = ({
   const handleClickCreateFlow = () => {
     updateCrudVal('create');
   };
-
 
   const handleDeleteFlow = () => {
     (async () => {

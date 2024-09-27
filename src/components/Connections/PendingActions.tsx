@@ -15,7 +15,14 @@ import Image from 'next/image';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import SchemaChangeDetailsForm from './SchemaChangeDetailsForm';
-import { formatDateTimeStringToLocalTimeZone } from '@/utils/common';
+import {
+  formatDateTimeStringToLocalTimeZone,
+  lastRunTime,
+} from '@/utils/common';
+import { PrefectFlowRun } from '../DBT/DBTTarget';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import { FlowRun } from '../Flows/SingleFlowRunHistory';
 
 interface PendingActionsAccordionProps {
   refreshConnectionsList: (...args: any) => any;
@@ -25,6 +32,7 @@ interface SchemaChangeDataJob {
   flow_run_id: string;
   job_type: string;
   scheduled_at: string;
+  run: FlowRun | undefined | null;
 }
 export interface SchemaChangeData {
   change_type: string;
@@ -85,6 +93,48 @@ const PendingActionsAccordion = ({
     return null;
   }
 
+  const upComingSchedule = (schemaChange: SchemaChangeData) => {
+    if (schemaChange.schedule_job && !schemaChange.schedule_job.run) {
+      return (
+        <Typography
+          variant="body1"
+          sx={{ fontWeight: 'semi-bold' }}
+        >{`Scheduled at : ${formatDateTimeStringToLocalTimeZone(
+          schemaChange.schedule_job.scheduled_at
+        )}`}</Typography>
+      );
+    }
+    return null;
+  };
+
+  const lastJobStatus = (schemaChange: SchemaChangeData) => {
+    if (schemaChange.schedule_job?.run) {
+      return (
+        <Box sx={{ alignItems: 'center', justifyContent: 'center' }}>
+          Last run:{' '}
+          {lastRunTime(
+            schemaChange.schedule_job?.run.startTime ||
+              schemaChange.schedule_job.run.expectedStartTime
+          )}{' '}
+          {schemaChange.schedule_job?.run.status == 'COMPLETED' ? (
+            <>
+              Success
+              <TaskAltIcon sx={{ color: '#399D47' }} />
+            </>
+          ) : schemaChange.schedule_job?.run.status == 'FAILED' ? (
+            <>
+              Failed
+              <WarningAmberIcon sx={{ color: '#981F1F' }} />
+            </>
+          ) : (
+            ''
+          )}
+        </Box>
+      );
+    }
+    return null;
+  };
+
   return (
     <>
       <Accordion sx={{ marginBottom: '16px' }}>
@@ -143,18 +193,8 @@ const PendingActionsAccordion = ({
                             </Typography>
                           )}
                         </Typography>
-                        {schemaChange.schedule_job &&
-                          schemaChange.schedule_job.scheduled_at && (
-                            <Typography
-                              variant="body1"
-                              sx={{ fontWeight: 'semi-bold' }}
-                            >
-                              Scheduled at :{' '}
-                              {formatDateTimeStringToLocalTimeZone(
-                                schemaChange.schedule_job.scheduled_at
-                              )}
-                            </Typography>
-                          )}
+                        {upComingSchedule(schemaChange)}
+                        {lastJobStatus(schemaChange)}
                       </Box>
                     </Box>
                     <Button
