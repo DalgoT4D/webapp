@@ -61,18 +61,16 @@ describe('SavedSession Component', () => {
       </GlobalContext.Provider>
     );
 
-    expect(screen.getByText('Saved Sessions')).toBeInTheDocument();
-    expect(screen.getByAltText('info icon')).toBeInTheDocument();
-    expect(screen.getByText('Created On')).toBeInTheDocument();
-    expect(screen.getByText('Updated On')).toBeInTheDocument();
+    expect(screen.getByText('Saved sessions')).toBeInTheDocument();
+    expect(screen.getByText('Created on')).toBeInTheDocument();
+    expect(screen.getByText('Updated on')).toBeInTheDocument();
     expect(screen.getByText('Name')).toBeInTheDocument();
-    expect(screen.getByText('Status')).toBeInTheDocument();
-    expect(screen.getByText('Created By')).toBeInTheDocument();
+    expect(screen.getByText('Created by')).toBeInTheDocument();
+    expect(screen.getByText('Last edited')).toBeInTheDocument();
 
     // Wait for the saved sessions data to be loaded
     await waitFor(() => {
       expect(screen.getByText('Test Session 1')).toBeInTheDocument();
-      expect(screen.getByText('Completed')).toBeInTheDocument();
     });
   });
 
@@ -131,7 +129,7 @@ describe('SavedSession Component', () => {
     });
   });
 
-  test.only('handles row click and edit session', async () => {
+  test('handles row click and edit session', async () => {
     httpGet.mockResolvedValue(mockSavedSessions);
 
     render(
