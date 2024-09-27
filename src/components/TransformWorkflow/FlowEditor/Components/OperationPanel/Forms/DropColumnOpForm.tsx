@@ -8,9 +8,7 @@ import {
   Divider,
   FormControlLabel,
   FormHelperText,
-  Grid,
   InputAdornment,
-  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -21,15 +19,8 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 
 import { OperationFormProps } from '../../OperationConfigLayout';
-import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import { Controller, set, useFieldArray, useForm } from 'react-hook-form';
-import { GridTable } from '@/components/UI/GridTable/GridTable';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
-
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 interface DropDataConfig {
   columns: string[];

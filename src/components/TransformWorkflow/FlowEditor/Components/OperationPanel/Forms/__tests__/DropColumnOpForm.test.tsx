@@ -4,7 +4,6 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
-import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
 
