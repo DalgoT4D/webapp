@@ -59,12 +59,11 @@ const DropColumnOp = ({
     config: FormColumnData[];
   };
 
-  const { control, handleSubmit, register, reset, getValues, setValue } =
-    useForm<FormData>({
-      defaultValues: {
-        config: [],
-      },
-    });
+  const { control, handleSubmit, getValues, setValue } = useForm<FormData>({
+    defaultValues: {
+      config: [],
+    },
+  });
 
   const { fields } = useFieldArray({
     control,
