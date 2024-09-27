@@ -200,6 +200,7 @@ export const SqlWrite = memo(
               control={control}
               render={({ field }) => (
                 <TextField
+                  data-testid="sqlTest-box"
                   id="outlined-multiline-static"
                   sx={{
                     backgroundColor: 'transparent',
