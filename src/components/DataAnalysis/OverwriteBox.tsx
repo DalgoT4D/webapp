@@ -200,7 +200,7 @@ export const OverWriteDialog = ({
             borderRadius: '5px',
           },
           onClick: () => {
-            setModalName(MODALS.OVERWRITE);
+            setModalName(oldSessionName ? MODALS.OVERWRITE : MODALS.SAVE);
           },
         },
         {

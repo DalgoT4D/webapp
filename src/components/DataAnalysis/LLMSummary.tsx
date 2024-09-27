@@ -5,16 +5,15 @@ import { OverWriteDialog } from './OverwriteBox';
 import { useRouter } from 'next/router';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import InfoTooltip from '../UI/Tooltip/Tooltip';
-import CopyIcon from '@/assets/icons/content_copy.svg';
 import DalgoIcon from '@/assets/icons/dalgoIcon.svg';
-import ThumbsupIcon from '@/assets/icons/thumb_up.svg';
-import ThumbsDownIcon from '@/assets/icons/thumb_up (1).svg';
+
 import { copyToClipboard } from '@/utils/common';
 import { successToast, errorToast } from '../ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { ContentCopy, ThumbDownAltOutlined } from '@mui/icons-material';
 
 export const MODALS = {
   SAVE: 'SAVE',
@@ -179,6 +178,7 @@ export const LLMSummary = ({
             color: '#0F2440',
             fontWeight: 600,
             fontSize: '20px',
+            gap: '.2rem',
           }}
         >
           AI Analysis
@@ -231,18 +231,14 @@ export const LLMSummary = ({
           <Box
             sx={{
               display: 'flex',
-              gap: '0.5rem',
+              gap: '0.3rem',
               position: 'absolute',
               bottom: '22px',
               right: '1.25rem',
             }}
           >
             <IconButton disabled={!llmSummary} onClick={handleCopyClick}>
-              <Image
-                style={{ width: '1.063rem', height: '1.25rem' }}
-                src={CopyIcon}
-                alt="copy icon"
-              />
+              <ContentCopy sx={{ color: llmSummary && '#0F2440AD' }} />
             </IconButton>
             <IconButton
               onClick={() => {
@@ -251,11 +247,7 @@ export const LLMSummary = ({
               }}
               disabled={!llmSummary}
             >
-              <Image
-                style={{ width: '1.25rem', height: '1rem' }}
-                src={ThumbsDownIcon}
-                alt="thumbs down icon"
-              />
+              <ThumbDownAltOutlined sx={{ color: llmSummary && '#0F2440AD' }} />
             </IconButton>
           </Box>
         </Box>
@@ -275,6 +267,7 @@ export const LLMSummary = ({
               width: '6.75rem',
               padding: '8px 0',
               borderRadius: '6px',
+              boxShadow: '0px 2px 4px 0px #09254029',
             }}
           >
             Save as

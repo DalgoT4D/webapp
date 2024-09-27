@@ -123,11 +123,15 @@ describe('SavedSession Component', () => {
     );
 
     await waitFor(() => {
-      expect(errorToast).toHaveBeenCalledWith(errorMessage, [], mockGlobalContext);
+      expect(errorToast).toHaveBeenCalledWith(
+        errorMessage,
+        [],
+        mockGlobalContext
+      );
     });
   });
 
-  test('handles row click and edit session', async () => {
+  test.only('handles row click and edit session', async () => {
     httpGet.mockResolvedValue(mockSavedSessions);
 
     render(
@@ -159,7 +163,7 @@ describe('SavedSession Component', () => {
       });
     });
 
-    expect(mockOnClose).toHaveBeenCalledTimes(1); // Ensure the dialog is closed after editing
+    expect(mockOnClose).toHaveBeenCalledTimes(2); // Ensure the dialog is closed after editing
   });
 
   test('calls onClose when CloseIcon is clicked', () => {

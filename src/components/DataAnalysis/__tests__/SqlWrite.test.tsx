@@ -15,6 +15,8 @@ const mockGetLLMSummary = jest.fn();
 const defaultProps = {
   getLLMSummary: mockGetLLMSummary,
   prompt: '',
+  setResetState: () => {},
+  resetState: false,
   newSessionId: '',
   oldSessionMetaInfo: { sqlText: '' },
 };
@@ -45,11 +47,8 @@ describe('SqlWrite component', () => {
     );
 
     expect(screen.getByText(/SQL Filter/i)).toBeInTheDocument();
-    expect(screen.getByText(/Select a prompt/i)).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: '' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: '+ Add a custom prompt' })
-    ).toBeInTheDocument();
+    expect(screen.getByText('Prompt*')).toBeInTheDocument();
+    expect(screen.getByTestId('sqlTest-box')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
   });
 
