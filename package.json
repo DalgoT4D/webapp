@@ -13,7 +13,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@amplitude/analytics-browser": "^2.10.0",
+    "@amplitude/analytics-browser": "^2.11.2",
     "@dagrejs/dagre": "^1.1.4",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.11.5",
