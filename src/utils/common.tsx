@@ -129,7 +129,6 @@ export const toCamelCase = (str: string) => {
     .replace(/(^\w)/, (m) => m.toLowerCase());
 };
 
-
 export const formatDuration = (seconds: number) => {
   const duration = moment.duration(seconds, 'seconds');
   const days = Math.floor(duration.asDays());
@@ -153,4 +152,8 @@ export const formatDuration = (seconds: number) => {
   }
 
   return formattedDuration.trim();
+};
+
+export const formatDateTimeStringToLocalTimeZone = (dateTimeString: string) => {
+  return moment(dateTimeString).format('Do MMM HH:mmA');
 };

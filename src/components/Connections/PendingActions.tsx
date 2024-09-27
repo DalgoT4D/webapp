@@ -15,15 +15,32 @@ import Image from 'next/image';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import SchemaChangeDetailsForm from './SchemaChangeDetailsForm';
+import { formatDateTimeStringToLocalTimeZone } from '@/utils/common';
 
 interface PendingActionsAccordionProps {
   refreshConnectionsList: (...args: any) => any;
 }
 
+interface SchemaChangeDataJob {
+  flow_run_id: string;
+  job_type: string;
+  scheduled_at: string;
+}
+export interface SchemaChangeData {
+  change_type: string;
+  connection_id: string;
+  created_at: string;
+  is_connection_large: boolean;
+  schedule_job: null | SchemaChangeDataJob;
+  next_job_at: string;
+}
+
 const PendingActionsAccordion = ({
   refreshConnectionsList,
 }: PendingActionsAccordionProps) => {
-  const [schemaChangeData, setSchemaChangeData] = useState<any[]>([]);
+  const [schemaChangeData, setSchemaChangeData] = useState<SchemaChangeData[]>(
+    []
+  );
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
   const [connectionNameMap, setConnectionNameMap] = useState<
@@ -82,62 +99,74 @@ const PendingActionsAccordion = ({
         </AccordionSummary>
         <AccordionDetails>
           <Box sx={{ width: '100%' }}>
-            {schemaChangeData.map((schemaChange: any, index: number) => {
-              const connectionId = schemaChange.connection_id;
-              const connectionName = connectionNameMap[connectionId];
-              const schemaChangeType = schemaChange.change_type;
+            {schemaChangeData.map(
+              (schemaChange: SchemaChangeData, index: number) => {
+                const connectionId = schemaChange.connection_id;
+                const connectionName = connectionNameMap[connectionId];
+                const schemaChangeType = schemaChange.change_type;
 
-              const labelStyles = {
-                color: schemaChangeType === 'breaking' ? 'white' : '#D35D5D',
-                backgroundColor:
-                  schemaChangeType === 'breaking' ? '#D35D5D' : 'transparent',
-                border: `1px solid #D35D5D`,
-                borderRadius: '3px',
-                padding: '2px 6px',
-                fontSize: '0.6rem',
-                fontWeight: 'bold',
-              };
+                const labelStyles = {
+                  color: schemaChangeType === 'breaking' ? 'white' : '#D35D5D',
+                  backgroundColor:
+                    schemaChangeType === 'breaking' ? '#D35D5D' : 'transparent',
+                  border: `1px solid #D35D5D`,
+                  borderRadius: '3px',
+                  padding: '2px 6px',
+                  fontSize: '0.6rem',
+                  fontWeight: 'bold',
+                };
 
-              return (
-                <Box
-                  key={index}
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '20px',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Image
-                      style={{ marginRight: 10 }}
-                      src={connectionIcon}
-                      alt="connection icon"
-                    />
-                    <Typography variant="body1" fontWeight={800}>
-                      {connectionName} &nbsp;&nbsp;&nbsp;
-                      {schemaChangeType && (
-                        <Typography component="span" sx={labelStyles}>
-                          {schemaChangeType === 'breaking'
-                            ? 'Breaking'
-                            : 'Updates'}
-                        </Typography>
-                      )}
-                    </Typography>
-                  </Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 'bold' }}
-                  ></Typography>
-                  <Button
-                    variant="outlined"
-                    onClick={() => handleViewClick(connectionId)}
+                return (
+                  <Box
+                    key={index}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '20px',
+                    }}
                   >
-                    View
-                  </Button>
-                </Box>
-              );
-            })}
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Image
+                        style={{ marginRight: 10 }}
+                        src={connectionIcon}
+                        alt="connection icon"
+                      />
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="body1" fontWeight={800}>
+                          {connectionName} &nbsp;&nbsp;&nbsp;
+                          {schemaChangeType && (
+                            <Typography component="span" sx={labelStyles}>
+                              {schemaChangeType === 'breaking'
+                                ? 'Breaking'
+                                : 'Updates'}
+                            </Typography>
+                          )}
+                        </Typography>
+                        {schemaChange.schedule_job &&
+                          schemaChange.schedule_job.scheduled_at && (
+                            <Typography
+                              variant="body1"
+                              sx={{ fontWeight: 'semi-bold' }}
+                            >
+                              Scheduled at :{' '}
+                              {formatDateTimeStringToLocalTimeZone(
+                                schemaChange.schedule_job.scheduled_at
+                              )}
+                            </Typography>
+                          )}
+                      </Box>
+                    </Box>
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleViewClick(connectionId)}
+                    >
+                      View
+                    </Button>
+                  </Box>
+                );
+              }
+            )}
           </Box>
         </AccordionDetails>
       </Accordion>
@@ -149,7 +178,10 @@ const PendingActionsAccordion = ({
             refreshConnectionsList={refreshConnectionsList}
             showForm={openPopup}
             setShowForm={setOpenPopup}
-            fetchPendingActions={fetchData}
+            refreshSchemaChangePendingActions={fetchData}
+            schemaChangeData={schemaChangeData.find(
+              (change) => change.connection_id == selectedConnectionId
+            )}
           />
         </DialogContent>
       </Dialog>
