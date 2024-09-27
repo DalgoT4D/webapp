@@ -131,20 +131,26 @@ export default function DataAnalysis() {
         'tasks/stp/' + taskId
       );
       const lastMessage: any =
-        response['progress'][response['progress']?.length - 1];
+        response['progress'] && response['progress'].length > 0
+          ? response['progress'][response['progress'].length - 1]
+          : null;
+
       if (!['completed', 'failed'].includes(lastMessage?.status)) {
         await delay(3000);
         await pollForTaskRun(taskId);
-      } else if (['failed'].includes(lastMessage?.status)) {
+      } else if (lastMessage?.status === 'failed') {
         errorToast(lastMessage?.message, [], globalContext);
         return;
-      } else {
+      } else if (lastMessage?.status === 'completed') {
         successToast(lastMessage?.message, [], globalContext);
+
         setSessionMetaInfo((prev) => {
           return {
             ...prev,
-            summary: lastMessage?.result?.response[0].response,
-            newSessionId: lastMessage?.result?.session_id,
+            summary:
+              lastMessage?.result?.response?.[0]?.response ||
+              'No summary available',
+            newSessionId: lastMessage?.result?.session_id || prev.newSessionId,
           };
         });
       }
