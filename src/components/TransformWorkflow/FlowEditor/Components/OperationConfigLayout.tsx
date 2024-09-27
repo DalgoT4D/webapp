@@ -156,7 +156,7 @@ const OperationForm = ({
     setLoading,
   };
 
-  return <Form {...FormProps} />;
+  return <Form key={node?.data.id} {...FormProps} />;
 };
 
 const OperationConfigLayout = ({

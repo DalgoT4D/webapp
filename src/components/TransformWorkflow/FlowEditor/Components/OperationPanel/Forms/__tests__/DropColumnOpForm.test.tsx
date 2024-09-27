@@ -1,10 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import DropColumnOpForm from '../DropColumnOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
 import { intermediateTableResponse, mockNode } from './helpers';
-import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
 
@@ -67,8 +66,23 @@ const dropColumnForm = (
 describe('Drop column form', () => {
   it('renders correct initial form state', async () => {
     render(dropColumnForm);
+    continueOperationChainMock.mockClear();
+
     await waitFor(() => {
-      expect(screen.getByText('Select Column to Drop')).toBeInTheDocument();
+      expect(screen.getByText('Column Name')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('searchDropColBar')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      const parent = screen.getByTestId('selectAllDropColClick');
+      expect(parent).toBeInTheDocument();
+      expect(parent.textContent).toBe('SELECT ALL');
+    });
+    await waitFor(() => {
+      const parent = screen.getByTestId('clearAllDropColClick');
+      expect(parent).toBeInTheDocument();
+      expect(parent.textContent).toBe('CLEAR');
     });
   });
 });
@@ -76,6 +90,7 @@ describe('Drop column form', () => {
 describe('Form interactions', () => {
   it('allows filling out the form and submitting', async () => {
     render(dropColumnForm);
+    continueOperationChainMock.mockClear();
 
     await waitFor(() => {
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();
@@ -85,16 +100,19 @@ describe('Form interactions', () => {
 
     // validations to be called
     await waitFor(() => {
-      expect(
-        screen.getByText('Please select atleast 1 column')
-      ).toBeInTheDocument();
+      const elements = screen.getAllByText('Please select atleast 1 column');
+      expect(elements.length).toBeGreaterThan(1);
     });
 
-    await fireMultipleKeyDown('dropColumn', 2);
-    await user.click(screen.getByTestId('ArrowDropDownIcon'));
+    // Get the input element inside the parent element
+    const parentElement = screen.getByTestId('checkBoxInputContainer0');
+    const inputElement = parentElement.querySelector('input[type="checkbox"]');
+    if (inputElement) {
+      await fireEvent.click(inputElement);
+    }
 
     await waitFor(() => {
-      expect(screen.getByText('_airbyte_extracted_at')).toBeInTheDocument();
+      expect(inputElement).toBeChecked();
     });
 
     await user.click(saveButton);
@@ -102,5 +120,93 @@ describe('Form interactions', () => {
     await waitFor(() => {
       expect(continueOperationChainMock).toHaveBeenCalled();
     });
+  });
+});
+
+describe('Form interactions 2', () => {
+  it('check select all and clear functionality', async () => {
+    render(dropColumnForm);
+    continueOperationChainMock.mockClear();
+
+    await waitFor(() => {
+      expect(screen.getByText('Column Name')).toBeInTheDocument();
+    });
+
+    // Get the input element inside the parent element
+    const parentElementAllSelect = screen.getByTestId('selectAllDropColClick');
+    const parentElementClearAll = screen.getByTestId('clearAllDropColClick');
+    await userEvent.click(parentElementAllSelect);
+
+    // all columns should be checked
+    for (let i = 0; i < intermediateTableResponse.length; i++) {
+      const parentElement = screen.getByTestId(`checkBoxInputContainer${i}`);
+      const inputElement = parentElement.querySelector(
+        'input[type="checkbox"]'
+      );
+      expect(inputElement).toBeChecked();
+    }
+
+    // clear all selected
+    await userEvent.click(parentElementClearAll);
+    for (let i = 0; i < intermediateTableResponse.length; i++) {
+      const parentElement = screen.getByTestId(`checkBoxInputContainer${i}`);
+      const inputElement = parentElement.querySelector(
+        'input[type="checkbox"]'
+      );
+      expect(inputElement).not.toBeChecked();
+    }
+
+    await waitFor(() => {
+      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+    });
+    const saveButton = screen.getByTestId('savebutton');
+    await userEvent.click(saveButton);
+
+    // validations to be called
+    await waitFor(() => {
+      const elements = screen.getAllByText('Please select atleast 1 column');
+      expect(elements.length).toBeGreaterThan(1);
+      expect(continueOperationChainMock).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('Form interactions 3', () => {
+  it('search and select columns', async () => {
+    render(dropColumnForm);
+    continueOperationChainMock.mockClear();
+
+    await waitFor(() => {
+      expect(screen.getByText('Column Name')).toBeInTheDocument();
+    });
+
+    // Get the input element inside the parent element
+    const searchInputParent = screen.getByTestId('searchDropColBar');
+    const searchInput = searchInputParent.querySelector('input[type="text"]');
+    expect(searchInput).toBeInTheDocument();
+    if (searchInput) await userEvent.type(searchInput, 'District');
+
+    // Select all columns that are filtered by the search
+    const parentElementAllSelect = screen.getByTestId('selectAllDropColClick');
+    await userEvent.click(parentElementAllSelect);
+    for (let i = 0; i < intermediateTableResponse.length; i++) {
+      if (
+        intermediateTableResponse[i].name.includes('District'.toLowerCase())
+      ) {
+        const parentElement = screen.getByTestId(`checkBoxInputContainer${i}`);
+        const inputElement = parentElement.querySelector(
+          'input[type="checkbox"]'
+        );
+        expect(inputElement).toBeChecked();
+      }
+    }
+
+    await waitFor(() => {
+      expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+    });
+    const saveButton = screen.getByTestId('savebutton');
+    await userEvent.click(saveButton);
+
+    expect(continueOperationChainMock).toHaveBeenCalled();
   });
 });
