@@ -9,16 +9,13 @@ import {
   TableHead,
   TableRow,
   Tooltip,
-  Button,
   TablePagination,
   CircularProgress,
   Typography,
+  Button,
 } from '@mui/material';
 
-import Image from 'next/image';
-import InfoIcon from '@/assets/icons/info.svg';
 import CloseIcon from '@mui/icons-material/Close';
-import ArrowIcon from '@/assets/icons/arrow_back_ios.svg';
 import { memo, useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
@@ -68,7 +65,6 @@ export const SavedSession = memo(
     const [currentPageIndex, setCurrentPageIndex] = useState(0); // Page index starts from 0
     const [savedSessions, setSavedSession] = useState<Session[]>([]);
     const [loading, setLoading] = useState(false);
-    const [activeRow, setActiveRow] = useState<string | null>(null); // State to track the clicked row
 
     const getSavedSessions = async (pageIndex: number, rowsPerPage: number) => {
       setLoading(true);
@@ -123,8 +119,8 @@ export const SavedSession = memo(
           fullScreen
           PaperProps={{
             sx: {
-              width: '70%',
-              height: '80%',
+              width: '82%',
+              height: '85%',
               margin: 0,
               maxWidth: 'none',
               borderRadius: '12px',
@@ -136,6 +132,8 @@ export const SavedSession = memo(
             sx={{
               width: '100%',
               padding: '2rem 1.75rem',
+              position: 'relative',
+              height: '85%',
             }}
           >
             <Box
@@ -150,35 +148,43 @@ export const SavedSession = memo(
               <Box
                 sx={{
                   display: 'flex',
-                  gap: '0.2rem',
-                  justifyContent: 'center',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  color: '#0F2440',
-                  fontWeight: 700,
-                  fontSize: '24px',
+                  width: '95%',
                 }}
               >
-                Saved Sessions
-                <InfoTooltip
-                  placement="right"
-                  title={
-                    <div>
-                      <Typography variant="body2">
-                        Access previous AI analytics sessions that have been
-                        saved and build on them to develop new analyses.
-                      </Typography>
-                    </div>
-                  }
-                />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: '0.2rem',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    color: '#0F2440',
+                    fontWeight: 700,
+                    fontSize: '24px',
+                  }}
+                >
+                  Saved sessions
+                  <InfoTooltip
+                    placement="right"
+                    title={
+                      <div>
+                        <Typography variant="body2">
+                          Access previous AI analytics sessions that have been
+                          saved and build on them to develop new analyses.
+                        </Typography>
+                      </div>
+                    }
+                  />
+                </Box>
               </Box>
-              <CloseIcon onClick={onClose} sx={{ cursor: 'pointer' }} />
             </Box>
             <TableContainer
               component={Paper}
               sx={{
                 borderRadius: '4px',
                 overflowY: 'auto',
-                minHeight: '60vh',
+                minHeight: '65vh',
                 height: '50%',
                 flexGrow: 1,
               }}
@@ -208,32 +214,10 @@ export const SavedSession = memo(
                         fontWeight: '700',
                         fontSize: '16px',
                         padding: '10px',
-                        width: '15%',
+                        width: '10%',
                       }}
                     >
-                      Created On
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        color: '#FFFFFF',
-                        fontWeight: '700',
-                        fontSize: '16px',
-                        padding: '10px',
-                        width: '15%',
-                      }}
-                    >
-                      Updated On
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        color: '#FFFFFF',
-                        fontWeight: '700',
-                        fontSize: '16px',
-                        padding: '10px',
-                        width: '25%',
-                      }}
-                    >
-                      Name
+                      Created on
                     </TableCell>
                     <TableCell
                       sx={{
@@ -244,7 +228,30 @@ export const SavedSession = memo(
                         width: '10%',
                       }}
                     >
-                      Status
+                      Updated on
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        color: '#FFFFFF',
+                        fontWeight: '700',
+                        fontSize: '16px',
+                        padding: '10px',
+                        width: '20%',
+                      }}
+                    >
+                      Name
+                    </TableCell>
+
+                    <TableCell
+                      sx={{
+                        color: '#FFFFFF',
+                        fontWeight: '700',
+                        fontSize: '16px',
+                        padding: '10px',
+                        width: '20%',
+                      }}
+                    >
+                      Created by
                     </TableCell>
                     <TableCell
                       sx={{
@@ -253,10 +260,10 @@ export const SavedSession = memo(
                         fontSize: '16px',
                         padding: '10px',
                         borderRadius: '0 4px 4px 0',
-                        width: '40%',
+                        width: '20%',
                       }}
                     >
-                      Created By
+                      Last edited
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -266,14 +273,23 @@ export const SavedSession = memo(
                   ) : (
                     savedSessions.map((row: any, idx) => (
                       <TableRow
+                        onClick={() => {
+                          handleEditSession({
+                            prompt: row.response[0].prompt,
+                            summary: row.response[0].response,
+                            oldSessionId: row.session_id,
+                            session_status: row.session_status,
+                            session_name: row.session_name,
+                            sqlText: row.request_meta.sql,
+                            taskId: row.request_uuid,
+                          });
+                          onClose();
+                        }}
                         key={row.session_id}
                         sx={{
                           padding: 0,
                           position: 'relative',
-                          backgroundColor:
-                            activeRow === row.session_id
-                              ? '#E0F7FA'
-                              : 'inherit',
+                          backgroundColor: 'inherit',
                           '&:hover': {
                             backgroundColor: '#F5FAFA',
                           },
@@ -283,12 +299,12 @@ export const SavedSession = memo(
                           },
                           border: 'none',
                           boxShadow: 'none',
+                          height: '44px',
                         }}
-                        onClick={() => setActiveRow(row.session_id)}
                       >
                         <TableCell
                           sx={{
-                            fontWeight: '600',
+                            fontWeight: '500',
                             fontSize: '14px',
                             color: 'rgba(15, 36, 64, 0.8)',
                             padding: '12px',
@@ -298,7 +314,7 @@ export const SavedSession = memo(
                         </TableCell>
                         <TableCell
                           sx={{
-                            fontWeight: '600',
+                            fontWeight: '500',
                             fontSize: '14px',
                             color: 'rgba(15, 36, 64, 0.8)',
                             padding: '12px',
@@ -308,7 +324,7 @@ export const SavedSession = memo(
                         </TableCell>
                         <TableCell
                           sx={{
-                            fontWeight: '600',
+                            fontWeight: '500',
                             fontSize: '14px',
                             color: 'rgba(15, 36, 64, 0.8)',
                             padding: '12px',
@@ -328,23 +344,18 @@ export const SavedSession = memo(
                             maxWidth: '200px',
                           }}
                         >
-                          <Tooltip title={row.session_name}>
-                            <span>{trimText(row.session_name, 30)}</span>
-                          </Tooltip>
+                          {row.session_name.length >= 30 ? (
+                            <Tooltip title={row.session_name}>
+                              <span>{trimText(row.session_name, 30)}</span>
+                            </Tooltip>
+                          ) : (
+                            row.session_name
+                          )}
                         </TableCell>
+
                         <TableCell
                           sx={{
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            color: 'rgba(15, 36, 64, 0.8)',
-                            padding: '12px',
-                          }}
-                        >
-                          {row.session_status}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            fontWeight: '600',
+                            fontWeight: '500',
                             fontSize: '14px',
                             color: 'rgba(15, 36, 64, 0.8)',
                             padding: '12px',
@@ -352,6 +363,27 @@ export const SavedSession = memo(
                           }}
                         >
                           {row.created_by.email}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            fontWeight: '500',
+                            fontSize: '14px',
+                            color: 'rgba(15, 36, 64, 0.8)',
+                            padding: '12px',
+                            position: 'relative',
+                          }}
+                        >
+                          {row.updated_by?.email ? (
+                            row.updated_by.email
+                          ) : (
+                            <Typography
+                              sx={{
+                                paddingLeft: '15%',
+                              }}
+                            >
+                              -
+                            </Typography>
+                          )}
                           <Button
                             className="hover-button"
                             size="small"
@@ -363,20 +395,8 @@ export const SavedSession = memo(
                               right: 16,
                               top: 8,
                             }}
-                            onClick={() => {
-                              handleEditSession({
-                                prompt: row.response[0].prompt,
-                                summary: row.response[0].response,
-                                oldSessionId: row.session_id,
-                                session_status: row.session_status,
-                                session_name: row.session_name,
-                                sqlText: row.request_meta.sql,
-                                taskId: row.request_uuid,
-                              });
-                              onClose();
-                            }}
                           >
-                            OPEN <Image src={ArrowIcon} alt="close icon" />
+                            OPEN
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -387,7 +407,7 @@ export const SavedSession = memo(
             </TableContainer>
             {!!savedSessions.length && (
               <TablePagination
-                rowsPerPageOptions={[5, 10]}
+                rowsPerPageOptions={[5, 10, 15, 20, 25]}
                 component="div"
                 count={totalCount}
                 rowsPerPage={pageSize}
@@ -401,8 +421,21 @@ export const SavedSession = memo(
                   setCurrentPageIndex(0);
                   handlePagination(0, newPageSize);
                 }}
+                sx={{
+                  marginTop: '.5rem',
+                  borderTop: '1px solid #d3d3d3',
+                }}
               />
             )}
+            <CloseIcon
+              onClick={onClose}
+              sx={{
+                cursor: 'pointer',
+                position: 'absolute',
+                top: '1rem',
+                right: '1.5rem',
+              }}
+            />
           </Box>
         </Dialog>
       </>
