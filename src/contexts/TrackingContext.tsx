@@ -39,7 +39,9 @@ export const TrackingProvider = ({ children }: any) => {
     });
     if (session?.user?.email) {
       const userEmail: string = session.user.email;
-      const ist4dMember = userEmail.includes('projecttech4dev.org'); // a field to check if a user is t4d member.
+      const ist4dMember = userEmail.includes('projecttech4dev.org')
+        ? true
+        : false; // a field to check if a user is t4d member.
       const identifyEvent = new amplitude.Identify();
       amplitude.setUserId(session.user.email);
       identifyEvent.setOnce('ist4dMember', ist4dMember);
