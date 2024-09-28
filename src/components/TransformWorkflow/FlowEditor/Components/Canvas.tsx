@@ -45,7 +45,7 @@ import {
 } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { getNextNodePosition } from '@/utils/editor';
-import { KeyboardArrowDown, Work } from '@mui/icons-material';
+import { KeyboardArrowDown } from '@mui/icons-material';
 import { useTracking } from '@/contexts/TrackingContext';
 
 type CanvasProps = {
