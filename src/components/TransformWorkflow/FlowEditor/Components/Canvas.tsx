@@ -45,7 +45,8 @@ import {
 } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { getNextNodePosition } from '@/utils/editor';
-import { KeyboardArrowDown } from '@mui/icons-material';
+import { KeyboardArrowDown, Work } from '@mui/icons-material';
+import { useTracking } from '@/contexts/TrackingContext';
 
 type CanvasProps = {
   redrawGraph: boolean;
@@ -134,12 +135,14 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const [selectedAction, setSelectedAction] = useState('');
-
+  const trackAmplitudeEvent: any = useTracking();
   const nodeData: any = canvasNode?.data;
 
   const handleRunClick = (event: any) => {
     const action = event.target.value;
     setSelectedAction(action);
+    console.log(`[${WorkflowValues[action]}] Button Clicked`);
+    trackAmplitudeEvent(`[${WorkflowValues[action]}] Button Clicked`);
     if (action === 'run') {
       setCanvasAction({ type: 'run-workflow', data: null });
     } else if (action === 'run-to-node') {
