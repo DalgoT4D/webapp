@@ -141,7 +141,6 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
   const handleRunClick = (event: any) => {
     const action = event.target.value;
     setSelectedAction(action);
-    console.log(`[${WorkflowValues[action]}] Button Clicked`);
     trackAmplitudeEvent(`[${WorkflowValues[action]}] Button Clicked`);
     if (action === 'run') {
       setCanvasAction({ type: 'run-workflow', data: null });
