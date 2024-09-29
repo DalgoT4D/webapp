@@ -98,7 +98,10 @@ const renderWithProviders = (ui: React.ReactElement) => {
 const sampleTotalSyncs = 20;
 describe('ConnectionLogs Component', () => {
   beforeEach(() => {
-    mockedHttpGet.mockResolvedValue({ history: sampleLogs, totalSyncs: sampleTotalSyncs  });
+    mockedHttpGet.mockResolvedValue({
+      history: sampleLogs,
+      totalSyncs: sampleTotalSyncs,
+    });
     useSWR.mockReturnValue({
       data: { allowLogsSummary: true },
       error: null,
@@ -139,7 +142,10 @@ describe('ConnectionLogs Component', () => {
   });
 
   it('loads more logs when "load more" is clicked', async () => {
-    mockedHttpGet.mockResolvedValueOnce({ history: sampleLogs, totalSyncs: sampleTotalSyncs });
+    mockedHttpGet.mockResolvedValueOnce({
+      history: sampleLogs,
+      totalSyncs: sampleTotalSyncs,
+    });
     renderWithProviders(
       <ConnectionLogs
         setShowLogsDialog={jest.fn()}
@@ -170,8 +176,6 @@ describe('ConnectionLogs Component', () => {
   });
 
   it('renders AI summary when "AI summary" button is clicked', async () => {
-    
-
     renderWithProviders(
       <ConnectionLogs
         setShowLogsDialog={jest.fn()}

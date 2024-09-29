@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { DBTTaskList } from '../DBTTaskList';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpPost, } from '@/helpers/http';
+import { httpPost } from '@/helpers/http';
 import { TASK_DBTRUN, TASK_DBTTEST } from '@/config/constant';
 
 // Mocking dependencies
@@ -27,7 +27,11 @@ const mockTasks = [
     uuid: '1',
     command: 'dbt run',
     slug: TASK_DBTRUN,
-    lock: { status: 'running', lockedBy: 'test@example.com', lockedAt: '2024-07-23T12:00:00Z' },
+    lock: {
+      status: 'running',
+      lockedBy: 'test@example.com',
+      lockedAt: '2024-07-23T12:00:00Z',
+    },
     generated_by: 'client',
   },
   {
@@ -39,7 +43,11 @@ const mockTasks = [
   },
 ];
 
-const mockPermissions = ['can_run_orgtask', 'can_delete_orgtask', 'can_create_orgtask'];
+const mockPermissions = [
+  'can_run_orgtask',
+  'can_delete_orgtask',
+  'can_create_orgtask',
+];
 
 const mockContext = {
   Permissions: {
@@ -49,7 +57,10 @@ const mockContext = {
 
 describe('DBTTaskList Component', () => {
   beforeEach(() => {
-    (useSession as jest.Mock).mockReturnValue({ data: mockSession, status: 'authenticated' });
+    (useSession as jest.Mock).mockReturnValue({
+      data: mockSession,
+      status: 'authenticated',
+    });
   });
 
   it('should render task list with commands', () => {
@@ -70,7 +81,10 @@ describe('DBTTaskList Component', () => {
   });
 
   it('should call executeDbtJob when Execute button is clicked', async () => {
-    (httpPost as jest.Mock).mockResolvedValueOnce({ status: 'success', result: [] });
+    (httpPost as jest.Mock).mockResolvedValueOnce({
+      status: 'success',
+      result: [],
+    });
 
     render(
       <GlobalContext.Provider value={mockContext}>
@@ -120,6 +134,4 @@ describe('DBTTaskList Component', () => {
       );
     });
   });
-
-
 });

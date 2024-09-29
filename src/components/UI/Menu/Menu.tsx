@@ -107,7 +107,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
         <MenuItem
           onClick={() => handleDelete()}
           disabled={!hasDeletePermission}
-          data-testid = "deletetestid"
+          data-testid="deletetestid"
         >
           <ListItemIcon style={{ minWidth: 28 }}>
             <Image src={DeleteIcon} alt="delete icon" />

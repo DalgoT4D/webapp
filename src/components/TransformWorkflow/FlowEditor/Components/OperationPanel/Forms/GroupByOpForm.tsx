@@ -63,8 +63,8 @@ const GroupByOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   type FormProps = {
     columns: { col: string }[];
@@ -422,7 +422,9 @@ const GroupByOpForm = ({
           ))}
 
           <Box sx={{ m: 2 }} />
-          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Box
+            sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}
+          >
             <Button
               variant="outlined"
               type="submit"

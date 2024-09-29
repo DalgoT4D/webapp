@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen,  } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ConfigInput } from '../ConfigInput';
 import { useForm } from 'react-hook-form';
 

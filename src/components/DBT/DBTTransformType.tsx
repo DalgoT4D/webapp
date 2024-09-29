@@ -203,14 +203,14 @@ const DBTTransformType = ({
     }
   };
 
-  const fetchMoreLogs = async(flow_run_id: string, updateLimit: boolean) => {
+  const fetchMoreLogs = async (flow_run_id: string, updateLimit: boolean) => {
     let newMaxLimit = maxLogs;
-    if(updateLimit){
+    if (updateLimit) {
       newMaxLimit += flowRunLogsOffsetLimit;
     }
     setMaxLogs(newMaxLimit);
     await fetchLogs(flow_run_id, newMaxLimit);
-  }
+  };
 
   const fetchLogs = async (flow_run_id = flowRunId, maxLogsLimit = maxLogs) => {
     if (!flow_run_id) {
@@ -229,16 +229,16 @@ const DBTTransformType = ({
         );
 
         if (data?.logs?.logs && data.logs.logs.length > 0) {
-          const newlogs =  dbtSetupLogsRef.current.concat(data.logs.logs);
+          const newlogs = dbtSetupLogsRef.current.concat(data.logs.logs);
           setDbtSetupLogs(newlogs);
-          dbtSetupLogsRef.current = newlogs
+          dbtSetupLogsRef.current = newlogs;
         }
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], globalContext);
       }
     })();
-  }
+  };
 
   useEffect(() => {
     fetchDbtWorkspace();
@@ -441,7 +441,9 @@ const DBTTransformType = ({
                   )}
                   {dbtSetupStage === 'complete' ? (
                     <DBTTaskList
-                      fetchLogs={(flow_run_id) => fetchMoreLogs(flow_run_id ,false)}
+                      fetchLogs={(flow_run_id) =>
+                        fetchMoreLogs(flow_run_id, false)
+                      }
                       setFlowRunId={(flow_run_id) => setFlowRunId(flow_run_id)}
                       setExpandLogs={setExpandLogs}
                       setDbtRunLogs={(logs: string[]) => {
@@ -459,7 +461,7 @@ const DBTTransformType = ({
                     expand={expandLogs}
                     setExpand={setExpandLogs}
                     fetchMore={dbtSetupLogs?.length >= maxLogs}
-                    fetchMoreLogs={() => fetchMoreLogs(flowRunId ,true)}
+                    fetchMoreLogs={() => fetchMoreLogs(flowRunId, true)}
                   />
                 </Box>
               </Box>

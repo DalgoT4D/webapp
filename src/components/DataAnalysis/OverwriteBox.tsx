@@ -295,8 +295,8 @@ export const OverWriteDialog = ({
                         ? errors.feedback.message
                         : ''
                       : errors.sessionName
-                      ? errors.sessionName.message
-                      : ''
+                        ? errors.sessionName.message
+                        : ''
                   }
                 />
               )}

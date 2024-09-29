@@ -23,7 +23,6 @@ jest.mock('./../DestinationForm', () => {
   return MockDestination;
 });
 
-
 describe('Destinations', () => {
   const mockSession: Session = {
     expires: '1',
@@ -173,9 +172,7 @@ describe('Destinations', () => {
     expect(dataset_id).toHaveTextContent('DATASET_ID');
     const loading_method = screen.getByTestId('loadingMethod');
     expect(loading_method).toHaveTextContent('GCS Staging');
-    const gcs_bucket_name_and_path = screen.getByTestId(
-      'gCSBucket&amp;Path'
-    );
+    const gcs_bucket_name_and_path = screen.getByTestId('gCSBucket&amp;Path');
     expect(gcs_bucket_name_and_path).toHaveTextContent(
       'gcs_bucket_name / gcs_bucket_path'
     );
@@ -211,9 +208,7 @@ describe('Destinations', () => {
 
     // Open create destination form
     await act(async () => userEvent.click(addNewWarehouseButton));
-    const mockCreateDestinationForm = screen.getByTestId(
-      'test-dest-form'
-    );
+    const mockCreateDestinationForm = screen.getByTestId('test-dest-form');
     expect(mockCreateDestinationForm).toBeInTheDocument();
   });
 });

@@ -3,9 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import DBTTransformType from '../DBTTransformType';
 
 jest.mock('next-auth/react');

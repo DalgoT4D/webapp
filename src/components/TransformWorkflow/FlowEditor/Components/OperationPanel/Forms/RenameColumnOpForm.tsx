@@ -181,8 +181,8 @@ const RenameColumnOp = ({
             action === 'view'
               ? undefined
               : (index: number) => {
-                remove(index);
-              }
+                  remove(index);
+                }
           }
           headers={['Current Name', 'New Name']}
           data={fields.map((field, index) => [
@@ -252,7 +252,15 @@ const RenameColumnOp = ({
           Add column
         </Button>
         <Box sx={{ m: 2 }} />
-        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2, px: 2 }}>
+        <Box
+          sx={{
+            position: 'sticky',
+            bottom: 0,
+            background: '#fff',
+            pb: 2,
+            px: 2,
+          }}
+        >
           <Button
             variant="contained"
             type="submit"

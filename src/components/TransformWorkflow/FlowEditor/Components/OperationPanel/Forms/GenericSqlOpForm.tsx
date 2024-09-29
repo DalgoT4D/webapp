@@ -34,8 +34,8 @@ const GenericSqlOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       sql_statement_1: '',
@@ -175,7 +175,9 @@ const GenericSqlOpForm = ({
             )}
           />
           <Box sx={{ m: 2 }} />
-          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Box
+            sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}
+          >
             <Button
               disabled={action === 'view'}
               variant="contained"

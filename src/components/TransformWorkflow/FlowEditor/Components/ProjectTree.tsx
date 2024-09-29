@@ -87,15 +87,18 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
     dbtSourceModels: DbtSourceModel[]
   ) => {
     // group by schema and push dbtSourceModels under the children key
-    const leafNodesBySchema = dbtSourceModels.reduce((acc, dbtSourceModel) => {
-      const schema = dbtSourceModel.schema;
-      if (schema in acc) {
-        acc[schema].push(dbtSourceModel);
-      } else {
-        acc[schema] = [dbtSourceModel];
-      }
-      return acc;
-    }, {} as { [key: string]: DbtSourceModel[] });
+    const leafNodesBySchema = dbtSourceModels.reduce(
+      (acc, dbtSourceModel) => {
+        const schema = dbtSourceModel.schema;
+        if (schema in acc) {
+          acc[schema].push(dbtSourceModel);
+        } else {
+          acc[schema] = [dbtSourceModel];
+        }
+        return acc;
+      },
+      {} as { [key: string]: DbtSourceModel[] }
+    );
 
     // construct the tree data
     const treeData = Object.keys(leafNodesBySchema).map(

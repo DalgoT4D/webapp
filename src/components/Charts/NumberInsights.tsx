@@ -34,7 +34,7 @@ export const NumberInsights: React.FC<NumberInsightsProps> = ({
         <Box sx={{ minWidth: '700px', display: 'flex', alignItems: 'center' }}>
           {(Object.keys(data) as Array<keyof DataProps>)
             .filter((key) => key !== 'otherModes')
-            .map((key,index) => (
+            .map((key, index) => (
               <Box key={key} sx={{ mr: '50px' }}>
                 <Box sx={{ color: 'rgba(15, 36, 64, 0.57)' }}>
                   {key.charAt(0).toUpperCase() + key.slice(1)}
@@ -80,7 +80,7 @@ export const NumberInsights: React.FC<NumberInsightsProps> = ({
           setChartType(chartType === 'chart' ? 'numbers' : 'chart')
         }
         alt="switch icon"
-        data-testid = {`switchicon-${chartType === "chart"? "numbers": "chart"}`}
+        data-testid={`switchicon-${chartType === 'chart' ? 'numbers' : 'chart'}`}
       />
     </Box>
   );

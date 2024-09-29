@@ -25,7 +25,6 @@ describe('BarChart', () => {
     expect(bars.size()).toBe(data.length);
   });
 
- 
   it('renders correct values on bars', () => {
     render(<BarChart data={data} />);
     const svgElement = screen.getByTestId('barchart-svg');
@@ -43,14 +42,19 @@ describe('BarChart', () => {
     const svgElement = screen.getByTestId('barchart-svg');
     const ticks = d3.select(svgElement).selectAll('.tick text').nodes();
 
-   //trim label
+    //trim label
     ticks.forEach((node, i) => {
       const originalLabel = data[i].label;
-      const expectedLabel = originalLabel.length > 10 ? `${originalLabel.substring(0, 10)}...` : originalLabel;
+      const expectedLabel =
+        originalLabel.length > 10
+          ? `${originalLabel.substring(0, 10)}...`
+          : originalLabel;
       expect(d3.select(node).text()).toBe(expectedLabel);
     });
 
-    const longLabelNode = ticks.find(node => d3.select(node).text().endsWith('...'));
+    const longLabelNode = ticks.find((node) =>
+      d3.select(node).text().endsWith('...')
+    );
     if (longLabelNode) {
       fireEvent.mouseOver(longLabelNode as HTMLElement);
       const tooltip = d3.select('body').select('.tooltip');
@@ -58,4 +62,3 @@ describe('BarChart', () => {
     }
   });
 });
-

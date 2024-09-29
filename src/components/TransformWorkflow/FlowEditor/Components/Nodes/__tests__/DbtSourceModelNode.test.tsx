@@ -3,7 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DbtSourceModelNode } from '../DbtSourceModelNode';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
-import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
+import {
+  useCanvasAction,
+  useCanvasNode,
+} from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { useNodeId, useEdges } from 'reactflow';
 
@@ -63,7 +66,7 @@ const node = {
 };
 
 const edges = [
-//   { id: 'e1-2', source: '1', target: '2' },
+  //   { id: 'e1-2', source: '1', target: '2' },
 ];
 
 const columns = [
@@ -78,7 +81,10 @@ beforeEach(() => {
   useCanvasAction.mockReturnValue(mockCanvasAction);
   useCanvasNode.mockReturnValue(mockCanvasNode);
   usePreviewAction.mockReturnValue(mockPreviewAction);
-  useSession.mockReturnValue({ data: { session: 'mock-session' }, status: 'authenticated' });
+  useSession.mockReturnValue({
+    data: { session: 'mock-session' },
+    status: 'authenticated',
+  });
 
   global.fetch = jest.fn(() =>
     Promise.resolve({
@@ -98,7 +104,6 @@ describe('DbtSourceModelNode Component', () => {
     expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
     expect(screen.getByTestId('target-left')).toBeInTheDocument();
     expect(screen.getByTestId('source-right')).toBeInTheDocument();
-
   });
 
   it('should call handleSelectNode on click', () => {
@@ -111,7 +116,10 @@ describe('DbtSourceModelNode Component', () => {
     fireEvent.click(screen.getByText(/test_input_name/i));
 
     expect(mockSetCanvasNode).toHaveBeenCalledWith(node);
-    expect(mockSetPreviewAction).toHaveBeenCalledWith({ type: 'preview', data: node.data });
+    expect(mockSetPreviewAction).toHaveBeenCalledWith({
+      type: 'preview',
+      data: node.data,
+    });
     expect(mockSetCanvasAction).toHaveBeenCalledWith({
       type: 'open-opconfig-panel',
       data: 'create',
@@ -120,14 +128,14 @@ describe('DbtSourceModelNode Component', () => {
 
   it('should call handleDeleteAction on delete icon click', () => {
     const node = {
-        id: '1',
-        type: 'sourceModel',
-        data: {
-          input_name: 'test_input_name',
-          schema: 'test_schema',
-          isDummy: false,
-        },
-      };
+      id: '1',
+      type: 'sourceModel',
+      data: {
+        input_name: 'test_input_name',
+        schema: 'test_schema',
+        isDummy: false,
+      },
+    };
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <DbtSourceModelNode {...node} />

@@ -22,8 +22,6 @@ const mockSession = {
   data: { user: { name: 'Test User' } },
 };
 
-
-
 const mockPreviewAction = {
   type: 'preview',
   data: {
@@ -35,9 +33,7 @@ const mockPreviewAction = {
 describe('PreviewPane Component', () => {
   beforeEach(() => {
     useSession.mockReturnValue(mockSession);
-    usePreviewAction.mockReturnValue({ previewAction: mockPreviewAction })
-
-
+    usePreviewAction.mockReturnValue({ previewAction: mockPreviewAction });
   });
   test('renders preview pane with table and headers', async () => {
     // Mock the httpGet function
@@ -55,7 +51,9 @@ describe('PreviewPane Component', () => {
       } else if (url.includes('table_count')) {
         return Promise.resolve({ total_rows: 2 });
       } else if (url.includes('download')) {
-        return Promise.resolve(new Blob(['id,name\n1,Test1\n2,Test2'], { type: 'text/csv' }));
+        return Promise.resolve(
+          new Blob(['id,name\n1,Test1\n2,Test2'], { type: 'text/csv' })
+        );
       }
     });
 
@@ -68,7 +66,7 @@ describe('PreviewPane Component', () => {
       expect(screen.getByText('name')).toBeInTheDocument();
       expect(screen.getByText('Test1')).toBeInTheDocument();
       expect(screen.getByText('Test2')).toBeInTheDocument();
-    })
+    });
 
     // Test header rendering and sorting
     const idHeader = screen.getByText('id');
@@ -79,13 +77,28 @@ describe('PreviewPane Component', () => {
 
     // Test sorting functionality
     fireEvent.click(idHeader);
-    await waitFor(() => expect(httpGet).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('order_by=id&order=1')));
+    await waitFor(() =>
+      expect(httpGet).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('order_by=id&order=1')
+      )
+    );
 
     fireEvent.click(idHeader);
-    await waitFor(() => expect(httpGet).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('order_by=id&order=-1')));
+    await waitFor(() =>
+      expect(httpGet).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('order_by=id&order=-1')
+      )
+    );
 
     fireEvent.click(nameHeader);
-    await waitFor(() => expect(httpGet).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('order_by=name&order=1')));
+    await waitFor(() =>
+      expect(httpGet).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('order_by=name&order=1')
+      )
+    );
   });
   test('initiates the download process when the download button is clicked', async () => {
     render(<PreviewPane height={600} />);
@@ -99,7 +112,9 @@ describe('PreviewPane Component', () => {
   });
 
   test('renders "Select a table to view" message when no table is selected', () => {
-    usePreviewAction.mockReturnValue({ previewAction: { type: 'clear-preview' } });
+    usePreviewAction.mockReturnValue({
+      previewAction: { type: 'clear-preview' },
+    });
 
     render(<PreviewPane height={600} />);
 

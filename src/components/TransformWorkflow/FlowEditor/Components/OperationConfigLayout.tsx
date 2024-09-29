@@ -255,11 +255,15 @@ const OperationConfigLayout = ({
 
   const DiscardDialog = ({ handleBackbuttonAction }: any) => {
     return (
-      <Dialog open={showDiscardDialog} onClose={() => setShowDiscardDialog(false)}>
+      <Dialog
+        open={showDiscardDialog}
+        onClose={() => setShowDiscardDialog(false)}
+      >
         <DialogTitle>Discard Changes?</DialogTitle>
         <DialogContent>
           <Typography>
-            All your changes will be discarded. Are you sure you want to continue?
+            All your changes will be discarded. Are you sure you want to
+            continue?
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -271,8 +275,8 @@ const OperationConfigLayout = ({
           </Button>
         </DialogActions>
       </Dialog>
-    )
-  }
+    );
+  };
 
   const PanelHeader = () => {
     const handleBackbuttonAction = () => {
@@ -323,17 +327,17 @@ const OperationConfigLayout = ({
         >
           {((selectedOp && panelOpFormState.current === 'create') ||
             panelState === 'create-table-or-add-function') && (
-              <IconButton
-                onClick={
-                  panelState === 'create-table-or-add-function'
-                    ? handleBackButtonOnCreateTableAddFunction
-                    : () => setShowDiscardDialog(true)
-                }
-                data-testid="openoperationlist"
-              >
-                <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
-              </IconButton>
-            )}
+            <IconButton
+              onClick={
+                panelState === 'create-table-or-add-function'
+                  ? handleBackButtonOnCreateTableAddFunction
+                  : () => setShowDiscardDialog(true)
+              }
+              data-testid="openoperationlist"
+            >
+              <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
+            </IconButton>
+          )}
           <DiscardDialog handleBackbuttonAction={handleBackbuttonAction} />
           <Box sx={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
             <Typography
@@ -416,8 +420,8 @@ const OperationConfigLayout = ({
                 onClick={
                   canSelectOperation
                     ? () => {
-                      handleSelectOp(op);
-                    }
+                        handleSelectOp(op);
+                      }
                     : undefined
                 }
               >
@@ -575,7 +579,7 @@ const OperationConfigLayout = ({
                   zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
                 open={isPanelLoading}
-                onClick={() => { }}
+                onClick={() => {}}
               ></Backdrop>
               <OperationForm
                 sx={{ marginBottom: '10px' }}

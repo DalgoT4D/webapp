@@ -26,8 +26,6 @@ describe('RangeChart', () => {
     expect(bars.length).toBe(data.length * 2); // Considering both the main bars and the legend bars
   });
 
-  
-
   it('trims long labels and shows tooltip on hover', async () => {
     render(<RangeChart data={data} />);
     const container = screen.getByTestId('range-chart-container');

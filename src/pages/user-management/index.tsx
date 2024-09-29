@@ -38,12 +38,12 @@ const UserManagement = () => {
   const tabsObj: { [key: string]: number } = {
     users: 0,
     pending_invitations: 1,
-  }
+  };
   const { value, handleChange } = useQueryParams({
     tabsObj,
-    basePath: "/user-management",
-    defaultTab: "users"
-  })
+    basePath: '/user-management',
+    defaultTab: 'users',
+  });
   const handleClickInviteUser = () => {
     setShowInviteUserForm(true);
   };

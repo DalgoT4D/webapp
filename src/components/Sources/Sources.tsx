@@ -191,7 +191,7 @@ export const Sources = () => {
   };
 
   useEffect(() => {
-    if(session){
+    if (session) {
       fetchSourceDefinitions();
     }
   }, [session]);

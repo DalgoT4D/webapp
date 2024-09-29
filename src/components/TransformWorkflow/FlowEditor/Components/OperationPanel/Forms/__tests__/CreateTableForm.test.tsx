@@ -4,7 +4,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CreateTableForm from '../CreateTableForm';
 import { useSession } from 'next-auth/react';
 import { httpPost } from '@/helpers/http';
-import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
+import {
+  useCanvasAction,
+  useCanvasNode,
+} from '@/contexts/FlowEditorCanvasContext';
 
 jest.mock('next-auth/react');
 jest.mock('@/helpers/http');
@@ -26,7 +29,9 @@ jest.mock('react-hook-form', () => ({
 describe('CreateTableForm', () => {
   beforeEach(() => {
     useSession.mockReturnValue({ data: { session: 'mockSession' } });
-    useCanvasNode.mockReturnValue({ canvasNode: { type: 'operation_node', data: { target_model_id: '123' } } });
+    useCanvasNode.mockReturnValue({
+      canvasNode: { type: 'operation_node', data: { target_model_id: '123' } },
+    });
     useCanvasAction.mockReturnValue({ setCanvasAction: mockSetCanvasAction });
     httpPost.mockResolvedValue({});
   });
@@ -36,7 +41,13 @@ describe('CreateTableForm', () => {
   });
 
   const renderComponent = (props = {}) =>
-    render(<CreateTableForm sx={{}} clearAndClosePanel={mockClearAndClosePanel} {...props} />);
+    render(
+      <CreateTableForm
+        sx={{}}
+        clearAndClosePanel={mockClearAndClosePanel}
+        {...props}
+      />
+    );
 
   it('renders the form', () => {
     renderComponent();
@@ -45,7 +56,7 @@ describe('CreateTableForm', () => {
     expect(screen.getByText(/Output Schema Name/i)).toBeInTheDocument();
   });
 
- //write test for form submission.
+  //write test for form submission.
   it('calls clearAndClosePanel if provided', async () => {
     renderComponent({ clearAndClosePanel: mockClearAndClosePanel });
 
@@ -59,5 +70,4 @@ describe('CreateTableForm', () => {
       expect(mockClearAndClosePanel).toHaveBeenCalled();
     });
   });
-
 });

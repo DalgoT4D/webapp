@@ -5,7 +5,9 @@ interface FullPageBackgroundProps {
   children: React.ReactNode;
 }
 
-export const FullPageBackground: React.FC<FullPageBackgroundProps> = ({ children }) => {
+export const FullPageBackground: React.FC<FullPageBackgroundProps> = ({
+  children,
+}) => {
   return (
     <Box
       sx={{

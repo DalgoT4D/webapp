@@ -140,6 +140,5 @@ describe('Flow Creation', () => {
     expect(postFlowRunMock).toHaveBeenCalled();
 
     // delete flow
- 
   });
 });

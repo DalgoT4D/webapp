@@ -19,7 +19,10 @@ import {
 
 import React from 'react';
 import ToastMessage from '@/components/ToastMessage/ToastMessage';
-import { initialUnsavedChangesState, UnsavedChangesReducer } from './reducers/UnsavedChangesReducer';
+import {
+  initialUnsavedChangesState,
+  UnsavedChangesReducer,
+} from './reducers/UnsavedChangesReducer';
 
 interface context {
   Permissions: { state: string[]; dispatch: any };
@@ -68,7 +71,10 @@ const ContextProvider = ({ children }: any) => {
         Toast: { state: toast, dispatch: toastDisptach },
         CurrentOrg: { state: currentOrg, dispatch: currentOrgDispatch },
         OrgUsers: { state: orgUsers, dispatch: orgUsersDispatch },
-        UnsavedChanges: { state: unsavedChanges, dispatch: unsavedChangesDispatch },
+        UnsavedChanges: {
+          state: unsavedChanges,
+          dispatch: unsavedChangesDispatch,
+        },
       }}
     >
       {children}

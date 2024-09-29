@@ -193,10 +193,10 @@ const WhereFilterOpForm = ({
           logicalOp: LogicalOperators.find((op) => op.id === operator),
           operand: operand
             ? {
-              type: operand.is_col ? 'col' : 'val',
-              col_val: operand.is_col ? operand.value : '',
-              const_val: !operand.is_col ? operand.value : '',
-            }
+                type: operand.is_col ? 'col' : 'val',
+                col_val: operand.is_col ? operand.value : '',
+                const_val: !operand.is_col ? operand.value : '',
+              }
             : { type: 'col', col_val: '', const_val: '' },
         };
       }
@@ -412,7 +412,9 @@ const WhereFilterOpForm = ({
           </Box>
 
           <Box sx={{ m: 2 }} />
-          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Box
+            sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}
+          >
             <Button
               variant="contained"
               type="submit"

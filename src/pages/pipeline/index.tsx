@@ -41,8 +41,8 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
           state_name === 'DBT_TEST_FAILED'
             ? '#df8e14'
             : status === 'COMPLETED'
-            ? '#00897B'
-            : '#C15E5E';
+              ? '#00897B'
+              : '#C15E5E';
         const lastRun = moment(new Date(run.startTime)).calendar();
         const lastRunDateFormat = moment(new Date(run.startTime)).format(
           'YYYY-MM-DD HH:mm:ss'

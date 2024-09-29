@@ -55,11 +55,9 @@ export const List = ({
     const sorted = [...rowValues].sort((a, b) => {
       const aValue = a[sortColumn].toString().toLowerCase();
       const bValue = b[sortColumn].toString().toLowerCase();
-    
-      if (aValue < bValue) 
-        return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue)
-        return sortDirection === 'asc' ? 1 : -1;
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
 

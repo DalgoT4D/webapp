@@ -269,7 +269,15 @@ const ReplaceValueOpForm = ({
           Add row
         </Button>
         <Box sx={{ m: 2 }} />
-        <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2, px: 2 }}>
+        <Box
+          sx={{
+            position: 'sticky',
+            bottom: 0,
+            background: '#fff',
+            pb: 2,
+            px: 2,
+          }}
+        >
           <Button
             variant="contained"
             type="submit"

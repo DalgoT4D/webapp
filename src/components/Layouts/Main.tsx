@@ -141,7 +141,6 @@ const MainDashboard = ({ children }: any) => {
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
 
-
   const router = useRouter();
 
   // Verify email with token should be visible whether the token is there or not

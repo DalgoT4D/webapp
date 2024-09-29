@@ -33,7 +33,6 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import useSWR from 'swr';
 import { useTracking } from '@/contexts/TrackingContext';
 
-
 const fetchAirbyteLogs = async (
   connectionId: string,
   session: any,
@@ -134,17 +133,17 @@ const LogsColumn = ({
       ) : null}
       {action === 'summary'
         ? summarizedLogs.length > 0 && (
-          <Alert icon={false} severity="success" sx={{ mb: 2 }}>
-            {summarizedLogs.map((result: any, index: number) => (
-              <Box key={result.prompt} sx={{ mb: 2 }}>
-                <Box>
-                  <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
+            <Alert icon={false} severity="success" sx={{ mb: 2 }}>
+              {summarizedLogs.map((result: any, index: number) => (
+                <Box key={result.prompt} sx={{ mb: 2 }}>
+                  <Box>
+                    <strong>{index === 0 ? 'Summary' : result.prompt}</strong>
+                  </Box>
+                  <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
                 </Box>
-                <Box sx={{ fontWeight: 500 }}>{result.response}</Box>
-              </Box>
-            ))}
-          </Alert>
-        )
+              ))}
+            </Alert>
+          )
         : null}
 
       {action === 'detail' && logs.length > 0 && (
@@ -236,10 +235,10 @@ const Row = ({
   ) => {
     if (newAction === 'summary' && summarizedLogs.length < 1) {
       summarizeLogs();
-      trackAmplitudeEvent("[ai-summary] Button clicked")
+      trackAmplitudeEvent('[ai-summary] Button clicked');
     } else if (newAction === 'detail' && detailedLogs.length < 1) {
       getDetailedLogs();
-      trackAmplitudeEvent("[connection-logs] Button clicked")
+      trackAmplitudeEvent('[connection-logs] Button clicked');
     }
     setAction(newAction);
   };
@@ -276,10 +275,14 @@ const Row = ({
         >
           {formatDuration(logDetail.totalTimeInSeconds)}
         </TableCell>
-        <TableCell sx={{
-          width: '300px', fontWeight: 500, borderTopRightRadius: '10px',
-          borderBottomRightRadius: '10px',
-        }}>
+        <TableCell
+          sx={{
+            width: '300px',
+            fontWeight: 500,
+            borderTopRightRadius: '10px',
+            borderBottomRightRadius: '10px',
+          }}
+        >
           <ToggleButtonGroup
             size="small"
             color="primary"
@@ -290,12 +293,16 @@ const Row = ({
             onChange={handleAction}
             aria-label="text alignment"
           >
-            <ToggleButton value="detail" aria-label="left" data-testid="logs" >
+            <ToggleButton value="detail" aria-label="left" data-testid="logs">
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
-            {(allowLogsSummary && logDetail.status === "failed") && (
-              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${connectionId}`} >
+            {allowLogsSummary && logDetail.status === 'failed' && (
+              <ToggleButton
+                value="summary"
+                aria-label="right"
+                data-testid={`aisummary-${connectionId}`}
+              >
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
             )}
@@ -334,10 +341,11 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
     (async () => {
       if (connection) {
         setLoading(true);
-        const { history = [], totalSyncs = 0 }: { history: LogObject[], totalSyncs: number } = await fetchAirbyteLogs(
-          connection.connectionId,
-          session
-        );
+        const {
+          history = [],
+          totalSyncs = 0,
+        }: { history: LogObject[]; totalSyncs: number } =
+          await fetchAirbyteLogs(connection.connectionId, session);
         if (history) {
           setLogDetails(history);
           setTotalSyncs(totalSyncs);
@@ -371,7 +379,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
             <Typography sx={{ fontWeight: 700 }}>
               {`${connection?.name} |`}
             </Typography>
-            <Box sx={{ display: "flex", width: "90%" }}>
+            <Box sx={{ display: 'flex', width: '90%' }}>
               <Typography sx={{ fontWeight: 600, ml: '4px' }}>
                 {connection?.source.sourceName} →{' '}
                 {connection?.destination.destinationName}
@@ -447,15 +455,19 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                   onClick={async () => {
                     setLoadMorePressed(true);
                     if (connection) {
-                      const { history = [], totalSyncs = 0 }: { history: LogObject[], totalSyncs: number } = await fetchAirbyteLogs(
-                        connection.connectionId,
-                        session,
-                        offset
-                      );
+                      const {
+                        history = [],
+                        totalSyncs = 0,
+                      }: { history: LogObject[]; totalSyncs: number } =
+                        await fetchAirbyteLogs(
+                          connection.connectionId,
+                          session,
+                          offset
+                        );
                       if (history) {
                         setLogDetails((logs) => [...logs, ...history]);
                         setOffset((offset) => offset + defaultLoadMoreLimit);
-                        setTotalSyncs(totalSyncs)
+                        setTotalSyncs(totalSyncs);
                       }
                       setLoadMorePressed(false);
                     }

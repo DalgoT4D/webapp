@@ -8,7 +8,6 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { Session } from 'next-auth';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 
-
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
 }));

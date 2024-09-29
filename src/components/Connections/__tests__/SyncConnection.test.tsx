@@ -180,7 +180,7 @@ describe('Sync connection suite', () => {
     await user.click(syncButton);
 
     await waitFor(() => {
-      within(syncButton).findByAltText("sync icon");
+      within(syncButton).findByAltText('sync icon');
     });
   });
 

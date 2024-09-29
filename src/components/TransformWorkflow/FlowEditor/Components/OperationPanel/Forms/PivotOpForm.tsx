@@ -100,10 +100,11 @@ const PivotOpForm = ({
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
         setSrcColumns(data.map((col: ColumnData) => col.name));
-        const col_fields = data.sort((a, b) => a.name.localeCompare(b.name))
-          .map((col: ColumnData) => ({ col: col.name, is_checked: false }))
+        const col_fields = data
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((col: ColumnData) => ({ col: col.name, is_checked: false }));
         setValue('source_columns', col_fields);
-        setColFieldData(col_fields)
+        setColFieldData(col_fields);
       } catch (error) {
         console.log(error);
       }
@@ -210,8 +211,7 @@ const PivotOpForm = ({
           .concat([{ col: '' }]),
         source_columns: groupbySourceColumns,
       });
-      setColFieldData(groupbySourceColumns)
-
+      setColFieldData(groupbySourceColumns);
     } catch (error) {
       console.error(error);
     } finally {
@@ -224,9 +224,9 @@ const PivotOpForm = ({
     const filteredColumns = srcColFields?.filter((colField) => {
       const stringToSearch = colField?.col?.toLowerCase();
       return stringToSearch?.includes(trimmedSubstring);
-    })
-    setColFieldData(filteredColumns)
-  }
+    });
+    setColFieldData(filteredColumns);
+  };
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Filter the fields based on the search results stored in colFieldData
@@ -240,36 +240,42 @@ const PivotOpForm = ({
       is_checked: event.target.checked,
     }));
 
-    setColFieldData(updatedFields)
+    setColFieldData(updatedFields);
 
     // Merge the updated fields with the original unpivotColFields
-    const mergedFields = srcColFields.map((field) =>
-      updatedFields.find((updatedField) => updatedField.col === field.col) || field
+    const mergedFields = srcColFields.map(
+      (field) =>
+        updatedFields.find((updatedField) => updatedField.col === field.col) ||
+        field
     );
 
     replace(mergedFields);
   };
 
-  const handleUpdate = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleUpdate = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
     const field = colFieldData[index];
     const updatedFields = colFieldData.map((colField) => {
       if (colField.col == field.col) {
         return {
           col: field.col,
           is_checked: event.target.checked,
-        }
+        };
       }
       return colField;
-    }
+    });
+    const originalIndex = srcColFields?.findIndex(
+      (colField) => colField.col == field.col
     );
-    const originalIndex = srcColFields?.findIndex((colField) => colField.col == field.col)
 
     update(originalIndex, {
       col: field.col,
       is_checked: event.target.checked,
     });
     setColFieldData(updatedFields);
-  }
+  };
 
   useEffect(() => {
     if (['edit', 'view'].includes(action)) {
@@ -281,13 +287,13 @@ const PivotOpForm = ({
 
   useEffect(() => {
     if (colFieldData?.length > 0) {
-      let selectAll = true
+      let selectAll = true;
       colFieldData?.forEach((colField) => {
         if (!colField.is_checked) selectAll = false;
-      })
-      setSelectAllCheckbox(selectAll)
+      });
+      setSelectAllCheckbox(selectAll);
     }
-  }, [colFieldData])
+  }, [colFieldData]);
 
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
@@ -371,7 +377,7 @@ const PivotOpForm = ({
           fieldStyle="transformation"
           sx={{ px: 1, pb: 1 }}
           placeholder="Search by column name"
-          onChange={event => handleSearch(event.target.value)}
+          onChange={(event) => handleSearch(event.target.value)}
         />
         <GridTable
           headers={['Columns to groupby']}
@@ -395,8 +401,7 @@ const PivotOpForm = ({
                         disabled={action === 'view'}
                         onChange={(
                           event: React.ChangeEvent<HTMLInputElement>
-                        ) => handleSelectAll(event)
-                        }
+                        ) => handleSelectAll(event)}
                       />
                     }
                     label=""
@@ -428,9 +433,9 @@ const PivotOpForm = ({
                     <Checkbox
                       disabled={field.col === pivotColumn || action === 'view'}
                       checked={field.is_checked}
-                      onChange={(
-                        event: React.ChangeEvent<HTMLInputElement>
-                      ) => handleUpdate(event, idx)}
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                        handleUpdate(event, idx)
+                      }
                     />
                   }
                   label=""
@@ -447,7 +452,7 @@ const PivotOpForm = ({
             ]),
           ]}
         ></GridTable>
-        <Box sx={{m: 2}}/>
+        <Box sx={{ m: 2 }} />
         <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
           <Button
             disabled={action === 'view'}

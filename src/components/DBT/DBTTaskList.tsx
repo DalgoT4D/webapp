@@ -94,7 +94,7 @@ export const DBTTaskList = ({
         variant="contained"
         onClick={() => {
           setRunningTask(task);
-          trackAmplitudeEvent(`[${task.label}] Button Clicked`)
+          trackAmplitudeEvent(`[${task.label}] Button Clicked`);
         }}
         data-testid={'task-' + task.uuid}
         disabled={
@@ -106,7 +106,7 @@ export const DBTTaskList = ({
         sx={{ marginRight: '10px', width: '75px', height: '40px' }}
       >
         {runningTask?.uuid === task.uuid ||
-          (task.lock?.status && task.lock?.status !== 'complete') ? (
+        (task.lock?.status && task.lock?.status !== 'complete') ? (
           <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
         ) : (
           'Execute'
@@ -170,7 +170,9 @@ export const DBTTaskList = ({
         // Custom state has been returned
         // need another api call to fetch the logs
         if (message?.result[0]?.id) {
-          await fetchAndSetFlowRunLogs(message.result[0]?.state_details?.flow_run_id);
+          await fetchAndSetFlowRunLogs(
+            message.result[0]?.state_details?.flow_run_id
+          );
         } else {
           setDbtRunLogs(message?.result);
         }
@@ -347,7 +349,7 @@ export const DBTTaskList = ({
 
   const handleCreateOpenOrgTaskDialog = () => {
     setShowCreateOrgTaskDialog(true);
-    trackAmplitudeEvent("[+ New Task] Button Clicked")
+    trackAmplitudeEvent('[+ New Task] Button Clicked');
   };
 
   return (

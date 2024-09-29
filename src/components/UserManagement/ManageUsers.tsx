@@ -105,7 +105,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   };
 
   const handleUpdateRole = async () => {
-    trackAmplitudeEvent("[Update-Role] Button Clicked")
+    trackAmplitudeEvent('[Update-Role] Button Clicked');
     try {
       const message = await httpPost(
         session,

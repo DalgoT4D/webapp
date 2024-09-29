@@ -68,8 +68,8 @@ export const StringInsights: React.FC<StringInsightsProps> = ({
               chartType === 'chart'
                 ? 'bars'
                 : chartType === 'bars'
-                ? 'stats'
-                : 'chart'
+                  ? 'stats'
+                  : 'chart'
             )
           }
           alt="switch icon"

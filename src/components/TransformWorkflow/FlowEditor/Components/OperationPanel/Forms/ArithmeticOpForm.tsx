@@ -322,10 +322,10 @@ const ArithmeticOpForm = ({
                   />
                 )}
                 {arithmeticOp &&
-                  ((['sub', 'div'].includes(arithmeticOp?.id) &&
-                    fields.length < 2) ||
-                    ['add', 'mul'].includes(arithmeticOp?.id)) &&
-                  index === fields.length - 1 ? (
+                ((['sub', 'div'].includes(arithmeticOp?.id) &&
+                  fields.length < 2) ||
+                  ['add', 'mul'].includes(arithmeticOp?.id)) &&
+                index === fields.length - 1 ? (
                   <Button
                     disabled={action === 'view'}
                     variant="shadow"
@@ -384,7 +384,9 @@ const ArithmeticOpForm = ({
 
           <InfoBox text="Please select only numeric columns" />
           <Box sx={{ m: 2 }} />
-          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Box
+            sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}
+          >
             <Button
               disabled={action === 'view'}
               variant="contained"

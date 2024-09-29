@@ -1,5 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -80,7 +86,7 @@ describe('CreateOrgForm Component', () => {
   it('should handle form submission and display success toast', async () => {
     // Arrange
     httpPost.mockResolvedValueOnce({ slug: 'new-org-slug' });
-    
+
     const closeSideMenu = jest.fn();
     const setShowForm = jest.fn();
     const { getByTestId, getByLabelText } = render(
@@ -94,17 +100,21 @@ describe('CreateOrgForm Component', () => {
     );
 
     // Act
-    const inputOrgDiv = screen.getByTestId("input-orgname");
-    const inputOrg = within(inputOrgDiv).getByRole("textbox");
+    const inputOrgDiv = screen.getByTestId('input-orgname');
+    const inputOrg = within(inputOrgDiv).getByRole('textbox');
     fireEvent.change(inputOrg, { target: { value: 'New Org' } });
     fireEvent.click(getByTestId('savebutton'));
 
     // Assert
     await waitFor(() => {
-      expect(httpPost).toHaveBeenCalledWith({"user": {"name": "Test User"}}, 'v1/organizations/', { name: 'New Org' });
+      expect(httpPost).toHaveBeenCalledWith(
+        { user: { name: 'Test User' } },
+        'v1/organizations/',
+        { name: 'New Org' }
+      );
       expect(localStorage.getItem('org-slug')).toBe('new-org-slug');
       expect(closeSideMenu).toHaveBeenCalled();
       expect(setShowForm).toHaveBeenCalledWith(false);
     });
-  })
+  });
 });

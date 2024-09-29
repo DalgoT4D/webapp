@@ -96,7 +96,7 @@ export const SqlWrite = memo(
           setTempLoading(true);
           const [promptsResult, limitResult]: [
             PromiseSettledResult<PromptsResult>,
-            PromiseSettledResult<LimitResult>
+            PromiseSettledResult<LimitResult>,
           ] = await Promise.allSettled([
             httpGet(session, 'data/user_prompts/'),
             httpGet(session, 'data/llm_data_analysis_query_limit/'),

@@ -20,11 +20,11 @@ export default function App({
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <SessionProvider session={session} refetchOnWindowFocus={false}>
-                <Main>
-              <TrackingProvider session={session} >
+              <Main>
+                <TrackingProvider session={session}>
                   <Component {...pageProps} />
-              </TrackingProvider>
-                </Main>
+                </TrackingProvider>
+              </Main>
             </SessionProvider>
           </ThemeProvider>
         </StyledEngineProvider>

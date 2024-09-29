@@ -63,8 +63,8 @@ const CoalesceOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
@@ -327,7 +327,9 @@ const CoalesceOpForm = ({
             )}
           />
           <Box sx={{ m: 2 }} />
-          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Box
+            sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}
+          >
             <Button
               disabled={action === 'view'}
               variant="contained"

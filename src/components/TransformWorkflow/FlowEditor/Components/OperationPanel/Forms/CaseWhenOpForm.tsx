@@ -208,8 +208,8 @@ const CaseWhenOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   type clauseType = {
     filterCol: string;
@@ -847,7 +847,9 @@ const CaseWhenOpForm = ({
           )}
 
           <Box sx={{ m: 2 }} />
-          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
+          <Box
+            sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}
+          >
             <Button
               disabled={isAdvanceFieldsDisabled}
               variant="contained"

@@ -46,8 +46,8 @@ const DropColumnOp = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
   const theme = useTheme();
 
   type FormColumnData = {

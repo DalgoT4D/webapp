@@ -146,7 +146,7 @@ const CreateOrgTaskForm = ({
 
   const onSubmit = async (data: any) => {
     setLoading(true);
-    trackAmplitudeEvent("[Save-OrgTask] Button Clicked")
+    trackAmplitudeEvent('[Save-OrgTask] Button Clicked');
     const paramOptions: any = {};
     data.options
       .filter((opt: any) => opt.key && opt.value)

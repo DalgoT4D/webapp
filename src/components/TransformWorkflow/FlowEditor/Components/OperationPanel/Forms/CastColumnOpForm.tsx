@@ -37,8 +37,8 @@ const CastColumnOp = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   type FormData = {
     config: { name: string; data_type: string | null }[];

@@ -73,11 +73,10 @@ const CreateConnectionForm = ({
     Array<SourceStream>
   >([]);
 
-//if any stream has absent cursorfiled then we want increment-all to be disabled.
+  //if any stream has absent cursorfiled then we want increment-all to be disabled.
   const isAnyCursorAbsent = useMemo(() => {
-  return filteredSourceStreams.some((stream) => !stream.cursorField);
+    return filteredSourceStreams.some((stream) => !stream.cursorField);
   }, [filteredSourceStreams]);
-
 
   const [loading, setLoading] = useState<boolean>(false);
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
@@ -181,7 +180,7 @@ const CreateConnectionForm = ({
         }
         setLoading(false);
       })();
-    }else{
+    } else {
       reset();
       setConnectionId('');
       setSourceStreams([]);
@@ -294,7 +293,6 @@ const CreateConnectionForm = ({
   ) => {
     const newstreams: SourceStream[] = [];
     for (let idx = 0; idx < sourceStreams.length; idx++) {
-    
       if (sourceStreams[idx].name === stream.name) {
         newstreams.push(newStream);
       } else {
@@ -305,28 +303,40 @@ const CreateConnectionForm = ({
   };
 
   const selectStream = (checked: boolean, stream: SourceStream) => {
-    const destinationMode = !checked && stream.destinationSyncMode !== "overwrite"
-      ? "overwrite"
-      : stream.destinationSyncMode;
+    const destinationMode =
+      !checked && stream.destinationSyncMode !== 'overwrite'
+        ? 'overwrite'
+        : stream.destinationSyncMode;
 
-    const syncMode = checked && incrementalAllStreams
-      ? "incremental"
-      : !checked && stream.syncMode === "incremental"
-        ? "full_refresh"
-        : stream.syncMode;    
-    updateThisStreamTo_(stream, { ...stream, selected: checked, destinationSyncMode: destinationMode, syncMode });
+    const syncMode =
+      checked && incrementalAllStreams
+        ? 'incremental'
+        : !checked && stream.syncMode === 'incremental'
+          ? 'full_refresh'
+          : stream.syncMode;
+    updateThisStreamTo_(stream, {
+      ...stream,
+      selected: checked,
+      destinationSyncMode: destinationMode,
+      syncMode,
+    });
   };
 
   const setStreamIncr = (checked: boolean, stream: SourceStream) => {
-    if (checked && stream.destinationSyncMode === "overwrite") {
-      errorToast("Cannot use Overwrite when sync mode is incremental", [], globalContext);
+    if (checked && stream.destinationSyncMode === 'overwrite') {
+      errorToast(
+        'Cannot use Overwrite when sync mode is incremental',
+        [],
+        globalContext
+      );
     }
     //checking the sync mode based on incremental.
-    const destinationMode = checked && stream.destinationSyncMode === "overwrite"
-      ? "append_dedup"
-      : !checked && stream.destinationSyncMode !== "overwrite"
-        ? "overwrite"
-        : stream.destinationSyncMode;
+    const destinationMode =
+      checked && stream.destinationSyncMode === 'overwrite'
+        ? 'append_dedup'
+        : !checked && stream.destinationSyncMode !== 'overwrite'
+          ? 'overwrite'
+          : stream.destinationSyncMode;
 
     updateThisStreamTo_(stream, {
       ...stream,
@@ -344,25 +354,31 @@ const CreateConnectionForm = ({
 
   const handleSyncAllStreams = (checked: boolean) => {
     setSelectAllStreams(checked);
-    if(!checked && incrementalAllStreams){
+    if (!checked && incrementalAllStreams) {
       setIncrementalAllStreams(false);
     }
 
     const sourceStreamsSlice: Array<SourceStream> = sourceStreams.map(
       (stream: SourceStream) => {
-        const destinationMode = !checked && stream.destinationSyncMode !== "overwrite"
-          ? "overwrite"
-          : stream.destinationSyncMode;
+        const destinationMode =
+          !checked && stream.destinationSyncMode !== 'overwrite'
+            ? 'overwrite'
+            : stream.destinationSyncMode;
 
-        const syncMode = !checked && stream.syncMode === "incremental"
-          ? "full_refresh"
-          : stream.syncMode;
+        const syncMode =
+          !checked && stream.syncMode === 'incremental'
+            ? 'full_refresh'
+            : stream.syncMode;
 
-        return { ...stream, selected: checked, destinationSyncMode: destinationMode, syncMode }
-
+        return {
+          ...stream,
+          selected: checked,
+          destinationSyncMode: destinationMode,
+          syncMode,
+        };
       }
     );
-  
+
     setSourceStreams(sourceStreamsSlice);
   };
 
@@ -370,26 +386,31 @@ const CreateConnectionForm = ({
     let ifAnyOverwritePresent = false;
     const sourceStreamsSlice: Array<SourceStream> = sourceStreams.map(
       (stream: SourceStream) => {
-        if (stream.destinationSyncMode === "overwrite") {
+        if (stream.destinationSyncMode === 'overwrite') {
           ifAnyOverwritePresent = true;
         }
         //checking if any sync mode is overwrite.
-        const destinationMode = checked && stream.destinationSyncMode === "overwrite"
-          ? "append_dedup"
-          : !checked && stream.destinationSyncMode !== "overwrite"
-            ? "overwrite"
-            : stream.destinationSyncMode;
+        const destinationMode =
+          checked && stream.destinationSyncMode === 'overwrite'
+            ? 'append_dedup'
+            : !checked && stream.destinationSyncMode !== 'overwrite'
+              ? 'overwrite'
+              : stream.destinationSyncMode;
 
         return {
           ...stream,
           syncMode: checked ? 'incremental' : 'full_refresh',
-          destinationSyncMode: destinationMode
+          destinationSyncMode: destinationMode,
         };
       }
     );
 
     if (ifAnyOverwritePresent) {
-      errorToast("Cannot use Overwrite when sync mode is incremental", [], globalContext)
+      errorToast(
+        'Cannot use Overwrite when sync mode is incremental',
+        [],
+        globalContext
+      );
     }
 
     setIncrementalAllStreams(checked);
@@ -434,7 +455,10 @@ const CreateConnectionForm = ({
   const FormContent = () => {
     return (
       <>
-        <Box key={connectionId ? "edit-mode" : "add-new-mode"} sx={{ pt: 2, pb: 4 }}>
+        <Box
+          key={connectionId ? 'edit-mode' : 'add-new-mode'}
+          sx={{ pt: 2, pb: 4 }}
+        >
           <Input
             data-testid="connectionName"
             sx={{ width: '100%' }}
@@ -546,7 +570,8 @@ const CreateConnectionForm = ({
                     .slice()
                     .sort((a, b) => a.name.localeCompare(b.name)) // this will sort the stream on the basis of the name property.
                     .map((stream, idx: number) => {
-                      const ifIncremental = stream.syncMode === 'incremental' ? true : false;
+                      const ifIncremental =
+                        stream.syncMode === 'incremental' ? true : false;
                       return (
                         <TableRow key={stream.name}>
                           <TableCell
@@ -573,7 +598,9 @@ const CreateConnectionForm = ({
                             <Switch
                               data-testid={`stream-incremental-${idx}`}
                               disabled={
-                                !stream.cursorField || !stream.supportsIncremental || !stream.selected
+                                !stream.cursorField ||
+                                !stream.supportsIncremental ||
+                                !stream.selected
                               }
                               checked={
                                 stream.supportsIncremental &&
@@ -581,9 +608,8 @@ const CreateConnectionForm = ({
                                 stream.selected
                               }
                               onChange={(event) => {
-                                setStreamIncr(event.target.checked, stream)
-                              }
-                              }
+                                setStreamIncr(event.target.checked, stream);
+                              }}
                             />
                           </TableCell>
                           <TableCell key="destination" align="center">
@@ -599,7 +625,12 @@ const CreateConnectionForm = ({
                               }}
                             >
                               <MenuItem value="append">Append</MenuItem>
-                              <MenuItem disabled={ifIncremental} value="overwrite">Overwrite</MenuItem>
+                              <MenuItem
+                                disabled={ifIncremental}
+                                value="overwrite"
+                              >
+                                Overwrite
+                              </MenuItem>
                               <MenuItem value="append_dedup">
                                 Append / Dedup
                               </MenuItem>
@@ -628,9 +659,8 @@ const CreateConnectionForm = ({
                             </Select>
                           </TableCell>
                         </TableRow>
-                      )
-                    }
-                    )}
+                      );
+                    })}
                 </TableBody>
               </Table>
             </>
@@ -643,7 +673,7 @@ const CreateConnectionForm = ({
   return (
     <>
       <CustomDialog
-        key={connectionId ? "edit-custom" : "new-custom"}
+        key={connectionId ? 'edit-custom' : 'new-custom'}
         maxWidth={false}
         data-testid="dialog"
         title={connectionId ? 'Edit this connection' : 'Add a new connection'}
