@@ -12,6 +12,7 @@ import {
 import Auth from '@/components/Layouts/Auth';
 import { httpGet } from '../../helpers/http';
 import Image from 'next/image';
+import { PageHead } from '@/components/PageHead';
 
 export const VerifyEmailResend = () => {
   const { handleSubmit } = useForm();
@@ -35,34 +36,38 @@ export const VerifyEmailResend = () => {
   };
 
   return (
-    <Auth heading="Check your Inbox for the verification email" subHeading="">
-      <form onSubmit={handleSubmit(onSubmit)} data-testid="resend-email-form">
-        <Box className={styles.Container}>
-          <Button
-            variant="contained"
-            sx={{ width: '100%', mb: 3, minHeight: '50px' }}
-            type="submit"
-            data-testid="submit"
-          >
-            Resend verification email
-          </Button>
+    <>
+      <PageHead title="Dalgo | Resend Email" />
+
+      <Auth heading="Check your Inbox for the verification email" subHeading="">
+        <form onSubmit={handleSubmit(onSubmit)} data-testid="resend-email-form">
+          <Box className={styles.Container}>
+            <Button
+              variant="contained"
+              sx={{ width: '100%', mb: 3, minHeight: '50px' }}
+              type="submit"
+              data-testid="submit"
+            >
+              Resend verification email
+            </Button>
+          </Box>
+        </form>
+        <Box
+          sx={{
+            mt: 3,
+            fontSize: '18px',
+            alignItems: 'center',
+            justifyContent: 'center',
+            ':hover': { cursor: 'pointer' },
+            display: 'flex',
+          }}
+          onClick={() => handleSignout()}
+        >
+          <Image src={LogoutIcon} alt="logout icon" />
+          <Link sx={{ textDecoration: 'underline' }}>Logout</Link>
         </Box>
-      </form>
-      <Box
-        sx={{
-          mt: 3,
-          fontSize: '18px',
-          alignItems: 'center',
-          justifyContent: 'center',
-          ':hover': { cursor: 'pointer' },
-          display: 'flex',
-        }}
-        onClick={() => handleSignout()}
-      >
-        <Image src={LogoutIcon} alt="logout icon" />
-        <Link sx={{ textDecoration: 'underline' }}>Logout</Link>
-      </Box>
-    </Auth>
+      </Auth>
+    </>
   );
 };
 

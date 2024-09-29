@@ -9,6 +9,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import Input from '@/components/UI/Input/Input';
 import Auth from '@/components/Layouts/Auth';
 import { httpPost } from '../../helpers/http';
+import { PageHead } from '@/components/PageHead';
 
 export const ResetPassword = () => {
   const { register, handleSubmit } = useForm();
@@ -26,8 +27,8 @@ export const ResetPassword = () => {
 
   const onSubmit = async (reqData: any) => {
     try {
-      if(!token){
-        errorToast("This password reset link is invalid", [], toastContext);
+      if (!token) {
+        errorToast('This password reset link is invalid', [], toastContext);
         return;
       }
       await httpPost(session, 'users/reset_password/', {
@@ -35,37 +36,40 @@ export const ResetPassword = () => {
         password: reqData.password,
       });
       router.push('/login');
-    } catch (error: any) {     
+    } catch (error: any) {
       errorToast(error.cause.detail[0].msg, [], toastContext);
     }
   };
 
   return (
-    <Auth heading="Set password" subHeading="Please enter your new password">
-      <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
-        <Box className={styles.Container}>
-          <Input
-            sx={{ width: '100%', pb: 2 }}
-            id="outlined-basic"
-            data-testid="password"
-            label="Password"
-            type="password"
-            required
-            register={register}
-            name="password"
-          />
+    <>
+      <PageHead title="Dalgo | Reset Password" />
+      <Auth heading="Set password" subHeading="Please enter your new password">
+        <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
+          <Box className={styles.Container}>
+            <Input
+              sx={{ width: '100%', pb: 2 }}
+              id="outlined-basic"
+              data-testid="password"
+              label="Password"
+              type="password"
+              required
+              register={register}
+              name="password"
+            />
 
-          <Button
-            variant="contained"
-            sx={{ width: '100%', mb: 3, minHeight: '50px' }}
-            type="submit"
-            data-testid="submit"
-          >
-            Set Password
-          </Button>
-        </Box>
-      </form>
-    </Auth>
+            <Button
+              variant="contained"
+              sx={{ width: '100%', mb: 3, minHeight: '50px' }}
+              type="submit"
+              data-testid="submit"
+            >
+              Set Password
+            </Button>
+          </Box>
+        </form>
+      </Auth>
+    </>
   );
 };
 
