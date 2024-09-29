@@ -60,7 +60,7 @@ export default function Analysis() {
 
   return (
     <>
-      <PageHead title="Dalgo" />
+      <PageHead title="Dalgo | Analysis" />
       <Box sx={{ p: '3rem 4rem', width: '100%' }}>
         {globalContext?.CurrentOrg?.state?.viz_url && (
           <iframe

@@ -55,7 +55,7 @@ export default function Usage() {
 
   return (
     <>
-      <PageHead title="Dalgo" />
+      <PageHead title="Dalgo | Usage" />
       <main className={styles.usage}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography

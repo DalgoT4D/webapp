@@ -20,6 +20,7 @@ import {
   successToast,
 } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
+import { PageHead } from '@/components/PageHead';
 
 const AcceptInvite = () => {
   const { data: session }: any = useSession();
@@ -75,102 +76,106 @@ const AcceptInvite = () => {
   };
 
   return (
-    <Auth
-      heading="Welcome aboard"
-      subHeading="Thank you. You are at the last step"
-    >
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        data-testid="accept-invitation-form"
+    <>
+      <PageHead title="Dalgo | Invitations" />
+
+      <Auth
+        heading="Welcome aboard"
+        subHeading="Thank you. You are at the last step"
       >
-        <Box className={styles.Container}>
-          {!isUserPresent && (
-            <>
-              <Input
-                error={!!errors.password}
-                helperText={errors.password?.message}
-                sx={{ width: '100%', pb: 3 }}
-                id="outlined-password-input"
-                data-testid="password"
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                autoComplete="current-password"
-                register={register}
-                name="password"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Box>
-                        <IconButton
-                          onClick={() => {
-                            setShowPassword(!showPassword);
-                          }}
-                          edge="end"
-                        >
-                          {showPassword ? (
-                            <VisibilityOutlinedIcon />
-                          ) : (
-                            <VisibilityOffOutlinedIcon />
-                          )}
-                        </IconButton>
-                      </Box>
-                    </InputAdornment>
-                  ),
-                }}
-              />
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          data-testid="accept-invitation-form"
+        >
+          <Box className={styles.Container}>
+            {!isUserPresent && (
+              <>
+                <Input
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
+                  sx={{ width: '100%', pb: 3 }}
+                  id="outlined-password-input"
+                  data-testid="password"
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  register={register}
+                  name="password"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Box>
+                          <IconButton
+                            onClick={() => {
+                              setShowPassword(!showPassword);
+                            }}
+                            edge="end"
+                          >
+                            {showPassword ? (
+                              <VisibilityOutlinedIcon />
+                            ) : (
+                              <VisibilityOffOutlinedIcon />
+                            )}
+                          </IconButton>
+                        </Box>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
-              <Input
-                error={!!errors.confirmpassword}
-                helperText={errors.confirmpassword?.message}
-                hookFormValidations={{
-                  validate: (value: string) =>
-                    value === password || 'Passwords do not match',
-                }}
-                sx={{ width: '100%', pb: 3 }}
-                id="outlined-confirm-password-input"
-                data-testid="confirmpassword"
-                label="Confirm Password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Confirm password"
-                register={register}
-                name="confirmpassword"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Box>
-                        <IconButton
-                          onClick={() => {
-                            setShowPassword(!showPassword);
-                          }}
-                          edge="end"
-                        >
-                          {showPassword ? (
-                            <VisibilityOutlinedIcon />
-                          ) : (
-                            <VisibilityOffOutlinedIcon />
-                          )}
-                        </IconButton>
-                      </Box>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </>
-          )}
+                <Input
+                  error={!!errors.confirmpassword}
+                  helperText={errors.confirmpassword?.message}
+                  hookFormValidations={{
+                    validate: (value: string) =>
+                      value === password || 'Passwords do not match',
+                  }}
+                  sx={{ width: '100%', pb: 3 }}
+                  id="outlined-confirm-password-input"
+                  data-testid="confirmpassword"
+                  label="Confirm Password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Confirm password"
+                  register={register}
+                  name="confirmpassword"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Box>
+                          <IconButton
+                            onClick={() => {
+                              setShowPassword(!showPassword);
+                            }}
+                            edge="end"
+                          >
+                            {showPassword ? (
+                              <VisibilityOutlinedIcon />
+                            ) : (
+                              <VisibilityOffOutlinedIcon />
+                            )}
+                          </IconButton>
+                        </Box>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </>
+            )}
 
-          <Button
-            variant="contained"
-            sx={{ width: '100%', mb: 3, minHeight: '50px' }}
-            type="submit"
-            data-testid="submit"
-          >
-            Accept
-            {loading && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
-          </Button>
-        </Box>
-      </form>
-    </Auth>
+            <Button
+              variant="contained"
+              sx={{ width: '100%', mb: 3, minHeight: '50px' }}
+              type="submit"
+              data-testid="submit"
+            >
+              Accept
+              {loading && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
+            </Button>
+          </Box>
+        </form>
+      </Auth>
+    </>
   );
 };
 
