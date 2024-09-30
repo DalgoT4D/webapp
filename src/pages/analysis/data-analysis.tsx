@@ -161,7 +161,8 @@ export default function DataAnalysis() {
       setLoading(false);
     }
   };
-
+  const a = '';
+  console.log(' hello ');
   // get llm summary
   const getLLMSummary = async ({
     sqlText,
