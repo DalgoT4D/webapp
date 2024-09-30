@@ -20,13 +20,7 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   const { canvasNode } = useCanvasNode() as { canvasNode: OperationNodeType };
   const { setCanvasAction } = useCanvasAction();
   const globalContext = useContext(GlobalContext);
-  const {
-    control,
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
+  const { control, register, handleSubmit, reset, formState } = useForm({
     defaultValues: canvasNode?.data.is_last_in_chain
       ? {
           output_name: canvasNode?.data.target_model_name || '',
@@ -87,7 +81,7 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
             />
           )}
         />
-        {errors?.dest_schema && (
+        {formState?.errors?.dest_schema && (
           <FormHelperText error>Schema is required</FormHelperText>
         )}
         <Box sx={{ m: 2 }} />
