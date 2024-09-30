@@ -9,7 +9,8 @@
 yarn install
 ```
 ## Prettier Formatting
-
+ Do this if there isn't a husky pre-commit script inside the ```husky/_``` folder
+ 
 - We are using Husky and lint-staged auto fix the fomatting in the code in the staging file.
 - After yarn install run
   ```npx husky init```
