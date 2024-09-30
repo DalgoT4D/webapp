@@ -48,8 +48,7 @@ export const List = ({
   };
 
   const orderedRows = React.useMemo(() => {
-    if (sortColumn === null || sortDirection === undefined || !rowValues)
-      return rows; // no sorting needed
+    if (sortColumn === null || sortDirection === undefined || !rowValues) return rows; // no sorting needed
 
     // Sort row values lexicographically based on the sort column:
     const sorted = [...rowValues].sort((a, b) => {
@@ -86,10 +85,7 @@ export const List = ({
             <TableHead sx={{ display: 'table-header-group' }}>
               <TableRow>
                 {headers.values.map((header, index) => (
-                  <TableCell
-                    sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }}
-                    key={index}
-                  >
+                  <TableCell sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }} key={index}>
                     {headers.sortable && headers.sortable[index] ? (
                       <TableSortLabel
                         active={sortColumn === index}
@@ -103,10 +99,7 @@ export const List = ({
                     )}
                   </TableCell>
                 ))}
-                <TableCell
-                  sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }}
-                  align="right"
-                >
+                <TableCell sx={{ px: 2, py: 1, fontWeight: 700, color: '#0925408A' }} align="right">
                   Actions
                 </TableCell>
               </TableRow>
@@ -126,8 +119,7 @@ export const List = ({
                       <TableCell
                         key={idx}
                         align={
-                          headers.values.length + 1 === row.length &&
-                          idx === row.length - 1
+                          headers.values.length + 1 === row.length && idx === row.length - 1
                             ? 'right'
                             : 'left'
                         }
@@ -150,9 +142,7 @@ export const List = ({
         </TableContainer>
       ) : (
         <Box>
-          <Typography>
-            No {title.toLowerCase()} found. Please create one
-          </Typography>
+          <Typography>No {title.toLowerCase()} found. Please create one</Typography>
         </Box>
       )}
     </>

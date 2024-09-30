@@ -42,11 +42,7 @@ describe('CreateOrgTaskForm', () => {
 
     return render(
       <GlobalContext.Provider value={mockGlobalContext}>
-        <CreateOrgTaskForm
-          mutate={mockMutate}
-          showForm={true}
-          setShowForm={mockSetShowForm}
-        />
+        <CreateOrgTaskForm mutate={mockMutate} showForm={true} setShowForm={mockSetShowForm} />
       </GlobalContext.Provider>
     );
   };
@@ -64,9 +60,7 @@ describe('CreateOrgTaskForm', () => {
   });
 
   it('handles form submission errors', async () => {
-    global.fetch = jest.fn(() =>
-      Promise.reject(new Error('Submission error'))
-    ) as jest.Mock;
+    global.fetch = jest.fn(() => Promise.reject(new Error('Submission error'))) as jest.Mock;
 
     setup();
 
@@ -74,11 +68,7 @@ describe('CreateOrgTaskForm', () => {
     fireEvent.click(screen.getByText(/Save/i));
 
     await waitFor(() => {
-      expect(errorToast).toHaveBeenCalledWith(
-        'Submission error',
-        [],
-        mockGlobalContext
-      );
+      expect(errorToast).toHaveBeenCalledWith('Submission error', [], mockGlobalContext);
     });
   });
 

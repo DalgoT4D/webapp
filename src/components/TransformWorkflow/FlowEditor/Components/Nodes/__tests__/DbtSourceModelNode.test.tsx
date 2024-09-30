@@ -3,10 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { DbtSourceModelNode } from '../DbtSourceModelNode';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { useNodeId, useEdges } from 'reactflow';
 
@@ -156,9 +153,7 @@ describe('DbtSourceModelNode Component', () => {
   });
 
   it('should display error message if columns fetch fails', async () => {
-    global.fetch = jest.fn(() =>
-      Promise.reject(new Error('Failed to fetch columns'))
-    );
+    global.fetch = jest.fn(() => Promise.reject(new Error('Failed to fetch columns')));
 
     render(
       <GlobalContext.Provider value={mockGlobalContext}>

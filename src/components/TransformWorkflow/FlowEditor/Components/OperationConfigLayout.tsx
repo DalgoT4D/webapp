@@ -16,12 +16,7 @@ import {
 } from '@mui/material';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
-import {
-  OperationNodeData,
-  OperationNodeType,
-  SrcModelNodeType,
-  UIOperationType,
-} from './Canvas';
+import { OperationNodeData, OperationNodeType, SrcModelNodeType, UIOperationType } from './Canvas';
 import {
   OPERATION_NODE,
   RENAME_COLUMNS_OP,
@@ -49,10 +44,7 @@ import DropColumnOpForm from './OperationPanel/Forms/DropColumnOpForm';
 import { operations } from '../constant';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CreateTableOrAddFunction from './OperationPanel/CreateTableOrAddFunction';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import CreateTableForm from './OperationPanel/Forms/CreateTableForm';
 import { Edge, useReactFlow } from 'reactflow';
 import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
@@ -159,11 +151,7 @@ const OperationForm = ({
   return <Form key={node?.data.id} {...FormProps} />;
 };
 
-const OperationConfigLayout = ({
-  openPanel,
-  setOpenPanel,
-  sx,
-}: OperationConfigProps) => {
+const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigProps) => {
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { canvasNode, setCanvasNode } = useCanvasNode();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
@@ -177,8 +165,7 @@ const OperationConfigLayout = ({
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
 
-  const { addEdges, addNodes, deleteElements, getNodes, setNodes, getEdges } =
-    useReactFlow();
+  const { addEdges, addNodes, deleteElements, getNodes, setNodes, getEdges } = useReactFlow();
 
   const handleClosePanel = () => {
     const dummyNodesArr: { id: string }[] = getNodes()
@@ -195,10 +182,7 @@ const OperationConfigLayout = ({
   const handleSelectOp = (op: UIOperationType) => {
     // Create the dummy node on canvas
     // For multi input operation we might have to do it inside the operation once they select the other inputs
-    const dummyTargetNodeData: any = generateDummyOperationlNode(
-      canvasNode,
-      op
-    );
+    const dummyTargetNodeData: any = generateDummyOperationlNode(canvasNode, op);
     const newEdge: any = {
       id: `${canvasNode ? canvasNode.id : ''}_${dummyTargetNodeData.id}`,
       source: canvasNode ? canvasNode.id : '',
@@ -233,9 +217,7 @@ const OperationConfigLayout = ({
       if (['view', 'edit'].includes(panelOpFormState.current)) {
         const nodeData = canvasNode?.data as OperationNodeData;
         if (permissions.includes('can_view_dbt_operation')) {
-          setSelectedOp(
-            operations.find((op) => op.slug === nodeData.config?.type)
-          );
+          setSelectedOp(operations.find((op) => op.slug === nodeData.config?.type));
         }
       }
     }
@@ -255,15 +237,11 @@ const OperationConfigLayout = ({
 
   const DiscardDialog = ({ handleBackbuttonAction }: any) => {
     return (
-      <Dialog
-        open={showDiscardDialog}
-        onClose={() => setShowDiscardDialog(false)}
-      >
+      <Dialog open={showDiscardDialog} onClose={() => setShowDiscardDialog(false)}>
         <DialogTitle>Discard Changes?</DialogTitle>
         <DialogContent>
           <Typography>
-            All your changes will be discarded. Are you sure you want to
-            continue?
+            All your changes will be discarded. Are you sure you want to continue?
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -302,9 +280,7 @@ const OperationConfigLayout = ({
       // show the form
       const { config } = canvasNode?.data as OperationNodeData;
       if (config && config.type) {
-        const editingOperation = operations.find(
-          (op) => op.slug === config.type
-        );
+        const editingOperation = operations.find((op) => op.slug === config.type);
         setSelectedOp({
           slug: editingOperation?.slug || '',
           label: editingOperation?.label || '',
@@ -340,25 +316,15 @@ const OperationConfigLayout = ({
           )}
           <DiscardDialog handleBackbuttonAction={handleBackbuttonAction} />
           <Box sx={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
-            <Typography
-              fontWeight={600}
-              fontSize="15px"
-              color="#0F2440"
-              lineHeight={'21px'}
-            >
-              {selectedOp
-                ? selectedOp.label
-                : panelState === 'op-list'
-                  ? 'Functions'
-                  : ''}
+            <Typography fontWeight={600} fontSize="15px" color="#0F2440" lineHeight={'21px'}>
+              {selectedOp ? selectedOp.label : panelState === 'op-list' ? 'Functions' : ''}
             </Typography>
             <Box sx={{ width: '1px', height: '12px' }}>
               {panelState === 'op-form' && selectedOp ? (
                 <InfoTooltip
                   title={
-                    operations.find(
-                      (op: UIOperationType) => op.slug === selectedOp.slug
-                    )?.infoToolTip ||
+                    operations.find((op: UIOperationType) => op.slug === selectedOp.slug)
+                      ?.infoToolTip ||
                     (selectedOp.slug === 'create-table'
                       ? 'Generate a table which will be saved with a new name in your desired warehouse schema'
                       : '')
@@ -371,10 +337,7 @@ const OperationConfigLayout = ({
               )}
             </Box>
           </Box>
-          <IconButton
-            onClick={handleClosePanel}
-            data-testid="closeoperationpanel"
-          >
+          <IconButton onClick={handleClosePanel} data-testid="closeoperationpanel">
             <CloseIcon fontSize="small" width="16px" height="16px" />
           </IconButton>
         </Box>
@@ -397,8 +360,7 @@ const OperationConfigLayout = ({
         <List>
           {operations.map((op, index) => {
             const canSelectOperation = !(
-              cantChainOperationsInMiddle.includes(op.slug) &&
-              canvasNode?.type === OPERATION_NODE
+              cantChainOperationsInMiddle.includes(op.slug) && canvasNode?.type === OPERATION_NODE
             );
             return (
               <ListItemButton
@@ -459,8 +421,7 @@ const OperationConfigLayout = ({
       const dummyNodeId: string = dummyNodeIdRef.current;
       // get all edges of this dummy node and save
       const dummyNodeEdges = getEdges().filter(
-        (edge: Edge) =>
-          edge.source === dummyNodeId || edge.target === dummyNodeId
+        (edge: Edge) => edge.source === dummyNodeId || edge.target === dummyNodeId
       );
 
       // convert this dummy node to a real node from backend. basically create a new one
@@ -479,11 +440,9 @@ const OperationConfigLayout = ({
 
       // recreate the saved edges but this time to the real node
       const edgesToCreate: Edge[] = dummyNodeEdges.map((edge: Edge) => {
-        const source =
-          edge.source === dummyNodeId ? dummyToRealNode.id : edge.source;
+        const source = edge.source === dummyNodeId ? dummyToRealNode.id : edge.source;
 
-        const target =
-          edge.target === dummyNodeId ? dummyToRealNode.id : edge.target;
+        const target = edge.target === dummyNodeId ? dummyToRealNode.id : edge.target;
 
         return {
           id: `${source}_${target}`,

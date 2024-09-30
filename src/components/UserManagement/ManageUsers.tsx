@@ -32,20 +32,20 @@ const headers = {
         title={
           <Box>
             <Box>
-              <strong> Account manager </strong>: Admin of the NGO org, and is
-              also responsible for the user management
+              <strong> Account manager </strong>: Admin of the NGO org, and is also responsible for
+              the user management
             </Box>
             <Box>
-              <strong>Pipeline manager : </strong> Org team member who is
-              responsible for creating pipelines & DBT models
+              <strong>Pipeline manager : </strong> Org team member who is responsible for creating
+              pipelines & DBT models
             </Box>
             <Box>
-              <strong>Analyst : </strong> M&E team member who will be working on
-              transformation models of the org
+              <strong>Analyst : </strong> M&E team member who will be working on transformation
+              models of the org
             </Box>
             <Box>
-              <strong>Guest : </strong> The guest is able to view the platform
-              and the usage dashboard
+              <strong>Guest : </strong> The guest is able to view the platform and the usage
+              dashboard
             </Box>
           </Box>
         }
@@ -88,10 +88,8 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [editOrgRole, setEditOrgRole] = useState<OrgUser | null>(null);
-  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
-    useState<boolean>(false);
-  const [orguserSelectedInAction, setOrguserSelectedInAction] =
-    useState<OrgUser | null>(null);
+  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] = useState<boolean>(false);
+  const [orguserSelectedInAction, setOrguserSelectedInAction] = useState<OrgUser | null>(null);
   const trackAmplitudeEvent = useTracking();
   const [selectedUserRole, setSelectedUserRole] = useState<string>('');
   const openActionMenu = Boolean(anchorEl);
@@ -129,9 +127,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
 
   const handleEdit = () => {
     setSelectedUserRole(
-      roles.find(
-        (role: any) => role.slug === orguserSelectedInAction?.new_role_slug
-      ).uuid
+      roles.find((role: any) => role.slug === orguserSelectedInAction?.new_role_slug).uuid
     );
     setEditOrgRole(orguserSelectedInAction);
     setAnchorEl(null);
@@ -151,15 +147,8 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
   rows = useMemo(() => {
     if (data && data.length >= 0) {
       return data.map((orguser: OrgUser, idx: number) => [
-        <Box
-          key={'email-' + idx}
-          sx={{ display: 'flex', alignItems: 'center' }}
-        >
-          <Image
-            src={ProfileIcon}
-            style={{ marginRight: 10 }}
-            alt="person icon"
-          />
+        <Box key={'email-' + idx} sx={{ display: 'flex', alignItems: 'center' }}>
+          <Image src={ProfileIcon} style={{ marginRight: 10 }} alt="person icon" />
           <Typography variant="body1" fontWeight={600}>
             {orguser.email}
           </Typography>
@@ -182,21 +171,14 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
               </Select>
             </FormControl>
           ) : (
-            <Typography
-              key={'role-' + idx}
-              variant="subtitle2"
-              fontWeight={600}
-            >
+            <Typography key={'role-' + idx} variant="subtitle2" fontWeight={600}>
               {orguser.new_role_slug
                 .replace('-', ' ')
                 .replace(/\b\w/g, (char) => char.toUpperCase())}
             </Typography>
           )}
         </Box>,
-        <Box
-          sx={{ justifyContent: 'end', display: 'flex' }}
-          key={'action-box-' + idx}
-        >
+        <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'action-box-' + idx}>
           {editOrgRole?.email === orguser.email ? (
             <Button variant="contained" onClick={() => handleUpdateRole()}>
               Save
@@ -230,11 +212,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
         await httpPost(session, `v1/organizations/users/delete`, {
           email: orguser.email,
         });
-        successToast(
-          'Organization user deleted successfully',
-          [],
-          globalContext
-        );
+        successToast('Organization user deleted successfully', [], globalContext);
         mutate();
         setMutateInvitations(true);
       } catch (err: any) {
@@ -262,13 +240,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
         handleEdit={handleEdit}
         handleDelete={handleClickDeleteAction}
       />
-      <List
-        openDialog={() => {}}
-        title="User"
-        headers={headers}
-        rows={rows}
-        onlyList={true}
-      />
+      <List openDialog={() => {}} title="User" headers={headers} rows={rows} onlyList={true} />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
         handleClose={() => handleCancelDeleteOrguser()}

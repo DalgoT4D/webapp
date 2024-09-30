@@ -1,19 +1,10 @@
 import React from 'react';
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  within,
-} from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { CreateOrgForm } from '../CreateOrgForm';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 
 // Mock dependencies
@@ -78,9 +69,7 @@ describe('CreateOrgForm Component', () => {
     fireEvent.click(screen.getByTestId('savebutton'));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Organization name is required/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Organization name is required/i)).toBeInTheDocument();
     });
   });
   it('should handle form submission and display success toast', async () => {
@@ -91,11 +80,7 @@ describe('CreateOrgForm Component', () => {
     const setShowForm = jest.fn();
     const { getByTestId, getByLabelText } = render(
       <GlobalContext.Provider value={mockGlobalContext}>
-        <CreateOrgForm
-          closeSideMenu={closeSideMenu}
-          showForm={true}
-          setShowForm={setShowForm}
-        />
+        <CreateOrgForm closeSideMenu={closeSideMenu} showForm={true} setShowForm={setShowForm} />
       </GlobalContext.Provider>
     );
 
@@ -107,11 +92,9 @@ describe('CreateOrgForm Component', () => {
 
     // Assert
     await waitFor(() => {
-      expect(httpPost).toHaveBeenCalledWith(
-        { user: { name: 'Test User' } },
-        'v1/organizations/',
-        { name: 'New Org' }
-      );
+      expect(httpPost).toHaveBeenCalledWith({ user: { name: 'Test User' } }, 'v1/organizations/', {
+        name: 'New Org',
+      });
       expect(localStorage.getItem('org-slug')).toBe('new-org-slug');
       expect(closeSideMenu).toHaveBeenCalled();
       expect(setShowForm).toHaveBeenCalledWith(false);

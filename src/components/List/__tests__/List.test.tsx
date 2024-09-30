@@ -8,16 +8,8 @@ const headers = {
 };
 
 const rows = [
-  [
-    <span key="1">Source 1</span>,
-    <span key="2">Type 1</span>,
-    <button key="3">Edit</button>,
-  ],
-  [
-    <span key="1">Source 2</span>,
-    <span key="2">Type 2</span>,
-    <button key="3">Edit</button>,
-  ],
+  [<span key="1">Source 1</span>, <span key="2">Type 1</span>, <button key="3">Edit</button>],
+  [<span key="1">Source 2</span>, <span key="2">Type 2</span>, <button key="3">Edit</button>],
 ];
 
 const rowValues = [
@@ -73,18 +65,10 @@ describe('List component', () => {
 
   test('displays message when no rows are present', () => {
     render(
-      <List
-        title="Source"
-        openDialog={mockOpenDialog}
-        headers={headers}
-        rows={[]}
-        rowValues={[]}
-      />
+      <List title="Source" openDialog={mockOpenDialog} headers={headers} rows={[]} rowValues={[]} />
     );
 
-    expect(
-      screen.getByText('No source found. Please create one')
-    ).toBeInTheDocument();
+    expect(screen.getByText('No source found. Please create one')).toBeInTheDocument();
   });
 
   test('opens dialog when add new button is clicked', () => {

@@ -62,9 +62,7 @@ export default function Orchestrate() {
 
   // when the flows list changes
   useEffect(() => {
-    const isLocked: boolean = data?.some((flow: any) =>
-      flow.lock ? true : false
-    );
+    const isLocked: boolean = data?.some((flow: any) => (flow.lock ? true : false));
 
     if (data && data.length >= 0) {
       setFlows(data);
@@ -107,11 +105,7 @@ export default function Orchestrate() {
             />
           ))}
         {crudVal === 'create' && (
-          <FlowCreate
-            updateCrudVal={updateCrudVal}
-            mutate={mutate}
-            tasks={tasks}
-          />
+          <FlowCreate updateCrudVal={updateCrudVal} mutate={mutate} tasks={tasks} />
         )}
         {crudVal === 'update' && (
           <FlowCreate

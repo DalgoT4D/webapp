@@ -49,9 +49,7 @@ const ItemButton: React.FC<ItemButtonProps> = ({
       onClick={() => !disabled && onClick(item)}
       selected={isSelected}
     >
-      <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>
-        {item.icon(isSelected)}
-      </ListItemIcon>
+      <ListItemIcon sx={!openMenu ? { pr: 10 } : {}}>{item.icon(isSelected)}</ListItemIcon>
       {openMenu && (
         <ListItemText
           primaryTypographyProps={{
@@ -132,9 +130,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
 
   useEffect(() => {
     if (state) return;
-    setSelectedIndex(
-      sideMenu.find((item) => item.path === router.pathname)?.index
-    );
+    setSelectedIndex(sideMenu.find((item) => item.path === router.pathname)?.index);
   }, [router.pathname, state]);
 
   const handleListItemClick = (item: MenuOption) => {
@@ -147,9 +143,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   };
 
   useEffect(() => {
-    setOpen(
-      new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
-    );
+    setOpen(new Array(sideMenu.filter((item) => !item.parent).length).fill(true));
   }, [openMenu]);
 
   useEffect(() => {
@@ -159,9 +153,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const getList = (
     <List component="div" data-testid="side-menu">
       {sideMenu.map((item) => {
-        const hasChildren = sideMenu.filter(
-          (sideItem) => sideItem.parent === item.index
-        );
+        const hasChildren = sideMenu.filter((sideItem) => sideItem.parent === item.index);
         const itemColor = selectedIndex === item.index ? 'primary' : 'inherit';
         if (item.hide) return null;
         return (
@@ -175,10 +167,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                 <ItemButton
                   openMenu={openMenu}
                   item={item}
-                  disabled={
-                    item.permission !== undefined &&
-                    !permissions.includes(item.permission)
-                  }
+                  disabled={item.permission !== undefined && !permissions.includes(item.permission)}
                   isSelected={selectedIndex === item.index}
                   onClick={() => {
                     handleListItemClick(item);
@@ -207,11 +196,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                   data-testid={`collapse-box-${item.index}`}
                   unmountOnExit
                 >
-                  <List
-                    component="div"
-                    disablePadding
-                    sx={{ ml: openMenu ? 4 : 0 }}
-                  >
+                  <List component="div" disablePadding sx={{ ml: openMenu ? 4 : 0 }}>
                     {hasChildren.map((subitem) => {
                       if (subitem.hide) {
                         return null;

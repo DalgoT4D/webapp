@@ -41,10 +41,7 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
         'enable_discord_notifications',
         preferences.res.enable_discord_notifications || false
       );
-      setValue(
-        'enable_email_notifications',
-        preferences.res.enable_email_notifications || false
-      );
+      setValue('enable_email_notifications', preferences.res.enable_email_notifications || false);
       setValue('discord_webhook', preferences.res.discord_webhook || '');
     }
   }, [preferences, setValue, showForm]);
@@ -104,9 +101,7 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
       await httpPut(session, 'userpreferences/', {
         enable_email_notifications: values.enable_email_notifications,
         enable_discord_notifications: values.enable_discord_notifications,
-        discord_webhook: values.enable_discord_notifications
-          ? values.discord_webhook
-          : '',
+        discord_webhook: values.enable_discord_notifications ? values.discord_webhook : '',
       });
       mutate();
       handleClose();

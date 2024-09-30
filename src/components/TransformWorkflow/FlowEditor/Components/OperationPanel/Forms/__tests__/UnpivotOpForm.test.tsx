@@ -3,11 +3,7 @@ import UnpivotOpForm from '../UnpivotOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import {
-  intermediateTableResponse,
-  mockNode,
-  sourceModelsMock,
-} from './helpers';
+import { intermediateTableResponse, mockNode, sourceModelsMock } from './helpers';
 import { ReactFlowProvider } from 'reactflow';
 
 const user = userEvent.setup();
@@ -94,9 +90,7 @@ describe('Unpivot form', () => {
     render(unpivotForm);
     await waitFor(() => {
       expect(screen.getByText('Columns to unpivot')).toBeInTheDocument();
-      expect(
-        screen.getByText('Columns to keep in output table')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Columns to keep in output table')).toBeInTheDocument();
     });
   });
 });
@@ -113,9 +107,7 @@ describe('Form interactions', () => {
 
     // validations to be called
     await waitFor(() => {
-      expect(
-        screen.getByText('Atleast one column required to unpivot')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Atleast one column required to unpivot')).toBeInTheDocument();
     });
 
     const unpivotColumn1 = screen.getByTestId('unpivotColumn0');
@@ -176,9 +168,7 @@ describe('Form interactions', () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Atleast one column required to unpivot')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Atleast one column required to unpivot')).toBeInTheDocument();
     });
   });
 

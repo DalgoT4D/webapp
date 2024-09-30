@@ -27,9 +27,7 @@ describe('DBTDocs Component', () => {
     render(<DBTDocs />);
 
     expect(
-      screen.getByText(
-        /Please go to the setup tab and select the function DBT docs-generate/i
-      )
+      screen.getByText(/Please go to the setup tab and select the function DBT docs-generate/i)
     ).toBeInTheDocument();
   });
 
@@ -58,9 +56,7 @@ describe('DBTDocs Component', () => {
       status: 'authenticated',
     });
 
-    global.fetch = jest.fn(() =>
-      Promise.reject(new Error('Failed to fetch token'))
-    ) as jest.Mock;
+    global.fetch = jest.fn(() => Promise.reject(new Error('Failed to fetch token'))) as jest.Mock;
 
     render(<DBTDocs />);
 
@@ -70,9 +66,7 @@ describe('DBTDocs Component', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          /Please go to the setup tab and select the function DBT docs-generate/i
-        )
+        screen.getByText(/Please go to the setup tab and select the function DBT docs-generate/i)
       ).toBeInTheDocument();
     });
   });

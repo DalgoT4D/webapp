@@ -71,18 +71,12 @@ describe('DBTTransformType', () => {
 
   it('handles error when fetching DBT workspace', async () => {
     const errorMessage = 'Failed to fetch DBT workspace';
-    global.fetch = jest.fn(() =>
-      Promise.reject(new Error(errorMessage))
-    ) as jest.Mock;
+    global.fetch = jest.fn(() => Promise.reject(new Error(errorMessage))) as jest.Mock;
 
     setup();
 
     await waitFor(() => {
-      expect(errorToast).toHaveBeenCalledWith(
-        errorMessage,
-        [],
-        mockGlobalContext
-      );
+      expect(errorToast).toHaveBeenCalledWith(errorMessage, [], mockGlobalContext);
     });
   });
 });

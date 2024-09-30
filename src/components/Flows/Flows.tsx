@@ -81,14 +81,8 @@ const flowLastRun = (flow: FlowInterface) => {
           </Typography>
         </Box>
       ) : flow.lastRun ? (
-        <Typography
-          data-testid={'flowlastrun-' + flow.name}
-          fontWeight={600}
-          component="p"
-        >
-          {lastRunTime(
-            flow.lastRun?.startTime || flow.lastRun?.expectedStartTime
-          )}
+        <Typography data-testid={'flowlastrun-' + flow.name} fontWeight={600} component="p">
+          {lastRunTime(flow.lastRun?.startTime || flow.lastRun?.expectedStartTime)}
         </Typography>
       ) : (
         <Box
@@ -138,11 +132,7 @@ const Actions = memo(
             fontWeight: 600,
             marginRight: '5px',
           }}
-          disabled={
-            tempSyncState ||
-            !!lock ||
-            !permissions.includes('can_view_pipeline')
-          }
+          disabled={tempSyncState || !!lock || !permissions.includes('can_view_pipeline')}
           onClick={() => {
             setShowLogsDialog(true);
             setFlowLogs(flow);
@@ -156,30 +146,19 @@ const Actions = memo(
             sx={{ mr: 1 }}
             data-testid={'btn-quickrundeployment-' + flow.name}
             variant="contained"
-            disabled={
-              tempSyncState ||
-              !!lock ||
-              !permissions.includes('can_run_pipeline')
-            }
+            disabled={tempSyncState || !!lock || !permissions.includes('can_run_pipeline')}
             onClick={async () => {
               setTempSyncState(true);
               handlingSyncState();
               trackAmplitudeEvent('[Run-pipleline] Button clicked');
               // push deployment id into list of running deployment ids
               if (!runningDeploymentIds.includes(flow.deploymentId)) {
-                setRunningDeploymentIds([
-                  ...runningDeploymentIds,
-                  flow.deploymentId,
-                ]);
+                setRunningDeploymentIds([...runningDeploymentIds, flow.deploymentId]);
               }
             }}
           >
             {tempSyncState || lock ? (
-              <Image
-                src={SyncIcon}
-                className={styles.SyncIcon}
-                alt="sync icon"
-              />
+              <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
             ) : (
               'Run'
             )}
@@ -188,9 +167,7 @@ const Actions = memo(
             aria-controls={open ? 'basic-menu' : undefined}
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
-            onClick={(event) =>
-              handleClick(flow.deploymentId, event.currentTarget)
-            }
+            onClick={(event) => handleClick(flow.deploymentId, event.currentTarget)}
             variant="contained"
             key={'menu-' + idx}
             color="info"
@@ -210,22 +187,14 @@ const Actions = memo(
 );
 Actions.displayName = 'Action'; //adding a display name to Actions which react cannot infer due to HOC memo.
 
-export const Flows = ({
-  flows,
-  updateCrudVal,
-  mutate,
-  setSelectedFlowId,
-}: FlowsInterface) => {
-  const [runningDeploymentIds, setRunningDeploymentIds] = useState<string[]>(
-    []
-  );
+export const Flows = ({ flows, updateCrudVal, mutate, setSelectedFlowId }: FlowsInterface) => {
+  const [runningDeploymentIds, setRunningDeploymentIds] = useState<string[]>([]);
   const [deploymentId, setDeploymentId] = useState<string>('');
   const { data: session }: any = useSession();
   const [showLogsDialog, setShowLogsDialog] = useState(false);
   const [flowLogs, setFlowLogs] = useState<FlowInterface>();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
-    useState<boolean>(false);
+  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] = useState<boolean>(false);
   const [deleteFlowLoading, setDeleteFlowLoading] = useState<boolean>(false);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
@@ -258,24 +227,15 @@ export const Flows = ({
     // things when the connection is locked
     if (flow.lock?.status === 'running') {
       jobStatus = 'running';
-    } else if (
-      flow.lock?.status === 'locked' ||
-      flow.lock?.status === 'complete'
-    ) {
+    } else if (flow.lock?.status === 'locked' || flow.lock?.status === 'complete') {
       jobStatus = 'locked';
-    } else if (
-      runningDeploymentIds.includes(flow.deploymentId) ||
-      flow.lock?.status === 'queued'
-    ) {
+    } else if (runningDeploymentIds.includes(flow.deploymentId) || flow.lock?.status === 'queued') {
       jobStatus = 'queued';
     }
 
     if (jobStatus === null && flow.lastRun) {
       const state_name = flow.lastRun?.state_name;
-      const status =
-        state_name === 'DBT_TEST_FAILED'
-          ? 'dbt tests failed'
-          : flow.lastRun?.status;
+      const status = state_name === 'DBT_TEST_FAILED' ? 'dbt tests failed' : flow.lastRun?.status;
       if (status === 'dbt tests failed') {
         jobStatus = 'dbt test failed';
         jobStatusColor = '#df8e14';
@@ -288,13 +248,7 @@ export const Flows = ({
       }
     }
 
-    const StatusIcon = ({
-      sx,
-      status,
-    }: {
-      sx: SxProps;
-      status: string | null;
-    }) => {
+    const StatusIcon = ({ sx, status }: { sx: SxProps; status: string | null }) => {
       if (status === null) return null;
 
       if (status === 'running') {
@@ -361,9 +315,7 @@ export const Flows = ({
       errorToast(err.message, [], globalContext);
       return { error: 'ERROR' };
     } finally {
-      setRunningDeploymentIds(
-        runningDeploymentIds.filter((id) => id !== deploymentId)
-      );
+      setRunningDeploymentIds(runningDeploymentIds.filter((id) => id !== deploymentId));
     }
   };
 
@@ -439,10 +391,7 @@ export const Flows = ({
     (async () => {
       setDeleteFlowLoading(true);
       try {
-        const data = await httpDelete(
-          session,
-          `prefect/v1/flows/${deploymentId}`
-        );
+        const data = await httpDelete(session, `prefect/v1/flows/${deploymentId}`);
         if (data?.success) {
           successToast('Flow deleted successfully', [], globalContext);
         } else {
@@ -476,12 +425,7 @@ export const Flows = ({
         sx={{ display: 'flex', justifyContent: 'space-between' }}
         className="pipelinelist_walkthrough"
       >
-        <Typography
-          sx={{ fontWeight: 700 }}
-          variant="h4"
-          gutterBottom
-          color="#000"
-        >
+        <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
           Pipelines
         </Typography>
       </Box>
@@ -491,20 +435,12 @@ export const Flows = ({
         rows={rows}
         openDialog={handleClickCreateFlow}
         headers={{
-          values: [
-            '',
-            'Schedule',
-            'Pipeline Status',
-            'Last run',
-            'Last run status',
-          ],
+          values: ['', 'Schedule', 'Pipeline Status', 'Last run', 'Last run status'],
         }}
         title={'Pipeline'}
       />
 
-      {showLogsDialog && (
-        <FlowLogs setShowLogsDialog={setShowLogsDialog} flow={flowLogs} />
-      )}
+      {showLogsDialog && <FlowLogs setShowLogsDialog={setShowLogsDialog} flow={flowLogs} />}
 
       <ConfirmationDialog
         show={showConfirmDeleteDialog}

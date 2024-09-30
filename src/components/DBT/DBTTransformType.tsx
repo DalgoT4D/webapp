@@ -71,11 +71,7 @@ type Tasks = TransformTask[];
 
 type DBTSetupStage = 'create-workspace' | 'complete' | '';
 
-const DBTTransformType = ({
-  transformType,
-}: {
-  transformType: TransformType;
-}) => {
+const DBTTransformType = ({ transformType }: { transformType: TransformType }) => {
   const [workspace, setWorkspace] = useState({
     status: '',
     gitrepo_url: '',
@@ -87,8 +83,7 @@ const DBTTransformType = ({
   const dbtSetupLogsRef = useRef<string[]>([]);
   const [dbtSetupStage, setDbtSetupStage] = useState<DBTSetupStage>(''); // create-workspace, complete
   const [expandLogs, setExpandLogs] = useState<boolean>(false);
-  const [showConnectRepoDialog, setShowConnectRepoDialog] =
-    useState<boolean>(false);
+  const [showConnectRepoDialog, setShowConnectRepoDialog] = useState<boolean>(false);
   const [rerender, setRerender] = useState<boolean>(false);
   const [dbtSetupLogs, setDbtSetupLogs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<string>('setup');
@@ -152,9 +147,7 @@ const DBTTransformType = ({
       while (isLocked) {
         const response = await httpGet(session, 'prefect/tasks/transform/');
 
-        isLocked = response?.some((task: TransformTask) =>
-          task.lock ? true : false
-        );
+        isLocked = response?.some((task: TransformTask) => (task.lock ? true : false));
         await delay(3000);
       }
       setAnyTaskLocked(false);
@@ -258,12 +251,7 @@ const DBTTransformType = ({
         handleEdit={handleEdit}
       />
       <Box>
-        <Typography
-          sx={{ fontWeight: 700 }}
-          variant="h4"
-          gutterBottom
-          color="#000"
-        >
+        <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
           Transformation
         </Typography>
         {globalContext?.CurrentOrg.state.wtype === 'snowflake' ? (
@@ -315,11 +303,7 @@ const DBTTransformType = ({
                             alignItems: 'center',
                           }}
                         >
-                          <Image
-                            src={Dbt}
-                            alt="Banner"
-                            style={{ width: '46px', height: '46px' }}
-                          />
+                          <Image src={Dbt} alt="Banner" style={{ width: '46px', height: '46px' }} />
                           <Box
                             sx={{
                               display: 'flex',
@@ -327,11 +311,7 @@ const DBTTransformType = ({
                               gap: '5px',
                             }}
                           >
-                            <Typography
-                              sx={{ fontWeight: 700 }}
-                              variant="h4"
-                              color="#000"
-                            >
+                            <Typography sx={{ fontWeight: 700 }} variant="h4" color="#000">
                               DBT REPOSITORY
                             </Typography>
                             {workspace && workspace.gitrepo_url ? (
@@ -350,9 +330,7 @@ const DBTTransformType = ({
                                   rel="noopener"
                                   href={workspace.gitrepo_url}
                                 >
-                                  <Typography
-                                    sx={{ fontWeight: 600, color: '#0F2440' }}
-                                  >
+                                  <Typography sx={{ fontWeight: 600, color: '#0F2440' }}>
                                     {workspace.gitrepo_url}
                                   </Typography>
                                 </Link>
@@ -365,9 +343,7 @@ const DBTTransformType = ({
                                     display: 'inline-flex',
                                   }}
                                 >
-                                  <Typography
-                                    sx={{ fontWeight: 600, color: '#0F2440' }}
-                                  >
+                                  <Typography sx={{ fontWeight: 600, color: '#0F2440' }}>
                                     {workspace?.default_schema}
                                   </Typography>
                                 </Box>
@@ -382,11 +358,7 @@ const DBTTransformType = ({
                             <Button
                               variant="contained"
                               onClick={() => setShowConnectRepoDialog(true)}
-                              disabled={
-                                !permissions.includes(
-                                  'can_create_dbt_workspace'
-                                )
-                              }
+                              disabled={!permissions.includes('can_create_dbt_workspace')}
                             >
                               Connect & Setup Repo{' '}
                             </Button>
@@ -394,9 +366,7 @@ const DBTTransformType = ({
                             <Button
                               variant="contained"
                               onClick={() => setShowConnectRepoDialog(true)}
-                              disabled={
-                                !permissions.includes('can_edit_dbt_workspace')
-                              }
+                              disabled={!permissions.includes('can_edit_dbt_workspace')}
                             >
                               Edit
                             </Button>
@@ -441,9 +411,7 @@ const DBTTransformType = ({
                   )}
                   {dbtSetupStage === 'complete' ? (
                     <DBTTaskList
-                      fetchLogs={(flow_run_id) =>
-                        fetchMoreLogs(flow_run_id, false)
-                      }
+                      fetchLogs={(flow_run_id) => fetchMoreLogs(flow_run_id, false)}
                       setFlowRunId={(flow_run_id) => setFlowRunId(flow_run_id)}
                       setExpandLogs={setExpandLogs}
                       setDbtRunLogs={(logs: string[]) => {
@@ -466,9 +434,7 @@ const DBTTransformType = ({
                 </Box>
               </Box>
             )}
-            {activeTab === 'docs' &&
-              dbtSetupStage === 'complete' &&
-              workspace && <DBTDocs />}
+            {activeTab === 'docs' && dbtSetupStage === 'complete' && workspace && <DBTDocs />}
           </>
         ) : (
           ''

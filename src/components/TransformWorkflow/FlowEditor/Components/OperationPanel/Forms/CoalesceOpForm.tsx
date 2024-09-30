@@ -1,15 +1,7 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Box,
-  Button,
-  FormHelperText,
-  FormLabel,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button, FormHelperText, FormLabel, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -107,9 +99,7 @@ const CoalesceOpForm = ({
 
   const handleSave = async (data: any) => {
     try {
-      const coalesceColumns = data.columns
-        .map((col: any) => col.col)
-        .filter((col: string) => col);
+      const coalesceColumns = data.columns.map((col: any) => col.col).filter((col: string) => col);
 
       const postData: any = {
         op_type: operation.slug,
@@ -128,17 +118,11 @@ const CoalesceOpForm = ({
       setLoading(true);
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (action === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${node?.id}/`,
@@ -166,12 +150,8 @@ const CoalesceOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      const {
-        source_columns,
-        columns,
-        output_column_name,
-        default_value,
-      }: CoalesceDataConfig = opConfig;
+      const { source_columns, columns, output_column_name, default_value }: CoalesceDataConfig =
+        opConfig;
       setSrcColumns(source_columns);
 
       // pre-fill form
@@ -218,12 +198,7 @@ const CoalesceOpForm = ({
 
           {fields.map((field, index) => (
             <Fragment key={field.id}>
-              <Grid
-                key={field + '_1'}
-                item
-                xs={2}
-                sx={{ ...renameGridStyles.item }}
-              >
+              <Grid key={field + '_1'} item xs={2} sx={{ ...renameGridStyles.item }}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -262,10 +237,7 @@ const CoalesceOpForm = ({
                       disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns
-                        .filter(
-                          (option) =>
-                            !columns.map((col) => col.col).includes(option)
-                        )
+                        .filter((option) => !columns.map((col) => col.col).includes(option))
                         .sort((a, b) => a.localeCompare(b))}
                       onChange={(data: any) => {
                         field.onChange(data);
@@ -327,9 +299,7 @@ const CoalesceOpForm = ({
             )}
           />
           <Box sx={{ m: 2 }} />
-          <Box
-            sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}
-          >
+          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
             <Button
               disabled={action === 'view'}
               variant="contained"

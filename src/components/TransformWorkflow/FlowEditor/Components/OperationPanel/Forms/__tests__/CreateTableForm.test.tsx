@@ -4,10 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CreateTableForm from '../CreateTableForm';
 import { useSession } from 'next-auth/react';
 import { httpPost } from '@/helpers/http';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 
 jest.mock('next-auth/react');
 jest.mock('@/helpers/http');
@@ -41,13 +38,7 @@ describe('CreateTableForm', () => {
   });
 
   const renderComponent = (props = {}) =>
-    render(
-      <CreateTableForm
-        sx={{}}
-        clearAndClosePanel={mockClearAndClosePanel}
-        {...props}
-      />
-    );
+    render(<CreateTableForm sx={{}} clearAndClosePanel={mockClearAndClosePanel} {...props} />);
 
   it('renders the form', () => {
     renderComponent();

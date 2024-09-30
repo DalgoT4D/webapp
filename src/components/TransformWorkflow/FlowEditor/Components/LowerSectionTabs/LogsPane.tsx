@@ -19,11 +19,7 @@ interface LogsPaneProps {
   finalLockCanvas: boolean;
 }
 
-export const LogsPane = ({
-  height,
-  dbtRunLogs,
-  finalLockCanvas,
-}: LogsPaneProps) => {
+export const LogsPane = ({ height, dbtRunLogs, finalLockCanvas }: LogsPaneProps) => {
   return (
     <Box height={height - 50} sx={{ overflow: 'auto', position: 'relative' }}>
       {dbtRunLogs.length > 0 ? (
@@ -66,8 +62,7 @@ export const LogsPane = ({
                       fontWeight: 500,
                     }}
                   >
-                    {moment(log.timestamp).format('YYYY/MM/DD')}{' '}
-                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    {moment(log.timestamp).format('YYYY/MM/DD')} &nbsp;&nbsp;&nbsp;&nbsp;
                     {moment(log.timestamp).format('hh:mm:ss A ')}
                   </TableCell>
                   <TableCell

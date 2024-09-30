@@ -5,10 +5,7 @@ import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { delay } from '@/utils/common';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import { useContext, useEffect, useState } from 'react';
 import { SavedSession } from '@/components/DataAnalysis/SavedSession';
 import { TopBar } from '@/components/DataAnalysis/TopBar';
@@ -42,10 +39,7 @@ export default function DataAnalysis() {
     try {
       if (orgSlug && session?.user?.email) {
         (async () => {
-          const response = await httpGet(
-            session,
-            `currentuserv2?org_slug=${orgSlug}`
-          );
+          const response = await httpGet(session, `currentuserv2?org_slug=${orgSlug}`);
           if (response?.length === 1 && !response[0]?.llm_optin) {
             setIsOpen(true);
           }
@@ -57,10 +51,7 @@ export default function DataAnalysis() {
     }
   }, [session]);
 
-  const [
-    { prompt, summary, newSessionId, ...oldSessionMetaInfo },
-    setSessionMetaInfo,
-  ] = useState({
+  const [{ prompt, summary, newSessionId, ...oldSessionMetaInfo }, setSessionMetaInfo] = useState({
     prompt: '',
     summary: '',
     newSessionId: '',
@@ -126,10 +117,7 @@ export default function DataAnalysis() {
   //polling
   const pollForTaskRun = async (taskId: string) => {
     try {
-      const response: ProgressResponse = await httpGet(
-        session,
-        'tasks/stp/' + taskId
-      );
+      const response: ProgressResponse = await httpGet(session, 'tasks/stp/' + taskId);
       const lastMessage: any =
         response['progress'] && response['progress'].length > 0
           ? response['progress'][response['progress'].length - 1]
@@ -147,9 +135,7 @@ export default function DataAnalysis() {
         setSessionMetaInfo((prev) => {
           return {
             ...prev,
-            summary:
-              lastMessage?.result?.response?.[0]?.response ||
-              'No summary available',
+            summary: lastMessage?.result?.response?.[0]?.response || 'No summary available',
             newSessionId: lastMessage?.result?.session_id || prev.newSessionId,
           };
         });
@@ -173,14 +159,10 @@ export default function DataAnalysis() {
   }) => {
     setLoading(true);
     try {
-      const response: { request_uuid: string } = await httpPost(
-        session,
-        `warehouse/ask/`,
-        {
-          sql: sqlText,
-          user_prompt,
-        }
-      );
+      const response: { request_uuid: string } = await httpPost(session, `warehouse/ask/`, {
+        sql: sqlText,
+        user_prompt,
+      });
       if (!response?.request_uuid) {
         errorToast('Something went wrong', [], globalContext);
         return { error: 'ERROR' };
@@ -270,9 +252,7 @@ export default function DataAnalysis() {
             >
               <>
                 <CircularProgress sx={{ color: '#FFFFFF' }} />
-                <Typography
-                  sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}
-                >
+                <Typography sx={{ fontWeight: '600', fontSize: '20px', color: '#FFFFFF' }}>
                   Prepping your data output...
                 </Typography>
               </>

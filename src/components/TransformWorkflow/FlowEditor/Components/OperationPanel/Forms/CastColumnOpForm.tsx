@@ -44,26 +44,22 @@ const CastColumnOp = ({
     config: { name: string; data_type: string | null }[];
   };
 
-  const { control, handleSubmit, register, reset, getValues, setValue } =
-    useForm<FormData>({
-      defaultValues: {
-        config: [
-          {
-            name: '',
-            data_type: null,
-          },
-        ] as ColumnData[],
-      },
-    });
+  const { control, handleSubmit, register, reset, getValues, setValue } = useForm<FormData>({
+    defaultValues: {
+      config: [
+        {
+          name: '',
+          data_type: null,
+        },
+      ] as ColumnData[],
+    },
+  });
 
   const { config } = getValues();
 
   const fetchDataTypes = async () => {
     try {
-      const response = await httpGet(
-        session,
-        `transform/dbt_project/data_type/`
-      );
+      const response = await httpGet(session, `transform/dbt_project/data_type/`);
       setDataTypes(response.sort((a: string, b: string) => a.localeCompare(b)));
     } catch (error) {
       console.log(error);
@@ -125,17 +121,11 @@ const CastColumnOp = ({
       setLoading(true);
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (action === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${node?.id}/`,
@@ -169,12 +159,10 @@ const CastColumnOp = ({
 
       // pre-fill form
       reset({
-        config: columns.map(
-          (column: { columnname: string; columntype: string }) => ({
-            name: column.columnname,
-            data_type: column.columntype,
-          })
-        ),
+        config: columns.map((column: { columnname: string; columntype: string }) => ({
+          name: column.columnname,
+          data_type: column.columntype,
+        })),
       });
     } catch (error) {
       console.error(error);

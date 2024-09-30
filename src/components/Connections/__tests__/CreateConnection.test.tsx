@@ -1,11 +1,4 @@
-import {
-  render,
-  screen,
-  within,
-  fireEvent,
-  act,
-  waitFor,
-} from '@testing-library/react';
+import { render, screen, within, fireEvent, act, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import CreateConnectionForm from '../CreateConnectionForm';
@@ -110,8 +103,7 @@ describe('Create connection', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
+              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
             }}
           >
             <CreateConnectionForm
@@ -122,9 +114,7 @@ describe('Create connection', () => {
               connectionId=""
               setConnectionId={() => {}}
               blockId=""
-              filteredSourceStreams={SOURCES.slice().sort((a, b) =>
-                a.name.localeCompare(b.name)
-              )}
+              filteredSourceStreams={SOURCES.slice().sort((a, b) => a.name.localeCompare(b.name))}
             />
           </SWRConfig>
         </SessionProvider>
@@ -157,9 +147,7 @@ describe('Create connection', () => {
     expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2);
 
     // check if the headers are correct
-    const headerCells = within(sourceStreamTableRows[0]).getAllByRole(
-      'columnheader'
-    );
+    const headerCells = within(sourceStreamTableRows[0]).getAllByRole('columnheader');
     expect(headerCells.length).toBe(5);
     expect(headerCells[0].textContent).toBe('Stream');
     expect(headerCells[1].textContent).toBe('Sync?');
@@ -169,20 +157,15 @@ describe('Create connection', () => {
 
     // check if the stream mocked by us is present
     // const rows = within(sourceStreamTable).getAllByRole('row');
-    const streamRowCells = within(sourceStreamTableRows[2]).getAllByRole(
-      'cell'
-    );
+    const streamRowCells = within(sourceStreamTableRows[2]).getAllByRole('cell');
     expect(streamRowCells.length).toBe(5);
     expect(streamRowCells[0].textContent).toBe(STREAMS[0].name);
 
     const connectButton = screen.getByText('Connect').closest('button');
     const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
 
-    let streamIncrementalSwitch = screen.getByTestId(
-      'stream-incremental-0'
-    ).firstChild;
-    let streamSelectDestinationMode =
-      screen.getByTestId('stream-destmode-0').childNodes[1];
+    let streamIncrementalSwitch = screen.getByTestId('stream-incremental-0').firstChild;
+    let streamSelectDestinationMode = screen.getByTestId('stream-destmode-0').childNodes[1];
 
     // stream is not selected for sync
     expect(streamSyncSwitch).not.toBeChecked();
@@ -195,11 +178,8 @@ describe('Create connection', () => {
 
     // Need to redraw these elements since jest updates its dom but
     // does not pass reference to some elements
-    streamIncrementalSwitch = screen.getByTestId(
-      'stream-incremental-0'
-    ).firstChild;
-    streamSelectDestinationMode =
-      screen.getByTestId('stream-destmode-0').childNodes[1];
+    streamIncrementalSwitch = screen.getByTestId('stream-incremental-0').firstChild;
+    streamSelectDestinationMode = screen.getByTestId('stream-destmode-0').childNodes[1];
 
     // check if elements are abled
     expect(screen.getByTestId('stream-sync-0').firstChild).toBeChecked();
@@ -213,9 +193,7 @@ describe('Create connection', () => {
     expect(streamIncrementalSwitch).not.toBeChecked();
     if (SOURCES[0]?.cursorField) {
       await act(() => userEvent.click(streamIncrementalSwitch));
-      expect(
-        screen.getByTestId('stream-incremental-0').firstChild
-      ).toBeChecked();
+      expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked();
     }
 
     // check normalization after sync checkbox
@@ -224,9 +202,7 @@ describe('Create connection', () => {
     // incremental switch disabled
     // stream 2 doesn't support incremental sync
     const streamSyncSwitch1 = screen.getByTestId('stream-sync-1').firstChild;
-    const streamIncrementalSwitch1 = screen.getByTestId(
-      'stream-incremental-1'
-    ).firstChild;
+    const streamIncrementalSwitch1 = screen.getByTestId('stream-incremental-1').firstChild;
     expect(streamIncrementalSwitch1).toBeDisabled();
     // select stream 2 to sync
     await waitFor(() => userEvent.click(streamSyncSwitch1));
@@ -264,8 +240,7 @@ describe('Create connection', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
+              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
             }}
           >
             <CreateConnectionForm
@@ -363,8 +338,7 @@ describe('Create connection', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
+              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
             }}
           >
             <CreateConnectionForm
@@ -420,9 +394,7 @@ describe('Create connection', () => {
 
     const mockCreateConnectionFetch = jest.fn().mockResolvedValueOnce({
       ok: false,
-      json: jest
-        .fn()
-        .mockResolvedValueOnce({ detail: 'could not create connection' }),
+      json: jest.fn().mockResolvedValueOnce({ detail: 'could not create connection' }),
     });
 
     (global as any).fetch = mockCreateConnectionFetch;

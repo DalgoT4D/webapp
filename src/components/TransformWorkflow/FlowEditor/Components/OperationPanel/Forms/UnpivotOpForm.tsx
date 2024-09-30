@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Box,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  FormHelperText,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, FormHelperText, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -62,14 +55,13 @@ const UnpivotOpForm = ({
     }[];
   };
 
-  const { control, handleSubmit, reset, setValue, setError, formState } =
-    useForm<FormProps>({
-      defaultValues: {
-        unpivot_field_name: 'col_name',
-        unpivot_value_name: 'value',
-        unpivot_columns: [],
-      },
-    });
+  const { control, handleSubmit, reset, setValue, setError, formState } = useForm<FormProps>({
+    defaultValues: {
+      unpivot_field_name: 'col_name',
+      unpivot_value_name: 'value',
+      unpivot_columns: [],
+    },
+  });
 
   const {
     fields: unpivotColFields,
@@ -140,17 +132,11 @@ const UnpivotOpForm = ({
       // api call
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (action === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${node?.id}/`,
@@ -188,9 +174,7 @@ const UnpivotOpForm = ({
       }: UnpivotDataConfig = opConfig;
       setSrcColumns(source_columns);
 
-      const orginalSrcColumns = source_columns.sort((a, b) =>
-        a.localeCompare(b)
-      );
+      const orginalSrcColumns = source_columns.sort((a, b) => a.localeCompare(b));
 
       const unpivot_col_fields = orginalSrcColumns.map((col: string) => ({
         col,
@@ -222,10 +206,7 @@ const UnpivotOpForm = ({
     setColFieldData(filteredColumns);
   };
 
-  const handleSelectAll = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    is_exclude: boolean
-  ) => {
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>, is_exclude: boolean) => {
     // Filter the fields based on the search results stored in colFieldData
     const filteredFields = unpivotColFields.filter((field) =>
       colFieldData.some((colField) => colField.col === field.col)
@@ -250,9 +231,7 @@ const UnpivotOpForm = ({
 
     // Merge the updated fields with the original unpivotColFields
     const mergedFields = unpivotColFields.map(
-      (field) =>
-        updatedFields.find((updatedField) => updatedField.col === field.col) ||
-        field
+      (field) => updatedFields.find((updatedField) => updatedField.col === field.col) || field
     );
 
     unpivotColReplace(mergedFields);
@@ -282,9 +261,7 @@ const UnpivotOpForm = ({
       }
       return colField;
     });
-    const originalIndex = unpivotColFields?.findIndex(
-      (colField) => colField.col == field.col
-    );
+    const originalIndex = unpivotColFields?.findIndex((colField) => colField.col == field.col);
 
     unpivotColUpdate(originalIndex, {
       col: field.col,
@@ -350,15 +327,11 @@ const UnpivotOpForm = ({
                       <Checkbox
                         checked={selectAllCheckbox.is_unpivot}
                         disabled={action === 'view'}
-                        onChange={(
-                          event: React.ChangeEvent<HTMLInputElement>
-                        ) => {
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                           handleSelectAll(event, false);
                           setSelectAllCheckbox({
                             is_unpivot: event.target.checked,
-                            is_exclude: event.target.checked
-                              ? false
-                              : selectAllCheckbox.is_exclude,
+                            is_exclude: event.target.checked ? false : selectAllCheckbox.is_exclude,
                           });
                         }}
                       />
@@ -393,9 +366,7 @@ const UnpivotOpForm = ({
                       data-testid={`unpivotColumn${idx}`}
                       disabled={action === 'view'}
                       checked={field.is_unpivot_checked}
-                      onChange={(
-                        event: React.ChangeEvent<HTMLInputElement>
-                      ) => {
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         handleUnpivotColUpdate(event, idx, false);
                       }}
                     />
@@ -440,13 +411,9 @@ const UnpivotOpForm = ({
                       <Checkbox
                         checked={selectAllCheckbox.is_exclude}
                         disabled={action === 'view'}
-                        onChange={(
-                          event: React.ChangeEvent<HTMLInputElement>
-                        ) => {
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                           setSelectAllCheckbox({
-                            is_unpivot: event.target.checked
-                              ? false
-                              : selectAllCheckbox.is_unpivot,
+                            is_unpivot: event.target.checked ? false : selectAllCheckbox.is_unpivot,
                             is_exclude: event.target.checked,
                           });
                           handleSelectAll(event, true);
@@ -482,9 +449,7 @@ const UnpivotOpForm = ({
                     <Checkbox
                       disabled={action === 'view'}
                       checked={field.is_exclude_checked}
-                      onChange={(
-                        event: React.ChangeEvent<HTMLInputElement>
-                      ) => {
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                         handleUnpivotColUpdate(event, idx, true);
                       }}
                     />

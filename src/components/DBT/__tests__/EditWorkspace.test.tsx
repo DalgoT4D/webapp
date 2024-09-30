@@ -43,17 +43,13 @@ describe('Edit workspace', () => {
         />
       </SessionProvider>
     );
-    const urlinputfield: HTMLInputElement =
-      screen.getByLabelText('GitHub repo URL*');
+    const urlinputfield: HTMLInputElement = screen.getByLabelText('GitHub repo URL*');
     expect(urlinputfield.value).toBe(dbt.gitrepoUrl);
 
-    const patinputfield: HTMLInputElement = screen.getByLabelText(
-      'Personal access token'
-    );
+    const patinputfield: HTMLInputElement = screen.getByLabelText('Personal access token');
     expect(patinputfield.value).toBe('');
 
-    const dbttargetschema: HTMLInputElement =
-      screen.getByLabelText('dbt target schema*');
+    const dbttargetschema: HTMLInputElement = screen.getByLabelText('dbt target schema*');
     expect(dbttargetschema.value).toBe(dbt.schema);
 
     const savebutton = screen.getByTestId('save-github-url');
@@ -103,17 +99,13 @@ describe('Edit workspace', () => {
         />
       </SessionProvider>
     );
-    const urlinputfield: HTMLInputElement =
-      screen.getByLabelText('GitHub repo URL*');
+    const urlinputfield: HTMLInputElement = screen.getByLabelText('GitHub repo URL*');
     expect(urlinputfield.value).toBe(dbt.gitrepoUrl);
 
-    const patinputfield: HTMLInputElement = screen.getByLabelText(
-      'Personal access token'
-    );
+    const patinputfield: HTMLInputElement = screen.getByLabelText('Personal access token');
     expect(patinputfield.value).toBe('');
 
-    const dbttargetschema: HTMLInputElement =
-      screen.getByLabelText('dbt target schema*');
+    const dbttargetschema: HTMLInputElement = screen.getByLabelText('dbt target schema*');
     expect(dbttargetschema.value).toBe(dbt.schema);
 
     // update git repo url
@@ -150,17 +142,13 @@ describe('Edit workspace', () => {
         />
       </SessionProvider>
     );
-    const urlinputfield: HTMLInputElement =
-      screen.getByLabelText('GitHub repo URL*');
+    const urlinputfield: HTMLInputElement = screen.getByLabelText('GitHub repo URL*');
     expect(urlinputfield.value).toBe(dbt.gitrepoUrl);
 
-    const patinputfield: HTMLInputElement = screen.getByLabelText(
-      'Personal access token'
-    );
+    const patinputfield: HTMLInputElement = screen.getByLabelText('Personal access token');
     expect(patinputfield.value).toBe('');
 
-    const dbttargetschema: HTMLInputElement =
-      screen.getByLabelText('dbt target schema*');
+    const dbttargetschema: HTMLInputElement = screen.getByLabelText('dbt target schema*');
     expect(dbttargetschema.value).toBe(dbt.schema);
 
     // update the schema

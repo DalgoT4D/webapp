@@ -28,21 +28,14 @@ const findNearest = (arr: number[], target = 5 /*order for custom tasks*/) => {
 
   return nearestGreater;
 };
-export const TaskSequence = ({
-  field,
-  options: initialOptions,
-}: TaskSequenceProps) => {
+export const TaskSequence = ({ field, options: initialOptions }: TaskSequenceProps) => {
   const treeRef = useRef();
 
-  const [autocompleteOptions, setAutocompleteOptions] = useState<
-    TransformTask[]
-  >([]);
+  const [autocompleteOptions, setAutocompleteOptions] = useState<TransformTask[]>([]);
 
   useEffect(() => {
     const selectedUuids = field.value.map((task: TransformTask) => task.uuid);
-    setAutocompleteOptions(
-      initialOptions.filter((option) => !selectedUuids.includes(option.uuid))
-    );
+    setAutocompleteOptions(initialOptions.filter((option) => !selectedUuids.includes(option.uuid)));
   }, [field.value, initialOptions]);
 
   const handleSelect = (value: any) => {
@@ -106,9 +99,7 @@ export const TaskSequence = ({
         >
           {node.rowIndex + 1}
         </Box>
-        <Box sx={{ p: '4px 12px', background: '#F5FAFA', width: '100%' }}>
-          {node.data.command}
-        </Box>
+        <Box sx={{ p: '4px 12px', background: '#F5FAFA', width: '100%' }}>{node.data.command}</Box>
         <Box
           sx={{
             p: '4px 12px',
@@ -122,10 +113,7 @@ export const TaskSequence = ({
         >
           {node.data.generated_by}
         </Box>
-        <Box
-          sx={{ cursor: 'pointer', p: '2px' }}
-          onClick={() => removeNode(node)}
-        >
+        <Box sx={{ cursor: 'pointer', p: '2px' }} onClick={() => removeNode(node)}>
           <Image
             src={DeleteIcon}
             style={{ height: '18px', width: '18px', marginLeft: '4px' }}
@@ -180,17 +168,14 @@ export const TaskSequence = ({
           variant="contained"
           size="small"
           onClick={() =>
-            field.onChange(
-              initialOptions.filter(ValidateDefaultTasksToApplyInPipeline)
-            )
+            field.onChange(initialOptions.filter(ValidateDefaultTasksToApplyInPipeline))
           }
         >
           Reset to default
         </Button>
       </Box>
       <Typography sx={{ mt: 1 }} variant="body2" gutterBottom>
-        These are your default transformation tasks. Most users don&apos;t need
-        to change this list
+        These are your default transformation tasks. Most users don&apos;t need to change this list
       </Typography>
 
       <Tree
@@ -220,12 +205,8 @@ export const TaskSequence = ({
           );
           let runNodeIndex = 0;
           let testNodeIndex = nodes.length;
-          const runNode = nodes.find(
-            (node) => node.data.order === smallestOrder
-          );
-          const testNode = nodes.find(
-            (node) => node.data.order === largestOrder
-          );
+          const runNode = nodes.find((node) => node.data.order === smallestOrder);
+          const testNode = nodes.find((node) => node.data.order === largestOrder);
 
           if (runNode) {
             runNodeIndex = tree.idToIndex[runNode.id];
@@ -234,8 +215,7 @@ export const TaskSequence = ({
           if (testNode) {
             testNodeIndex = tree.idToIndex[testNode.id];
           }
-          if (node.index >= runNodeIndex && node.index <= testNodeIndex)
-            return false;
+          if (node.index >= runNodeIndex && node.index <= testNodeIndex) return false;
 
           return true;
         }}

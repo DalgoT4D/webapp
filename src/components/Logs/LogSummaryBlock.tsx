@@ -9,10 +9,7 @@ interface LogSummaryBlockProps {
 
 const blockWidth = '400px';
 
-const NameAndPatternBlock = ({
-  logsummary,
-  setLogsummaryLogs,
-}: LogSummaryBlockProps) => {
+const NameAndPatternBlock = ({ logsummary, setLogsummaryLogs }: LogSummaryBlockProps) => {
   return (
     <>
       <Box
@@ -23,27 +20,17 @@ const NameAndPatternBlock = ({
           paddingLeft: '5px',
         }}
       >
-        <Typography sx={{ fontWeight: 500, fontSize: 18 }}>
-          {logsummary.task_name}
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={() => setLogsummaryLogs(logsummary.log_lines)}
-        >
+        <Typography sx={{ fontWeight: 500, fontSize: 18 }}>{logsummary.task_name}</Typography>
+        <Button variant="contained" onClick={() => setLogsummaryLogs(logsummary.log_lines)}>
           Logs
         </Button>
       </Box>
-      <Typography sx={{ fontWeight: 300, fontSize: 14 }}>
-        {logsummary.pattern}
-      </Typography>
+      <Typography sx={{ fontWeight: 300, fontSize: 14 }}>{logsummary.pattern}</Typography>
     </>
   );
 };
 
-const DbtRunBlock = ({
-  logsummary,
-  setLogsummaryLogs,
-}: LogSummaryBlockProps) => {
+const DbtRunBlock = ({ logsummary, setLogsummaryLogs }: LogSummaryBlockProps) => {
   return (
     <>
       <Box
@@ -54,13 +41,8 @@ const DbtRunBlock = ({
           paddingLeft: '5px',
         }}
       >
-        <Typography sx={{ fontWeight: 500, fontSize: 18 }}>
-          {logsummary.task_name}
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={() => setLogsummaryLogs(logsummary.log_lines)}
-        >
+        <Typography sx={{ fontWeight: 500, fontSize: 18 }}>{logsummary.task_name}</Typography>
+        <Button variant="contained" onClick={() => setLogsummaryLogs(logsummary.log_lines)}>
           Logs
         </Button>
       </Box>
@@ -120,13 +102,8 @@ const DbtRunBlock = ({
   );
 };
 
-const DbtTestBlock = ({
-  logsummary,
-  setLogsummaryLogs,
-}: LogSummaryBlockProps) => {
-  const summary = logsummary.tests.find(
-    (test) => test.pattern === 'test-summary'
-  );
+const DbtTestBlock = ({ logsummary, setLogsummaryLogs }: LogSummaryBlockProps) => {
+  const summary = logsummary.tests.find((test) => test.pattern === 'test-summary');
   if (!summary) {
     return <></>;
   }
@@ -140,13 +117,8 @@ const DbtTestBlock = ({
           paddingLeft: '5px',
         }}
       >
-        <Typography sx={{ fontWeight: 500, fontSize: 18 }}>
-          {logsummary.task_name}
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={() => setLogsummaryLogs(logsummary.log_lines)}
-        >
+        <Typography sx={{ fontWeight: 500, fontSize: 18 }}>{logsummary.task_name}</Typography>
+        <Button variant="contained" onClick={() => setLogsummaryLogs(logsummary.log_lines)}>
           Logs
         </Button>
       </Box>
@@ -206,10 +178,7 @@ const DbtTestBlock = ({
   );
 };
 
-export const LogSummaryBlock = ({
-  logsummary,
-  setLogsummaryLogs,
-}: LogSummaryBlockProps) => {
+export const LogSummaryBlock = ({ logsummary, setLogsummaryLogs }: LogSummaryBlockProps) => {
   let specialHandling = false;
   if (logsummary.task_name == 'dbt run' && logsummary.status == 'success') {
     specialHandling = true;
@@ -231,22 +200,13 @@ export const LogSummaryBlock = ({
       }}
     >
       {logsummary.task_name == 'dbt run' && logsummary.status == 'success' && (
-        <DbtRunBlock
-          logsummary={logsummary}
-          setLogsummaryLogs={setLogsummaryLogs}
-        />
+        <DbtRunBlock logsummary={logsummary} setLogsummaryLogs={setLogsummaryLogs} />
       )}
       {logsummary.task_name == 'dbt test' && logsummary.status == 'failed' && (
-        <DbtTestBlock
-          logsummary={logsummary}
-          setLogsummaryLogs={setLogsummaryLogs}
-        />
+        <DbtTestBlock logsummary={logsummary} setLogsummaryLogs={setLogsummaryLogs} />
       )}
       {!specialHandling && (
-        <NameAndPatternBlock
-          logsummary={logsummary}
-          setLogsummaryLogs={setLogsummaryLogs}
-        />
+        <NameAndPatternBlock logsummary={logsummary} setLogsummaryLogs={setLogsummaryLogs} />
       )}
     </Box>
   );

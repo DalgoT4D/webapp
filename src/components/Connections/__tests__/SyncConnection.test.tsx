@@ -77,8 +77,7 @@ describe('Sync connection suite', () => {
         <SWRConfig
           value={{
             dedupingInterval: 0,
-            fetcher: (resource) =>
-              fetch(resource, {}).then((res) => res.json()),
+            fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
           }}
         >
           <Connections />
@@ -113,12 +112,9 @@ describe('Sync connection suite', () => {
       expect(connCells.length).toBe(4);
     });
 
-    const actionConnCell: any | HTMLElement | undefined =
-      connCells[3]?.firstChild;
+    const actionConnCell: any | HTMLElement | undefined = connCells[3]?.firstChild;
 
-    const syncButton = within(actionConnCell).getByTestId(
-      `sync-${CONNECTIONS[0].blockId}`
-    );
+    const syncButton = within(actionConnCell).getByTestId(`sync-${CONNECTIONS[0].blockId}`);
 
     // mock flow logs and flow status for successful sync
     const flowStatusAndLogsFetch = jest
@@ -140,11 +136,7 @@ describe('Sync connection suite', () => {
         json: jest.fn().mockResolvedValueOnce({
           logs: {
             offset: 0,
-            logs: [
-              { message: 'message-1' },
-              { message: 'message-2' },
-              { message: 'message-3' },
-            ],
+            logs: [{ message: 'message-1' }, { message: 'message-2' }, { message: 'message-3' }],
           },
         }),
       })
@@ -159,11 +151,7 @@ describe('Sync connection suite', () => {
         json: jest.fn().mockResolvedValueOnce({
           logs: {
             offset: 0,
-            logs: [
-              { message: 'message-4' },
-              { message: 'message-5' },
-              { message: 'message-6' },
-            ],
+            logs: [{ message: 'message-4' }, { message: 'message-5' }, { message: 'message-6' }],
           },
         }),
       })
@@ -215,12 +203,9 @@ describe('Sync connection suite', () => {
       expect(connCells.length).toBe(4);
     });
 
-    const actionConnCell: any | HTMLElement | undefined =
-      connCells[3]?.firstChild;
+    const actionConnCell: any | HTMLElement | undefined = connCells[3]?.firstChild;
 
-    const syncButton = within(actionConnCell).getByTestId(
-      `sync-${CONNECTIONS[0].blockId}`
-    );
+    const syncButton = within(actionConnCell).getByTestId(`sync-${CONNECTIONS[0].blockId}`);
 
     const fetchFlowRunIdFailed = jest.fn().mockResolvedValueOnce({
       ok: true,

@@ -34,16 +34,12 @@ describe('RangeChart', () => {
     data.forEach((d, i) => {
       const originalLabel = d.name;
       const expectedLabel =
-        originalLabel.length > 10
-          ? `${originalLabel.substring(0, 10)}...`
-          : originalLabel;
+        originalLabel.length > 10 ? `${originalLabel.substring(0, 10)}...` : originalLabel;
       const actualText = d3.select(legendTexts[i]).text();
       expect(actualText).toBe(expectedLabel);
     });
 
-    const longLabelNode = legendTexts.find((node) =>
-      d3.select(node).text().endsWith('...')
-    );
+    const longLabelNode = legendTexts.find((node) => d3.select(node).text().endsWith('...'));
     if (longLabelNode) {
       fireEvent.mouseOver(longLabelNode as HTMLElement);
       const tooltip = d3.select('body').select('.tooltip');

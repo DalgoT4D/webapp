@@ -1,10 +1,4 @@
-import {
-  Box,
-  Button,
-  CircularProgress,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Button, CircularProgress, TextField, Typography } from '@mui/material';
 import { memo, useContext, useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -67,11 +61,7 @@ export const SqlWrite = memo(
       }
 
       if (!sqlText) {
-        errorToast(
-          'Please provide a SQL query to query the data.',
-          [],
-          globalContext
-        );
+        errorToast('Please provide a SQL query to query the data.', [], globalContext);
         return;
       }
 
@@ -102,17 +92,10 @@ export const SqlWrite = memo(
             httpGet(session, 'data/llm_data_analysis_query_limit/'),
           ]);
 
-          if (
-            promptsResult.status === 'fulfilled' &&
-            promptsResult.value.length
-          ) {
+          if (promptsResult.status === 'fulfilled' && promptsResult.value.length) {
             setDefaultPromptLists(promptsResult.value);
           } else {
-            errorToast(
-              'No Custom Prompts found or failed to fetch prompts',
-              [],
-              globalContext
-            );
+            errorToast('No Custom Prompts found or failed to fetch prompts', [], globalContext);
           }
           if (limitResult.status === 'fulfilled' && limitResult.value) {
             setSqlQueryLimit(limitResult.value);
@@ -121,11 +104,7 @@ export const SqlWrite = memo(
           }
         } catch (error: any) {
           console.error('Error fetching data:', error);
-          errorToast(
-            error.message || 'An unexpected error occurred',
-            [],
-            globalContext
-          );
+          errorToast(error.message || 'An unexpected error occurred', [], globalContext);
         } finally {
           setTempLoading(false);
         }
@@ -148,8 +127,7 @@ export const SqlWrite = memo(
     useEffect(() => {
       //if resetState is true and there is session_name, which means the session is already saved.
       // session_name - 1sst time works, 2nd tiem, we have session_name
-      const savedSessionResetCase =
-        oldSessionMetaInfo.session_name && !newSessionId;
+      const savedSessionResetCase = oldSessionMetaInfo.session_name && !newSessionId;
       if (
         (resetState && savedSessionResetCase) ||
         (resetState && !oldSessionMetaInfo.session_name && !newSessionId)
@@ -165,10 +143,7 @@ export const SqlWrite = memo(
 
     return (
       <>
-        <Box
-          sx={{ width: '100%' }}
-          key={defaultPromptsLists.length ? 'goodkey' : 'badkey'}
-        >
+        <Box sx={{ width: '100%' }} key={defaultPromptsLists.length ? 'goodkey' : 'badkey'}>
           {/* Second box */}
           <Box sx={{ width: '100%', padding: '1.25rem 0' }}>
             <hr></hr>
@@ -176,11 +151,7 @@ export const SqlWrite = memo(
 
           {/* SQL Editor */}
           <Box sx={{ width: '100%', marginTop: '1.5rem', borderRadius: '6px' }}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              marginBottom="5px"
-            >
+            <Box display="flex" justifyContent="space-between" marginBottom="5px">
               <Typography
                 data-testid="sql-filter"
                 sx={{ color: '#0F2440', fontWeight: '600', fontSize: '14px' }}
@@ -283,13 +254,8 @@ export const SqlWrite = memo(
                     fontSize: '14px',
                     fontWeight: '600',
                     backgroundColor:
-                      selectedPrompt === defaultPrompts.prompt
-                        ? '#00897B'
-                        : '#F5FAFA',
-                    color:
-                      selectedPrompt === defaultPrompts.prompt
-                        ? '#FFFFFF'
-                        : '#0F2440CC',
+                      selectedPrompt === defaultPrompts.prompt ? '#00897B' : '#F5FAFA',
+                    color: selectedPrompt === defaultPrompts.prompt ? '#FFFFFF' : '#0F2440CC',
 
                     '&:hover': {
                       backgroundColor: '#00897B',
@@ -317,12 +283,7 @@ export const SqlWrite = memo(
                     marginBottom: '0.5rem',
                   }}
                 >
-                  <Box
-                    display={'flex'}
-                    gap="0.5rem"
-                    height="1rem"
-                    alignItems="center"
-                  >
+                  <Box display={'flex'} gap="0.5rem" height="1rem" alignItems="center">
                     <Typography
                       sx={{
                         fontSize: '14px',
@@ -339,28 +300,23 @@ export const SqlWrite = memo(
                             Tips for Writing a Good Prompt:
                           </Typography>
                           <Typography variant="body2">
-                            1. Be Clear: Clearly state what you need to avoid
-                            confusion.
+                            1. Be Clear: Clearly state what you need to avoid confusion.
                           </Typography>
                           <Typography variant="body2">
-                            2. Add Context: Include relevant details to guide
-                            the response.
+                            2. Add Context: Include relevant details to guide the response.
                           </Typography>
                           <Typography variant="body2">
-                            3. Adjust & Refine: If the result isn&apos;t what
-                            you expected, tweak your prompt.
+                            3. Adjust & Refine: If the result isn&apos;t what you expected, tweak
+                            your prompt.
                           </Typography>
 
                           <Typography variant="body2" gutterBottom>
-                            Example: If your data has some rows that contain
-                            people&apos;s feelings during COVID, then instead of
-                            &quot;Describe people&apos;s feelings during
-                            COVID,&quot; try: &quot;This data is a list of
-                            responses from people about how they are feeling.
-                            Analyse the data and give me the different emotions
-                            that people felt during covid, and also which was
-                            the frequently felt emotion? Limit it to one short
-                            paragraph.&quot;
+                            Example: If your data has some rows that contain people&apos;s feelings
+                            during COVID, then instead of &quot;Describe people&apos;s feelings
+                            during COVID,&quot; try: &quot;This data is a list of responses from
+                            people about how they are feeling. Analyse the data and give me the
+                            different emotions that people felt during covid, and also which was the
+                            frequently felt emotion? Limit it to one short paragraph.&quot;
                           </Typography>
                         </div>
                       }

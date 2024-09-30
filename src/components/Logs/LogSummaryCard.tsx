@@ -18,18 +18,11 @@ interface LogSummaryCardProps {
   setLogsummaryLogs: any;
 }
 
-export const LogSummaryCard = ({
-  logsummary,
-  setLogsummaryLogs,
-}: LogSummaryCardProps) => {
+export const LogSummaryCard = ({ logsummary, setLogsummaryLogs }: LogSummaryCardProps) => {
   return (
     <Box>
       {logsummary.map((log: LogSummary, index: number) => (
-        <LogSummaryBlock
-          key={index}
-          logsummary={log}
-          setLogsummaryLogs={setLogsummaryLogs}
-        />
+        <LogSummaryBlock key={index} logsummary={log} setLogsummaryLogs={setLogsummaryLogs} />
       ))}
     </Box>
   );

@@ -42,14 +42,10 @@ const Invitations = ({
   const { data: session }: any = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
-    useState<boolean>(false);
-  const [showConfirmResendialog, setShowConfirmResendialog] =
-    useState<boolean>(false);
-  const [invitationToBeDeleted, setInvitationToBeDeleted] =
-    useState<Invitation | null>(null);
-  const [invitationToBeResent, setInvitationToBeResent] =
-    useState<Invitation | null>(null);
+  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] = useState<boolean>(false);
+  const [showConfirmResendialog, setShowConfirmResendialog] = useState<boolean>(false);
+  const [invitationToBeDeleted, setInvitationToBeDeleted] = useState<Invitation | null>(null);
+  const [invitationToBeResent, setInvitationToBeResent] = useState<Invitation | null>(null);
 
   const openActionMenu = Boolean(anchorEl);
   const handleClick = (invitation: Invitation, event: HTMLElement | null) => {
@@ -101,16 +97,9 @@ const Invitations = ({
           {invitation.invited_role.name}
         </Typography>,
         <Typography key={'sent-on-' + idx} variant="subtitle2" fontWeight={600}>
-          {moment
-            .utc(invitation.invited_on)
-            .local()
-            .format('Do MMM hh:mm A')
-            .toString()}
+          {moment.utc(invitation.invited_on).local().format('Do MMM hh:mm A').toString()}
         </Typography>,
-        <Box
-          sx={{ justifyContent: 'end', display: 'flex' }}
-          key={'action-box-' + idx}
-        >
+        <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'action-box-' + idx}>
           <Button
             aria-controls={openActionMenu ? 'basic-menu' : undefined}
             aria-haspopup="true"
@@ -149,11 +138,7 @@ const Invitations = ({
     if (invitation) {
       setLoading(true);
       try {
-        await httpPost(
-          session,
-          `users/invitations/resend/${invitation.id}`,
-          {}
-        );
+        await httpPost(session, `users/invitations/resend/${invitation.id}`, {});
         successToast('Invitation sent again', [], globalContext);
         mutate();
       } catch (err: any) {
@@ -176,20 +161,12 @@ const Invitations = ({
         anchorEl={anchorEl}
         open={openActionMenu}
         hasDeletePermission={permissions.includes('can_delete_invitation')}
-        hasResendPermission={permissions.includes(
-          'can_resend_email_verification'
-        )}
+        hasResendPermission={permissions.includes('can_resend_email_verification')}
         handleClose={handleClose}
         handleDelete={handleClickDeleteAction}
         handleResendInvitation={handleClickResendAction}
       />
-      <List
-        openDialog={() => {}}
-        title=""
-        headers={headers}
-        rows={rows}
-        onlyList={true}
-      />
+      <List openDialog={() => {}} title="" headers={headers} rows={rows} onlyList={true} />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
         handleClose={() => handleCancelDeleteInvitation()}
