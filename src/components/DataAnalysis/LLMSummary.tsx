@@ -96,9 +96,7 @@ export const LLMSummary = ({
 
   // submitting the session name ->
   const onSubmit = (sessionName: string, overwrite: boolean) => {
-    const oldSessionIdToSend = overwrite
-      ? oldSessionMetaInfo?.oldSessionId
-      : null;
+    const oldSessionIdToSend = overwrite ? oldSessionMetaInfo?.oldSessionId : null;
     handleSaveSession(overwrite, oldSessionIdToSend, sessionName);
   };
 
@@ -119,11 +117,7 @@ export const LLMSummary = ({
     if (copyRes) {
       successToast('Successfully copied to clipboard', [], globalContext);
     } else {
-      errorToast(
-        'Some problem with copying. Please try again',
-        [],
-        globalContext
-      );
+      errorToast('Some problem with copying. Please try again', [], globalContext);
     }
   };
 
@@ -185,8 +179,8 @@ export const LLMSummary = ({
           <InfoTooltip
             title={
               <Typography variant="body2">
-                The AI response based on the parameters you have provided for
-                analytics. Edit the parameters to fine-tune the response
+                The AI response based on the parameters you have provided for analytics. Edit the
+                parameters to fine-tune the response
               </Typography>
             }
           />
@@ -258,9 +252,7 @@ export const LLMSummary = ({
             variant="outlined"
             disabled={!newSessionId}
             onClick={() => {
-              setModalName(
-                oldSessionMetaInfo.oldSessionId ? MODALS.OVERWRITE : MODALS.SAVE
-              );
+              setModalName(oldSessionMetaInfo.oldSessionId ? MODALS.OVERWRITE : MODALS.SAVE);
               setIsBoxOpen(true);
             }}
             sx={{

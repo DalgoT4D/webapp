@@ -47,8 +47,7 @@ export const Sources = () => {
   const { data, isLoading, mutate } = useSWR(`airbyte/sources`);
 
   const [showSourceDialog, setShowSourceDialog] = useState<boolean>(false);
-  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
-    useState<boolean>(false);
+  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] = useState<boolean>(false);
   const [sourceIdToEdit, setSourceIdToEdit] = useState<string>('');
   const [sourceToBeDeleted, setSourceToBeDeleted] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -84,27 +83,17 @@ export const Sources = () => {
     if (data && data.length >= 0) {
       return data.map((source: any, idx: number) => [
         <Box key={idx} sx={{ display: 'flex', alignItems: 'center' }}>
-          <Image
-            style={{ marginRight: 10 }}
-            src={connectionIcon}
-            alt="connection icon"
-          />
+          <Image style={{ marginRight: 10 }} src={connectionIcon} alt="connection icon" />
           <Typography variant="body1" fontWeight={600}>
             {source.name}
           </Typography>
         </Box>,
-        <Typography
-          key={source.sourceName}
-          variant="subtitle2"
-          fontWeight={600}
-        >
+        <Typography key={source.sourceName} variant="subtitle2" fontWeight={600}>
           {source.sourceName}
           <br />
           <Typography variant="subtitle2" fontWeight={400}>
             {sourceDefs?.map((item) =>
-              item?.id == source?.sourceDefinitionId
-                ? `${item.dockerRepository}:${item?.tag}`
-                : ''
+              item?.id == source?.sourceDefinitionId ? `${item.dockerRepository}:${item?.tag}` : ''
             )}
           </Typography>
         </Typography>,

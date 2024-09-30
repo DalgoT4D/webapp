@@ -14,9 +14,7 @@ export const useQueryParams = ({
 
   const { tab }: any = router.query;
   const currentTab =
-    tab && typeof tab === 'string' && tab in tabsObj
-      ? +tabsObj[tab]
-      : +tabsObj[defaultTab];
+    tab && typeof tab === 'string' && tab in tabsObj ? +tabsObj[tab] : +tabsObj[defaultTab];
 
   const reverseTabsObj = Object.entries(tabsObj).reduce(
     (acc, [key, value]) => ({ ...acc, [value]: key }),

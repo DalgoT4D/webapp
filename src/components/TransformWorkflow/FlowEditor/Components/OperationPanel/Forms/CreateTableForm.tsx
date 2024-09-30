@@ -3,10 +3,7 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Controller, useForm } from 'react-hook-form';
 import { Box, Button } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { OPERATION_NODE } from '../../../constant';
 import { OperationNodeData, OperationNodeType } from '../../Canvas';
 import { httpPost } from '@/helpers/http';
@@ -30,15 +27,11 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
     if (canvasNode?.type === OPERATION_NODE) {
       const nodeData = canvasNode?.data as OperationNodeData;
       try {
-        await httpPost(
-          session,
-          `transform/dbt_project/model/${nodeData?.target_model_id}/save/`,
-          {
-            name: data.output_name,
-            display_name: data.output_name,
-            dest_schema: data.dest_schema,
-          }
-        );
+        await httpPost(session, `transform/dbt_project/model/${nodeData?.target_model_id}/save/`, {
+          name: data.output_name,
+          display_name: data.output_name,
+          dest_schema: data.dest_schema,
+        });
         reset();
         setCanvasAction({ type: 'run-workflow', data: null });
         if (clearAndClosePanel) {
@@ -78,12 +71,7 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
         />
         <Box sx={{ m: 2 }} />
         <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
-          <Button
-            variant="contained"
-            type="submit"
-            data-testid="savebutton"
-            fullWidth
-          >
+          <Button variant="contained" type="submit" data-testid="savebutton" fullWidth>
             Save
           </Button>
         </Box>

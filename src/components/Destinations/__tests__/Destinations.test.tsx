@@ -110,19 +110,14 @@ describe('Destinations', () => {
       value={{
         CurrentOrg: { state: { is_demo: false } },
         Permissions: {
-          state: [
-            'can_edit_warehouse',
-            'can_create_warehouse',
-            'can_delete_warehouse',
-          ],
+          state: ['can_edit_warehouse', 'can_create_warehouse', 'can_delete_warehouse'],
         },
       }}
     >
       <SWRConfig
         value={{
           dedupingInterval: 0,
-          fetcher: (resource) =>
-            mockFunction(resource, {}).then((res: any) => res.json()),
+          fetcher: (resource) => mockFunction(resource, {}).then((res: any) => res.json()),
           provider: () => new Map(),
         }}
       >
@@ -173,9 +168,7 @@ describe('Destinations', () => {
     const loading_method = screen.getByTestId('loadingMethod');
     expect(loading_method).toHaveTextContent('GCS Staging');
     const gcs_bucket_name_and_path = screen.getByTestId('gCSBucket&amp;Path');
-    expect(gcs_bucket_name_and_path).toHaveTextContent(
-      'gcs_bucket_name / gcs_bucket_path'
-    );
+    expect(gcs_bucket_name_and_path).toHaveTextContent('gcs_bucket_name / gcs_bucket_path');
     const abworkspace = screen.getByTestId('airbyteWorkspaceID');
     expect(abworkspace).toHaveTextContent('WORKSPACE_ID');
 

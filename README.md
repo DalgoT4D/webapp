@@ -8,6 +8,14 @@
 ```bash
 yarn install
 ```
+## Prettier Formatting
+ Do this if there isn't a husky pre-commit script inside the ```husky/_``` folder
+ 
+- We are using Husky and lint-staged auto fix the fomatting in the code in the staging file.
+- After yarn install run
+  ```npx husky init```
+- A file will be created inside the ```husky/_ folder/pre_commit```
+- Add ```npm run auto-format``` inside the file
 
 ## Run the development server
 
@@ -40,6 +48,8 @@ Open `http://localhost:<port>` with your browser to see the result.
 ## Development convention
 
 Refer to this [guide](https://github.com/airbnb/javascript/tree/master/react)
+
+
 
 ## Using Docker on Dev
 

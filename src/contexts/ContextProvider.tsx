@@ -41,10 +41,7 @@ const ContextProvider = ({ children }: any) => {
   );
 
   // Toast reduces/logic-updater
-  const [toast, toastDisptach]: [any, any] = useReducer<any>(
-    ToastReducer,
-    initialToastState
-  );
+  const [toast, toastDisptach]: [any, any] = useReducer<any>(ToastReducer, initialToastState);
 
   // Current org reducer/logic-updater
   const [currentOrg, currentOrgDispatch]: [any, any] = useReducer<any>(

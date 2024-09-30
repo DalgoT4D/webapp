@@ -101,9 +101,7 @@ describe('Sources', () => {
 
     // Close the form dialog
     fireEvent.click(screen.getByTestId('closebutton'));
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   test('handles source deletion', async () => {
@@ -118,15 +116,9 @@ describe('Sources', () => {
     fireEvent.click(screen.getByText('Delete'));
 
     // Confirm delete action
-    fireEvent.click(
-      screen.getByText(/I understand the consequences, confirm/i)
-    );
+    fireEvent.click(screen.getByText(/I understand the consequences, confirm/i));
     await waitFor(() =>
-      expect(successToast).toHaveBeenCalledWith(
-        'Source deleted',
-        [],
-        mockGlobalContext
-      )
+      expect(successToast).toHaveBeenCalledWith('Source deleted', [], mockGlobalContext)
     );
   });
 

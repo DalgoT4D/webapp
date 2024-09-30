@@ -92,11 +92,7 @@ const WhereFilterOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(
-          data
-            .map((col: ColumnData) => col.name)
-            .sort((a, b) => a.localeCompare(b))
-        );
+        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -138,17 +134,11 @@ const WhereFilterOpForm = ({
       setLoading(true);
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (action === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${node?.id}/`,
@@ -176,12 +166,7 @@ const WhereFilterOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      const {
-        source_columns,
-        clauses,
-        sql_snippet,
-        where_type,
-      }: WherefilterDataConfig = opConfig;
+      const { source_columns, clauses, sql_snippet, where_type }: WherefilterDataConfig = opConfig;
       setSrcColumns(source_columns);
 
       let clauseFields = {};
@@ -222,8 +207,7 @@ const WhereFilterOpForm = ({
     }
   }, [session, node]);
 
-  const isNonAdancedFieldsDisabled =
-    advanceFilter === 'yes' || action === 'view';
+  const isNonAdancedFieldsDisabled = advanceFilter === 'yes' || action === 'view';
 
   const isAdvanceFieldsDisabled = action === 'view';
 
@@ -258,9 +242,7 @@ const WhereFilterOpForm = ({
               name="logicalOp"
               rules={{
                 validate: (value) =>
-                  advanceFilter !== 'no' ||
-                  value.id !== '' ||
-                  'Operation is required',
+                  advanceFilter !== 'no' || value.id !== '' || 'Operation is required',
               }}
               render={({ field, fieldState }) => (
                 <Autocomplete
@@ -269,9 +251,7 @@ const WhereFilterOpForm = ({
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                   options={LogicalOperators.filter((op) => op.id !== 'between')}
-                  isOptionEqualToValue={(option: any, value: any) =>
-                    option?.id === value?.id
-                  }
+                  isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
                   disabled={isNonAdancedFieldsDisabled}
                   label="Select operation*"
                   fieldStyle="transformation"
@@ -362,9 +342,7 @@ const WhereFilterOpForm = ({
                   Advance Filter
                 </Typography>
                 <InfoTooltip
-                  title={
-                    'Want to try something more complicated? Enter the SQL statement.'
-                  }
+                  title={'Want to try something more complicated? Enter the SQL statement.'}
                 ></InfoTooltip>
               </Box>
               <Controller
@@ -412,9 +390,7 @@ const WhereFilterOpForm = ({
           </Box>
 
           <Box sx={{ m: 2 }} />
-          <Box
-            sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}
-          >
+          <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
             <Button
               variant="contained"
               type="submit"

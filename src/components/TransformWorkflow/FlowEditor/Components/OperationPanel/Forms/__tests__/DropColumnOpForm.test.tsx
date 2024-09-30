@@ -26,8 +26,7 @@ const props: OperationFormProps = {
   operation: {
     label: 'Drop',
     slug: 'dropcolumns',
-    infoToolTip:
-      'Select the columns that you would like to remove from the table',
+    infoToolTip: 'Select the columns that you would like to remove from the table',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -140,9 +139,7 @@ describe('Form interactions 2', () => {
     // all columns should be checked
     for (let i = 0; i < intermediateTableResponse.length; i++) {
       const parentElement = screen.getByTestId(`checkBoxInputContainer${i}`);
-      const inputElement = parentElement.querySelector(
-        'input[type="checkbox"]'
-      );
+      const inputElement = parentElement.querySelector('input[type="checkbox"]');
       expect(inputElement).toBeChecked();
     }
 
@@ -150,9 +147,7 @@ describe('Form interactions 2', () => {
     await userEvent.click(parentElementClearAll);
     for (let i = 0; i < intermediateTableResponse.length; i++) {
       const parentElement = screen.getByTestId(`checkBoxInputContainer${i}`);
-      const inputElement = parentElement.querySelector(
-        'input[type="checkbox"]'
-      );
+      const inputElement = parentElement.querySelector('input[type="checkbox"]');
       expect(inputElement).not.toBeChecked();
     }
 
@@ -190,13 +185,9 @@ describe('Form interactions 3', () => {
     const parentElementAllSelect = screen.getByTestId('selectAllDropColClick');
     await userEvent.click(parentElementAllSelect);
     for (let i = 0; i < intermediateTableResponse.length; i++) {
-      if (
-        intermediateTableResponse[i].name.includes('District'.toLowerCase())
-      ) {
+      if (intermediateTableResponse[i].name.includes('District'.toLowerCase())) {
         const parentElement = screen.getByTestId(`checkBoxInputContainer${i}`);
-        const inputElement = parentElement.querySelector(
-          'input[type="checkbox"]'
-        );
+        const inputElement = parentElement.querySelector('input[type="checkbox"]');
         expect(inputElement).toBeChecked();
       }
     }

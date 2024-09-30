@@ -34,15 +34,8 @@ import { httpDelete, httpGet } from '@/helpers/http';
 import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
-import {
-  OPERATION_NODE,
-  SRC_MODEL_NODE,
-  operationIconMapping,
-} from '../constant';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { OPERATION_NODE, SRC_MODEL_NODE, operationIconMapping } from '../constant';
+import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { getNextNodePosition } from '@/utils/editor';
 import { KeyboardArrowDown } from '@mui/icons-material';
@@ -205,12 +198,7 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
             return value === '' ? 'Select Action' : WorkflowValues[value];
           }}
           IconComponent={(props: any) => {
-            return (
-              <KeyboardArrowDown
-                {...props}
-                style={{ color: '#FFFFFF', width: '22px' }}
-              />
-            );
+            return <KeyboardArrowDown {...props} style={{ color: '#FFFFFF', width: '22px' }} />;
           }}
           sx={{
             background: '#00897B',
@@ -225,16 +213,10 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
           }}
         >
           <MenuItem value="run">Run workflow</MenuItem>
-          <MenuItem
-            value="run-to-node"
-            disabled={disableToAndFromNodeRunOptions}
-          >
+          <MenuItem value="run-to-node" disabled={disableToAndFromNodeRunOptions}>
             Run to node
           </MenuItem>
-          <MenuItem
-            value="run-from-node"
-            disabled={disableToAndFromNodeRunOptions}
-          >
+          <MenuItem value="run-from-node" disabled={disableToAndFromNodeRunOptions}>
             Run from node
           </MenuItem>
         </Select>
@@ -292,8 +274,7 @@ const Canvas = ({
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [openOperationConfig, setOpenOperationConfig] =
-    useState<boolean>(false);
+  const [openOperationConfig, setOpenOperationConfig] = useState<boolean>(false);
   const { addNodes, setCenter, getZoom } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
@@ -318,23 +299,23 @@ const Canvas = ({
         session,
         'transform/dbt_project/graph/'
       );
-      const nodes: Array<DbtSourceModel | OperationNodeData | any> =
-        response.nodes.map((nn: DbtSourceModel | OperationNodeData) => ({
+      const nodes: Array<DbtSourceModel | OperationNodeData | any> = response.nodes.map(
+        (nn: DbtSourceModel | OperationNodeData) => ({
           id: nn.id,
           type: nn.type,
           data: nn,
-        }));
+        })
+      );
       const edges: Edge[] = response.edges.map((edgeData: EdgeData) => ({
         ...edgeData,
         ...EdgeStyle,
       }));
 
-      const { nodes: layoutedNodes, edges: layoutedEdges } =
-        getLayoutedElements({
-          nodes: nodes,
-          edges: edges,
-          options: { direction: 'LR' },
-        });
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements({
+        nodes: nodes,
+        edges: edges,
+        options: { direction: 'LR' },
+      });
 
       setNodes([...layoutedNodes]);
       setEdges([...layoutedEdges]);
@@ -358,25 +339,18 @@ const Canvas = ({
   }, [previewAction]);
 
   const handleNodesChange = (changes: NodeChange[]) => {
-    console.log(
-      'inside handle nodes changes; changes include move, drag and select'
-    );
+    console.log('inside handle nodes changes; changes include move, drag and select');
     console.log('node changes', changes);
     onNodesChange(changes);
   };
 
   const handleEdgesChange = (changes: EdgeChange[]) => {
-    console.log(
-      'inside handle edges changes; changes include select and remove'
-    );
+    console.log('inside handle edges changes; changes include select and remove');
     onEdgesChange(changes);
   };
 
   const handleNewConnection = (connection: Connection) => {
-    console.log(
-      'inside handle new connection; when two nodes are connected by user',
-      connection
-    );
+    console.log('inside handle new connection; when two nodes are connected by user', connection);
     if (connection.source && connection.target) {
       const newEdge: Edge = {
         source: connection.source,
@@ -412,10 +386,7 @@ const Canvas = ({
       } else if (type === OPERATION_NODE) {
         // hit the backend api to remove the node in a try catch
         try {
-          await httpDelete(
-            session,
-            `transform/dbt_project/model/operations/${nodeId}/`
-          );
+          await httpDelete(session, `transform/dbt_project/model/operations/${nodeId}/`);
         } catch (error) {
           console.log(error);
         } finally {
@@ -435,9 +406,7 @@ const Canvas = ({
     if (shouldRefreshGraph) setRedrawGraph(!redrawGraph); //calls api in parent and this comp rerenders.
   };
 
-  const addSrcModelNodeToCanvas = (
-    dbtSourceModel: DbtSourceModel | null | undefined
-  ) => {
+  const addSrcModelNodeToCanvas = (dbtSourceModel: DbtSourceModel | null | undefined) => {
     if (dbtSourceModel) {
       const position = getNextNodePosition(nodes);
       const newNode = {
@@ -455,9 +424,7 @@ const Canvas = ({
     }
   };
 
-  const addOperationNodeToCanvas = (
-    operationNode: OperationNodeData | null | undefined
-  ) => {
+  const addOperationNodeToCanvas = (operationNode: OperationNodeData | null | undefined) => {
     if (operationNode) {
       console.log('adding an operation node to canvas', operationNode);
       const newNode = {
@@ -492,9 +459,7 @@ const Canvas = ({
         canvasAction.data.nodeId,
         canvasAction.data.nodeType,
         canvasAction.data.shouldRefreshGraph, // by default always refresh canvas
-        canvasAction.data.isDummy !== undefined
-          ? canvasAction.data.isDummy
-          : false
+        canvasAction.data.isDummy !== undefined ? canvasAction.data.isDummy : false
       );
     }
   }, [canvasAction]);
@@ -508,17 +473,13 @@ const Canvas = ({
 
       const xOverlap = Math.max(
         0,
-        Math.min(
-          node.position.x + node.width,
-          otherNode.position.x + (otherNode.width || 0)
-        ) - Math.max(node.position.x, otherNode.position.x)
+        Math.min(node.position.x + node.width, otherNode.position.x + (otherNode.width || 0)) -
+          Math.max(node.position.x, otherNode.position.x)
       );
       const yOverlap = Math.max(
         0,
-        Math.min(
-          node.position.y + node.height,
-          otherNode.position.y + (otherNode.height || 0)
-        ) - Math.max(node.position.y, otherNode.position.y)
+        Math.min(node.position.y + node.height, otherNode.position.y + (otherNode.height || 0)) -
+          Math.max(node.position.y, otherNode.position.y)
       );
       if (xOverlap > 0 && yOverlap > 0) {
         // Prevent overlap by adjusting position

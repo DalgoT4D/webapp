@@ -51,12 +51,7 @@ const UserManagement = () => {
     <>
       <PageHead title="Dalgo | User Management" />
       <main className={styles.main}>
-        <Typography
-          sx={{ fontWeight: 700 }}
-          variant="h4"
-          gutterBottom
-          color="#000"
-        >
+        <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
           Manage users
         </Typography>
         <Box display="flex" justifyContent="flex-end" marginTop={'10px'}>
@@ -70,15 +65,9 @@ const UserManagement = () => {
           </Button>
         </Box>
         <Box sx={{ borderBottom: 1, borderColor: '#DDDDDD' }}>
-          <Tabs
-            value={value}
-            onChange={handleChange}
-            aria-label="user-management-tabs"
-          >
+          <Tabs value={value} onChange={handleChange} aria-label="user-management-tabs">
             <Tab label="Users" sx={{ mr: 4 }} />
-            {permissions.includes('can_view_invitations') && (
-              <Tab label="Pending Invitations" />
-            )}
+            {permissions.includes('can_view_invitations') && <Tab label="Pending Invitations" />}
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>

@@ -43,11 +43,7 @@ const mockTasks = [
   },
 ];
 
-const mockPermissions = [
-  'can_run_orgtask',
-  'can_delete_orgtask',
-  'can_create_orgtask',
-];
+const mockPermissions = ['can_run_orgtask', 'can_delete_orgtask', 'can_create_orgtask'];
 
 const mockContext = {
   Permissions: {
@@ -101,11 +97,7 @@ describe('DBTTaskList Component', () => {
     fireEvent.click(screen.getByTestId('task-2'));
 
     await waitFor(() => {
-      expect(httpPost).toHaveBeenCalledWith(
-        mockSession,
-        `prefect/tasks/2/run/`,
-        {}
-      );
+      expect(httpPost).toHaveBeenCalledWith(mockSession, `prefect/tasks/2/run/`, {});
     });
   });
 
@@ -127,11 +119,7 @@ describe('DBTTaskList Component', () => {
     fireEvent.click(screen.getByTestId('task-2'));
 
     await waitFor(() => {
-      expect(httpPost).toHaveBeenCalledWith(
-        mockSession,
-        `prefect/tasks/2/run/`,
-        {}
-      );
+      expect(httpPost).toHaveBeenCalledWith(mockSession, `prefect/tasks/2/run/`, {});
     });
   });
 });

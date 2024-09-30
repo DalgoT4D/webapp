@@ -138,9 +138,7 @@ describe('FlowEditor', () => {
             ]),
         });
 
-      case url.includes(
-        'tasks/mock-org-slug?hashkey=syncsources-mock-org-slug'
-      ):
+      case url.includes('tasks/mock-org-slug?hashkey=syncsources-mock-org-slug'):
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ detail: 'no such task id' }),

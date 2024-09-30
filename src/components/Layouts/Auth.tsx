@@ -10,11 +10,7 @@ type AuthProps = {
   heading: string;
   subHeading?: string;
 };
-export const Auth: React.FC<AuthProps> = ({
-  heading,
-  subHeading,
-  children,
-}) => {
+export const Auth: React.FC<AuthProps> = ({ heading, subHeading, children }) => {
   return (
     <Box sx={{ width: '100%' }}>
       <Grid container columns={16}>
@@ -27,12 +23,7 @@ export const Auth: React.FC<AuthProps> = ({
             height: '100vh  ',
           }}
         >
-          <Grid
-            container
-            direction="column"
-            justifyContent="center"
-            alignItems="center"
-          >
+          <Grid container direction="column" justifyContent="center" alignItems="center">
             <Image src={Logo} alt="dalgo logo" />
             <Paper
               sx={{

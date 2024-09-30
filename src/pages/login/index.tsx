@@ -15,10 +15,7 @@ import styles from '@/styles/Login.module.css';
 import { useRouter } from 'next/router';
 import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
 import Input from '@/components/UI/Input/Input';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
@@ -67,10 +64,7 @@ export const Login = () => {
     <>
       <PageHead title="Dalgo | Login" />
 
-      <Auth
-        heading="Log In"
-        subHeading="Please enter correct login details below"
-      >
+      <Auth heading="Log In" subHeading="Please enter correct login details below">
         <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
           <Box className={styles.Container}>
             <Input
@@ -109,11 +103,7 @@ export const Login = () => {
                         }}
                         edge="end"
                       >
-                        {showPassword ? (
-                          <VisibilityOutlinedIcon />
-                        ) : (
-                          <VisibilityOffOutlinedIcon />
-                        )}
+                        {showPassword ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />}
                       </IconButton>
                     </Box>
                   </InputAdornment>
@@ -145,8 +135,7 @@ export const Login = () => {
               disabled={waitForLogin}
               data-testid="submitbutton"
             >
-              Login{' '}
-              {waitForLogin && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
+              Login {waitForLogin && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
             </Button>
             <Divider>OR</Divider>
             <Box sx={{ mt: 3, textAlign: 'center' }}>

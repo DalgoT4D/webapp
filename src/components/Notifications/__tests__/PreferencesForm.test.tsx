@@ -3,10 +3,7 @@ import PreferencesForm from '../PreferencesForm';
 import useSWR from 'swr';
 import { useSession } from 'next-auth/react';
 import { httpPut } from '@/helpers/http';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 
 jest.mock('swr');
 jest.mock('next-auth/react');
@@ -37,14 +34,10 @@ describe('PreferencesForm Component', () => {
   test('renders the preferences form with current values', () => {
     render(<PreferencesForm showForm={true} setShowForm={setShowForm} />);
 
-    expect(
-      screen.getByLabelText('Enable Email Notifications')
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Enable Email Notifications')).toBeInTheDocument();
     expect(screen.getByLabelText('Enable Email Notifications')).toBeChecked();
 
-    expect(
-      screen.getByLabelText('Enable Discord Notifications')
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Enable Discord Notifications')).toBeInTheDocument();
     expect(screen.getByLabelText('Enable Discord Notifications')).toBeChecked();
 
     // expect(screen.getByLabelText('Discord Webhook')).toBeInTheDocument();
@@ -92,11 +85,7 @@ describe('PreferencesForm Component', () => {
     fireEvent.click(saveButton);
 
     await waitFor(() => {
-      expect(errorToast).toHaveBeenCalledWith(
-        'Update failed',
-        [],
-        expect.any(Object)
-      );
+      expect(errorToast).toHaveBeenCalledWith('Update failed', [], expect.any(Object));
     });
   });
 

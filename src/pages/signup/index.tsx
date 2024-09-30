@@ -114,11 +114,7 @@ export const SignUp = () => {
                         }}
                         edge="end"
                       >
-                        {showPassword ? (
-                          <VisibilityOutlinedIcon />
-                        ) : (
-                          <VisibilityOffOutlinedIcon />
-                        )}
+                        {showPassword ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />}
                       </IconButton>
                     </Box>
                   </InputAdornment>
@@ -130,8 +126,7 @@ export const SignUp = () => {
               error={!!errors.confirmpassword}
               helperText={errors.confirmpassword?.message}
               hookFormValidations={{
-                validate: (value: string) =>
-                  value === password || 'Passwords do not match',
+                validate: (value: string) => value === password || 'Passwords do not match',
               }}
               sx={{ width: '100%', pb: 3 }}
               id="outlined-confirm-password-input"
@@ -152,11 +147,7 @@ export const SignUp = () => {
                         }}
                         edge="end"
                       >
-                        {showPassword ? (
-                          <VisibilityOutlinedIcon />
-                        ) : (
-                          <VisibilityOffOutlinedIcon />
-                        )}
+                        {showPassword ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />}
                       </IconButton>
                     </Box>
                   </InputAdornment>
@@ -184,8 +175,7 @@ export const SignUp = () => {
               disabled={waitForSignup}
               data-testid="submitbutton"
             >
-              Sign Up{' '}
-              {waitForSignup && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
+              Sign Up {waitForSignup && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
             </Button>
             <Divider>OR</Divider>
             <Box sx={{ mt: 3, textAlign: 'center' }}>

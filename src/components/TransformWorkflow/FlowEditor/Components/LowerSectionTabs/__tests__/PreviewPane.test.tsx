@@ -51,9 +51,7 @@ describe('PreviewPane Component', () => {
       } else if (url.includes('table_count')) {
         return Promise.resolve({ total_rows: 2 });
       } else if (url.includes('download')) {
-        return Promise.resolve(
-          new Blob(['id,name\n1,Test1\n2,Test2'], { type: 'text/csv' })
-        );
+        return Promise.resolve(new Blob(['id,name\n1,Test1\n2,Test2'], { type: 'text/csv' }));
       }
     });
 

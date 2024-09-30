@@ -46,15 +46,11 @@ describe('BarChart', () => {
     ticks.forEach((node, i) => {
       const originalLabel = data[i].label;
       const expectedLabel =
-        originalLabel.length > 10
-          ? `${originalLabel.substring(0, 10)}...`
-          : originalLabel;
+        originalLabel.length > 10 ? `${originalLabel.substring(0, 10)}...` : originalLabel;
       expect(d3.select(node).text()).toBe(expectedLabel);
     });
 
-    const longLabelNode = ticks.find((node) =>
-      d3.select(node).text().endsWith('...')
-    );
+    const longLabelNode = ticks.find((node) => d3.select(node).text().endsWith('...'));
     if (longLabelNode) {
       fireEvent.mouseOver(longLabelNode as HTMLElement);
       const tooltip = d3.select('body').select('.tooltip');

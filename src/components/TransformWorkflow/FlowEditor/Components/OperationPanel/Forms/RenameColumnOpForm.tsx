@@ -73,11 +73,7 @@ const RenameColumnOp = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(
-          data
-            .map((col: ColumnData) => col.name)
-            .sort((a, b) => a.localeCompare(b))
-        );
+        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -106,17 +102,11 @@ const RenameColumnOp = ({
       setLoading(true);
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (action === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${node?.id}/`,
@@ -169,9 +159,7 @@ const RenameColumnOp = ({
     }
   }, [session, node]);
 
-  const options = srcColumns.filter(
-    (column) => !config.map((con) => con.old).includes(column)
-  );
+  const options = srcColumns.filter((column) => !config.map((con) => con.old).includes(column));
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>

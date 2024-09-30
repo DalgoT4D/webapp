@@ -33,14 +33,8 @@ export const VerifyEmail = () => {
     <>
       <PageHead title="Dalgo | Verify Email" />
 
-      <Auth
-        heading="Almost done..."
-        subHeading="Click to verify your email address"
-      >
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          data-testid="email-verification-form"
-        >
+      <Auth heading="Almost done..." subHeading="Click to verify your email address">
+        <form onSubmit={handleSubmit(onSubmit)} data-testid="email-verification-form">
           <Box className={styles.Container}>
             <Button
               variant="contained"

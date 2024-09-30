@@ -40,8 +40,7 @@ const NotificationManagement = () => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
   const { data: unread_count, mutate } = useSWR(`notifications/unread_count`);
-  const [showPreferencesForm, setShowPreferencesForm] =
-    useState<boolean>(false);
+  const [showPreferencesForm, setShowPreferencesForm] = useState<boolean>(false);
   const [checkedRows, setCheckedRows] = useState([]);
   const [mutateAllRow, setMutateAllRows] = useState(false);
 
@@ -79,21 +78,12 @@ const NotificationManagement = () => {
             Notifications
           </Typography>
           <Box sx={{ px: 1, py: 0.2, background: '#00897B', borderRadius: 1 }}>
-            <Typography
-              sx={{ fontWeight: 600 }}
-              variant="subtitle1"
-              color="#fff"
-            >
+            <Typography sx={{ fontWeight: 600 }} variant="subtitle1" color="#fff">
               {unread_count?.res}
             </Typography>
           </Box>
         </Box>
-        <Box
-          display="flex"
-          justifyContent="flex-end"
-          marginTop={'10px'}
-          gap="1rem"
-        >
+        <Box display="flex" justifyContent="flex-end" marginTop={'10px'} gap="1rem">
           <Button
             data-testid={'invite-user'}
             variant="contained"
@@ -131,11 +121,7 @@ const NotificationManagement = () => {
           </Box>
         </Box>
         <Box sx={{ borderBottom: 1, borderColor: '#DDDDDD' }}>
-          <Tabs
-            value={value}
-            onChange={handleChange}
-            aria-label="user-management-tabs"
-          >
+          <Tabs value={value} onChange={handleChange} aria-label="user-management-tabs">
             <Tab label="all" sx={{ padding: 0 }} />
             <Tab label="read" />
             <Tab label="unread" />
@@ -154,10 +140,7 @@ const NotificationManagement = () => {
             </TabPanel>
           );
         })}
-        <PreferencesForm
-          showForm={showPreferencesForm}
-          setShowForm={setShowPreferencesForm}
-        />
+        <PreferencesForm showForm={showPreferencesForm} setShowForm={setShowPreferencesForm} />
       </main>
     </>
   );

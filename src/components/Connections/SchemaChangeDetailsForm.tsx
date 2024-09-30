@@ -1,14 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
-import {
-  Box,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Table, TableBody, TableCell, TableRow, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
@@ -58,12 +50,8 @@ const SchemaChangeDetailsForm = ({
     },
   });
   const [sourceStreams, setSourceStreams] = useState<Array<SourceStream>>([]);
-  const [filteredSourceStreams, setFilteredSourceStreams] = useState<
-    Array<SourceStream>
-  >([]);
-  const [tableData, setTableData] = useState<
-    Array<{ name: string; changedColumns: string[] }>
-  >([]);
+  const [filteredSourceStreams, setFilteredSourceStreams] = useState<Array<SourceStream>>([]);
+  const [tableData, setTableData] = useState<Array<{ name: string; changedColumns: string[] }>>([]);
   const [syncCatalog, setSyncCatalog] = useState<any>(null);
   const [catalogDiff, setCatalogDiff] = useState<any>(null);
   const [catalogId, setCatalogId] = useState<string>('');
@@ -76,9 +64,7 @@ const SchemaChangeDetailsForm = ({
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
   const toastContext = useContext(GlobalContext);
 
-  const checkProgress = async function (
-    taskId: string
-  ): Promise<[boolean, any]> {
+  const checkProgress = async function (taskId: string): Promise<[boolean, any]> {
     try {
       const message = await httpGet(session, `tasks/stp/${taskId}`);
       await delay(3000);
@@ -134,27 +120,24 @@ const SchemaChangeDetailsForm = ({
               } else if (transform.transformType === 'add_stream') {
                 changedColumns.push(`+Stream: ${tableName}`);
               } else {
-                changedColumns = transform.updateStream.reduce(
-                  (columns: string[], update: any) => {
-                    if (
-                      update.transformType === 'add_field' ||
-                      update.transformType === 'remove_field' ||
-                      update.transformType === 'update_field_schema'
-                    ) {
-                      if (update.transformType === 'update_field_schema') {
-                        columns.push(`+${update.fieldName.join(', ')}`);
-                      } else {
-                        columns.push(
-                          `${
-                            update.transformType === 'add_field' ? '+' : '-'
-                          }${update.fieldName.join(', ')}`
-                        );
-                      }
+                changedColumns = transform.updateStream.reduce((columns: string[], update: any) => {
+                  if (
+                    update.transformType === 'add_field' ||
+                    update.transformType === 'remove_field' ||
+                    update.transformType === 'update_field_schema'
+                  ) {
+                    if (update.transformType === 'update_field_schema') {
+                      columns.push(`+${update.fieldName.join(', ')}`);
+                    } else {
+                      columns.push(
+                        `${
+                          update.transformType === 'add_field' ? '+' : '-'
+                        }${update.fieldName.join(', ')}`
+                      );
                     }
-                    return columns;
-                  },
-                  []
-                );
+                  }
+                  return columns;
+                }, []);
               }
 
               return { name: tableName, changedColumns };
@@ -215,13 +198,9 @@ const SchemaChangeDetailsForm = ({
     try {
       if (connectionId) {
         setLoading(true);
-        await httpPost(
-          session,
-          `airbyte/v1/connections/${connectionId}/schema_update/schedule`,
-          {
-            catalogDiff: catalogDiff,
-          }
-        );
+        await httpPost(session, `airbyte/v1/connections/${connectionId}/schema_update/schedule`, {
+          catalogDiff: catalogDiff,
+        });
         successToast('Initiated schema update changes', [], globalContext);
         setLoading(false);
       }
@@ -243,11 +222,9 @@ const SchemaChangeDetailsForm = ({
 
   useEffect(() => {
     if (filteredSourceStreams && filteredSourceStreams.length > 0) {
-      const filteredStreamNames = filteredSourceStreams.map(
-        (stream: SourceStream) => stream.name
-      );
-      const updateFilteredStreams = sourceStreams.filter(
-        (stream: SourceStream) => filteredStreamNames.includes(stream.name)
+      const filteredStreamNames = filteredSourceStreams.map((stream: SourceStream) => stream.name);
+      const updateFilteredStreams = sourceStreams.filter((stream: SourceStream) =>
+        filteredStreamNames.includes(stream.name)
       );
       setFilteredSourceStreams(updateFilteredStreams);
     }
@@ -264,9 +241,7 @@ const SchemaChangeDetailsForm = ({
     );
     const columnsRemoved = tableData.flatMap((table) =>
       table.changedColumns
-        .filter(
-          (column) => column.startsWith('-') && !column.startsWith('-Stream')
-        )
+        .filter((column) => column.startsWith('-') && !column.startsWith('-Stream'))
         .map((column) => ({
           tableName: table.name,
           columnName: column.substring(1),
@@ -274,9 +249,7 @@ const SchemaChangeDetailsForm = ({
     );
     const columnsAdded = tableData.flatMap((table) =>
       table.changedColumns
-        .filter(
-          (column) => column.startsWith('+') && !column.startsWith('+Stream')
-        )
+        .filter((column) => column.startsWith('+') && !column.startsWith('+Stream'))
         .map((column) => ({
           tableName: table.name,
           columnName: column.substring(1),
@@ -297,12 +270,7 @@ const SchemaChangeDetailsForm = ({
                 <TableBody>
                   {tablesRemoved.length > 0 && (
                     <React.Fragment>
-                      <Typography
-                        variant="h6"
-                        fontWeight={600}
-                        color="#5f7182"
-                        gutterBottom
-                      >
+                      <Typography variant="h6" fontWeight={600} color="#5f7182" gutterBottom>
                         Tables Removed
                       </Typography>
                       {tablesRemoved.map((table, idx) => (
@@ -350,12 +318,8 @@ const SchemaChangeDetailsForm = ({
                         Columns Removed
                       </Typography>
                       <TableRow sx={{ boxShadow: '1px', borderRadius: '0px' }}>
-                        <TableCell sx={{ fontWeight: 'bold' }}>
-                          Table Names
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>
-                          Column Names
-                        </TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Table Names</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Column Names</TableCell>
                       </TableRow>
                       {columnsRemoved.map((column, idx) => (
                         <TableRow key={idx} sx={{ boxShadow: 'none' }}>
@@ -399,12 +363,8 @@ const SchemaChangeDetailsForm = ({
                         Columns Added
                       </Typography>
                       <TableRow sx={{ boxShadow: '1px', borderRadius: '0px' }}>
-                        <TableCell sx={{ fontWeight: 'bold' }}>
-                          Table Names
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>
-                          Column Names
-                        </TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Table Names</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Column Names</TableCell>
                       </TableRow>
                       {columnsAdded.map((column, idx) => (
                         <TableRow key={idx} sx={{ boxShadow: 'none' }}>

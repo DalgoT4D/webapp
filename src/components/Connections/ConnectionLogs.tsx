@@ -33,11 +33,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import useSWR from 'swr';
 import { useTracking } from '@/contexts/TrackingContext';
 
-const fetchAirbyteLogs = async (
-  connectionId: string,
-  session: any,
-  offset = 0
-) => {
+const fetchAirbyteLogs = async (connectionId: string, session: any, offset = 0) => {
   try {
     const response = await httpGet(
       session,
@@ -84,13 +80,7 @@ interface ConnectionLogsProps {
   connection: Connection | undefined;
 }
 
-const columns = [
-  'Date',
-  'Records synced',
-  'Bytes synced',
-  'Duration',
-  'Actions',
-];
+const columns = ['Date', 'Records synced', 'Bytes synced', 'Duration', 'Actions'];
 
 interface LogObject {
   attempt_no: number;
@@ -128,9 +118,7 @@ const LogsColumn = ({
         transition: 'max-height 0.6s ease-in-out',
       }}
     >
-      {logsLoading || summarizedLogsLoading ? (
-        <LinearProgress color="inherit" />
-      ) : null}
+      {logsLoading || summarizedLogsLoading ? <LinearProgress color="inherit" /> : null}
       {action === 'summary'
         ? summarizedLogs.length > 0 && (
             <Alert icon={false} severity="success" sx={{ mb: 2 }}>
@@ -149,10 +137,7 @@ const LogsColumn = ({
       {action === 'detail' && logs.length > 0 && (
         <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
           {logs.map((log: string, idx: number) => (
-            <Box
-              key={log + idx}
-              sx={{ mb: '3px', fontWeight: 600, display: 'flex' }}
-            >
+            <Box key={log + idx} sx={{ mb: '3px', fontWeight: 600, display: 'flex' }}>
               <Box>{log}</Box>
             </Box>
           ))}
@@ -181,8 +166,7 @@ const Row = ({
   const pollForTaskRun = async (taskId: string) => {
     try {
       const response: any = await httpGet(session, 'tasks/stp/' + taskId);
-      const lastMessage: any =
-        response['progress'][response['progress'].length - 1];
+      const lastMessage: any = response['progress'][response['progress'].length - 1];
 
       if (!['completed', 'failed'].includes(lastMessage.status)) {
         await delay(3000);
@@ -250,8 +234,7 @@ const Row = ({
           position: 'relative',
           p: 2,
 
-          background:
-            logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
+          background: logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
         }}
       >
         <TableCell
@@ -264,9 +247,7 @@ const Row = ({
           {moment(logDetail.date).format('MMMM D, YYYY')}
         </TableCell>
 
-        <TableCell sx={{ fontWeight: 500 }}>
-          {logDetail.recordsEmitted.toLocaleString()}
-        </TableCell>
+        <TableCell sx={{ fontWeight: 500 }}>{logDetail.recordsEmitted.toLocaleString()}</TableCell>
         <TableCell sx={{ fontWeight: 500 }}>{logDetail.bytesEmitted}</TableCell>
         <TableCell
           sx={{
@@ -341,10 +322,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
     (async () => {
       if (connection) {
         setLoading(true);
-        const {
-          history = [],
-          totalSyncs = 0,
-        }: { history: LogObject[]; totalSyncs: number } =
+        const { history = [], totalSyncs = 0 }: { history: LogObject[]; totalSyncs: number } =
           await fetchAirbyteLogs(connection.connectionId, session);
         if (history) {
           setLogDetails(history);
@@ -369,27 +347,19 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
       open
       TransitionComponent={Transition}
     >
-      <TopNavBar
-        handleClose={() => setShowLogsDialog(false)}
-        title="Connection History"
-      />
+      <TopNavBar handleClose={() => setShowLogsDialog(false)} title="Connection History" />
       <Box sx={{ p: '0px 28px' }}>
         <Box sx={{ mb: 1 }}>
           <Box sx={{ fontSize: '16px', display: 'flex' }}>
-            <Typography sx={{ fontWeight: 700 }}>
-              {`${connection?.name} |`}
-            </Typography>
+            <Typography sx={{ fontWeight: 700 }}>{`${connection?.name} |`}</Typography>
             <Box sx={{ display: 'flex', width: '90%' }}>
               <Typography sx={{ fontWeight: 600, ml: '4px' }}>
-                {connection?.source.sourceName} →{' '}
-                {connection?.destination.destinationName}
+                {connection?.source.sourceName} → {connection?.destination.destinationName}
               </Typography>
             </Box>
           </Box>
         </Box>
-        <TableContainer
-          sx={{ height: 'calc(100vh - 210px)', overflow: 'scroll' }}
-        >
+        <TableContainer sx={{ height: 'calc(100vh - 210px)', overflow: 'scroll' }}>
           <Table stickyHeader sx={{ mt: '-10px' }}>
             <TableHead>
               <TableRow
@@ -427,9 +397,7 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                   allowLogsSummary={!!flags?.allowLogsSummary}
                   key={logDetail.job_id}
                   logDetail={logDetail}
-                  connectionId={
-                    connection?.connectionId ? connection.connectionId : ''
-                  }
+                  connectionId={connection?.connectionId ? connection.connectionId : ''}
                 />
               ))}
             </TableBody>
@@ -458,12 +426,11 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                       const {
                         history = [],
                         totalSyncs = 0,
-                      }: { history: LogObject[]; totalSyncs: number } =
-                        await fetchAirbyteLogs(
-                          connection.connectionId,
-                          session,
-                          offset
-                        );
+                      }: { history: LogObject[]; totalSyncs: number } = await fetchAirbyteLogs(
+                        connection.connectionId,
+                        session,
+                        offset
+                      );
                       if (history) {
                         setLogDetails((logs) => [...logs, ...history]);
                         setOffset((offset) => offset + defaultLoadMoreLimit);
