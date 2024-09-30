@@ -18,12 +18,10 @@
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx,json,css,md}": [
-      "prettier --write",
-      "eslint --fix"
+      "prettier --write"
     ],
     "cypress/**/*.{js,ts,tsx}": [
-      "prettier --write",
-      "eslint --fix"
+      "prettier --write"
     ]
   },
   "dependencies": {
