@@ -46,8 +46,8 @@ const DropColumnOp = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
   const theme = useTheme();
 
   type FormColumnData = {
@@ -82,7 +82,7 @@ const DropColumnOp = ({
       try {
         const data: ColumnData[] = await httpGet(
           session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
+          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`,
         );
         setSrcColumns(data.map((col: ColumnData) => col.name));
         setValue(
@@ -90,7 +90,7 @@ const DropColumnOp = ({
           data.map((col: ColumnData) => ({
             col_name: col.name,
             drop_col: false,
-          }))
+          })),
         );
       } catch (error) {
         console.log(error);
@@ -98,6 +98,13 @@ const DropColumnOp = ({
     }
 
     if (node?.type === OPERATION_NODE) {
+      setValue(
+        'config',
+        nodeData.output_cols.map((col: string) => ({
+          col_name: col,
+          drop_col: false,
+        })),
+      );
       setSrcColumns(nodeData.output_cols);
     }
   };
@@ -127,7 +134,7 @@ const DropColumnOp = ({
         operationNode = await httpPost(
           session,
           `transform/dbt_project/model/`,
-          postData
+          postData,
         );
       } else if (action === 'edit') {
         // need this input to be sent for the first step in chain
@@ -138,7 +145,7 @@ const DropColumnOp = ({
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${node?.id}/`,
-          postData
+          postData,
         );
       }
 
@@ -155,7 +162,7 @@ const DropColumnOp = ({
       setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/dbt_project/model/operations/${node?.id}/`,
       );
       const { config: opConfig, input_models } = config;
       setInputModels(input_models);
@@ -186,7 +193,7 @@ const DropColumnOp = ({
   }, [session, node]);
 
   const filteredFields = fields.filter((field) =>
-    field.col_name.toLowerCase().includes(search.toLowerCase())
+    field.col_name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleSelectAll = () => {
@@ -288,7 +295,7 @@ const DropColumnOp = ({
             {filteredFields.map(
               (
                 column: { col_name: string; drop_col: boolean },
-                index: number
+                index: number,
               ) => [
                 <Controller
                   name={`config.${findColumnIndex(column.col_name)}.drop_col`}
@@ -309,7 +316,7 @@ const DropColumnOp = ({
                           <Checkbox
                             {...field}
                             data-testid={`checkBoxInputContainer${findColumnIndex(
-                              column.col_name
+                              column.col_name,
                             )}`}
                             checked={field.value}
                             onChange={(e) => {
@@ -332,7 +339,7 @@ const DropColumnOp = ({
                     </Box>
                   )}
                 />,
-              ]
+              ],
             )}
           </Box>
         </Box>
