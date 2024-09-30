@@ -11,7 +11,8 @@ yarn install
 ## Prettier Formatting
 
 - We are using Husky and lint-staged auto fix the fomatting in the code in the staging file.
-- After yarn install run "npx husky init"
+- After yarn install run
+  ```npx husky init```
 - A file will be created inside the "husky/_ folder/pre_commit"
 - Add "npm run auto-format" inside the file
 
