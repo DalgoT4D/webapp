@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Controller, useForm } from 'react-hook-form';
 import { Box, Button } from '@mui/material';
@@ -12,11 +12,14 @@ import { OperationNodeData, OperationNodeType } from '../../Canvas';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 
 const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   const { data: session } = useSession();
   const { canvasNode } = useCanvasNode() as { canvasNode: OperationNodeType };
   const { setCanvasAction } = useCanvasAction();
+  const globalContext = useContext(GlobalContext);
   const { control, register, handleSubmit, reset } = useForm({
     defaultValues: canvasNode?.data.is_last_in_chain
       ? {
@@ -37,15 +40,16 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
             name: data.output_name,
             display_name: data.output_name,
             dest_schema: data.dest_schema,
-          }
+          },
         );
         reset();
         setCanvasAction({ type: 'run-workflow', data: null });
         if (clearAndClosePanel) {
           clearAndClosePanel();
         }
-      } catch (error) {
-        console.log(error);
+      } catch (error: any) {
+        console.log(error.message);
+        errorToast(error.message, [], globalContext);
       }
     }
   };
