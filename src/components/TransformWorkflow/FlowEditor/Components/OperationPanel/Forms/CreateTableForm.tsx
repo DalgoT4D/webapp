@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Controller, useForm } from 'react-hook-form';
-import { Box, Button } from '@mui/material';
+import { Box, Button, FormHelperText } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import {
   useCanvasAction,
@@ -20,7 +20,13 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   const { canvasNode } = useCanvasNode() as { canvasNode: OperationNodeType };
   const { setCanvasAction } = useCanvasAction();
   const globalContext = useContext(GlobalContext);
-  const { control, register, handleSubmit, reset } = useForm({
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
     defaultValues: canvasNode?.data.is_last_in_chain
       ? {
           output_name: canvasNode?.data.target_model_name || '',
@@ -69,6 +75,7 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
         <Controller
           control={control}
           name="dest_schema"
+          rules={{ required: true }}
           render={({ field }) => (
             <Autocomplete
               fieldStyle="transformation"
@@ -80,6 +87,9 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
             />
           )}
         />
+        {errors?.dest_schema && (
+          <FormHelperText error>Schema is required</FormHelperText>
+        )}
         <Box sx={{ m: 2 }} />
         <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>
           <Button
