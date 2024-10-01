@@ -14,7 +14,7 @@ import {
   SxProps,
   Typography,
 } from '@mui/material';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { memo, useContext, useEffect, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
@@ -111,41 +111,8 @@ const operationComponentMapping: any = {
   [GENERIC_SQL_OP]: GenericSqlOpForm,
 };
 
-const OperationForm = ({
-  operation,
-  node,
-  sx,
-  continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
-  action,
-  setLoading,
-}: OperationFormProps) => {
-  if (operation === null || operation === undefined) {
-    return null;
-  }
-
-  if (operation.slug === 'create-table') {
-    return (
-      <CreateTableForm
-        node={node}
-        operation={operation}
-        sx={sx}
-        continueOperationChain={continueOperationChain}
-        clearAndClosePanel={clearAndClosePanel}
-        dummyNodeId={dummyNodeId}
-        action={action}
-        setLoading={setLoading}
-      />
-    );
-  }
-
-  if (!Object.keys(operationComponentMapping).includes(operation.slug)) {
-    return <>Operation not yet supported</>;
-  }
-
-  const Form = operationComponentMapping[operation.slug];
-  const FormProps = {
+const OperationForm = memo(
+  ({
     operation,
     node,
     sx,
@@ -154,10 +121,45 @@ const OperationForm = ({
     dummyNodeId,
     action,
     setLoading,
-  };
+  }: OperationFormProps) => {
+    if (operation === null || operation === undefined) {
+      return null;
+    }
 
-  return <Form {...FormProps} />;
-};
+    if (operation.slug === 'create-table') {
+      return (
+        <CreateTableForm
+          node={node}
+          operation={operation}
+          sx={sx}
+          continueOperationChain={continueOperationChain}
+          clearAndClosePanel={clearAndClosePanel}
+          dummyNodeId={dummyNodeId}
+          action={action}
+          setLoading={setLoading}
+        />
+      );
+    }
+
+    if (!Object.keys(operationComponentMapping).includes(operation.slug)) {
+      return <>Operation not yet supported</>;
+    }
+
+    const Form = operationComponentMapping[operation.slug];
+    const FormProps = {
+      operation,
+      node,
+      sx,
+      continueOperationChain,
+      clearAndClosePanel,
+      dummyNodeId,
+      action,
+      setLoading,
+    };
+    return <Form  {...FormProps} />;
+  }
+
+)
 
 const OperationConfigLayout = ({
   openPanel,
@@ -233,10 +235,24 @@ const OperationConfigLayout = ({
         const nodeData = canvasNode?.data as OperationNodeData;
         if (permissions.includes('can_view_dbt_operation')) {
           setSelectedOp(
-            operations.find((op) => op.slug === nodeData.config?.type)
+            operations.find((op) => op.slug === nodeData?.config?.type)
           );
         }
       }
+    }
+    // prevents creation of multiple dummy nodes
+    const isDummyNode = getNodes().some((node) => node.data?.isDummy === true);
+    // console.log(canvasAction.data, "CNAVASACTIONDATA")
+    // if (canvasAction.data === 'create') {  
+
+    //DOOUBT WHEN THRE IS A DUMMMY SOURCE NODE. eg join.
+    // if there are dummy nodes and user selects any other node (operational or source), then it deletes the node. So this prevents creation of multiple dummy nodes on the canvas.
+    if (isDummyNode && !canvasNode?.data.isDummy) {
+      const dummyNodesArr: { id: string }[] = getNodes()
+        .filter((node) => node.data.isDummy)
+        .map((node) => ({ id: node.id }));
+      dummyNodesArr.push({ id: dummyNodeIdRef.current });
+      deleteElements({ nodes: dummyNodesArr });
     }
 
     if (canvasAction.type === 'close-reset-opconfig-panel') {
@@ -325,17 +341,17 @@ const OperationConfigLayout = ({
         >
           {((selectedOp && panelOpFormState.current === 'create') ||
             panelState === 'create-table-or-add-function') && (
-            <IconButton
-              onClick={
-                panelState === 'create-table-or-add-function'
-                  ? handleBackButtonOnCreateTableAddFunction
-                  : () => setShowDiscardDialog(true)
-              }
-              data-testid="openoperationlist"
-            >
-              <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
-            </IconButton>
-          )}
+              <IconButton
+                onClick={
+                  panelState === 'create-table-or-add-function'
+                    ? handleBackButtonOnCreateTableAddFunction
+                    : () => setShowDiscardDialog(true)
+                }
+                data-testid="openoperationlist"
+              >
+                <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
+              </IconButton>
+            )}
           <DiscardDialog handleBackbuttonAction={handleBackbuttonAction} />
           <Box sx={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
             <Typography
@@ -347,8 +363,8 @@ const OperationConfigLayout = ({
               {selectedOp
                 ? selectedOp.label
                 : panelState === 'op-list'
-                ? 'Functions'
-                : ''}
+                  ? 'Functions'
+                  : ''}
             </Typography>
             <Box sx={{ width: '1px', height: '12px' }}>
               {panelState === 'op-form' && selectedOp ? (
@@ -418,8 +434,8 @@ const OperationConfigLayout = ({
                 onClick={
                   canSelectOperation
                     ? () => {
-                        handleSelectOp(op);
-                      }
+                      handleSelectOp(op);
+                    }
                     : undefined
                 }
               >
@@ -520,9 +536,12 @@ const OperationConfigLayout = ({
 
   const panelState = selectedOp
     ? 'op-form'
-    : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE
-    ? 'op-list'
-    : 'create-table-or-add-function';
+    : showFunctionsList || (canvasNode?.type === SRC_MODEL_NODE)
+      ? 'op-list'
+      : 'create-table-or-add-function';
+
+
+
 
   return (
     <Box
@@ -577,7 +596,7 @@ const OperationConfigLayout = ({
                   zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
                 open={isPanelLoading}
-                onClick={() => {}}
+                onClick={() => { }}
               ></Backdrop>
               <OperationForm
                 sx={{ marginBottom: '10px' }}

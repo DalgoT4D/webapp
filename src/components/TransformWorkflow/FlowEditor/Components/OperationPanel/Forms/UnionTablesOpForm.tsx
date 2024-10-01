@@ -15,6 +15,7 @@ import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBo
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { generateDummySrcModelNode } from '../../dummynodes';
 import { SecondaryInput } from './JoinOpForm';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 interface UnionDataConfig {
   other_inputs: SecondaryInput[];
@@ -38,12 +39,16 @@ const UnionTablesOpForm = ({
   const { deleteElements, addEdges, addNodes, getEdges, getNodes } =
     useReactFlow();
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-        ? (node?.data as OperationNodeData)
-        : {};
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    }
+  })
 
   const { control, handleSubmit, reset, setValue } = useForm<{
     tables: Array<{ id: string; label: string }>;
@@ -182,6 +187,8 @@ const UnionTablesOpForm = ({
   const handleSave = async (data: {
     tables: { id: string; label: string }[];
   }) => {
+    const finalNode = node?.data.isDummy ? parentNode : node;
+    const finalAction = node?.data.isDummy ? 'create' : action;
     if (data.tables.length < 2) {
       errorToast(
         'Please select atleast two tables to union',
@@ -282,6 +289,7 @@ const UnionTablesOpForm = ({
   };
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     fetchSourcesModels();
     if (['edit', 'view'].includes(action)) {
       // do things when in edit state
