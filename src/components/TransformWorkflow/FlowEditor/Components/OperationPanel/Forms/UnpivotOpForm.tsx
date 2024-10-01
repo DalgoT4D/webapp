@@ -10,7 +10,6 @@ import {
   Typography,
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -19,6 +18,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 import Input from '@/components/UI/Input/Input';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 interface UnpivotDataConfig {
   source_columns: string[];
@@ -45,12 +45,16 @@ const UnpivotOpForm = ({
     is_unpivot: boolean;
     is_exclude: boolean;
   }>({ is_unpivot: false, is_exclude: false });
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-        ? (node?.data as OperationNodeData)
-        : {};
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    }
+  })
 
   type FormProps = {
     unpivot_field_name: string;
@@ -82,7 +86,8 @@ const UnpivotOpForm = ({
   });
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
+    if (node?.type === SRC_MODEL_NODE) { //change
+
       try {
         const data: ColumnData[] = await httpGet(
           session,
@@ -108,6 +113,8 @@ const UnpivotOpForm = ({
   };
 
   const handleSave = async (data: FormProps) => {
+    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const postData: any = {
         op_type: operation.slug,
@@ -122,8 +129,8 @@ const UnpivotOpForm = ({
             .filter((col) => col.is_exclude_checked)
             .map((col) => col.col),
         },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
       // validate form errors
@@ -138,13 +145,13 @@ const UnpivotOpForm = ({
       setLoading(true);
       // api call
       let operationNode: any;
-      if (action === 'create') {
+      if (finalAction === 'create') {
         operationNode = await httpPost(
           session,
           `transform/dbt_project/model/`,
           postData
         );
-      } else if (action === 'edit') {
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid
@@ -152,7 +159,7 @@ const UnpivotOpForm = ({
             : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -268,6 +275,7 @@ const UnpivotOpForm = ({
   }
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     } else {

@@ -577,7 +577,7 @@ const Canvas = ({
           zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
         open={finalLockCanvas}
-        onClick={() => {}}
+        onClick={() => { }}
       >
         <CircularProgress
           sx={{

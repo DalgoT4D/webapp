@@ -3,7 +3,6 @@ import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
@@ -13,6 +12,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 interface CastDataConfig {
   source_columns: string[];
@@ -33,13 +33,16 @@ const CastColumnOp = ({
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [configData, setConfigData] = useState<any>([]);
   const globalContext = useContext(GlobalContext);
-  const sourceModelNodeRef: any = useRef(); //table
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    }
+  })
   type FormData = {
     config: { name: string; data_type: string | null }[];
   };
@@ -95,7 +98,7 @@ const CastColumnOp = ({
     // clicking operational nodes (saved in db) has action == edit.
     //clicking source node (table) has action == create.
 
-    const finalNode = node?.data.isDummy ? sourceModelNodeRef.current : node;
+    const finalNode = node?.data.isDummy ? parentNode : node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const sourceColumnsNames = config.map((column) => column.name);
@@ -106,8 +109,8 @@ const CastColumnOp = ({
         other_inputs: [],
         config: { columns: [] },
         input_uuid:
-          finalNode?.type === SRC_MODEL_NODE ? finalNode?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
+          finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
       formData.config.forEach((data: any) => {
@@ -162,11 +165,10 @@ const CastColumnOp = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const nodeId = node?.data.isDummy ? sourceModelNodeRef.current : node?.id;
       const { config }: OperationNodeData = await httpGet(
         //this here fetches the columns data.
         session,
-        `transform/dbt_project/model/operations/${nodeId}/`
+        `transform/dbt_project/model/operations/${node?.id}/`
       );
       const { config: opConfig, input_models } = config;
       setInputModels(input_models);
@@ -210,9 +212,6 @@ const CastColumnOp = ({
     So we dont call any api in that case.
    **/
   useEffect(() => {
-    if (node?.type === SRC_MODEL_NODE) {
-      sourceModelNodeRef.current = node; //saving table's id
-    }
     if (node?.data.isDummy) return;
     fetchDataTypes();
     if (['edit', 'view'].includes(action)) {
