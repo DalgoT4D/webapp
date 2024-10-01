@@ -186,10 +186,10 @@ const OperationConfigLayout = ({
       .map((node) => ({ id: node.id }));
     dummyNodesArr.push({ id: dummyNodeIdRef.current });
     deleteElements({ nodes: dummyNodesArr });
-    setOpenPanel(false); //opens operational panel
-    setShowFunctionsList(false); //sql functions
-    setSelectedOp(null); //selected operation eg(cast etc)
-    setCanvasNode(null); //using context, settting node as null.
+    setOpenPanel(false);
+    setShowFunctionsList(false);
+    setSelectedOp(null);
+    setCanvasNode(null);
   };
 
   const handleSelectOp = (op: UIOperationType) => {
@@ -237,15 +237,6 @@ const OperationConfigLayout = ({
           );
         }
       }
-    }
-    // prevents creation of multiple dummy nodes
-    const isDummyNode = getNodes().some((node) => node.data?.isDummy === true);
-    if (canvasAction.data === 'create' && isDummyNode) {
-      const dummyNodesArr: { id: string }[] = getNodes()
-        .filter((node) => node.data.isDummy)
-        .map((node) => ({ id: node.id }));
-      dummyNodesArr.push({ id: dummyNodeIdRef.current });
-      deleteElements({ nodes: dummyNodesArr });
     }
 
     if (canvasAction.type === 'close-reset-opconfig-panel') {
