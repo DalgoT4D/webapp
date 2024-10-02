@@ -294,7 +294,7 @@ const Canvas = ({
   const [nodes, setNodes, onNodesChange] = useNodesState([]); //works when we click the node or move it.
   const [edges, setEdges, onEdgesChange] = useEdgesState([]); //workds when we click the edges.
   const [openOperationConfig, setOpenOperationConfig] =
-    useState<boolean>(false); // this is the left form with sql operations.
+    useState<boolean>(false); // this is the right form with sql operations.
   const { addNodes, setCenter, getZoom } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
