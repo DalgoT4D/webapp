@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
@@ -225,6 +225,42 @@ const CastColumnOp = ({
     setConfigData(config);
   }, [config]);
 
+  const MemoizedGridTable = useMemo(() => {
+    return <GridTable
+      headers={['Column name', 'Type']}
+      data={configData?.map((column: any, index: number) => [
+        <Input
+          data-testid={`columnName${findColumnIndex(column.name)}`}
+          key={`config.${findColumnIndex(column.name)}.name`}
+          fieldStyle="none"
+          sx={{
+            padding: '0',
+            caretColor: 'transparent',
+          }}
+          name={`config.${findColumnIndex(column.name)}.name`}
+          register={register}
+          value={column.name}
+          disabled={action === 'view'}
+        />,
+        <Controller
+          key={`config.${findColumnIndex(column.name)}.data_type`}
+          control={control}
+          name={`config.${findColumnIndex(column.name)}.data_type`}
+          render={({ field }) => (
+            <Autocomplete
+              {...field}
+              data-testid={`type${findColumnIndex(column.name)}`}
+              disabled={action === 'view'}
+              disableClearable
+              fieldStyle="none"
+              options={dataTypes}
+            />
+          )}
+        />,
+      ])}
+    ></GridTable>
+  }, [configData, dataTypes, control])
+
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
       <Input
@@ -234,39 +270,8 @@ const CastColumnOp = ({
         onChange={(event) => handleSearch(event.target.value)}
       />
       <form onSubmit={handleSubmit(handleSave)}>
-        <GridTable
-          headers={['Column name', 'Type']}
-          data={configData?.map((column: any, index: number) => [
-            <Input
-              data-testid={`columnName${findColumnIndex(column.name)}`}
-              key={`config.${findColumnIndex(column.name)}.name`}
-              fieldStyle="none"
-              sx={{
-                padding: '0',
-                caretColor: 'transparent',
-              }}
-              name={`config.${findColumnIndex(column.name)}.name`}
-              register={register}
-              value={column.name}
-              disabled={action === 'view'}
-            />,
-            <Controller
-              key={`config.${findColumnIndex(column.name)}.data_type`}
-              control={control}
-              name={`config.${findColumnIndex(column.name)}.data_type`}
-              render={({ field }) => (
-                <Autocomplete
-                  {...field}
-                  data-testid={`type${findColumnIndex(column.name)}`}
-                  disabled={action === 'view'}
-                  disableClearable
-                  fieldStyle="none"
-                  options={dataTypes}
-                />
-              )}
-            />,
-          ])}
-        ></GridTable>
+
+        {MemoizedGridTable}
         <Box sx={{ m: 2 }} />
         <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', p: 2 }}>
           <Button

@@ -14,7 +14,7 @@ import {
   SxProps,
   Typography,
 } from '@mui/material';
-import React, { memo, useContext, useEffect, useRef, useState } from 'react';
+import React, { memo, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   OperationNodeData,
@@ -111,7 +111,7 @@ const operationComponentMapping: any = {
   [GENERIC_SQL_OP]: GenericSqlOpForm,
 };
 
-const OperationForm = (
+const OperationForm = memo((
   ({
     operation,
     node,
@@ -159,7 +159,9 @@ const OperationForm = (
     return <Form  {...FormProps} />;
   }
 
-)
+))
+OperationForm.displayName = "OperationForm";
+
 
 const OperationConfigLayout = ({
   openPanel,

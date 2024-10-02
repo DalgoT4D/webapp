@@ -93,7 +93,7 @@ const closedMixin = (theme: Theme): CSSObject => ({
     width: `calc(${theme.spacing(8)} + 1px)`,
   },
 });
- const Drawer = styled(MuiDrawer, {
+const Drawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
   width: drawerWidth,
@@ -112,6 +112,8 @@ const closedMixin = (theme: Theme): CSSObject => ({
 
 export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const router = useRouter();
+  const globalContext = useContext(GlobalContext);
+  const { state } = globalContext?.UnsavedChanges ?? {};
   const [open, setOpen] = useState(
     new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
   );
@@ -119,7 +121,6 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
     sideMenu.find((item) => item.path === router.pathname)?.index
   );
   const [runWalkThrough, setRunWalkThrough] = useState(false);
-  const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   // handle drawer expand and collapse
 
@@ -130,10 +131,11 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   };
 
   useEffect(() => {
+    if (state) return;
     setSelectedIndex(
       sideMenu.find((item) => item.path === router.pathname)?.index
     );
-  }, [router.pathname]);
+  }, [router.pathname, state]);
 
   const handleListItemClick = (item: MenuOption) => {
     if (item.minimize) {
@@ -272,7 +274,9 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                 justifyContent: 'center',
               }}
             >
-              <Typography data-testid="documentation" sx={{ paddingRight: 1 }}>Documentation</Typography>
+              <Typography data-testid="documentation" sx={{ paddingRight: 1 }}>
+                Documentation
+              </Typography>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 height="16"
@@ -294,7 +298,9 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                 marginTop: 1,
               }}
             >
-              <Typography data-testid="privacypolicy" sx={{ paddingRight: 1 }}>Privacy Policy</Typography>
+              <Typography data-testid="privacypolicy" sx={{ paddingRight: 1 }}>
+                Privacy Policy
+              </Typography>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 height="16"

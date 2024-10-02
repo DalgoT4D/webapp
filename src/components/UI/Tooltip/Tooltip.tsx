@@ -4,7 +4,7 @@ import InfoIcon from '@mui/icons-material/InfoOutlined';
 import Typography from '@mui/material/Typography';
 
 interface InfoTooltipProps {
-  title: string;
+  title: string | any;
   placement?: any;
 }
 
