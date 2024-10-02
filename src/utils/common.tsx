@@ -129,7 +129,6 @@ export const toCamelCase = (str: string) => {
     .replace(/(^\w)/, (m) => m.toLowerCase());
 };
 
-
 export const formatDuration = (seconds: number) => {
   const duration = moment.duration(seconds, 'seconds');
   const days = Math.floor(duration.asDays());
@@ -154,3 +153,16 @@ export const formatDuration = (seconds: number) => {
 
   return formattedDuration.trim();
 };
+
+export const copyToClipboard = (dataToCopy: any) => {
+  return navigator.clipboard
+    .writeText(dataToCopy)
+    .then(() => {
+      return true; 
+    })
+    .catch((err) => {
+      console.error('Failed to copy text: ', err);
+      return false;  
+    });
+};
+
