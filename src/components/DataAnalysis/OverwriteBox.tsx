@@ -9,6 +9,7 @@ import {
 import CustomDialog from '../Dialog/CustomDialog';
 import { useForm, Controller } from 'react-hook-form';
 import { MODALS } from './LLMSummary';
+import { useTracking } from '@/contexts/TrackingContext';
 // Define the form data type
 interface FormData {
   sessionName: string;
@@ -36,6 +37,7 @@ export const OverWriteDialog = ({
   handleNewSession: (x: boolean) => void;
   oldSessionName: string;
 }) => {
+  const trackAmplitudeEvent: any = useTracking();
   const {
     control,
     handleSubmit,
@@ -80,7 +82,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data.sessionName, false)), // Use handleSubmit from react-hook-form
+          onClick: () => {
+            trackAmplitudeEvent(`[Save-LLMSummary] Button Clicked`)
+            handleSubmit((data) => onSubmit(data.sessionName, false))() // Use handleSubmit from react-hook-form
+          }
         },
         {
           label: 'Cancel',
@@ -108,7 +113,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data.sessionName, true)), // Handle form submission
+          onClick: () => {
+            trackAmplitudeEvent(`[Overwrite-LLMSummary] Button Clicked`)
+            handleSubmit((data) => onSubmit(data.sessionName, true))() // Handle form submission
+          }
         },
         {
           label: 'Save as new',
@@ -152,7 +160,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data.sessionName, false)), // Use handleSubmit from react-hook-form
+          onClick: () => {
+            trackAmplitudeEvent(`[Save-LLMSummary] Button Clicked`)
+            handleSubmit((data) => onSubmit(data.sessionName, false))() // Use handleSubmit from react-hook-form
+          }
         },
         {
           label: 'Cancel',
@@ -295,8 +306,8 @@ export const OverWriteDialog = ({
                         ? errors.feedback.message
                         : ''
                       : errors.sessionName
-                      ? errors.sessionName.message
-                      : ''
+                        ? errors.sessionName.message
+                        : ''
                   }
                 />
               )}
@@ -314,7 +325,7 @@ export const OverWriteDialog = ({
       title={ModalData[modalName].mainheading}
       show={open}
       handleClose={handleClose}
-      handleSubmit={() => {}}
+      handleSubmit={() => { }}
       formContent={<FormContent />}
       formActions={
         <DialogActions
