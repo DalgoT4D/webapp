@@ -111,7 +111,7 @@ const operationComponentMapping: any = {
   [GENERIC_SQL_OP]: GenericSqlOpForm,
 };
 
-const OperationForm = memo(
+const OperationForm = (
   ({
     operation,
     node,
@@ -240,15 +240,13 @@ const OperationConfigLayout = ({
         }
       }
     }
-    // prevents creation of multiple dummy nodes
-    const isDummyNode = getNodes().some((node) => node.data?.isDummy === true);
-    // console.log(canvasAction.data, "CNAVASACTIONDATA")
-    // if (canvasAction.data === 'create') {  
 
-    //DOOUBT WHEN THRE IS A DUMMMY SOURCE NODE. eg join.
+    const nodes = getNodes();
+    const areDummyNodes = nodes.some((node) => node.data?.isDummy === true);
+
     // if there are dummy nodes and user selects any other node (operational or source), then it deletes the node. So this prevents creation of multiple dummy nodes on the canvas.
-    if (isDummyNode && !canvasNode?.data.isDummy) {
-      const dummyNodesArr: { id: string }[] = getNodes()
+    if (areDummyNodes && !canvasNode?.data.isDummy) {
+      const dummyNodesArr: { id: string }[] = nodes
         .filter((node) => node.data.isDummy)
         .map((node) => ({ id: node.id }));
       dummyNodesArr.push({ id: dummyNodeIdRef.current });
