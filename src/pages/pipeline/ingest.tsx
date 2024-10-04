@@ -35,18 +35,18 @@ export default function Ingest() {
   const tabsObj: { [key: string]: number } = {
     connections: 0,
     sources: 1,
-    warehouse: 2
-  }
+    warehouse: 2,
+  };
 
   const { value, handleChange } = useQueryParams({
     tabsObj,
-    basePath: "/pipeline/ingest",
-    defaultTab: "connections"
-  })
+    basePath: '/pipeline/ingest',
+    defaultTab: 'connections',
+  });
 
   return (
     <>
-      <PageHead title="Dalgo" />
+      <PageHead title="Dalgo | Ingest" />
       <main className={styles.main}>
         <Typography
           sx={{ fontWeight: 700 }}

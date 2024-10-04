@@ -12,6 +12,7 @@ import {
 import Input from '@/components/UI/Input/Input';
 import Auth from '@/components/Layouts/Auth';
 import { httpPost } from '../../helpers/http';
+import { PageHead } from '@/components/PageHead';
 
 export const ForgotPassword = () => {
   const { register, handleSubmit } = useForm();
@@ -43,31 +44,34 @@ export const ForgotPassword = () => {
     );
   } else {
     return (
-      <Auth heading="Forgot password" subHeading="">
-        <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
-          <Box className={styles.Container}>
-            <Input
-              sx={{ width: '100%', pb: 2 }}
-              id="outlined-basic"
-              data-testid="email"
-              label="Enter your registered email"
-              variant="outlined"
-              required
-              register={register}
-              name="email"
-            />
+      <>
+        <PageHead title="Dalgo | Forgot Password" />
+        <Auth heading="Forgot password" subHeading="">
+          <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
+            <Box className={styles.Container}>
+              <Input
+                sx={{ width: '100%', pb: 2 }}
+                id="outlined-basic"
+                data-testid="email"
+                label="Enter your registered email"
+                variant="outlined"
+                required
+                register={register}
+                name="email"
+              />
 
-            <Button
-              variant="contained"
-              sx={{ width: '100%', mb: 3, minHeight: '50px' }}
-              type="submit"
-              data-testid="submit"
-            >
-              Continue
-            </Button>
-          </Box>
-        </form>
-      </Auth>
+              <Button
+                variant="contained"
+                sx={{ width: '100%', mb: 3, minHeight: '50px' }}
+                type="submit"
+                data-testid="submit"
+              >
+                Continue
+              </Button>
+            </Box>
+          </form>
+        </Auth>
+      </>
     );
   }
 };

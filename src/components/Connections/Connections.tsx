@@ -615,7 +615,7 @@ export const Connections = () => {
   };
 
   const handleDeleteConnection = () => {
-    handleClose();
+    handleClose('EDIT');
     setShowConfirmDeleteDialog(true);
   };
 
