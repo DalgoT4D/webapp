@@ -6,6 +6,29 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import useSWR from 'swr';
 import { httpDelete, httpGet } from '@/helpers/http';
 import { successToast } from '@/components/ToastMessage/ToastHelper'
+import { Dialog } from '@mui/material';
+jest.mock('../SourceForm', () => {
+  const MockSource = ({ showForm, setShowForm }: { showForm: boolean, setShowForm: any }) => {
+    return (
+      <Dialog open={showForm} data-testid="test-source-form">
+        form-dialog-component
+        <button
+          data-testid="closebutton"
+          onClick={() => {
+            setShowForm(false)
+          }}
+        >
+          Close
+        </button>
+      </Dialog>
+    );
+  };
+
+  MockSource.displayName = 'MockSourceForm';
+
+  return { __esModule: true, default: MockSource };
+});
+
 
 
 jest.mock('next-auth/react');
@@ -96,11 +119,8 @@ describe("Sources", () => {
       </GlobalContext.Provider>
     );
 
-    // Open the form dialog
-    fireEvent.click(screen.getByText(/ New Source/i));
+    fireEvent.click(screen.getByText(/New Source/i));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-
-    // Close the form dialog
     fireEvent.click(screen.getByTestId("closebutton"));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
