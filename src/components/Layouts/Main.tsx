@@ -69,12 +69,9 @@ const MainDashboard = ({ children }: any) => {
         // see if the org is set in the local storage
         const currentOrgSlug = localStorage.getItem('org-slug');
         let currentOrgUser: OrgUser | null | undefined = null;
-        currentOrgUser = orgusers?.find(
-          (orguser: OrgUser) => orguser.org.slug === currentOrgSlug
-        );
+        currentOrgUser = orgusers?.find((orguser: OrgUser) => orguser.org.slug === currentOrgSlug);
         // If not pick the first org from the api response
-        if (!currentOrgUser && orgusers && orgusers.length > 0)
-          currentOrgUser = orgusers[0];
+        if (!currentOrgUser && orgusers && orgusers.length > 0) currentOrgUser = orgusers[0];
         // update current org in global state
         globalContext?.CurrentOrg.dispatch({
           type: 'new',
@@ -82,9 +79,7 @@ const MainDashboard = ({ children }: any) => {
         });
 
         // update permissions in global state
-        const permissions = currentOrgUser?.permissions.map(
-          (permission: any) => permission.slug
-        );
+        const permissions = currentOrgUser?.permissions.map((permission: any) => permission.slug);
 
         globalContext?.Permissions.dispatch({
           type: 'add',
@@ -140,7 +135,6 @@ const MainDashboard = ({ children }: any) => {
 
 export const Main = ({ children }: any) => {
   const { data: session }: any = useSession();
-
 
   const router = useRouter();
 

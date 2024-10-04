@@ -121,11 +121,7 @@ describe('SavedSession Component', () => {
     );
 
     await waitFor(() => {
-      expect(errorToast).toHaveBeenCalledWith(
-        errorMessage,
-        [],
-        mockGlobalContext
-      );
+      expect(errorToast).toHaveBeenCalledWith(errorMessage, [], mockGlobalContext);
     });
   });
 

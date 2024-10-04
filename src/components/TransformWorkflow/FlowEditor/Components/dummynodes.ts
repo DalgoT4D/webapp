@@ -2,11 +2,7 @@ import { DbtSourceModel, UIOperationType } from './Canvas';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
 import { getNextNodePosition } from '@/utils/editor';
 
-export const generateDummySrcModelNode = (
-  node: any,
-  model: DbtSourceModel,
-  height = 200
-) => {
+export const generateDummySrcModelNode = (node: any, model: DbtSourceModel, height = 200) => {
   const { x: xnew, y: ynew } = getNextNodePosition([
     {
       position: { x: node?.xPos, y: node?.yPos },
@@ -29,11 +25,7 @@ export const generateDummySrcModelNode = (
   return dummyNode;
 };
 
-export const generateDummyOperationlNode = (
-  node: any,
-  op: UIOperationType,
-  height = 200
-) => {
+export const generateDummyOperationlNode = (node: any, op: UIOperationType, height = 200) => {
   const nodeId = String(Date.now());
   const { x: xnew, y: ynew } = getNextNodePosition([
     { position: { x: node?.xPos, y: node?.yPos }, height: height },

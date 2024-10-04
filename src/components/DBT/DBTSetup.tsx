@@ -54,10 +54,7 @@ export const DBTSetup = ({
     try {
       const orgSlug = toastContext?.CurrentOrg.state.slug;
       const hashKey = `${hashKeyPrefix}-${orgSlug}`;
-      const message = await httpGet(
-        session,
-        `tasks/${taskId}?hashkey=${hashKey}`
-      );
+      const message = await httpGet(session, `tasks/${taskId}?hashkey=${hashKey}`);
       setProgressMessages(message['progress']);
 
       const lastMessage = message['progress'][message['progress'].length - 1];
@@ -79,9 +76,7 @@ export const DBTSetup = ({
 
   useEffect(() => {
     setLogs(
-      progressMessages.map(
-        (msg) => `${msg.stepnum ? msg.stepnum + '. ' : ''}${msg.message}`
-      )
+      progressMessages.map((msg) => `${msg.stepnum ? msg.stepnum + '. ' : ''}${msg.message}`)
     );
   }, [progressMessages]);
 
@@ -253,19 +248,10 @@ export const DBTSetup = ({
         formContent={<AddWorkspaceSetupForm />}
         formActions={
           <>
-            <Button
-              variant="contained"
-              type="submit"
-              data-testid="save-github-url"
-            >
+            <Button variant="contained" type="submit" data-testid="save-github-url">
               Save
             </Button>
-            <Button
-              color="secondary"
-              variant="outlined"
-              onClick={handleClose}
-              data-testid="cancel"
-            >
+            <Button color="secondary" variant="outlined" onClick={handleClose} data-testid="cancel">
               Cancel
             </Button>
           </>

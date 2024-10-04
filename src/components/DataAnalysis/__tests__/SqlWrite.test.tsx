@@ -42,9 +42,7 @@ describe('SqlWrite component', () => {
     // Ensure the loader is rendered initially
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
 
-    await waitFor(() =>
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
 
     expect(screen.getByText(/SQL Filter/i)).toBeInTheDocument();
     expect(screen.getByText('Prompt*')).toBeInTheDocument();
@@ -88,9 +86,7 @@ describe('SqlWrite component', () => {
     await waitFor(() => {
       expect(screen.getByText('Prompt 1')).toBeInTheDocument();
       expect(screen.getByText('Prompt 2')).toBeInTheDocument();
-      expect(
-        screen.getByText('*You can query a maximum of 500 rows only.')
-      ).toBeInTheDocument();
+      expect(screen.getByText('*You can query a maximum of 500 rows only.')).toBeInTheDocument();
     });
   });
 
