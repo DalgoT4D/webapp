@@ -1791,18 +1791,18 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
-"@superset-ui/embedded-sdk@^0.1.0-alpha.10":
-  version "0.1.0-alpha.12"
-  resolved "https://registry.yarnpkg.com/@superset-ui/embedded-sdk/-/embedded-sdk-0.1.0-alpha.12.tgz#9cca1680df45077d975c9ad0cd5fe1a667d03fb9"
-  integrity sha512-DnoAgrbNl1SV18WaJMNKvEtfHypXp0zbTp2tixy/VH3rTVllq++j0C5/LiCHZN1TZgcUHMr3FSvP6cxWXbTlvA==
+"@superset-ui/embedded-sdk@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@superset-ui/embedded-sdk/-/embedded-sdk-0.1.2.tgz#2710dd1e0966bb8ace2672d061c0646a6ae8c5b1"
+  integrity sha512-S+KXiplLAF4Sjp/b5whvGnNHQJBoz3GxJbp3ymiPGvxBkLIxELakY6KZ5Qk0s8+Cl0KWKF6t/8Norn/UaS9oJQ==
   dependencies:
-    "@superset-ui/switchboard" "^0.18.26-0"
-    jwt-decode "^3.1.2"
+    "@superset-ui/switchboard" "^0.20.2"
+    jwt-decode "^4.0.0"
 
-"@superset-ui/switchboard@^0.18.26-0":
-  version "0.18.26-2"
-  resolved "https://registry.yarnpkg.com/@superset-ui/switchboard/-/switchboard-0.18.26-2.tgz#d69abc5a4b2564c89eae2ee48b406491d308b6e7"
-  integrity sha512-yIuEv8QGS+j+SS3P3TGQ0wp9WGKGHJrI39kjh74N1HFZlHhfZEKZ28XdZIjOEXlqCr7pvrF0XPEzLHnGSsbtCg==
+"@superset-ui/switchboard@^0.20.2":
+  version "0.20.2"
+  resolved "https://registry.yarnpkg.com/@superset-ui/switchboard/-/switchboard-0.20.2.tgz#cd97892229d75ce64ddeaea1ef96e030aeee4b40"
+  integrity sha512-ORnueRpcnAt/IJB8IFaB+M5uDnItLZRJexWj0TKFcN9TBZhE9bQ6J6ARyfOq6VRVlLcaYfrfBYukaZCg3Fh5Jw==
 
 "@swc/counter@^0.1.3":
   version "0.1.3"
@@ -6008,10 +6008,10 @@ jsprim@^2.0.2:
     object.assign "^4.1.4"
     object.values "^1.1.6"
 
-jwt-decode@^3.1.2:
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/jwt-decode/-/jwt-decode-3.1.2.tgz#3fb319f3675a2df0c2895c8f5e9fa4b67b04ed59"
-  integrity sha512-UfpWE/VZn0iP50d8cz9NrZLM9lSWhcJ+0Gt/nm4by88UL+J1SiKN8/5dkjMmbEzwL2CAe+67GsegCbIKtbp75A==
+jwt-decode@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/jwt-decode/-/jwt-decode-4.0.0.tgz#2270352425fd413785b2faf11f6e755c5151bd4b"
+  integrity sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==
 
 keyv@^4.5.3:
   version "4.5.4"
