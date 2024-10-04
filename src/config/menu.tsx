@@ -1,5 +1,6 @@
 import AnalysisIcon from '@/assets/icons/analysis';
 import UsageIcon from '@/assets/icons/UsageIcon';
+import AiAnalysisIcon from '@/assets/icons/aianalysis'
 import IngestIcon from '@/assets/icons/ingest';
 import TransformIcon from '@/assets/icons/transform';
 import PipelineIcon from '@/assets/icons/pipeline';
@@ -44,6 +45,15 @@ export const sideMenu: MenuOption[] = [
     parent: 1,
     className: 'usage_walkthrough',
     minimize: true,
+  },
+  {
+    index: 1.2,
+    title: 'Data Analysis',
+    path: '/analysis/data-analysis',
+    icon: (selected: boolean) => <AiAnalysisIcon fill={getColor(selected)} />,
+    parent: 1,
+    className: 'data_analysis',
+    minimize: false,
   },
   {
     index: 2,

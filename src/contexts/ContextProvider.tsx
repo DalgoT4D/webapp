@@ -19,12 +19,14 @@ import {
 
 import React from 'react';
 import ToastMessage from '@/components/ToastMessage/ToastMessage';
+import { initialUnsavedChangesState, UnsavedChangesReducer } from './reducers/UnsavedChangesReducer';
 
 interface context {
   Permissions: { state: string[]; dispatch: any };
   Toast: { state: ToastStateInterface; dispatch: any };
   CurrentOrg: { state: CurrentOrgStateInterface; dispatch: any };
   OrgUsers: { state: Array<OrgUserStateInterface>; dispatch: any };
+  UnsavedChanges: { state: boolean; dispatch: any };
 }
 export const GlobalContext = createContext<context | null>(null);
 
@@ -53,6 +55,10 @@ const ContextProvider = ({ children }: any) => {
     initialOrgUsersState
   );
 
+  const [unsavedChanges, unsavedChangesDispatch]: [any, any] = useReducer<any>(
+    UnsavedChangesReducer,
+    initialUnsavedChangesState
+  );
   // You can add other reducers here to have global state for different use cases with the same global context
 
   return (
@@ -62,6 +68,7 @@ const ContextProvider = ({ children }: any) => {
         Toast: { state: toast, dispatch: toastDisptach },
         CurrentOrg: { state: currentOrg, dispatch: currentOrgDispatch },
         OrgUsers: { state: orgUsers, dispatch: orgUsersDispatch },
+        UnsavedChanges: { state: unsavedChanges, dispatch: unsavedChangesDispatch },
       }}
     >
       {children}

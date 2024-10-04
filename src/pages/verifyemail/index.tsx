@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
 import { httpPost } from '../../helpers/http';
+import { PageHead } from '@/components/PageHead';
 
 export const VerifyEmail = () => {
   const { handleSubmit } = useForm();
@@ -29,26 +30,30 @@ export const VerifyEmail = () => {
   };
 
   return (
-    <Auth
-      heading="Almost done..."
-      subHeading="Click to verify your email address"
-    >
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        data-testid="email-verification-form"
+    <>
+      <PageHead title="Dalgo | Verify Email" />
+
+      <Auth
+        heading="Almost done..."
+        subHeading="Click to verify your email address"
       >
-        <Box className={styles.Container}>
-          <Button
-            variant="contained"
-            sx={{ width: '100%', mb: 3, minHeight: '50px' }}
-            type="submit"
-            data-testid="submit"
-          >
-            Verify
-          </Button>
-        </Box>
-      </form>
-    </Auth>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          data-testid="email-verification-form"
+        >
+          <Box className={styles.Container}>
+            <Button
+              variant="contained"
+              sx={{ width: '100%', mb: 3, minHeight: '50px' }}
+              type="submit"
+              data-testid="submit"
+            >
+              Verify
+            </Button>
+          </Box>
+        </form>
+      </Auth>
+    </>
   );
 };
 
