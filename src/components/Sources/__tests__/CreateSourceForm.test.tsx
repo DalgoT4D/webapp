@@ -23,7 +23,6 @@ jest.mock('react-use-websocket', () => ({
 }));
 
 describe('Connections Setup', () => {
-
   let sendJsonMessageMock: jest.Mock;
   let lastMessageMock: any;
 
@@ -70,10 +69,12 @@ describe('Connections Setup', () => {
     render(createSourceForm());
 
     // Wait for the useEffect to initialize the WebSocket URL
-    await waitFor(() => expect(useWebSocket).toHaveBeenCalledWith(
-      expect.stringContaining('airbyte/source/check_connection'),
-      expect.any(Object)
-    ));
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
+    );
     const savebutton = screen.getByTestId('savebutton');
     expect(savebutton).toBeInTheDocument();
 
@@ -89,7 +90,6 @@ describe('Connections Setup', () => {
     const sourceType = screen.getByLabelText('Select source type');
     expect(sourceType).toBeInTheDocument();
   });
-
 
   // ===========================================================================
   it('selects the source type and submits the form', async () => {
@@ -110,10 +110,10 @@ describe('Connections Setup', () => {
 
     render(createSourceForm());
 
-    // await waitFor(() => expect(useWebSocket).toHaveBeenCalledWith(
-    //   expect.stringContaining('airbyte/source/check_connection'),
-    //   expect.any(Object)
-    // ));
+    await waitFor(() => expect(useWebSocket).toHaveBeenCalledWith(
+      expect.stringContaining('airbyte/source/check_connection'),
+      expect.any(Object)
+    ));
 
     const autocomplete = screen.getByTestId('autocomplete');
     const sourceTypeInput = screen.getByRole('combobox');
@@ -133,8 +133,6 @@ describe('Connections Setup', () => {
       expect(inputField.value).toBe('localhost');
       expect(inputField.type).toBe('text');
     });
-
-
 
     const createSourceSubmit = jest.fn().mockResolvedValueOnce({
       ok: true,
@@ -168,37 +166,28 @@ describe('Connections Setup', () => {
         expect(requestBody.sourceDefId).toBe('MYSOURCEDEFID');
         expect(requestBody.config.host).toBe('localhost');
       }
-    })
-
+    });
   });
 
-
   it('handles failed WebSocket response and shows logs', async () => {
-    // Mock WebSocket lastMessage to simulate a failure response with logs
     lastMessageMock = {
-      data: JSON.stringify({
-        status: 'success',
-        data: {
-          status: 'failed',
-          logs: ['Error log line 1', 'Error log line 2'],
-        },
-      }),
+      status: 'success',
+      data: {
+        status: 'failed',
+        logs: ['Error log line 1', 'Error log line 2'],
+      },
     };
 
-    (useWebSocket as jest.Mock).mockReturnValue({
-      sendJsonMessage: sendJsonMessageMock,
-      lastMessage: lastMessageMock,
-      onError: jest.fn(),
-    });
 
     render(createSourceForm());
 
-    await waitFor(() => expect(useWebSocket).toHaveBeenCalledWith(
-      expect.stringContaining('airbyte/source/check_connection'),
-      expect.any(Object)
-    ));
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
+    );
 
-    // Fill in required fields
     const sourceName = screen.getByLabelText('Name*');
     await user.type(sourceName, 'Test Source');
 
@@ -212,22 +201,13 @@ describe('Connections Setup', () => {
     const saveButton = screen.getByTestId('savebutton');
     await user.click(saveButton);
 
-    // WebSocket should send a message
-    await waitFor(() => {
+    await waitFor(() =>
       expect(sendJsonMessageMock).toHaveBeenCalledWith({
         name: 'Test Source',
         sourceDefId: 'MYSOURCEDEFID',
         config: expect.any(Object),
         sourceId: '',
-      });
-    });
-    // await waitFor(() => {
-    //   if (lastMessageMock) {
-    //     expect(screen.getByText('Error log line 1')).toBeInTheDocument();
-    //     expect(screen.getByText('Error log line 2')).toBeInTheDocument();
-    //   }
-    // });
+      })
+    );
   });
-
 });
-
