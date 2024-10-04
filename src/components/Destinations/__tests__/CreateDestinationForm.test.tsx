@@ -13,7 +13,6 @@ import userEvent from '@testing-library/user-event';
 import CreateDestinationForm from '../DestinationForm';
 import useWebSocket from 'react-use-websocket';
 
-
 const pushMock = jest.fn();
 
 jest.mock('next/router', () => ({
@@ -29,7 +28,6 @@ jest.mock('react-use-websocket', () => ({
   default: jest.fn(),
 }));
 
-
 describe('destination create form - fetch definitions success', () => {
   const mockSession: Session = {
     expires: 'false',
@@ -39,8 +37,8 @@ describe('destination create form - fetch definitions success', () => {
   const setShowForm = jest.fn();
 
   beforeEach(() => {
-    let sendJsonMessageMock: jest.Mock;
-    let lastMessageMock: any;
+    const sendJsonMessageMock = jest.fn();
+    const lastMessageMock = null;
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce([
@@ -50,9 +48,6 @@ describe('destination create form - fetch definitions success', () => {
         },
       ]),
     });
-
-    sendJsonMessageMock = jest.fn();
-    lastMessageMock = null;
 
     (useWebSocket as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
@@ -95,7 +90,7 @@ describe('destination create form - fetch definitions success', () => {
     await waitFor(() => {
       expect(destinationName).toBeInTheDocument();
       expect(destinationType).toBeInTheDocument();
-    })
+    });
   });
 
   it('cancel button closes the form', async () => {
@@ -135,8 +130,8 @@ describe('destination create form - fetch definitions failure', () => {
   const setShowForm = jest.fn();
 
   beforeEach(() => {
-    let sendJsonMessageMock: jest.Mock;
-    let lastMessageMock: any;
+    const sendJsonMessageMock = jest.fn();
+    const lastMessageMock = null;
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
       ok: false,
       json: jest.fn().mockResolvedValueOnce([
@@ -146,9 +141,6 @@ describe('destination create form - fetch definitions failure', () => {
         },
       ]),
     });
-
-    sendJsonMessageMock = jest.fn();
-    lastMessageMock = null;
 
     (useWebSocket as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
@@ -332,8 +324,6 @@ describe('destination create form - definitions + specifications', () => {
       lastMessage: lastMessageMock,
       onError: jest.fn(),
     });
-
-
   });
 
   it('select destination definition to load specs', async () => {
@@ -389,7 +379,6 @@ describe('destination create form - definitions + specifications', () => {
     const portSpec = screen.getByLabelText('SSL modes');
     expect(portSpec).toBeInTheDocument();
 
-
     const saveButton = screen.getByTestId('save-button');
 
     // Add name of the warehouse. Required field is empty
@@ -401,10 +390,7 @@ describe('destination create form - definitions + specifications', () => {
 
     // Now submit
     await userEvent.click(saveButton);
-    await waitFor(() =>
-      expect(sendJsonMessageMock).toHaveBeenCalled()
-    )
-
+    await waitFor(() => expect(sendJsonMessageMock).toHaveBeenCalled());
   });
 
   it('submit the form with check connection failure & show logs', async () => {
@@ -494,7 +480,6 @@ describe('destination create form - definitions + specifications', () => {
     });
   });
 
-
   it('submit the form with check connection success', async () => {
     await act(async () => {
       render(
@@ -534,14 +519,12 @@ describe('destination create form - definitions + specifications', () => {
     const selectDef2 = screen.getByText('destination-def-name-2');
     await act(async () => fireEvent.click(selectDef2));
 
-    const createDestinationOnSubmit = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          status: 'succeeded',
-        }),
-      });
+    const createDestinationOnSubmit = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({
+        status: 'succeeded',
+      }),
+    });
 
     (global as any).fetch = createDestinationOnSubmit;
 
@@ -562,7 +545,6 @@ describe('destination create form - definitions + specifications', () => {
     });
 
     const saveButton = screen.getByTestId('save-button');
-
 
     const destNameInput = screen.getByLabelText('Name*');
     const hostSpec = screen.getByLabelText('Host*');
@@ -588,5 +570,4 @@ describe('destination create form - definitions + specifications', () => {
       }
     });
   });
-
 });
