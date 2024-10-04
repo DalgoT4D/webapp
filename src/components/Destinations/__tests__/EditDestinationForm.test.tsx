@@ -1,9 +1,10 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import EditDestinationForm from '../DestinationForm';
+import useWebSocket from 'react-use-websocket';
 
 const pushMock = jest.fn();
 
@@ -13,6 +14,11 @@ jest.mock('next/router', () => ({
       push: pushMock,
     };
   },
+}));
+
+jest.mock('react-use-websocket', () => ({
+  __esModule: true,
+  default: jest.fn(),
 }));
 
 describe('destination edit form - fetch definitions + specs successfully', () => {
@@ -159,6 +165,8 @@ describe('destination edit form - fetch definitions + specs successfully', () =>
     },
   };
 
+  let sendJsonMessageMock: jest.Mock;
+  let lastMessageMock: any;
   beforeEach(() => {
     (global as any).fetch = jest
       .fn()
@@ -175,6 +183,15 @@ describe('destination edit form - fetch definitions + specs successfully', () =>
         ok: true,
         json: jest.fn().mockResolvedValueOnce(WAREHOUSE_SPECS),
       });
+
+    sendJsonMessageMock = jest.fn();
+    lastMessageMock = null;
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
+    });
   });
 
   it('render the form with fields prefilled', async () => {
@@ -190,7 +207,14 @@ describe('destination edit form - fetch definitions + specs successfully', () =>
       );
     });
 
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
     expect(fetch).toHaveBeenCalledTimes(2);
+
 
     // destination name
     const destinationName: HTMLInputElement = within(
@@ -373,6 +397,8 @@ describe('destination edit form - fetch definition (being edited does not match 
     },
   };
 
+  let sendJsonMessageMock: jest.Mock;
+  let lastMessageMock: any;
   beforeEach(() => {
     (global as any).fetch = jest
       .fn()
@@ -389,6 +415,14 @@ describe('destination edit form - fetch definition (being edited does not match 
         ok: true,
         json: jest.fn().mockResolvedValueOnce(WAREHOUSE_SPECS),
       });
+    sendJsonMessageMock = jest.fn();
+    lastMessageMock = null;
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
+    });
   });
 
   it('render the form without the specs', async () => {
@@ -403,6 +437,12 @@ describe('destination edit form - fetch definition (being edited does not match 
         </SessionProvider>
       );
     });
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
 
     expect(fetch).toHaveBeenCalledTimes(1);
 
@@ -423,6 +463,8 @@ describe('destination edit form - fetch definition (being edited does not match 
     expect(defAutocomplete.value).toBe('');
   });
 });
+
+
 
 describe('destination edit form - fetch definition failed', () => {
   const mockSession: Session = {
@@ -568,6 +610,8 @@ describe('destination edit form - fetch definition failed', () => {
     },
   };
 
+  let sendJsonMessageMock: jest.Mock;
+  let lastMessageMock: any;
   beforeEach(() => {
     (global as any).fetch = jest
       .fn()
@@ -584,6 +628,15 @@ describe('destination edit form - fetch definition failed', () => {
         ok: true,
         json: jest.fn().mockResolvedValueOnce(WAREHOUSE_SPECS),
       });
+    sendJsonMessageMock = jest.fn();
+    lastMessageMock = null;
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
+    });
+
   });
 
   it('render the form without the specs', async () => {
@@ -600,7 +653,12 @@ describe('destination edit form - fetch definition failed', () => {
     });
 
     expect(fetch).toHaveBeenCalledTimes(1);
-
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
     // If definition api call fails, nothing is set
 
     // destination name
@@ -763,6 +821,8 @@ describe('destination edit form - connectivity', () => {
     },
   };
 
+  let sendJsonMessageMock: jest.Mock;
+  let lastMessageMock: any;
   beforeEach(() => {
     (global as any).fetch = jest
       .fn()
@@ -779,9 +839,18 @@ describe('destination edit form - connectivity', () => {
         ok: true,
         json: jest.fn().mockResolvedValueOnce(WAREHOUSE_SPECS),
       });
+
+    sendJsonMessageMock = jest.fn();
+    lastMessageMock = null;
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
+    });
   });
 
-  it('submit the form with the prefilled', async () => {
+  it('submits the form with prefilled values and validates WebSocket and API call', async () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
@@ -794,7 +863,14 @@ describe('destination edit form - connectivity', () => {
       );
     });
 
-    // Mock check connectivity api
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
+
+    // Mock connectivity API call
     const checkConnectivityEditConnectionMock = jest
       .fn()
       .mockResolvedValueOnce({
@@ -802,34 +878,49 @@ describe('destination edit form - connectivity', () => {
         json: jest.fn().mockResolvedValueOnce({
           status: 'succeeded',
         }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          success: 1,
-        }),
       });
 
     (global as any).fetch = checkConnectivityEditConnectionMock;
 
-    // Hit save
+    // Set the WebSocket last message to simulate a successful connection response
+    lastMessageMock = {
+      data: JSON.stringify({
+        status: 'success',
+        data: {
+          status: 'succeeded',
+        },
+      }),
+    };
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
+    });
+
+    // Click the save button to trigger submission
     const saveButton = screen.getByTestId('save-button');
     await userEvent.click(saveButton);
 
-    // Check request body
-    const request = checkConnectivityEditConnectionMock.mock.calls[0][1];
-    const requestBody = JSON.parse(request.body);
+    // Check WebSocket sendJsonMessage payload
+    await waitFor(() =>
+      expect(sendJsonMessageMock).toHaveBeenCalledWith({
+        name: 'test-warehouse',
+        config: {
+          database: 'test-db',
+          host: 'test-server',
+          ssl_mode: { mode: 'disable' },
+        },
+        destinationId: 'test-dest-id',
+      })
+    );
 
-    // Destination definition is not editable
-    expect(requestBody.name).toBe('test-warehouse');
-    expect(requestBody.config.host).toBe('test-server');
-    expect(requestBody.config.database).toBe('test-db');
-    expect(requestBody.config.ssl_mode.mode).toBe('disable');
-
-    expect(checkConnectivityEditConnectionMock).toHaveBeenCalledTimes(2);
+    // Validate that the check connectivity API was called once after successful WebSocket response
+    await waitFor(() => {
+      expect(checkConnectivityEditConnectionMock).toHaveBeenCalledTimes(1);
+    });
   });
-
-  it('submit the form with check connection failed & show logs', async () => {
+  it('submits the form with connection failure, displaying error logs', async () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
@@ -842,36 +933,55 @@ describe('destination edit form - connectivity', () => {
       );
     });
 
-    // Mock check connectivity api
-    const checkConnectivityMock = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce({
-        status: 'failed',
-        logs: ['log-message-line-1', 'log-message-line-2'],
+    // Verify WebSocket connection setup
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
+
+    // Simulate a WebSocket response with failure and logs
+    lastMessageMock = {
+      data: JSON.stringify({
+        status: 'success',
+        data: {
+          status: 'failed',
+          logs: ['log-message-line-1', 'log-message-line-2'],
+        },
       }),
+    };
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
     });
-    (global as any).fetch = checkConnectivityMock;
 
-    // Hit save
+    // Click the save button to trigger the submission
     const saveButton = screen.getByTestId('save-button');
-    await userEvent.click(saveButton);
+    await act(async () => {
+      userEvent.click(saveButton);
+    });
 
-    // Check request body
-    const request = checkConnectivityMock.mock.calls[0][1];
-    const requestBody = JSON.parse(request.body);
+    // Validate the WebSocket message payload sent on save
+    await waitFor(() =>
+      expect(sendJsonMessageMock).toHaveBeenCalledWith({
+        name: 'test-warehouse',
+        config: {
+          database: 'test-db',
+          host: 'test-server',
+          ssl_mode: { mode: 'disable' },
+        },
+        destinationId: 'test-dest-id',
+      })
+    );
 
-    // Destination definition is not editable
-    expect(requestBody.name).toBe('test-warehouse');
-    expect(requestBody.config.host).toBe('test-server');
-    expect(requestBody.config.database).toBe('test-db');
-    expect(requestBody.config.ssl_mode.mode).toBe('disable');
-
-    expect(checkConnectivityMock).toHaveBeenCalled();
-
-    // Logs message lines should appear
-    const logLine1 = screen.getByText('log-message-line-1');
-    expect(logLine1).toBeInTheDocument();
-    const logLine2 = screen.getByText('log-message-line-2');
-    expect(logLine2).toBeInTheDocument();
+    // Check that error logs appear in the UI as expected
+    await waitFor(() => {
+      expect(screen.getByText('log-message-line-1')).toBeInTheDocument();
+      expect(screen.getByText('log-message-line-2')).toBeInTheDocument();
+    });
   });
+
 });
