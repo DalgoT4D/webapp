@@ -69,8 +69,7 @@ export const operations = [
   {
     label: 'Cast',
     slug: CAST_DATA_TYPES_OP,
-    infoToolTip:
-      "Convert a column's values (of any type) into a specified datatype",
+    infoToolTip: "Convert a column's values (of any type) into a specified datatype",
   },
   {
     label: 'Coalesce',
@@ -81,14 +80,12 @@ export const operations = [
   {
     label: 'Arithmetic',
     slug: ARITHMETIC_OP,
-    infoToolTip:
-      'Perform arithmetic operations on or between one or more columns',
+    infoToolTip: 'Perform arithmetic operations on or between one or more columns',
   },
   {
     label: 'Drop',
     slug: DROP_COLUMNS_OP,
-    infoToolTip:
-      'Select the columns that you would like to remove from the table',
+    infoToolTip: 'Select the columns that you would like to remove from the table',
   },
   {
     label: 'Rename',
@@ -105,8 +102,7 @@ export const operations = [
   {
     label: 'Filter',
     slug: WHERE_OP,
-    infoToolTip:
-      'Filters all the row values in the selected column based on the defined condition',
+    infoToolTip: 'Filters all the row values in the selected column based on the defined condition',
   },
   {
     label: 'Group By',
@@ -128,8 +124,7 @@ export const operations = [
   {
     label: 'Case',
     slug: CASEWHEN_OP,
-    infoToolTip:
-      'Select the relevant column, operation, and comparison column or value',
+    infoToolTip: 'Select the relevant column, operation, and comparison column or value',
   },
   {
     label: 'Table union',

@@ -133,13 +133,10 @@ describe('Flow Creation', () => {
       json: jest.fn().mockResolvedValueOnce([{}]),
     });
     (global as any).fetch = postFlowRunMock;
-    const openQuickRunDeploymentButton = screen.getByTestId(
-      'btn-quickrundeployment-flow-0'
-    );
+    const openQuickRunDeploymentButton = screen.getByTestId('btn-quickrundeployment-flow-0');
     await userEvent.click(openQuickRunDeploymentButton);
     expect(postFlowRunMock).toHaveBeenCalled();
 
     // delete flow
- 
   });
 });

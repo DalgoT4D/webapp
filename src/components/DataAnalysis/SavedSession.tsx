@@ -170,8 +170,8 @@ export const SavedSession = memo(
                     title={
                       <div>
                         <Typography variant="body2">
-                          Access previous AI analytics sessions that have been
-                          saved and build on them to develop new analyses.
+                          Access previous AI analytics sessions that have been saved and build on
+                          them to develop new analyses.
                         </Typography>
                       </div>
                     }

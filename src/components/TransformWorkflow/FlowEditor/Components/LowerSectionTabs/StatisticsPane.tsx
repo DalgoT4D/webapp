@@ -94,10 +94,7 @@ export const pollTaskStatus = async (
   const hashKey = `data-insights`;
   const taskUrl = `tasks/${taskId}?hashkey=${hashKey}`;
 
-  const poll = async (
-    resolve: (value?: unknown) => void,
-    reject: (reason?: any) => void
-  ) => {
+  const poll = async (resolve: (value?: unknown) => void, reject: (reason?: any) => void) => {
     try {
       const response = await httpGet(session, taskUrl);
       const latestProgress = response.progress[response.progress.length - 1];
@@ -118,10 +115,7 @@ export const pollTaskStatus = async (
           })
         );
         resolve(latestProgress.results);
-      } else if (
-        latestProgress.status === 'failed' ||
-        latestProgress.status === 'error'
-      ) {
+      } else if (latestProgress.status === 'failed' || latestProgress.status === 'error') {
         setData((columnData: ColumnData[]) =>
           columnData.map((data) => {
             if (data.name === postBody.column_name) {
@@ -263,10 +257,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                 <StringInsights
                   data={chartData.map((data: any) => ({
                     name: data.category,
-                    percentage: (
-                      (data.count * 100) /
-                      distribution.count
-                    ).toFixed(1),
+                    percentage: ((data.count * 100) / distribution.count).toFixed(1),
                     count: data.count,
                   }))}
                   statsData={{
@@ -286,18 +277,12 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                   data={[
                     {
                       name: 'True',
-                      percentage: (
-                        (distribution.countTrue * 100) /
-                        distribution.count
-                      ).toFixed(1),
+                      percentage: ((distribution.countTrue * 100) / distribution.count).toFixed(1),
                       count: distribution.countTrue,
                     },
                     {
                       name: 'False',
-                      percentage: (
-                        (distribution.countFalse * 100) /
-                        distribution.count
-                      ).toFixed(1),
+                      percentage: ((distribution.countFalse * 100) / distribution.count).toFixed(1),
                       count: distribution.countFalse,
                     },
                   ]}
@@ -336,10 +321,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
     try {
       const dataUrl = `warehouse/v1/table_data/${schema}/${table}`;
 
-      const tableDetails: TableDetailsResponse[] = await httpGet(
-        session,
-        dataUrl
-      );
+      const tableDetails: TableDetailsResponse[] = await httpGet(session, dataUrl);
       const tableData: ColumnData[] = tableDetails.map((data) => {
         if (data.translated_type === 'Json') {
           return {
@@ -360,9 +342,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
 
       tableDetails.forEach(async (column) => {
         if (
-          !['Datetime', 'Json', 'Boolean', 'String', 'Numeric'].includes(
-            column.translated_type
-          )
+          !['Datetime', 'Json', 'Boolean', 'String', 'Numeric'].includes(column.translated_type)
         ) {
           return;
         }
@@ -373,11 +353,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
           column_name: column.name,
         };
 
-        const metrics: { task_id: string } = await httpPost(
-          session,
-          metricsApiUrl,
-          postBody
-        );
+        const metrics: { task_id: string } = await httpPost(session, metricsApiUrl, postBody);
 
         await delay(1000);
 
@@ -389,10 +365,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   };
 
   const fetchRowCountAndColumns = async (schema: string, table: string) => {
-    const count = await httpGet(
-      session,
-      `warehouse/table_count/${schema}/${table}`
-    );
+    const count = await httpGet(session, `warehouse/table_count/${schema}/${table}`);
     setRowCount(count.total_rows);
 
     if (count.total_rows > 0) {
@@ -469,8 +442,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                     mr: 2,
                   }}
                 >
-                  <VisibilityIcon sx={{ mr: 1, color: '#00897b' }} />{' '}
-                  {data.length} Columns{' '}
+                  <VisibilityIcon sx={{ mr: 1, color: '#00897b' }} /> {data.length} Columns{' '}
                 </Box>
                 {rowCount > 0 ? rowCount : 0} Rows
               </Box>
@@ -487,12 +459,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                 <Button
                   variant="contained"
                   sx={{ mr: 2 }}
-                  onClick={() =>
-                    fetchColumns(
-                      modelToPreview.schema,
-                      modelToPreview.input_name
-                    )
-                  }
+                  onClick={() => fetchColumns(modelToPreview.schema, modelToPreview.input_name)}
                 >
                   Refresh
                 </Button>
@@ -523,24 +490,14 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                             {header.column.columnDef.enableSorting ? (
                               <TableSortLabel
                                 active={!!header.column.getIsSorted()}
-                                direction={
-                                  header.column.getIsSorted() === 'desc'
-                                    ? 'desc'
-                                    : 'asc'
-                                }
+                                direction={header.column.getIsSorted() === 'desc' ? 'desc' : 'asc'}
                                 onClick={header.column.getToggleSortingHandler()}
                                 sx={{ marginLeft: '4px' }}
                               >
-                                {flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
+                                {flexRender(header.column.columnDef.header, header.getContext())}
                               </TableSortLabel>
                             ) : (
-                              flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )
+                              flexRender(header.column.columnDef.header, header.getContext())
                             )}
                           </Box>
                         </TableCell>
@@ -571,10 +528,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                               }}
                             >
                               {cell.getValue() !== undefined ? (
-                                flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext()
-                                )
+                                flexRender(cell.column.columnDef.cell, cell.getContext())
                               ) : (
                                 <Skeleton variant="rectangular" height={118} />
                               )}

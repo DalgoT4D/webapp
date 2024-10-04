@@ -60,9 +60,7 @@ export const FlowRunHistory = ({
 
   const lastRunTime = (flowRun: FlowRun) => {
     // When the flow run fails startTime is null, so we look at the expectedStartTime
-    return moment(
-      new Date(flowRun?.startTime || flowRun.expectedStartTime)
-    ).fromNow();
+    return moment(new Date(flowRun?.startTime || flowRun.expectedStartTime)).fromNow();
   };
 
   const fetchFlowRunLogsAndUpdateOffset = async (
@@ -80,9 +78,7 @@ export const FlowRunHistory = ({
 
           if (data?.logs?.logs && data.logs.logs.length >= 0) {
             const tempFlowRuns = flowRuns.slice();
-            tempFlowRuns[rowIdx].logs = tempFlowRuns[rowIdx].logs.concat(
-              data.logs.logs
-            );
+            tempFlowRuns[rowIdx].logs = tempFlowRuns[rowIdx].logs.concat(data.logs.logs);
             setFlowRuns(tempFlowRuns);
 
             // increment the offset by 200 if we have more to fetch
@@ -109,17 +105,12 @@ export const FlowRunHistory = ({
         try {
           setLoadingFlowRuns(true);
           const data: Array<FlowRun> =
-            (await httpGet(
-              session,
-              `prefect/flows/${deploymentId}/flow_runs/history`
-            )) || [];
+            (await httpGet(session, `prefect/flows/${deploymentId}/flow_runs/history`)) || [];
           setFlowRuns(data);
           setShowLogs(new Array(data.length).fill(false));
 
           const initialLogsOffset = data.map((flowRun: FlowRun) =>
-            flowRun?.logs.length >= flowRunLogsOffsetLimit
-              ? flowRunLogsOffsetLimit
-              : -1
+            flowRun?.logs.length >= flowRunLogsOffsetLimit ? flowRunLogsOffsetLimit : -1
           );
           setFlowRunsOffset(initialLogsOffset);
           setLoadingFlowRuns(false);
@@ -156,9 +147,7 @@ export const FlowRunHistory = ({
       <DialogContent sx={{ marginLeft: '20px', overflowX: 'hidden' }}>
         <Stack width="100rem">
           {loadingFlowRuns && <CircularProgress></CircularProgress>}
-          {!loadingFlowRuns && flowRuns.length === 0 && (
-            <Typography>No runs to show</Typography>
-          )}
+          {!loadingFlowRuns && flowRuns.length === 0 && <Typography>No runs to show</Typography>}
           {flowRuns &&
             flowRuns.map((flowRun: FlowRun, idx: number) => (
               <Box display="flex" gap="10px" key={idx}>
@@ -176,9 +165,7 @@ export const FlowRunHistory = ({
                       width: '7px',
                       borderRadius: '50%',
                       backgroundColor:
-                        flowRun && flowRun.status === 'COMPLETED'
-                          ? '#399D47'
-                          : '#981F1F',
+                        flowRun && flowRun.status === 'COMPLETED' ? '#399D47' : '#981F1F',
                     }}
                   >
                     <Typography color="white">i</Typography>
@@ -196,9 +183,7 @@ export const FlowRunHistory = ({
                     wordWrap: 'break-word',
                   }}
                 >
-                  <Typography data-testid={'lastrun-' + idx}>
-                    {lastRunTime(flowRun)}
-                  </Typography>
+                  <Typography data-testid={'lastrun-' + idx}>{lastRunTime(flowRun)}</Typography>
                   <Box
                     sx={{
                       display: 'flex',
@@ -228,10 +213,7 @@ export const FlowRunHistory = ({
                         }}
                       />
                     )}
-                    <Button
-                      data-testid={'showlogs-' + idx}
-                      onClick={() => handleShowMore(idx)}
-                    >
+                    <Button data-testid={'showlogs-' + idx} onClick={() => handleShowMore(idx)}>
                       {showLogs[idx] ? 'show less' : 'show more'}
                     </Button>
                   </Box>

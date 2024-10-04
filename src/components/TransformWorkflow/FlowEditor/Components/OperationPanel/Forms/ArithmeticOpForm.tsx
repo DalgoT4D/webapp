@@ -7,14 +7,7 @@ import { DbtSourceModel, OperationNodeData } from '../../Canvas';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
-import {
-  Box,
-  Button,
-  FormControlLabel,
-  FormHelperText,
-  Radio,
-  RadioGroup,
-} from '@mui/material';
+import { Box, Button, FormControlLabel, FormHelperText, Radio, RadioGroup } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
@@ -63,18 +56,16 @@ const ArithmeticOpForm = ({
     output_column_name: string;
   };
 
-  const { control, handleSubmit, reset, watch, formState } = useForm<FormProps>(
-    {
-      defaultValues: {
-        arithmeticOp: null,
-        operands: [
-          { type: 'col', col_val: '', const_val: 0 },
-          { type: 'col', col_val: '', const_val: 0 },
-        ],
-        output_column_name: '',
-      },
-    }
-  );
+  const { control, handleSubmit, reset, watch, formState } = useForm<FormProps>({
+    defaultValues: {
+      arithmeticOp: null,
+      operands: [
+        { type: 'col', col_val: '', const_val: 0 },
+        { type: 'col', col_val: '', const_val: 0 },
+      ],
+      output_column_name: '',
+    },
+  });
   // Include this for multi-row input
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -100,11 +91,7 @@ const ArithmeticOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(
-          data
-            .map((col: ColumnData) => col.name)
-            .sort((a, b) => a.localeCompare(b))
-        );
+        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -124,11 +111,7 @@ const ArithmeticOpForm = ({
         config: {
           operator: data.arithmeticOp?.id,
           operands: data.operands.map(
-            (op: {
-              type: string;
-              col_val: string;
-              const_val: number | undefined;
-            }) => ({
+            (op: { type: string; col_val: string; const_val: number | undefined }) => ({
               is_col: op.type === 'col',
               value: op.type === 'col' ? op.col_val : op.const_val,
             })
@@ -143,17 +126,11 @@ const ArithmeticOpForm = ({
       setLoading(true);
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (action === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${node?.id}/`,
@@ -182,12 +159,8 @@ const ArithmeticOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      const {
-        operands,
-        source_columns,
-        operator,
-        output_column_name,
-      }: ArithmeticDataConfig = opConfig;
+      const { operands, source_columns, operator, output_column_name }: ArithmeticDataConfig =
+        opConfig;
       setSrcColumns(source_columns);
 
       // pre-fill form
@@ -223,8 +196,7 @@ const ArithmeticOpForm = ({
             control={control}
             name="arithmeticOp"
             rules={{
-              validate: (value) =>
-                (value && value?.id !== '') || 'Operation is required',
+              validate: (value) => (value && value?.id !== '') || 'Operation is required',
             }}
             render={({ field, fieldState }) => {
               return (
@@ -234,9 +206,7 @@ const ArithmeticOpForm = ({
                   disabled={action === 'view'}
                   placeholder="Select the operation*"
                   options={ArithmeticOperations}
-                  isOptionEqualToValue={(option: any, value: any) =>
-                    option?.id === value?.id
-                  }
+                  isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
                   label="Operation*"
                   fieldStyle="transformation"
                   helperText={fieldState.error?.message}
@@ -322,10 +292,9 @@ const ArithmeticOpForm = ({
                   />
                 )}
                 {arithmeticOp &&
-                  ((['sub', 'div'].includes(arithmeticOp?.id) &&
-                    fields.length < 2) ||
-                    ['add', 'mul'].includes(arithmeticOp?.id)) &&
-                  index === fields.length - 1 ? (
+                ((['sub', 'div'].includes(arithmeticOp?.id) && fields.length < 2) ||
+                  ['add', 'mul'].includes(arithmeticOp?.id)) &&
+                index === fields.length - 1 ? (
                   <Button
                     disabled={action === 'view'}
                     variant="shadow"
@@ -334,9 +303,7 @@ const ArithmeticOpForm = ({
                     sx={{
                       marginTop: '17px',
                     }}
-                    onClick={(event) =>
-                      append({ type: 'col', col_val: '', const_val: undefined })
-                    }
+                    onClick={(event) => append({ type: 'col', col_val: '', const_val: undefined })}
                   >
                     + Add operand
                   </Button>

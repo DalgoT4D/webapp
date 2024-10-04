@@ -41,14 +41,13 @@ const JoinOpForm = ({
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
-  const { deleteElements, addEdges, addNodes, getEdges, getNodes } =
-    useReactFlow();
+  const { deleteElements, addEdges, addNodes, getEdges, getNodes } = useReactFlow();
   const nodeData: any =
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
 
   type FormProps = {
     table1: {
@@ -89,10 +88,7 @@ const JoinOpForm = ({
     }
   };
 
-  const fetchWareohuseTableColumns = async (
-    schema: string,
-    input_name: string
-  ) => {
+  const fetchWareohuseTableColumns = async (schema: string, input_name: string) => {
     try {
       const data: ColumnData[] = await httpGet(
         session,
@@ -123,9 +119,7 @@ const JoinOpForm = ({
     }
   };
 
-  const clearAndAddDummyModelNode = (
-    model: DbtSourceModel | undefined | null
-  ) => {
+  const clearAndAddDummyModelNode = (model: DbtSourceModel | undefined | null) => {
     const edges: Edge[] = getEdges();
 
     const removeNodeId = modelDummyNodeIds.current.pop();
@@ -133,17 +127,14 @@ const JoinOpForm = ({
     // pop the last element
     if (removeNodeId) {
       if (
-        edges.filter(
-          (edge: Edge) =>
-            edge.source === removeNodeId || edge.target === removeNodeId
-        ).length <= 1
+        edges.filter((edge: Edge) => edge.source === removeNodeId || edge.target === removeNodeId)
+          .length <= 1
       )
         deleteElements({ nodes: [{ id: removeNodeId }] });
       else {
         // if removeNodeId has multiple edges, the remove the dummy one we just created
         const removeEdges: Edge[] = edges.filter(
-          (edge: Edge) =>
-            edge.source === removeNodeId && edge.target === dummyNodeId
+          (edge: Edge) => edge.source === removeNodeId && edge.target === dummyNodeId
         );
         deleteElements({
           edges: removeEdges.map((edge: Edge) => ({ id: edge.id })),
@@ -153,9 +144,7 @@ const JoinOpForm = ({
 
     // push the new one
     if (model) {
-      let dummySourceNodeData: any = getNodes().find(
-        (node) => node.id === model.id
-      );
+      let dummySourceNodeData: any = getNodes().find((node) => node.id === model.id);
 
       if (!dummySourceNodeData) {
         dummySourceNodeData = generateDummySrcModelNode(node, model, 400);
@@ -221,17 +210,11 @@ const JoinOpForm = ({
       setLoading(true);
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (action === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${node?.id}/`,
@@ -259,20 +242,14 @@ const JoinOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      const {
-        source_columns,
-        join_on,
-        join_type,
-        other_inputs,
-      }: JoinDataConfig = opConfig;
+      const { source_columns, join_on, join_type, other_inputs }: JoinDataConfig = opConfig;
       setNodeSrcColumns(source_columns);
 
       // pre-fill form
       const lengthInputModels: number = input_models.length;
       let jointype: string = join_type;
       if (other_inputs.length === 1) {
-        jointype =
-          other_inputs[0].seq === 0 && jointype == 'left' ? 'right' : jointype;
+        jointype = other_inputs[0].seq === 0 && jointype == 'left' ? 'right' : jointype;
         setTable2Columns(other_inputs[0].source_columns);
       }
       reset({
@@ -311,10 +288,7 @@ const JoinOpForm = ({
       fetchAndSetSourceColumns();
       setValue('table1.tab', {
         id: nodeData?.id,
-        label:
-          nodeData?.type === SRC_MODEL_NODE
-            ? nodeData?.input_name
-            : 'Chained Model',
+        label: nodeData?.type === SRC_MODEL_NODE ? nodeData?.input_name : 'Chained Model',
       });
     }
   }, [session, node]);
@@ -371,8 +345,7 @@ const JoinOpForm = ({
         <Controller
           control={control}
           rules={{
-            validate: (value) =>
-              (value && value?.id !== '') || 'Second table is required',
+            validate: (value) => (value && value?.id !== '') || 'Second table is required',
           }}
           name={`table2.tab`}
           render={({ field, fieldState }) => {

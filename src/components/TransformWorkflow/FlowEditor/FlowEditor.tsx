@@ -7,17 +7,11 @@ import PreviewPane from './Components/LowerSectionTabs/PreviewPane';
 import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { DbtSourceModel } from './Components/Canvas';
-import {
-  useDbtRunLogs,
-  useDbtRunLogsUpdate,
-} from '@/contexts/DbtRunLogsContext';
+import { useDbtRunLogs, useDbtRunLogsUpdate } from '@/contexts/DbtRunLogsContext';
 import { ReactFlowProvider } from 'reactflow';
 import { ResizableBox } from 'react-resizable';
 import { TransformTask } from '@/components/DBT/DBTTarget';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { delay } from '@/utils/common';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
@@ -106,10 +100,7 @@ const LowerSection = ({
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
   const trackAmplitudeEvent = useTracking();
-  const handleTabChange = (
-    event: React.SyntheticEvent,
-    newValue: LowerSectionTabValues
-  ) => {
+  const handleTabChange = (event: React.SyntheticEvent, newValue: LowerSectionTabValues) => {
     trackAmplitudeEvent(`[${newValue}-tab] Button Clicked`);
     setSelectedTab(newValue);
   };
@@ -133,9 +124,7 @@ const LowerSection = ({
           <Tab label="Preview" value="preview" />
           <Tab label="Logs" value="logs" />
 
-          {showDataInsightsTab && (
-            <Tab label="Data statistics" value="statistics" />
-          )}
+          {showDataInsightsTab && <Tab label="Data statistics" value="statistics" />}
         </Tabs>
         <IconButton sx={{ ml: 'auto' }} onClick={setFullScreen}>
           <OpenInFull />
@@ -144,11 +133,7 @@ const LowerSection = ({
       <Box sx={{ height: '100vh' }}>
         {selectedTab === 'preview' && <PreviewPane height={height} />}
         {selectedTab === 'logs' && (
-          <LogsPane
-            height={height}
-            dbtRunLogs={dbtRunLogs}
-            finalLockCanvas={finalLockCanvas}
-          />
+          <LogsPane height={height} dbtRunLogs={dbtRunLogs} finalLockCanvas={finalLockCanvas} />
         )}
         {selectedTab === 'statistics' && <StatisticsPane height={height} />}
       </Box>
@@ -162,16 +147,14 @@ const FlowEditor = ({}) => {
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
-  const { finalLockCanvas, setTempLockCanvas } =
-    useLockCanvas(lockUpperSection);
+  const { finalLockCanvas, setTempLockCanvas } = useLockCanvas(lockUpperSection);
   const [selectedTab, setSelectedTab] = useState<LowerSectionTabValues>('logs');
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction, setCanvasAction } = useCanvasAction();
 
   const onResize = (event: any) => {
-    const dailogHeight =
-      document.querySelector('.MuiDialog-root')?.clientHeight || 0;
+    const dailogHeight = document.querySelector('.MuiDialog-root')?.clientHeight || 0;
     setLowerSectionHeight(dailogHeight - event.clientY);
   };
   const fetchSourcesModels = () => {
@@ -224,8 +207,7 @@ const FlowEditor = ({}) => {
       );
       setDbtRunLogs(response['progress']);
 
-      const lastMessage: TaskProgressLog =
-        response['progress'][response['progress'].length - 1];
+      const lastMessage: TaskProgressLog = response['progress'][response['progress'].length - 1];
 
       if (!['completed', 'failed'].includes(lastMessage.status)) {
         await delay(2000);
@@ -247,11 +229,7 @@ const FlowEditor = ({}) => {
 
       console.log('data passed for run_dbt_via_celery', runParams);
 
-      const response: any = await httpPost(
-        session,
-        'dbt/run_dbt_via_celery/',
-        runParams
-      );
+      const response: any = await httpPost(session, 'dbt/run_dbt_via_celery/', runParams);
 
       successToast('Dbt run initiated', [], globalContext);
 
@@ -279,11 +257,7 @@ const FlowEditor = ({}) => {
       const orgslug = globalContext?.CurrentOrg.state.slug;
       const syncSourcesHashKey = `syncsources-${orgslug}`;
 
-      const response: any = await httpPost(
-        session,
-        `transform/dbt_project/sync_sources/`,
-        {}
-      );
+      const response: any = await httpPost(session, `transform/dbt_project/sync_sources/`, {});
 
       if (response?.task_id && orgslug) {
         await pollForSyncSourcesTask(response.task_id, syncSourcesHashKey);
@@ -297,19 +271,14 @@ const FlowEditor = ({}) => {
 
   const pollForSyncSourcesTask = async (taskId: string, hashKey: string) => {
     try {
-      const response: any = await httpGet(
-        session,
-        `tasks/${taskId}?hashkey=${hashKey}`
-      );
+      const response: any = await httpGet(session, `tasks/${taskId}?hashkey=${hashKey}`);
       if (response && response?.progress) {
         setDbtRunLogs(
-          response?.progress.map(
-            (resp: { status: string; message: string }) => ({
-              level: 0,
-              timestamp: new Date(),
-              message: resp.message,
-            })
-          )
+          response?.progress.map((resp: { status: string; message: string }) => ({
+            level: 0,
+            timestamp: new Date(),
+            message: resp.message,
+          }))
         );
         if (response.progress.length > 0) {
           const lastMessage = response.progress[response.progress.length - 1];
@@ -337,8 +306,7 @@ const FlowEditor = ({}) => {
     try {
       setLockUpperSection(true);
       setSelectedTab('logs');
-      if (syncSourcesTaskId)
-        await pollForSyncSourcesTask(syncSourcesTaskId, syncSourcesHashKey);
+      if (syncSourcesTaskId) await pollForSyncSourcesTask(syncSourcesTaskId, syncSourcesHashKey);
     } catch (error) {
       console.error(error);
     } finally {
@@ -403,9 +371,7 @@ const FlowEditor = ({}) => {
             const dialogBox = document.querySelector('.MuiDialog-root');
             if (dialogBox) {
               const fullHeight = dialogBox?.clientHeight - 50;
-              setLowerSectionHeight(
-                lowerSectionHeight === fullHeight ? 300 : fullHeight
-              );
+              setLowerSectionHeight(lowerSectionHeight === fullHeight ? 300 : fullHeight);
             }
           }}
           height={lowerSectionHeight}

@@ -34,8 +34,8 @@ const GenericSqlOpForm = ({
     node?.type === SRC_MODEL_NODE
       ? (node?.data as DbtSourceModel)
       : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+        ? (node?.data as OperationNodeData)
+        : {};
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       sql_statement_1: '',
@@ -45,10 +45,7 @@ const GenericSqlOpForm = ({
   let inputName = '';
   if (node?.type === SRC_MODEL_NODE) {
     inputName = nodeData.input_name;
-  } else if (
-    node?.type === OPERATION_NODE &&
-    nodeData.config.input_models.length > 0
-  ) {
+  } else if (node?.type === OPERATION_NODE && nodeData.config.input_models.length > 0) {
     inputName = nodeData.config.input_models[0].name;
   } else {
     inputName = 'undefined';
@@ -71,17 +68,11 @@ const GenericSqlOpForm = ({
       setLoading(true);
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (action === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${node?.id}/`,
