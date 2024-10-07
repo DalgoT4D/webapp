@@ -12,6 +12,7 @@ import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Box, Button } from '@mui/material';
 
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 export interface SecondaryInput {
   input: { input_name: string; input_type: string; source_name: string };
@@ -42,13 +43,16 @@ const JoinOpForm = ({
   const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
   const { deleteElements, addEdges, addNodes, getEdges, getNodes } = useReactFlow();
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-        ? (node?.data as OperationNodeData)
-        : {};
-
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    },
+  });
   type FormProps = {
     table1: {
       tab: { id: string; label: string };
@@ -184,6 +188,8 @@ const JoinOpForm = ({
   };
 
   const handleSave = async (data: FormProps) => {
+    const finalNode = node?.data.isDummy ? parentNode : node;
+    const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const postData: any = {
         op_type: operation.slug,
@@ -204,20 +210,20 @@ const JoinOpForm = ({
             compare_with: '=',
           },
         },
-        target_model_uuid: nodeData?.target_model_id || '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
       // api call
       setLoading(true);
       let operationNode: any;
-      if (action === 'create') {
+      if (finalAction === 'create') {
         operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
-      } else if (action === 'edit') {
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -280,6 +286,7 @@ const JoinOpForm = ({
   };
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     fetchSourcesModels();
     if (['edit', 'view'].includes(action)) {
       // do things when in edit state

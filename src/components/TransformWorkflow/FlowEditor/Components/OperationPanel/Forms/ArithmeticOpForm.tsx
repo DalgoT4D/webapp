@@ -3,7 +3,7 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel, OperationNodeData } from '../../Canvas';
+import { OperationNodeData } from '../../Canvas';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -12,6 +12,7 @@ import Input from '@/components/UI/Input/Input';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 interface ArithmeticDataConfig {
   operands: { value: string | number; is_col: boolean }[];
@@ -39,12 +40,16 @@ const ArithmeticOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-        ? (node?.data as OperationNodeData)
-        : {};
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    },
+  });
 
   type FormProps = {
     arithmeticOp: { id: string; label: string } | null;
@@ -103,6 +108,8 @@ const ArithmeticOpForm = ({
   };
 
   const handleSave = async (data: FormProps) => {
+    const finalNode = node?.data.isDummy ? parentNode : node; //this checks for edit case too.
+    const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const postData: any = {
         op_type: operation.slug,
@@ -118,22 +125,22 @@ const ArithmeticOpForm = ({
           ),
           output_column_name: data.output_column_name,
         },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
-      if (action === 'create') {
+      if (finalAction === 'create') {
         operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
-      } else if (action === 'edit') {
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -181,6 +188,7 @@ const ArithmeticOpForm = ({
   };
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     } else {

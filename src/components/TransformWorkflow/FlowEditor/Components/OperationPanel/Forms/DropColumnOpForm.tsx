@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import {
@@ -14,13 +14,19 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
+import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { useOpForm } from '@/customHooks/useOpForm';
+
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 interface DropDataConfig {
   columns: string[];
@@ -42,12 +48,16 @@ const DropColumnOp = ({
   // const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [search, setSearch] = useState('');
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-        ? (node?.data as OperationNodeData)
-        : {};
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    },
+  });
   const theme = useTheme();
 
   type FormColumnData = {
@@ -113,6 +123,9 @@ const DropColumnOp = ({
     const selectedColumns = formData.config
       .filter((column) => column.drop_col)
       .map((column) => column.col_name);
+
+    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
       if (selectedColumns.length < 1) {
         setValid(false);
@@ -123,22 +136,22 @@ const DropColumnOp = ({
         source_columns: srcColumns,
         other_inputs: [],
         config: { columns: selectedColumns },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData.target_model_id || '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
-      if (action === 'create') {
+      if (finalAction === 'create') {
         operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
-      } else if (action === 'edit') {
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -179,6 +192,7 @@ const DropColumnOp = ({
   };
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     } else {
@@ -186,9 +200,9 @@ const DropColumnOp = ({
     }
   }, [session, node]);
 
-  const filteredFields = fields.filter((field) =>
-    field.col_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredFields = useMemo(() => {
+    return fields.filter((field) => field.col_name.toLowerCase().includes(search.toLowerCase()));
+  }, [fields, search]);
 
   const handleSelectAll = () => {
     filteredFields.forEach((field, index) => {
@@ -285,50 +299,53 @@ const DropColumnOp = ({
           </Box>
           <Box>
             {filteredFields.map(
-              (column: { col_name: string; drop_col: boolean }, index: number) => [
-                <Controller
-                  name={`config.${findColumnIndex(column.col_name)}.drop_col`}
-                  key={`config.${findColumnIndex(column.col_name)}.key`}
-                  control={control}
-                  render={({ field }) => (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '1px',
-                        background: field.value ? '#F5FAFA' : '',
-                        padding: '0px 12px',
-                      }}
-                    >
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            {...field}
-                            data-testid={`checkBoxInputContainer${findColumnIndex(
-                              column.col_name
-                            )}`}
-                            checked={field.value}
-                            onChange={(e) => {
-                              field.onChange(e.target.checked);
-                            }}
-                            sx={{
-                              transform: 'scale(0.8)',
-                            }}
-                          />
-                        }
-                        label={column.col_name}
+              (column: { col_name: string; drop_col: boolean }, index: number) => {
+                const colIndex = findColumnIndex(column.col_name);
+                return [
+                  <Controller
+                    name={`config.${colIndex}.drop_col`}
+                    key={`${node?.data.id}config.${colIndex}.key`}
+                    control={control}
+                    render={({ field }) => (
+                      <Box
                         sx={{
-                          '& .MuiFormControlLabel-label': {
-                            fontSize: theme.typography.pxToRem(14),
-                            fontWeight: 500,
-                            color: theme.palette.text.primary,
-                          },
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1px',
+                          background: field.value ? '#F5FAFA' : '',
+                          padding: '0px 12px',
                         }}
-                      />
-                    </Box>
-                  )}
-                />,
-              ]
+                      >
+                        <FormControlLabel
+                          key={`${node?.data.id}${colIndex}.form`}
+                          control={
+                            <Checkbox
+                              {...field}
+                              data-testid={`checkBoxInputContainer${colIndex}`}
+                              checked={field.value}
+                              onChange={(e) => {
+                                field.onChange(e.target.checked);
+                              }}
+                              sx={{
+                                transform: 'scale(0.8)',
+                              }}
+                              key={`${node?.data.id}chekboxInput`}
+                            />
+                          }
+                          label={column.col_name}
+                          sx={{
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: theme.typography.pxToRem(14),
+                              fontWeight: 500,
+                              color: theme.palette.text.primary,
+                            },
+                          }}
+                        />
+                      </Box>
+                    )}
+                  />,
+                ];
+              }
             )}
           </Box>
         </Box>
