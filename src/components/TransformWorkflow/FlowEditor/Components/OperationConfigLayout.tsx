@@ -14,7 +14,7 @@ import {
   SxProps,
   Typography,
 } from '@mui/material';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { memo, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { OperationNodeData, OperationNodeType, SrcModelNodeType, UIOperationType } from './Canvas';
 import {
@@ -103,41 +103,8 @@ const operationComponentMapping: any = {
   [GENERIC_SQL_OP]: GenericSqlOpForm,
 };
 
-const OperationForm = ({
-  operation,
-  node,
-  sx,
-  continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
-  action,
-  setLoading,
-}: OperationFormProps) => {
-  if (operation === null || operation === undefined) {
-    return null;
-  }
-
-  if (operation.slug === 'create-table') {
-    return (
-      <CreateTableForm
-        node={node}
-        operation={operation}
-        sx={sx}
-        continueOperationChain={continueOperationChain}
-        clearAndClosePanel={clearAndClosePanel}
-        dummyNodeId={dummyNodeId}
-        action={action}
-        setLoading={setLoading}
-      />
-    );
-  }
-
-  if (!Object.keys(operationComponentMapping).includes(operation.slug)) {
-    return <>Operation not yet supported</>;
-  }
-
-  const Form = operationComponentMapping[operation.slug];
-  const FormProps = {
+const OperationForm = memo(
+  ({
     operation,
     node,
     sx,
@@ -146,10 +113,45 @@ const OperationForm = ({
     dummyNodeId,
     action,
     setLoading,
-  };
+  }: OperationFormProps) => {
+    if (operation === null || operation === undefined) {
+      return null;
+    }
 
-  return <Form key={node?.data.id} {...FormProps} />;
-};
+    if (operation.slug === 'create-table') {
+      return (
+        <CreateTableForm
+          node={node}
+          operation={operation}
+          sx={sx}
+          continueOperationChain={continueOperationChain}
+          clearAndClosePanel={clearAndClosePanel}
+          dummyNodeId={dummyNodeId}
+          action={action}
+          setLoading={setLoading}
+        />
+      );
+    }
+
+    if (!Object.keys(operationComponentMapping).includes(operation.slug)) {
+      return <>Operation not yet supported</>;
+    }
+
+    const Form = operationComponentMapping[operation.slug];
+    const FormProps = {
+      operation,
+      node,
+      sx,
+      continueOperationChain,
+      clearAndClosePanel,
+      dummyNodeId,
+      action,
+      setLoading,
+    };
+    return <Form {...FormProps} />;
+  }
+);
+OperationForm.displayName = 'OperationForm';
 
 const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigProps) => {
   const { canvasAction, setCanvasAction } = useCanvasAction();
@@ -210,16 +212,27 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
 
   useEffect(() => {
     if (canvasAction.type === 'open-opconfig-panel') {
-      setOpenPanel(true);
+      setOpenPanel(true); // when a table or node is clicked , this opens the sql ops form.
       setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
-      console.log(canvasAction, panelOpFormState);
       if (['view', 'edit'].includes(panelOpFormState.current)) {
         const nodeData = canvasNode?.data as OperationNodeData;
         if (permissions.includes('can_view_dbt_operation')) {
           setSelectedOp(operations.find((op) => op.slug === nodeData.config?.type));
         }
       }
+    }
+
+    const nodes = getNodes();
+    const areDummyNodes = nodes.some((node) => node.data?.isDummy === true);
+
+    // if there are dummy nodes and user selects any other node (operational or source), then it deletes the node. So this prevents creation of multiple dummy nodes on the canvas.
+    if (areDummyNodes && !canvasNode?.data.isDummy) {
+      const dummyNodesArr: { id: string }[] = nodes
+        .filter((node) => node.data.isDummy)
+        .map((node) => ({ id: node.id }));
+      dummyNodesArr.push({ id: dummyNodeIdRef.current });
+      deleteElements({ nodes: dummyNodesArr });
     }
 
     if (canvasAction.type === 'close-reset-opconfig-panel') {
