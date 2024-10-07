@@ -56,13 +56,6 @@ export function OperationNode(node: OperationNodeType) {
   const handleSelectNode = () => {
     setCanvasNode(node);
     setPreviewAction({ type: 'clear-preview', data: null });
-    //this checks if its a dummy node consider it as create operation, not as edit or view.
-    // if ((permissions.includes('can_edit_dbt_operation') || permissions.includes('can_view_dbt_operation') && node.data.isDummy)) {
-    //   setCanvasAction({
-    //     type: 'open-opconfig-panel',
-    //     data: 'create'
-    //   })
-    // }
     if (permissions.includes('can_edit_dbt_operation'))
       setCanvasAction({
         type: 'open-opconfig-panel',
