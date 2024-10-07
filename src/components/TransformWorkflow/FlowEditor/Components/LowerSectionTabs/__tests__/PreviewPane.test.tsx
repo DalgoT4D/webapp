@@ -22,8 +22,6 @@ const mockSession = {
   data: { user: { name: 'Test User' } },
 };
 
-
-
 const mockPreviewAction = {
   type: 'preview',
   data: {
@@ -35,9 +33,7 @@ const mockPreviewAction = {
 describe('PreviewPane Component', () => {
   beforeEach(() => {
     useSession.mockReturnValue(mockSession);
-    usePreviewAction.mockReturnValue({ previewAction: mockPreviewAction })
-
-
+    usePreviewAction.mockReturnValue({ previewAction: mockPreviewAction });
   });
   test('renders preview pane with table and headers', async () => {
     // Mock the httpGet function
@@ -68,7 +64,7 @@ describe('PreviewPane Component', () => {
       expect(screen.getByText('name')).toBeInTheDocument();
       expect(screen.getByText('Test1')).toBeInTheDocument();
       expect(screen.getByText('Test2')).toBeInTheDocument();
-    })
+    });
 
     // Test header rendering and sorting
     const idHeader = screen.getByText('id');
@@ -79,13 +75,28 @@ describe('PreviewPane Component', () => {
 
     // Test sorting functionality
     fireEvent.click(idHeader);
-    await waitFor(() => expect(httpGet).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('order_by=id&order=1')));
+    await waitFor(() =>
+      expect(httpGet).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('order_by=id&order=1')
+      )
+    );
 
     fireEvent.click(idHeader);
-    await waitFor(() => expect(httpGet).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('order_by=id&order=-1')));
+    await waitFor(() =>
+      expect(httpGet).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('order_by=id&order=-1')
+      )
+    );
 
     fireEvent.click(nameHeader);
-    await waitFor(() => expect(httpGet).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('order_by=name&order=1')));
+    await waitFor(() =>
+      expect(httpGet).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('order_by=name&order=1')
+      )
+    );
   });
   test('initiates the download process when the download button is clicked', async () => {
     render(<PreviewPane height={600} />);

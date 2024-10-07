@@ -25,7 +25,7 @@ describe('Flow Creation', () => {
       json: jest.fn().mockResolvedValueOnce({
         logs: {
           logs: [{ message: 'log-0-0' }, { message: 'log-0-1' }],
-        }
+        },
       }),
     });
 
@@ -34,12 +34,12 @@ describe('Flow Creation', () => {
         <SessionProvider session={mockSession}>
           <SingleFlowRunHistory
             flowRun={{
-              id: "flow-run-id",
-              name: "flow-run-name",
-              status: "flow-run-status",
-              lastRun: "flow-run-lastRun",
-              startTime: "flow-run-startTime",
-              expectedStartTime: "flow-run-expectedStartTime",
+              id: 'flow-run-id',
+              name: 'flow-run-name',
+              status: 'flow-run-status',
+              lastRun: 'flow-run-lastRun',
+              startTime: 'flow-run-startTime',
+              expectedStartTime: 'flow-run-expectedStartTime',
             }}
           />
         </SessionProvider>
@@ -49,5 +49,4 @@ describe('Flow Creation', () => {
     const logmessages = screen.getByTestId('logmessages');
     expect(logmessages).toBeInTheDocument();
   });
-
 });

@@ -27,8 +27,7 @@ const props: OperationFormProps = {
   operation: {
     label: 'Case',
     slug: 'casewhen',
-    infoToolTip:
-      'Select the relevant column, operation, and comparison column or value',
+    infoToolTip: 'Select the relevant column, operation, and comparison column or value',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -97,17 +96,11 @@ describe('Form interactions', () => {
     await fireMultipleKeyDown('operation', 2);
     await fireMultipleKeyDown('column', 2);
 
-    const columnValue = screen
-      .getByTestId('value0')
-      .querySelector('input') as HTMLInputElement;
+    const columnValue = screen.getByTestId('value0').querySelector('input') as HTMLInputElement;
     await user.type(columnValue, '0');
-    const columnValue1 = screen
-      .getByTestId('value1')
-      .querySelector('input') as HTMLInputElement;
+    const columnValue1 = screen.getByTestId('value1').querySelector('input') as HTMLInputElement;
     await user.type(columnValue1, '5');
-    const thenValue = screen
-      .getByTestId('thenInput')
-      .querySelector('input') as HTMLInputElement;
+    const thenValue = screen.getByTestId('thenInput').querySelector('input') as HTMLInputElement;
     await user.type(thenValue, '5');
 
     // Simulate user typing in the Output Column Name

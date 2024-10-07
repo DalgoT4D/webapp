@@ -13,9 +13,7 @@ export type BarChartProps = {
 
 const trimString = (label: string) => {
   const maxLength = 10; // Trim to 10 characters
-  return label.length > maxLength
-    ? label.substring(0, maxLength) + '...'
-    : label;
+  return label.length > maxLength ? label.substring(0, maxLength) + '...' : label;
 };
 
 export const BarChart: React.FC<BarChartProps> = ({ data }) => {
@@ -43,9 +41,7 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
 
       const xAxis = d3.axisBottom(x);
 
-      const chart = svg
-        .append('g')
-        .attr('transform', `translate(${margin.left}, ${margin.top})`);
+      const chart = svg.append('g').attr('transform', `translate(${margin.left}, ${margin.top})`);
 
       chart
         .append('g')
@@ -97,9 +93,7 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
       svg
         .selectAll('.tick text')
         .on('mouseover', (event, d) => {
-          const originalLabel = data.find(
-            (item) => trimString(item.label) === d
-          )?.label;
+          const originalLabel = data.find((item) => trimString(item.label) === d)?.label;
 
           if (originalLabel && originalLabel?.length > 10) {
             tooltip.transition().duration(200).style('opacity', 0.9);

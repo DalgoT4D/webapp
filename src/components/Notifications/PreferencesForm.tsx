@@ -1,12 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import CustomDialog from '../Dialog/CustomDialog';
 import useSWR from 'swr';
-import {
-  Box,
-  Button,
-  FormControlLabel,
-  Switch,
-} from '@mui/material';
+import { Box, Button, FormControlLabel, Switch } from '@mui/material';
 import Input from '../UI/Input/Input';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
@@ -25,10 +20,7 @@ type PreferencesFormInput = {
   discord_webhook: string;
 };
 
-const PreferencesForm = ({
-  showForm,
-  setShowForm,
-}: PreferencesFormProps) => {
+const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
   const { data: session }: any = useSession();
   const { data: preferences, mutate } = useSWR(`userpreferences/`);
   const [loading, setLoading] = useState<boolean>(false);
@@ -45,7 +37,10 @@ const PreferencesForm = ({
 
   useEffect(() => {
     if (preferences && showForm) {
-      setValue('enable_discord_notifications', preferences.res.enable_discord_notifications || false);
+      setValue(
+        'enable_discord_notifications',
+        preferences.res.enable_discord_notifications || false
+      );
       setValue('enable_email_notifications', preferences.res.enable_email_notifications || false);
       setValue('discord_webhook', preferences.res.discord_webhook || '');
     }
@@ -57,7 +52,6 @@ const PreferencesForm = ({
     reset();
     setShowForm(false);
   };
-
 
   const formContent = (
     <>
@@ -82,10 +76,13 @@ const PreferencesForm = ({
             />
           )}
         />
-        {enableDiscordNotifications &&
+        {enableDiscordNotifications && (
           <Input
             error={!!errors.discord_webhook}
-            helperText={!!errors.discord_webhook && 'Discord webhook is required to enable discord notifications!'}
+            helperText={
+              !!errors.discord_webhook &&
+              'Discord webhook is required to enable discord notifications!'
+            }
             sx={{ width: '100%' }}
             required
             label="Discord Webhook"
@@ -93,7 +90,7 @@ const PreferencesForm = ({
             register={register}
             name="discord_webhook"
           />
-        }
+        )}
       </Box>
     </>
   );
@@ -104,7 +101,7 @@ const PreferencesForm = ({
       await httpPut(session, 'userpreferences/', {
         enable_email_notifications: values.enable_email_notifications,
         enable_discord_notifications: values.enable_discord_notifications,
-        discord_webhook: values.enable_discord_notifications? values.discord_webhook: '',
+        discord_webhook: values.enable_discord_notifications ? values.discord_webhook : '',
       });
       mutate();
       handleClose();

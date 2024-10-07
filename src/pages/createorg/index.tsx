@@ -6,10 +6,7 @@ import LogoutIcon from '@/assets/icons/logout.svg';
 import { useRouter } from 'next/router';
 import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
 import Input from '@/components/UI/Input/Input';
 import { httpPost } from '@/helpers/http';
@@ -79,10 +76,7 @@ export const CreateOrgPage = () => {
             disabled={waitForOrgCreation}
             data-testid="submitbutton"
           >
-            Save{' '}
-            {waitForOrgCreation && (
-              <CircularProgress sx={{ ml: 2 }} size="1rem" />
-            )}
+            Save {waitForOrgCreation && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
           </Button>
           <Divider></Divider>
           <Box

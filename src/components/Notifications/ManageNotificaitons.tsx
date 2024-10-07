@@ -15,11 +15,7 @@ import {
   Paper,
   IconButton,
 } from '@mui/material';
-import {
-  ErrorOutline,
-  KeyboardArrowDown,
-  KeyboardArrowUp,
-} from '@mui/icons-material';
+import { ErrorOutline, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 
 interface Notification {
   id: number;
@@ -50,9 +46,7 @@ const ManageNotifications = ({
   const readQuery = tabWord === 'all' ? '' : `&read_status=${message_status}`;
 
   const { data, isLoading, mutate } = useSWR(
-    `notifications/v1?limit=${pageSize}&page=${
-      currentPageIndex + 1
-    }${readQuery}`
+    `notifications/v1?limit=${pageSize}&page=${currentPageIndex + 1}${readQuery}`
   );
 
   useEffect(() => {
@@ -71,9 +65,7 @@ const ManageNotifications = ({
   const handleCheckboxChange = (id: number) => {
     setCheckedRows((prevChecked: any) => {
       if (prevChecked.includes(id)) {
-        return prevChecked.filter(
-          (notificationId: number) => notificationId !== id
-        );
+        return prevChecked.filter((notificationId: number) => notificationId !== id);
       } else {
         return [...prevChecked, id];
       }
@@ -84,9 +76,7 @@ const ManageNotifications = ({
     if (data?.res.length === checkedRows.length) {
       setCheckedRows([]);
     } else {
-      const allNotificationIds = data?.res.map(
-        (notification: Notification) => notification.id
-      );
+      const allNotificationIds = data?.res.map((notification: Notification) => notification.id);
       setCheckedRows(allNotificationIds);
     }
   };
@@ -118,15 +108,10 @@ const ManageNotifications = ({
       >
         <Checkbox
           data-testid="select-all-checkbox"
-          checked={
-            data?.res.length > 0 && data?.res.length === checkedRows.length
-          }
+          checked={data?.res.length > 0 && data?.res.length === checkedRows.length}
           onChange={handleCheckUncheckAll}
         />
-        <Typography
-          data-testid="textheading"
-          sx={{ fontWeight: 500, color: '#0F2440CC' }}
-        >
+        <Typography data-testid="textheading" sx={{ fontWeight: 500, color: '#0F2440CC' }}>
           Select all <strong>|</strong> Showing {showingNotificationCount} of{' '}
           {data?.total_notifications || 0} notifications
         </Typography>
@@ -186,8 +171,7 @@ const ManageNotifications = ({
                       p: 1.5,
                       whiteSpace: 'normal',
                       overflow: 'hidden',
-                      textOverflow:
-                        expandedRow === notification.id ? 'clip' : 'ellipsis',
+                      textOverflow: expandedRow === notification.id ? 'clip' : 'ellipsis',
                       maxWidth: '200px',
                       fontWeight: '600',
                       fontSize: '14px',
@@ -199,9 +183,7 @@ const ManageNotifications = ({
                       <Box
                         width="90%"
                         sx={{
-                          color: notification.read_status
-                            ? '#798696'
-                            : '#0F2440E0',
+                          color: notification.read_status ? '#798696' : '#0F2440E0',
                         }}
                       >
                         <Typography sx={{ fontWeight: 500, fontSize: '15px' }}>
@@ -235,11 +217,7 @@ const ManageNotifications = ({
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {notification.urgent ? (
-                        <ErrorOutline sx={{ color: 'red' }} />
-                      ) : (
-                        ''
-                      )}
+                      {notification.urgent ? <ErrorOutline sx={{ color: 'red' }} /> : ''}
                     </Typography>
                   </TableCell>
 
@@ -251,19 +229,13 @@ const ManageNotifications = ({
                         alignItems: 'center',
                         justifyContent: 'flex-end',
                       }}
-                      onClick={() =>
-                        isMessageLong && handleRowClick(notification.id)
-                      }
+                      onClick={() => isMessageLong && handleRowClick(notification.id)}
                     >
                       <IconButton size="small">
                         {expandedRow === notification.id ? (
-                          <KeyboardArrowUp
-                            sx={{ transition: 'transform 0.3s ease' }}
-                          />
+                          <KeyboardArrowUp sx={{ transition: 'transform 0.3s ease' }} />
                         ) : (
-                          <KeyboardArrowDown
-                            sx={{ transition: 'transform 0.3s ease' }}
-                          />
+                          <KeyboardArrowDown sx={{ transition: 'transform 0.3s ease' }} />
                         )}
                       </IconButton>
                     </TableCell>

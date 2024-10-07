@@ -19,11 +19,7 @@ interface LogsPaneProps {
   finalLockCanvas: boolean;
 }
 
-export const LogsPane = ({
-  height,
-  dbtRunLogs,
-  finalLockCanvas
-}: LogsPaneProps) => {
+export const LogsPane = ({ height, dbtRunLogs, finalLockCanvas }: LogsPaneProps) => {
   return (
     <Box height={height - 50} sx={{ overflow: 'auto', position: 'relative' }}>
       {dbtRunLogs.length > 0 ? (
@@ -66,8 +62,7 @@ export const LogsPane = ({
                       fontWeight: 500,
                     }}
                   >
-                    {moment(log.timestamp).format('YYYY/MM/DD')}{' '}
-                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    {moment(log.timestamp).format('YYYY/MM/DD')} &nbsp;&nbsp;&nbsp;&nbsp;
                     {moment(log.timestamp).format('hh:mm:ss A ')}
                   </TableCell>
                   <TableCell
@@ -83,43 +78,43 @@ export const LogsPane = ({
             })}
           </TableBody>
         </Table>
-    ) : finalLockCanvas ? (
-      <Backdrop
-        sx={{
-          background: 'white',
-          position: 'absolute', // Position the Backdrop over the Box
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0, // Cover the entire Box
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-        }}
-        data-testid = "progressbar"
-        open={finalLockCanvas}
-        onClick={() => {}}
-      >
-        <CircularProgress
+      ) : finalLockCanvas ? (
+        <Backdrop
           sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 2,
+            background: 'white',
+            position: 'absolute', // Position the Backdrop over the Box
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0, // Cover the entire Box
+            zIndex: (theme) => theme.zIndex.drawer + 1,
           }}
-        />
-      </Backdrop>
-    ) : (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100%',
-        }}
-      >
-        Please press run
-      </Box>
-    )}
-  </Box>
-);
+          data-testid="progressbar"
+          open={finalLockCanvas}
+          onClick={() => {}}
+        >
+          <CircularProgress
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 2,
+            }}
+          />
+        </Backdrop>
+      ) : (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%',
+          }}
+        >
+          Please press run
+        </Box>
+      )}
+    </Box>
+  );
 };

@@ -1,12 +1,4 @@
-import {
-  Box,
-  Menu,
-  MenuItem,
-  Paper,
-  Typography,
-  IconButton,
-  Badge,
-} from '@mui/material';
+import { Box, Menu, MenuItem, Paper, Typography, IconButton, Badge } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
@@ -71,9 +63,7 @@ export const Header = ({
 
   const [orgusers, setOrgusers] = useState<Array<OrgUser> | undefined>([]);
   const [showOrgCreateForm, setShowOrgCreateForm] = useState<boolean>(false);
-  const [selectedOrg, setSelectedOrg] = useState<
-    AutoCompleteOption | null | undefined
-  >(null);
+  const [selectedOrg, setSelectedOrg] = useState<AutoCompleteOption | null | undefined>(null);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const open = Boolean(anchorEl);
@@ -172,11 +162,7 @@ export const Header = ({
         )}
         <Image src={Logo} alt="dalgo logo" />
       </Box>
-      <Box
-        display="flex"
-        alignItems="center"
-        sx={{ marginLeft: 'auto', gap: '20px' }}
-      >
+      <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto', gap: '20px' }}>
         <IconButton
           onClick={handleViewAll}
           sx={{
@@ -285,11 +271,7 @@ export const Header = ({
           }}
           onClick={() => handleSignout()}
         >
-          <Image
-            style={{ marginRight: 8 }}
-            src={LogoutIcon}
-            alt="logout icon"
-          />
+          <Image style={{ marginRight: 8 }} src={LogoutIcon} alt="logout icon" />
           Logout
         </MenuItem>
       </Menu>

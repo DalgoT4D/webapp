@@ -105,9 +105,7 @@ describe('Flow Creation', () => {
     const showlogs = screen.getByTestId('showlogs-0');
     await userEvent.click(showlogs);
 
-    const { getByText: getByText0 } = within(
-      screen.getByTestId('logmessages-0')
-    );
+    const { getByText: getByText0 } = within(screen.getByTestId('logmessages-0'));
     expect(getByText0('- log-0-0')).toBeInTheDocument();
     expect(getByText0('- log-0-1')).toBeInTheDocument();
     const showless = screen.getByTestId('showlogs-after-0');

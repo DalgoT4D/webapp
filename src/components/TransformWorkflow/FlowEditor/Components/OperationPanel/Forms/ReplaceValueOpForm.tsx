@@ -48,8 +48,8 @@ const ReplaceValueOpForm = ({
       continueOperationChain,
       action,
       setLoading,
-    }
-  })
+    },
+  });
 
   const { control, register, handleSubmit, reset, formState } = useForm<{
     config: Array<{ old: string; new: string }>;
@@ -74,18 +74,14 @@ const ReplaceValueOpForm = ({
   });
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) { //change
+    if (node?.type === SRC_MODEL_NODE) {
+      //change
       try {
         const data: ColumnData[] = await httpGet(
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-
         );
-        setSrcColumns(
-          data
-            .map((col: ColumnData) => col.name)
-            .sort((a, b) => a.localeCompare(b))
-        );
+        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -131,17 +127,11 @@ const ReplaceValueOpForm = ({
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${finalNode?.id}/`,
@@ -174,11 +164,12 @@ const ReplaceValueOpForm = ({
 
       // pre-fill form
       if (columns.length === 1) {
-        const replaceValArray: { old: string; new: string }[] =
-          columns[0].replace_ops.map((item: ReplaceOp) => ({
+        const replaceValArray: { old: string; new: string }[] = columns[0].replace_ops.map(
+          (item: ReplaceOp) => ({
             old: item.find,
             new: item.replace,
-          }));
+          })
+        );
         replaceValArray.push({ old: '', new: '' });
         reset({
           column_name: columns[0].col_name,

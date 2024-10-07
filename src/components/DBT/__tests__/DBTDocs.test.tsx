@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { DBTDocs } from '../DBTDocs';
 
-
 // Mock the useSession hook
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
@@ -24,7 +23,9 @@ describe('DBTDocs Component', () => {
 
     render(<DBTDocs />);
 
-    expect(screen.getByText(/Please go to the setup tab and select the function DBT docs-generate/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Please go to the setup tab and select the function DBT docs-generate/i)
+    ).toBeInTheDocument();
   });
 
   it('should fetch and display the token when session is available', async () => {
@@ -32,19 +33,19 @@ describe('DBTDocs Component', () => {
       data: mockSession,
       status: 'authenticated',
     });
-  
+
     global.fetch = jest.fn(() =>
       Promise.resolve({
         json: () => Promise.resolve({ token: 'dbt-docs-token' }),
       })
     ) as jest.Mock;
-  
+
     render(<DBTDocs />);
-  
+
     await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalled();
+      expect(global.fetch).toHaveBeenCalled();
     });
-});
+  });
 
   it('should display error message if fetching token fails', async () => {
     (useSession as jest.Mock).mockReturnValueOnce({
@@ -61,7 +62,9 @@ describe('DBTDocs Component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Please go to the setup tab and select the function DBT docs-generate/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Please go to the setup tab and select the function DBT docs-generate/i)
+      ).toBeInTheDocument();
     });
   });
 });

@@ -53,8 +53,8 @@ const AggregationOpForm = ({
       continueOperationChain,
       action,
       setLoading,
-    }
-  })
+    },
+  });
 
   type FormProps = {
     aggregate_on: {
@@ -84,7 +84,6 @@ const AggregationOpForm = ({
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
       try {
-
         const data: ColumnData[] = await httpGet(
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
@@ -122,17 +121,11 @@ const AggregationOpForm = ({
       // api call
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${finalNode?.id}/`,
@@ -216,9 +209,7 @@ const AggregationOpForm = ({
                 control={control}
                 rules={{
                   validate: (value) => {
-                    return (
-                      (value && value?.id !== '') || 'Operation is required'
-                    );
+                    return (value && value?.id !== '') || 'Operation is required';
                   },
                 }}
                 name={`aggregate_on.${index}.operation`}
@@ -227,9 +218,7 @@ const AggregationOpForm = ({
                     disabled={action === 'view'}
                     data-testid="operation"
                     options={AggregateOperations}
-                    isOptionEqualToValue={(option: any, value: any) =>
-                      option?.id === value?.id
-                    }
+                    isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
                     {...field}
                     helperText={fieldState.error?.message}
                     error={!!fieldState.error}

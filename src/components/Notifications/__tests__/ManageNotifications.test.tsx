@@ -58,9 +58,7 @@ describe('ManageNotifications Component', () => {
 
     expect(screen.getByText('Urgent message 1')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'This is a normal message with a long text to test truncation.'
-      )
+      screen.getByText('This is a normal message with a long text to test truncation.')
     ).toBeInTheDocument();
   });
 
@@ -81,18 +79,14 @@ describe('ManageNotifications Component', () => {
 
     const { rerender } = render(<MockComponent />);
 
-    const checkbox1 = screen
-      .getByTestId('1-checkbox')
-      .querySelector('input[type="checkbox"]');
+    const checkbox1 = screen.getByTestId('1-checkbox').querySelector('input[type="checkbox"]');
     fireEvent.click(checkbox1!);
 
     expect(checkbox1).toBeChecked();
 
     rerender(<MockComponent />);
 
-    const checkbox2 = screen
-      .getByTestId('2-checkbox')
-      .querySelector('input[type="checkbox"]');
+    const checkbox2 = screen.getByTestId('2-checkbox').querySelector('input[type="checkbox"]');
     fireEvent.click(checkbox2!);
     expect(checkbox2).toBeChecked();
   });

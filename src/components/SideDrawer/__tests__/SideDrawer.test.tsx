@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  within,
-} from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { SideDrawer } from '../SideDrawer';
 import { sideMenu } from '@/config/menu';
