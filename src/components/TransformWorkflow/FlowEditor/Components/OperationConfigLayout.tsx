@@ -218,7 +218,7 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
       if (['view', 'edit'].includes(panelOpFormState.current)) {
         const nodeData = canvasNode?.data as OperationNodeData;
         if (permissions.includes('can_view_dbt_operation')) {
-          setSelectedOp(operations.find((op) => op.slug === nodeData.config?.type));
+          setSelectedOp(operations.find((op) => op.slug === nodeData?.config?.type));
         }
       }
     }
@@ -239,7 +239,6 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
       handleClosePanel();
     }
   }, [canvasAction]);
-
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
