@@ -10,7 +10,6 @@ import {
   Typography,
 } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -20,6 +19,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { AggregateOn, AggregateOperations } from './AggregationOpForm';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 const renameGridStyles: {
   container: SxProps;
@@ -59,12 +59,16 @@ const GroupByOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    }
+  })
 
   type FormProps = {
     columns: { col: string }[];
@@ -113,7 +117,7 @@ const GroupByOpForm = ({
   const columns = watch('columns'); // Get the current form values
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
+    if (node?.type === SRC_MODEL_NODE) { //change
       try {
         const data: ColumnData[] = await httpGet(
           session,
@@ -135,6 +139,8 @@ const GroupByOpForm = ({
   };
 
   const handleSave = async (data: FormProps) => {
+    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
       const dimensionColumns = data.columns
         .filter((col: any) => (col.col ? true : false))
@@ -156,20 +162,20 @@ const GroupByOpForm = ({
               output_column_name: item.output_column_name,
             })),
         },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
-      if (action === 'create') {
+      if (finalAction === 'create') {
         operationNode = await httpPost(
           session,
           `transform/dbt_project/model/`,
           postData
         );
-      } else if (action === 'edit') {
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid
@@ -177,7 +183,7 @@ const GroupByOpForm = ({
             : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -229,6 +235,7 @@ const GroupByOpForm = ({
   };
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     } else {
