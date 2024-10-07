@@ -59,12 +59,7 @@ const DataTable = ({
           <Typography data-testid="wname" variant="h3">
             {warehouse.name}
           </Typography>
-          <Image
-            src={warehouse.icon}
-            width={100}
-            height={100}
-            alt="warehouse icon"
-          />
+          <Image src={warehouse.icon} width={100} height={100} alt="warehouse icon" />
         </>
       )}
       <Table sx={{ maxWidth: '600px' }}>
@@ -98,8 +93,7 @@ export const Destinations = () => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const [showWarehouseDialog, setShowWarehouseDialog] = useState(false);
-  const [showDeleteWarehouseDialog, setShowDeleteWarehouseDialog] =
-    useState(false);
+  const [showDeleteWarehouseDialog, setShowDeleteWarehouseDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
@@ -110,13 +104,11 @@ export const Destinations = () => {
         airbyteDockerRepository: w_house.airbyte_docker_repository,
         tag: w_house.airbyte_docker_image_tag,
         destinationId: w_house.airbyte_destination.destinationId,
-        destinationDefinitionId:
-          w_house.airbyte_destination.destinationDefinitionId,
+        destinationDefinitionId: w_house.airbyte_destination.destinationDefinitionId,
         name: w_house.name,
         wtype: w_house.wtype,
         icon: w_house.airbyte_destination.icon,
-        connectionConfiguration:
-          w_house.airbyte_destination.connectionConfiguration,
+        connectionConfiguration: w_house.airbyte_destination.connectionConfiguration,
       } as Warehouse);
     }
   }, [data]);
@@ -143,18 +135,13 @@ export const Destinations = () => {
 
   let tableData: WarehouseTableRow[] = [];
 
-  if (
-    warehouse &&
-    ['postgres', 'bigquery', 'snowflake'].includes(warehouse.wtype)
-  ) {
+  if (warehouse && ['postgres', 'bigquery', 'snowflake'].includes(warehouse.wtype)) {
     tableData = getTableData(warehouse, permissions.includes('can_create_org'));
   }
 
   return (
     <>
-      {tableData.length > 0 && (
-        <DataTable data={tableData} warehouse={warehouse} />
-      )}
+      {tableData.length > 0 && <DataTable data={tableData} warehouse={warehouse} />}
 
       {warehouse && !globalContext?.CurrentOrg.state.is_demo && (
         <Box sx={{ display: 'flex', gap: '5px' }}>

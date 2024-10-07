@@ -1,8 +1,4 @@
-export const successToast = (
-  message = '',
-  messages: Array<string> = [],
-  context: any
-) => {
+export const successToast = (message = '', messages: Array<string> = [], context: any) => {
   context?.Toast?.dispatch({
     type: 'new',
     toastState: {
@@ -15,11 +11,7 @@ export const successToast = (
   });
 };
 
-export const errorToast = (
-  message = '',
-  messages: Array<string> = [],
-  context: any
-) => {
+export const errorToast = (message = '', messages: Array<string> = [], context: any) => {
   context?.Toast?.dispatch({
     type: 'new',
     toastState: {

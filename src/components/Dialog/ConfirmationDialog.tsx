@@ -63,10 +63,7 @@ const ConfirmationDialog = ({
         </Typography>
       </DialogContent>
 
-      <Backdrop
-        open={loading !== undefined ? loading : false}
-        sx={{ zIndex: '100' }}
-      >
+      <Backdrop open={loading !== undefined ? loading : false} sx={{ zIndex: '100' }}>
         <CircularProgress data-testid="circularprogress" color="info" />
       </Backdrop>
       <DialogActions sx={{ justifyContent: 'flex-start', padding: '1.5rem' }}>

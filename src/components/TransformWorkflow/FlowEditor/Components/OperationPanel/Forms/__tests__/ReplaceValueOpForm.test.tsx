@@ -88,9 +88,7 @@ describe('Form interactions', () => {
     // validations to be called
     await waitFor(() => {
       expect(screen.getByText('Column is required')).toBeInTheDocument();
-      expect(
-        screen.getByText('Atleast one value is required')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Atleast one value is required')).toBeInTheDocument();
     });
 
     await fireMultipleKeyDown('column', 2);

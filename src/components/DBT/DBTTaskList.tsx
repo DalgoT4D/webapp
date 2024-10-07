@@ -14,11 +14,7 @@ import { TransformTask } from './DBTTarget';
 import { List } from '../List/List';
 import { delay, lastRunTime, trimEmail } from '@/utils/common';
 import Image from 'next/image';
-import {
-  TASK_DBTRUN,
-  TASK_DBTTEST,
-  TASK_DOCSGENERATE,
-} from '@/config/constant';
+import { TASK_DBTRUN, TASK_DBTTEST, TASK_DOCSGENERATE } from '@/config/constant';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import CreateOrgTaskForm from './CreateOrgTaskForm';
@@ -68,13 +64,11 @@ export const DBTTaskList = ({
   const permissions = toastContext?.Permissions.state || [];
   const [rows, setRows] = useState<Array<any>>([]);
   const [taskId, setTaskId] = useState<string>('');
-  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
-    useState<boolean>(false);
+  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] = useState<boolean>(false);
   const [runningTask, setRunningTask] = useState<TransformTask | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const [showCreateOrgTaskDialog, setShowCreateOrgTaskDialog] =
-    useState<boolean>(false);
+  const [showCreateOrgTaskDialog, setShowCreateOrgTaskDialog] = useState<boolean>(false);
   const [deleteTaskLoad, setDeleteTaskLoading] = useState(false);
   const trackAmplitudeEvent = useTracking();
   const handleClick = (taskId: string, event: HTMLElement | null) => {
@@ -86,27 +80,20 @@ export const DBTTaskList = ({
   };
 
   const Actions = ({ task }: ActionsParam) => (
-    <Box
-      sx={{ justifyContent: 'end', display: 'flex' }}
-      key={'task-' + task.uuid}
-    >
+    <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'task-' + task.uuid}>
       <Button
         variant="contained"
         onClick={() => {
           setRunningTask(task);
-          trackAmplitudeEvent(`[${task.label}] Button Clicked`)
+          trackAmplitudeEvent(`[${task.label}] Button Clicked`);
         }}
         data-testid={'task-' + task.uuid}
-        disabled={
-          !!runningTask ||
-          isAnyTaskLocked ||
-          !permissions.includes('can_run_orgtask')
-        }
+        disabled={!!runningTask || isAnyTaskLocked || !permissions.includes('can_run_orgtask')}
         key={'task-' + task.uuid}
         sx={{ marginRight: '10px', width: '75px', height: '40px' }}
       >
         {runningTask?.uuid === task.uuid ||
-          (task.lock?.status && task.lock?.status !== 'complete') ? (
+        (task.lock?.status && task.lock?.status !== 'complete') ? (
           <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
         ) : (
           'Execute'
@@ -118,9 +105,7 @@ export const DBTTaskList = ({
           aria-controls={open ? 'basic-menu' : undefined}
           aria-haspopup="true"
           aria-expanded={open ? 'true' : undefined}
-          onClick={(event) =>
-            handleClick(String(task.uuid), event.currentTarget)
-          }
+          onClick={(event) => handleClick(String(task.uuid), event.currentTarget)}
           variant="contained"
           key={'menu-' + task.uuid}
           color="info"
@@ -188,10 +173,7 @@ export const DBTTaskList = ({
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
-      const flowRun: PrefectFlowRun = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}`
-      );
+      const flowRun: PrefectFlowRun = await httpGet(session, `prefect/flow_runs/${flow_run_id}`);
 
       if (!flowRun.state_type) return 'FAILED';
 
@@ -204,15 +186,11 @@ export const DBTTaskList = ({
 
   const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
     try {
-      const response = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}/logs`
-      );
+      const response = await httpGet(session, `prefect/flow_runs/${flow_run_id}/logs`);
       if (response?.logs?.logs && response.logs.logs.length > 0) {
         const logsArray = response.logs.logs.map(
           // eslint-disable-next-line
-          (logObject: PrefectFlowRunLog, idx: number) =>
-            `- ${logObject.message} '\n'`
+          (logObject: PrefectFlowRunLog, idx: number) => `- ${logObject.message} '\n'`
         );
 
         setDbtRunLogs(logsArray);
@@ -234,13 +212,10 @@ export const DBTTaskList = ({
         );
 
         // if flow run id is not present, something went wrong
-        if (!response.flow_run_id)
-          errorToast('Something went wrong', [], toastContext);
+        if (!response.flow_run_id) errorToast('Something went wrong', [], toastContext);
 
         // Poll and show logs till flow run is either completed or failed
-        let flowRunStatus: string = await fetchFlowRunStatus(
-          response.flow_run_id
-        );
+        let flowRunStatus: string = await fetchFlowRunStatus(response.flow_run_id);
         setFlowRunId(response.flow_run_id);
         fetchDbtTasks();
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
@@ -290,8 +265,7 @@ export const DBTTaskList = ({
                 <Box sx={{ alignItems: 'center', display: 'flex' }}>
                   {task.lock?.status === 'running' ? (
                     <LoopIcon />
-                  ) : task.lock?.status === 'locked' ||
-                    task.lock?.status === 'complete' ? (
+                  ) : task.lock?.status === 'locked' || task.lock?.status === 'complete' ? (
                     <LockIcon />
                   ) : (
                     <ScheduleIcon />
@@ -347,7 +321,7 @@ export const DBTTaskList = ({
 
   const handleCreateOpenOrgTaskDialog = () => {
     setShowCreateOrgTaskDialog(true);
-    trackAmplitudeEvent("[+ New Task] Button Clicked")
+    trackAmplitudeEvent('[+ New Task] Button Clicked');
   };
 
   return (

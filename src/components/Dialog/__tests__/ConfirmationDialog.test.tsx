@@ -43,8 +43,8 @@ describe('Connections Setup', () => {
         <ConfirmationDialog
           show={true}
           message="confirmation-message"
-          handleClose={() => { }}
-          handleConfirm={() => { }}
+          handleClose={() => {}}
+          handleConfirm={() => {}}
           loading={false}
         />
       </SessionProvider>
@@ -61,8 +61,8 @@ describe('Connections Setup', () => {
         <ConfirmationDialog
           show={true}
           message="confirmation-message"
-          handleClose={() => { }}
-          handleConfirm={() => { }}
+          handleClose={() => {}}
+          handleConfirm={() => {}}
           loading={true}
         />
       </SessionProvider>
@@ -79,7 +79,7 @@ describe('Connections Setup', () => {
           show={true}
           message="confirmation-message"
           handleClose={() => handleCloseMock()}
-          handleConfirm={() => { }}
+          handleConfirm={() => {}}
           loading={false}
         />
       </SessionProvider>
@@ -97,7 +97,7 @@ describe('Connections Setup', () => {
           show={true}
           message="confirmation-message"
           handleClose={() => handleCloseMock()}
-          handleConfirm={() => { }}
+          handleConfirm={() => {}}
           loading={false}
         />
       </SessionProvider>
@@ -114,7 +114,7 @@ describe('Connections Setup', () => {
         <ConfirmationDialog
           show={true}
           message="confirmation-message"
-          handleClose={() => { }}
+          handleClose={() => {}}
           handleConfirm={() => handleConfirmMock()}
           loading={false}
         />
@@ -126,14 +126,13 @@ describe('Connections Setup', () => {
   });
 
   it('checks for the message text', () => {
-
     render(
       <SessionProvider session={mockSession}>
         <ConfirmationDialog
           show={true}
           message="confirmation-message"
-          handleClose={() => { }}
-          handleConfirm={() => { }}
+          handleClose={() => {}}
+          handleConfirm={() => {}}
           loading={false}
         />
       </SessionProvider>
@@ -141,5 +140,4 @@ describe('Connections Setup', () => {
     const messageholder = screen.getByTestId('messageholder');
     expect(messageholder.textContent).toMatch('confirmation-message');
   });
-
 });

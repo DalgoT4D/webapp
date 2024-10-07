@@ -27,10 +27,7 @@ import moment from 'moment';
 import { FlowInterface } from './Flows';
 import { delay, formatDuration } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionLogs';
-import {
-  defaultLoadMoreLimit,
-  flowRunLogsOffsetLimit,
-} from '@/config/constant';
+import { defaultLoadMoreLimit, flowRunLogsOffsetLimit } from '@/config/constant';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
@@ -48,11 +45,7 @@ const makeReadable = (label: string) => {
   return readableObject[label] ? readableObject[label] : label;
 };
 
-const fetchDeploymentLogs = async (
-  deploymentId: string,
-  session: any,
-  offset = 0
-) => {
+const fetchDeploymentLogs = async (deploymentId: string, session: any, offset = 0) => {
   try {
     const response = await httpGet(
       session,
@@ -101,13 +94,7 @@ interface DeploymentObject {
   totalRunTime: number;
 }
 
-const LogsContainer = ({
-  run,
-  flowRunId,
-}: {
-  run: RunObject;
-  flowRunId: string;
-}) => {
+const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }) => {
   const globalContext = useContext(GlobalContext);
   const [action, setAction] = useState<'detail' | 'summary' | null>(null);
   const [logsLoaded, setLogsLoaded] = useState<boolean>(false);
@@ -120,8 +107,7 @@ const LogsContainer = ({
   const pollForTaskRun = async (taskId: string) => {
     try {
       const response: any = await httpGet(session, 'tasks/stp/' + taskId);
-      const lastMessage: any =
-        response['progress'][response['progress'].length - 1];
+      const lastMessage: any = response['progress'][response['progress'].length - 1];
 
       if (!['completed', 'failed'].includes(lastMessage.status)) {
         await delay(3000);
@@ -171,14 +157,11 @@ const LogsContainer = ({
         };
         const data = await httpGet(
           session,
-          `prefect/flow_runs/${pathParam}/logs?${new URLSearchParams(
-            queryParams
-          ).toString()}`
+          `prefect/flow_runs/${pathParam}/logs?${new URLSearchParams(queryParams).toString()}`
         );
 
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
-          const newlogs =
-            flowRunOffset <= 0 ? data.logs.logs : logs.concat(data.logs.logs);
+          const newlogs = flowRunOffset <= 0 ? data.logs.logs : logs.concat(data.logs.logs);
           setLogs(newlogs);
 
           // increment the offset by 200 if we have more to fetch
@@ -224,9 +207,7 @@ const LogsContainer = ({
           }}
         >
           {formatDuration(
-            moment
-              .duration(moment(run.end_time).diff(moment(run.start_time)))
-              .asSeconds()
+            moment.duration(moment(run.end_time).diff(moment(run.start_time))).asSeconds()
           )}
         </Box>
         <Box sx={{ width: '40%', textAlign: 'right' }}>
@@ -239,20 +220,12 @@ const LogsContainer = ({
             onChange={handleAction}
             aria-label="text alignment"
           >
-            <ToggleButton
-              value="detail"
-              aria-label="left"
-              onClick={() => !action && fetchLogs()}
-            >
+            <ToggleButton value="detail" aria-label="left" onClick={() => !action && fetchLogs()}>
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
             {run.state_type === 'FAILED' && (
-              <ToggleButton
-                value="summary"
-                aria-label="right"
-                data-testid={`aisummary-${run.id}`}
-              >
+              <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${run.id}`}>
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
             )}
@@ -288,9 +261,7 @@ const LogsContainer = ({
         {action === 'detail' ? (
           <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
             <Box sx={{ wordBreak: 'break-word' }}>
-              {logs?.map((log: any, idx) => (
-                <Box key={idx}>- {log?.message || log}</Box>
-              ))}
+              {logs?.map((log: any, idx) => <Box key={idx}>- {log?.message || log}</Box>)}
             </Box>
             {flowRunOffset > 0 &&
               (logsLoaded ? (
@@ -316,8 +287,7 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
           position: 'relative',
           p: 2,
 
-          background:
-            logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
+          background: logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
         }}
       >
         <TableCell
@@ -348,10 +318,7 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
   );
 };
 
-export const FlowLogs: React.FC<FlowLogsProps> = ({
-  setShowLogsDialog,
-  flow,
-}) => {
+export const FlowLogs: React.FC<FlowLogsProps> = ({ setShowLogsDialog, flow }) => {
   const { data: session }: any = useSession();
   const [logDetails, setLogDetails] = useState<DeploymentObject[]>([]);
   const [offset, setOffset] = useState(defaultLoadMoreLimit);
@@ -362,10 +329,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
     (async () => {
       if (flow) {
         setLoading(true);
-        const response: DeploymentObject[] = await fetchDeploymentLogs(
-          flow.deploymentId,
-          session
-        );
+        const response: DeploymentObject[] = await fetchDeploymentLogs(flow.deploymentId, session);
         if (response) {
           setLogDetails(response);
         }
@@ -394,24 +358,17 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
       open
       TransitionComponent={Transition}
     >
-      <TopNavBar
-        handleClose={() => setShowLogsDialog(false)}
-        title="Logs History"
-      />
+      <TopNavBar handleClose={() => setShowLogsDialog(false)} title="Logs History" />
       <Box sx={{ p: '0px 28px' }}>
         <Box sx={{ mb: 1 }}>
           <Box sx={{ fontSize: '16px', display: 'flex' }}>
-            <Typography sx={{ fontWeight: 700 }}>
-              {`${flow?.name} |`}
-            </Typography>
+            <Typography sx={{ fontWeight: 700 }}>{`${flow?.name} |`}</Typography>
             <Typography sx={{ fontWeight: 600, ml: '4px' }}>
               {flow?.status ? 'Active' : 'Inactive'}
             </Typography>
           </Box>
         </Box>
-        <TableContainer
-          sx={{ height: 'calc(100vh - 210px)', overflow: 'scroll' }}
-        >
+        <TableContainer sx={{ height: 'calc(100vh - 210px)', overflow: 'scroll' }}>
           <Table stickyHeader sx={{ mt: '-10px' }}>
             <TableHead>
               <TableRow
@@ -434,8 +391,7 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
                       color: 'white',
                       background: '#00897B',
                       fontWeight: 700,
-                      textAlign:
-                        index === columns.length - 1 ? 'right' : 'unset',
+                      textAlign: index === columns.length - 1 ? 'right' : 'unset',
                     }}
                     key={column}
                   >
@@ -472,12 +428,11 @@ export const FlowLogs: React.FC<FlowLogsProps> = ({
                   onClick={async () => {
                     if (flow) {
                       setLoadMorePressed(true);
-                      const response: DeploymentObject[] =
-                        await fetchDeploymentLogs(
-                          flow.deploymentId,
-                          session,
-                          offset
-                        );
+                      const response: DeploymentObject[] = await fetchDeploymentLogs(
+                        flow.deploymentId,
+                        session,
+                        offset
+                      );
                       if (response) {
                         setLogDetails((logs) => [...logs, ...response]);
                         setOffset((offset) => offset + defaultLoadMoreLimit);

@@ -5,10 +5,7 @@ import { useForm } from 'react-hook-form';
 import styles from '@/styles/Login.module.css';
 import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import Input from '@/components/UI/Input/Input';
 import Auth from '@/components/Layouts/Auth';
 import { httpPost } from '../../helpers/http';

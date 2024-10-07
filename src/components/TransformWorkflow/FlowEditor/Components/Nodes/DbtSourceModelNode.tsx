@@ -16,10 +16,7 @@ import { SrcModelNodeType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { trimString } from '@/utils/common';
 import styled from '@emotion/styled';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -63,10 +60,7 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
           }}
           key={'NAME'}
         >
-          <StyledTableCell
-            align="left"
-            sx={{ borderRight: '1px solid #E8E8E8' }}
-          >
+          <StyledTableCell align="left" sx={{ borderRight: '1px solid #E8E8E8' }}>
             NAME
           </StyledTableCell>
           <StyledTableCell align="left">TYPE</StyledTableCell>
@@ -75,10 +69,7 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
       <TableBody>
         {columns.map((row: ColumnData) => (
           <StyledTableRow key={row.name}>
-            <StyledTableCell
-              align="left"
-              sx={{ borderRight: '1px solid #E8E8E8' }}
-            >
+            <StyledTableCell align="left" sx={{ borderRight: '1px solid #E8E8E8' }}>
               {row.name}
             </StyledTableCell>
             <StyledTableCell align="left">{row.data_type}</StyledTableCell>
@@ -101,16 +92,11 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
   const edges = useEdges();
   const nodeId: string | null = useNodeId();
 
-  const edgesGoingIntoNode: Edge[] = edges.filter(
-    (edge: Edge) => edge.target === nodeId
-  );
-  const edgesEmanatingOutOfNode: Edge[] = edges.filter(
-    (edge: Edge) => edge.source === nodeId
-  );
+  const edgesGoingIntoNode: Edge[] = edges.filter((edge: Edge) => edge.target === nodeId);
+  const edgesEmanatingOutOfNode: Edge[] = edges.filter((edge: Edge) => edge.source === nodeId);
   // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean =
-    permissions.includes('can_delete_dbt_model') &&
-    edgesEmanatingOutOfNode.length <= 0;
+    permissions.includes('can_delete_dbt_model') && edgesEmanatingOutOfNode.length <= 0;
 
   const cacheRef = useRef<{ [key: string]: ColumnData[] }>({});
 
@@ -121,9 +107,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
         nodeId: nodeId,
         nodeType: node.type,
         shouldRefreshGraph:
-          edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0
-            ? false
-            : true,
+          edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0 ? false : true,
         isDummy: node.data?.isDummy,
       },
     });

@@ -27,8 +27,7 @@ const props: OperationFormProps = {
   operation: {
     label: 'Arithmetic',
     slug: 'arithmetic',
-    infoToolTip:
-      'Perform arithmetic operations on or between one or more columns',
+    infoToolTip: 'Perform arithmetic operations on or between one or more columns',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -89,9 +88,7 @@ describe('Form interactions', () => {
     await waitFor(() => {
       expect(screen.getByText('Operation is required')).toBeInTheDocument();
       expect(screen.getAllByText('Column is required')).toHaveLength(2);
-      expect(
-        screen.getByText('Output column name is required')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Output column name is required')).toBeInTheDocument();
     });
 
     await fireMultipleKeyDown('operation', 2);
