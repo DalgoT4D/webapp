@@ -1,13 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Box,
-  Button,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-} from '@mui/material';
+import { Box, Button, FormControlLabel, Radio, RadioGroup } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
@@ -60,8 +54,8 @@ const GenericColumnOpForm = ({
       continueOperationChain,
       action,
       setLoading,
-    }
-  })
+    },
+  });
   type FormProps = {
     computed_columns: {
       function_name: string;
@@ -101,11 +95,7 @@ const GenericColumnOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(
-          data
-            .map((col: ColumnData) => col.name)
-            .sort((a, b) => a.localeCompare(b))
-        );
+        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -127,16 +117,9 @@ const GenericColumnOpForm = ({
           computed_columns: data.computed_columns.map((item) => ({
             function_name: item.function_name,
             operands: item.operands.map(
-              (op: {
-                type: string;
-                col_val: string;
-                const_val: string | undefined;
-              }) => ({
+              (op: { type: string; col_val: string; const_val: string | undefined }) => ({
                 is_col: op.type === 'col',
-                value:
-                  op.type === 'col'
-                    ? op.col_val
-                    : parseStringForNull(op.const_val),
+                value: op.type === 'col' ? op.col_val : parseStringForNull(op.const_val),
               })
             ),
             output_column_name: item.output_column_name,
@@ -150,17 +133,11 @@ const GenericColumnOpForm = ({
       // api call
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${finalNode?.id}/`,
@@ -189,21 +166,18 @@ const GenericColumnOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      const { source_columns, computed_columns }: GenericColDataConfig =
-        opConfig;
+      const { source_columns, computed_columns }: GenericColDataConfig = opConfig;
       setSrcColumns(source_columns);
 
       // pre-fill form
       reset({
         computed_columns: computed_columns.map((item: GenericCol) => ({
           function_name: item.function_name,
-          operands: item.operands.map(
-            (op: { value: any; is_col: boolean }) => ({
-              type: op.is_col ? 'col' : 'val',
-              col_val: op.is_col ? op.value : '',
-              const_val: op.is_col ? undefined : op.value,
-            })
-          ),
+          operands: item.operands.map((op: { value: any; is_col: boolean }) => ({
+            type: op.is_col ? 'col' : 'val',
+            col_val: op.is_col ? op.value : '',
+            const_val: op.is_col ? undefined : op.value,
+          })),
           output_column_name: item.output_column_name,
         })),
       });
@@ -266,9 +240,7 @@ const GenericColumnOpForm = ({
             </Button>
           )}
           {fields.map((field, index) => {
-            const radioValue = watch(
-              `computed_columns.0.operands.${index}.type`
-            );
+            const radioValue = watch(`computed_columns.0.operands.${index}.type`);
             return (
               <Box key={field.id}>
                 <Box sx={{ m: 2 }} />

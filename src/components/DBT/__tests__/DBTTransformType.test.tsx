@@ -3,9 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import DBTTransformType from '../DBTTransformType';
 
 jest.mock('next-auth/react');
@@ -73,18 +71,12 @@ describe('DBTTransformType', () => {
 
   it('handles error when fetching DBT workspace', async () => {
     const errorMessage = 'Failed to fetch DBT workspace';
-    global.fetch = jest.fn(() =>
-      Promise.reject(new Error(errorMessage))
-    ) as jest.Mock;
+    global.fetch = jest.fn(() => Promise.reject(new Error(errorMessage))) as jest.Mock;
 
     setup();
 
     await waitFor(() => {
-      expect(errorToast).toHaveBeenCalledWith(
-        errorMessage,
-        [],
-        mockGlobalContext
-      );
+      expect(errorToast).toHaveBeenCalledWith(errorMessage, [], mockGlobalContext);
     });
   });
 });

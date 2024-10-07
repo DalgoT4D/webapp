@@ -1,21 +1,17 @@
 import React from 'react';
-import { render, screen,  } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ConfigInput } from '../ConfigInput';
 import { useForm } from 'react-hook-form';
 
 // Mock implementation for ConnectorConfigInput.fetchUpdatedSpecsOnObjectFieldChange
 jest.mock('../../../helpers/ConnectorConfigInput', () => ({
-  fetchUpdatedSpecsOnObjectFieldChange: jest
-    .fn()
-    .mockImplementation((val, field, specs) => specs),
+  fetchUpdatedSpecsOnObjectFieldChange: jest.fn().mockImplementation((val, field, specs) => specs),
 }));
 
 // Helper component to render ConfigInput with useForm
 const ConfigInputTestWrapper = ({ specs }) => {
   const { control, setValue } = useForm();
-  return (
-    <ConfigInput specs={specs} control={control} setFormValue={setValue} />
-  );
+  return <ConfigInput specs={specs} control={control} setFormValue={setValue} />;
 };
 
 describe('ConfigInput Component', () => {

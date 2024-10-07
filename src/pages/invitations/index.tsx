@@ -2,23 +2,14 @@ import styles from '@/styles/Login.module.css';
 import Auth from '@/components/Layouts/Auth';
 import React, { useContext, useEffect, useState } from 'react';
 import Input from '@/components/UI/Input/Input';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  InputAdornment,
-} from '@mui/material';
+import { Box, Button, CircularProgress, IconButton, InputAdornment } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 import { PageHead } from '@/components/PageHead';
 
@@ -61,8 +52,7 @@ const AcceptInvite = () => {
         router.push('/login');
         successToast('Invitation successfully accepted', [], globalContext);
       } catch (err: any) {
-        if (err.cause.detail === 'password is required')
-          setIsUserPresent(false);
+        if (err.cause.detail === 'password is required') setIsUserPresent(false);
         else {
           errorToast(err.cause.detail, [], globalContext);
         }
@@ -79,14 +69,8 @@ const AcceptInvite = () => {
     <>
       <PageHead title="Dalgo | Invitations" />
 
-      <Auth
-        heading="Welcome aboard"
-        subHeading="Thank you. You are at the last step"
-      >
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          data-testid="accept-invitation-form"
-        >
+      <Auth heading="Welcome aboard" subHeading="Thank you. You are at the last step">
+        <form onSubmit={handleSubmit(onSubmit)} data-testid="accept-invitation-form">
           <Box className={styles.Container}>
             {!isUserPresent && (
               <>
@@ -128,8 +112,7 @@ const AcceptInvite = () => {
                   error={!!errors.confirmpassword}
                   helperText={errors.confirmpassword?.message}
                   hookFormValidations={{
-                    validate: (value: string) =>
-                      value === password || 'Passwords do not match',
+                    validate: (value: string) => value === password || 'Passwords do not match',
                   }}
                   sx={{ width: '100%', pb: 3 }}
                   id="outlined-confirm-password-input"

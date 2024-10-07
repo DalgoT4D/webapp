@@ -4,7 +4,7 @@
 export const initialUnsavedChangesState = false;
 
 // Reducer for handling unsaved changes
-export const UnsavedChangesReducer = (state:any, action:any) => {
+export const UnsavedChangesReducer = (state: any, action: any) => {
   switch (action.type) {
     case 'SET_UNSAVED_CHANGES':
       return true;
@@ -14,4 +14,3 @@ export const UnsavedChangesReducer = (state:any, action:any) => {
       return state;
   }
 };
-

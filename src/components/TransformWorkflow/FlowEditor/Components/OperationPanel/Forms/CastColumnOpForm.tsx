@@ -41,30 +41,26 @@ const CastColumnOp = ({
       continueOperationChain,
       action,
       setLoading,
-    }
-  })
+    },
+  });
   type FormData = {
     config: { name: string; data_type: string | null }[];
   };
-  const { control, handleSubmit, register, reset, getValues, setValue } =
-    useForm<FormData>({
-      defaultValues: {
-        config: [
-          {
-            name: '',
-            data_type: null,
-          },
-        ] as ColumnData[],
-      },
-    });
+  const { control, handleSubmit, register, reset, getValues, setValue } = useForm<FormData>({
+    defaultValues: {
+      config: [
+        {
+          name: '',
+          data_type: null,
+        },
+      ] as ColumnData[],
+    },
+  });
 
   const { config } = getValues();
   const fetchDataTypes = async () => {
     try {
-      const response = await httpGet(
-        session,
-        `transform/dbt_project/data_type/`
-      );
+      const response = await httpGet(session, `transform/dbt_project/data_type/`);
       setDataTypes(response.sort((a: string, b: string) => a.localeCompare(b)));
     } catch (error) {
       console.log(error);
@@ -108,8 +104,7 @@ const CastColumnOp = ({
         source_columns: sourceColumnsNames,
         other_inputs: [],
         config: { columns: [] },
-        input_uuid:
-          finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
         target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
@@ -133,17 +128,11 @@ const CastColumnOp = ({
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${finalNode?.id}/`,
@@ -178,12 +167,10 @@ const CastColumnOp = ({
 
       // pre-fill form
       reset({
-        config: columns.map(
-          (column: { columnname: string; columntype: string }) => ({
-            name: column.columnname,
-            data_type: column.columntype,
-          })
-        ),
+        config: columns.map((column: { columnname: string; columntype: string }) => ({
+          name: column.columnname,
+          data_type: column.columntype,
+        })),
       });
     } catch (error) {
       console.error(error);
@@ -226,40 +213,42 @@ const CastColumnOp = ({
   }, [config]);
 
   const MemoizedGridTable = useMemo(() => {
-    return <GridTable
-      headers={['Column name', 'Type']}
-      data={configData?.map((column: any, index: number) => [
-        <Input
-          data-testid={`columnName${findColumnIndex(column.name)}`}
-          key={`config.${findColumnIndex(column.name)}.name`}
-          fieldStyle="none"
-          sx={{
-            padding: '0',
-            caretColor: 'transparent',
-          }}
-          name={`config.${findColumnIndex(column.name)}.name`}
-          register={register}
-          value={column.name}
-          disabled={action === 'view'}
-        />,
-        <Controller
-          key={`config.${findColumnIndex(column.name)}.data_type`}
-          control={control}
-          name={`config.${findColumnIndex(column.name)}.data_type`}
-          render={({ field }) => (
-            <Autocomplete
-              {...field}
-              data-testid={`type${findColumnIndex(column.name)}`}
-              disabled={action === 'view'}
-              disableClearable
-              fieldStyle="none"
-              options={dataTypes}
-            />
-          )}
-        />,
-      ])}
-    ></GridTable>
-  }, [configData, dataTypes, control])
+    return (
+      <GridTable
+        headers={['Column name', 'Type']}
+        data={configData?.map((column: any, index: number) => [
+          <Input
+            data-testid={`columnName${findColumnIndex(column.name)}`}
+            key={`config.${findColumnIndex(column.name)}.name`}
+            fieldStyle="none"
+            sx={{
+              padding: '0',
+              caretColor: 'transparent',
+            }}
+            name={`config.${findColumnIndex(column.name)}.name`}
+            register={register}
+            value={column.name}
+            disabled={action === 'view'}
+          />,
+          <Controller
+            key={`config.${findColumnIndex(column.name)}.data_type`}
+            control={control}
+            name={`config.${findColumnIndex(column.name)}.data_type`}
+            render={({ field }) => (
+              <Autocomplete
+                {...field}
+                data-testid={`type${findColumnIndex(column.name)}`}
+                disabled={action === 'view'}
+                disableClearable
+                fieldStyle="none"
+                options={dataTypes}
+              />
+            )}
+          />,
+        ])}
+      ></GridTable>
+    );
+  }, [configData, dataTypes, control]);
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
@@ -270,7 +259,6 @@ const CastColumnOp = ({
         onChange={(event) => handleSearch(event.target.value)}
       />
       <form onSubmit={handleSubmit(handleSave)}>
-
         {MemoizedGridTable}
         <Box sx={{ m: 2 }} />
         <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', p: 2 }}>

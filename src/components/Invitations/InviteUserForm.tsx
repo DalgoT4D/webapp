@@ -28,11 +28,7 @@ type InviteUserFormInput = {
   invited_role_uuid: string;
 };
 
-const InviteUserForm = ({
-  mutate,
-  showForm,
-  setShowForm,
-}: InviteUserFormProps) => {
+const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) => {
   const { data: session }: any = useSession();
   const { data: roles } = useSWR(`data/roles`);
   const [loading, setLoading] = useState<boolean>(false);
@@ -92,9 +88,7 @@ const InviteUserForm = ({
                     ))}
                 </Select>
                 {fieldState.error && (
-                  <FormHelperText sx={{ color: 'red' }}>
-                    {fieldState.error.message}
-                  </FormHelperText>
+                  <FormHelperText sx={{ color: 'red' }}>{fieldState.error.message}</FormHelperText>
                 )}
               </FormControl>
             )}

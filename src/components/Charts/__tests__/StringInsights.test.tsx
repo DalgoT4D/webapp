@@ -3,7 +3,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import { StringInsights } from '../StringInsights';
 
-
 jest.mock('../RangeChart', () => jest.fn(() => <div>RangeChart</div>));
 jest.mock('../BarChart', () => ({
   BarChart: jest.fn(() => <div>BarChart</div>),
@@ -12,13 +11,12 @@ jest.mock('../StatsChart', () => ({
   StatsChart: jest.fn(() => <div>StatsChart</div>),
 }));
 
-
-const mockData:any = [
+const mockData: any = [
   { name: 'Character 1', count: 10, percentage: 50 },
   { name: 'Character 2', count: 20, percentage: 50 },
 ];
 
-const mockStatsData:any = {
+const mockStatsData: any = {
   minimum: 1,
   maximum: 20,
   mean: 10,

@@ -26,7 +26,9 @@ jest.mock('react-hook-form', () => ({
 describe('CreateTableForm', () => {
   beforeEach(() => {
     useSession.mockReturnValue({ data: { session: 'mockSession' } });
-    useCanvasNode.mockReturnValue({ canvasNode: { type: 'operation_node', data: { target_model_id: '123' } } });
+    useCanvasNode.mockReturnValue({
+      canvasNode: { type: 'operation_node', data: { target_model_id: '123' } },
+    });
     useCanvasAction.mockReturnValue({ setCanvasAction: mockSetCanvasAction });
     httpPost.mockResolvedValue({});
   });
@@ -45,7 +47,7 @@ describe('CreateTableForm', () => {
     expect(screen.getByText(/Output Schema Name/i)).toBeInTheDocument();
   });
 
- //write test for form submission.
+  //write test for form submission.
   it('calls clearAndClosePanel if provided', async () => {
     renderComponent({ clearAndClosePanel: mockClearAndClosePanel });
 
@@ -59,5 +61,4 @@ describe('CreateTableForm', () => {
       expect(mockClearAndClosePanel).toHaveBeenCalled();
     });
   });
-
 });

@@ -47,13 +47,7 @@ export type PrefectFlowRun = {
   state_name: string;
 };
 
-export const DBTTarget = ({
-  tasks,
-  setDbtRunLogs,
-  setRunning,
-  running,
-  setExpandLogs,
-}: params) => {
+export const DBTTarget = ({ tasks, setDbtRunLogs, setRunning, running, setExpandLogs }: params) => {
   const [selectedTask, setSelectedTask] = useState<TransformTask | undefined>();
   const toastContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
@@ -77,9 +71,7 @@ export const DBTTarget = ({
         // Custom state has been returned
         // need another api call to fetch the logs
         if (message?.result[0]?.id) {
-          await fetchAndSetFlowRunLogs(
-            message.result[0]?.state_details?.flow_run_id
-          );
+          await fetchAndSetFlowRunLogs(message.result[0]?.state_details?.flow_run_id);
         } else {
           setDbtRunLogs(message?.result);
         }
@@ -96,10 +88,7 @@ export const DBTTarget = ({
 
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
-      const flowRun: PrefectFlowRun = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}`
-      );
+      const flowRun: PrefectFlowRun = await httpGet(session, `prefect/flow_runs/${flow_run_id}`);
 
       if (!flowRun.state_type) return 'FAILED';
 
@@ -112,15 +101,11 @@ export const DBTTarget = ({
 
   const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
     try {
-      const response = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}/logs`
-      );
+      const response = await httpGet(session, `prefect/flow_runs/${flow_run_id}/logs`);
       if (response?.logs?.logs && response.logs.logs.length > 0) {
         const logsArray = response.logs.logs.map(
           // eslint-disable-next-line
-          (logObject: PrefectFlowRunLog, idx: number) =>
-            `- ${logObject.message} '\n'`
+          (logObject: PrefectFlowRunLog, idx: number) => `- ${logObject.message} '\n'`
         );
 
         setDbtRunLogs(logsArray);
@@ -143,13 +128,10 @@ export const DBTTarget = ({
         );
 
         // if flow run id is not present, something went wrong
-        if (!response.flow_run_id)
-          errorToast('Something went wrong', [], toastContext);
+        if (!response.flow_run_id) errorToast('Something went wrong', [], toastContext);
 
         // Poll and show logs till flow run is either completed or failed
-        let flowRunStatus: string = await fetchFlowRunStatus(
-          response.flow_run_id
-        );
+        let flowRunStatus: string = await fetchFlowRunStatus(response.flow_run_id);
 
         while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
           await delay(5000);
@@ -176,9 +158,7 @@ export const DBTTarget = ({
         value={selectedTask?.slug || 'Select function'}
         sx={{ width: '150px', textAlign: 'center' }}
         onChange={(event) => {
-          const task = tasks.find(
-            (task: TransformTask) => task.slug === event.target.value
-          );
+          const task = tasks.find((task: TransformTask) => task.slug === event.target.value);
           setSelectedTask(task);
         }}
       >
@@ -202,20 +182,12 @@ export const DBTTarget = ({
               dbtRunWithDeployment(selectedTask);
             else executeDbtJob(selectedTask);
           } else {
-            errorToast(
-              'Please select a dbt function to execute',
-              [],
-              toastContext
-            );
+            errorToast('Please select a dbt function to execute', [], toastContext);
           }
         }}
         disabled={running}
       >
-        {running ? (
-          <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" />
-        ) : (
-          'Execute'
-        )}
+        {running ? <Image src={SyncIcon} className={styles.SyncIcon} alt="sync icon" /> : 'Execute'}
       </Button>
     </>
   );

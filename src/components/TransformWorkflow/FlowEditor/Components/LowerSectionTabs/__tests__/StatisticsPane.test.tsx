@@ -1,6 +1,6 @@
 // StatisticsPane.test.tsx
 import React from 'react';
-import {  render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { StatisticsPane } from '../StatisticsPane';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
@@ -8,7 +8,7 @@ import { httpGet, httpPost } from '@/helpers/http';
 import { DbtSourceModel } from '../../Canvas';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
-import { pollTaskStatus } from '../StatisticsPane'; 
+import { pollTaskStatus } from '../StatisticsPane';
 
 // Mock external dependencies
 jest.mock('@/helpers/http', () => ({
@@ -20,9 +20,6 @@ jest.mock('@/contexts/FlowEditorPreviewContext', () => ({
   usePreviewAction: jest.fn(),
 }));
 
-
-
-  
 // Mock session and context
 const mockSession: Session = {};
 const mockToastContext = {};
@@ -39,7 +36,6 @@ const mockPreviewAction = {
     input_name: 'test_table',
   } as DbtSourceModel,
 };
-
 
 describe('StatisticsPane', () => {
   beforeEach(() => {
@@ -78,7 +74,9 @@ describe('StatisticsPane', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/No data \(0 rows\) available to generate insights/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/No data \(0 rows\) available to generate insights/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -101,14 +99,13 @@ describe('StatisticsPane', () => {
     );
 
     // Check for table header
-    await waitFor(()=>{
-        expect(screen.getByText(/Column name/i)).toBeInTheDocument();
-        expect(screen.getByText(/Column type/i)).toBeInTheDocument();
-        expect(screen.getByText(/Distinct/i)).toBeInTheDocument();
-        expect(screen.getByText(/Null/i)).toBeInTheDocument();
-        expect(screen.getByText(/Data distribution/i)).toBeInTheDocument();
-    })
- 
+    await waitFor(() => {
+      expect(screen.getByText(/Column name/i)).toBeInTheDocument();
+      expect(screen.getByText(/Column type/i)).toBeInTheDocument();
+      expect(screen.getByText(/Distinct/i)).toBeInTheDocument();
+      expect(screen.getByText(/Null/i)).toBeInTheDocument();
+      expect(screen.getByText(/Data distribution/i)).toBeInTheDocument();
+    });
   });
 
   it('renders select a table message when no model is selected', () => {
@@ -153,9 +150,7 @@ describe('StatisticsPane', () => {
     ).rejects.toEqual({ reason: 'Failed' });
   });
 
-
-
-//can add polling test
+  //can add polling test
 
   it('should retry and eventually reject on error', async () => {
     const mockError = new Error('Network Error');
