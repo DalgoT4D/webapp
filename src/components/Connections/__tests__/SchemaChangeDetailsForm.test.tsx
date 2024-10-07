@@ -201,13 +201,7 @@ describe('SchemaChangeDetailsForm', () => {
     fireEvent.click(screen.getByText('Yes, I approve'));
 
     await waitFor(() => expect(httpPost).toHaveBeenCalledTimes(1));
-    await waitFor(() =>
-      expect(successToast).toHaveBeenCalledWith(
-        'Initiated schema update changes',
-        [],
-        mockContextValue
-      )
-    );
+    await waitFor(() => expect(successToast).toHaveBeenCalledWith('Success', [], mockContextValue));
     jest.useRealTimers(); // Restore real timers
   });
 
