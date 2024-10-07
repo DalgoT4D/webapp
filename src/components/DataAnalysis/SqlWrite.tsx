@@ -6,6 +6,7 @@ import { errorToast } from '../ToastMessage/ToastHelper';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import InfoTooltip from '../UI/Tooltip/Tooltip';
+import { useTracking } from '@/contexts/TrackingContext';
 interface Prompt {
   id: string;
   label: string;
@@ -35,7 +36,7 @@ export const SqlWrite = memo(
     const globalContext = useContext(GlobalContext);
     const [tempLoading, setTempLoading] = useState(false);
     const [sqlQueryLimit, setSqlQueryLimit] = useState<number>(500); //deafult value
-
+    const trackAmplitudeEvent: any = useTracking();
     const { control, setValue, watch, handleSubmit, reset } = useForm({
       defaultValues: {
         prompt: '',
@@ -73,6 +74,7 @@ export const SqlWrite = memo(
         );
         return;
       }
+      trackAmplitudeEvent(`[Get-LLMSummary] Button Clicked`);
       getLLMSummary({
         sqlText,
         user_prompt: prompt,
