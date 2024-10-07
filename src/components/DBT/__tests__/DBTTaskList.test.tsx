@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { DBTTaskList } from '../DBTTaskList';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpPost, } from '@/helpers/http';
+import { httpPost } from '@/helpers/http';
 import { TASK_DBTRUN, TASK_DBTTEST } from '@/config/constant';
 
 // Mocking dependencies
@@ -87,11 +87,7 @@ describe('DBTTaskList Component', () => {
     fireEvent.click(screen.getByTestId('task-2'));
 
     await waitFor(() => {
-      expect(httpPost).toHaveBeenCalledWith(
-        mockSession,
-        `prefect/tasks/2/run/`,
-        {}
-      );
+      expect(httpPost).toHaveBeenCalledWith(mockSession, `prefect/tasks/2/run/`, {});
     });
   });
 
@@ -113,13 +109,7 @@ describe('DBTTaskList Component', () => {
     fireEvent.click(screen.getByTestId('task-2'));
 
     await waitFor(() => {
-      expect(httpPost).toHaveBeenCalledWith(
-        mockSession,
-        `prefect/tasks/2/run/`,
-        {}
-      );
+      expect(httpPost).toHaveBeenCalledWith(mockSession, `prefect/tasks/2/run/`, {});
     });
   });
-
-
 });

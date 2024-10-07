@@ -53,14 +53,13 @@ const SourceForm = ({
 }: SourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const { handleSubmit, control, watch, reset, setValue } =
-    useForm<SourceFormInput>({
-      defaultValues: {
-        name: '',
-        sourceDef: null,
-        config: {},
-      },
-    });
+  const { handleSubmit, control, watch, reset, setValue } = useForm<SourceFormInput>({
+    defaultValues: {
+      name: '',
+      sourceDef: null,
+      config: {},
+    },
+  });
 
   const watchSelectedSourceDef = watch('sourceDef');
   const [logs, setLogs] = useState<Array<any>>([]);
@@ -80,10 +79,7 @@ const SourceForm = ({
       setLoading(true);
       (async () => {
         try {
-          const data: SourceApiResponse = await httpGet(
-            session,
-            `airbyte/sources/${sourceId}`
-          );
+          const data: SourceApiResponse = await httpGet(session, `airbyte/sources/${sourceId}`);
           setValue('name', data?.name);
           setSource(data);
 
@@ -135,9 +131,7 @@ const SourceForm = ({
               source.connectionConfiguration
             );
           } else {
-            specsConfigFields.forEach((spec: any) =>
-              setValue(spec.field, spec.default)
-            );
+            specsConfigFields.forEach((spec: any) => setValue(spec.field, spec.default));
           }
 
           setSourceDefSpecs(specsConfigFields);
@@ -248,9 +242,7 @@ const SourceForm = ({
                 id="sourceDef"
                 data-testid="autocomplete"
                 value={field.value}
-                getOptionLabel={(option) =>
-                  `${option.label} (v${option.dockerImageTag})`
-                }
+                getOptionLabel={(option) => `${option.label} (v${option.dockerImageTag})`}
                 renderOption={(props, option) => (
                   <li {...props} key={option.id}>
                     {`${option.label} (v${option.dockerImageTag})`}

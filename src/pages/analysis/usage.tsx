@@ -31,9 +31,7 @@ export default function Usage() {
     if (session?.user?.token) {
       (async () => {
         const embed_token = await fetchEmbedToken();
-        const mountHTMLElement: HTMLElement | null = document.getElementById(
-          'dashboard-container'
-        );
+        const mountHTMLElement: HTMLElement | null = document.getElementById('dashboard-container');
         if (mountHTMLElement && embed_token) {
           embedDashboard({
             id: usageDashboardId || '',
@@ -58,12 +56,7 @@ export default function Usage() {
       <PageHead title="Dalgo | Usage" />
       <main className={styles.usage}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography
-            sx={{ fontWeight: 700 }}
-            variant="h4"
-            gutterBottom
-            color="#000"
-          >
+          <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
             Usage Dashboard
           </Typography>
         </Box>
@@ -77,16 +70,12 @@ export default function Usage() {
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
               <Typography variant="h6">
                 Please contact the Dalgo team at{' '}
-                <a href="mailto:support@dalgo.in">support@dalgo.in</a> for more
-                information
+                <a href="mailto:support@dalgo.in">support@dalgo.in</a> for more information
               </Typography>
             </Box>
           </>
         ) : (
-          <div
-            id="dashboard-container"
-            className={styles.embeddedsuperset}
-          ></div>
+          <div id="dashboard-container" className={styles.embeddedsuperset}></div>
         )}
       </main>
     </>

@@ -160,9 +160,7 @@ describe('SchemaChangeDetailsForm', () => {
 
     await waitFor(() => expect(httpGet).toHaveBeenCalledTimes(2));
 
-    await waitFor(() =>
-      expect(screen.getByText('Schema Changes')).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText('Schema Changes')).toBeInTheDocument());
 
     jest.useRealTimers(); // Restore real timers
   });
@@ -193,21 +191,11 @@ describe('SchemaChangeDetailsForm', () => {
     await waitFor(() => expect(httpGet).toHaveBeenCalledTimes(2));
     jest.advanceTimersByTime(3000);
     // Verify the presence of table changes
-    await waitFor(() =>
-      expect(screen.getByText('2 tables with changes')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('Tables Added')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('new_tab')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('New column of nulls')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('Second new column')).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText('2 tables with changes')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Tables Added')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('new_tab')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('New column of nulls')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Second new column')).toBeInTheDocument());
 
     // Submit the form
     fireEvent.click(screen.getByText('Yes, I approve'));
@@ -249,21 +237,11 @@ describe('SchemaChangeDetailsForm', () => {
     await waitFor(() => expect(httpGet).toHaveBeenCalledTimes(2));
     jest.advanceTimersByTime(3000);
     // Verify the presence of table changes
-    await waitFor(() =>
-      expect(screen.getByText('2 tables with changes')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('Tables Added')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('new_tab')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('New column of nulls')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('Second new column')).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText('2 tables with changes')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Tables Added')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('new_tab')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('New column of nulls')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Second new column')).toBeInTheDocument());
 
     // Submit the form
     fireEvent.click(screen.getByText('Yes, I approve'));
@@ -280,11 +258,7 @@ describe('SchemaChangeDetailsForm', () => {
 
     await waitFor(() => expect(httpPost).toHaveBeenCalledTimes(2));
     await waitFor(() =>
-      expect(errorToast).toHaveBeenCalledWith(
-        mockError.message,
-        [],
-        mockContextValue
-      )
+      expect(errorToast).toHaveBeenCalledWith(mockError.message, [], mockContextValue)
     );
     jest.useRealTimers();
   });
@@ -411,24 +385,12 @@ describe('SchemaChangeDetailsForm', () => {
     await waitFor(() => expect(httpGet).toHaveBeenCalledTimes(2));
     jest.advanceTimersByTime(3000);
     // Verify the presence of table changes
-    await waitFor(() =>
-      expect(screen.getByText('2 tables with changes')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('Tables Added')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('new_tab')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('New column of nulls')).toBeInTheDocument()
-    );
-    await waitFor(() =>
-      expect(screen.getByText('Second new column')).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText('2 tables with changes')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Tables Added')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('new_tab')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('New column of nulls')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Second new column')).toBeInTheDocument());
 
-    await waitFor(() =>
-      expect(screen.getByTestId('approveschemachange')).toBeDisabled()
-    );
+    await waitFor(() => expect(screen.getByTestId('approveschemachange')).toBeDisabled());
   });
 });

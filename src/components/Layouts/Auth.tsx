@@ -10,11 +10,7 @@ type AuthProps = {
   heading: string;
   subHeading?: string;
 };
-export const Auth: React.FC<AuthProps> = ({
-  heading,
-  subHeading,
-  children,
-}) => {
+export const Auth: React.FC<AuthProps> = ({ heading, subHeading, children }) => {
   return (
     <Box sx={{ width: '100%' }}>
       <Grid container columns={16}>
@@ -27,12 +23,7 @@ export const Auth: React.FC<AuthProps> = ({
             height: '100vh  ',
           }}
         >
-          <Grid
-            container
-            direction="column"
-            justifyContent="center"
-            alignItems="center"
-          >
+          <Grid container direction="column" justifyContent="center" alignItems="center">
             <Image src={Logo} alt="dalgo logo" />
             <Paper
               sx={{
@@ -53,14 +44,16 @@ export const Auth: React.FC<AuthProps> = ({
                 )}
               </Box>
               {children}
-              <Box sx={{display: 'flex', justifyContent: 'center'}}>
-                <Typography variant="body1"  >
-                    <a href="https://dalgo.in/privacy-policy/" target="_blank">Privacy Policy</a>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Typography variant="body1">
+                  <a href="https://dalgo.in/privacy-policy/" target="_blank">
+                    Privacy Policy
+                  </a>
                 </Typography>
               </Box>
             </Paper>
             <Typography variant="body1" mt={4} pb={3}>
-            {moment().year()}, DALGO ALL RIGHTS RESERVED
+              {moment().year()}, DALGO ALL RIGHTS RESERVED
             </Typography>
           </Grid>
         </Grid>

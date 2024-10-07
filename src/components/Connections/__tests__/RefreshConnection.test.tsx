@@ -69,8 +69,7 @@ describe('Refresh connection', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
+              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
             }}
           >
             <Connections />
@@ -85,8 +84,7 @@ describe('Refresh connection', () => {
     const connCells = within(connectionsTableRows[1]).getAllByRole('cell');
     expect(connCells.length).toBe(4);
 
-    const actionConnCell: any | HTMLElement | undefined =
-      connCells[3]?.firstChild;
+    const actionConnCell: any | HTMLElement | undefined = connCells[3]?.firstChild;
 
     const actionThreeDotsButton: HTMLElement | null =
       within(actionConnCell).getByTestId('MoreHorizIcon').parentElement;

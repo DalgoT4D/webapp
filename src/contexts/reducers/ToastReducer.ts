@@ -30,10 +30,7 @@ export const initialToastState = {
 
 export const initialPermissionState = [];
 
-export const PermissionReducer = (
-  state: string[],
-  updateAction: PermissionAction
-) => {
+export const PermissionReducer = (state: string[], updateAction: PermissionAction) => {
   switch (updateAction?.type) {
     case 'add':
       return updateAction.permissionState;
@@ -43,10 +40,7 @@ export const PermissionReducer = (
   }
 };
 
-export const ToastReducer = (
-  state: ToastStateInterface,
-  updateAction: ToastAction
-) => {
+export const ToastReducer = (state: ToastStateInterface, updateAction: ToastAction) => {
   switch (updateAction?.type) {
     case 'close':
       return { ...state, open: false };

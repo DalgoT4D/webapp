@@ -17,10 +17,7 @@ interface Action {
 
 export const initialOrgUsersState = [];
 
-export const OrgUsersReducer = (
-  state: Array<OrgUserStateInterface>,
-  updateAction: Action
-) => {
+export const OrgUsersReducer = (state: Array<OrgUserStateInterface>, updateAction: Action) => {
   switch (updateAction?.type) {
     case 'new':
       return updateAction.orgUsersState;

@@ -33,12 +33,10 @@ export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
                   Provide the required parameters:
                 </Typography>
                 <Typography variant="body2">
-                  1. Enter the SQL query to access data stored in your
-                  warehouse.
+                  1. Enter the SQL query to access data stored in your warehouse.
                 </Typography>
                 <Typography variant="body2">
-                  2. Select/enter a prompt to generate AI enabled insights on
-                  your data.
+                  2. Select/enter a prompt to generate AI enabled insights on your data.
                 </Typography>
               </div>
             }
@@ -71,9 +69,7 @@ export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
               onClick={handleOpenSavedSession}
             >
               <Folder />
-              <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>
-                Saved Sessions
-              </Typography>
+              <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>Saved Sessions</Typography>
             </Button>
           </Box>
           <Box sx={{ flexGrow: 1 }}>
@@ -85,9 +81,7 @@ export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
                 handleNewSession();
               }}
             >
-              <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>
-                + New
-              </Typography>
+              <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>+ New</Typography>
             </Button>
           </Box>
         </Box>

@@ -30,12 +30,7 @@ export type EntitySpec = {
   multiline?: boolean;
 };
 
-export const ConfigInput = ({
-  specs,
-  control,
-  setFormValue,
-  entity,
-}: ConfigInputprops) => {
+export const ConfigInput = ({ specs, control, setFormValue, entity }: ConfigInputprops) => {
   const [connectorSpecs, setConnectorSpecs] = useState<Array<EntitySpec>>([]);
 
   const [showPasswords, setShowPasswords] = useState<any>({});
@@ -96,9 +91,7 @@ export const ConfigInput = ({
                       sx={{ width: '100%' }}
                       label={`${spec.title}${spec.required ? '*' : ''}`}
                       variant="outlined"
-                      type={
-                        showPasswords[`${spec.field}`] ? 'text' : 'password'
-                      }
+                      type={showPasswords[`${spec.field}`] ? 'text' : 'password'}
                       multiline={spec?.multiline}
                       rows={4}
                       InputProps={{
@@ -107,9 +100,7 @@ export const ConfigInput = ({
                             {!entity ? (
                               <Box>
                                 <IconButton
-                                  onClick={() =>
-                                    handleClickShowPassword(`${spec.field}`)
-                                  }
+                                  onClick={() => handleClickShowPassword(`${spec.field}`)}
                                   edge="end"
                                 >
                                   {showPasswords[`${spec.field}`] ? (

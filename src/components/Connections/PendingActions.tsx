@@ -20,15 +20,11 @@ interface PendingActionsAccordionProps {
   refreshConnectionsList: (...args: any) => any;
 }
 
-const PendingActionsAccordion = ({
-  refreshConnectionsList,
-}: PendingActionsAccordionProps) => {
+const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccordionProps) => {
   const [schemaChangeData, setSchemaChangeData] = useState<any[]>([]);
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
-  const [connectionNameMap, setConnectionNameMap] = useState<
-    Record<string, string>
-  >({});
+  const [connectionNameMap, setConnectionNameMap] = useState<Record<string, string>>({});
   const { data: session }: any = useSession();
 
   const handleViewClick = (connectionId: string) => {
@@ -38,16 +34,10 @@ const PendingActionsAccordion = ({
 
   const fetchData = async () => {
     try {
-      const schemaChangeResponse = await httpGet(
-        session,
-        'airbyte/v1/connection/schema_change'
-      );
+      const schemaChangeResponse = await httpGet(session, 'airbyte/v1/connection/schema_change');
       setSchemaChangeData(schemaChangeResponse);
 
-      const connectionDataResponse = await httpGet(
-        session,
-        'airbyte/v1/connections'
-      );
+      const connectionDataResponse = await httpGet(session, 'airbyte/v1/connections');
       const connectionMap: Record<string, string> = {};
       connectionDataResponse.forEach((connection: any) => {
         connectionMap[connection.connectionId] = connection.name;
@@ -89,8 +79,7 @@ const PendingActionsAccordion = ({
 
               const labelStyles = {
                 color: schemaChangeType === 'breaking' ? 'white' : '#D35D5D',
-                backgroundColor:
-                  schemaChangeType === 'breaking' ? '#D35D5D' : 'transparent',
+                backgroundColor: schemaChangeType === 'breaking' ? '#D35D5D' : 'transparent',
                 border: `1px solid #D35D5D`,
                 borderRadius: '3px',
                 padding: '2px 6px',
@@ -109,30 +98,18 @@ const PendingActionsAccordion = ({
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Image
-                      style={{ marginRight: 10 }}
-                      src={connectionIcon}
-                      alt="connection icon"
-                    />
+                    <Image style={{ marginRight: 10 }} src={connectionIcon} alt="connection icon" />
                     <Typography variant="body1" fontWeight={800}>
                       {connectionName} &nbsp;&nbsp;&nbsp;
                       {schemaChangeType && (
                         <Typography component="span" sx={labelStyles}>
-                          {schemaChangeType === 'breaking'
-                            ? 'Breaking'
-                            : 'Updates'}
+                          {schemaChangeType === 'breaking' ? 'Breaking' : 'Updates'}
                         </Typography>
                       )}
                     </Typography>
                   </Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 'bold' }}
-                  ></Typography>
-                  <Button
-                    variant="outlined"
-                    onClick={() => handleViewClick(connectionId)}
-                  >
+                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}></Typography>
+                  <Button variant="outlined" onClick={() => handleViewClick(connectionId)}>
                     View
                   </Button>
                 </Box>

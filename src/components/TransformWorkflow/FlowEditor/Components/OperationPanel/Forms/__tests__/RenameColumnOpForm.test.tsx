@@ -86,16 +86,12 @@ describe('Form interactions', () => {
 
     // validations to be called
     await waitFor(() => {
-      expect(
-        screen.getByText('Alteast one column is required')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Alteast one column is required')).toBeInTheDocument();
     });
 
     await fireMultipleKeyDown('currentName0', 2);
 
-    const newName0 = screen
-      .getByTestId('newName0')
-      .querySelector('input') as HTMLInputElement;
+    const newName0 = screen.getByTestId('newName0').querySelector('input') as HTMLInputElement;
 
     await user.type(newName0, 'updated_name');
 
@@ -103,9 +99,7 @@ describe('Form interactions', () => {
 
     await fireMultipleKeyDown('currentName1', 2);
 
-    const newName1 = screen
-      .getByTestId('newName1')
-      .querySelector('input') as HTMLInputElement;
+    const newName1 = screen.getByTestId('newName1').querySelector('input') as HTMLInputElement;
 
     await user.type(newName1, 'updated_name1');
 

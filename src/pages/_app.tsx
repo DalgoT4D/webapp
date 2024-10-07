@@ -9,10 +9,7 @@ import { StyledEngineProvider } from '@mui/material/styles';
 import { Main } from '@/components/Layouts/Main';
 import ContextProvider from '@/contexts/ContextProvider';
 import { TrackingProvider } from '@/contexts/TrackingContext';
-export default function App({
-  Component,
-  pageProps: { session, ...pageProps },
-}: AppProps) {
+export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
     <ContextProvider value={1}>
       <main className={rajdhani.className}>
@@ -20,11 +17,11 @@ export default function App({
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <SessionProvider session={session} refetchOnWindowFocus={false}>
-                <Main>
-              <TrackingProvider session={session} >
+              <Main>
+                <TrackingProvider session={session}>
                   <Component {...pageProps} />
-              </TrackingProvider>
-                </Main>
+                </TrackingProvider>
+              </Main>
             </SessionProvider>
           </ThemeProvider>
         </StyledEngineProvider>

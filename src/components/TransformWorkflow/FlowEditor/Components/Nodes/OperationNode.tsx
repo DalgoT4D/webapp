@@ -3,15 +3,8 @@ import 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { OperationNodeType } from '../Canvas';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {
-  OPERATION_NODE,
-  operationIconMapping,
-  operations,
-} from '../../constant';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { OPERATION_NODE, operationIconMapping, operations } from '../../constant';
+import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Image from 'next/image';
@@ -26,17 +19,12 @@ export function OperationNode(node: OperationNodeType) {
   const { setCanvasNode, canvasNode } = useCanvasNode();
   const { setPreviewAction } = usePreviewAction();
 
-  const edgesGoingIntoNode: Edge[] = edges.filter(
-    (edge: Edge) => edge.target === nodeId
-  );
-  const edgesEmanatingOutOfNode: Edge[] = edges.filter(
-    (edge: Edge) => edge.source === nodeId
-  );
+  const edgesGoingIntoNode: Edge[] = edges.filter((edge: Edge) => edge.target === nodeId);
+  const edgesEmanatingOutOfNode: Edge[] = edges.filter((edge: Edge) => edge.source === nodeId);
 
   // can only delete/chain more ops if this node doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean =
-    permissions.includes('can_delete_dbt_operation') &&
-    edgesEmanatingOutOfNode.length <= 0;
+    permissions.includes('can_delete_dbt_operation') && edgesEmanatingOutOfNode.length <= 0;
 
   const handleDeleteAction = () => {
     setCanvasAction({
@@ -45,9 +33,7 @@ export function OperationNode(node: OperationNodeType) {
         nodeId: nodeId,
         nodeType: node.type,
         shouldRefreshGraph:
-          edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0
-            ? false
-            : true,
+          edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0 ? false : true,
         isDummy: node.data?.isDummy,
       },
     });
@@ -86,10 +72,7 @@ export function OperationNode(node: OperationNodeType) {
       onClick={handleSelectNode}
       data-testid="nodeselectbox"
       sx={{
-        border:
-          node.id === canvasNode?.id || node.data?.isDummy
-            ? '2px solid black'
-            : '0px',
+        border: node.id === canvasNode?.id || node.data?.isDummy ? '2px solid black' : '0px',
         borderRadius: '5px',
         borderStyle: 'dotted',
       }}
@@ -123,10 +106,7 @@ export function OperationNode(node: OperationNodeType) {
               justifyContent: 'center',
             }}
           >
-            <Image
-              src={operationIconMapping[node.data?.config.type]}
-              alt="operation icon"
-            ></Image>
+            <Image src={operationIconMapping[node.data?.config.type]} alt="operation icon"></Image>
             {isDeletable && (
               <IconButton
                 sx={{ position: 'absolute', right: -15, top: -15 }}
@@ -150,14 +130,8 @@ export function OperationNode(node: OperationNodeType) {
               overflow: 'hidden',
             }}
           >
-            <Typography
-              fontWeight="600"
-              fontSize="12px"
-              padding="8px"
-              sx={{ textAlign: 'center' }}
-            >
-              {operations.find((op) => op.slug === node.data.config?.type)
-                ?.label || 'Not found'}
+            <Typography fontWeight="600" fontSize="12px" padding="8px" sx={{ textAlign: 'center' }}>
+              {operations.find((op) => op.slug === node.data.config?.type)?.label || 'Not found'}
             </Typography>
           </Box>
         </Box>

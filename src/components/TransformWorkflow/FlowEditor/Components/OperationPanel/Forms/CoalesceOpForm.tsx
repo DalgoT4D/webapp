@@ -1,17 +1,8 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Box,
-  Button,
-  FormHelperText,
-  FormLabel,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button, FormHelperText, FormLabel, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -19,6 +10,7 @@ import Input from '@/components/UI/Input/Input';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 const renameGridStyles: {
   container: SxProps;
@@ -59,12 +51,16 @@ const CoalesceOpForm = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    },
+  });
 
   const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
@@ -106,10 +102,10 @@ const CoalesceOpForm = ({
   };
 
   const handleSave = async (data: any) => {
+    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      const coalesceColumns = data.columns
-        .map((col: any) => col.col)
-        .filter((col: string) => col);
+      const coalesceColumns = data.columns.map((col: any) => col.col).filter((col: string) => col);
 
       const postData: any = {
         op_type: operation.slug,
@@ -120,28 +116,22 @@ const CoalesceOpForm = ({
           default_value: data.default_value,
           output_column_name: data.output_column_name,
         },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
-      if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
-      } else if (action === 'edit') {
+      if (finalAction === 'create') {
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -166,12 +156,8 @@ const CoalesceOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      const {
-        source_columns,
-        columns,
-        output_column_name,
-        default_value,
-      }: CoalesceDataConfig = opConfig;
+      const { source_columns, columns, output_column_name, default_value }: CoalesceDataConfig =
+        opConfig;
       setSrcColumns(source_columns);
 
       // pre-fill form
@@ -192,6 +178,7 @@ const CoalesceOpForm = ({
   };
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     } else {
@@ -218,12 +205,7 @@ const CoalesceOpForm = ({
 
           {fields.map((field, index) => (
             <Fragment key={field.id}>
-              <Grid
-                key={field + '_1'}
-                item
-                xs={2}
-                sx={{ ...renameGridStyles.item }}
-              >
+              <Grid key={field + '_1'} item xs={2} sx={{ ...renameGridStyles.item }}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -262,10 +244,7 @@ const CoalesceOpForm = ({
                       disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns
-                        .filter(
-                          (option) =>
-                            !columns.map((col) => col.col).includes(option)
-                        )
+                        .filter((option) => !columns.map((col) => col.col).includes(option))
                         .sort((a, b) => a.localeCompare(b))}
                       onChange={(data: any) => {
                         field.onChange(data);

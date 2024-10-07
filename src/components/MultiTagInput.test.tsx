@@ -32,8 +32,7 @@ describe('setup for multi tag component', () => {
 
     // Add a tag
     const multiTag: any = screen.getByTestId('test-multi-tag');
-    const multiTagInput: HTMLInputElement =
-      within(multiTag).getByRole('textbox');
+    const multiTagInput: HTMLInputElement = within(multiTag).getByRole('textbox');
     fireEvent.change(multiTagInput, { target: { value: 'tag1' } });
     // expect text box to have the input
     expect(multiTagInput.value).toBe('tag1');

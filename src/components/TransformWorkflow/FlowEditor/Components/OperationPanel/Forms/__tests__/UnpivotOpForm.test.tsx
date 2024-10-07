@@ -3,11 +3,7 @@ import UnpivotOpForm from '../UnpivotOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import {
-  intermediateTableResponse,
-  mockNode,
-  sourceModelsMock,
-} from './helpers';
+import { intermediateTableResponse, mockNode, sourceModelsMock } from './helpers';
 import { ReactFlowProvider } from 'reactflow';
 
 const user = userEvent.setup();
@@ -60,16 +56,17 @@ const props: OperationFormProps = {
     case url.includes('transform/dbt_project/model/operations/'):
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({
-          config: {
-            source_columns: ['column1', 'column2', 'column3'],
-            exclude_columns: ['column1'],
-            unpivot_columns: ['column2'],
-            unpivot_field_name: 'field_name',
-            unpivot_value_name: 'value_name',
-            input_models: [{ uuid: 'mock-uuid' }]
-          }
-        }),
+        json: () =>
+          Promise.resolve({
+            config: {
+              source_columns: ['column1', 'column2', 'column3'],
+              exclude_columns: ['column1'],
+              unpivot_columns: ['column2'],
+              unpivot_field_name: 'field_name',
+              unpivot_value_name: 'value_name',
+              input_models: [{ uuid: 'mock-uuid' }],
+            },
+          }),
       });
 
     default:
@@ -93,9 +90,7 @@ describe('Unpivot form', () => {
     render(unpivotForm);
     await waitFor(() => {
       expect(screen.getByText('Columns to unpivot')).toBeInTheDocument();
-      expect(
-        screen.getByText('Columns to keep in output table')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Columns to keep in output table')).toBeInTheDocument();
     });
   });
 });
@@ -112,9 +107,7 @@ describe('Form interactions', () => {
 
     // validations to be called
     await waitFor(() => {
-      expect(
-        screen.getByText('Atleast one column required to unpivot')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Atleast one column required to unpivot')).toBeInTheDocument();
     });
 
     const unpivotColumn1 = screen.getByTestId('unpivotColumn0');
@@ -129,8 +122,6 @@ describe('Form interactions', () => {
       expect(continueOperationChainMock).toHaveBeenCalled();
     });
   });
-
-
 
   it('deselects all columns for unpivoting when "Select all" is unchecked', async () => {
     render(unpivotForm);
@@ -177,9 +168,7 @@ describe('Form interactions', () => {
     await user.click(saveButton);
 
     await waitFor(() => {
-      expect(
-        screen.getByText('Atleast one column required to unpivot')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Atleast one column required to unpivot')).toBeInTheDocument();
     });
   });
 
@@ -208,6 +197,4 @@ describe('Form interactions', () => {
       expect(unpivotColumns.length).toBeGreaterThan(0);
     });
   });
-
-
 });

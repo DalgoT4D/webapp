@@ -3,10 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Elementary } from '../Elementary';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  successToast,
-  errorToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { successToast, errorToast } from '@/components/ToastMessage/ToastHelper';
 import { Session } from 'next-auth';
 
 // Mock the dependencies
@@ -71,9 +68,7 @@ describe('Elementary', () => {
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(screen.getByText(/Last generated:/)).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: /Regenerate report/ })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Regenerate report/ })).toBeInTheDocument();
     });
   });
 
@@ -179,11 +174,7 @@ describe('Elementary', () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledTimes(3);
-      expect(errorToast).toHaveBeenCalledWith(
-        'Failed to refresh report',
-        [],
-        expect.any(Object)
-      );
+      expect(errorToast).toHaveBeenCalledWith('Failed to refresh report', [], expect.any(Object));
     });
   });
 });

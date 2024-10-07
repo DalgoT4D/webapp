@@ -1,9 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
@@ -13,6 +12,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 interface CastDataConfig {
   source_columns: string[];
@@ -33,37 +33,34 @@ const CastColumnOp = ({
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [configData, setConfigData] = useState<any>([]);
   const globalContext = useContext(GlobalContext);
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
-
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    },
+  });
   type FormData = {
     config: { name: string; data_type: string | null }[];
   };
-
-  const { control, handleSubmit, register, reset, getValues, setValue } =
-    useForm<FormData>({
-      defaultValues: {
-        config: [
-          {
-            name: '',
-            data_type: null,
-          },
-        ] as ColumnData[],
-      },
-    });
+  const { control, handleSubmit, register, reset, getValues, setValue } = useForm<FormData>({
+    defaultValues: {
+      config: [
+        {
+          name: '',
+          data_type: null,
+        },
+      ] as ColumnData[],
+    },
+  });
 
   const { config } = getValues();
-
   const fetchDataTypes = async () => {
     try {
-      const response = await httpGet(
-        session,
-        `transform/dbt_project/data_type/`
-      );
+      const response = await httpGet(session, `transform/dbt_project/data_type/`);
       setDataTypes(response.sort((a: string, b: string) => a.localeCompare(b)));
     } catch (error) {
       console.log(error);
@@ -93,6 +90,12 @@ const CastColumnOp = ({
   };
 
   const handleSave = async (formData: FormData) => {
+    // when a new dummy node is being created we will keep the final node as table node and the final action as create action.
+    // clicking operational nodes (saved in db) has action == edit.
+    //clicking source node (table) has action == create.
+
+    const finalNode = node?.data.isDummy ? parentNode : node;
+    const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const sourceColumnsNames = config.map((column) => column.name);
 
@@ -101,8 +104,8 @@ const CastColumnOp = ({
         source_columns: sourceColumnsNames,
         other_inputs: [],
         config: { columns: [] },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
       formData.config.forEach((data: any) => {
@@ -124,21 +127,15 @@ const CastColumnOp = ({
       // Make the API call
       setLoading(true);
       let operationNode: any;
-      if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
-      } else if (action === 'edit') {
+      if (finalAction === 'create') {
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -158,6 +155,7 @@ const CastColumnOp = ({
     try {
       setLoading(true);
       const { config }: OperationNodeData = await httpGet(
+        //this here fetches the columns data.
         session,
         `transform/dbt_project/model/operations/${node?.id}/`
       );
@@ -169,12 +167,10 @@ const CastColumnOp = ({
 
       // pre-fill form
       reset({
-        config: columns.map(
-          (column: { columnname: string; columntype: string }) => ({
-            name: column.columnname,
-            data_type: column.columntype,
-          })
-        ),
+        config: columns.map((column: { columnname: string; columntype: string }) => ({
+          name: column.columnname,
+          data_type: column.columntype,
+        })),
       });
     } catch (error) {
       console.error(error);
@@ -197,7 +193,13 @@ const CastColumnOp = ({
     return index == -1 ? 0 : index;
   };
 
+  /**
+    So operation nodes can be dummy (not yet saved to db) or real (saved in db).
+    Both have nodeId, but the dummy nodes have isDummy= true field. 
+    So we dont call any api in that case.
+   **/
   useEffect(() => {
+    if (node?.data.isDummy) return;
     fetchDataTypes();
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
@@ -210,6 +212,44 @@ const CastColumnOp = ({
     setConfigData(config);
   }, [config]);
 
+  const MemoizedGridTable = useMemo(() => {
+    return (
+      <GridTable
+        headers={['Column name', 'Type']}
+        data={configData?.map((column: any, index: number) => [
+          <Input
+            data-testid={`columnName${findColumnIndex(column.name)}`}
+            key={`config.${findColumnIndex(column.name)}.name`}
+            fieldStyle="none"
+            sx={{
+              padding: '0',
+              caretColor: 'transparent',
+            }}
+            name={`config.${findColumnIndex(column.name)}.name`}
+            register={register}
+            value={column.name}
+            disabled={action === 'view'}
+          />,
+          <Controller
+            key={`config.${findColumnIndex(column.name)}.data_type`}
+            control={control}
+            name={`config.${findColumnIndex(column.name)}.data_type`}
+            render={({ field }) => (
+              <Autocomplete
+                {...field}
+                data-testid={`type${findColumnIndex(column.name)}`}
+                disabled={action === 'view'}
+                disableClearable
+                fieldStyle="none"
+                options={dataTypes}
+              />
+            )}
+          />,
+        ])}
+      ></GridTable>
+    );
+  }, [configData, dataTypes, control]);
+
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
       <Input
@@ -219,39 +259,7 @@ const CastColumnOp = ({
         onChange={(event) => handleSearch(event.target.value)}
       />
       <form onSubmit={handleSubmit(handleSave)}>
-        <GridTable
-          headers={['Column name', 'Type']}
-          data={configData?.map((column: any, index: number) => [
-            <Input
-              data-testid={`columnName${findColumnIndex(column.name)}`}
-              key={`config.${findColumnIndex(column.name)}.name`}
-              fieldStyle="none"
-              sx={{
-                padding: '0',
-                caretColor: 'transparent',
-              }}
-              name={`config.${findColumnIndex(column.name)}.name`}
-              register={register}
-              value={column.name}
-              disabled={action === 'view'}
-            />,
-            <Controller
-              key={`config.${findColumnIndex(column.name)}.data_type`}
-              control={control}
-              name={`config.${findColumnIndex(column.name)}.data_type`}
-              render={({ field }) => (
-                <Autocomplete
-                  {...field}
-                  data-testid={`type${findColumnIndex(column.name)}`}
-                  disabled={action === 'view'}
-                  disableClearable
-                  fieldStyle="none"
-                  options={dataTypes}
-                />
-              )}
-            />,
-          ])}
-        ></GridTable>
+        {MemoizedGridTable}
         <Box sx={{ m: 2 }} />
         <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', p: 2 }}>
           <Button
