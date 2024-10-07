@@ -28,11 +28,7 @@ export const castGridStyles: { [key: string]: SxProps } = {
   },
 };
 
-export const GridTable = ({
-  headers,
-  data = [[]],
-  removeItem,
-}: GridTableProps) => {
+export const GridTable = ({ headers, data = [[]], removeItem }: GridTableProps) => {
   return (
     <Table sx={castGridStyles.container}>
       <TableHead sx={castGridStyles.headerItem}>

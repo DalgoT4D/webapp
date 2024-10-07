@@ -1,14 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Box,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  FormHelperText,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, FormHelperText, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
@@ -49,8 +42,8 @@ const PivotOpForm = ({
       continueOperationChain,
       action,
       setLoading,
-    }
-  })
+    },
+  });
   type FormProps = {
     pivot_column_name: string;
     pivot_column_values: {
@@ -59,8 +52,8 @@ const PivotOpForm = ({
     source_columns: { col: string; is_checked: boolean }[];
   };
 
-  const { control, register, handleSubmit, reset, watch, formState, setValue } =
-    useForm<FormProps>({
+  const { control, register, handleSubmit, reset, watch, formState, setValue } = useForm<FormProps>(
+    {
       defaultValues: {
         pivot_column_name: '',
         pivot_column_values: [
@@ -70,7 +63,8 @@ const PivotOpForm = ({
         ],
         source_columns: [],
       },
-    });
+    }
+  );
 
   const pivotColumn: string = watch('pivot_column_name');
 
@@ -96,17 +90,19 @@ const PivotOpForm = ({
   });
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) { //change
+    if (node?.type === SRC_MODEL_NODE) {
+      //change
       try {
         const data: ColumnData[] = await httpGet(
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
         setSrcColumns(data.map((col: ColumnData) => col.name));
-        const col_fields = data.sort((a, b) => a.name.localeCompare(b.name))
-          .map((col: ColumnData) => ({ col: col.name, is_checked: false }))
+        const col_fields = data
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((col: ColumnData) => ({ col: col.name, is_checked: false }));
         setValue('source_columns', col_fields);
-        setColFieldData(col_fields)
+        setColFieldData(col_fields);
       } catch (error) {
         console.log(error);
       }
@@ -130,9 +126,7 @@ const PivotOpForm = ({
       const postData: any = {
         op_type: operation.slug,
         source_columns: data.source_columns
-          .filter(
-            (src_col) => src_col.is_checked && src_col.col !== pivotColumn
-          )
+          .filter((src_col) => src_col.is_checked && src_col.col !== pivotColumn)
           .map((src_col) => src_col.col),
         config: {
           pivot_column_name: data.pivot_column_name,
@@ -148,17 +142,11 @@ const PivotOpForm = ({
       // api call
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${finalNode?.id}/`,
@@ -187,16 +175,10 @@ const PivotOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      const {
-        source_columns,
-        pivot_column_name,
-        pivot_column_values,
-      }: PivotDataConfig = opConfig;
+      const { source_columns, pivot_column_name, pivot_column_values }: PivotDataConfig = opConfig;
       let orginalSrcColumns: string[] = [];
       if (prev_source_columns) {
-        orginalSrcColumns = prev_source_columns.sort((a, b) =>
-          a.localeCompare(b)
-        );
+        orginalSrcColumns = prev_source_columns.sort((a, b) => a.localeCompare(b));
       }
       setSrcColumns(orginalSrcColumns);
 
@@ -215,8 +197,7 @@ const PivotOpForm = ({
           .concat([{ col: '' }]),
         source_columns: groupbySourceColumns,
       });
-      setColFieldData(groupbySourceColumns)
-
+      setColFieldData(groupbySourceColumns);
     } catch (error) {
       console.error(error);
     } finally {
@@ -229,9 +210,9 @@ const PivotOpForm = ({
     const filteredColumns = srcColFields?.filter((colField) => {
       const stringToSearch = colField?.col?.toLowerCase();
       return stringToSearch?.includes(trimmedSubstring);
-    })
-    setColFieldData(filteredColumns)
-  }
+    });
+    setColFieldData(filteredColumns);
+  };
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Filter the fields based on the search results stored in colFieldData
@@ -245,11 +226,11 @@ const PivotOpForm = ({
       is_checked: event.target.checked,
     }));
 
-    setColFieldData(updatedFields)
+    setColFieldData(updatedFields);
 
     // Merge the updated fields with the original unpivotColFields
-    const mergedFields = srcColFields.map((field) =>
-      updatedFields.find((updatedField) => updatedField.col === field.col) || field
+    const mergedFields = srcColFields.map(
+      (field) => updatedFields.find((updatedField) => updatedField.col === field.col) || field
     );
 
     replace(mergedFields);
@@ -262,19 +243,18 @@ const PivotOpForm = ({
         return {
           col: field.col,
           is_checked: event.target.checked,
-        }
+        };
       }
       return colField;
-    }
-    );
-    const originalIndex = srcColFields?.findIndex((colField) => colField.col == field.col)
+    });
+    const originalIndex = srcColFields?.findIndex((colField) => colField.col == field.col);
 
     update(originalIndex, {
       col: field.col,
       is_checked: event.target.checked,
     });
     setColFieldData(updatedFields);
-  }
+  };
 
   useEffect(() => {
     if (node?.data.isDummy) return;
@@ -287,13 +267,13 @@ const PivotOpForm = ({
 
   useEffect(() => {
     if (colFieldData?.length > 0) {
-      let selectAll = true
+      let selectAll = true;
       colFieldData?.forEach((colField) => {
         if (!colField.is_checked) selectAll = false;
-      })
-      setSelectAllCheckbox(selectAll)
+      });
+      setSelectAllCheckbox(selectAll);
     }
-  }, [colFieldData])
+  }, [colFieldData]);
 
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
@@ -323,9 +303,7 @@ const PivotOpForm = ({
                 onChange={(data: any) => {
                   field.onChange(data);
                   if (data) {
-                    const findIndex: number = srcColFields.findIndex(
-                      (field) => field.col === data
-                    );
+                    const findIndex: number = srcColFields.findIndex((field) => field.col === data);
                     update(findIndex, {
                       col: srcColFields[findIndex].col,
                       is_checked: false,
@@ -377,7 +355,7 @@ const PivotOpForm = ({
           fieldStyle="transformation"
           sx={{ px: 1, pb: 1 }}
           placeholder="Search by column name"
-          onChange={event => handleSearch(event.target.value)}
+          onChange={(event) => handleSearch(event.target.value)}
         />
         <GridTable
           headers={['Columns to groupby']}
@@ -399,9 +377,8 @@ const PivotOpForm = ({
                       <Checkbox
                         checked={selectAllCheckbox}
                         disabled={action === 'view'}
-                        onChange={(
-                          event: React.ChangeEvent<HTMLInputElement>
-                        ) => handleSelectAll(event)
+                        onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                          handleSelectAll(event)
                         }
                       />
                     }
@@ -434,9 +411,9 @@ const PivotOpForm = ({
                     <Checkbox
                       disabled={field.col === pivotColumn || action === 'view'}
                       checked={field.is_checked}
-                      onChange={(
-                        event: React.ChangeEvent<HTMLInputElement>
-                      ) => handleUpdate(event, idx)}
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                        handleUpdate(event, idx)
+                      }
                     />
                   }
                   label=""

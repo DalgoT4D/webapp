@@ -23,7 +23,6 @@ jest.mock('./../DestinationForm', () => {
   return MockDestination;
 });
 
-
 describe('Destinations', () => {
   const mockSession: Session = {
     expires: '1',
@@ -111,19 +110,14 @@ describe('Destinations', () => {
       value={{
         CurrentOrg: { state: { is_demo: false } },
         Permissions: {
-          state: [
-            'can_edit_warehouse',
-            'can_create_warehouse',
-            'can_delete_warehouse',
-          ],
+          state: ['can_edit_warehouse', 'can_create_warehouse', 'can_delete_warehouse'],
         },
       }}
     >
       <SWRConfig
         value={{
           dedupingInterval: 0,
-          fetcher: (resource) =>
-            mockFunction(resource, {}).then((res: any) => res.json()),
+          fetcher: (resource) => mockFunction(resource, {}).then((res: any) => res.json()),
           provider: () => new Map(),
         }}
       >
@@ -173,12 +167,8 @@ describe('Destinations', () => {
     expect(dataset_id).toHaveTextContent('DATASET_ID');
     const loading_method = screen.getByTestId('loadingMethod');
     expect(loading_method).toHaveTextContent('GCS Staging');
-    const gcs_bucket_name_and_path = screen.getByTestId(
-      'gCSBucket&amp;Path'
-    );
-    expect(gcs_bucket_name_and_path).toHaveTextContent(
-      'gcs_bucket_name / gcs_bucket_path'
-    );
+    const gcs_bucket_name_and_path = screen.getByTestId('gCSBucket&amp;Path');
+    expect(gcs_bucket_name_and_path).toHaveTextContent('gcs_bucket_name / gcs_bucket_path');
     const abworkspace = screen.getByTestId('airbyteWorkspaceID');
     expect(abworkspace).toHaveTextContent('WORKSPACE_ID');
 
@@ -211,9 +201,7 @@ describe('Destinations', () => {
 
     // Open create destination form
     await act(async () => userEvent.click(addNewWarehouseButton));
-    const mockCreateDestinationForm = screen.getByTestId(
-      'test-dest-form'
-    );
+    const mockCreateDestinationForm = screen.getByTestId('test-dest-form');
     expect(mockCreateDestinationForm).toBeInTheDocument();
   });
 });

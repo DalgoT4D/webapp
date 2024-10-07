@@ -39,9 +39,7 @@ export const TrackingProvider = ({ children }: any) => {
     });
     if (session?.user?.email) {
       const userEmail: string = session.user.email;
-      const ist4dMember = userEmail.includes('projecttech4dev.org')
-        ? true
-        : false; // a field to check if a user is t4d member.
+      const ist4dMember = userEmail.includes('projecttech4dev.org') ? true : false; // a field to check if a user is t4d member.
       const identifyEvent = new amplitude.Identify();
       amplitude.setUserId(session.user.email);
       identifyEvent.setOnce('ist4dMember', ist4dMember);
@@ -57,35 +55,24 @@ export const TrackingProvider = ({ children }: any) => {
         userEmail: session?.user?.email,
         page_domain: window.location.hostname,
         page_location: window.location.href,
-        page_path: extractPath(
-          window.location.pathname + window.location.search
-        ),
+        page_path: extractPath(window.location.pathname + window.location.search),
         page_title: document.title,
         page_url: window.location.href,
         referrer: document.referrer,
-        referring_domain: document.referrer
-          ? new URL(document.referrer).hostname
-          : '',
+        referring_domain: document.referrer ? new URL(document.referrer).hostname : '',
       });
 
-      amplitude.logEvent(
-        `[${router.pathname}${window.location.search}] Page Viewed`,
-        {
-          userCurrentOrg: globalContext.CurrentOrg.state.name,
-          userEmail: session?.user?.email,
-          page_domain: window.location.hostname,
-          page_location: window.location.href,
-          page_path: extractPath(
-            window.location.pathname + window.location.search
-          ),
-          page_title: document.title,
-          page_url: window.location.href,
-          referrer: document.referrer,
-          referring_domain: document.referrer
-            ? new URL(document.referrer).hostname
-            : '',
-        }
-      );
+      amplitude.logEvent(`[${router.pathname}${window.location.search}] Page Viewed`, {
+        userCurrentOrg: globalContext.CurrentOrg.state.name,
+        userEmail: session?.user?.email,
+        page_domain: window.location.hostname,
+        page_location: window.location.href,
+        page_path: extractPath(window.location.pathname + window.location.search),
+        page_title: document.title,
+        page_url: window.location.href,
+        referrer: document.referrer,
+        referring_domain: document.referrer ? new URL(document.referrer).hostname : '',
+      });
     }
   }, [router.pathname, session, globalContext?.CurrentOrg]);
   useEffect(() => {
@@ -95,10 +82,7 @@ export const TrackingProvider = ({ children }: any) => {
       amplitude.identify(identifyEvent);
     }
   }, [globalContext?.CurrentOrg]);
-  const trackEvent = (
-    eventName: string,
-    additionalData: Record<string, any> = {}
-  ) => {
+  const trackEvent = (eventName: string, additionalData: Record<string, any> = {}) => {
     amplitude.track(eventName, {
       timestamp: new Date(),
       ...eventProperties,
@@ -106,11 +90,7 @@ export const TrackingProvider = ({ children }: any) => {
     });
   };
 
-  return (
-    <TrackingContext.Provider value={trackEvent}>
-      {children}
-    </TrackingContext.Provider>
-  );
+  return <TrackingContext.Provider value={trackEvent}>{children}</TrackingContext.Provider>;
 };
 
 export const useTracking = () => {

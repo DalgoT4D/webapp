@@ -95,8 +95,7 @@ describe('Connections Setup', () => {
         <SWRConfig
           value={{
             dedupingInterval: 0,
-            fetcher: (resource) =>
-              fetch(resource, {}).then((res) => res.json()),
+            fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
           }}
         >
           <Connections />
@@ -114,9 +113,7 @@ describe('Connections Setup', () => {
   it('check empty list', () => {
     render(connections);
 
-    expect(
-      screen.getByText('No connection found. Please create one')
-    ).toBeInTheDocument();
+    expect(screen.getByText('No connection found. Please create one')).toBeInTheDocument();
   });
 
   it('check connections list', async () => {
@@ -135,9 +132,7 @@ describe('Connections Setup', () => {
 
     // Check if connections name is shown in the list
     for (let i = 0; i < CONNECTIONS.length; i++) {
-      const connCells = within(connectionsTableRows[i + 1]).getAllByRole(
-        'cell'
-      );
+      const connCells = within(connectionsTableRows[i + 1]).getAllByRole('cell');
       expect(connCells.length).toBe(4);
       expect(connCells[0].textContent).toBe(CONNECTIONS[i]['name']);
       expect(connCells[1].textContent).toBe(
@@ -149,9 +144,7 @@ describe('Connections Setup', () => {
       );
       expect(connCells[2].textContent).toBe(
         lastRunTime(CONNECTIONS[i]['lastRun']['startTime']) +
-          (CONNECTIONS[i]['lastRun']['status'] === 'COMPLETED'
-            ? 'success'
-            : 'failed') +
+          (CONNECTIONS[i]['lastRun']['status'] === 'COMPLETED' ? 'success' : 'failed') +
           'View history'
       );
     }

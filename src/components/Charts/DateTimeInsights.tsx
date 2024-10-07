@@ -56,28 +56,18 @@ const arrowStyles: SxProps = {
   },
 };
 
-const pollTaskStatus = async (
-  session: Session | null,
-  taskId: string,
-  interval = 5000
-) => {
+const pollTaskStatus = async (session: Session | null, taskId: string, interval = 5000) => {
   // const orgSlug = globalContext?.CurrentOrg.state.slug;
   const hashKey = `data-insights`;
   const taskUrl = `tasks/${taskId}?hashkey=${hashKey}`;
 
-  const poll = async (
-    resolve: (value?: unknown) => void,
-    reject: (reason?: any) => void
-  ) => {
+  const poll = async (resolve: (value?: unknown) => void, reject: (reason?: any) => void) => {
     try {
       const response = await httpGet(session, taskUrl);
       const latestProgress = response.progress[response.progress.length - 1];
       if (latestProgress.status === 'completed') {
         resolve(latestProgress.results);
-      } else if (
-        latestProgress.status === 'failed' ||
-        latestProgress.status === 'error'
-      ) {
+      } else if (latestProgress.status === 'failed' || latestProgress.status === 'error') {
         reject({ reason: 'Failed' });
       } else {
         setTimeout(() => poll(resolve, reject), interval);
@@ -99,9 +89,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
 }) => {
   const { data: session } = useSession();
   const [chartType, setChartType] = useState(type);
-  const [newData, setNewData] = useState<
-    'available' | 'loading' | 'unavailable'
-  >('available');
+  const [newData, setNewData] = useState<'available' | 'loading' | 'unavailable'>('available');
 
   const [barChartData, setBarChartData] = useState(
     barProps.data.map((data: any) => ({
@@ -117,8 +105,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
   });
 
   const updateOffset = async (type: 'increase' | 'decrease') => {
-    let newOffset =
-      type === 'increase' ? filter.offset + 10 : filter.offset - 10;
+    let newOffset = type === 'increase' ? filter.offset + 10 : filter.offset - 10;
 
     if (newOffset < 0) newOffset = 0;
 
@@ -150,15 +137,11 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
 
     const metricsApiUrl = `warehouse/insights/metrics/`;
 
-    const metrics: { task_id: string } = await httpPost(
-      session,
-      metricsApiUrl,
-      {
-        ...postBody,
-        filter: newFilter,
-        refresh: true,
-      }
-    );
+    const metrics: { task_id: string } = await httpPost(session, metricsApiUrl, {
+      ...postBody,
+      filter: newFilter,
+      refresh: true,
+    });
 
     await delay(1000);
 
@@ -202,9 +185,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
             {newData === 'loading' && <Skeleton height={100} width={700} />}
             {newData === 'available' && <BarChart data={barChartData} />}
             {newData === 'unavailable' && (
-              <Box sx={{ width: 700, textAlign: 'center' }}>
-                No Data available
-              </Box>
+              <Box sx={{ width: 700, textAlign: 'center' }}>No Data available</Box>
             )}
             <Box
               sx={{
@@ -254,10 +235,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
                 alignItems: 'center',
               }}
             >
-              <Box sx={{ ml: 1 }}>
-                {' '}
-                {moment(minDate).format('ddd, Do MMMM, YYYY')}
-              </Box>
+              <Box sx={{ ml: 1 }}> {moment(minDate).format('ddd, Do MMMM, YYYY')}</Box>
             </Box>
           </Box>
           <Box sx={{ pt: 3 }}>TO</Box>
@@ -273,9 +251,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
                 alignItems: 'center',
               }}
             >
-              <Box sx={{ ml: 1 }}>
-                {moment(maxDate).format('ddd, Do MMMM, YYYY')}
-              </Box>
+              <Box sx={{ ml: 1 }}>{moment(maxDate).format('ddd, Do MMMM, YYYY')}</Box>
             </Box>
           </Box>
           <Box sx={{ m: '0px' }}>
@@ -290,10 +266,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
                 alignItems: 'center',
               }}
             >
-              <Box sx={{ ml: 1 }}>
-                {' '}
-                {moment(maxDate).diff(moment(minDate), 'days')}
-              </Box>
+              <Box sx={{ ml: 1 }}> {moment(maxDate).diff(moment(minDate), 'days')}</Box>
             </Box>
           </Box>
         </Box>
@@ -302,9 +275,7 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
         <Image
           style={{ cursor: 'pointer' }}
           src={switchIcon}
-          onClick={() =>
-            setChartType(chartType === 'chart' ? 'numbers' : 'chart')
-          }
+          onClick={() => setChartType(chartType === 'chart' ? 'numbers' : 'chart')}
           alt="switch icon"
         />
       </Box>

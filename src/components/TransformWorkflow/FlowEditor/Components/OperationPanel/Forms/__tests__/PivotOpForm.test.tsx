@@ -67,9 +67,7 @@ describe('Pivot form', () => {
   it('renders correct initial form state', async () => {
     render(pivotForm);
     await waitFor(() => {
-      expect(
-        screen.getByText('Select Column to pivot on*')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Select Column to pivot on*')).toBeInTheDocument();
       expect(screen.getByText('Column values to pivot on')).toBeInTheDocument();
       expect(screen.getByText('Columns to groupby')).toBeInTheDocument();
     });
@@ -89,9 +87,7 @@ describe('Form interactions', () => {
     // validations to be called
     await waitFor(() => {
       expect(screen.getByText('Pivot Column is required')).toBeInTheDocument();
-      expect(
-        screen.getByText('Atleast one value is required')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Atleast one value is required')).toBeInTheDocument();
     });
 
     await fireMultipleKeyDown('pivot', 2);

@@ -158,11 +158,11 @@ export const copyToClipboard = (dataToCopy: any) => {
   return navigator.clipboard
     .writeText(dataToCopy)
     .then(() => {
-      return true; 
+      return true;
     })
     .catch((err) => {
       console.error('Failed to copy text: ', err);
-      return false;  
+      return false;
     });
 };
 

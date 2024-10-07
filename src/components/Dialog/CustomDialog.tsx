@@ -52,19 +52,14 @@ const CustomDialog: React.FC<CustomDialogProps> = ({
         </Box>
       </DialogTitle>
       <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ minWidth: '400px', py: 0 }}>
-          {formContent}
-        </DialogContent>
+        <DialogContent sx={{ minWidth: '400px', py: 0 }}>{formContent}</DialogContent>
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'center',
           }}
         >
-          <Backdrop
-            open={loading !== undefined ? loading : false}
-            sx={{ zIndex: '100' }}
-          >
+          <Backdrop open={loading !== undefined ? loading : false} sx={{ zIndex: '100' }}>
             <CircularProgress data-testid="circularprogress" color="info" />
           </Backdrop>
         </Box>

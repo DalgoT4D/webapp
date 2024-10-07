@@ -5,10 +5,7 @@ import styles from '@/styles/Login.module.css';
 import { useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import LogoutIcon from '@/assets/icons/logout.svg';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
 import { httpGet } from '../../helpers/http';
 import Image from 'next/image';

@@ -1,13 +1,5 @@
 import * as React from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  Collapse,
-  IconButton,
-} from '@mui/material';
+import { Box, Button, Card, CardActions, CardContent, Collapse, IconButton } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export type FlowRunLogMessage = {

@@ -27,8 +27,7 @@ const props: OperationFormProps = {
   operation: {
     label: 'Cast',
     slug: 'castdatatypes',
-    infoToolTip:
-      "Convert a column's values (of any type) into a specified datatype",
+    infoToolTip: "Convert a column's values (of any type) into a specified datatype",
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,
@@ -93,12 +92,8 @@ describe('AggregationOpForm', () => {
     await waitFor(() => {
       expect(screen.getByText('Column name')).toBeInTheDocument();
       expect(screen.getByText('Type')).toBeInTheDocument();
-      expect(
-        screen.getByTestId('columnName0').querySelector('input')
-      ).toHaveValue('salinity');
-      expect(
-        screen.getByTestId('columnName1').querySelector('input')
-      ).toHaveValue('Multiple');
+      expect(screen.getByTestId('columnName0').querySelector('input')).toHaveValue('salinity');
+      expect(screen.getByTestId('columnName1').querySelector('input')).toHaveValue('Multiple');
     });
   });
 });

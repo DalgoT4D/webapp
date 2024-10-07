@@ -58,9 +58,7 @@ describe('Create workspace', () => {
   it('submit form to create workspace - failure', async () => {
     const createWorkspaceFetch = jest.fn().mockResolvedValueOnce({
       ok: false,
-      json: jest
-        .fn()
-        .mockResolvedValueOnce({ detail: "couldn't create workspace" }),
+      json: jest.fn().mockResolvedValueOnce({ detail: "couldn't create workspace" }),
     });
 
     global.fetch = createWorkspaceFetch;

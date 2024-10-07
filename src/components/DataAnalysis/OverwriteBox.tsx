@@ -1,14 +1,9 @@
 import React, { useEffect } from 'react';
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 import CustomDialog from '../Dialog/CustomDialog';
 import { useForm, Controller } from 'react-hook-form';
 import { MODALS } from './LLMSummary';
+import { useTracking } from '@/contexts/TrackingContext';
 // Define the form data type
 interface FormData {
   sessionName: string;
@@ -36,6 +31,7 @@ export const OverWriteDialog = ({
   handleNewSession: (x: boolean) => void;
   oldSessionName: string;
 }) => {
+  const trackAmplitudeEvent: any = useTracking();
   const {
     control,
     handleSubmit,
@@ -69,8 +65,7 @@ export const OverWriteDialog = ({
     SAVE: {
       mainheading: 'Save as',
       label: 'Session name',
-      subHeading:
-        'Please name the configuration before saving it in the warehouse',
+      subHeading: 'Please name the configuration before saving it in the warehouse',
       buttons: [
         {
           label: 'Save',
@@ -80,7 +75,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data.sessionName, false)), // Use handleSubmit from react-hook-form
+          onClick: () => {
+            trackAmplitudeEvent(`[Save-LLMSummary] Button Clicked`);
+            handleSubmit((data) => onSubmit(data.sessionName, false))(); // Use handleSubmit from react-hook-form
+          },
         },
         {
           label: 'Cancel',
@@ -97,8 +95,7 @@ export const OverWriteDialog = ({
     OVERWRITE: {
       mainheading: 'Overwrite existing session',
       label: 'Session name',
-      subHeading:
-        'The session with this name already exists. Do you want to overwrite?',
+      subHeading: 'The session with this name already exists. Do you want to overwrite?',
       buttons: [
         {
           label: 'Overwrite',
@@ -108,7 +105,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data.sessionName, true)), // Handle form submission
+          onClick: () => {
+            trackAmplitudeEvent(`[Overwrite-LLMSummary] Button Clicked`);
+            handleSubmit((data) => onSubmit(data.sessionName, true))(); // Handle form submission
+          },
         },
         {
           label: 'Save as new',
@@ -141,8 +141,7 @@ export const OverWriteDialog = ({
     CONFIRM_SAVEAS: {
       mainheading: 'Confirm save as',
       label: 'Session name',
-      subHeading:
-        'Please rename the configuration before saving it in the warehouse',
+      subHeading: 'Please rename the configuration before saving it in the warehouse',
       buttons: [
         {
           label: 'Save',
@@ -152,7 +151,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => onSubmit(data.sessionName, false)), // Use handleSubmit from react-hook-form
+          onClick: () => {
+            trackAmplitudeEvent(`[Save-LLMSummary] Button Clicked`);
+            handleSubmit((data) => onSubmit(data.sessionName, false))(); // Use handleSubmit from react-hook-form
+          },
         },
         {
           label: 'Cancel',
@@ -284,19 +286,15 @@ export const OverWriteDialog = ({
                   rows={ModalData[modalName]?.rowsNum || 1}
                   label={ModalData[modalName]?.label || ''}
                   variant="outlined"
-                  error={
-                    modalName === 'FEEDBACK_FORM'
-                      ? !!errors.feedback
-                      : !!errors.sessionName
-                  }
+                  error={modalName === 'FEEDBACK_FORM' ? !!errors.feedback : !!errors.sessionName}
                   helperText={
                     modalName === 'FEEDBACK_FORM'
                       ? errors.feedback
                         ? errors.feedback.message
                         : ''
                       : errors.sessionName
-                      ? errors.sessionName.message
-                      : ''
+                        ? errors.sessionName.message
+                        : ''
                   }
                 />
               )}

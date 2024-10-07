@@ -9,6 +9,12 @@
 yarn install
 ```
 
+## Formatter
+
+This project uses `Prettier` for code formatting to maintain consistent style across all JavaScript and TypeScript files.
+`Husky` is used as a pre-commit hook. It automatically formats the code and adds the changes to the commit if any formatting inconsistencies are found.
+
+
 ## Run the development server
 
 You will need to run the [Django backend](https://github.com/DalgoT4D/DDP_backend). Once that is running, specify its URL in the `.env` under

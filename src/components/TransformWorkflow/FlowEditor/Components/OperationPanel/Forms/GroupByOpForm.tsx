@@ -1,14 +1,7 @@
 import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Box,
-  Button,
-  FormHelperText,
-  Grid,
-  SxProps,
-  Typography,
-} from '@mui/material';
+import { Box, Button, FormHelperText, Grid, SxProps, Typography } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
@@ -67,8 +60,8 @@ const GroupByOpForm = ({
       continueOperationChain,
       action,
       setLoading,
-    }
-  })
+    },
+  });
 
   type FormProps = {
     columns: { col: string }[];
@@ -79,20 +72,18 @@ const GroupByOpForm = ({
     }[];
   };
 
-  const { control, handleSubmit, reset, watch, formState } = useForm<FormProps>(
-    {
-      defaultValues: {
-        columns: [{ col: '' }],
-        aggregate_on: [
-          {
-            metric: '',
-            aggregate_func: { id: '', label: '' },
-            output_column_name: '',
-          },
-        ],
-      },
-    }
-  );
+  const { control, handleSubmit, reset, watch, formState } = useForm<FormProps>({
+    defaultValues: {
+      columns: [{ col: '' }],
+      aggregate_on: [
+        {
+          metric: '',
+          aggregate_func: { id: '', label: '' },
+          output_column_name: '',
+        },
+      ],
+    },
+  });
   // Include this for multi-row input
   const {
     fields: dimensionFields,
@@ -117,17 +108,14 @@ const GroupByOpForm = ({
   const columns = watch('columns'); // Get the current form values
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) { //change
+    if (node?.type === SRC_MODEL_NODE) {
+      //change
       try {
         const data: ColumnData[] = await httpGet(
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(
-          data
-            .map((col: ColumnData) => col.name)
-            .sort((a, b) => a.localeCompare(b))
-        );
+        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -152,10 +140,7 @@ const GroupByOpForm = ({
         other_inputs: [],
         config: {
           aggregate_on: data.aggregate_on
-            .filter(
-              (item: any) =>
-                item.metric && item.aggregate_func.id && item.output_column_name
-            )
+            .filter((item: any) => item.metric && item.aggregate_func.id && item.output_column_name)
             .map((item: any) => ({
               column: item.metric,
               operation: item.aggregate_func.id,
@@ -170,17 +155,11 @@ const GroupByOpForm = ({
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${finalNode?.id}/`,
@@ -221,9 +200,7 @@ const GroupByOpForm = ({
         columns: dimensionColumns,
         aggregate_on: aggregate_on.map((item: AggregateOn) => ({
           metric: item.column,
-          aggregate_func: AggregateOperations.find(
-            (op) => op.id === item.operation
-          ),
+          aggregate_func: AggregateOperations.find((op) => op.id === item.operation),
           output_column_name: item.output_column_name,
         })),
       });
@@ -262,12 +239,7 @@ const GroupByOpForm = ({
 
           {dimensionFields.map((field, index) => (
             <Fragment key={field + '_1'}>
-              <Grid
-                key={field + '_1'}
-                item
-                xs={2}
-                sx={{ ...renameGridStyles.item }}
-              >
+              <Grid key={field + '_1'} item xs={2} sx={{ ...renameGridStyles.item }}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -306,8 +278,7 @@ const GroupByOpForm = ({
                       disabled={action === 'view'}
                       fieldStyle="transformation"
                       options={srcColumns?.filter(
-                        (option) =>
-                          !columns.map((col) => col.col).includes(option)
+                        (option) => !columns.map((col) => col.col).includes(option)
                       )}
                       onChange={(data: any) => {
                         field.onChange(data);
@@ -358,8 +329,7 @@ const GroupByOpForm = ({
                 key={`${field.id}_aggregate_func`}
                 control={control}
                 rules={{
-                  validate: (value) =>
-                    value.id !== '' || 'Aggregate function is required',
+                  validate: (value) => value.id !== '' || 'Aggregate function is required',
                 }}
                 name={`aggregate_on.${index}.aggregate_func`}
                 render={({ field, fieldState }) => (
@@ -370,9 +340,7 @@ const GroupByOpForm = ({
                     helperText={fieldState.error?.message}
                     disabled={action === 'view'}
                     options={AggregateOperations}
-                    isOptionEqualToValue={(option: any, value: any) =>
-                      option?.id === value?.id
-                    }
+                    isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
                     label="Select aggregation*"
                     fieldStyle="transformation"
                   />

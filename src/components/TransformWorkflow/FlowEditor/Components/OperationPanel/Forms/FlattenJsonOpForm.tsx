@@ -59,8 +59,8 @@ const FlattenJsonOpForm = ({
       continueOperationChain,
       action,
       setLoading,
-    }
-  })
+    },
+  });
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       json_column: '',
@@ -74,20 +74,14 @@ const FlattenJsonOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(
-          data
-            .map((col: ColumnData) => col.name)
-            .sort((a, b) => a.localeCompare(b))
-        );
+        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
     }
 
     if (node?.type === OPERATION_NODE) {
-      setSrcColumns(
-        nodeData.output_cols.sort((a: string, b: string) => a.localeCompare(b))
-      );
+      setSrcColumns(nodeData.output_cols.sort((a: string, b: string) => a.localeCompare(b)));
     }
   };
 
@@ -96,8 +90,10 @@ const FlattenJsonOpForm = ({
     try {
       const response = await httpGet(
         session,
-        `warehouse/dbt_project/json_columnspec/?source_schema=${action !== 'edit' ? nodeData.schema : inputModels[0].schema
-        }&input_name=${action !== 'edit' ? nodeData.input_name : inputModels[0].name
+        `warehouse/dbt_project/json_columnspec/?source_schema=${
+          action !== 'edit' ? nodeData.schema : inputModels[0].schema
+        }&input_name=${
+          action !== 'edit' ? nodeData.input_name : inputModels[0].name
         }&json_column=${selectedColumn}`
       );
       setJsonColumns(response);
@@ -128,17 +124,11 @@ const FlattenJsonOpForm = ({
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
           `transform/dbt_project/model/operations/${finalNode?.id}/`,
@@ -167,11 +157,7 @@ const FlattenJsonOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      const {
-        source_columns,
-        json_column,
-        json_columns_to_copy,
-      }: FlattejsonDataConfig = opConfig;
+      const { source_columns, json_column, json_columns_to_copy }: FlattejsonDataConfig = opConfig;
       setSrcColumns(source_columns);
       setJsonColumns(json_columns_to_copy);
 

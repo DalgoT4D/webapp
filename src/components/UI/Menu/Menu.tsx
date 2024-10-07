@@ -64,11 +64,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
     }}
   >
     {handleEdit && (
-      <MenuItem
-        sx={{ my: 0 }}
-        onClick={() => handleEdit()}
-        disabled={!hasEditPermission}
-      >
+      <MenuItem sx={{ my: 0 }} onClick={() => handleEdit()} disabled={!hasEditPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <Image src={EditIcon} alt="edit icon" />
         </ListItemIcon>
@@ -77,11 +73,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
     )}
     <Divider style={{ margin: 0 }} />
     {handleRefresh && (
-      <MenuItem
-        sx={{ my: 0 }}
-        onClick={() => handleRefresh()}
-        disabled={!hasEditPermission}
-      >
+      <MenuItem sx={{ my: 0 }} onClick={() => handleRefresh()} disabled={!hasEditPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <RefreshIcon sx={{ width: 14 }} />
         </ListItemIcon>
@@ -107,7 +99,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
         <MenuItem
           onClick={() => handleDelete()}
           disabled={!hasDeletePermission}
-          data-testid = "deletetestid"
+          data-testid="deletetestid"
         >
           <ListItemIcon style={{ minWidth: 28 }}>
             <Image src={DeleteIcon} alt="delete icon" />
@@ -118,10 +110,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
     )}
     <Divider style={{ margin: 0 }} />
     {eleType === 'connection' && handleResetConnection && (
-      <MenuItem
-        onClick={() => handleResetConnection()}
-        disabled={!hasResetPermission}
-      >
+      <MenuItem onClick={() => handleResetConnection()} disabled={!hasResetPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <RestartAltIcon sx={{ width: 16 }} />
         </ListItemIcon>
