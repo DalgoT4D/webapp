@@ -52,15 +52,12 @@ export const OverWriteDialog = ({
     setIsBoxOpen(false);
   };
   useEffect(() => {
-    console.log(modalName, 'modalname');
     if (oldSessionName && modalName === MODALS.OVERWRITE) {
-      console.log(oldSessionName, 'oldsessino');
       reset({
         sessionName: oldSessionName,
       });
     }
   }, [oldSessionName, modalName]);
-  console.log();
   const ModalData: any = {
     SAVE: {
       mainheading: 'Save as',

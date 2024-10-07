@@ -85,7 +85,6 @@ export const LLMSummary = ({
       );
       if (response.success) {
         successToast(`Feedback sent successfully`, [], globalContext);
-        handleNewSession(true);
       }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
