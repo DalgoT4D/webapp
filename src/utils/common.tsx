@@ -154,6 +154,18 @@ export const formatDuration = (seconds: number) => {
   return formattedDuration.trim();
 };
 
+export const copyToClipboard = (dataToCopy: any) => {
+  return navigator.clipboard
+    .writeText(dataToCopy)
+    .then(() => {
+      return true; 
+    })
+    .catch((err) => {
+      console.error('Failed to copy text: ', err);
+      return false;  
+    });
+};
+
 export const formatDateTimeStringToLocalTimeZone = (dateTimeString: string) => {
   return moment(dateTimeString).format('Do MMM HH:mmA');
 };
