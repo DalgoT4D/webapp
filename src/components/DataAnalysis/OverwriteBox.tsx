@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 import CustomDialog from '../Dialog/CustomDialog';
 import { useForm, Controller } from 'react-hook-form';
-import { MODALS } from './LLMSummary';
 import { useTracking } from '@/contexts/TrackingContext';
+import { MODALS } from '@/pages/analysis/data-analysis';
 // Define the form data type
 interface FormData {
   sessionName: string;
@@ -18,8 +18,10 @@ export const OverWriteDialog = ({
   onConfirmNavigation,
   setModalName,
   submitFeedback,
-  oldSessionName,
+  oldSessionMetaInfo,
   handleNewSession,
+  handleEditSession,
+  selectedSession,
 }: {
   open: boolean;
   modalName: string;
@@ -29,7 +31,9 @@ export const OverWriteDialog = ({
   setIsBoxOpen: (a: boolean) => void;
   submitFeedback: (x: string) => void;
   handleNewSession: (x: boolean) => void;
-  oldSessionName: string;
+  oldSessionMetaInfo: any;
+  handleEditSession: (x: any, y: boolean) => void;
+  selectedSession: any;
 }) => {
   const trackAmplitudeEvent: any = useTracking();
   const {
@@ -43,7 +47,7 @@ export const OverWriteDialog = ({
       feedback: '',
     },
   });
-
+  const oldSessionName = oldSessionMetaInfo.session_name;
   const handleClose = () => {
     reset({
       sessionName: '',
@@ -249,6 +253,39 @@ export const OverWriteDialog = ({
         },
       ],
     },
+    EDIT_SESSION_WARNING: {
+      mainheading: 'Unsaved session',
+      subHeading:
+        'You are about to leave the session without saving your changes.\nAny unsaved work will be lost. Do you wish to continue?',
+      label: 'Save session',
+      buttons: [
+        {
+          label: 'Save changes',
+          variant: 'contained',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: () => {
+            setModalName(oldSessionName ? MODALS.OVERWRITE : MODALS.SAVE);
+          },
+        },
+        {
+          label: 'Leave Anyway',
+          variant: 'contained',
+          sx: {
+            width: '6.75rem',
+            padding: '8px 0',
+            borderRadius: '5px',
+          },
+          onClick: () => {
+            setIsBoxOpen(false);
+            handleEditSession(selectedSession, true);
+          },
+        },
+      ],
+    },
   };
 
   const FormContent = () => {
@@ -264,7 +301,7 @@ export const OverWriteDialog = ({
         >
           {ModalData[modalName].subHeading}
         </Typography>
-        {!['UNSAVED_CHANGES', 'RESET_WARNING'].includes(modalName) && (
+        {!['UNSAVED_CHANGES', 'RESET_WARNING', 'EDIT_SESSION_WARNING'].includes(modalName) && (
           <Box sx={{ marginTop: '1.75rem' }}>
             <Controller
               name={modalName === 'FEEDBACK_FORM' ? 'feedback' : 'sessionName'}
