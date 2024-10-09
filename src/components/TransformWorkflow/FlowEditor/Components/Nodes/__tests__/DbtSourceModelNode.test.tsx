@@ -63,7 +63,7 @@ const node = {
 };
 
 const edges = [
-//   { id: 'e1-2', source: '1', target: '2' },
+  //   { id: 'e1-2', source: '1', target: '2' },
 ];
 
 const columns = [
@@ -98,7 +98,6 @@ describe('DbtSourceModelNode Component', () => {
     expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
     expect(screen.getByTestId('target-left')).toBeInTheDocument();
     expect(screen.getByTestId('source-right')).toBeInTheDocument();
-
   });
 
   it('should call handleSelectNode on click', () => {
@@ -120,14 +119,14 @@ describe('DbtSourceModelNode Component', () => {
 
   it('should call handleDeleteAction on delete icon click', () => {
     const node = {
-        id: '1',
-        type: 'sourceModel',
-        data: {
-          input_name: 'test_input_name',
-          schema: 'test_schema',
-          isDummy: false,
-        },
-      };
+      id: '1',
+      type: 'sourceModel',
+      data: {
+        input_name: 'test_input_name',
+        schema: 'test_schema',
+        isDummy: false,
+      },
+    };
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <DbtSourceModelNode {...node} />
@@ -148,9 +147,7 @@ describe('DbtSourceModelNode Component', () => {
   });
 
   it('should display error message if columns fetch fails', async () => {
-    global.fetch = jest.fn(() =>
-      Promise.reject(new Error('Failed to fetch columns'))
-    );
+    global.fetch = jest.fn(() => Promise.reject(new Error('Failed to fetch columns')));
 
     render(
       <GlobalContext.Provider value={mockGlobalContext}>

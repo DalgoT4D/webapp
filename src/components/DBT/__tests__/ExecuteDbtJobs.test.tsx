@@ -117,9 +117,7 @@ describe('Execute dbt jobs', () => {
 
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
-    await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'dbt-run' } })
-    );
+    await act(() => fireEvent.change(selectInput, { target: { value: 'dbt-run' } }));
 
     // execute dbt run
     const executeButton = screen.getByTestId('runJob');
@@ -159,9 +157,7 @@ describe('Execute dbt jobs', () => {
 
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
-    await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'dbt-run' } })
-    );
+    await act(() => fireEvent.change(selectInput, { target: { value: 'dbt-run' } }));
 
     //execute
     const executeButton = screen.getByTestId('runJob');
@@ -201,9 +197,7 @@ describe('Execute dbt jobs', () => {
 
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
-    await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'dbt-run' } })
-    );
+    await act(() => fireEvent.change(selectInput, { target: { value: 'dbt-run' } }));
 
     //execute
     const executeButton = screen.getByTestId('runJob');
@@ -234,11 +228,7 @@ describe('Execute dbt jobs', () => {
         json: jest.fn().mockResolvedValueOnce({
           logs: {
             offset: 0,
-            logs: [
-              { message: 'message-1' },
-              { message: 'message-2' },
-              { message: 'message-3' },
-            ],
+            logs: [{ message: 'message-1' }, { message: 'message-2' }, { message: 'message-3' }],
           },
         }),
       })
@@ -270,9 +260,7 @@ describe('Execute dbt jobs', () => {
 
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
-    await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'dbt-run' } })
-    );
+    await act(() => fireEvent.change(selectInput, { target: { value: 'dbt-run' } }));
 
     //execute
     const executeButton = screen.getByTestId('runJob');
@@ -309,9 +297,7 @@ describe('Execute dbt jobs', () => {
 
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
-    await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'dbt-clean' } })
-    );
+    await act(() => fireEvent.change(selectInput, { target: { value: 'dbt-clean' } }));
 
     //execute
     const executeButton = screen.getByTestId('runJob');
@@ -348,9 +334,7 @@ describe('Execute dbt jobs', () => {
 
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
-    await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'dbt-clean' } })
-    );
+    await act(() => fireEvent.change(selectInput, { target: { value: 'dbt-clean' } }));
 
     //execute
     const executeButton = screen.getByTestId('runJob');
@@ -387,9 +371,7 @@ describe('Execute dbt jobs', () => {
 
     const selectDiv = screen.getByTestId('dbt-functions');
     const selectInput = selectDiv.childNodes[1];
-    await act(() =>
-      fireEvent.change(selectInput, { target: { value: 'dbt-clean' } })
-    );
+    await act(() => fireEvent.change(selectInput, { target: { value: 'dbt-clean' } }));
 
     //execute
     const executeButton = screen.getByTestId('runJob');

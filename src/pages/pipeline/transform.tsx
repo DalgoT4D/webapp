@@ -22,10 +22,8 @@ interface TransformTypeResponse {
 const Transform = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
-  const [transformClickedOn, setTransformClickedOn] =
-    useState<TransformType>('none');
-  const [selectedTransform, setSelectedTransform] =
-    useState<TransformType>(null);
+  const [transformClickedOn, setTransformClickedOn] = useState<TransformType>('none');
+  const [selectedTransform, setSelectedTransform] = useState<TransformType>(null);
   const [dialogLoader, setDialogLoader] = useState<boolean>(false);
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
@@ -126,12 +124,7 @@ const Transform = () => {
       <main className={styles.main}>
         {selectedTransform === 'none' ? (
           <Box>
-            <Typography
-              sx={{ fontWeight: 700 }}
-              variant="h4"
-              gutterBottom
-              color="#000"
-            >
+            <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
               Transformation
             </Typography>
             <Typography
@@ -164,22 +157,16 @@ const Transform = () => {
                       width: 'auto',
                     }}
                   />
-                  <Typography
-                    sx={{ fontWeight: 600 }}
-                    variant="h5"
-                    align="left"
-                    color="#000"
-                  >
-                    UI Users{' '}
-                    <span style={{ color: 'grey' }}>(Click and Configure)</span>
+                  <Typography sx={{ fontWeight: 600 }} variant="h5" align="left" color="#000">
+                    UI Users <span style={{ color: 'grey' }}>(Click and Configure)</span>
                   </Typography>
                   <Typography
                     sx={{ fontWeight: 400, marginBottom: '10px' }}
                     variant="body1"
                     color="#808080"
                   >
-                    Use the UI to build your transformation workflow using a
-                    simple and intuitive user interface.
+                    Use the UI to build your transformation workflow using a simple and intuitive
+                    user interface.
                   </Typography>
                   <Button
                     variant="contained"
@@ -212,12 +199,7 @@ const Transform = () => {
                       width: 'auto',
                     }}
                   />
-                  <Typography
-                    sx={{ fontWeight: 600 }}
-                    variant="h5"
-                    align="left"
-                    color="#000"
-                  >
+                  <Typography sx={{ fontWeight: 600 }} variant="h5" align="left" color="#000">
                     Github Users <span style={{ color: 'grey' }}>(Code)</span>
                   </Typography>
                   <Typography
@@ -230,8 +212,8 @@ const Transform = () => {
                       marginBottom: '10px',
                     }}
                   >
-                    Create a project to integrate your dbt repository by
-                    providing your repository URL and authentication details.
+                    Create a project to integrate your dbt repository by providing your repository
+                    URL and authentication details.
                   </Typography>
                   <Button
                     variant="contained"
@@ -246,11 +228,8 @@ const Transform = () => {
               </Grid>
             </Grid>
           </Box>
-        ) : selectedTransform &&
-          ['ui', 'github'].includes(selectedTransform) ? (
-          <DBTTransformType
-            transformType={selectedTransform}
-          ></DBTTransformType>
+        ) : selectedTransform && ['ui', 'github'].includes(selectedTransform) ? (
+          <DBTTransformType transformType={selectedTransform}></DBTTransformType>
         ) : (
           ''
         )}

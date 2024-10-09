@@ -14,14 +14,9 @@ import {
   SxProps,
   Typography,
 } from '@mui/material';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { memo, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
-import {
-  OperationNodeData,
-  OperationNodeType,
-  SrcModelNodeType,
-  UIOperationType,
-} from './Canvas';
+import { OperationNodeData, OperationNodeType, SrcModelNodeType, UIOperationType } from './Canvas';
 import {
   OPERATION_NODE,
   RENAME_COLUMNS_OP,
@@ -49,10 +44,7 @@ import DropColumnOpForm from './OperationPanel/Forms/DropColumnOpForm';
 import { operations } from '../constant';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CreateTableOrAddFunction from './OperationPanel/CreateTableOrAddFunction';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import CreateTableForm from './OperationPanel/Forms/CreateTableForm';
 import { Edge, useReactFlow } from 'reactflow';
 import JoinOpForm from './OperationPanel/Forms/JoinOpForm';
@@ -111,41 +103,8 @@ const operationComponentMapping: any = {
   [GENERIC_SQL_OP]: GenericSqlOpForm,
 };
 
-const OperationForm = ({
-  operation,
-  node,
-  sx,
-  continueOperationChain,
-  clearAndClosePanel,
-  dummyNodeId,
-  action,
-  setLoading,
-}: OperationFormProps) => {
-  if (operation === null || operation === undefined) {
-    return null;
-  }
-
-  if (operation.slug === 'create-table') {
-    return (
-      <CreateTableForm
-        node={node}
-        operation={operation}
-        sx={sx}
-        continueOperationChain={continueOperationChain}
-        clearAndClosePanel={clearAndClosePanel}
-        dummyNodeId={dummyNodeId}
-        action={action}
-        setLoading={setLoading}
-      />
-    );
-  }
-
-  if (!Object.keys(operationComponentMapping).includes(operation.slug)) {
-    return <>Operation not yet supported</>;
-  }
-
-  const Form = operationComponentMapping[operation.slug];
-  const FormProps = {
+const OperationForm = memo(
+  ({
     operation,
     node,
     sx,
@@ -154,16 +113,47 @@ const OperationForm = ({
     dummyNodeId,
     action,
     setLoading,
-  };
+  }: OperationFormProps) => {
+    if (operation === null || operation === undefined) {
+      return null;
+    }
 
-  return <Form {...FormProps} />;
-};
+    if (operation.slug === 'create-table') {
+      return (
+        <CreateTableForm
+          node={node}
+          operation={operation}
+          sx={sx}
+          continueOperationChain={continueOperationChain}
+          clearAndClosePanel={clearAndClosePanel}
+          dummyNodeId={dummyNodeId}
+          action={action}
+          setLoading={setLoading}
+        />
+      );
+    }
 
-const OperationConfigLayout = ({
-  openPanel,
-  setOpenPanel,
-  sx,
-}: OperationConfigProps) => {
+    if (!Object.keys(operationComponentMapping).includes(operation.slug)) {
+      return <>Operation not yet supported</>;
+    }
+
+    const Form = operationComponentMapping[operation.slug];
+    const FormProps = {
+      operation,
+      node,
+      sx,
+      continueOperationChain,
+      clearAndClosePanel,
+      dummyNodeId,
+      action,
+      setLoading,
+    };
+    return <Form {...FormProps} />;
+  }
+);
+OperationForm.displayName = 'OperationForm';
+
+const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigProps) => {
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { canvasNode, setCanvasNode } = useCanvasNode();
   const [selectedOp, setSelectedOp] = useState<UIOperationType | null>();
@@ -177,8 +167,7 @@ const OperationConfigLayout = ({
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
 
-  const { addEdges, addNodes, deleteElements, getNodes, setNodes, getEdges } =
-    useReactFlow();
+  const { addEdges, addNodes, deleteElements, getNodes, setNodes, getEdges } = useReactFlow();
 
   const handleClosePanel = () => {
     const dummyNodesArr: { id: string }[] = getNodes()
@@ -195,10 +184,7 @@ const OperationConfigLayout = ({
   const handleSelectOp = (op: UIOperationType) => {
     // Create the dummy node on canvas
     // For multi input operation we might have to do it inside the operation once they select the other inputs
-    const dummyTargetNodeData: any = generateDummyOperationlNode(
-      canvasNode,
-      op
-    );
+    const dummyTargetNodeData: any = generateDummyOperationlNode(canvasNode, op);
     const newEdge: any = {
       id: `${canvasNode ? canvasNode.id : ''}_${dummyTargetNodeData.id}`,
       source: canvasNode ? canvasNode.id : '',
@@ -226,25 +212,33 @@ const OperationConfigLayout = ({
 
   useEffect(() => {
     if (canvasAction.type === 'open-opconfig-panel') {
-      setOpenPanel(true);
+      setOpenPanel(true); // when a table or node is clicked , this opens the sql ops form.
       setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
-      console.log(canvasAction, panelOpFormState);
       if (['view', 'edit'].includes(panelOpFormState.current)) {
         const nodeData = canvasNode?.data as OperationNodeData;
         if (permissions.includes('can_view_dbt_operation')) {
-          setSelectedOp(
-            operations.find((op) => op.slug === nodeData.config?.type)
-          );
+          setSelectedOp(operations.find((op) => op.slug === nodeData?.config?.type));
         }
       }
+    }
+
+    const nodes = getNodes();
+    const areDummyNodes = nodes.some((node) => node.data?.isDummy === true);
+
+    // if there are dummy nodes and user selects any other node (operational or source), then it deletes the node. So this prevents creation of multiple dummy nodes on the canvas.
+    if (areDummyNodes && !canvasNode?.data.isDummy) {
+      const dummyNodesArr: { id: string }[] = nodes
+        .filter((node) => node.data.isDummy)
+        .map((node) => ({ id: node.id }));
+      dummyNodesArr.push({ id: dummyNodeIdRef.current });
+      deleteElements({ nodes: dummyNodesArr });
     }
 
     if (canvasAction.type === 'close-reset-opconfig-panel') {
       handleClosePanel();
     }
   }, [canvasAction]);
-
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
@@ -271,8 +265,8 @@ const OperationConfigLayout = ({
           </Button>
         </DialogActions>
       </Dialog>
-    )
-  }
+    );
+  };
 
   const PanelHeader = () => {
     const handleBackbuttonAction = () => {
@@ -298,9 +292,7 @@ const OperationConfigLayout = ({
       // show the form
       const { config } = canvasNode?.data as OperationNodeData;
       if (config && config.type) {
-        const editingOperation = operations.find(
-          (op) => op.slug === config.type
-        );
+        const editingOperation = operations.find((op) => op.slug === config.type);
         setSelectedOp({
           slug: editingOperation?.slug || '',
           label: editingOperation?.label || '',
@@ -323,38 +315,28 @@ const OperationConfigLayout = ({
         >
           {((selectedOp && panelOpFormState.current === 'create') ||
             panelState === 'create-table-or-add-function') && (
-              <IconButton
-                onClick={
-                  panelState === 'create-table-or-add-function'
-                    ? handleBackButtonOnCreateTableAddFunction
-                    : () => setShowDiscardDialog(true)
-                }
-                data-testid="openoperationlist"
-              >
-                <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
-              </IconButton>
-            )}
+            <IconButton
+              onClick={
+                panelState === 'create-table-or-add-function'
+                  ? handleBackButtonOnCreateTableAddFunction
+                  : () => setShowDiscardDialog(true)
+              }
+              data-testid="openoperationlist"
+            >
+              <ChevronLeftIcon fontSize="small" width="16px" height="16px" />
+            </IconButton>
+          )}
           <DiscardDialog handleBackbuttonAction={handleBackbuttonAction} />
           <Box sx={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
-            <Typography
-              fontWeight={600}
-              fontSize="15px"
-              color="#0F2440"
-              lineHeight={'21px'}
-            >
-              {selectedOp
-                ? selectedOp.label
-                : panelState === 'op-list'
-                  ? 'Functions'
-                  : ''}
+            <Typography fontWeight={600} fontSize="15px" color="#0F2440" lineHeight={'21px'}>
+              {selectedOp ? selectedOp.label : panelState === 'op-list' ? 'Functions' : ''}
             </Typography>
             <Box sx={{ width: '1px', height: '12px' }}>
               {panelState === 'op-form' && selectedOp ? (
                 <InfoTooltip
                   title={
-                    operations.find(
-                      (op: UIOperationType) => op.slug === selectedOp.slug
-                    )?.infoToolTip ||
+                    operations.find((op: UIOperationType) => op.slug === selectedOp.slug)
+                      ?.infoToolTip ||
                     (selectedOp.slug === 'create-table'
                       ? 'Generate a table which will be saved with a new name in your desired warehouse schema'
                       : '')
@@ -367,10 +349,7 @@ const OperationConfigLayout = ({
               )}
             </Box>
           </Box>
-          <IconButton
-            onClick={handleClosePanel}
-            data-testid="closeoperationpanel"
-          >
+          <IconButton onClick={handleClosePanel} data-testid="closeoperationpanel">
             <CloseIcon fontSize="small" width="16px" height="16px" />
           </IconButton>
         </Box>
@@ -393,8 +372,7 @@ const OperationConfigLayout = ({
         <List>
           {operations.map((op, index) => {
             const canSelectOperation = !(
-              cantChainOperationsInMiddle.includes(op.slug) &&
-              canvasNode?.type === OPERATION_NODE
+              cantChainOperationsInMiddle.includes(op.slug) && canvasNode?.type === OPERATION_NODE
             );
             return (
               <ListItemButton
@@ -416,8 +394,8 @@ const OperationConfigLayout = ({
                 onClick={
                   canSelectOperation
                     ? () => {
-                      handleSelectOp(op);
-                    }
+                        handleSelectOp(op);
+                      }
                     : undefined
                 }
               >
@@ -455,8 +433,7 @@ const OperationConfigLayout = ({
       const dummyNodeId: string = dummyNodeIdRef.current;
       // get all edges of this dummy node and save
       const dummyNodeEdges = getEdges().filter(
-        (edge: Edge) =>
-          edge.source === dummyNodeId || edge.target === dummyNodeId
+        (edge: Edge) => edge.source === dummyNodeId || edge.target === dummyNodeId
       );
 
       // convert this dummy node to a real node from backend. basically create a new one
@@ -475,11 +452,9 @@ const OperationConfigLayout = ({
 
       // recreate the saved edges but this time to the real node
       const edgesToCreate: Edge[] = dummyNodeEdges.map((edge: Edge) => {
-        const source =
-          edge.source === dummyNodeId ? dummyToRealNode.id : edge.source;
+        const source = edge.source === dummyNodeId ? dummyToRealNode.id : edge.source;
 
-        const target =
-          edge.target === dummyNodeId ? dummyToRealNode.id : edge.target;
+        const target = edge.target === dummyNodeId ? dummyToRealNode.id : edge.target;
 
         return {
           id: `${source}_${target}`,
@@ -575,7 +550,7 @@ const OperationConfigLayout = ({
                   zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
                 open={isPanelLoading}
-                onClick={() => { }}
+                onClick={() => {}}
               ></Backdrop>
               <OperationForm
                 sx={{ marginBottom: '10px' }}

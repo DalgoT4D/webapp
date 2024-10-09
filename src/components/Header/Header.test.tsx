@@ -1,7 +1,7 @@
 // Header.test.tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Header } from './Header';
-import { useSession,signOut } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useRouter } from 'next/navigation';
 
@@ -16,7 +16,6 @@ const mockUseRouter = useRouter as jest.Mock;
 const mockSignOut = signOut as jest.Mock;
 describe('Header Component', () => {
   const setOpenMenu = jest.fn();
-  
 
   beforeEach(() => {
     mockUseRouter.mockReturnValue({
@@ -40,7 +39,13 @@ describe('Header Component', () => {
           active: true,
           role: 1,
           role_slug: 'admin',
-          org: { name: 'Org1', slug: 'org1', airbyte_workspace_id: '', viz_url: null, viz_login_type: null },
+          org: {
+            name: 'Org1',
+            slug: 'org1',
+            airbyte_workspace_id: '',
+            viz_url: null,
+            viz_login_type: null,
+          },
           wtype: 'type1',
         },
         {
@@ -48,7 +53,13 @@ describe('Header Component', () => {
           active: true,
           role: 2,
           role_slug: 'member',
-          org: { name: 'Org2', slug: 'org2', airbyte_workspace_id: '', viz_url: null, viz_login_type: null },
+          org: {
+            name: 'Org2',
+            slug: 'org2',
+            airbyte_workspace_id: '',
+            viz_url: null,
+            viz_login_type: null,
+          },
           wtype: 'type2',
         },
       ],
@@ -94,7 +105,7 @@ describe('Header Component', () => {
     expect(setOpenMenu).toHaveBeenCalledWith(true);
   });
 
-  test('calls signOut when logout menu item is clicked', async() => {
+  test('calls signOut when logout menu item is clicked', async () => {
     renderComponent();
     const profileIcon = screen.getByAltText('profile icon');
 
@@ -102,9 +113,9 @@ describe('Header Component', () => {
     const logoutItem = screen.getByText('Logout');
     fireEvent.click(logoutItem);
 
-    await waitFor(()=>{
+    await waitFor(() => {
       expect(mockSignOut).toHaveBeenCalled();
-    })  
+    });
   });
 
   test('switches organization when a different org is selected', () => {
@@ -118,7 +129,14 @@ describe('Header Component', () => {
 
     expect(globalContextMock.CurrentOrg.dispatch).toHaveBeenCalledWith({
       type: 'new',
-      orgState: { name: 'Org2', slug: 'org2', airbyte_workspace_id: '', viz_url: null, viz_login_type: null, wtype: 'type2' },
+      orgState: {
+        name: 'Org2',
+        slug: 'org2',
+        airbyte_workspace_id: '',
+        viz_url: null,
+        viz_login_type: null,
+        wtype: 'type2',
+      },
     });
   });
 });

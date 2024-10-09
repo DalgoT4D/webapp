@@ -34,18 +34,12 @@ import { httpDelete, httpGet } from '@/helpers/http';
 import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
-import {
-  OPERATION_NODE,
-  SRC_MODEL_NODE,
-  operationIconMapping,
-} from '../constant';
-import {
-  useCanvasAction,
-  useCanvasNode,
-} from '@/contexts/FlowEditorCanvasContext';
+import { OPERATION_NODE, SRC_MODEL_NODE, operationIconMapping } from '../constant';
+import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { getNextNodePosition } from '@/utils/editor';
 import { KeyboardArrowDown } from '@mui/icons-material';
+import { useTracking } from '@/contexts/TrackingContext';
 
 type CanvasProps = {
   redrawGraph: boolean;
@@ -134,12 +128,13 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const [selectedAction, setSelectedAction] = useState('');
-
+  const trackAmplitudeEvent: any = useTracking();
   const nodeData: any = canvasNode?.data;
 
   const handleRunClick = (event: any) => {
     const action = event.target.value;
     setSelectedAction(action);
+    trackAmplitudeEvent(`[${WorkflowValues[action]}] Button Clicked`);
     if (action === 'run') {
       setCanvasAction({ type: 'run-workflow', data: null });
     } else if (action === 'run-to-node') {
@@ -203,12 +198,7 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
             return value === '' ? 'Select Action' : WorkflowValues[value];
           }}
           IconComponent={(props: any) => {
-            return (
-              <KeyboardArrowDown
-                {...props}
-                style={{ color: '#FFFFFF', width: '22px' }}
-              />
-            );
+            return <KeyboardArrowDown {...props} style={{ color: '#FFFFFF', width: '21px' }} />;
           }}
           sx={{
             background: '#00897B',
@@ -217,22 +207,17 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
             fontSize: '12px',
             border: '1px solid #00897B',
             borderRadius: '6px',
-            minWidth: '8rem',
+            minWidth: '7rem',
+            height: '1.688rem',
             textAlign: 'center',
             boxShadow: '0px 2px 4px 0px ',
           }}
         >
           <MenuItem value="run">Run workflow</MenuItem>
-          <MenuItem
-            value="run-to-node"
-            disabled={disableToAndFromNodeRunOptions}
-          >
+          <MenuItem value="run-to-node" disabled={disableToAndFromNodeRunOptions}>
             Run to node
           </MenuItem>
-          <MenuItem
-            value="run-from-node"
-            disabled={disableToAndFromNodeRunOptions}
-          >
+          <MenuItem value="run-from-node" disabled={disableToAndFromNodeRunOptions}>
             Run from node
           </MenuItem>
         </Select>
@@ -288,10 +273,9 @@ const Canvas = ({
   setTempLockCanvas,
 }: CanvasProps) => {
   const { data: session } = useSession();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [openOperationConfig, setOpenOperationConfig] =
-    useState<boolean>(false);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]); //works when we click the node or move it.
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]); //workds when we click the edges.
+  const [openOperationConfig, setOpenOperationConfig] = useState<boolean>(false); // this is the right form with sql operations.
   const { addNodes, setCenter, getZoom } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
@@ -316,23 +300,23 @@ const Canvas = ({
         session,
         'transform/dbt_project/graph/'
       );
-      const nodes: Array<DbtSourceModel | OperationNodeData | any> =
-        response.nodes.map((nn: DbtSourceModel | OperationNodeData) => ({
+      const nodes: Array<DbtSourceModel | OperationNodeData | any> = response.nodes.map(
+        (nn: DbtSourceModel | OperationNodeData) => ({
           id: nn.id,
           type: nn.type,
           data: nn,
-        }));
+        })
+      );
       const edges: Edge[] = response.edges.map((edgeData: EdgeData) => ({
         ...edgeData,
         ...EdgeStyle,
       }));
 
-      const { nodes: layoutedNodes, edges: layoutedEdges } =
-        getLayoutedElements({
-          nodes: nodes,
-          edges: edges,
-          options: { direction: 'LR' },
-        });
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements({
+        nodes: nodes,
+        edges: edges,
+        options: { direction: 'LR' },
+      });
 
       setNodes([...layoutedNodes]);
       setEdges([...layoutedEdges]);
@@ -356,25 +340,18 @@ const Canvas = ({
   }, [previewAction]);
 
   const handleNodesChange = (changes: NodeChange[]) => {
-    console.log(
-      'inside handle nodes changes; changes include move, drag and select'
-    );
+    console.log('inside handle nodes changes; changes include move, drag and select');
     console.log('node changes', changes);
     onNodesChange(changes);
   };
 
   const handleEdgesChange = (changes: EdgeChange[]) => {
-    console.log(
-      'inside handle edges changes; changes include select and remove'
-    );
+    console.log('inside handle edges changes; changes include select and remove');
     onEdgesChange(changes);
   };
 
   const handleNewConnection = (connection: Connection) => {
-    console.log(
-      'inside handle new connection; when two nodes are connected by user',
-      connection
-    );
+    console.log('inside handle new connection; when two nodes are connected by user', connection);
     if (connection.source && connection.target) {
       const newEdge: Edge = {
         source: connection.source,
@@ -410,10 +387,7 @@ const Canvas = ({
       } else if (type === OPERATION_NODE) {
         // hit the backend api to remove the node in a try catch
         try {
-          await httpDelete(
-            session,
-            `transform/dbt_project/model/operations/${nodeId}/`
-          );
+          await httpDelete(session, `transform/dbt_project/model/operations/${nodeId}/`);
         } catch (error) {
           console.log(error);
         } finally {
@@ -433,9 +407,7 @@ const Canvas = ({
     if (shouldRefreshGraph) setRedrawGraph(!redrawGraph); //calls api in parent and this comp rerenders.
   };
 
-  const addSrcModelNodeToCanvas = (
-    dbtSourceModel: DbtSourceModel | null | undefined
-  ) => {
+  const addSrcModelNodeToCanvas = (dbtSourceModel: DbtSourceModel | null | undefined) => {
     if (dbtSourceModel) {
       const position = getNextNodePosition(nodes);
       const newNode = {
@@ -453,9 +425,7 @@ const Canvas = ({
     }
   };
 
-  const addOperationNodeToCanvas = (
-    operationNode: OperationNodeData | null | undefined
-  ) => {
+  const addOperationNodeToCanvas = (operationNode: OperationNodeData | null | undefined) => {
     if (operationNode) {
       console.log('adding an operation node to canvas', operationNode);
       const newNode = {
@@ -490,9 +460,7 @@ const Canvas = ({
         canvasAction.data.nodeId,
         canvasAction.data.nodeType,
         canvasAction.data.shouldRefreshGraph, // by default always refresh canvas
-        canvasAction.data.isDummy !== undefined
-          ? canvasAction.data.isDummy
-          : false
+        canvasAction.data.isDummy !== undefined ? canvasAction.data.isDummy : false
       );
     }
   }, [canvasAction]);
@@ -506,17 +474,13 @@ const Canvas = ({
 
       const xOverlap = Math.max(
         0,
-        Math.min(
-          node.position.x + node.width,
-          otherNode.position.x + (otherNode.width || 0)
-        ) - Math.max(node.position.x, otherNode.position.x)
+        Math.min(node.position.x + node.width, otherNode.position.x + (otherNode.width || 0)) -
+          Math.max(node.position.x, otherNode.position.x)
       );
       const yOverlap = Math.max(
         0,
-        Math.min(
-          node.position.y + node.height,
-          otherNode.position.y + (otherNode.height || 0)
-        ) - Math.max(node.position.y, otherNode.position.y)
+        Math.min(node.position.y + node.height, otherNode.position.y + (otherNode.height || 0)) -
+          Math.max(node.position.y, otherNode.position.y)
       );
       if (xOverlap > 0 && yOverlap > 0) {
         // Prevent overlap by adjusting position
@@ -552,6 +516,7 @@ const Canvas = ({
   };
 
   const handlePaneClick = () => {
+    // clicking the background canvas.
     setCanvasAction({ type: 'close-reset-opconfig-panel', data: null });
     setPreviewAction({ type: 'clear-preview', data: null });
   };
@@ -605,12 +570,12 @@ const Canvas = ({
         }}
       >
         <ReactFlow
-          nodes={nodes}
+          nodes={nodes} // are the tables and the operations.
           selectNodesOnDrag={false}
-          edges={edges}
+          edges={edges} // flexible lines connecting tables, table-node.
           onNodeDragStop={onNodeDragStop}
-          onPaneClick={handlePaneClick}
-          onNodesChange={handleNodesChange}
+          onPaneClick={handlePaneClick} //back canvas click.
+          onNodesChange={handleNodesChange} // when node (table or operation) is clicked or moved.
           onEdgesChange={handleEdgesChange}
           onConnect={handleNewConnection}
           nodeTypes={nodeTypes}
@@ -635,6 +600,7 @@ const Canvas = ({
             </ControlButton>
           </Controls>
         </ReactFlow>
+        {/* This is what renders the right form */}
         <OperationConfigLayout
           openPanel={openOperationConfig}
           setOpenPanel={setOpenOperationConfig}

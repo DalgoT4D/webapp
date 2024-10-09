@@ -35,25 +35,19 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
     const data = runs
       .map((run: any) => {
         const state_name = run.state_name;
-        const status =
-          state_name === 'DBT_TEST_FAILED' ? 'dbt tests failed' : run.status;
+        const status = state_name === 'DBT_TEST_FAILED' ? 'dbt tests failed' : run.status;
         const color =
           state_name === 'DBT_TEST_FAILED'
             ? '#df8e14'
             : status === 'COMPLETED'
-            ? '#00897B'
-            : '#C15E5E';
+              ? '#00897B'
+              : '#C15E5E';
         const lastRun = moment(new Date(run.startTime)).calendar();
-        const lastRunDateFormat = moment(new Date(run.startTime)).format(
-          'YYYY-MM-DD HH:mm:ss'
-        );
+        const lastRunDateFormat = moment(new Date(run.startTime)).format('YYYY-MM-DD HH:mm:ss');
         const totalRunTime = Math.round(run.totalRunTime);
         const runTimeInHours = Math.floor(totalRunTime / 3600);
-        const runTimeInMinutes = Math.floor(
-          (totalRunTime - runTimeInHours * 3600) / 60
-        );
-        const runTimeInSeconds =
-          totalRunTime - runTimeInHours * 3600 - runTimeInMinutes * 60;
+        const runTimeInMinutes = Math.floor((totalRunTime - runTimeInHours * 3600) / 60);
+        const runTimeInSeconds = totalRunTime - runTimeInHours * 3600 - runTimeInMinutes * 60;
         return {
           id: run.id,
           name: run.name,
@@ -111,13 +105,13 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
       .on('mouseover', (event, d: any) => {
         const [x, y] = d3.pointer(event, d);
         let runTime = `${d.runTimeInHours}hr ${d.runTimeInMinutes}min ${d.runTimeInSeconds}s`;
-        if(d.runTimeInHours === 0){
+        if (d.runTimeInHours === 0) {
           runTime = `${d.runTimeInMinutes}min ${d.runTimeInSeconds}s`;
         }
-        if(d.runTimeInMinutes === 0 && d.runTimeInHours === 0){
+        if (d.runTimeInMinutes === 0 && d.runTimeInHours === 0) {
           runTime = `${d.runTimeInSeconds}s`;
         }
-        if(d.runTimeInMinutes === 0 && d.runTimeInHours !== 0){
+        if (d.runTimeInMinutes === 0 && d.runTimeInHours !== 0) {
           runTime = `${d.runTimeInHours}hr ${d.runTimeInSeconds}s`;
         }
         // Show tooltip on mouseover
@@ -223,7 +217,7 @@ export default function Home() {
 
   return (
     <>
-      <PageHead title="Dalgo" />
+      <PageHead title="Dalgo | Pipeline Overview" />
       <main className={styles.main}>
         <Box
           className={styles.Box}
@@ -328,28 +322,16 @@ export default function Home() {
                                   src={CheckIcon}
                                   alt="check icon"
                                 />{' '}
-                                last run performed{' '}
-                                {lastRunTime(run.runs[0].startTime)}
+                                last run performed {lastRunTime(run.runs[0].startTime)}
                               </>
                             )}
                           </Typography>
-                          <Typography
-                            variant="subtitle2"
-                            fontWeight={600}
-                            sx={{ ml: 'auto' }}
-                          >
-                            {
-                              run.runs.filter(
-                                (item: any) => item.status === 'COMPLETED'
-                              ).length
-                            }
-                            /{run.runs.length} successful runs
+                          <Typography variant="subtitle2" fontWeight={600} sx={{ ml: 'auto' }}>
+                            {run.runs.filter((item: any) => item.status === 'COMPLETED').length}/
+                            {run.runs.length} successful runs
                           </Typography>
                         </Box>
-                        <BarChart
-                          runs={run.runs}
-                          selectFlowRun={selectFlowRun}
-                        />
+                        <BarChart runs={run.runs} selectFlowRun={selectFlowRun} />
                         <Typography variant="subtitle2" fontWeight={600}>
                           Last {run.runs.length} runs
                         </Typography>

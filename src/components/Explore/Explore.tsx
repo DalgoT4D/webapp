@@ -17,9 +17,7 @@ import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
 export const Explore = () => {
   const { data: session } = useSession();
-  const [selectedTab, setSelectedTab] = useState<'preview' | 'statistics'>(
-    'preview'
-  );
+  const [selectedTab, setSelectedTab] = useState<'preview' | 'statistics'>('preview');
   const router = useRouter();
 
   const [dialogueOpen, setDialogueOpen] = useState(true);
@@ -57,10 +55,7 @@ export const Explore = () => {
     setWidth(size.width);
   };
 
-  const handleTabChange = (
-    event: React.SyntheticEvent,
-    newValue: 'preview' | 'statistics'
-  ) => {
+  const handleTabChange = (event: React.SyntheticEvent, newValue: 'preview' | 'statistics') => {
     setSelectedTab(newValue);
   };
 
@@ -90,10 +85,7 @@ export const Explore = () => {
             maxConstraints={[550, Infinity]}
             resizeHandles={['e']}
           >
-            <ProjectTree
-              dbtSourceModels={sourceModels}
-              handleNodeClick={handleNodeClick}
-            />
+            <ProjectTree dbtSourceModels={sourceModels} handleNodeClick={handleNodeClick} />
           </ResizableBox>
           <Divider orientation="vertical" sx={{ color: 'black' }} />
           <Box sx={{ width: `calc(100% - ${width}px)` }}>
@@ -130,9 +122,7 @@ export const Explore = () => {
               <Box>
                 {selectedTab === 'preview' && <PreviewPane height={height} />}
 
-                {selectedTab === 'statistics' && (
-                  <StatisticsPane height={height} />
-                )}
+                {selectedTab === 'statistics' && <StatisticsPane height={height} />}
               </Box>
             </Box>
           </Box>

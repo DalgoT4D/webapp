@@ -45,9 +45,7 @@ const Node = ({ node, style, dragHandle }: any) => {
         <FolderIcon />
       )}
       <Box sx={{ display: 'flex', width: '100%' }}>
-        <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>
-          {name}
-        </Typography>
+        <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>{name}</Typography>
         {node.isLeaf && <AddIcon sx={{ ml: 'auto', cursor: 'pointer' }} />}
         {!node.isLeaf && node.level === 0 && (
           <Tooltip title="Sync Sources">
@@ -77,39 +75,35 @@ interface ProjectTreeProps {
 
 // type TreeData = Partial<DbtSourceModel> & { children: TreeData[] };
 
-const ProjectTree = ({
-  dbtSourceModels,
-  handleNodeClick,
-}: ProjectTreeProps) => {
+const ProjectTree = ({ dbtSourceModels, handleNodeClick }: ProjectTreeProps) => {
   const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
 
-  const constructAndSetProjectTreeData = (
-    dbtSourceModels: DbtSourceModel[]
-  ) => {
+  const constructAndSetProjectTreeData = (dbtSourceModels: DbtSourceModel[]) => {
     // group by schema and push dbtSourceModels under the children key
-    const leafNodesBySchema = dbtSourceModels.reduce((acc, dbtSourceModel) => {
-      const schema = dbtSourceModel.schema;
-      if (schema in acc) {
-        acc[schema].push(dbtSourceModel);
-      } else {
-        acc[schema] = [dbtSourceModel];
-      }
-      return acc;
-    }, {} as { [key: string]: DbtSourceModel[] });
+    const leafNodesBySchema = dbtSourceModels.reduce(
+      (acc, dbtSourceModel) => {
+        const schema = dbtSourceModel.schema;
+        if (schema in acc) {
+          acc[schema].push(dbtSourceModel);
+        } else {
+          acc[schema] = [dbtSourceModel];
+        }
+        return acc;
+      },
+      {} as { [key: string]: DbtSourceModel[] }
+    );
 
     // construct the tree data
-    const treeData = Object.keys(leafNodesBySchema).map(
-      (schema: string, idx: number) => {
-        return {
-          id: String(idx + 1),
-          schema: schema,
-          children: leafNodesBySchema[schema],
-        };
-      }
-    );
+    const treeData = Object.keys(leafNodesBySchema).map((schema: string, idx: number) => {
+      return {
+        id: String(idx + 1),
+        schema: schema,
+        children: leafNodesBySchema[schema],
+      };
+    });
 
     setProjectTreeData([{ id: '0', schema: 'Store', children: treeData }]);
   };
@@ -120,6 +114,13 @@ const ProjectTree = ({
       constructAndSetProjectTreeData(dbtSourceModels);
     }
   }, [dbtSourceModels]);
+
+  const handleNodeClick = (nodes: NodeApi<any>[]) => {
+    if (nodes.length > 0 && nodes[0].isLeaf) {
+      console.log('adding a node to canvas from project tree component', nodes[0].data);
+      setCanvasAction({ type: 'add-srcmodel-node', data: nodes[0].data });
+    }
+  };
 
   return (
     <Box
@@ -153,11 +154,7 @@ const ProjectTree = ({
           height={height}
           width={width}
           rowHeight={30}
-          onSelect={
-            permissions.includes('can_create_dbt_model')
-              ? handleNodeClick
-              : undefined
-          }
+          onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
         >
           {Node}
         </Tree>

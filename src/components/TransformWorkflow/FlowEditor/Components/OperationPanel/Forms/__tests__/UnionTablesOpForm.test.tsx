@@ -3,11 +3,7 @@ import UnionTablesOpForm from '../UnionTablesOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import {
-  intermediateTableResponse,
-  mockNode,
-  sourceModelsMock,
-} from './helpers';
+import { intermediateTableResponse, mockNode, sourceModelsMock } from './helpers';
 import { ReactFlowProvider } from 'reactflow';
 import { fireMultipleKeyDown } from '@/utils/tests';
 

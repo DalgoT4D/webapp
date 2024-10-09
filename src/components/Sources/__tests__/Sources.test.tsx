@@ -5,14 +5,12 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import useSWR from 'swr';
 import { httpDelete, httpGet } from '@/helpers/http';
-import { successToast } from '@/components/ToastMessage/ToastHelper'
-
+import { successToast } from '@/components/ToastMessage/ToastHelper';
 
 jest.mock('next-auth/react');
 jest.mock('swr');
 jest.mock('@/helpers/http');
 jest.mock('@/components/ToastMessage/ToastHelper');
-
 
 const mockSession = {
   data: {
@@ -62,10 +60,7 @@ const mockSourceDefs = [
     dockerImageTag: 'tag2',
   },
 ];
-describe("Sources", () => {
-
-
-
+describe('Sources', () => {
   beforeEach(() => {
     useSession.mockReturnValue(mockSession);
     useSWR.mockReturnValue({ data: mockData, isLoading: false, mutate: jest.fn() });
@@ -101,7 +96,7 @@ describe("Sources", () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     // Close the form dialog
-    fireEvent.click(screen.getByTestId("closebutton"));
+    fireEvent.click(screen.getByTestId('closebutton'));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
@@ -113,16 +108,17 @@ describe("Sources", () => {
     );
 
     // Open the menu and select delete
-    fireEvent.click(screen.getAllByTestId("MoreHorizIcon")[0]);
+    fireEvent.click(screen.getAllByTestId('MoreHorizIcon')[0]);
     fireEvent.click(screen.getByText('Delete'));
 
     // Confirm delete action
     fireEvent.click(screen.getByText(/I understand the consequences, confirm/i));
-    await waitFor(() => expect(successToast).toHaveBeenCalledWith('Source deleted', [], mockGlobalContext));
+    await waitFor(() =>
+      expect(successToast).toHaveBeenCalledWith('Source deleted', [], mockGlobalContext)
+    );
   });
 
   test('displays loading indicator while fetching data', async () => {
-
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <Sources />
@@ -131,7 +127,6 @@ describe("Sources", () => {
     useSWR.mockReturnValueOnce({ data: null, isLoading: true, mutate: jest.fn() });
     await waitFor(() => {
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    })
+    });
   });
-
 });

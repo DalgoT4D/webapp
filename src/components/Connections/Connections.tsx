@@ -1,12 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import useSWR from 'swr';
-import {
-  CircularProgress,
-  Box,
-  Typography,
-  Tooltip,
-  SxProps,
-} from '@mui/material';
+import { CircularProgress, Box, Typography, Tooltip, SxProps } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 import SyncIcon from '@/assets/icons/sync.svg';
@@ -20,10 +14,7 @@ import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useContext } from 'react';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import connectionIcon from '@/assets/icons/connection.svg';
 import CreateConnectionForm from './CreateConnectionForm';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
@@ -33,10 +24,7 @@ import { delay, lastRunTime, trimEmail } from '@/utils/common';
 import { ActionsMenu } from '../UI/Menu/Menu';
 import { LogCard } from '@/components/Logs/LogCard';
 import { TaskLock } from '../Flows/Flows';
-import {
-  useConnSyncLogs,
-  useConnSyncLogsUpdate,
-} from '@/contexts/ConnectionSyncLogsContext';
+import { useConnSyncLogs, useConnSyncLogsUpdate } from '@/contexts/ConnectionSyncLogsContext';
 import { ConnectionLogs } from './ConnectionLogs';
 import PendingActionsAccordion from './PendingActions';
 import { useSyncLock } from '@/customHooks/useSyncLock';
@@ -179,9 +167,8 @@ const Actions = memo(
   }) => {
     const { deploymentId, connectionId, lock } = connection;
     const { tempSyncState, setTempSyncState } = useSyncLock(lock);
-    const trackAmplitudeEvent:any = useTracking();
-    const isSyncConnectionIdPresent =
-      syncingConnectionIds.includes(connectionId);
+    const trackAmplitudeEvent: any = useTracking();
+    const isSyncConnectionIdPresent = syncingConnectionIds.includes(connectionId);
 
     const handlingSyncState = async () => {
       const res: any = await syncConnection(deploymentId, connectionId);
@@ -203,9 +190,7 @@ const Actions = memo(
             }
           }}
           data-testid={'sync-' + idx}
-          disabled={
-            tempSyncState || !!lock || !permissions.includes('can_sync_sources')
-          }
+          disabled={tempSyncState || !!lock || !permissions.includes('can_sync_sources')}
           key={'sync-' + idx}
           sx={{ marginRight: '10px' }}
         >
@@ -238,10 +223,13 @@ const Actions = memo(
       </Box>
     );
   },
-  //rerenderes when fn returns false. 
+  //rerenderes when fn returns false.
   // checking lock when doing sync and checking connectionId wehen we sort the list or a new connection gets added.
   (prevProps, nextProps) => {
-    return prevProps.connection.lock?.status === nextProps.connection.lock?.status && prevProps.connection.connectionId === nextProps.connection.connectionId
+    return (
+      prevProps.connection.lock?.status === nextProps.connection.lock?.status &&
+      prevProps.connection.connectionId === nextProps.connection.connectionId
+    );
   }
 );
 Actions.displayName = 'Action'; //display name added.
@@ -253,9 +241,7 @@ export const Connections = () => {
   const [connectionId, setConnectionId] = useState<string>('');
   const [logsConnection, setLogsConnection] = useState<Connection>();
   const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
-  const [syncingConnectionIds, setSyncingConnectionIds] = useState<
-    Array<string>
-  >([]);
+  const [syncingConnectionIds, setSyncingConnectionIds] = useState<Array<string>>([]);
   const syncLogs = useConnSyncLogs();
   const setSyncLogs = useConnSyncLogsUpdate();
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
@@ -271,17 +257,15 @@ export const Connections = () => {
     setAnchorEl(event);
   };
   const handleClose = (isEditMode?: string) => {
-    if(isEditMode !== "EDIT"){
-      setConnectionId("");
-      setResetDeploymentId("");
+    if (isEditMode !== 'EDIT') {
+      setConnectionId('');
+      setResetDeploymentId('');
     }
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
-  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] =
-    useState<boolean>(false);
-  const [showConfirmResetDialog, setShowConfirmResetDialog] =
-    useState<boolean>(false);
+  const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] = useState<boolean>(false);
+  const [showConfirmResetDialog, setShowConfirmResetDialog] = useState<boolean>(false);
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -289,10 +273,7 @@ export const Connections = () => {
   const trackAmplitudeEvent = useTracking();
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
-      const flowRun: PrefectFlowRun = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}`
-      );
+      const flowRun: PrefectFlowRun = await httpGet(session, `prefect/flow_runs/${flow_run_id}`);
 
       if (!flowRun.state_type) return 'FAILED';
 
@@ -305,15 +286,11 @@ export const Connections = () => {
 
   const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
     try {
-      const response = await httpGet(
-        session,
-        `prefect/flow_runs/${flow_run_id}/logs`
-      );
+      const response = await httpGet(session, `prefect/flow_runs/${flow_run_id}/logs`);
       if (response?.logs?.logs && response.logs.logs.length > 0) {
         const logsArray = response.logs.logs.map(
           // eslint-disable-next-line
-          (logObject: PrefectFlowRunLog, idx: number) =>
-            `${logObject.message} '\n'`
+          (logObject: PrefectFlowRunLog, idx: number) => `${logObject.message} '\n'`
         );
 
         setSyncLogs(logsArray);
@@ -341,11 +318,7 @@ export const Connections = () => {
       return;
     }
     try {
-      const response = await httpPost(
-        session,
-        `prefect/v1/flows/${deploymentId}/flow_run/`,
-        {}
-      );
+      const response = await httpPost(session, `prefect/v1/flows/${deploymentId}/flow_run/`, {});
       // returning {error:"ERROR"} to stop loader if error occurs.
       if (response?.detail) {
         errorToast(response.detail, [], globalContext);
@@ -367,9 +340,7 @@ export const Connections = () => {
       errorToast(err.message, [], globalContext);
       return { error: 'ERROR' };
     } finally {
-      setSyncingConnectionIds(
-        syncingConnectionIds.filter((id) => id !== connectionId)
-      );
+      setSyncingConnectionIds(syncingConnectionIds.filter((id) => id !== connectionId));
     }
   };
 
@@ -377,10 +348,7 @@ export const Connections = () => {
     (async () => {
       try {
         setDeleteLoading(true);
-        const message = await httpDelete(
-          session,
-          `airbyte/v1/connections/${connectionId}`
-        );
+        const message = await httpDelete(session, `airbyte/v1/connections/${connectionId}`);
         if (message.success) {
           successToast('Connection deleted', [], globalContext);
           mutate();
@@ -399,17 +367,9 @@ export const Connections = () => {
     (async () => {
       try {
         setResetLoading(true);
-        const message = await httpPost(
-          session,
-          `prefect/v1/flows/${deploymentId}/flow_run/`,
-          {}
-        );
+        const message = await httpPost(session, `prefect/v1/flows/${deploymentId}/flow_run/`, {});
         if (message.success) {
-          successToast(
-            'Reset connection initiated successfully',
-            [],
-            globalContext
-          );
+          successToast('Reset connection initiated successfully', [], globalContext);
         }
       } catch (err: any) {
         console.error(err);
@@ -430,10 +390,7 @@ export const Connections = () => {
     // things when the connection is locked
     if (connection.lock?.status === 'running') {
       jobStatus = 'running';
-    } else if (
-      connection.lock?.status === 'locked' ||
-      connection.lock?.status === 'complete'
-    ) {
+    } else if (connection.lock?.status === 'locked' || connection.lock?.status === 'complete') {
       jobStatus = 'locked';
     } else if (
       syncingConnectionIds.includes(connection.connectionId) ||
@@ -453,13 +410,7 @@ export const Connections = () => {
       }
     }
 
-    const StatusIcon = ({
-      sx,
-      status,
-    }: {
-      sx: SxProps;
-      status: string | null;
-    }) => {
+    const StatusIcon = ({ sx, status }: { sx: SxProps; status: string | null }) => {
       if (status === null) return null;
 
       if (status === 'running') {
@@ -478,9 +429,7 @@ export const Connections = () => {
     };
 
     return (
-      <Box
-        sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-      >
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {jobStatus &&
           (['success', 'failed'].includes(jobStatus) ? (
             <Typography variant="subtitle2" fontWeight={600}>
@@ -534,7 +483,7 @@ export const Connections = () => {
             onClick={() => {
               setShowLogsDialog(true);
               setLogsConnection(connection);
-              trackAmplitudeEvent("[View history] Button clicked")
+              trackAmplitudeEvent('[View history] Button clicked');
             }}
           >
             View history
@@ -547,15 +496,8 @@ export const Connections = () => {
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
       const tempRows = data.map((connection: any) => [
-        <Box
-          key={`name-${connection.blockId}`}
-          sx={{ display: 'flex', alignItems: 'center' }}
-        >
-          <Image
-            style={{ marginRight: 10 }}
-            src={connectionIcon}
-            alt="dbt icon"
-          />
+        <Box key={`name-${connection.blockId}`} sx={{ display: 'flex', alignItems: 'center' }}>
+          <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
           <Typography variant="body1" fontWeight={600}>
             {connection.name}
           </Typography>
@@ -615,7 +557,7 @@ export const Connections = () => {
   };
 
   const handleDeleteConnection = () => {
-    handleClose();
+    handleClose('EDIT');
     setShowConfirmDeleteDialog(true);
   };
 
@@ -630,11 +572,11 @@ export const Connections = () => {
   const handleResetConnection = () => {
     handleClose();
     setShowConfirmResetDialog(true);
-    trackAmplitudeEvent("[Reset-connection] Button Clicked");
+    trackAmplitudeEvent('[Reset-connection] Button Clicked');
   };
 
   const handleEditConnection = () => {
-    handleClose("EDIT");
+    handleClose('EDIT');
     setShowDialog(true);
   };
 
@@ -642,29 +584,17 @@ export const Connections = () => {
     handleClose();
     setIsRefreshing(true); // Set loading state to true
     try {
-      const response = await httpGet(
-        session,
-        `airbyte/v1/connections/${connectionId}/catalog`
-      );
+      const response = await httpGet(session, `airbyte/v1/connections/${connectionId}/catalog`);
       const checkRefresh = async function () {
-        const refreshResponse = await httpGet(
-          session,
-          'tasks/stp/' + response.task_id
-        );
+        const refreshResponse = await httpGet(session, 'tasks/stp/' + response.task_id);
         if (refreshResponse.progress && refreshResponse.progress.length > 0) {
-          const lastStatus =
-            refreshResponse.progress[refreshResponse.progress.length - 1]
-              .status;
+          const lastStatus = refreshResponse.progress[refreshResponse.progress.length - 1].status;
           // running | failed | completed
           if (lastStatus === 'failed') {
             errorToast('Failed to refresh connection', [], globalContext);
             return;
           } else if (lastStatus === 'completed') {
-            successToast(
-              'Connection refreshed successfully',
-              [],
-              globalContext
-            );
+            successToast('Connection refreshed successfully', [], globalContext);
             mutate();
             return;
           }
@@ -690,10 +620,7 @@ export const Connections = () => {
   return (
     <>
       {showLogsDialog && (
-        <ConnectionLogs
-          setShowLogsDialog={setShowLogsDialog}
-          connection={logsConnection}
-        />
+        <ConnectionLogs setShowLogsDialog={setShowLogsDialog} connection={logsConnection} />
       )}
       <PendingActionsAccordion refreshConnectionsList={mutate} />
       <ActionsMenu
@@ -739,11 +666,7 @@ export const Connections = () => {
         handleConfirm={() => resetConnection(resetDeploymentId)}
         message="Resetting the connection will clear all data at the warehouse."
       />
-      <LogCard
-        logs={syncLogs}
-        expand={expandSyncLogs}
-        setExpand={setExpandSyncLogs}
-      />
+      <LogCard logs={syncLogs} expand={expandSyncLogs} setExpand={setExpandSyncLogs} />
     </>
   );
 };

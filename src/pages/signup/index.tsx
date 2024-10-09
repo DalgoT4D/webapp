@@ -20,6 +20,7 @@ import { httpPost } from '@/helpers/http';
 import Input from '@/components/UI/Input/Input';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import { PageHead } from '@/components/PageHead';
 
 export const SignUp = () => {
   const { data: session }: any = useSession();
@@ -67,142 +68,136 @@ export const SignUp = () => {
   };
 
   return (
-    <Auth
-      heading="Create an account"
-      subHeading="Please enter correct registration details below"
-    >
-      <form onSubmit={handleSubmit(onSubmit)} data-testid="signup-form">
-        <Box className={styles.Container}>
-          <Input
-            error={!!errors.username}
-            helperText={errors.username?.message}
-            sx={{ width: '100%', pb: 3, mt: 2 }}
-            id="outlined-basic"
-            data-testid="username"
-            label="Business email"
-            variant="outlined"
-            placeholder="eg. user@domain.com"
-            register={register}
-            name="username"
-            required
-          />
+    <>
+      <PageHead title="Dalgo | Signup" />
 
-          <Input
-            error={!!errors.password}
-            helperText={errors.password?.message}
-            sx={{ width: '100%', pb: 3 }}
-            id="outlined-password-input"
-            data-testid="password"
-            label="Password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Enter your password"
-            autoComplete="current-password"
-            register={register}
-            required
-            name="password"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Box>
-                    <IconButton
-                      onClick={() => {
-                        setShowPassword(!showPassword);
-                      }}
-                      edge="end"
-                    >
-                      {showPassword ? (
-                        <VisibilityOutlinedIcon />
-                      ) : (
-                        <VisibilityOffOutlinedIcon />
-                      )}
-                    </IconButton>
-                  </Box>
-                </InputAdornment>
-              ),
-            }}
-          />
+      <Auth
+        heading="Create an account"
+        subHeading="Please enter correct registration details below"
+      >
+        <form onSubmit={handleSubmit(onSubmit)} data-testid="signup-form">
+          <Box className={styles.Container}>
+            <Input
+              error={!!errors.username}
+              helperText={errors.username?.message}
+              sx={{ width: '100%', pb: 3, mt: 2 }}
+              id="outlined-basic"
+              data-testid="username"
+              label="Business email"
+              variant="outlined"
+              placeholder="eg. user@domain.com"
+              register={register}
+              name="username"
+              required
+            />
 
-          <Input
-            error={!!errors.confirmpassword}
-            helperText={errors.confirmpassword?.message}
-            hookFormValidations={{
-              validate: (value: string) =>
-                value === password || 'Passwords do not match',
-            }}
-            sx={{ width: '100%', pb: 3 }}
-            id="outlined-confirm-password-input"
-            data-testid="confirmpassword"
-            label="Confirm Password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Confirm password"
-            register={register}
-            required
-            name="confirmpassword"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Box>
-                    <IconButton
-                      onClick={() => {
-                        setShowPassword(!showPassword);
-                      }}
-                      edge="end"
-                    >
-                      {showPassword ? (
-                        <VisibilityOutlinedIcon />
-                      ) : (
-                        <VisibilityOffOutlinedIcon />
-                      )}
-                    </IconButton>
-                  </Box>
-                </InputAdornment>
-              ),
-            }}
-          />
+            <Input
+              error={!!errors.password}
+              helperText={errors.password?.message}
+              sx={{ width: '100%', pb: 3 }}
+              id="outlined-password-input"
+              data-testid="password"
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+              register={register}
+              required
+              name="password"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Box>
+                      <IconButton
+                        onClick={() => {
+                          setShowPassword(!showPassword);
+                        }}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />}
+                      </IconButton>
+                    </Box>
+                  </InputAdornment>
+                ),
+              }}
+            />
 
-          <Input
-            error={!!errors.signupcode}
-            helperText={errors.signupcode?.message}
-            sx={{ width: '100%', pb: 3 }}
-            id="outlined-basic"
-            label="Signup code"
-            data-testid="signupcode"
-            variant="outlined"
-            register={register}
-            placeholder="Enter code"
-            name="signupcode"
-            required
-          />
-          <Button
-            sx={{ width: '100%', mb: 3, minHeight: '50px' }}
-            variant="contained"
-            type="submit"
-            disabled={waitForSignup}
-            data-testid="submitbutton"
-          >
-            Sign Up{' '}
-            {waitForSignup && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
-          </Button>
-          <Divider>OR</Divider>
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            Already a member?{' '}
-            <Link href="/login" sx={{ textDecoration: 'none' }}>
-              Log in
-            </Link>
-          </Box>
-          <Box sx={{ mt: 1, textAlign: 'center' }}>
-            Need a signup code?{' '}
-            <Link
-              href="https://dalgo.in/contact-us/"
-              target="_blank"
-              sx={{ textDecoration: 'none' }}
+            <Input
+              error={!!errors.confirmpassword}
+              helperText={errors.confirmpassword?.message}
+              hookFormValidations={{
+                validate: (value: string) => value === password || 'Passwords do not match',
+              }}
+              sx={{ width: '100%', pb: 3 }}
+              id="outlined-confirm-password-input"
+              data-testid="confirmpassword"
+              label="Confirm Password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Confirm password"
+              register={register}
+              required
+              name="confirmpassword"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Box>
+                      <IconButton
+                        onClick={() => {
+                          setShowPassword(!showPassword);
+                        }}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />}
+                      </IconButton>
+                    </Box>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Input
+              error={!!errors.signupcode}
+              helperText={errors.signupcode?.message}
+              sx={{ width: '100%', pb: 3 }}
+              id="outlined-basic"
+              label="Signup code"
+              data-testid="signupcode"
+              variant="outlined"
+              register={register}
+              placeholder="Enter code"
+              name="signupcode"
+              required
+            />
+            <Button
+              sx={{ width: '100%', mb: 3, minHeight: '50px' }}
+              variant="contained"
+              type="submit"
+              disabled={waitForSignup}
+              data-testid="submitbutton"
             >
-              Contact Us
-            </Link>
+              Sign Up {waitForSignup && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
+            </Button>
+            <Divider>OR</Divider>
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              Already a member?{' '}
+              <Link href="/login" sx={{ textDecoration: 'none' }}>
+                Log in
+              </Link>
+            </Box>
+            <Box sx={{ mt: 1, textAlign: 'center' }}>
+              Need a signup code?{' '}
+              <Link
+                href="https://dalgo.in/contact-us/"
+                target="_blank"
+                sx={{ textDecoration: 'none' }}
+              >
+                Contact Us
+              </Link>
+            </Box>
           </Box>
-        </Box>
-      </form>
-    </Auth>
+        </form>
+      </Auth>
+    </>
   );
 };
 

@@ -2,11 +2,7 @@ import { DbtSourceModel, UIOperationType } from './Canvas';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
 import { getNextNodePosition } from '@/utils/editor';
 
-export const generateDummySrcModelNode = (
-  node: any,
-  model: DbtSourceModel,
-  height = 200
-) => {
+export const generateDummySrcModelNode = (node: any, model: DbtSourceModel, height = 200) => {
   const { x: xnew, y: ynew } = getNextNodePosition([
     {
       position: { x: node?.xPos, y: node?.yPos },
@@ -24,17 +20,13 @@ export const generateDummySrcModelNode = (
     },
   };
 
-  dummyNode.data = { ...model, isDummy: true };
+  dummyNode.data = { ...model, isDummy: true, parentNode: node };
 
   return dummyNode;
 };
 
-export const generateDummyOperationlNode = (
-  node: any,
-  op: UIOperationType,
-  height = 200
-) => {
-  const nodeId = String(Date.now());
+export const generateDummyOperationlNode = (node: any, op: UIOperationType, height = 200) => {
+  const nodeId = String(Date.now()); //this is the node.id, that is used to hit backend.
   const { x: xnew, y: ynew } = getNextNodePosition([
     { position: { x: node?.xPos, y: node?.yPos }, height: height },
   ]);
@@ -51,6 +43,7 @@ export const generateDummyOperationlNode = (
       target_model_schema: '',
       config: { type: op.slug },
       isDummy: true,
+      parentNode: node, //added to check parent node.
     },
     position: {
       x: xnew,

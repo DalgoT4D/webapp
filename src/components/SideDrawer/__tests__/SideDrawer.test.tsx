@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  within,
-} from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { SideDrawer } from '../SideDrawer';
 import { sideMenu } from '@/config/menu';
@@ -18,6 +12,7 @@ jest.mock('next/router', () => ({
 const mockGlobalContextValue: any = {
   Permissions: { state: ['permission1', 'can_view_dashboard'] },
   CurrentOrg: { state: { is_demo: true } },
+  UnsavedChanges: { state: false },
 };
 
 describe('SideDrawer', () => {
