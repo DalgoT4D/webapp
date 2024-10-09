@@ -115,13 +115,6 @@ const ProjectTree = ({ dbtSourceModels, handleNodeClick }: ProjectTreeProps) => 
     }
   }, [dbtSourceModels]);
 
-  const handleNodeClick = (nodes: NodeApi<any>[]) => {
-    if (nodes.length > 0 && nodes[0].isLeaf) {
-      console.log('adding a node to canvas from project tree component', nodes[0].data);
-      setCanvasAction({ type: 'add-srcmodel-node', data: nodes[0].data });
-    }
-  };
-
   return (
     <Box
       sx={{
