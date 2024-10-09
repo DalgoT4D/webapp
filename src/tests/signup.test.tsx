@@ -1,10 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { SignUp } from '../pages/signup/index'
+import { SignUp } from '../pages/signup/index';
 import { SessionProvider } from 'next-auth/react';
 import * as nextRouter from 'next/router';
 
-describe("tests for signup form", () => {
-
+describe('tests for signup form', () => {
   const mockSession: Session = {
     expires: '1',
     user: { email: 'a', name: 'Delta', image: 'c' },
@@ -13,8 +12,7 @@ describe("tests for signup form", () => {
   nextRouter.useRouter = jest.fn();
   nextRouter.useRouter.mockImplementation(() => ({ route: '/' }));
 
-  it("checks the initial render", () => {
-
+  it('checks the initial render', () => {
     render(
       <SessionProvider session={mockSession}>
         <SignUp />
@@ -29,7 +27,5 @@ describe("tests for signup form", () => {
 
     expect(usernameField).toBeDefined();
     expect(passwordField).toBeDefined();
-
   });
-
 });

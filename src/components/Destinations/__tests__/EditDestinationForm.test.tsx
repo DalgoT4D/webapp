@@ -87,12 +87,7 @@ describe('destination edit form - fetch definitions + specs successfully', () =>
           },
           {
             title: 'verify-full',
-            required: [
-              'mode',
-              'ca_certificate',
-              'client_certificate',
-              'client_key',
-            ],
+            required: ['mode', 'ca_certificate', 'client_certificate', 'client_key'],
             properties: {
               mode: {
                 enum: ['verify-full'],
@@ -181,11 +176,7 @@ describe('destination edit form - fetch definitions + specs successfully', () =>
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <EditDestinationForm
-            warehouse={WAREHOUSE}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <EditDestinationForm warehouse={WAREHOUSE} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });
@@ -193,9 +184,9 @@ describe('destination edit form - fetch definitions + specs successfully', () =>
     expect(fetch).toHaveBeenCalledTimes(2);
 
     // destination name
-    const destinationName: HTMLInputElement = within(
-      screen.getByTestId('dest-name')
-    ).getByRole('textbox');
+    const destinationName: HTMLInputElement = within(screen.getByTestId('dest-name')).getByRole(
+      'textbox'
+    );
     expect(destinationName).toBeInTheDocument();
     expect(destinationName.value).toBe('test-warehouse');
 
@@ -209,22 +200,19 @@ describe('destination edit form - fetch definitions + specs successfully', () =>
     // spec host
     const hostSpec: any = screen.getByText('Host*').parentElement;
     expect(hostSpec).not.toBeNull();
-    const hostSpecInput: HTMLInputElement =
-      within(hostSpec).getByRole('textbox');
+    const hostSpecInput: HTMLInputElement = within(hostSpec).getByRole('textbox');
     expect(hostSpecInput.value).toBe('test-server');
 
     // spec database
     const databaseSpec: any = screen.getByText('DB Name').parentElement;
     expect(databaseSpec).not.toBeNull();
-    const databaseSpecInput: HTMLInputElement =
-      within(databaseSpec).getByRole('textbox');
+    const databaseSpecInput: HTMLInputElement = within(databaseSpec).getByRole('textbox');
     expect(databaseSpecInput.value).toBe('test-db');
 
     // ssl mode spec
     const sslmodeSpec: any = screen.getByText('SSL modes').parentElement;
     expect(sslmodeSpec).not.toBeNull();
-    const sslmodeSpecInput: HTMLInputElement =
-      within(sslmodeSpec).getByRole('combobox');
+    const sslmodeSpecInput: HTMLInputElement = within(sslmodeSpec).getByRole('combobox');
     expect(sslmodeSpecInput.value).toBe('disable');
   });
 });
@@ -301,12 +289,7 @@ describe('destination edit form - fetch definition (being edited does not match 
           },
           {
             title: 'verify-full',
-            required: [
-              'mode',
-              'ca_certificate',
-              'client_certificate',
-              'client_key',
-            ],
+            required: ['mode', 'ca_certificate', 'client_certificate', 'client_key'],
             properties: {
               mode: {
                 enum: ['verify-full'],
@@ -395,11 +378,7 @@ describe('destination edit form - fetch definition (being edited does not match 
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <EditDestinationForm
-            warehouse={WAREHOUSE}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <EditDestinationForm warehouse={WAREHOUSE} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });
@@ -409,9 +388,9 @@ describe('destination edit form - fetch definition (being edited does not match 
     // If definition is wrong, nothing is set
 
     // destination name
-    const destinationName: HTMLInputElement = within(
-      screen.getByTestId('dest-name')
-    ).getByRole('textbox');
+    const destinationName: HTMLInputElement = within(screen.getByTestId('dest-name')).getByRole(
+      'textbox'
+    );
     expect(destinationName).toBeInTheDocument();
     expect(destinationName.value).toBe('');
 
@@ -496,12 +475,7 @@ describe('destination edit form - fetch definition failed', () => {
           },
           {
             title: 'verify-full',
-            required: [
-              'mode',
-              'ca_certificate',
-              'client_certificate',
-              'client_key',
-            ],
+            required: ['mode', 'ca_certificate', 'client_certificate', 'client_key'],
             properties: {
               mode: {
                 enum: ['verify-full'],
@@ -590,11 +564,7 @@ describe('destination edit form - fetch definition failed', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <EditDestinationForm
-            warehouse={WAREHOUSE}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <EditDestinationForm warehouse={WAREHOUSE} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });
@@ -604,9 +574,9 @@ describe('destination edit form - fetch definition failed', () => {
     // If definition api call fails, nothing is set
 
     // destination name
-    const destinationName: HTMLInputElement = within(
-      screen.getByTestId('dest-name')
-    ).getByRole('textbox');
+    const destinationName: HTMLInputElement = within(screen.getByTestId('dest-name')).getByRole(
+      'textbox'
+    );
     expect(destinationName).toBeInTheDocument();
     expect(destinationName.value).toBe('');
 
@@ -691,12 +661,7 @@ describe('destination edit form - connectivity', () => {
           },
           {
             title: 'verify-full',
-            required: [
-              'mode',
-              'ca_certificate',
-              'client_certificate',
-              'client_key',
-            ],
+            required: ['mode', 'ca_certificate', 'client_certificate', 'client_key'],
             properties: {
               mode: {
                 enum: ['verify-full'],
@@ -785,11 +750,7 @@ describe('destination edit form - connectivity', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <EditDestinationForm
-            warehouse={WAREHOUSE}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <EditDestinationForm warehouse={WAREHOUSE} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });
@@ -833,11 +794,7 @@ describe('destination edit form - connectivity', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <EditDestinationForm
-            warehouse={WAREHOUSE}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <EditDestinationForm warehouse={WAREHOUSE} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });

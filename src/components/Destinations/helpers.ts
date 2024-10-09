@@ -44,10 +44,7 @@ export const getTableData = (warehouse: Warehouse, isSuperAdmin: boolean) => {
         },
       ];
 
-      if (
-        warehouse.connectionConfiguration.loading_method.method ===
-        'GCS Staging'
-      ) {
+      if (warehouse.connectionConfiguration.loading_method.method === 'GCS Staging') {
         tableData.push(
           {
             label: 'GCS Bucket &amp; Path',
@@ -58,10 +55,7 @@ export const getTableData = (warehouse: Warehouse, isSuperAdmin: boolean) => {
           },
           {
             label: 'GCS Temp Files',
-            value:
-              warehouse.connectionConfiguration.loading_method[
-                'keep_files_in_gcs-bucket'
-              ],
+            value: warehouse.connectionConfiguration.loading_method['keep_files_in_gcs-bucket'],
           }
         );
       }

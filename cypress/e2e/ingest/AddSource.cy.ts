@@ -119,9 +119,7 @@ describe('Add source', () => {
 
     cy.get('[data-testid="savebutton"]').click();
 
-    cy.intercept('/api/airbyte/sources/check_connection').as(
-      'check_connection'
-    );
+    cy.intercept('/api/airbyte/sources/check_connection').as('check_connection');
 
     cy.contains('td', 'cypress test src');
   });

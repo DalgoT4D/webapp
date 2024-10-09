@@ -1,15 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
-import {
-  Box,
-  Button,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-} from '@mui/material';
+import { Box, Button, FormControlLabel, Radio, RadioGroup } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -19,6 +12,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { parseStringForNull } from '@/utils/common';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 export interface GenericCol {
   function_name: string;
@@ -52,13 +46,16 @@ const GenericColumnOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-        ? (node?.data as OperationNodeData)
-        : {};
-
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    },
+  });
   type FormProps = {
     computed_columns: {
       function_name: string;
@@ -98,11 +95,7 @@ const GenericColumnOpForm = ({
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(
-          data
-            .map((col: ColumnData) => col.name)
-            .sort((a, b) => a.localeCompare(b))
-        );
+        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -114,6 +107,8 @@ const GenericColumnOpForm = ({
   };
 
   const handleSave = async (data: FormProps) => {
+    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const postData: any = {
         op_type: operation.slug,
@@ -122,43 +117,30 @@ const GenericColumnOpForm = ({
           computed_columns: data.computed_columns.map((item) => ({
             function_name: item.function_name,
             operands: item.operands.map(
-              (op: {
-                type: string;
-                col_val: string;
-                const_val: string | undefined;
-              }) => ({
+              (op: { type: string; col_val: string; const_val: string | undefined }) => ({
                 is_col: op.type === 'col',
-                value:
-                  op.type === 'col'
-                    ? op.col_val
-                    : parseStringForNull(op.const_val),
+                value: op.type === 'col' ? op.col_val : parseStringForNull(op.const_val),
               })
             ),
             output_column_name: item.output_column_name,
           })),
         },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
       setLoading(true);
       // api call
       let operationNode: any;
-      if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
-      } else if (action === 'edit') {
+      if (finalAction === 'create') {
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -184,21 +166,18 @@ const GenericColumnOpForm = ({
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
-      const { source_columns, computed_columns }: GenericColDataConfig =
-        opConfig;
+      const { source_columns, computed_columns }: GenericColDataConfig = opConfig;
       setSrcColumns(source_columns);
 
       // pre-fill form
       reset({
         computed_columns: computed_columns.map((item: GenericCol) => ({
           function_name: item.function_name,
-          operands: item.operands.map(
-            (op: { value: any; is_col: boolean }) => ({
-              type: op.is_col ? 'col' : 'val',
-              col_val: op.is_col ? op.value : '',
-              const_val: op.is_col ? undefined : op.value,
-            })
-          ),
+          operands: item.operands.map((op: { value: any; is_col: boolean }) => ({
+            type: op.is_col ? 'col' : 'val',
+            col_val: op.is_col ? op.value : '',
+            const_val: op.is_col ? undefined : op.value,
+          })),
           output_column_name: item.output_column_name,
         })),
       });
@@ -210,6 +189,7 @@ const GenericColumnOpForm = ({
   };
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     } else {
@@ -260,9 +240,7 @@ const GenericColumnOpForm = ({
             </Button>
           )}
           {fields.map((field, index) => {
-            const radioValue = watch(
-              `computed_columns.0.operands.${index}.type`
-            );
+            const radioValue = watch(`computed_columns.0.operands.${index}.type`);
             return (
               <Box key={field.id}>
                 <Box sx={{ m: 2 }} />

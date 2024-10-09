@@ -15,10 +15,7 @@ export default function Analysis() {
     // listen to responses from the iframe
     window?.addEventListener('message', (event) => {
       const message = event.data;
-      if (
-        message?.locationStatus &&
-        message.locationStatus === '/superset/welcome/'
-      ) {
+      if (message?.locationStatus && message.locationStatus === '/superset/welcome/') {
         if (signedIn !== 'signedIn') {
           setSignedIn('signedIn');
         }
@@ -51,16 +48,12 @@ export default function Analysis() {
 
   const initiateGoogleSignIn = () => {
     // pop open a separate window here for users to do google auth
-    window.open(
-      `${globalContext?.CurrentOrg?.state.viz_url}`,
-      '_blank',
-      'width=500,height=500'
-    );
+    window.open(`${globalContext?.CurrentOrg?.state.viz_url}`, '_blank', 'width=500,height=500');
   };
 
   return (
     <>
-      <PageHead title="Dalgo" />
+      <PageHead title="Dalgo | Analysis" />
       <Box sx={{ p: '3rem 4rem', width: '100%' }}>
         {globalContext?.CurrentOrg?.state?.viz_url && (
           <iframe
@@ -75,12 +68,7 @@ export default function Analysis() {
           ></iframe>
         )}
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography
-            sx={{ fontWeight: 700 }}
-            variant="h4"
-            gutterBottom
-            color="#000"
-          >
+          <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
             Analysis
           </Typography>
         </Box>
@@ -94,8 +82,7 @@ export default function Analysis() {
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
               <Typography variant="h6">
                 Please contact the Dalgo team at{' '}
-                <a href="mailto:support@dalgo.in">support@dalgo.in</a> for more
-                information
+                <a href="mailto:support@dalgo.in">support@dalgo.in</a> for more information
               </Typography>
             </Box>
           </>

@@ -41,9 +41,7 @@ describe('NumberInsights', () => {
 
     const imgSwitchIcon = screen.getByTestId('switchicon-numbers');
     expect(imgSwitchIcon).toBeInTheDocument();
-    expect(
-      screen.getByText('All entries in this column are identical')
-    ).toBeInTheDocument();
+    expect(screen.getByText('All entries in this column are identical')).toBeInTheDocument();
 
     fireEvent.click(imgSwitchIcon);
 
@@ -62,9 +60,7 @@ describe('NumberInsights', () => {
     fireEvent.click(imgSwitchIcon);
 
     await waitFor(() => {
-      expect(
-        screen.getByText('All entries in this column are identical')
-      ).toBeInTheDocument();
+      expect(screen.getByText('All entries in this column are identical')).toBeInTheDocument();
     });
   });
 

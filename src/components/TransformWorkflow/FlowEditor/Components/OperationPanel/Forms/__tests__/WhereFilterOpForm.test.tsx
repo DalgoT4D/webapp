@@ -3,11 +3,7 @@ import WhereFilterOpForm from '../WhereFilterOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import {
-  intermediateTableResponse,
-  mockNode,
-  sourceModelsMock,
-} from './helpers';
+import { intermediateTableResponse, mockNode, sourceModelsMock } from './helpers';
 import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
@@ -31,8 +27,7 @@ const props: OperationFormProps = {
   operation: {
     label: 'Filter',
     slug: 'where',
-    infoToolTip:
-      'Filters all the row values in the selected column based on the defined condition',
+    infoToolTip: 'Filters all the row values in the selected column based on the defined condition',
   },
   sx: { marginLeft: '10px' },
   continueOperationChain: continueOperationChainMock,

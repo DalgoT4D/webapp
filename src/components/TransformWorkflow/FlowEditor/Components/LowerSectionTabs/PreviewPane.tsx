@@ -146,11 +146,7 @@ const PreviewPane = ({ height }: { height: number }) => {
 
         const filename = `${schema}__${table}.csv`;
 
-        const response = await httpGet(
-          session,
-          `warehouse/download/${schema}/${table}`,
-          false
-        );
+        const response = await httpGet(session, `warehouse/download/${schema}/${table}`, false);
 
         const blob = await response.blob();
 
@@ -237,19 +233,12 @@ const PreviewPane = ({ height }: { height: number }) => {
                         <TableSortLabel
                           active={sortedColumn === header.id}
                           direction={
-                            sortedColumn === header.id
-                              ? sortOrder === 1
-                                ? 'asc'
-                                : 'desc'
-                              : 'asc'
+                            sortedColumn === header.id ? (sortOrder === 1 ? 'asc' : 'desc') : 'asc'
                           }
                           onClick={() => handleSort(header.id)}
                           sx={{ marginLeft: '4px' }}
                         >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          {flexRender(header.column.columnDef.header, header.getContext())}
                         </TableSortLabel>
                       </Box>
                     </TableCell>
@@ -273,10 +262,7 @@ const PreviewPane = ({ height }: { height: number }) => {
                           fontSize: '0.8rem',
                         }}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>

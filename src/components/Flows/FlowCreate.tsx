@@ -83,9 +83,7 @@ const FlowCreate = ({
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
 
-  const [connectionOptions, setConnectionOptions] = useState<DispConnection[]>(
-    []
-  );
+  const [connectionOptions, setConnectionOptions] = useState<DispConnection[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const {
     register,
@@ -108,10 +106,7 @@ const FlowCreate = ({
   });
 
   const [alignment, setAlignment] = useState('simple');
-  const handleChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newAlignment: string
-  ) => {
+  const handleChange = (event: React.MouseEvent<HTMLElement>, newAlignment: string) => {
     if (newAlignment === 'simple') {
       setValue('tasks', []);
     }
@@ -172,14 +167,9 @@ const FlowCreate = ({
       (async () => {
         setLoading(true);
         try {
-          const data: any = await httpGet(
-            session,
-            `prefect/v1/flows/${flowId}`
-          );
+          const data: any = await httpGet(session, `prefect/v1/flows/${flowId}`);
 
-          let tasksToApply = tasks.filter(
-            ValidateDefaultTasksToApplyInPipeline
-          );
+          let tasksToApply = tasks.filter(ValidateDefaultTasksToApplyInPipeline);
 
           if (data.transformTasks.length === 0) {
             tasksToApply = [];
@@ -189,13 +179,10 @@ const FlowCreate = ({
             data.transformTasks.length > 0 &&
             data.transformTasks.length !== tasksToApply.length
           ) {
-            const uuidOrder = data.transformTasks.reduce(
-              (acc: any, obj: any) => {
-                acc[obj.uuid] = obj.seq;
-                return acc;
-              },
-              {}
-            );
+            const uuidOrder = data.transformTasks.reduce((acc: any, obj: any) => {
+              acc[obj.uuid] = obj.seq;
+              return acc;
+            }, {});
             tasksToApply = tasks
               .filter((obj) => uuidOrder.hasOwnProperty(obj.uuid))
               .sort((a, b) => uuidOrder[a.uuid] - uuidOrder[b.uuid]);
@@ -237,15 +224,13 @@ const FlowCreate = ({
     (async () => {
       try {
         const data = await httpGet(session, 'airbyte/v1/connections');
-        const tempConns: Array<DispConnection> = data.map(
-          (conn: Connection) => {
-            return {
-              id: conn.connectionId,
-              label: conn.name,
-              name: conn.name,
-            };
-          }
-        );
+        const tempConns: Array<DispConnection> = data.map((conn: Connection) => {
+          return {
+            id: conn.connectionId,
+            label: conn.name,
+            name: conn.name,
+          };
+        });
         setConnectionOptions(tempConns);
       } catch (err: any) {
         console.error(err);
@@ -261,21 +246,17 @@ const FlowCreate = ({
         data.cronDaysOfWeek.map((option: AutoCompleteOption) => option.id),
         data.cronTimeOfDay
       );
-      const selectedConns = data.connections.map(
-        (conn: DispConnection, index: number) => ({
-          id: conn.id,
-          seq: index + 1,
-        })
-      );
+      const selectedConns = data.connections.map((conn: DispConnection, index: number) => ({
+        id: conn.id,
+        seq: index + 1,
+      }));
       if (isEditPage) {
         setLoading(true);
         // hit the set schedule api if the value is updated
         if (dirtyFields?.active) {
           await httpPost(
             session,
-            `prefect/flows/${flowId}/set_schedule/${
-              data.active ? 'active' : 'inactive'
-            }`,
+            `prefect/flows/${flowId}/set_schedule/${data.active ? 'active' : 'inactive'}`,
             {}
           );
         }
@@ -285,18 +266,12 @@ const FlowCreate = ({
           cron: cronExpression,
           name: data.name,
           connections: selectedConns,
-          transformTasks: data.tasks.map(
-            (task: TransformTask, index: number) => ({
-              uuid: task.uuid,
-              seq: index + 1,
-            })
-          ),
+          transformTasks: data.tasks.map((task: TransformTask, index: number) => ({
+            uuid: task.uuid,
+            seq: index + 1,
+          })),
         });
-        successToast(
-          `Pipeline ${data.name} updated successfully`,
-          [],
-          toastContext
-        );
+        successToast(`Pipeline ${data.name} updated successfully`, [], toastContext);
         setSelectedFlowId('');
       } else {
         setLoading(true);
@@ -304,18 +279,12 @@ const FlowCreate = ({
           name: data.name,
           connections: selectedConns,
           cron: cronExpression,
-          transformTasks: data.tasks.map(
-            (task: TransformTask, index: number) => ({
-              uuid: task.uuid,
-              seq: index + 1,
-            })
-          ),
+          transformTasks: data.tasks.map((task: TransformTask, index: number) => ({
+            uuid: task.uuid,
+            seq: index + 1,
+          })),
         });
-        successToast(
-          `Pipeline ${response.name} created successfully`,
-          [],
-          toastContext
-        );
+        successToast(`Pipeline ${response.name} created successfully`, [], toastContext);
       }
       updateCrudVal('index');
       mutate();
@@ -329,19 +298,11 @@ const FlowCreate = ({
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} data-testid="form">
-        <Backdrop
-          open={loading !== undefined ? loading : false}
-          sx={{ zIndex: '100' }}
-        >
+        <Backdrop open={loading !== undefined ? loading : false} sx={{ zIndex: '100' }}>
           <CircularProgress data-testid="circularprogress" color="info" />
         </Backdrop>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography
-            sx={{ fontWeight: 700 }}
-            variant="h4"
-            gutterBottom
-            color="#000"
-          >
+          <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
             {flowId ? 'Update pipeline' : 'Create a new Pipeline'}
           </Typography>
           <Box display="flex" alignItems="center">
@@ -353,12 +314,7 @@ const FlowCreate = ({
             >
               Cancel
             </Typography>
-            <Button
-              variant="contained"
-              sx={{ m: 1 }}
-              type="submit"
-              data-testid="savebutton"
-            >
+            <Button variant="contained" sx={{ m: 1 }} type="submit" data-testid="savebutton">
               Save changes
             </Button>
           </Box>
@@ -372,11 +328,7 @@ const FlowCreate = ({
           }}
         >
           <Box sx={{ width: '60%', overflow: 'auto', pl: 4 }}>
-            <Typography
-              variant="h5"
-              sx={{ marginBottom: '30px' }}
-              fontWeight={600}
-            >
+            <Typography variant="h5" sx={{ marginBottom: '30px' }} fontWeight={600}>
               Pipeline details
             </Typography>
             <Stack gap="12px" sx={{ maxWidth: '495px', mr: 4 }}>
@@ -397,9 +349,7 @@ const FlowCreate = ({
                       </Stack>
                     )}
                   />
-                  <InputLabel sx={{ marginBottom: '5px' }}>
-                    Is Active ?
-                  </InputLabel>
+                  <InputLabel sx={{ marginBottom: '5px' }}>Is Active ?</InputLabel>
                 </Box>
               )}
               <Box>
@@ -454,9 +404,7 @@ const FlowCreate = ({
                 />
               </Box>
               <Box>
-                <InputLabel sx={{ marginBottom: '5px' }}>
-                  Transform tasks
-                </InputLabel>
+                <InputLabel sx={{ marginBottom: '5px' }}>Transform tasks</InputLabel>
 
                 <ToggleButtonGroup
                   color="primary"
@@ -489,9 +437,7 @@ const FlowCreate = ({
                                   field.onChange([]);
                                 } else {
                                   field.onChange(
-                                    tasks.filter(
-                                      ValidateDefaultTasksToApplyInPipeline
-                                    )
+                                    tasks.filter(ValidateDefaultTasksToApplyInPipeline)
                                   );
                                 }
                               }}
@@ -568,9 +514,7 @@ const FlowCreate = ({
                         isOptionEqualToValue={(option: any, val: any) =>
                           val && option?.id === val?.id
                         }
-                        onChange={(e, data: readonly any[]) =>
-                          field.onChange(data)
-                        }
+                        onChange={(e, data: readonly any[]) => field.onChange(data)}
                         renderInput={(params) => (
                           <Input
                             name="cronDaysOfWeek"

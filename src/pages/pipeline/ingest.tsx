@@ -35,43 +35,26 @@ export default function Ingest() {
   const tabsObj: { [key: string]: number } = {
     connections: 0,
     sources: 1,
-    warehouse: 2
-  }
+    warehouse: 2,
+  };
 
   const { value, handleChange } = useQueryParams({
     tabsObj,
-    basePath: "/pipeline/ingest",
-    defaultTab: "connections"
-  })
+    basePath: '/pipeline/ingest',
+    defaultTab: 'connections',
+  });
 
   return (
     <>
-      <PageHead title="Dalgo" />
+      <PageHead title="Dalgo | Ingest" />
       <main className={styles.main}>
-        <Typography
-          sx={{ fontWeight: 700 }}
-          variant="h4"
-          gutterBottom
-          color="#000"
-        >
+        <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
           Ingest
         </Typography>
         <Box sx={{ borderBottom: 1, borderColor: '#DDDDDD' }}>
-          <Tabs
-            value={value}
-            onChange={handleChange}
-            aria-label="ingestion tabs"
-          >
-            <Tab
-              label="Connections"
-              sx={{ mr: 4 }}
-              className="connections_walkthrough"
-            />
-            <Tab
-              label="Sources"
-              sx={{ mr: 4 }}
-              className="sources_walkthrough"
-            />
+          <Tabs value={value} onChange={handleChange} aria-label="ingestion tabs">
+            <Tab label="Connections" sx={{ mr: 4 }} className="connections_walkthrough" />
+            <Tab label="Sources" sx={{ mr: 4 }} className="sources_walkthrough" />
             <Tab label="Your Warehouse" className="warehouse_walkthrough" />
           </Tabs>
         </Box>

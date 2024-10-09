@@ -69,10 +69,7 @@ describe('LogSummaryBlock Component', () => {
 
   it('renders NameAndPatternBlock for default case', () => {
     render(
-      <LogSummaryBlock
-        logsummary={logsummaryDefault}
-        setLogsummaryLogs={mockSetLogsummaryLogs}
-      />
+      <LogSummaryBlock logsummary={logsummaryDefault} setLogsummaryLogs={mockSetLogsummaryLogs} />
     );
 
     expect(screen.getByText('default task')).toBeInTheDocument();
@@ -82,15 +79,10 @@ describe('LogSummaryBlock Component', () => {
 
   it('calls setLogsummaryLogs on Logs button click', () => {
     render(
-      <LogSummaryBlock
-        logsummary={logsummaryDefault}
-        setLogsummaryLogs={mockSetLogsummaryLogs}
-      />
+      <LogSummaryBlock logsummary={logsummaryDefault} setLogsummaryLogs={mockSetLogsummaryLogs} />
     );
 
     fireEvent.click(screen.getByText('Logs'));
-    expect(mockSetLogsummaryLogs).toHaveBeenCalledWith(
-      logsummaryDefault.log_lines
-    );
+    expect(mockSetLogsummaryLogs).toHaveBeenCalledWith(logsummaryDefault.log_lines);
   });
 });

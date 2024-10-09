@@ -3,7 +3,6 @@ import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, FormHelperText } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -13,6 +12,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 interface RenameDataConfig {
   columns: { [key: string]: string };
@@ -31,12 +31,16 @@ const RenameColumnOp = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-        ? (node?.data as OperationNodeData)
-        : {};
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    },
+  });
 
   const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
@@ -68,16 +72,13 @@ const RenameColumnOp = ({
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
+      //change
       try {
         const data: ColumnData[] = await httpGet(
           session,
           `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
         );
-        setSrcColumns(
-          data
-            .map((col: ColumnData) => col.name)
-            .sort((a, b) => a.localeCompare(b))
-        );
+        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
       }
@@ -89,14 +90,16 @@ const RenameColumnOp = ({
   };
 
   const handleSave = async (data: any) => {
+    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const postData: any = {
         op_type: operation.slug,
         source_columns: srcColumns,
         other_inputs: [],
         config: { columns: {} },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
       data.config.forEach((item: any) => {
         if (item.old && item.new) postData.config.columns[item.old] = item.new;
@@ -105,21 +108,15 @@ const RenameColumnOp = ({
       // api call
       setLoading(true);
       let operationNode: any;
-      if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
-      } else if (action === 'edit') {
+      if (finalAction === 'create') {
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -162,6 +159,7 @@ const RenameColumnOp = ({
   };
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     } else {
@@ -169,9 +167,7 @@ const RenameColumnOp = ({
     }
   }, [session, node]);
 
-  const options = srcColumns.filter(
-    (column) => !config.map((con) => con.old).includes(column)
-  );
+  const options = srcColumns.filter((column) => !config.map((con) => con.old).includes(column));
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
@@ -181,8 +177,8 @@ const RenameColumnOp = ({
             action === 'view'
               ? undefined
               : (index: number) => {
-                remove(index);
-              }
+                  remove(index);
+                }
           }
           headers={['Current Name', 'New Name']}
           data={fields.map((field, index) => [

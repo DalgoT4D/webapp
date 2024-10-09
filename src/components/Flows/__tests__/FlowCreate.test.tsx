@@ -1,10 +1,4 @@
-import {
-  render,
-  screen,
-  act,
-  fireEvent,
-  waitFor,
-} from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import FlowCreate from '../FlowCreate';
@@ -132,9 +126,7 @@ describe('Flow Creation', () => {
   it('checks connection autocomplete list and adding a connection', async () => {
     const fetchMock = jest.fn().mockResolvedValueOnce({
       ok: true,
-      json: jest
-        .fn()
-        .mockResolvedValueOnce([{ name: 'conn-1', blockName: 'conn-1-block' }]),
+      json: jest.fn().mockResolvedValueOnce([{ name: 'conn-1', blockName: 'conn-1-block' }]),
     });
     (global as any).fetch = fetchMock;
 
@@ -179,9 +171,7 @@ describe('Flow Creation', () => {
   it('checks removing a connection', async () => {
     const fetchMock = jest.fn().mockResolvedValueOnce({
       ok: true,
-      json: jest
-        .fn()
-        .mockResolvedValueOnce([{ name: 'conn-1', blockName: 'conn-1-block' }]),
+      json: jest.fn().mockResolvedValueOnce([{ name: 'conn-1', blockName: 'conn-1-block' }]),
     });
     (global as any).fetch = fetchMock;
 
@@ -271,11 +261,7 @@ describe('Flow Creation', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: jest
-          .fn()
-          .mockResolvedValueOnce([
-            { name: 'conn-1', connectionId: 'conn-1-id' },
-          ]),
+        json: jest.fn().mockResolvedValueOnce([{ name: 'conn-1', connectionId: 'conn-1-id' }]),
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -393,11 +379,7 @@ describe('Flow Creation', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: jest
-          .fn()
-          .mockResolvedValueOnce([
-            { name: 'conn-1', connectionId: 'conn-1-id' },
-          ]),
+        json: jest.fn().mockResolvedValueOnce([{ name: 'conn-1', connectionId: 'conn-1-id' }]),
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -491,11 +473,7 @@ describe('Flow Creation', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: jest
-          .fn()
-          .mockResolvedValueOnce([
-            { name: 'conn-1', connectionId: 'conn-1-id' },
-          ]),
+        json: jest.fn().mockResolvedValueOnce([{ name: 'conn-1', connectionId: 'conn-1-id' }]),
       })
       .mockResolvedValueOnce({
         ok: true,

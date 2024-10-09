@@ -5,26 +5,16 @@ describe('Side menu', () => {
 
   it('Initial render of side menu', () => {
     // parent
-    cy.get('[data-testid="side-menu"]')
-      .contains('Analysis')
-      .should('be.visible');
+    cy.get('[data-testid="side-menu"]').contains('Analysis').should('be.visible');
 
-    cy.get('[data-testid="side-menu"]')
-      .contains('Pipeline overview')
-      .should('be.visible');
+    cy.get('[data-testid="side-menu"]').contains('Pipeline overview').should('be.visible');
 
-    cy.get('[data-testid="side-menu"]')
-      .contains('User management')
-      .should('be.visible');
+    cy.get('[data-testid="side-menu"]').contains('User management').should('be.visible');
 
     // Sub menus for Pipeline overview are by default visible
     cy.get('[data-testid="side-menu"]').contains('Ingest').should('be.visible');
-    cy.get('[data-testid="side-menu"]')
-      .contains('Transform')
-      .should('be.visible');
-    cy.get('[data-testid="side-menu"]')
-      .contains('Orchestrate')
-      .should('be.visible');
+    cy.get('[data-testid="side-menu"]').contains('Transform').should('be.visible');
+    cy.get('[data-testid="side-menu"]').contains('Orchestrate').should('be.visible');
   });
 
   it('Toggle the side menu collapsible', () => {

@@ -15,14 +15,12 @@ import styles from '@/styles/Login.module.css';
 import { useRouter } from 'next/router';
 import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
 import Input from '@/components/UI/Input/Input';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import { PageHead } from '@/components/PageHead';
 
 export const Login = () => {
   const {
@@ -63,97 +61,93 @@ export const Login = () => {
   }
 
   return (
-    <Auth
-      heading="Log In"
-      subHeading="Please enter correct login details below"
-    >
-      <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
-        <Box className={styles.Container}>
-          <Input
-            error={!!errors.username}
-            sx={{ width: '100%', pb: 2 }}
-            id="outlined-basic"
-            data-testid="username"
-            label="Business email"
-            placeholder="eg. user@domain.com"
-            variant="outlined"
-            required
-            register={register}
-            name="username"
-            helperText={errors.username?.message}
-          />
-          <Input
-            error={!!errors.password}
-            required
-            helperText={errors.password?.message}
-            sx={{ width: '100%' }}
-            id="outlined-password-input"
-            data-testid="password"
-            label="Password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Enter your password"
-            autoComplete="current-password"
-            register={register}
-            name="password"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Box>
-                    <IconButton
-                      onClick={() => {
-                        setShowPassword(!showPassword);
-                      }}
-                      edge="end"
-                    >
-                      {showPassword ? (
-                        <VisibilityOutlinedIcon />
-                      ) : (
-                        <VisibilityOffOutlinedIcon />
-                      )}
-                    </IconButton>
-                  </Box>
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Box sx={{ textAlign: 'right', pb: 4 }}>
-            <Link
-              href="/forgotpassword"
-              sx={{
-                textDecoration: 'none',
-                color: '#c0c2c3',
-                fontWeight: '600',
-              }}
-            >
-              Forgot password?
-            </Link>
-          </Box>
-          {errors.root?.message && (
-            <FormHelperText sx={{ color: 'red', mb: 1, textAlign: 'center' }}>
-              {errors.root?.message}
-            </FormHelperText>
-          )}
+    <>
+      <PageHead title="Dalgo | Login" />
 
-          <Button
-            variant="contained"
-            sx={{ width: '100%', mb: 2, minHeight: '50px' }}
-            type="submit"
-            disabled={waitForLogin}
-            data-testid="submitbutton"
-          >
-            Login{' '}
-            {waitForLogin && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
-          </Button>
-          <Divider>OR</Divider>
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            Not a member?{' '}
-            <Link href="/signup" sx={{ textDecoration: 'none' }}>
-              Sign Up
-            </Link>
+      <Auth heading="Log In" subHeading="Please enter correct login details below">
+        <form onSubmit={handleSubmit(onSubmit)} data-testid="login-form">
+          <Box className={styles.Container}>
+            <Input
+              error={!!errors.username}
+              sx={{ width: '100%', pb: 2 }}
+              id="outlined-basic"
+              data-testid="username"
+              label="Business email"
+              placeholder="eg. user@domain.com"
+              variant="outlined"
+              required
+              register={register}
+              name="username"
+              helperText={errors.username?.message}
+            />
+            <Input
+              error={!!errors.password}
+              required
+              helperText={errors.password?.message}
+              sx={{ width: '100%' }}
+              id="outlined-password-input"
+              data-testid="password"
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+              register={register}
+              name="password"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Box>
+                      <IconButton
+                        onClick={() => {
+                          setShowPassword(!showPassword);
+                        }}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />}
+                      </IconButton>
+                    </Box>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Box sx={{ textAlign: 'right', pb: 4 }}>
+              <Link
+                href="/forgotpassword"
+                sx={{
+                  textDecoration: 'none',
+                  color: '#c0c2c3',
+                  fontWeight: '600',
+                }}
+              >
+                Forgot password?
+              </Link>
+            </Box>
+            {errors.root?.message && (
+              <FormHelperText sx={{ color: 'red', mb: 1, textAlign: 'center' }}>
+                {errors.root?.message}
+              </FormHelperText>
+            )}
+
+            <Button
+              variant="contained"
+              sx={{ width: '100%', mb: 2, minHeight: '50px' }}
+              type="submit"
+              disabled={waitForLogin}
+              data-testid="submitbutton"
+            >
+              Login {waitForLogin && <CircularProgress sx={{ ml: 2 }} size="1rem" />}
+            </Button>
+            <Divider>OR</Divider>
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              Not a member?{' '}
+              <Link href="/signup" sx={{ textDecoration: 'none' }}>
+                Sign Up
+              </Link>
+            </Box>
           </Box>
-        </Box>
-      </form>
-    </Auth>
+        </form>
+      </Auth>
+    </>
   );
 };
 
