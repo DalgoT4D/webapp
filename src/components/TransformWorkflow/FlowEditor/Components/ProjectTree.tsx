@@ -4,7 +4,7 @@ import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@/assets/icons/datatable.svg';
-import { DbtSourceModel } from './Canvas';
+import { DbtSourceModel, WarehouseTable } from './Canvas';
 import AddIcon from '@mui/icons-material/Add';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import useResizeObserver from 'use-resize-observer';
@@ -13,7 +13,8 @@ import Image from 'next/image';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-const Node = ({ node, style, dragHandle }: any) => {
+const Node = ({ node, style, dragHandle, tree, handleSyncClick }: any) => {
+  console.log(tree.props);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const width = node.tree.props.width;
@@ -23,7 +24,7 @@ const Node = ({ node, style, dragHandle }: any) => {
   const data: DbtSourceModel = node.data;
   let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
   name = trimString(name, stringLengthWithWidth);
-  const { setCanvasAction } = useCanvasAction();
+
   return (
     <Box
       style={style}
@@ -57,8 +58,8 @@ const Node = ({ node, style, dragHandle }: any) => {
               }}
               onClick={(event) => {
                 event.stopPropagation();
-                if (permissions.includes('can_sync_sources'))
-                  setCanvasAction({ type: 'sync-sources', data: null });
+                console.log('here clicking the sync button');
+                handleSyncClick();
               }}
             />
           </Tooltip>
@@ -69,19 +70,18 @@ const Node = ({ node, style, dragHandle }: any) => {
 };
 
 interface ProjectTreeProps {
-  dbtSourceModels: DbtSourceModel[];
-  handleNodeClick: any;
+  dbtSourceModels: WarehouseTable[];
+  handleNodeClick: (...args: any) => void;
+  handleSyncClick: (...args: any) => void;
 }
 
-// type TreeData = Partial<DbtSourceModel> & { children: TreeData[] };
-
-const ProjectTree = ({ dbtSourceModels, handleNodeClick }: ProjectTreeProps) => {
+const ProjectTree = ({ dbtSourceModels, handleNodeClick, handleSyncClick }: ProjectTreeProps) => {
   const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
 
-  const constructAndSetProjectTreeData = (dbtSourceModels: DbtSourceModel[]) => {
+  const constructAndSetProjectTreeData = (dbtSourceModels: WarehouseTable[]) => {
     // group by schema and push dbtSourceModels under the children key
     const leafNodesBySchema = dbtSourceModels.reduce(
       (acc, dbtSourceModel) => {
@@ -93,7 +93,7 @@ const ProjectTree = ({ dbtSourceModels, handleNodeClick }: ProjectTreeProps) => 
         }
         return acc;
       },
-      {} as { [key: string]: DbtSourceModel[] }
+      {} as { [key: string]: WarehouseTable[] }
     );
 
     // construct the tree data
@@ -110,7 +110,6 @@ const ProjectTree = ({ dbtSourceModels, handleNodeClick }: ProjectTreeProps) => 
 
   useEffect(() => {
     if (dbtSourceModels) {
-      console.log('rerendeirng project tree');
       constructAndSetProjectTreeData(dbtSourceModels);
     }
   }, [dbtSourceModels]);
@@ -149,7 +148,7 @@ const ProjectTree = ({ dbtSourceModels, handleNodeClick }: ProjectTreeProps) => 
           rowHeight={30}
           onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
         >
-          {Node}
+          {(props) => <Node {...props} handleSyncClick={handleSyncClick} />}
         </Tree>
       </Box>
     </Box>

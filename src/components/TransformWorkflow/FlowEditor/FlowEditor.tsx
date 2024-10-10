@@ -38,6 +38,7 @@ const UpperSection = ({
   setTempLockCanvas,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
+  const globalContext = useContext(GlobalContext);
   const { setCanvasAction } = useCanvasAction();
   const onResize = (event: any, { size }: any) => {
     setWidth(size.width);
@@ -47,6 +48,13 @@ const UpperSection = ({
     if (nodes.length > 0 && nodes[0].isLeaf) {
       console.log('adding a node to canvas from project tree component', nodes[0].data);
       setCanvasAction({ type: 'add-srcmodel-node', data: nodes[0].data });
+    }
+  };
+
+  const initiateSyncSources = () => {
+    const permissions = globalContext?.Permissions.state || [];
+    if (permissions.includes('can_sync_sources')) {
+      setCanvasAction({ type: 'sync-sources', data: null });
     }
   };
   return (
@@ -66,7 +74,11 @@ const UpperSection = ({
         maxConstraints={[550, Infinity]}
         resizeHandles={['e']}
       >
-        <ProjectTree dbtSourceModels={sourcesModels} handleNodeClick={handleNodeClick} />
+        <ProjectTree
+          dbtSourceModels={sourcesModels}
+          handleNodeClick={handleNodeClick}
+          handleSyncClick={initiateSyncSources}
+        />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />
       <Box sx={{ width: '100%' }}>
@@ -262,13 +274,10 @@ const FlowEditor = ({}) => {
       // Clear previous logs
       setDbtRunLogs([]);
 
-      const orgslug = globalContext?.CurrentOrg.state.slug;
-      const syncSourcesHashKey = `syncsources-${orgslug}`;
-
       const response: any = await httpPost(session, `transform/dbt_project/sync_sources/`, {});
 
-      if (response?.task_id && orgslug) {
-        await pollForSyncSourcesTask(response.task_id, syncSourcesHashKey);
+      if (response?.task_id && response?.hashkey) {
+        await pollForSyncSourcesTask(response.task_id, response.hashkey);
       }
     } catch (error) {
       console.error(error);

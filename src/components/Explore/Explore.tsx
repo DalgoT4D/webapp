@@ -1,12 +1,15 @@
 import { PageHead } from '@/components/PageHead';
-import { DbtSourceModel } from '@/components/TransformWorkflow/FlowEditor/Components/Canvas';
+import {
+  DbtSourceModel,
+  WarehouseTable,
+} from '@/components/TransformWorkflow/FlowEditor/Components/Canvas';
 import { StatisticsPane } from '@/components/TransformWorkflow/FlowEditor/Components/LowerSectionTabs/StatisticsPane';
 
 import { httpGet } from '@/helpers/http';
 import { Box, Dialog, Divider, IconButton, Tab, Tabs } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Transition } from '@/components/DBT/DBTTransformType';
 import { ResizableBox } from 'react-resizable';
 import ProjectTree from '@/components/TransformWorkflow/FlowEditor/Components/ProjectTree';
@@ -14,24 +17,28 @@ import PreviewPane from '@/components/TransformWorkflow/FlowEditor/Components/Lo
 import { NodeApi } from 'react-arborist';
 import Close from '@mui/icons-material/Close';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
+import { successToast } from '../ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 export const Explore = () => {
   const { data: session } = useSession();
   const [selectedTab, setSelectedTab] = useState<'preview' | 'statistics'>('preview');
   const router = useRouter();
+  const globalContext = useContext(GlobalContext);
 
   const [dialogueOpen, setDialogueOpen] = useState(true);
   const [width, setWidth] = useState(260);
 
   const [height, setheight] = useState(500);
-  const [sourceModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
+  const [sourceModels, setSourcesModels] = useState<WarehouseTable[]>([]);
 
   const { setPreviewAction } = usePreviewAction();
 
   const fetchSourcesModels = () => {
-    httpGet(session, 'transform/dbt_project/sources_models/')
-      .then((response: DbtSourceModel[]) => {
+    httpGet(session, 'warehouse/sync_tables')
+      .then((response: WarehouseTable[]) => {
         setSourcesModels(response);
+        successToast('Tables synced with warehouse', [], globalContext);
       })
       .catch((error) => {
         console.log(error);
@@ -85,7 +92,11 @@ export const Explore = () => {
             maxConstraints={[550, Infinity]}
             resizeHandles={['e']}
           >
-            <ProjectTree dbtSourceModels={sourceModels} handleNodeClick={handleNodeClick} />
+            <ProjectTree
+              dbtSourceModels={sourceModels}
+              handleNodeClick={handleNodeClick}
+              handleSyncClick={fetchSourcesModels}
+            />
           </ResizableBox>
           <Divider orientation="vertical" sx={{ color: 'black' }} />
           <Box sx={{ width: `calc(100% - ${width}px)` }}>
