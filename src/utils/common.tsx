@@ -167,5 +167,5 @@ export const copyToClipboard = (dataToCopy: any) => {
 };
 
 export const formatDateTimeStringToLocalTimeZone = (dateTimeString: string) => {
-  return moment(dateTimeString).format('Do MMM HH:mmA');
+  return moment(dateTimeString).format('Do MMM hh:mmA');
 };
