@@ -1,4 +1,4 @@
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -6,15 +6,15 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@/assets/icons/datatable.svg';
 import { DbtSourceModel, WarehouseTable } from './Canvas';
 import AddIcon from '@mui/icons-material/Add';
-import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import useResizeObserver from 'use-resize-observer';
 import { trimString } from '@/utils/common';
 import Image from 'next/image';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import SyncIcon from '@/assets/icons/sync.svg';
+import styles from '@/styles/Common.module.css';
 
-const Node = ({ node, style, dragHandle, tree, handleSyncClick }: any) => {
-  console.log(tree.props);
+const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const width = node.tree.props.width;
@@ -48,22 +48,31 @@ const Node = ({ node, style, dragHandle, tree, handleSyncClick }: any) => {
       <Box sx={{ display: 'flex', width: '100%' }}>
         <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>{name}</Typography>
         {node.isLeaf && <AddIcon sx={{ ml: 'auto', cursor: 'pointer' }} />}
-        {!node.isLeaf && node.level === 0 && (
-          <Tooltip title="Sync Sources">
-            <ReplayIcon
+        {!node.isLeaf &&
+          node.level === 0 &&
+          (!isSyncing ? (
+            <Tooltip title="Sync Sources">
+              <ReplayIcon
+                sx={{
+                  ml: 'auto',
+                  cursor: 'pointer',
+                  opacity: permissions.includes('can_sync_sources') ? 1 : 0.5,
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  console.log('here clicking the sync button');
+                  handleSyncClick();
+                }}
+              />
+            </Tooltip>
+          ) : (
+            <CircularProgress
               sx={{
                 ml: 'auto',
-                cursor: 'pointer',
-                opacity: permissions.includes('can_sync_sources') ? 1 : 0.5,
               }}
-              onClick={(event) => {
-                event.stopPropagation();
-                console.log('here clicking the sync button');
-                handleSyncClick();
-              }}
+              size={24}
             />
-          </Tooltip>
-        )}
+          ))}
       </Box>
     </Box>
   );
@@ -73,9 +82,15 @@ interface ProjectTreeProps {
   dbtSourceModels: WarehouseTable[];
   handleNodeClick: (...args: any) => void;
   handleSyncClick: (...args: any) => void;
+  isSyncing?: boolean;
 }
 
-const ProjectTree = ({ dbtSourceModels, handleNodeClick, handleSyncClick }: ProjectTreeProps) => {
+const ProjectTree = ({
+  dbtSourceModels,
+  handleNodeClick,
+  handleSyncClick,
+  isSyncing = false,
+}: ProjectTreeProps) => {
   const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
   const globalContext = useContext(GlobalContext);
@@ -148,7 +163,7 @@ const ProjectTree = ({ dbtSourceModels, handleNodeClick, handleSyncClick }: Proj
           rowHeight={30}
           onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
         >
-          {(props) => <Node {...props} handleSyncClick={handleSyncClick} />}
+          {(props) => <Node {...props} handleSyncClick={handleSyncClick} isSyncing={isSyncing} />}
         </Tree>
       </Box>
     </Box>

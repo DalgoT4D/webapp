@@ -25,6 +25,7 @@ export const Explore = () => {
   const [selectedTab, setSelectedTab] = useState<'preview' | 'statistics'>('preview');
   const router = useRouter();
   const globalContext = useContext(GlobalContext);
+  const [loading, setLoading] = useState(false);
 
   const [dialogueOpen, setDialogueOpen] = useState(true);
   const [width, setWidth] = useState(260);
@@ -35,6 +36,7 @@ export const Explore = () => {
   const { setPreviewAction } = usePreviewAction();
 
   const fetchSourcesModels = () => {
+    setLoading(true);
     httpGet(session, 'warehouse/sync_tables')
       .then((response: WarehouseTable[]) => {
         setSourcesModels(response);
@@ -42,6 +44,9 @@ export const Explore = () => {
       })
       .catch((error) => {
         console.log(error);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -96,6 +101,7 @@ export const Explore = () => {
               dbtSourceModels={sourceModels}
               handleNodeClick={handleNodeClick}
               handleSyncClick={fetchSourcesModels}
+              isSyncing={loading}
             />
           </ResizableBox>
           <Divider orientation="vertical" sx={{ color: 'black' }} />
