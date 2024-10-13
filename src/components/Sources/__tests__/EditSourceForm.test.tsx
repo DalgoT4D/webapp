@@ -22,7 +22,6 @@ jest.mock('react-use-websocket', () => ({
 }));
 
 describe('Connections Setup', () => {
-
   let sendJsonMessageMock: jest.Mock;
   let lastMessageMock: any;
 
@@ -37,7 +36,6 @@ describe('Connections Setup', () => {
       onError: jest.fn(),
     });
   });
-
 
   const mockSession: Session = {
     expires: '1',
@@ -75,8 +73,6 @@ describe('Connections Setup', () => {
         ]),
       });
 
-
-
     const setShowFormMock = jest.fn();
     const setLoadingMock = jest.fn();
     render(
@@ -100,10 +96,12 @@ describe('Connections Setup', () => {
       </SessionProvider>
     );
 
-    await waitFor(() => expect(useWebSocket).toHaveBeenCalledWith(
-      expect.stringContaining('airbyte/source/check_connection'),
-      expect.any(Object)
-    ));
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
+    );
 
     await waitFor(() => {
       const savebutton = screen.getByTestId('savebutton');
@@ -205,10 +203,12 @@ describe('Connections Setup', () => {
       </SessionProvider>
     );
 
-    await waitFor(() => expect(useWebSocket).toHaveBeenCalledWith(
-      expect.stringContaining('airbyte/source/check_connection'),
-      expect.any(Object)
-    ));
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
+    );
 
     await waitFor(() => {
       const savebutton = screen.getByTestId('savebutton');

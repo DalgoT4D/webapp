@@ -5,17 +5,17 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import useSWR from 'swr';
 import { httpDelete, httpGet } from '@/helpers/http';
-import { successToast } from '@/components/ToastMessage/ToastHelper'
+import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { Dialog } from '@mui/material';
 jest.mock('../SourceForm', () => {
-  const MockSource = ({ showForm, setShowForm }: { showForm: boolean, setShowForm: any }) => {
+  const MockSource = ({ showForm, setShowForm }: { showForm: boolean; setShowForm: any }) => {
     return (
       <Dialog open={showForm} data-testid="test-source-form">
         form-dialog-component
         <button
           data-testid="closebutton"
           onClick={() => {
-            setShowForm(false)
+            setShowForm(false);
           }}
         >
           Close
@@ -29,13 +29,10 @@ jest.mock('../SourceForm', () => {
   return { __esModule: true, default: MockSource };
 });
 
-
-
 jest.mock('next-auth/react');
 jest.mock('swr');
 jest.mock('@/helpers/http');
 jest.mock('@/components/ToastMessage/ToastHelper');
-
 
 const mockSession = {
   data: {
@@ -85,10 +82,7 @@ const mockSourceDefs = [
     dockerImageTag: 'tag2',
   },
 ];
-describe("Sources", () => {
-
-
-
+describe('Sources', () => {
   beforeEach(() => {
     useSession.mockReturnValue(mockSession);
     useSWR.mockReturnValue({ data: mockData, isLoading: false, mutate: jest.fn() });
@@ -121,7 +115,9 @@ describe("Sources", () => {
 
     fireEvent.click(screen.getByText(/New Source/i));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("closebutton"));
+
+    // Close the form dialog
+    fireEvent.click(screen.getByTestId('closebutton'));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
@@ -133,16 +129,17 @@ describe("Sources", () => {
     );
 
     // Open the menu and select delete
-    fireEvent.click(screen.getAllByTestId("MoreHorizIcon")[0]);
+    fireEvent.click(screen.getAllByTestId('MoreHorizIcon')[0]);
     fireEvent.click(screen.getByText('Delete'));
 
     // Confirm delete action
     fireEvent.click(screen.getByText(/I understand the consequences, confirm/i));
-    await waitFor(() => expect(successToast).toHaveBeenCalledWith('Source deleted', [], mockGlobalContext));
+    await waitFor(() =>
+      expect(successToast).toHaveBeenCalledWith('Source deleted', [], mockGlobalContext)
+    );
   });
 
   test('displays loading indicator while fetching data', async () => {
-
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <Sources />
@@ -151,7 +148,6 @@ describe("Sources", () => {
     useSWR.mockReturnValueOnce({ data: null, isLoading: true, mutate: jest.fn() });
     await waitFor(() => {
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    })
+    });
   });
-
 });

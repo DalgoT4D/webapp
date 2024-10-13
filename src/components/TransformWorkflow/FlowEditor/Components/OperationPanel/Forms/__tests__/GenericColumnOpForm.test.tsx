@@ -87,14 +87,10 @@ describe('Form interactions', () => {
     await waitFor(() => {
       expect(screen.getByText('Function name is required')).toBeInTheDocument();
       expect(screen.getByText('Column is required')).toBeInTheDocument();
-      expect(
-        screen.getByText('Output column name is required')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Output column name is required')).toBeInTheDocument();
     });
 
-    const functionName = screen
-      .getByTestId('function')
-      .querySelector('input') as HTMLInputElement;
+    const functionName = screen.getByTestId('function').querySelector('input') as HTMLInputElement;
 
     await user.type(functionName, 'SUM');
 

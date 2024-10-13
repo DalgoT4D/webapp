@@ -4,10 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import {
-  errorToast,
-  successToast,
-} from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 import Input from '@/components/UI/Input/Input';
 import CustomDialog from '../Dialog/CustomDialog';
@@ -18,11 +15,7 @@ interface CreateOrgFormProps {
   setShowForm: (...args: any) => any;
 }
 
-export const CreateOrgForm = ({
-  closeSideMenu,
-  showForm,
-  setShowForm,
-}: CreateOrgFormProps) => {
+export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOrgFormProps) => {
   const { data: session }: any = useSession();
   const [waitForOrgCreation, setWaitForOrgCreation] = useState(false);
   const [newlyCreatedOrg, setNewlyCreatedOrg] = useState<string>('');

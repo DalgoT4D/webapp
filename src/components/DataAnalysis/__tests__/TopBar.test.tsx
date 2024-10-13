@@ -19,7 +19,6 @@ describe('TopBar Component', () => {
 
     expect(screen.getByText('Parameters')).toBeInTheDocument();
 
-
     // Check if "Saved Sessions" button is rendered
     expect(screen.getByText('Saved Sessions')).toBeInTheDocument();
 

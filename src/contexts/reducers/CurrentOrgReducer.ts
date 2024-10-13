@@ -25,10 +25,7 @@ export const initialCurrentOrgState = {
   is_demo: false,
 };
 
-export const CurrentOrgReducer = (
-  state: CurrentOrgStateInterface,
-  updateAction: Action
-) => {
+export const CurrentOrgReducer = (state: CurrentOrgStateInterface, updateAction: Action) => {
   switch (updateAction?.type) {
     case 'new':
       return updateAction.orgState;

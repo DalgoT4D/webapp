@@ -11,13 +11,8 @@ type StringInsightsProps = {
   statsData: DataProps;
 };
 
-export const StringInsights: React.FC<StringInsightsProps> = ({
-  data,
-  statsData,
-}) => {
-  const [chartType, setChartType] = useState<'chart' | 'bars' | 'stats'>(
-    'chart'
-  );
+export const StringInsights: React.FC<StringInsightsProps> = ({ data, statsData }) => {
+  const [chartType, setChartType] = useState<'chart' | 'bars' | 'stats'>('chart');
 
   return (
     <Box
@@ -41,9 +36,7 @@ export const StringInsights: React.FC<StringInsightsProps> = ({
 
       {chartType === 'stats' &&
         (statsData.minimum === statsData.maximum ? (
-          <Box width={700}>
-            All entries in this column are identical in length
-          </Box>
+          <Box width={700}>All entries in this column are identical in length</Box>
         ) : (
           <Box>
             <StatsChart data={statsData} />
@@ -64,13 +57,7 @@ export const StringInsights: React.FC<StringInsightsProps> = ({
           style={{ cursor: 'pointer' }}
           src={switchIcon}
           onClick={() =>
-            setChartType(
-              chartType === 'chart'
-                ? 'bars'
-                : chartType === 'bars'
-                ? 'stats'
-                : 'chart'
-            )
+            setChartType(chartType === 'chart' ? 'bars' : chartType === 'bars' ? 'stats' : 'chart')
           }
           alt="switch icon"
         />

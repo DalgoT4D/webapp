@@ -88,16 +88,10 @@ describe('Form interactions', () => {
 
     // validations to be called
     await waitFor(() => {
-      expect(
-        screen.getByText('Atleast 1 column is required')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Atleast 1 column is required')).toBeInTheDocument();
       expect(screen.getByText('Metric is required')).toBeInTheDocument();
-      expect(
-        screen.getByText('Aggregate function is required')
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText('Output column name is required')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Aggregate function is required')).toBeInTheDocument();
+      expect(screen.getByText('Output column name is required')).toBeInTheDocument();
     });
 
     await fireMultipleKeyDown('columns0', 2);

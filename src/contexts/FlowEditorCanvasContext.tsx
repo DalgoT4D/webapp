@@ -8,9 +8,7 @@ import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
 interface CanvasNodeContext {
   canvasNode: SrcModelNodeType | OperationNodeType | null | undefined;
-  setCanvasNode: Dispatch<
-    SetStateAction<SrcModelNodeType | OperationNodeType | null | undefined>
-  >;
+  setCanvasNode: Dispatch<SetStateAction<SrcModelNodeType | OperationNodeType | null | undefined>>;
 }
 
 export const CanvasNodeContext = React.createContext<CanvasNodeContext>({

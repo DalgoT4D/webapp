@@ -4,9 +4,7 @@ import { DateTimeInsights } from '../DateTimeInsights';
 
 // Mock dependencies
 jest.mock('next-auth/react', () => ({
-  useSession: jest
-    .fn()
-    .mockReturnValue({ data: { user: { name: 'Test User' } } }),
+  useSession: jest.fn().mockReturnValue({ data: { user: { name: 'Test User' } } }),
 }));
 
 const mockBarProps = {

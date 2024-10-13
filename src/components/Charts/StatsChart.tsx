@@ -39,10 +39,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     // Scale for positioning
-    const xScale = d3
-      .scaleLinear()
-      .domain([data.minimum, data.maximum])
-      .range([0, width]);
+    const xScale = d3.scaleLinear().domain([data.minimum, data.maximum]).range([0, width]);
 
     // Calculate positions
     const values = [data.mean, data.median];
@@ -81,12 +78,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ data }) => {
       .attr('stroke-width', '2');
 
     // Function to add markers and labels for values
-    const addMarker = (
-      value: number,
-      label: string,
-      up = true,
-      distance = 2
-    ) => {
+    const addMarker = (value: number, label: string, up = true, distance = 2) => {
       svg
         .append('text')
         .attr('x', xScale(value))

@@ -5,11 +5,7 @@ import ListItem from '@mui/material/ListItem';
 import CustomDialog from '../Dialog/CustomDialog';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '../UI/Input/Input';
-import {
-  TASK_GITPULL,
-  TASK_DBTCLEAN,
-  TASK_DOCSGENERATE,
-} from '@/config/constant';
+import { TASK_GITPULL, TASK_DBTCLEAN, TASK_DOCSGENERATE } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -46,10 +42,7 @@ const Command = ({ task, flags, options }: any) => {
     task && (
       <Box>
         Command:{' '}
-        {task.id.replace('-', ' ') +
-          ' ' +
-          flags.map((flag: string) => '--' + flag).join(' ') +
-          ' '}
+        {task.id.replace('-', ' ') + ' ' + flags.map((flag: string) => '--' + flag).join(' ') + ' '}
         {options.current &&
           options.current.length > 0 &&
           options.current
@@ -61,11 +54,7 @@ const Command = ({ task, flags, options }: any) => {
   );
 };
 
-const CreateOrgTaskForm = ({
-  mutate,
-  showForm,
-  setShowForm,
-}: CreateOrgTaskFormProps) => {
+const CreateOrgTaskForm = ({ mutate, showForm, setShowForm }: CreateOrgTaskFormProps) => {
   const { data: session }: any = useSession();
   const optionsRef = useRef<any>([]);
   const globalContext = useContext(GlobalContext);
@@ -74,14 +63,13 @@ const CreateOrgTaskForm = ({
   const [masterFlags, setMasterFlags] = useState<Array<string>>([]);
   const [masterOptions, setMasterOptions] = useState<any>({});
   const trackAmplitudeEvent = useTracking();
-  const { register, handleSubmit, control, watch, reset, setValue, getValues } =
-    useForm({
-      defaultValues: {
-        task_slug: { label: '', id: '' },
-        flags: [],
-        options: [{ key: '', value: '' }],
-      },
-    });
+  const { register, handleSubmit, control, watch, reset, setValue, getValues } = useForm({
+    defaultValues: {
+      task_slug: { label: '', id: '' },
+      flags: [],
+      options: [{ key: '', value: '' }],
+    },
+  });
   const { fields, append, remove } = useFieldArray<any>({
     control,
     name: 'options',
@@ -97,10 +85,7 @@ const CreateOrgTaskForm = ({
       try {
         const data: Array<MasterTask> = await httpGet(session, `data/tasks/`);
         const tasksDropDownRows = data
-          .filter(
-            (task: MasterTask) =>
-              ![TASK_GITPULL, TASK_DBTCLEAN].includes(task.slug)
-          )
+          .filter((task: MasterTask) => ![TASK_GITPULL, TASK_DBTCLEAN].includes(task.slug))
           .map((task: MasterTask) => {
             return { id: task.slug, label: task.slug };
           });
@@ -146,7 +131,7 @@ const CreateOrgTaskForm = ({
 
   const onSubmit = async (data: any) => {
     setLoading(true);
-    trackAmplitudeEvent("[Save-OrgTask] Button Clicked")
+    trackAmplitudeEvent('[Save-OrgTask] Button Clicked');
     const paramOptions: any = {};
     data.options
       .filter((opt: any) => opt.key && opt.value)
@@ -215,9 +200,7 @@ const CreateOrgTaskForm = ({
                   value={field.value}
                   sx={{ marginBottom: '10px', width: '100%' }}
                   options={masterFlags}
-                  isOptionEqualToValue={(option: any, val: any) =>
-                    val && option?.id === val?.id
-                  }
+                  isOptionEqualToValue={(option: any, val: any) => val && option?.id === val?.id}
                   onChange={(e, data) => field.onChange(data)}
                   renderInput={(params) => (
                     <Input
@@ -305,11 +288,7 @@ const CreateOrgTaskForm = ({
 
           <Box sx={{ m: 2 }} />
           <InputLabel>
-            <Command
-              task={selectedTask}
-              flags={selectedFlags}
-              options={optionsRef}
-            />
+            <Command task={selectedTask} flags={selectedFlags} options={optionsRef} />
           </InputLabel>
         </Box>
       </>
@@ -331,11 +310,7 @@ const CreateOrgTaskForm = ({
             <Button variant="contained" type="submit">
               Save
             </Button>
-            <Button
-              color="secondary"
-              variant="outlined"
-              onClick={handleFormClose}
-            >
+            <Button color="secondary" variant="outlined" onClick={handleFormClose}>
               Cancel
             </Button>
           </>

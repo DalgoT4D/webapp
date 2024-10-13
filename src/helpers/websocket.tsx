@@ -11,10 +11,7 @@ export const generateWebsocketUrl = (relative_url: string, session: any) => {
     orgslug: getOrgHeaderValue('GET', relative_url),
   };
   const queryString = Object.keys(queryParams)
-    .map(
-      (key) =>
-        `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`
-    )
+    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
     .join('&');
   const urlWithParams = `${websocketUrl}/wss/${relative_url}?${queryString}`;
 

@@ -49,14 +49,10 @@ describe('Invitations', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
+              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
             }}
           >
-            <Invitations
-              mutateInvitationsParent={false}
-              setMutateInvitationsParent={() => {}}
-            />
+            <Invitations mutateInvitationsParent={false} setMutateInvitationsParent={() => {}} />
           </SWRConfig>
         </SessionProvider>
       )
@@ -65,8 +61,7 @@ describe('Invitations', () => {
     expect(invitationsMockFetch).toHaveBeenCalledTimes(1);
 
     const invitationsTable = screen.getByRole('table');
-    const invitationHeaderCells =
-      within(invitationsTable).getAllByRole('columnheader');
+    const invitationHeaderCells = within(invitationsTable).getAllByRole('columnheader');
     expect(invitationHeaderCells.length).toBe(4);
     expect(invitationHeaderCells[0].textContent).toBe('Email');
     expect(invitationHeaderCells[1].textContent).toBe('Role');
@@ -99,14 +94,10 @@ describe('Invitations', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
+              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
             }}
           >
-            <Invitations
-              mutateInvitationsParent={false}
-              setMutateInvitationsParent={() => {}}
-            />
+            <Invitations mutateInvitationsParent={false} setMutateInvitationsParent={() => {}} />
           </SWRConfig>
         </SessionProvider>
       )
@@ -118,8 +109,7 @@ describe('Invitations', () => {
     expect(invitationsTableRows.length).toBe(2);
     const firstRow = invitationsTableRows[1];
     const firstRowCells = firstRow.childNodes;
-    const invitationActionCell: any | HTMLElement | undefined =
-      firstRowCells[3];
+    const invitationActionCell: any | HTMLElement | undefined = firstRowCells[3];
 
     const actionThreeDotsButton: HTMLElement | null =
       within(invitationActionCell).getByTestId('MoreHorizIcon').parentElement;
@@ -132,9 +122,7 @@ describe('Invitations', () => {
 
     const resendInvitationApiMockFail = jest.fn().mockResolvedValueOnce({
       ok: false,
-      json: jest
-        .fn()
-        .mockResolvedValueOnce({ detail: "couldn't resend the invitation" }),
+      json: jest.fn().mockResolvedValueOnce({ detail: "couldn't resend the invitation" }),
     });
 
     (global as any).fetch = resendInvitationApiMockFail;
@@ -160,14 +148,10 @@ describe('Invitations', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
+              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
             }}
           >
-            <Invitations
-              mutateInvitationsParent={false}
-              setMutateInvitationsParent={() => {}}
-            />
+            <Invitations mutateInvitationsParent={false} setMutateInvitationsParent={() => {}} />
           </SWRConfig>
         </SessionProvider>
       )
@@ -179,8 +163,7 @@ describe('Invitations', () => {
     expect(invitationsTableRows.length).toBe(2);
     const firstRow = invitationsTableRows[1];
     const firstRowCells = firstRow.childNodes;
-    const invitationActionCell: any | HTMLElement | undefined =
-      firstRowCells[3];
+    const invitationActionCell: any | HTMLElement | undefined = firstRowCells[3];
 
     const actionThreeDotsButton: HTMLElement | null =
       within(invitationActionCell).getByTestId('MoreHorizIcon').parentElement;
@@ -219,14 +202,10 @@ describe('Invitations', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
+              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
             }}
           >
-            <Invitations
-              mutateInvitationsParent={false}
-              setMutateInvitationsParent={() => {}}
-            />
+            <Invitations mutateInvitationsParent={false} setMutateInvitationsParent={() => {}} />
           </SWRConfig>
         </SessionProvider>
       )
@@ -238,8 +217,7 @@ describe('Invitations', () => {
     expect(invitationsTableRows.length).toBe(2);
     const firstRow = invitationsTableRows[1];
     const firstRowCells = firstRow.childNodes;
-    const invitationActionCell: any | HTMLElement | undefined =
-      firstRowCells[3];
+    const invitationActionCell: any | HTMLElement | undefined = firstRowCells[3];
 
     const actionThreeDotsButton: HTMLElement | null =
       within(invitationActionCell).getByTestId('MoreHorizIcon').parentElement;
@@ -278,14 +256,10 @@ describe('Invitations', () => {
           <SWRConfig
             value={{
               dedupingInterval: 0,
-              fetcher: (resource) =>
-                fetch(resource, {}).then((res) => res.json()),
+              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
             }}
           >
-            <Invitations
-              mutateInvitationsParent={false}
-              setMutateInvitationsParent={() => {}}
-            />
+            <Invitations mutateInvitationsParent={false} setMutateInvitationsParent={() => {}} />
           </SWRConfig>
         </SessionProvider>
       )
@@ -297,8 +271,7 @@ describe('Invitations', () => {
     expect(invitationsTableRows.length).toBe(2);
     const firstRow = invitationsTableRows[1];
     const firstRowCells = firstRow.childNodes;
-    const invitationActionCell: any | HTMLElement | undefined =
-      firstRowCells[3];
+    const invitationActionCell: any | HTMLElement | undefined = firstRowCells[3];
 
     const actionThreeDotsButton: HTMLElement | null =
       within(invitationActionCell).getByTestId('MoreHorizIcon').parentElement;

@@ -110,10 +110,12 @@ describe('Connections Setup', () => {
 
     render(createSourceForm());
 
-    await waitFor(() => expect(useWebSocket).toHaveBeenCalledWith(
-      expect.stringContaining('airbyte/source/check_connection'),
-      expect.any(Object)
-    ));
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
+    );
 
     const autocomplete = screen.getByTestId('autocomplete');
     const sourceTypeInput = screen.getByRole('combobox');
@@ -177,7 +179,6 @@ describe('Connections Setup', () => {
         logs: ['Error log line 1', 'Error log line 2'],
       },
     };
-
 
     render(createSourceForm());
 
