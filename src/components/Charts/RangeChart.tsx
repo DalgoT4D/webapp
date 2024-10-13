@@ -12,14 +12,7 @@ interface RangeChartProps {
   colors?: string[];
   barHeight?: number;
 }
-const chartColors = [
-  '#00897b',
-  '#33a195',
-  '#66b8b0',
-  '#98d0c9',
-  '#cce7e4',
-  '#c7d8d7',
-];
+const chartColors = ['#00897b', '#33a195', '#66b8b0', '#98d0c9', '#cce7e4', '#c7d8d7'];
 
 export const RangeChart: React.FC<RangeChartProps> = ({
   data,
@@ -30,11 +23,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
 
   useEffect(() => {
     d3.select(ref.current).select('svg').remove();
-    const svg = d3
-      .select(ref.current)
-      .append('svg')
-      .attr('width', 700)
-      .attr('height', 100); // Height adjusted for legends and text
+    const svg = d3.select(ref.current).append('svg').attr('width', 700).attr('height', 100); // Height adjusted for legends and text
 
     const xScale = d3
       .scaleLinear()
@@ -60,9 +49,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
     const onMouseOver = (event: any, d: CharacterData) => {
       tooltip.transition().duration(200).style('opacity', 0.9);
       tooltip
-        .html(
-          `<strong>${d.name}</strong>: ${d.percentage}%  |  <strong>Count</strong>: ${d.count}`
-        )
+        .html(`<strong>${d.name}</strong>: ${d.percentage}%  |  <strong>Count</strong>: ${d.count}`)
         .style('left', event.pageX + 5 + 'px')
         .style('top', event.pageY - 28 + 'px');
     };
@@ -100,9 +87,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
       })
       .attr('y', 25)
       .style('text-anchor', 'middle')
-      .text((d) =>
-        xScale(d.count) > 50 ? `${d.percentage}% | ${d.count}` : ''
-      )
+      .text((d) => (xScale(d.count) > 50 ? `${d.percentage}% | ${d.count}` : ''))
       .classed('hidden-text', (d) => xScale(d.count) <= 50);
 
     // Legend section
@@ -141,9 +126,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
       .attr('y', 8)
       .text((d) => {
         const maxLength = 10; // Trim to 10 characters
-        return d.name.length > maxLength
-          ? d.name.substring(0, maxLength) + '...'
-          : d.name;
+        return d.name.length > maxLength ? d.name.substring(0, maxLength) + '...' : d.name;
       })
       .on('mouseover', onMouseOver)
       .on('mouseout', () => {
@@ -155,7 +138,7 @@ export const RangeChart: React.FC<RangeChartProps> = ({
     };
   }, [data]);
 
-  return <div data-testid ="range-chart-container" ref={ref}></div>;
+  return <div data-testid="range-chart-container" ref={ref}></div>;
 };
 
 export default RangeChart;

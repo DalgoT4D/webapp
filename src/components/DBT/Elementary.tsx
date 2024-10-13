@@ -23,11 +23,7 @@ export const Elementary = () => {
     if (!session) return;
     try {
       setGenerateReportLock(true);
-      const response = await httpPost(
-        session,
-        'dbt/v1/refresh-elementary-report/',
-        {}
-      );
+      const response = await httpPost(session, 'dbt/v1/refresh-elementary-report/', {});
 
       if (response.flow_run_id) {
         successToast(
@@ -45,11 +41,7 @@ export const Elementary = () => {
 
   const fetchElementaryToken = async () => {
     try {
-      const response = await httpPost(
-        session,
-        'dbt/fetch-elementary-report/',
-        {}
-      );
+      const response = await httpPost(session, 'dbt/fetch-elementary-report/', {});
 
       if (response.token) {
         setElementaryToken(response.token);
@@ -152,8 +144,8 @@ export const Elementary = () => {
             </Box>
           ) : (
             <Typography variant="h6">
-              No report available. Please click on the button above to generate
-              if you believe a report should be available.
+              No report available. Please click on the button above to generate if you believe a
+              report should be available.
             </Typography>
           )}
         </Card>

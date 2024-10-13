@@ -1,11 +1,4 @@
-import {
-  act,
-  render,
-  screen,
-  within,
-  fireEvent,
-  waitFor,
-} from '@testing-library/react';
+import { act, render, screen, within, fireEvent, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
@@ -60,11 +53,7 @@ describe('destination create form - fetch definitions success', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <CreateDestinationForm
-            mutate={() => { }}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <CreateDestinationForm mutate={() => {}} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });
@@ -97,11 +86,7 @@ describe('destination create form - fetch definitions success', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <CreateDestinationForm
-            mutate={() => { }}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <CreateDestinationForm mutate={() => {}} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });
@@ -153,11 +138,7 @@ describe('destination create form - fetch definitions failure', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <CreateDestinationForm
-            mutate={() => { }}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <CreateDestinationForm mutate={() => {}} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });
@@ -255,12 +236,7 @@ describe('destination create form - definitions + specifications', () => {
                 },
                 {
                   title: 'verify-full',
-                  required: [
-                    'mode',
-                    'ca_certificate',
-                    'client_certificate',
-                    'client_key',
-                  ],
+                  required: ['mode', 'ca_certificate', 'client_certificate', 'client_key'],
                   properties: {
                     mode: {
                       enum: ['verify-full'],
@@ -330,11 +306,7 @@ describe('destination create form - definitions + specifications', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <CreateDestinationForm
-            mutate={() => { }}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <CreateDestinationForm mutate={() => {}} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });
@@ -347,12 +319,10 @@ describe('destination create form - definitions + specifications', () => {
     );
 
     // Select one of the defs in autocomplete
-    let destinationDefAutocomplete = screen.getByTestId(
-      'dest-type-autocomplete'
+    let destinationDefAutocomplete = screen.getByTestId('dest-type-autocomplete');
+    let destinationDefInput: HTMLInputElement = within(destinationDefAutocomplete).getByRole(
+      'combobox'
     );
-    let destinationDefInput: HTMLInputElement = within(
-      destinationDefAutocomplete
-    ).getByRole('combobox');
 
     await act(() => {
       fireEvent.change(destinationDefInput, {
@@ -366,9 +336,7 @@ describe('destination create form - definitions + specifications', () => {
     await act(async () => await fireEvent.click(selectDef2));
     // Make sure the option selected is set in autcomplete
     destinationDefAutocomplete = screen.getByTestId('dest-type-autocomplete');
-    destinationDefInput = within(destinationDefAutocomplete).getByRole(
-      'combobox'
-    );
+    destinationDefInput = within(destinationDefAutocomplete).getByRole('combobox');
     expect(destinationDefInput.value).toBe('destination-def-name-2');
 
     // Specifications should populate
@@ -398,11 +366,7 @@ describe('destination create form - definitions + specifications', () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <CreateDestinationForm
-            mutate={() => { }}
-            showForm={true}
-            setShowForm={setShowForm}
-          />
+          <CreateDestinationForm mutate={() => {}} showForm={true} setShowForm={setShowForm} />
         </SessionProvider>
       );
     });
@@ -415,13 +379,11 @@ describe('destination create form - definitions + specifications', () => {
       )
     );
 
-    // Select destination definition
-    const destinationDefAutocomplete = screen.getByTestId(
-      'dest-type-autocomplete'
+    // select destination definition
+    const destinationDefAutocomplete = screen.getByTestId('dest-type-autocomplete');
+    const destinationDefInput: HTMLInputElement = within(destinationDefAutocomplete).getByRole(
+      'combobox'
     );
-    const destinationDefInput: HTMLInputElement = within(
-      destinationDefAutocomplete
-    ).getByRole('combobox');
 
     await act(() => {
       fireEvent.change(destinationDefInput, {
@@ -485,7 +447,7 @@ describe('destination create form - definitions + specifications', () => {
       render(
         <SessionProvider session={mockSession}>
           <CreateDestinationForm
-            mutate={() => { }}
+            mutate={() => {}}
             showForm={true}
             setShowForm={setShowForm}
             warehouse={null}
@@ -502,13 +464,11 @@ describe('destination create form - definitions + specifications', () => {
       )
     );
 
-    // Select destination definition
-    const destinationDefAutocomplete = screen.getByTestId(
-      'dest-type-autocomplete'
+    // select destination definition
+    const destinationDefAutocomplete = screen.getByTestId('dest-type-autocomplete');
+    const destinationDefInput: HTMLInputElement = within(destinationDefAutocomplete).getByRole(
+      'combobox'
     );
-    const destinationDefInput: HTMLInputElement = within(
-      destinationDefAutocomplete
-    ).getByRole('combobox');
 
     await act(async () => {
       fireEvent.change(destinationDefInput, {

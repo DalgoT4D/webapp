@@ -1,9 +1,9 @@
 import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
 const ConnectionSyncLogsContext = React.createContext<string[]>([]);
-const ConnectionSyncLogsUpdateContext = React.createContext<
-  Dispatch<SetStateAction<string[]>>
->((() => {}) as Dispatch<SetStateAction<string[]>>);
+const ConnectionSyncLogsUpdateContext = React.createContext<Dispatch<SetStateAction<string[]>>>(
+  (() => {}) as Dispatch<SetStateAction<string[]>>
+);
 
 export const useConnSyncLogs = () => {
   return useContext(ConnectionSyncLogsContext);

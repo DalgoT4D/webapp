@@ -26,9 +26,7 @@ interface SingleFlowRunHistoryProps {
   flowRun: Partial<FlowRun> | null | undefined;
 }
 
-export const SingleFlowRunHistory = ({
-  flowRun,
-}: SingleFlowRunHistoryProps) => {
+export const SingleFlowRunHistory = ({ flowRun }: SingleFlowRunHistoryProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
 
@@ -45,10 +43,7 @@ export const SingleFlowRunHistory = ({
     }
     (async () => {
       try {
-        const data = await httpGet(
-          session,
-          `prefect/flow_runs/${flowRun.id}/logsummary`
-        );
+        const data = await httpGet(session, `prefect/flow_runs/${flowRun.id}/logsummary`);
         console.log(data);
         setLogsummary(data);
       } catch (err: any) {
@@ -74,8 +69,7 @@ export const SingleFlowRunHistory = ({
         );
 
         if (data?.logs?.logs && data.logs.logs.length >= 0) {
-          const newlogs =
-            flowRunOffset <= 0 ? data.logs.logs : logs.concat(data.logs.logs);
+          const newlogs = flowRunOffset <= 0 ? data.logs.logs : logs.concat(data.logs.logs);
           setLogs(newlogs);
 
           // increment the offset by 200 if we have more to fetch
@@ -108,12 +102,7 @@ export const SingleFlowRunHistory = ({
   }, [flowRun?.id]);
 
   return (
-    <Box
-      display=""
-      gap="10px"
-      sx={{ marginTop: '20px' }}
-      data-testid="single-flow-run-logs"
-    >
+    <Box display="" gap="10px" sx={{ marginTop: '20px' }} data-testid="single-flow-run-logs">
       <Typography variant="h6" component="div">
         {flowRun?.lastRun}
       </Typography>
@@ -122,10 +111,7 @@ export const SingleFlowRunHistory = ({
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Box sx={{ width: '50%', margin: '5px' }}>
-              <LogSummaryCard
-                logsummary={logsummary}
-                setLogsummaryLogs={setLogsummaryLogs}
-              />
+              <LogSummaryCard logsummary={logsummary} setLogsummaryLogs={setLogsummaryLogs} />
             </Box>
             <Box sx={{ width: '50%', margin: '5px' }}>
               {logsummarylogs.length > 0 && (

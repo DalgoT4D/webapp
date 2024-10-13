@@ -70,9 +70,7 @@ describe('TaskSequence Component', () => {
     fireEvent.click(resetButton);
 
     expect(mockField.onChange).toHaveBeenCalledWith(
-      mockTasks.filter(
-        (task) => task.generated_by === 'system' && task.pipeline_default
-      )
+      mockTasks.filter((task) => task.generated_by === 'system' && task.pipeline_default)
     );
   });
 });

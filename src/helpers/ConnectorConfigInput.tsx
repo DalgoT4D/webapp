@@ -42,8 +42,7 @@ class ConnectorConfigInput {
       for (const key of Object.keys(dataProperties)) {
         const value: any = dataProperties[key];
         dataProperties[key]['order'] = value?.order >= 0 ? value.order + 1 : -1;
-        if (dataProperties[key]['order'] > maxOrder)
-          maxOrder = dataProperties[key]['order'];
+        if (dataProperties[key]['order'] > maxOrder) maxOrder = dataProperties[key]['order'];
       }
     }
 
@@ -52,8 +51,7 @@ class ConnectorConfigInput {
 
     // Attach order to all specs
     for (const key in dataProperties) {
-      if (dataProperties[key]['order'] === -1)
-        dataProperties[key]['order'] = ++maxOrder;
+      if (dataProperties[key]['order'] === -1) dataProperties[key]['order'] = ++maxOrder;
     }
 
     return this.specsData;
@@ -66,33 +64,22 @@ class ConnectorConfigInput {
   }
 
   prepareSpecsToRender() {
-    this.specsToRender = ConnectorConfigInput.traverseSpecs(
-      [],
-      this.specsData,
-      'config',
-      [],
-      []
-    );
+    this.specsToRender = ConnectorConfigInput.traverseSpecs([], this.specsData, 'config', [], []);
     return this.specsToRender;
   }
 
   updateSpecsToRender(connectionConfiguration: any) {
-    const childSpecs: Array<ConnectorSpec> =
-      ConnectorConfigInput.appendChildSpecsForEdit(
-        this.specsToRender,
-        connectionConfiguration,
-        'config',
-        []
-      );
+    const childSpecs: Array<ConnectorSpec> = ConnectorConfigInput.appendChildSpecsForEdit(
+      this.specsToRender,
+      connectionConfiguration,
+      'config',
+      []
+    );
 
     return this.specsToRender.concat(childSpecs);
   }
 
-  static traverseSpecsToSetOrder(
-    data: any,
-    parentOrder: number | null = null,
-    ordCounter = 0
-  ) {
+  static traverseSpecsToSetOrder(data: any, parentOrder: number | null = null, ordCounter = 0) {
     const dataProperties: any = data.properties;
 
     if (dataProperties) {
@@ -104,11 +91,7 @@ class ConnectorConfigInput {
         // each nested property should have parentOrder + 0.1
         if (parent && parent?.oneOf) {
           for (const oneOfObject of parent.oneOf) {
-            ConnectorConfigInput.traverseSpecsToSetOrder(
-              oneOfObject,
-              parent['order'],
-              0.1
-            );
+            ConnectorConfigInput.traverseSpecsToSetOrder(oneOfObject, parent['order'], 0.1);
           }
         }
       }
@@ -126,8 +109,7 @@ class ConnectorConfigInput {
     if (exclude.length > 0) {
       if (exclude[0] in data?.properties) {
         dropdownEnums.push(
-          data?.properties[exclude[0]]?.const ||
-            data?.properties[exclude[0]]?.enum[0]
+          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum[0]
         );
       }
     }
@@ -139,8 +121,8 @@ class ConnectorConfigInput {
       if (data['oneOf'].length > 1) {
         data['oneOf']?.forEach((ele: any) => {
           if (commonField.length > 0) {
-            commonField = Object.keys(ele?.properties || {}).filter(
-              (value: any) => commonField.includes(value)
+            commonField = Object.keys(ele?.properties || {}).filter((value: any) =>
+              commonField.includes(value)
             );
           } else {
             commonField = Object.keys(ele?.properties || {});
@@ -154,10 +136,7 @@ class ConnectorConfigInput {
         order: data?.order,
         title: data?.title,
         description: data?.description,
-        parent:
-          dropdownEnums.length > 0
-            ? dropdownEnums[dropdownEnums.length - 1]
-            : '',
+        parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
         enum: [],
         specs: [],
       };
@@ -199,13 +178,7 @@ class ConnectorConfigInput {
 
         // an object type can either have oneOf or properties
         if (value.properties) {
-          const specs = ConnectorConfigInput.traverseSpecs(
-            [],
-            value,
-            objParentKey,
-            [],
-            []
-          );
+          const specs = ConnectorConfigInput.traverseSpecs([], value, objParentKey, [], []);
           result.push(...specs);
         } else if (value['oneOf']) {
           const objResult = {
@@ -214,10 +187,7 @@ class ConnectorConfigInput {
             order: value?.order,
             title: value?.title,
             description: value?.description,
-            parent:
-              dropdownEnums.length > 0
-                ? dropdownEnums[dropdownEnums.length - 1]
-                : '',
+            parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
             enum: [],
             specs: [],
           };
@@ -239,10 +209,7 @@ class ConnectorConfigInput {
       result.push({
         ...value,
         field: objParentKey,
-        parent:
-          dropdownEnums.length > 0
-            ? dropdownEnums[dropdownEnums.length - 1]
-            : '',
+        parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
         required: data?.required.includes(key),
       });
     }
@@ -262,15 +229,10 @@ class ConnectorConfigInput {
     for (const [key, value] of Object.entries(connectionConfiguration)) {
       const field: any = `${parent}.${key}`;
 
-      const valIsObject =
-        typeof value === 'object' && value !== null && !Array.isArray(value);
+      const valIsObject = typeof value === 'object' && value !== null && !Array.isArray(value);
 
       if (valIsObject) {
-        ConnectorConfigInput.prefillFormFields(
-          value,
-          field,
-          setFormValueCallback
-        );
+        ConnectorConfigInput.prefillFormFields(value, field, setFormValueCallback);
       } else {
         setFormValueCallback(field, value);
       }
@@ -293,23 +255,17 @@ class ConnectorConfigInput {
 
       // if the spec if not present in specs, then the connection configuration must be an object type
       // so we need to traverse inside it
-      const valIsObject =
-        typeof value === 'object' && value !== null && !Array.isArray(value);
+      const valIsObject = typeof value === 'object' && value !== null && !Array.isArray(value);
 
       if (!childSpec && valIsObject) {
         if (Object.keys(value).length > 1) {
-          ConnectorConfigInput.appendChildSpecsForEdit(
-            specs,
-            value,
-            field,
-            childSpecs
-          );
+          ConnectorConfigInput.appendChildSpecsForEdit(specs, value, field, childSpecs);
         }
       } else if (!childSpec) {
         const regexp = new RegExp(`^${field.split('.', 2).join('.')}`);
 
-        const specsToFindFrom: Array<ConnectorSpec> | undefined = specs.find(
-          (sp: ConnectorSpec) => regexp.test(sp.field)
+        const specsToFindFrom: Array<ConnectorSpec> | undefined = specs.find((sp: ConnectorSpec) =>
+          regexp.test(sp.field)
         )?.specs;
 
         if (specsToFindFrom) {
@@ -365,9 +321,7 @@ class ConnectorConfigInput {
       [];
 
     const tempSpecs = currenRenderedSpecs
-      .filter(
-        (sp: ConnectorSpec) => !sp.parent || !enumsToRemove.includes(sp.parent)
-      )
+      .filter((sp: ConnectorSpec) => !sp.parent || !enumsToRemove.includes(sp.parent))
       .concat(filteredChildSpecs);
 
     return tempSpecs;

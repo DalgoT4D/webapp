@@ -3,12 +3,12 @@ import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, FormLabel } from '@mui/material';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { Controller, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
+import { useOpForm } from '@/customHooks/useOpForm';
 
 interface GenericDataConfig {
   columns: string[];
@@ -30,12 +30,16 @@ const GenericSqlOpForm = ({
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const nodeData: any =
-    node?.type === SRC_MODEL_NODE
-      ? (node?.data as DbtSourceModel)
-      : node?.type === OPERATION_NODE
-      ? (node?.data as OperationNodeData)
-      : {};
+  const { parentNode, nodeData } = useOpForm({
+    props: {
+      node,
+      operation,
+      sx,
+      continueOperationChain,
+      action,
+      setLoading,
+    },
+  });
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       sql_statement_1: '',
@@ -45,16 +49,15 @@ const GenericSqlOpForm = ({
   let inputName = '';
   if (node?.type === SRC_MODEL_NODE) {
     inputName = nodeData.input_name;
-  } else if (
-    node?.type === OPERATION_NODE &&
-    nodeData.config.input_models.length > 0
-  ) {
+  } else if (node?.type === OPERATION_NODE && nodeData.config.input_models.length > 0) {
     inputName = nodeData.config.input_models[0].name;
   } else {
     inputName = 'undefined';
   }
 
   const handleSave = async (data: any) => {
+    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
       const postData: any = {
         op_type: operation.slug,
@@ -63,28 +66,22 @@ const GenericSqlOpForm = ({
           sql_statement_1: data.sql_statement_1,
           sql_statement_2: data.sql_statement_2,
         },
-        input_uuid: node?.type === SRC_MODEL_NODE ? node?.data.id : '',
-        target_model_uuid: nodeData?.target_model_id || '',
+        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+        target_model_uuid: finalNode?.data.target_model_id || '',
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
-      if (action === 'create') {
-        operationNode = await httpPost(
-          session,
-          `transform/dbt_project/model/`,
-          postData
-        );
-      } else if (action === 'edit') {
+      if (finalAction === 'create') {
+        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+      } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid
-            ? inputModels[0].uuid
-            : '';
+          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/dbt_project/model/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -123,6 +120,7 @@ const GenericSqlOpForm = ({
   };
 
   useEffect(() => {
+    if (node?.data.isDummy) return;
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
     }

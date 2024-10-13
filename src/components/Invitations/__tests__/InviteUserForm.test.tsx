@@ -47,17 +47,12 @@ describe('Invite user', () => {
     <SWRConfig
       value={{
         dedupingInterval: 0,
-        fetcher: (resource) =>
-          mockRoles(resource, {}).then((res: any) => res.json()),
+        fetcher: (resource) => mockRoles(resource, {}).then((res: any) => res.json()),
         provider: () => new Map(),
       }}
     >
       <SessionProvider session={mockSession}>
-        <InviteUserForm
-          mutate={mutate}
-          showForm={true}
-          setShowForm={setShowForm}
-        />
+        <InviteUserForm mutate={mutate} showForm={true} setShowForm={setShowForm} />
       </SessionProvider>
     </SWRConfig>
   );

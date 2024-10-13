@@ -43,21 +43,12 @@ type DestinationFormInput = {
   config: object;
 };
 
-const DestinationForm = ({
-  showForm,
-  setShowForm,
-  warehouse,
-  mutate,
-}: DestinationFormProps) => {
+const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: DestinationFormProps) => {
   const { data: session }: any = useSession();
   const [loading, setLoading] = useState<boolean>(false);
   const [setupLogs, setSetupLogs] = useState<Array<string>>([]);
-  const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>(
-    []
-  );
-  const [destinationDefs, setDestinationDefs] = useState<
-    Array<{ id: string; label: string }>
-  >([]);
+  const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>([]);
+  const [destinationDefs, setDestinationDefs] = useState<Array<{ id: string; label: string }>>([]);
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const { sendJsonMessage, lastMessage } = useWebSocket(socketUrl, {
     share: false,
@@ -81,9 +72,7 @@ const DestinationForm = ({
 
   useEffect(() => {
     if (session) {
-      setSocketUrl(
-        generateWebsocketUrl('airbyte/destination/check_connection', session)
-      );
+      setSocketUrl(generateWebsocketUrl('airbyte/destination/check_connection', session));
     }
   }, [session]);
 
@@ -98,10 +87,7 @@ const DestinationForm = ({
           );
           const destinationDefRows: { id: string; label: string }[] = data?.map(
             (element: DestinationDefinitionsApiResponse) => {
-              if (
-                element.destinationDefinitionId ===
-                warehouse?.destinationDefinitionId
-              ) {
+              if (element.destinationDefinitionId === warehouse?.destinationDefinitionId) {
                 setValue('destinationDef', {
                   label: element.name,
                   id: element.destinationDefinitionId,
@@ -135,18 +121,14 @@ const DestinationForm = ({
             `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`
           );
 
-          const connectorConfigInput = new ConnectorConfigInput(
-            'destination',
-            data
-          );
+          const connectorConfigInput = new ConnectorConfigInput('destination', data);
 
           connectorConfigInput.setValidOrderToAllProperties();
 
           connectorConfigInput.setOrderToChildProperties();
 
           // Prepare the specs config before setting it
-          let specsConfigFields: any =
-            connectorConfigInput.prepareSpecsToRender();
+          let specsConfigFields: any = connectorConfigInput.prepareSpecsToRender();
 
           if (warehouse) {
             // Prefill the warehouse name
@@ -183,15 +165,11 @@ const DestinationForm = ({
   const editWarehouse = async (data: any) => {
     try {
       setLoading(true);
-      await httpPut(
-        session,
-        `airbyte/v1/destinations/${warehouse.destinationId}/`,
-        {
-          name: data.name,
-          destinationDefId: data.destinationDef.id,
-          config: data.config,
-        }
-      );
+      await httpPut(session, `airbyte/v1/destinations/${warehouse.destinationId}/`, {
+        name: data.name,
+        destinationDefId: data.destinationDef.id,
+        config: data.config,
+      });
       handleClose();
       mutate();
     } catch (err: any) {

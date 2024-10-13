@@ -3,11 +3,7 @@ import AggregationOpForm from '../AggregationOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { OperationFormProps } from '../../../OperationConfigLayout';
 import userEvent from '@testing-library/user-event';
-import {
-  aggregateDbtModelResponse,
-  intermediateTableResponse,
-  mockNode,
-} from './helpers';
+import { aggregateDbtModelResponse, intermediateTableResponse, mockNode } from './helpers';
 import { fireMultipleKeyDown } from '@/utils/tests';
 
 const user = userEvent.setup();
@@ -74,9 +70,7 @@ describe('AggregationOpForm', () => {
   it('renders correct initial form state', async () => {
     render(aggregationOpForm);
     await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
+      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue('');
       expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
       expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();
@@ -93,13 +87,9 @@ describe('Form interactions', () => {
 
     // validations to be called
     await waitFor(() => {
-      expect(
-        screen.getByText('Column to aggregate is required')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Column to aggregate is required')).toBeInTheDocument();
       expect(screen.getByText('Operation is required')).toBeInTheDocument();
-      expect(
-        screen.getByText('Output column name is required')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Output column name is required')).toBeInTheDocument();
     });
 
     const [columnInput] = screen.getAllByRole('combobox');
@@ -120,9 +110,7 @@ describe('Form interactions', () => {
 
     // reset to initial state after submit
     await waitFor(() => {
-      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue(
-        ''
-      );
+      expect(screen.getByLabelText('Select Column to Aggregate*')).toHaveValue('');
       expect(screen.getByLabelText('Aggregate*')).toHaveValue('');
       expect(screen.getByLabelText('Output Column Name*')).toHaveValue('');
       expect(screen.getByTestId('savebutton')).toBeInTheDocument();

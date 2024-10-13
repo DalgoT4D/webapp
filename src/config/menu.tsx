@@ -1,6 +1,6 @@
 import AnalysisIcon from '@/assets/icons/analysis';
 import UsageIcon from '@/assets/icons/UsageIcon';
-import AiAnalysisIcon from '@/assets/icons/aianalysis'
+import AiAnalysisIcon from '@/assets/icons/aianalysis';
 import IngestIcon from '@/assets/icons/ingest';
 import TransformIcon from '@/assets/icons/transform';
 import PipelineIcon from '@/assets/icons/pipeline';
