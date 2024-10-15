@@ -33,7 +33,8 @@ const UnpivotOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const [colFieldData, setColFieldData] = useState<any[]>([]);
+  const [searchUnpivot, setSearchUnpivot] = useState(''); // Search value for unpivot
+  const [searchExclude, setSearchExclude] = useState(''); // Search value for exclude
   const [selectAllCheckbox, setSelectAllCheckbox] = useState<{
     is_unpivot: boolean;
     is_exclude: boolean;
@@ -68,7 +69,7 @@ const UnpivotOpForm = ({
   });
 
   const {
-    fields: unpivotColFields,
+    fields: unpivotColFields, // use this as the central state
     replace: unpivotColReplace,
     update: unpivotColUpdate,
   } = useFieldArray({
@@ -79,8 +80,6 @@ const UnpivotOpForm = ({
 
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
-      //change
-
       try {
         const data: ColumnData[] = await httpGet(
           session,
@@ -95,7 +94,6 @@ const UnpivotOpForm = ({
             is_exclude_checked: false,
           }));
         setValue('unpivot_columns', unpivot_col_fields);
-        setColFieldData(unpivot_col_fields);
       } catch (error) {
         console.log(error);
       }
@@ -142,7 +140,6 @@ const UnpivotOpForm = ({
       if (finalAction === 'create') {
         operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (finalAction === 'edit') {
-        // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
@@ -172,7 +169,6 @@ const UnpivotOpForm = ({
       const { config: opConfig, input_models } = config;
       setInputModels(input_models);
 
-      // form data; will differ based on operations in progress
       const {
         source_columns,
         exclude_columns,
@@ -196,8 +192,6 @@ const UnpivotOpForm = ({
         unpivot_value_name: unpivot_value_name,
         unpivot_columns: unpivot_col_fields,
       });
-
-      setColFieldData(unpivot_col_fields);
     } catch (error) {
       console.error(error);
     } finally {
@@ -205,86 +199,55 @@ const UnpivotOpForm = ({
     }
   };
 
-  const handleSearch = (value: string) => {
-    const trimmedSubstring = value?.toLowerCase();
-    const filteredColumns = unpivotColFields?.filter((colField) => {
-      const stringToSearch = colField?.col?.toLowerCase();
-      return stringToSearch?.includes(trimmedSubstring);
-    });
-    setColFieldData(filteredColumns);
+  const handleSearchUnpivot = (value: string) => {
+    setSearchUnpivot(value.toLowerCase());
   };
 
-  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>, is_exclude: boolean) => {
-    // Filter the fields based on the search results stored in colFieldData
-    const filteredFields = unpivotColFields.filter((field) =>
-      colFieldData.some((colField) => colField.col === field.col)
-    );
-
-    // Update the filtered fields based on the select all checkbox
-    const updatedFields = filteredFields.map((field) => ({
-      col: field.col,
-      is_unpivot_checked: is_exclude
-        ? event.target.checked
-          ? false
-          : field.is_unpivot_checked
-        : event.target.checked,
-      is_exclude_checked: is_exclude
-        ? event.target.checked
-        : event.target.checked
-          ? false
-          : field.is_exclude_checked,
-    }));
-
-    setColFieldData(updatedFields);
-
-    // Merge the updated fields with the original unpivotColFields
-    const mergedFields = unpivotColFields.map(
-      (field) => updatedFields.find((updatedField) => updatedField.col === field.col) || field
-    );
-
-    unpivotColReplace(mergedFields);
+  const handleSearchExclude = (value: string) => {
+    setSearchExclude(value.toLowerCase());
   };
+
+  // Filtered lists for both unpivot and exclude based on search terms
+  const filteredUnpivotColumns = unpivotColFields.filter((col) =>
+    col.col.toLowerCase().includes(searchUnpivot)
+  );
+  const filteredExcludeColumns = unpivotColFields.filter((col) =>
+    col.col.toLowerCase().includes(searchExclude)
+  );
 
   const handleUnpivotColUpdate = (
     event: React.ChangeEvent<HTMLInputElement>,
-    index: number,
+    columnName: string,
     is_exclude: boolean
   ) => {
-    const field = colFieldData[index];
-    const updatedFields = colFieldData.map((colField) => {
-      if (colField.col == field.col) {
+    const updatedFields = unpivotColFields.map((colField) => {
+      if (colField.col === columnName) {
         return {
-          col: field.col,
+          ...colField,
           is_unpivot_checked: is_exclude
             ? event.target.checked
               ? false
-              : field.is_unpivot_checked
+              : colField.is_unpivot_checked
             : event.target.checked,
           is_exclude_checked: is_exclude
             ? event.target.checked
             : event.target.checked
               ? false
-              : field.is_exclude_checked,
+              : colField.is_exclude_checked,
         };
       }
       return colField;
     });
-    const originalIndex = unpivotColFields?.findIndex((colField) => colField.col == field.col);
+    unpivotColReplace(updatedFields); // Replace the entire array with updated values
+  };
 
-    unpivotColUpdate(originalIndex, {
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>, is_exclude: boolean) => {
+    const updatedFields = unpivotColFields.map((field) => ({
       col: field.col,
-      is_unpivot_checked: is_exclude
-        ? event.target.checked
-          ? false
-          : field.is_unpivot_checked
-        : event.target.checked,
-      is_exclude_checked: is_exclude
-        ? event.target.checked
-        : event.target.checked
-          ? false
-          : field.is_exclude_checked,
-    });
-    setColFieldData(updatedFields);
+      is_unpivot_checked: is_exclude ? false : event.target.checked,
+      is_exclude_checked: is_exclude ? event.target.checked : false,
+    }));
+    unpivotColReplace(updatedFields);
   };
 
   useEffect(() => {
@@ -297,15 +260,15 @@ const UnpivotOpForm = ({
   }, [session, node]);
 
   useEffect(() => {
-    if (colFieldData?.length > 0) {
+    if (unpivotColFields?.length > 0) {
       const selectAll = { is_exclude: true, is_unpivot: true };
-      colFieldData?.forEach((colField) => {
+      unpivotColFields?.forEach((colField) => {
         if (!colField.is_exclude_checked) selectAll.is_exclude = false;
         if (!colField.is_unpivot_checked) selectAll.is_unpivot = false;
       });
       setSelectAllCheckbox(selectAll);
     }
-  }, [colFieldData]);
+  }, [unpivotColFields]);
 
   return (
     <Box sx={{ ...sx, padding: '32px 16px 0px 16px' }}>
@@ -313,8 +276,8 @@ const UnpivotOpForm = ({
         <Input
           fieldStyle="transformation"
           sx={{ px: 1, pb: 1 }}
-          placeholder="Search by column name"
-          onChange={(event) => handleSearch(event.target.value)}
+          placeholder="Search by column name for unpivot"
+          onChange={(event) => handleSearchUnpivot(event.target.value)}
         />
         <GridTable
           headers={['Columns to unpivot']}
@@ -358,9 +321,9 @@ const UnpivotOpForm = ({
                 </Box>,
               ],
             ],
-            ...colFieldData.map((field, idx) => [
+            ...filteredUnpivotColumns.map((field, idx) => [
               <Box
-                key={field.col + idx}
+                key={field.col}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -376,7 +339,7 @@ const UnpivotOpForm = ({
                       disabled={action === 'view'}
                       checked={field.is_unpivot_checked}
                       onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                        handleUnpivotColUpdate(event, idx, false);
+                        handleUnpivotColUpdate(event, field.col, false);
                       }}
                     />
                   }
@@ -400,6 +363,14 @@ const UnpivotOpForm = ({
           </FormHelperText>
         )}
         <Box sx={{ mb: 2 }}></Box>
+
+        {/* Second Search bar for "Columns to keep in output table" */}
+        <Input
+          fieldStyle="transformation"
+          sx={{ px: 1, pb: 1 }}
+          placeholder="Search by column name in output"
+          onChange={(event) => handleSearchExclude(event.target.value)}
+        />
         <GridTable
           headers={['Columns to keep in output table']}
           data={[
@@ -442,9 +413,9 @@ const UnpivotOpForm = ({
                 </Box>,
               ],
             ],
-            ...colFieldData.map((field, idx) => [
+            ...filteredExcludeColumns.map((field) => [
               <Box
-                key={field.col + idx}
+                key={field.col}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -459,7 +430,7 @@ const UnpivotOpForm = ({
                       disabled={action === 'view'}
                       checked={field.is_exclude_checked}
                       onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                        handleUnpivotColUpdate(event, idx, true);
+                        handleUnpivotColUpdate(event, field.col, true);
                       }}
                     />
                   }
