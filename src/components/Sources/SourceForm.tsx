@@ -107,11 +107,11 @@ const SourceForm = ({
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
+        } finally {
+          setLoading(false);
         }
       })();
-      setLoading(false);
     }
-    setLoading(false);
   }, [sourceDefs, showForm]);
 
   useEffect(() => {
@@ -171,6 +171,8 @@ const SourceForm = ({
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -181,12 +183,14 @@ const SourceForm = ({
         sourceDefId: data.sourceDef.id,
         config: data.config,
       });
+      mutate();
       handleClose();
       successToast('Source updated', [], globalContext);
-      mutate();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -207,12 +211,11 @@ const SourceForm = ({
         } else {
           createSource(formData);
         }
-        setLoading(false);
       } else {
         setLogs(checkResponse.data.logs);
         errorToast('Something went wrong', [], globalContext);
+        setLoading(false);
       }
-      setLoading(false);
     }
   }, [lastMessage]);
 

@@ -105,8 +105,9 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       })();
     }
   }, [showForm]);
@@ -149,8 +150,9 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       })();
     }
   }, [watchSelectedDestinationDef]);
@@ -175,8 +177,9 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const createWarehouse = async (data: any) => {
@@ -196,8 +199,9 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -217,12 +221,11 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
         } else {
           createWarehouse(formData);
         }
-        setLoading(false);
       } else {
         setSetupLogs(checkResponse.data.logs);
         errorToast('Something went wrong', [], globalContext);
+        setLoading(false);
       }
-      setLoading(false);
     }
   }, [lastMessage]);
 
