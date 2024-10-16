@@ -578,7 +578,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
         height: debouncedHeight,
       }}
     >
-      Select a table to view
+      Select a table from the left pane to view
     </Box>
   );
 };

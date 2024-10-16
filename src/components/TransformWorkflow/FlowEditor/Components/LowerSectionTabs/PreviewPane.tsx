@@ -295,7 +295,7 @@ const PreviewPane = ({ height }: { height: number }) => {
         height: height,
       }}
     >
-      Select a table to view
+      Select a table from the left pane to view
     </Box>
   );
 };
