@@ -160,7 +160,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
       {
         accessorKey: 'name',
         header: 'Column name',
-        size: 150,
+        size: 160,
         enableSorting: true,
       },
       {
@@ -424,8 +424,8 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
               alignItems: 'center',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="body1" fontWeight="bold" padding="10px">
+            <Box sx={{ display: 'flex', alignItems: 'center', padding: '6px 8px 6px 44px' }}>
+              <Typography variant="body1" fontWeight="bold">
                 {modelToPreview?.input_name}
               </Typography>
               <Box
@@ -473,7 +473,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                 <TableHead>
                   {getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
+                      {headerGroup.headers.map((header, i) => (
                         <TableCell
                           key={header.id}
                           colSpan={header.colSpan}
@@ -481,7 +481,8 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                             width: header.column.columnDef.size,
                             backgroundColor: '#F5FAFA',
                             border: '1px solid #dddddd',
-                            padding: '8px',
+                            padding: i == 0 ? '8px 8px 8px 40px' : '8px',
+
                             textAlign: 'left',
                             fontWeight: 700,
                             color: 'rgba(15, 36, 64, 0.57)',
@@ -516,7 +517,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                           height: '180px',
                         }}
                       >
-                        {row.getVisibleCells().map((cell) => {
+                        {row.getVisibleCells().map((cell, i) => {
                           return (
                             <TableCell
                               key={cell.id}
@@ -526,6 +527,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                                 textAlign: 'left',
                                 borderBottom: '1px solid #ddd',
                                 fontSize: '0.8rem',
+                                padding: i == 0 ? '8px 8px 8px 46px' : '8px',
                               }}
                             >
                               {cell.getValue() !== undefined ? (
@@ -578,7 +580,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
         height: debouncedHeight,
       }}
     >
-      Select a table to view
+      Select a table from the left pane to view
     </Box>
   );
 };
