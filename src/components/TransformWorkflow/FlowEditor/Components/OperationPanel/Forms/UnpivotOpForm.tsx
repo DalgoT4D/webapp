@@ -140,6 +140,7 @@ const UnpivotOpForm = ({
       if (finalAction === 'create') {
         operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
       } else if (finalAction === 'edit') {
+        // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
@@ -169,6 +170,7 @@ const UnpivotOpForm = ({
       const { config: opConfig, input_models } = config;
       setInputModels(input_models);
 
+      // form data; will differ based on operations in progress
       const {
         source_columns,
         exclude_columns,
@@ -332,7 +334,7 @@ const UnpivotOpForm = ({
                 }}
               >
                 <FormControlLabel
-                  key={field.id}
+                  key={field.id + idx}
                   control={
                     <Checkbox
                       data-testid={`unpivotColumn${idx}`}
@@ -413,9 +415,9 @@ const UnpivotOpForm = ({
                 </Box>,
               ],
             ],
-            ...filteredExcludeColumns.map((field) => [
+            ...filteredExcludeColumns.map((field, idx) => [
               <Box
-                key={field.col}
+                key={field.col + idx}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
