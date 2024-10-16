@@ -11,8 +11,6 @@ import { trimString } from '@/utils/common';
 import Image from 'next/image';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import SyncIcon from '@/assets/icons/sync.svg';
-import styles from '@/styles/Common.module.css';
 
 const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const globalContext = useContext(GlobalContext);
@@ -24,6 +22,11 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const data: DbtSourceModel = node.data;
   let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
   name = trimString(name, stringLengthWithWidth);
+  useEffect(() => {
+    if (!node.isLeaf && node.level === 0 && !node.isOpen) {
+      node.toggle();
+    }
+  }, [node]);
 
   return (
     <Box
@@ -36,7 +39,7 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
         width: (250 * width) / 270 + 'px',
         opacity: permissions.includes('can_create_dbt_model') ? 1 : 0.5,
       }}
-      onClick={() => (node.isLeaf ? undefined : node.toggle())}
+      onClick={() => (node.isLeaf || node.level === 0 ? undefined : node.toggle())}
     >
       {node.isLeaf ? (
         <Image src={TocIcon} alt="Toc icon" />
@@ -120,7 +123,7 @@ const ProjectTree = ({
       };
     });
 
-    setProjectTreeData([{ id: '0', schema: 'Store', children: treeData }]);
+    setProjectTreeData([{ id: '0', schema: 'Schemas', children: treeData }]);
   };
 
   useEffect(() => {
@@ -128,7 +131,6 @@ const ProjectTree = ({
       constructAndSetProjectTreeData(dbtSourceModels);
     }
   }, [dbtSourceModels]);
-
   return (
     <Box
       sx={{

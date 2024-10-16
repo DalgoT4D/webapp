@@ -120,7 +120,12 @@ export const Explore = () => {
                 <Tabs
                   value={selectedTab}
                   onChange={handleTabChange}
-                  sx={{ display: 'flex', alignItems: 'center', height: '100%' }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '100%',
+                    paddingLeft: '28px',
+                  }}
                 >
                   <Tab label="Preview" value="preview" />
 
