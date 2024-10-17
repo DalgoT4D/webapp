@@ -4,6 +4,7 @@ import { Session } from 'next-auth';
 import EditSourceForm from '../SourceForm';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import useWebSocket from 'react-use-websocket';
 
 const pushMock = jest.fn();
 
@@ -15,7 +16,27 @@ jest.mock('next/router', () => ({
   },
 }));
 
+jest.mock('react-use-websocket', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe('Connections Setup', () => {
+  let sendJsonMessageMock: jest.Mock;
+  let lastMessageMock: any;
+
+  beforeEach(() => {
+    // Mock useWebSocket behavior
+    sendJsonMessageMock = jest.fn();
+    lastMessageMock = null;
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
+    });
+  });
+
   const mockSession: Session = {
     expires: '1',
     user: { email: 'a' },
@@ -51,6 +72,7 @@ describe('Connections Setup', () => {
           },
         ]),
       });
+
     const setShowFormMock = jest.fn();
     const setLoadingMock = jest.fn();
     render(
@@ -72,6 +94,13 @@ describe('Connections Setup', () => {
           ]}
         />
       </SessionProvider>
+    );
+
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
     );
 
     await waitFor(() => {
@@ -172,6 +201,13 @@ describe('Connections Setup', () => {
           ]}
         />
       </SessionProvider>
+    );
+
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
     );
 
     await waitFor(() => {
