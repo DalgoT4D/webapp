@@ -42,13 +42,14 @@ const RenameColumnOp = ({
     },
   });
 
-  const { control, handleSubmit, reset, getValues, formState } = useForm({
+  const { control, handleSubmit, reset, getValues, formState, watch } = useForm({
     defaultValues: {
       config: [{ old: '', new: '' }],
     },
   });
 
   const { config } = getValues();
+
   // Include this for multi-row input
   const { fields, append, remove } = useFieldArray({
     control,
@@ -149,7 +150,9 @@ const RenameColumnOp = ({
         old: key,
         new: columns[key],
       }));
-      renamedColumnArray.push({ old: '', new: '' });
+      if (renamedColumnArray.length < source_columns.length) {
+        renamedColumnArray.push({ old: '', new: '' });
+      }
       reset({ config: renamedColumnArray });
     } catch (error) {
       console.error(error);
@@ -168,6 +171,12 @@ const RenameColumnOp = ({
   }, [session, node]);
 
   const options = srcColumns.filter((column) => !config.map((con) => con.old).includes(column));
+  const configValues = watch('config'); //useful for rendering while selecting options or for input.
+
+  const disableCondition =
+    configValues.length >= srcColumns.length ||
+    configValues.at(-1)?.new === '' ||
+    configValues.at(-1)?.old === '';
 
   return (
     <Box sx={{ ...sx, marginTop: '17px' }}>
@@ -191,6 +200,7 @@ const RenameColumnOp = ({
                   {...field}
                   data-testid={`currentName${index}`}
                   id={`config${index}old`}
+                  value={field.value}
                   onChange={(data: any) => {
                     field.onChange(data);
                     const nextAutocompletIndex = document.querySelector(
@@ -216,10 +226,13 @@ const RenameColumnOp = ({
                   data-testid={`newName${index}`}
                   id={`config${index}new`}
                   fieldStyle="none"
+                  value={field.value}
                   sx={{ padding: '0' }}
+                  onChange={(e) => field.onChange(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
+                      if (disableCondition) return;
                       append({ old: '', new: '' });
                     }
                   }}
@@ -236,12 +249,13 @@ const RenameColumnOp = ({
         )}
 
         <Button
-          disabled={action === 'view'}
+          disabled={action === 'view' || disableCondition}
           variant="shadow"
           type="button"
           data-testid="addcase"
           sx={{ m: 2 }}
           onClick={(event) => {
+            if (disableCondition) return;
             append({ old: '', new: '' });
           }}
         >
