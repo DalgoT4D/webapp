@@ -24,8 +24,6 @@ import {
 } from '@tanstack/react-table';
 import { httpGet, httpPost } from '@/helpers/http';
 import { DbtSourceModel } from '../Canvas';
-import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { RangeChart } from '@/components/Charts/RangeChart';
 import { delay } from '@/utils/common';
@@ -33,6 +31,7 @@ import { Session } from 'next-auth';
 import { DateTimeInsights } from '@/components/Charts/DateTimeInsights';
 import { StringInsights } from '@/components/Charts/StringInsights';
 import { NumberInsights } from '@/components/Charts/NumberInsights';
+import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 
 const useDebounce = (value: number, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -150,16 +149,18 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   const [rowCount, setRowCount] = useState(-1);
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
-  const { previewAction } = usePreviewAction();
+
   // Row Data: The data to be displayed.
   const [data, setData] = useState<ColumnData[]>([]);
+
+  const { previewAction } = usePreviewAction();
 
   const columns: ColumnDef<ColumnData, any>[] = useMemo(
     () => [
       {
         accessorKey: 'name',
         header: 'Column name',
-        size: 150,
+        size: 160,
         enableSorting: true,
       },
       {
@@ -423,8 +424,8 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
               alignItems: 'center',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="body1" fontWeight="bold" padding="10px">
+            <Box sx={{ display: 'flex', alignItems: 'center', padding: '6px 8px 6px 44px' }}>
+              <Typography variant="body1" fontWeight="bold">
                 {modelToPreview?.input_name}
               </Typography>
               <Box
@@ -472,7 +473,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                 <TableHead>
                   {getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
+                      {headerGroup.headers.map((header, i) => (
                         <TableCell
                           key={header.id}
                           colSpan={header.colSpan}
@@ -480,7 +481,8 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                             width: header.column.columnDef.size,
                             backgroundColor: '#F5FAFA',
                             border: '1px solid #dddddd',
-                            padding: '8px',
+                            padding: i == 0 ? '8px 8px 8px 40px' : '8px',
+
                             textAlign: 'left',
                             fontWeight: 700,
                             color: 'rgba(15, 36, 64, 0.57)',
@@ -515,7 +517,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                           height: '180px',
                         }}
                       >
-                        {row.getVisibleCells().map((cell) => {
+                        {row.getVisibleCells().map((cell, i) => {
                           return (
                             <TableCell
                               key={cell.id}
@@ -525,6 +527,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                                 textAlign: 'left',
                                 borderBottom: '1px solid #ddd',
                                 fontSize: '0.8rem',
+                                padding: i == 0 ? '8px 8px 8px 46px' : '8px',
                               }}
                             >
                               {cell.getValue() !== undefined ? (
@@ -546,10 +549,10 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
       ) : (
         <Box
           sx={{
+            height: debouncedHeight,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: debouncedHeight,
           }}
         >
           <CircularProgress sx={{ mr: 2 }} />
@@ -560,9 +563,9 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
       <Box
         sx={{
           display: 'flex',
+          height: debouncedHeight,
           alignItems: 'center',
           justifyContent: 'center',
-          height: debouncedHeight,
         }}
       >
         No data (0 rows) available to generate insights
@@ -577,7 +580,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
         height: debouncedHeight,
       }}
     >
-      Select a table to view
+      Select a table from the left pane to view
     </Box>
   );
 };

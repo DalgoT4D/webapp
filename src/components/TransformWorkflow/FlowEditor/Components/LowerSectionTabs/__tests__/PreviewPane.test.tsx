@@ -109,11 +109,11 @@ describe('PreviewPane Component', () => {
     });
   });
 
-  test('renders "Select a table to view" message when no table is selected', () => {
+  test('renders "Select a table from the left pane to view " message when no table is selected', () => {
     usePreviewAction.mockReturnValue({ previewAction: { type: 'clear-preview' } });
 
     render(<PreviewPane height={600} />);
 
-    expect(screen.getByText('Select a table to view')).toBeInTheDocument();
+    expect(screen.getByText('Select a table from the left pane to view ')).toBeInTheDocument();
   });
 });
