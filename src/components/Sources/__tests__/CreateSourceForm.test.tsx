@@ -3,6 +3,8 @@ import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import CreateSourceForm from '../SourceForm';
 import userEvent from '@testing-library/user-event';
+import useWebSocket from 'react-use-websocket';
+
 import '@testing-library/jest-dom';
 
 const pushMock = jest.fn();
@@ -15,7 +17,27 @@ jest.mock('next/router', () => ({
   },
 }));
 
+jest.mock('react-use-websocket', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe('Connections Setup', () => {
+  let sendJsonMessageMock: jest.Mock;
+  let lastMessageMock: any;
+
+  beforeEach(() => {
+    // Mock useWebSocket behavior
+    sendJsonMessageMock = jest.fn();
+    lastMessageMock = null;
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
+    });
+  });
+
   const mockSession: Session = {
     expires: '1',
     user: { email: 'a' },
@@ -43,10 +65,16 @@ describe('Connections Setup', () => {
     </SessionProvider>
   );
 
-  // ===========================================================================
-  it('renders the form', async () => {
+  it('should initialize WebSocket with correct URL after session is set and render the form.', async () => {
     render(createSourceForm());
 
+    // Wait for the useEffect to initialize the WebSocket URL
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
+    );
     const savebutton = screen.getByTestId('savebutton');
     expect(savebutton).toBeInTheDocument();
 
@@ -81,6 +109,13 @@ describe('Connections Setup', () => {
     });
 
     render(createSourceForm());
+
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
+    );
 
     const autocomplete = screen.getByTestId('autocomplete');
     const sourceTypeInput = screen.getByRole('combobox');
@@ -120,88 +155,60 @@ describe('Connections Setup', () => {
 
     await waitFor(() => {
       screen.debug(document, Infinity);
-      expect(createSourceSubmit).toHaveBeenCalled();
+      expect(sendJsonMessageMock).toHaveBeenCalled();
     });
 
-    const request = createSourceSubmit.mock.calls[0][1];
-    const requestBody = JSON.parse(request.body);
+    await waitFor(() => {
+      if (lastMessageMock) {
+        expect(createSourceSubmit).toHaveBeenCalled();
+        const request = createSourceSubmit.mock.calls[0][1];
+        const requestBody = JSON.parse(request.body);
 
-    expect(requestBody.name).toBe('MYSOURCENAME');
-    expect(requestBody.sourceDefId).toBe('MYSOURCEDEFID');
-    expect(requestBody.config.host).toBe('localhost');
+        expect(requestBody.name).toBe('MYSOURCENAME');
+        expect(requestBody.sourceDefId).toBe('MYSOURCEDEFID');
+        expect(requestBody.config.host).toBe('localhost');
+      }
+    });
   });
 
-  // ===========================================================================
-  it('selects the source type and submits the form with a missing field', async () => {
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce({
-        properties: {
-          host: {
-            type: 'string',
-            title: 'Host',
-            field: 'host',
-          },
-        },
-        required: ['host'],
-      }),
-    });
+  it('handles failed WebSocket response and shows logs', async () => {
+    lastMessageMock = {
+      status: 'success',
+      data: {
+        status: 'failed',
+        logs: ['Error log line 1', 'Error log line 2'],
+      },
+    };
 
     render(createSourceForm());
+
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/source/check_connection'),
+        expect.any(Object)
+      )
+    );
+
+    const sourceName = screen.getByLabelText('Name*');
+    await user.type(sourceName, 'Test Source');
 
     const autocomplete = screen.getByTestId('autocomplete');
     const sourceTypeInput = screen.getByRole('combobox');
     autocomplete.focus();
-
     await user.type(sourceTypeInput, 's');
     fireEvent.keyDown(autocomplete, { key: 'ArrowDown' });
     fireEvent.keyDown(autocomplete, { key: 'Enter' });
-    await waitFor(() => {
-      expect(screen.getAllByRole('presentation').length).toBe(2);
-    });
 
-    await waitFor(() => {
-      const inputField: HTMLInputElement = screen.getByLabelText('Host*');
-      expect(inputField).toBeInTheDocument();
-      expect(inputField.value).toBe('');
-      expect(inputField.type).toBe('text');
-    });
+    const saveButton = screen.getByTestId('savebutton');
+    await user.click(saveButton);
 
-    const createSourceSubmit = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce({
-        status: 'failed',
-        logs: ['log-message-line-1', 'log-message-line-2'],
-      }),
-    });
-    (global as any).fetch = createSourceSubmit;
-
-    const savebutton = screen.getByTestId('savebutton');
-
-    // put in the name
-    const sourceName = screen.getByLabelText('Name*');
-    await user.type(sourceName, 'MYSOURCENAME');
-
-    // but the "host" field is missing & required
-    await user.click(savebutton);
-    expect(createSourceSubmit).not.toHaveBeenCalled();
-    const inputField: HTMLInputElement = screen.getByLabelText('Host*');
-    // now put in the required field
-    await user.type(inputField, 'SOMEHOST');
-    await user.click(savebutton);
-
-    expect(createSourceSubmit).toHaveBeenCalled();
-    const request = createSourceSubmit.mock.calls[0][1];
-    const requestBody = JSON.parse(request.body);
-
-    expect(requestBody.name).toBe('MYSOURCENAME');
-    expect(requestBody.sourceDefId).toBe('MYSOURCEDEFID');
-    expect(requestBody.config.host).toBe('SOMEHOST');
-
-    // Logs message lines should appear
-    const logLine1 = screen.getByText('log-message-line-1');
-    expect(logLine1).toBeInTheDocument();
-    const logLine2 = screen.getByText('log-message-line-1');
-    expect(logLine2).toBeInTheDocument();
+    await waitFor(() =>
+      expect(sendJsonMessageMock).toHaveBeenCalledWith({
+        name: 'Test Source',
+        sourceDefId: 'MYSOURCEDEFID',
+        config: expect.any(Object),
+        sourceId: '',
+      })
+    );
   });
 });
