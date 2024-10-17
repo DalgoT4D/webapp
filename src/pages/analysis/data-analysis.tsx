@@ -12,6 +12,8 @@ import { TopBar } from '@/components/DataAnalysis/TopBar';
 import { jsonToCSV } from 'react-papaparse';
 import { PageHead } from '@/components/PageHead';
 import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
+import { OverWriteDialog } from '@/components/DataAnalysis/OverwriteBox';
+import { useRouter } from 'next/router';
 interface ProgressResult {
   response?: Array<any>;
   session_id?: string;
@@ -22,18 +24,34 @@ interface ProgressEntry {
   status: 'running' | 'completed' | 'failed';
   result?: ProgressResult;
 }
+export const MODALS = {
+  SAVE: 'SAVE',
+  OVERWRITE: 'OVERWRITE',
+  CONFIRM_SAVEAS: 'CONFIRM_SAVEAS',
+  FEEDBACK_FORM: 'FEEDBACK_FORM',
+  UNSAVED_CHANGES: 'UNSAVED_CHANGES',
+  RESET_WARNING: 'RESET_WARNING',
+  EDIT_SESSION_WARNING: 'EDIT_SESSION_WARNING',
+};
 
 interface ProgressResponse {
   progress: ProgressEntry[];
 }
 export default function DataAnalysis() {
   const { data: session } = useSession();
+  const router = useRouter();
+  const [attemptedRoute, setAttemptedRoute] = useState(null);
   const globalContext = useContext(GlobalContext);
+  const { dispatch, state } = globalContext?.UnsavedChanges ?? {};
   const [loading, setLoading] = useState(false);
   const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
   const [resetState, setResetState] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState();
+  const [isBoxOpen, setIsBoxOpen] = useState(false);
+  const [modalName, setModalName] = useState(MODALS.SAVE);
 
+  //for the discalimer page.
   useEffect(() => {
     const orgSlug = localStorage.getItem('org-slug');
     try {
@@ -84,7 +102,14 @@ export default function DataAnalysis() {
     }
     setResetState(true);
   };
-  const handleEditSession = (info: any) => {
+  const handleEditSession = (info: any, openEdit: boolean) => {
+    setSelectedSession(info);
+    //shows me a modal asking to save the generated summary.
+    if (newSessionId && !openEdit) {
+      setIsBoxOpen(true);
+      setModalName(MODALS.EDIT_SESSION_WARNING);
+      return;
+    }
     setSessionMetaInfo({
       newSessionId: '',
       ...oldSessionMetaInfo,
@@ -183,6 +208,102 @@ export default function DataAnalysis() {
       errorToast(err.message, [], globalContext);
     }
   };
+  //handling save session->
+  const handleSaveSession = async (
+    overwrite: boolean,
+    old_session_id: string | null,
+    session_name: string
+  ) => {
+    try {
+      const response: { success: number } = await httpPost(
+        session,
+        `warehouse/ask/${newSessionId}/save`,
+        {
+          session_name,
+          overwrite,
+          old_session_id,
+        }
+      );
+      if (response.success) {
+        successToast(`${session_name} saved successfully`, [], globalContext);
+        handleNewSession(true);
+      }
+    } catch (err: any) {
+      errorToast(err.message, [], globalContext);
+    } finally {
+      setIsBoxOpen(false);
+    }
+  };
+
+  const handleFeedback = async (session_id: string, feedback: string) => {
+    try {
+      const response: { success: number } = await httpPost(
+        session,
+        `warehouse/ask/${session_id}/feedback`,
+        {
+          feedback,
+        }
+      );
+      if (response.success) {
+        successToast(`Feedback sent successfully`, [], globalContext);
+      }
+    } catch (err: any) {
+      errorToast(err.message, [], globalContext);
+    } finally {
+      setIsBoxOpen(false);
+    }
+  };
+
+  // Submitting the session name -> Caan be overwrite or new session.
+  const onSubmit = (sessionName: string, overwrite: boolean) => {
+    const oldSessionIdToSend = overwrite ? oldSessionMetaInfo?.oldSessionId : null;
+    handleSaveSession(overwrite, oldSessionIdToSend, sessionName);
+  };
+
+  //Submitting Feedback
+  const submitFeedback = (feedback: string) => {
+    let sessionIdToSend: any;
+    if (newSessionId) {
+      // if we have a newsession or if we have oldsession but again create a new summary (both oldsessionid and newsessionid).
+      sessionIdToSend = newSessionId;
+    } else if (oldSessionMetaInfo.oldSessionId) {
+      //during edit when we have a oldsession id.
+      sessionIdToSend = oldSessionMetaInfo.oldSessionId;
+    }
+    handleFeedback(sessionIdToSend, feedback);
+  };
+
+  //Warns user to save the session before moving to some other tab.
+  useEffect(() => {
+    const handleRouteChange = (url: any) => {
+      if (
+        (oldSessionMetaInfo.oldSessionId && newSessionId && state === false) ||
+        (newSessionId && !oldSessionMetaInfo.oldSessionId && state === false)
+      ) {
+        router.events.emit('routeChangeError');
+        setModalName(MODALS.UNSAVED_CHANGES);
+        setIsBoxOpen(true);
+        dispatch({ type: 'SET_UNSAVED_CHANGES' });
+        setAttemptedRoute(url);
+        throw 'Unsaved changes, route change aborted';
+      }
+    };
+
+    router.events.on('routeChangeStart', handleRouteChange);
+
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange);
+      dispatch({ type: 'CLEAR_UNSAVED_CHANGES' });
+    };
+  }, [router, oldSessionMetaInfo.oldSessionId, state, newSessionId]);
+
+  //the unsaved modal function->
+  const onConfirmNavigation = () => {
+    if (attemptedRoute) {
+      dispatch({ type: 'SET_UNSAVED_CHANGES' });
+      router.push(attemptedRoute);
+    }
+  };
 
   return (
     <>
@@ -222,6 +343,8 @@ export default function DataAnalysis() {
         {/* Final Summary */}
         <LLMSummary
           resetState={resetState}
+          setModalName={setModalName}
+          setIsBoxOpen={setIsBoxOpen}
           llmSummary={summary}
           downloadCSV={downloadCSV}
           newSessionId={newSessionId}
@@ -268,6 +391,21 @@ export default function DataAnalysis() {
           />
         )}
         {isOpen && <Disclaimer open={isOpen} setIsOpen={setIsOpen} />}
+        {isBoxOpen && (
+          <OverWriteDialog
+            open={isBoxOpen}
+            setIsBoxOpen={setIsBoxOpen}
+            modalName={modalName}
+            onSubmit={onSubmit}
+            submitFeedback={submitFeedback}
+            onConfirmNavigation={onConfirmNavigation}
+            handleNewSession={handleNewSession}
+            setModalName={setModalName}
+            oldSessionMetaInfo={oldSessionMetaInfo}
+            handleEditSession={handleEditSession}
+            selectedSession={selectedSession}
+          />
+        )}
       </Box>
     </>
   );
