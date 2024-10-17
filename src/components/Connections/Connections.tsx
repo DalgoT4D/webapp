@@ -363,11 +363,11 @@ export const Connections = () => {
     handleCancelDeleteConnection();
   };
 
-  const resetConnection = (deploymentId: string) => {
+  const resetConnection = (connectionId: string) => {
     (async () => {
       try {
         setResetLoading(true);
-        const message = await httpPost(session, `prefect/v1/flows/${deploymentId}/flow_run/`, {});
+        const message = await httpPost(session, `airbyte/v1/connections/${connectionId}/reset`, {});
         if (message.success) {
           successToast('Reset connection initiated successfully', [], globalContext);
         }
@@ -570,7 +570,7 @@ export const Connections = () => {
   };
 
   const handleResetConnection = () => {
-    handleClose();
+    handleClose('EDIT');
     setShowConfirmResetDialog(true);
     trackAmplitudeEvent('[Reset-connection] Button Clicked');
   };
@@ -663,7 +663,7 @@ export const Connections = () => {
         loading={resetLoading}
         show={showConfirmResetDialog}
         handleClose={() => handleCancelResetConnection()}
-        handleConfirm={() => resetConnection(resetDeploymentId)}
+        handleConfirm={() => resetConnection(connectionId)}
         message="Resetting the connection will clear all data at the warehouse."
       />
       <LogCard logs={syncLogs} expand={expandSyncLogs} setExpand={setExpandSyncLogs} />
