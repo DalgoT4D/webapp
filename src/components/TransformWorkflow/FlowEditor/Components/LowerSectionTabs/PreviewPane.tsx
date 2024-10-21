@@ -184,7 +184,7 @@ const PreviewPane = ({ height }: { height: number }) => {
           alignItems: 'center',
           display: 'flex',
           justifyContent: 'space-between',
-          padding: '8px 8px 8px 44px',
+          padding: '8px 20px 8px 44px',
         }}
       >
         <Typography variant="body1" fontWeight="bold">
@@ -283,6 +283,7 @@ const PreviewPane = ({ height }: { height: number }) => {
             setPageSize(e.target.value);
             setCurrentPageIndex(1);
           }}
+          sx={{ marginRight: '20px' }}
         />
       </Box>
     </Box>

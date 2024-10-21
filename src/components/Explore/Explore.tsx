@@ -10,7 +10,7 @@ import { Box, Dialog, Divider, IconButton, Tab, Tabs } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
-import { Transition } from '@/components/DBT/DBTTransformType';
+import { TopNavBar, Transition } from '@/components/DBT/DBTTransformType';
 import { ResizableBox } from 'react-resizable';
 import ProjectTree from '@/components/TransformWorkflow/FlowEditor/Components/ProjectTree';
 import PreviewPane from '@/components/TransformWorkflow/FlowEditor/Components/LowerSectionTabs/PreviewPane';
@@ -58,7 +58,7 @@ export const Explore = () => {
     const dialogBox = document.querySelector('.MuiDialog-container');
 
     if (dialogBox) {
-      const fullHeight = dialogBox?.clientHeight - 50;
+      const fullHeight = dialogBox?.clientHeight - 100;
       setheight(fullHeight);
     }
   }, [sourceModels]);
@@ -78,9 +78,15 @@ export const Explore = () => {
   };
   return (
     <>
-      <PageHead title="Dalgo" />
-
+      <PageHead title="Dalgo | Explore" />
       <Dialog fullScreen open={dialogueOpen} TransitionComponent={Transition}>
+        <TopNavBar
+          handleClose={() => {
+            setDialogueOpen(false);
+            router.push('/pipeline/ingest');
+          }}
+        />
+
         <Box
           sx={{
             flexGrow: 1,
@@ -109,7 +115,7 @@ export const Explore = () => {
             <Box sx={{ height: 'unset' }}>
               <Box
                 sx={{
-                  height: '50px',
+                  height: '44px',
                   display: 'flex',
                   alignItems: 'center',
                   background: '#F5FAFA',
@@ -131,15 +137,6 @@ export const Explore = () => {
 
                   <Tab label="Data statistics" value="statistics" />
                 </Tabs>
-                <IconButton
-                  sx={{ ml: 'auto' }}
-                  onClick={() => {
-                    setDialogueOpen(false);
-                    router.push('/pipeline/ingest');
-                  }}
-                >
-                  <Close />
-                </IconButton>
               </Box>
               <Box>
                 {selectedTab === 'preview' && <PreviewPane height={height} />}
