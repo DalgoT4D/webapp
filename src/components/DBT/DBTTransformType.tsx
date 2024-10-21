@@ -40,7 +40,7 @@ export const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} timeout={400} />;
 });
 
-const TopNavBar = ({ handleClose }: any) => (
+export const TopNavBar = ({ handleClose }: any) => (
   <Box sx={{ display: 'flex' }}>
     <Box
       sx={{
