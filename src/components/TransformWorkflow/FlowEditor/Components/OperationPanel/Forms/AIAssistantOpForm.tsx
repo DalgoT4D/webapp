@@ -134,7 +134,7 @@ const AIAssistantOpForm = ({
 
     try {
       const postData = {
-        op_type: null,
+        op_type: '',
         source_columns: srcColumns,
         other_inputs: [],
         config: { query: data.prompt },
