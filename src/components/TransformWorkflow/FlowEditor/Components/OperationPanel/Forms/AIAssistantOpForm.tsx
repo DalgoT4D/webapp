@@ -132,22 +132,23 @@ const AIAssistantOpForm = ({
     const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
     const finalAction = node?.data.isDummy ? 'create' : action; //change
 
-    await delay(1000);
     try {
       const postData = {
-        op_type: 'dropcolumns',
+        op_type: null,
         source_columns: srcColumns,
         other_inputs: [],
-        config: { columns: ['salinity'] },
+        config: { query: data.prompt },
         input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
         target_model_uuid: finalNode?.data.target_model_id || '',
       };
+
+      await delay(1000);
 
       // api call
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        operationNode = await httpPost(session, `transform/agent/chat/`, postData);
       }
 
       continueOperationChain(operationNode);
