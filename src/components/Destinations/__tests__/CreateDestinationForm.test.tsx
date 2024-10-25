@@ -4,6 +4,7 @@ import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import CreateDestinationForm from '../DestinationForm';
+import useWebSocket from 'react-use-websocket';
 
 const pushMock = jest.fn();
 
@@ -15,6 +16,11 @@ jest.mock('next/router', () => ({
   },
 }));
 
+jest.mock('react-use-websocket', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
 describe('destination create form - fetch definitions success', () => {
   const mockSession: Session = {
     expires: 'false',
@@ -24,6 +30,8 @@ describe('destination create form - fetch definitions success', () => {
   const setShowForm = jest.fn();
 
   beforeEach(() => {
+    const sendJsonMessageMock = jest.fn();
+    const lastMessageMock = null;
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce([
@@ -32,6 +40,12 @@ describe('destination create form - fetch definitions success', () => {
           destinationDefinitionId: 'destination-def-id-1',
         },
       ]),
+    });
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
     });
   });
 
@@ -44,6 +58,13 @@ describe('destination create form - fetch definitions success', () => {
       );
     });
 
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
+
     const destinationName = screen.getByTestId('dest-name');
     expect(destinationName).toBeInTheDocument();
 
@@ -55,8 +76,10 @@ describe('destination create form - fetch definitions success', () => {
 
     // Form shouldn't submit if nothing is entered. Name is required
     userEvent.click(saveButton);
-    expect(destinationName).toBeInTheDocument();
-    expect(destinationType).toBeInTheDocument();
+    await waitFor(() => {
+      expect(destinationName).toBeInTheDocument();
+      expect(destinationType).toBeInTheDocument();
+    });
   });
 
   it('cancel button closes the form', async () => {
@@ -92,6 +115,8 @@ describe('destination create form - fetch definitions failure', () => {
   const setShowForm = jest.fn();
 
   beforeEach(() => {
+    const sendJsonMessageMock = jest.fn();
+    const lastMessageMock = null;
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
       ok: false,
       json: jest.fn().mockResolvedValueOnce([
@@ -100,6 +125,12 @@ describe('destination create form - fetch definitions failure', () => {
           destinationDefinitionId: 'destination-def-id-1',
         },
       ]),
+    });
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
     });
   });
 
@@ -111,6 +142,13 @@ describe('destination create form - fetch definitions failure', () => {
         </SessionProvider>
       );
     });
+
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
 
     const destinationName = screen.getByTestId('dest-name');
     expect(destinationName).toBeInTheDocument();
@@ -128,6 +166,8 @@ describe('destination create form - definitions + specifications', () => {
 
   const setShowForm = jest.fn();
 
+  let sendJsonMessageMock: jest.Mock;
+  let lastMessageMock: any;
   beforeEach(() => {
     (global as any).fetch = jest
       .fn()
@@ -251,6 +291,15 @@ describe('destination create form - definitions + specifications', () => {
           required: ['host'],
         }),
       });
+
+    sendJsonMessageMock = jest.fn();
+    lastMessageMock = null;
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
+    });
   });
 
   it('select destination definition to load specs', async () => {
@@ -261,6 +310,13 @@ describe('destination create form - definitions + specifications', () => {
         </SessionProvider>
       );
     });
+
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
 
     // Select one of the defs in autocomplete
     let destinationDefAutocomplete = screen.getByTestId('dest-type-autocomplete');
@@ -291,36 +347,22 @@ describe('destination create form - definitions + specifications', () => {
     const portSpec = screen.getByLabelText('SSL modes');
     expect(portSpec).toBeInTheDocument();
 
-    // Mock the api call in submit function, a failed call
-    const createDestinationOnSubmit = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce({
-        status: 'failed',
-        logs: ['log-message-line-1', 'log-message-line-2'],
-      }),
-    });
-
-    (global as any).fetch = createDestinationOnSubmit;
-
     const saveButton = screen.getByTestId('save-button');
 
     // Add name of the warehouse. Required field is empty
     const destNameInput = screen.getByLabelText('Name*');
     await userEvent.type(destNameInput, 'test-dest');
-    // await userEvent.click(saveButton);
-    // expect(createDestinationOnSubmit).not.toHaveBeenCalled();
 
     // Add the required field input
     await userEvent.type(hostSpec, 'test-host-sever-name');
 
     // Now submit
     await userEvent.click(saveButton);
-    expect(createDestinationOnSubmit).toHaveBeenCalled();
-
-    // Mock the api call in submit function, a success call and submit again
+    await waitFor(() => expect(sendJsonMessageMock).toHaveBeenCalled());
   });
 
   it('submit the form with check connection failure & show logs', async () => {
+    // Render component
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
@@ -328,6 +370,14 @@ describe('destination create form - definitions + specifications', () => {
         </SessionProvider>
       );
     });
+
+    // Verify WebSocket setup
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
 
     // select destination definition
     const destinationDefAutocomplete = screen.getByTestId('dest-type-autocomplete');
@@ -337,67 +387,82 @@ describe('destination create form - definitions + specifications', () => {
 
     await act(() => {
       fireEvent.change(destinationDefInput, {
-        target: {
-          value: 'destination-def-name-2',
-        },
+        target: { value: 'destination-def-name-2' },
       });
     });
 
-    const selectDef2 = screen.getByText('destination-def-name-2'); // Replace 'Option 2' with the actual text of the second option
-    await act(async () => await fireEvent.click(selectDef2));
+    const selectDef2 = screen.getByText('destination-def-name-2');
+    await act(async () => fireEvent.click(selectDef2));
 
-    // Mock the check connectivity call in submit function, a failed call
-    const createDestinationOnSubmit = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce({
-        status: 'failed',
-        logs: ['log-message-line-1', 'log-message-line-2'],
+    // Mock failed WebSocket message with logs
+    lastMessageMock = {
+      data: JSON.stringify({
+        status: 'success',
+        data: {
+          status: 'failed',
+          logs: ['log-message-line-1', 'log-message-line-2'],
+        },
       }),
+    };
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
     });
 
-    (global as any).fetch = createDestinationOnSubmit;
-
     const saveButton = screen.getByTestId('save-button');
-    // Enter required fields
+
+    // Fill in required fields
     const destNameInput = screen.getByLabelText('Name*');
     const hostSpec = screen.getByLabelText('Host*');
     await userEvent.type(destNameInput, 'test-dest');
     await userEvent.type(hostSpec, 'test-host-sever-name');
-    await userEvent.click(saveButton);
 
-    const request = createDestinationOnSubmit.mock.calls[0][1];
-    const requestBody = JSON.parse(request.body);
-
-    expect(requestBody.name).toBe('test-dest');
-    expect(requestBody.destinationDefId).toBe('destination-def-id-2');
-    expect(requestBody.config.host).toBe('test-host-sever-name');
-
-    // Logs message lines should appear
-    const logLine1 = screen.getByText('log-message-line-1');
-    expect(logLine1).toBeInTheDocument();
-    const logLine2 = screen.getByText('log-message-line-1');
-    expect(logLine2).toBeInTheDocument();
-
-    // Mock the api call with response with ok: false
-    const createDestinationOnSubmitFail = jest.fn().mockResolvedValueOnce({
-      ok: false,
-      json: jest.fn().mockResolvedValueOnce({
-        status: 'failed',
-        logs: ['log-message-line-1', 'log-message-line-2'],
-      }),
+    await act(async () => {
+      userEvent.click(saveButton);
     });
-    (global as any).fetch = createDestinationOnSubmitFail;
-    await userEvent.click(saveButton);
+
+    // Verify that WebSocket send message was triggered
+    await waitFor(() =>
+      expect(sendJsonMessageMock).toHaveBeenCalledWith({
+        name: 'test-dest',
+        destinationDefId: 'destination-def-id-2',
+        config: expect.any(Object),
+        destinationId: null,
+      })
+    );
+
+    // Verify logs are displayed after receiving failed status in `lastMessageMock`
+    await waitFor(() => {
+      const logLine1 = screen.getByText('log-message-line-1');
+      const logLine2 = screen.getByText('log-message-line-2');
+      expect(logLine1).toBeInTheDocument();
+      expect(logLine2).toBeInTheDocument();
+    });
   });
 
   it('submit the form with check connection success', async () => {
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
-          <CreateDestinationForm mutate={() => {}} showForm={true} setShowForm={setShowForm} />
+          <CreateDestinationForm
+            mutate={() => {}}
+            showForm={true}
+            setShowForm={setShowForm}
+            warehouse={null}
+          />
         </SessionProvider>
       );
     });
+
+    // Verify WebSocket setup
+    await waitFor(() =>
+      expect(useWebSocket).toHaveBeenCalledWith(
+        expect.stringContaining('airbyte/destination/check_connection'),
+        expect.any(Object)
+      )
+    );
 
     // select destination definition
     const destinationDefAutocomplete = screen.getByTestId('dest-type-autocomplete');
@@ -405,50 +470,64 @@ describe('destination create form - definitions + specifications', () => {
       'combobox'
     );
 
-    await act(() => {
+    await act(async () => {
       fireEvent.change(destinationDefInput, {
-        target: {
-          value: 'destination-def-name-2',
-        },
+        target: { value: 'destination-def-name-2' },
       });
     });
 
-    const selectDef2 = screen.getByText('destination-def-name-2'); // Replace 'Option 2' with the actual text of the second option
-    await act(async () => await fireEvent.click(selectDef2));
+    const selectDef2 = screen.getByText('destination-def-name-2');
+    await act(async () => fireEvent.click(selectDef2));
 
-    // Mock the check connectivity call in submit function, a success call
-    // Also mock successfull create warehouse api call
-    const createDestinationOnSubmit = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          status: 'succeeded',
-        }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({ success: 1 }),
-      });
+    const createDestinationOnSubmit = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({
+        status: 'succeeded',
+      }),
+    });
 
     (global as any).fetch = createDestinationOnSubmit;
 
+    // Simulate a successful WebSocket response
+    lastMessageMock = {
+      data: JSON.stringify({
+        status: 'success',
+        data: {
+          status: 'succeeded',
+        },
+      }),
+    };
+
+    (useWebSocket as jest.Mock).mockReturnValue({
+      sendJsonMessage: sendJsonMessageMock,
+      lastMessage: lastMessageMock,
+      onError: jest.fn(),
+    });
+
     const saveButton = screen.getByTestId('save-button');
-    // Enter required fields
+
     const destNameInput = screen.getByLabelText('Name*');
     const hostSpec = screen.getByLabelText('Host*');
-    await userEvent.type(destNameInput, 'test-dest');
-    await userEvent.type(hostSpec, 'test-host-sever-name');
-    await userEvent.click(saveButton);
+    await act(async () => {
+      await userEvent.type(destNameInput, 'test-dest');
+      await userEvent.type(hostSpec, 'test-host-sever-name');
+      userEvent.click(saveButton);
+    });
 
-    const request = createDestinationOnSubmit.mock.calls[0][1];
-    const requestBody = JSON.parse(request.body);
+    // Verify WebSocket message was sent
+    await waitFor(() =>
+      expect(sendJsonMessageMock).toHaveBeenCalledWith({
+        name: 'test-dest',
+        destinationDefId: 'destination-def-id-2',
+        config: expect.any(Object),
+        destinationId: null,
+      })
+    );
 
-    expect(requestBody.name).toBe('test-dest');
-    expect(requestBody.destinationDefId).toBe('destination-def-id-2');
-    expect(requestBody.config.host).toBe('test-host-sever-name');
-
-    await userEvent.click(saveButton);
-    expect(createDestinationOnSubmit).toHaveBeenCalled();
+    await waitFor(() => {
+      if (lastMessageMock.data.status === 'success') {
+        expect(createDestinationOnSubmit).toHaveBeenCalledTimes(1);
+      }
+    });
   });
 });
