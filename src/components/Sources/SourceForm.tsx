@@ -9,6 +9,8 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 import { ConfigInput } from '../ConfigInput/ConfigInput';
+import { generateWebsocketUrl } from '@/helpers/websocket';
+import useWebSocket from 'react-use-websocket';
 
 interface SourceFormProps {
   mutate: (...args: any) => any;
@@ -53,13 +55,26 @@ const SourceForm = ({
 }: SourceFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const { handleSubmit, control, watch, reset, setValue } = useForm<SourceFormInput>({
+  const { handleSubmit, control, watch, reset, setValue, getValues } = useForm<SourceFormInput>({
     defaultValues: {
       name: '',
       sourceDef: null,
       config: {},
     },
   });
+  const [socketUrl, setSocketUrl] = useState<string | null>(null);
+  const { sendJsonMessage, lastMessage } = useWebSocket(socketUrl, {
+    share: false,
+    onError(event) {
+      console.error('Socket error:', event);
+    },
+  });
+
+  useEffect(() => {
+    if (session) {
+      setSocketUrl(generateWebsocketUrl('airbyte/source/check_connection', session));
+    }
+  }, [session]);
 
   const watchSelectedSourceDef = watch('sourceDef');
   const [logs, setLogs] = useState<Array<any>>([]);
@@ -92,11 +107,11 @@ const SourceForm = ({
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
+        } finally {
+          setLoading(false);
         }
       })();
-      setLoading(false);
     }
-    setLoading(false);
   }, [sourceDefs, showForm]);
 
   useEffect(() => {
@@ -156,6 +171,8 @@ const SourceForm = ({
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -166,50 +183,52 @@ const SourceForm = ({
         sourceDefId: data.sourceDef.id,
         config: data.config,
       });
+      mutate();
       handleClose();
       successToast('Source updated', [], globalContext);
-      mutate();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const checkSourceConnectivityForUpdate = async (data: any) => {
-    setLoading(true);
-    setLogs([]);
-    try {
-      let url = `airbyte/sources/check_connection/`;
-      if (sourceId) {
-        url = `airbyte/sources/${sourceId}/check_connection_for_update/`;
-      }
-      const checkResponse = await httpPost(session, url, {
-        name: data.name,
-        sourceDefId: data.sourceDef.id,
-        config: data.config,
-      });
+  useEffect(() => {
+    if (lastMessage) {
+      const formData = getValues();
+      const checkResponse = JSON.parse(lastMessage.data);
 
-      if (checkResponse.status === 'succeeded') {
-        if (sourceId) {
-          await editSource(data);
-        } else {
-          await createSource(data);
-        }
-
+      if (checkResponse.status !== 'success') {
+        errorToast(checkResponse.message, [], globalContext);
         setLoading(false);
-      } else {
-        setLogs(checkResponse.logs);
-        errorToast('Something went wrong', [], globalContext);
+        return;
       }
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], globalContext);
+
+      if (checkResponse.data.status === 'succeeded') {
+        if (sourceId) {
+          editSource(formData);
+        } else {
+          createSource(formData);
+        }
+      } else {
+        setLogs(checkResponse.data.logs);
+        errorToast('Something went wrong', [], globalContext);
+        setLoading(false);
+      }
     }
-    setLoading(false);
-  };
+  }, [lastMessage]);
 
   const onSubmit = async (data: any) => {
-    await checkSourceConnectivityForUpdate(data);
+    // trigger check connection
+    setLoading(true);
+    setLogs([]);
+    sendJsonMessage({
+      name: data.name,
+      sourceDefId: data.sourceDef.id,
+      config: data.config,
+      sourceId: sourceId, // sourceId is null for new source
+    });
   };
 
   const formContent = (
