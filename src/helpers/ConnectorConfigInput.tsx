@@ -167,9 +167,9 @@ class ConnectorConfigInput {
         if (value['oneOf'] && value['oneOf'].length > 1) {
           value['oneOf']?.forEach((ele: any) => {
             if (commonField.length > 0) {
-              commonField = Object.keys(ele?.properties).filter((value: any) =>
-                commonField.includes(value)
-              );
+              commonField = Object.keys(ele?.properties)
+                .filter((key: any) => 'const' in ele?.properties[key])
+                .filter((value: any) => commonField.includes(value));
             } else {
               commonField = Object.keys(ele?.properties);
             }
