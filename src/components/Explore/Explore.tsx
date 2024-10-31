@@ -1,12 +1,9 @@
 import { PageHead } from '@/components/PageHead';
-import {
-  DbtSourceModel,
-  WarehouseTable,
-} from '@/components/TransformWorkflow/FlowEditor/Components/Canvas';
+import { WarehouseTable } from '@/components/TransformWorkflow/FlowEditor/Components/Canvas';
 import { StatisticsPane } from '@/components/TransformWorkflow/FlowEditor/Components/LowerSectionTabs/StatisticsPane';
 
 import { httpGet } from '@/helpers/http';
-import { Box, Dialog, Divider, IconButton, Tab, Tabs } from '@mui/material';
+import { Box, Dialog, Divider, Tab, Tabs } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
@@ -15,7 +12,6 @@ import { ResizableBox } from 'react-resizable';
 import ProjectTree from '@/components/TransformWorkflow/FlowEditor/Components/ProjectTree';
 import PreviewPane from '@/components/TransformWorkflow/FlowEditor/Components/LowerSectionTabs/PreviewPane';
 import { NodeApi } from 'react-arborist';
-import Close from '@mui/icons-material/Close';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
