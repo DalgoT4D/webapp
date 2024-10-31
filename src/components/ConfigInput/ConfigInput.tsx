@@ -76,6 +76,7 @@ export const ConfigInput = ({ specs, control, setFormValue, entity }: ConfigInpu
       {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
         .map((spec: EntitySpec) => {
+          console.log(spec, 'PEC');
           return spec?.type === 'string' ? (
             spec?.airbyte_secret ? (
               <React.Fragment key={spec.field}>
@@ -121,6 +122,39 @@ export const ConfigInput = ({ specs, control, setFormValue, entity }: ConfigInpu
                 />
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
+            ) : spec?.enum && spec?.enum.length > 0 ? (
+              <>
+                <React.Fragment key={spec.field}>
+                  <Controller
+                    name={spec.field}
+                    control={control}
+                    rules={{ required: spec.required && 'Required' }}
+                    render={({ field, fieldState }) => (
+                      <Autocomplete
+                        disabled={false}
+                        data-testid="autocomplete"
+                        id={spec.field}
+                        value={field.value}
+                        options={spec.enum as any}
+                        onChange={(e, data: any) => {
+                          handleObjectFieldOnChange(data, spec.field, field);
+                        }}
+                        renderInput={(params) => (
+                          <Input
+                            name={spec.field}
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message}
+                            {...params}
+                            variant="outlined"
+                            label={`${spec.title}${spec.required ? '*' : ''}`}
+                          />
+                        )}
+                      />
+                    )}
+                  />
+                  <Box sx={{ m: 2 }} />
+                </React.Fragment>
+              </>
             ) : (
               <React.Fragment key={spec.field}>
                 <Controller
