@@ -76,7 +76,6 @@ export const ConfigInput = ({ specs, control, setFormValue, entity }: ConfigInpu
       {connectorSpecs
         ?.sort((input1, input2) => input1.order - input2.order)
         .map((spec: EntitySpec) => {
-          console.log(spec, 'PEC');
           return spec?.type === 'string' ? (
             spec?.airbyte_secret ? (
               <React.Fragment key={spec.field}>
@@ -122,7 +121,10 @@ export const ConfigInput = ({ specs, control, setFormValue, entity }: ConfigInpu
                 />
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
-            ) : spec?.enum && spec?.enum.length > 0 ? (
+            ) : spec?.enum &&
+              spec?.enum.length > 0 &&
+              (spec?.specs == null || spec?.specs === undefined) ? (
+              //usually parent object containing enum has type object. but in the case of mongodb connector the type was string.
               <>
                 <React.Fragment key={spec.field}>
                   <Controller
