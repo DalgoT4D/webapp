@@ -20,6 +20,7 @@ import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
 import { showDataInsightsTab } from '@/config/constant';
 import { useLockCanvas } from '@/customHooks/useLockCanvas';
 import { useTracking } from '@/contexts/TrackingContext';
+import { NodeApi } from 'react-arborist';
 
 type UpperSectionProps = {
   sourcesModels: DbtSourceModel[];
@@ -37,9 +38,24 @@ const UpperSection = ({
   setTempLockCanvas,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
-
+  const globalContext = useContext(GlobalContext);
+  const { setCanvasAction } = useCanvasAction();
   const onResize = (event: any, { size }: any) => {
     setWidth(size.width);
+  };
+
+  const handleNodeClick = (nodes: NodeApi<any>[]) => {
+    if (nodes.length > 0 && nodes[0].isLeaf) {
+      console.log('adding a node to canvas from project tree component', nodes[0].data);
+      setCanvasAction({ type: 'add-srcmodel-node', data: nodes[0].data });
+    }
+  };
+
+  const initiateSyncSources = () => {
+    const permissions = globalContext?.Permissions.state || [];
+    if (permissions.includes('can_sync_sources')) {
+      setCanvasAction({ type: 'sync-sources', data: null });
+    }
   };
   return (
     <Box
@@ -58,7 +74,11 @@ const UpperSection = ({
         maxConstraints={[550, Infinity]}
         resizeHandles={['e']}
       >
-        <ProjectTree dbtSourceModels={sourcesModels} />
+        <ProjectTree
+          dbtSourceModels={sourcesModels}
+          handleNodeClick={handleNodeClick}
+          handleSyncClick={initiateSyncSources}
+        />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />
       <Box sx={{ width: '100%' }}>
@@ -119,7 +139,7 @@ const LowerSection = ({
         <Tabs
           value={selectedTab}
           onChange={handleTabChange}
-          sx={{ display: 'flex', alignItems: 'center', height: '100%' }}
+          sx={{ display: 'flex', alignItems: 'center', height: '100%', paddingLeft: '28px' }}
         >
           <Tab label="Preview" value="preview" />
           <Tab label="Logs" value="logs" />
@@ -254,13 +274,10 @@ const FlowEditor = ({}) => {
       // Clear previous logs
       setDbtRunLogs([]);
 
-      const orgslug = globalContext?.CurrentOrg.state.slug;
-      const syncSourcesHashKey = `syncsources-${orgslug}`;
-
       const response: any = await httpPost(session, `transform/dbt_project/sync_sources/`, {});
 
-      if (response?.task_id && orgslug) {
-        await pollForSyncSourcesTask(response.task_id, syncSourcesHashKey);
+      if (response?.task_id && response?.hashkey) {
+        await pollForSyncSourcesTask(response.task_id, response.hashkey);
       }
     } catch (error) {
       console.error(error);

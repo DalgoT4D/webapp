@@ -184,16 +184,16 @@ const PreviewPane = ({ height }: { height: number }) => {
           alignItems: 'center',
           display: 'flex',
           justifyContent: 'space-between',
-          padding: '5px',
+          padding: '8px 20px 8px 44px',
         }}
       >
-        <Typography variant="body1" fontWeight="bold" padding="10px">
+        <Typography variant="body1" fontWeight="bold">
           {modelToPreview?.input_name}
         </Typography>
         <Button
           onClick={handleTableDataDownload}
           variant="contained"
-          sx={{ padding: '5px' }}
+          sx={{ padding: '5px ' }}
           disabled={downloadInProgress}
           data-testid="downloadbutton"
         >
@@ -215,7 +215,7 @@ const PreviewPane = ({ height }: { height: number }) => {
             <TableHead>
               {getHeaderGroups().map((headerGroup: any) => (
                 <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header: any) => (
+                  {headerGroup.headers.map((header: any, i: number) => (
                     <TableCell
                       key={header.id}
                       colSpan={header.colSpan}
@@ -223,7 +223,7 @@ const PreviewPane = ({ height }: { height: number }) => {
                         backgroundColor: '#F5FAFA',
                         border: '1px solid #dddddd',
                         borderLeft: 'unset',
-                        padding: '8px',
+                        padding: i == 0 ? '8px 0 8px 40px' : '8px',
                         textAlign: 'left',
                         fontWeight: 700,
                         color: 'rgba(15, 36, 64, 0.57)',
@@ -250,14 +250,14 @@ const PreviewPane = ({ height }: { height: number }) => {
               {getRowModel().rows.map((row: any) => {
                 return (
                   <TableRow key={row.id} sx={{ boxShadow: 'unset' }}>
-                    {row.getVisibleCells().map((cell: any) => (
+                    {row.getVisibleCells().map((cell: any, i: number) => (
                       <TableCell
                         key={cell.id}
                         sx={{
                           fontWeight: 600,
                           borderBottom: '1px solid #dddddd',
                           borderRight: '1px solid #dddddd',
-
+                          padding: i === 0 ? '8px 40px 8px 44px' : '8px',
                           textAlign: 'left',
                           fontSize: '0.8rem',
                         }}
@@ -283,6 +283,7 @@ const PreviewPane = ({ height }: { height: number }) => {
             setPageSize(e.target.value);
             setCurrentPageIndex(1);
           }}
+          sx={{ marginRight: '20px' }}
         />
       </Box>
     </Box>
@@ -295,7 +296,7 @@ const PreviewPane = ({ height }: { height: number }) => {
         height: height,
       }}
     >
-      Select a table to view
+      Select a table from the left pane to view
     </Box>
   );
 };
