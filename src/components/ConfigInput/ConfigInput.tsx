@@ -121,6 +121,42 @@ export const ConfigInput = ({ specs, control, setFormValue, entity }: ConfigInpu
                 />
                 <Box sx={{ m: 2 }} />
               </React.Fragment>
+            ) : spec?.enum &&
+              spec?.enum.length > 0 &&
+              (spec?.specs == null || spec?.specs === undefined) ? (
+              //usually parent object containing enum has type object. but in the case of mongodb connector the type was string.
+              <>
+                <React.Fragment key={spec.field}>
+                  <Controller
+                    name={spec.field}
+                    control={control}
+                    rules={{ required: spec.required && 'Required' }}
+                    render={({ field, fieldState }) => (
+                      <Autocomplete
+                        disabled={false}
+                        data-testid="autocomplete"
+                        id={spec.field}
+                        value={field.value}
+                        options={spec.enum as any}
+                        onChange={(e, data: any) => {
+                          handleObjectFieldOnChange(data, spec.field, field);
+                        }}
+                        renderInput={(params) => (
+                          <Input
+                            name={spec.field}
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message}
+                            {...params}
+                            variant="outlined"
+                            label={`${spec.title}${spec.required ? '*' : ''}`}
+                          />
+                        )}
+                      />
+                    )}
+                  />
+                  <Box sx={{ m: 2 }} />
+                </React.Fragment>
+              </>
             ) : (
               <React.Fragment key={spec.field}>
                 <Controller
