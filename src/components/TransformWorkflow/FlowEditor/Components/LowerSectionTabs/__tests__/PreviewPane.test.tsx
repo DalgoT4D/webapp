@@ -114,6 +114,6 @@ describe('PreviewPane Component', () => {
 
     render(<PreviewPane height={600} />);
 
-    expect(screen.getByText('Select a table from the left pane to view ')).toBeInTheDocument();
+    expect(screen.getByText('Select a table from the left pane to view')).toBeInTheDocument();
   });
 });
