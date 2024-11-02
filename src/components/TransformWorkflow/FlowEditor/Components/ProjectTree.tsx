@@ -123,7 +123,7 @@ const ProjectTree = ({
       };
     });
 
-    setProjectTreeData([{ id: '0', schema: 'Schemas', children: treeData }]);
+    setProjectTreeData([{ id: '0', schema: 'Data', children: treeData }]);
   };
 
   useEffect(() => {
