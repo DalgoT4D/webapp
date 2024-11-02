@@ -7,6 +7,7 @@ import PipelineIcon from '@/assets/icons/pipeline';
 import OrchestrateIcon from '@/assets/icons/orchestrate';
 import DataQualityIcon from '@/assets/icons/dataQuality';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import ExploreIcon from '@/assets/icons/explore';
 import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 
 import { primaryColor } from './theme';
@@ -90,6 +91,12 @@ export const sideMenu: MenuOption[] = [
   },
   {
     index: 3,
+    title: 'Explore',
+    path: '/explore',
+    icon: (selected: boolean) => <ExploreIcon fill={getColor(selected)} />,
+  },
+  {
+    index: 4,
     title: 'Data Quality',
     path: '/data-quality',
     icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
@@ -97,15 +104,16 @@ export const sideMenu: MenuOption[] = [
     // hide: !showElementaryMenu,
     minimize: true,
   },
+
   {
-    index: 4,
+    index: 5,
     title: 'User management',
     path: '/user-management',
     icon: () => <SupervisorAccountIcon />,
     className: 'usermanagement_walkthrough',
   },
   {
-    index: 5,
+    index: 6,
     title: 'Notifications',
     path: '/notifications',
     icon: () => <MarkEmailUnreadIcon />,

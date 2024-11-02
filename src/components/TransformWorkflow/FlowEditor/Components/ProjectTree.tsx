@@ -1,19 +1,18 @@
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
-import { Tree, NodeApi } from 'react-arborist';
+import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@/assets/icons/datatable.svg';
-import { DbtSourceModel } from './Canvas';
+import { DbtSourceModel, WarehouseTable } from './Canvas';
 import AddIcon from '@mui/icons-material/Add';
-import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import useResizeObserver from 'use-resize-observer';
 import { trimString } from '@/utils/common';
 import Image from 'next/image';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-const Node = ({ node, style, dragHandle }: any) => {
+const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const width = node.tree.props.width;
@@ -23,7 +22,12 @@ const Node = ({ node, style, dragHandle }: any) => {
   const data: DbtSourceModel = node.data;
   let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
   name = trimString(name, stringLengthWithWidth);
-  const { setCanvasAction } = useCanvasAction();
+  useEffect(() => {
+    if (!node.isLeaf && node.level === 0 && !node.isOpen) {
+      node.toggle();
+    }
+  }, [node]);
+
   return (
     <Box
       style={style}
@@ -35,7 +39,7 @@ const Node = ({ node, style, dragHandle }: any) => {
         width: (250 * width) / 270 + 'px',
         opacity: permissions.includes('can_create_dbt_model') ? 1 : 0.5,
       }}
-      onClick={() => (node.isLeaf ? undefined : node.toggle())}
+      onClick={() => (node.isLeaf || node.level === 0 ? undefined : node.toggle())}
     >
       {node.isLeaf ? (
         <Image src={TocIcon} alt="Toc icon" />
@@ -47,41 +51,55 @@ const Node = ({ node, style, dragHandle }: any) => {
       <Box sx={{ display: 'flex', width: '100%' }}>
         <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>{name}</Typography>
         {node.isLeaf && <AddIcon sx={{ ml: 'auto', cursor: 'pointer' }} />}
-        {!node.isLeaf && node.level === 0 && (
-          <Tooltip title="Sync Sources">
-            <ReplayIcon
+        {!node.isLeaf &&
+          node.level === 0 &&
+          (!isSyncing ? (
+            <Tooltip title="Sync Sources">
+              <ReplayIcon
+                sx={{
+                  ml: 'auto',
+                  cursor: 'pointer',
+                  opacity: permissions.includes('can_sync_sources') ? 1 : 0.5,
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  console.log('here clicking the sync button');
+                  handleSyncClick();
+                }}
+              />
+            </Tooltip>
+          ) : (
+            <CircularProgress
               sx={{
                 ml: 'auto',
-                cursor: 'pointer',
-                opacity: permissions.includes('can_sync_sources') ? 1 : 0.5,
               }}
-              onClick={(event) => {
-                event.stopPropagation();
-                if (permissions.includes('can_sync_sources'))
-                  setCanvasAction({ type: 'sync-sources', data: null });
-              }}
+              size={24}
             />
-          </Tooltip>
-        )}
+          ))}
       </Box>
     </Box>
   );
 };
 
 interface ProjectTreeProps {
-  dbtSourceModels: DbtSourceModel[];
+  dbtSourceModels: WarehouseTable[];
+  handleNodeClick: (...args: any) => void;
+  handleSyncClick: (...args: any) => void;
+  isSyncing?: boolean;
 }
 
-// type TreeData = Partial<DbtSourceModel> & { children: TreeData[] };
-
-const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
-  const { setCanvasAction } = useCanvasAction();
+const ProjectTree = ({
+  dbtSourceModels,
+  handleNodeClick,
+  handleSyncClick,
+  isSyncing = false,
+}: ProjectTreeProps) => {
   const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
 
-  const constructAndSetProjectTreeData = (dbtSourceModels: DbtSourceModel[]) => {
+  const constructAndSetProjectTreeData = (dbtSourceModels: WarehouseTable[]) => {
     // group by schema and push dbtSourceModels under the children key
     const leafNodesBySchema = dbtSourceModels.reduce(
       (acc, dbtSourceModel) => {
@@ -93,7 +111,7 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
         }
         return acc;
       },
-      {} as { [key: string]: DbtSourceModel[] }
+      {} as { [key: string]: WarehouseTable[] }
     );
 
     // construct the tree data
@@ -105,23 +123,14 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
       };
     });
 
-    setProjectTreeData([{ id: '0', schema: 'Store', children: treeData }]);
+    setProjectTreeData([{ id: '0', schema: 'Data', children: treeData }]);
   };
 
   useEffect(() => {
     if (dbtSourceModels) {
-      console.log('rerendeirng project tree');
       constructAndSetProjectTreeData(dbtSourceModels);
     }
   }, [dbtSourceModels]);
-
-  const handleNodeClick = (nodes: NodeApi<any>[]) => {
-    if (nodes.length > 0 && nodes[0].isLeaf) {
-      console.log('adding a node to canvas from project tree component', nodes[0].data);
-      setCanvasAction({ type: 'add-srcmodel-node', data: nodes[0].data });
-    }
-  };
-
   return (
     <Box
       sx={{
@@ -156,7 +165,7 @@ const ProjectTree = ({ dbtSourceModels }: ProjectTreeProps) => {
           rowHeight={30}
           onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
         >
-          {Node}
+          {(props) => <Node {...props} handleSyncClick={handleSyncClick} isSyncing={isSyncing} />}
         </Tree>
       </Box>
     </Box>

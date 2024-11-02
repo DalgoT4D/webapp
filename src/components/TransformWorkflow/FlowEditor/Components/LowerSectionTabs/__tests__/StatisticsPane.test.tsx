@@ -122,7 +122,7 @@ describe('StatisticsPane', () => {
     );
 
     // Check for the message when no model is selected
-    expect(screen.getByText(/Select a table to view/i)).toBeInTheDocument();
+    expect(screen.getByText(/Select a table from the left pane to view/i)).toBeInTheDocument();
   });
 
   it('should resolve when status is completed', async () => {
