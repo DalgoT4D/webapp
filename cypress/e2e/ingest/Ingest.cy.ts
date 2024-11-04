@@ -8,7 +8,7 @@ describe('Ingest', () => {
   it('Ingest in sub menu', () => {
     cy.get('[data-testid="side-menu"]').contains('Ingest').should('be.visible');
 
-    cy.get('[data-testid="child-menu-2"]').should('be.visible');
+    cy.get('[data-testid="menu-item-2.1"]').should('be.visible');
   });
 
   it('Render ingest sub menu item', () => {

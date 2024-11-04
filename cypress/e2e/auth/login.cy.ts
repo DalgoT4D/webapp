@@ -1,6 +1,6 @@
 describe('Login Page', () => {
   beforeEach(() => {
-    cy.visit('/login');
+    cy.visit('https://staging.dalgo.in/login');
   });
 
   it('Load the login page', () => {
