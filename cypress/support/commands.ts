@@ -42,7 +42,7 @@ declare namespace Cypress {
 //   }
 // }
 Cypress.Commands.add('login', () => {
-  cy.visit('/login');
+  cy.visit('https://staging.dalgo.in/login');
   cy.get('[data-testid="username"]').type(Cypress.env('username'));
   cy.get('[data-testid="password"]').type(Cypress.env('password'));
   cy.get('[data-testid="submitbutton"]').click();
