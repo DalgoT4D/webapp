@@ -7,7 +7,6 @@ describe('Add source', () => {
 
   it('Add source', () => {
     cy.get('[data-testid="side-menu"]').contains('Ingest').click();
-    cy.get('[data-testid="side-menu"]').contains('Ingest').click();
     cy.get('h4').should('contain', 'Ingest');
 
     // three tabs should be visible
