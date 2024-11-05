@@ -160,7 +160,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
           !item.parent && (
             <Fragment key={item.title}>
               <ListItem
-                sx={{ px: 1.5 }}
+                sx={{ px: 1.5, py: 0.5 }}
                 className={item.className}
                 data-testid={`menu-item-${item.index}`}
               >

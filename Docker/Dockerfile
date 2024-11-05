@@ -5,7 +5,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # A common issue that may arise with node-alpine is a missing shared library required for use of process.dlopen. To add the missing shared libraries to your image, adding the libc6-compat package in your Dockerfile is recommended: apk add --no-cache libc6-compat
 
 RUN apk add --no-cache libc6-compat
-COPY package.json yarn.lock tsconfig.json next.config.js ./
+COPY package.json yarn.lock tsconfig.json next.config.js sentry.server.config.ts sentry.edge.config.ts ./
 RUN yarn install --frozen-lockfile --network-timeout 1000000
 
 
@@ -24,6 +24,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/next.config.js ./
 COPY --from=deps /app/tsconfig.json ./
 COPY --from=deps /app/package.json ./
+COPY --from=deps /app/sentry.server.config.ts ./
+COPY --from=deps /app/sentry.edge.config.ts ./
 
 COPY src ./src
 COPY public ./public
