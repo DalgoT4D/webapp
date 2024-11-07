@@ -36,6 +36,7 @@ export const LLMSummary = ({
   // Function to handle copying text ->
   const handleCopyClick = async () => {
     const copyRes: boolean = await copyToClipboard(llmSummary);
+    trackAmplitudeEvent(`[Copy-LLMSummary] Button Clicked`);
     if (copyRes) {
       successToast('Successfully copied to clipboard', [], globalContext);
     } else {
@@ -128,6 +129,7 @@ export const LLMSummary = ({
             </IconButton>
             <IconButton
               onClick={() => {
+                trackAmplitudeEvent(`[Dislike-LLMSummary] Button Clicked`);
                 setModalName(MODALS.FEEDBACK_FORM);
                 setIsBoxOpen(true);
               }}
