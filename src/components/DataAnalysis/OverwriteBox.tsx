@@ -89,7 +89,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleClose,
+          onClick: () => {
+            trackAmplitudeEvent(`[Cancel-Save-Op-LLMSummary] Button Clicked`);
+            handleClose();
+          },
         },
       ],
     },
@@ -120,6 +123,7 @@ export const OverWriteDialog = ({
             borderRadius: '5px',
           },
           onClick: () => {
+            trackAmplitudeEvent(`[Save-as-new-LLMSummary] Button Clicked`);
             reset({
               sessionName: '',
               feedback: '',
@@ -135,7 +139,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleClose,
+          onClick: () => {
+            trackAmplitudeEvent(`[Cancel-Save-Op-LLMSummary] Button Clicked`);
+            handleClose();
+          },
         },
       ],
     },
@@ -165,7 +172,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleClose,
+          onClick: () => {
+            trackAmplitudeEvent(`[Cancel-Save-Op-LLMSummary] Button Clicked`);
+            handleClose();
+          },
         },
       ],
     },
@@ -183,7 +193,10 @@ export const OverWriteDialog = ({
             padding: '8px 0',
             borderRadius: '5px',
           },
-          onClick: handleSubmit((data) => submitFeedback(data.feedback)),
+          onClick: () => {
+            trackAmplitudeEvent(`[Submit-Feedback-LLMSummary] Button Clicked`);
+            handleSubmit((data) => submitFeedback(data.feedback));
+          },
         },
       ],
     },
@@ -203,6 +216,7 @@ export const OverWriteDialog = ({
             borderRadius: '5px',
           },
           onClick: () => {
+            trackAmplitudeEvent(`[Save-Changes-LLMSummary] Button Clicked`);
             setModalName(oldSessionName ? MODALS.OVERWRITE : MODALS.SAVE);
           },
         },
@@ -215,6 +229,7 @@ export const OverWriteDialog = ({
             borderRadius: '5px',
           },
           onClick: () => {
+            trackAmplitudeEvent(`[Leave-anyway-LLMSummary] Button Clicked`);
             onConfirmNavigation();
           },
         },
@@ -235,6 +250,7 @@ export const OverWriteDialog = ({
             borderRadius: '5px',
           },
           onClick: () => {
+            trackAmplitudeEvent(`[Save-Changes-LLMSummary] Button Clicked`);
             setModalName(oldSessionName ? MODALS.OVERWRITE : MODALS.SAVE);
           },
         },
@@ -247,6 +263,7 @@ export const OverWriteDialog = ({
             borderRadius: '5px',
           },
           onClick: () => {
+            trackAmplitudeEvent(`[Reset-LLMSummary] Button Clicked`);
             handleNewSession(true);
             setIsBoxOpen(false);
           },
@@ -268,6 +285,7 @@ export const OverWriteDialog = ({
             borderRadius: '5px',
           },
           onClick: () => {
+            trackAmplitudeEvent(`[Save-Changes-LLMSummary] Button Clicked`);
             setModalName(oldSessionName ? MODALS.OVERWRITE : MODALS.SAVE);
           },
         },
@@ -281,6 +299,7 @@ export const OverWriteDialog = ({
           },
           onClick: () => {
             setIsBoxOpen(false);
+            trackAmplitudeEvent(`[Leave-anyway-LLMSummary] Button Clicked`);
             handleEditSession(selectedSession, true);
           },
         },

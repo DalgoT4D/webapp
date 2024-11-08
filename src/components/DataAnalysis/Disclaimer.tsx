@@ -1,3 +1,4 @@
+import { useTracking } from '@/contexts/TrackingContext';
 import { httpPut } from '@/helpers/http';
 import { Box, Button, Dialog, DialogActions, DialogTitle, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
@@ -13,6 +14,8 @@ type Org = {
 
 export const Disclaimer = ({ open, setIsOpen }: { open: boolean; setIsOpen: any }) => {
   const { data: session } = useSession();
+  const trackAmplitudeEvent: any = useTracking();
+
   const handleOkayButton = async () => {
     try {
       const response = await httpPut(session, 'v1/organizations/user_self', {
@@ -59,7 +62,15 @@ export const Disclaimer = ({ open, setIsOpen }: { open: boolean; setIsOpen: any 
           p: 0,
         }}
       >
-        <Button onClick={handleOkayButton} variant="contained" sx={{ width: '5rem' }}>
+        <Button
+          onClick={() => {
+            trackAmplitudeEvent(`[Accept-llmDisclaimer-LLMSummary] Button Clicked`);
+
+            handleOkayButton();
+          }}
+          variant="contained"
+          sx={{ width: '5rem' }}
+        >
           Okay
         </Button>
       </DialogActions>
