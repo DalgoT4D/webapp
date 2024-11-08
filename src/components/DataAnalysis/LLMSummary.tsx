@@ -10,6 +10,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ContentCopy, ThumbDownAltOutlined } from '@mui/icons-material';
 import { MODALS } from '@/pages/analysis/data-analysis';
+import { useTracking } from '@/contexts/TrackingContext';
 
 export const LLMSummary = ({
   resetState,
@@ -30,10 +31,12 @@ export const LLMSummary = ({
   handleNewSession: (x: any) => void;
 }) => {
   const globalContext = useContext(GlobalContext);
+  const trackAmplitudeEvent: any = useTracking();
 
   // Function to handle copying text ->
   const handleCopyClick = async () => {
     const copyRes: boolean = await copyToClipboard(llmSummary);
+    trackAmplitudeEvent(`[Copy-LLMSummary] Button Clicked`);
     if (copyRes) {
       successToast('Successfully copied to clipboard', [], globalContext);
     } else {
@@ -126,6 +129,7 @@ export const LLMSummary = ({
             </IconButton>
             <IconButton
               onClick={() => {
+                trackAmplitudeEvent(`[Dislike-LLMSummary] Button Clicked`);
                 setModalName(MODALS.FEEDBACK_FORM);
                 setIsBoxOpen(true);
               }}
@@ -142,6 +146,7 @@ export const LLMSummary = ({
             variant="outlined"
             disabled={!newSessionId}
             onClick={() => {
+              trackAmplitudeEvent(`[Save-as-LLMSummary] Button Clicked`);
               setModalName(oldSessionMetaInfo.oldSessionId ? MODALS.OVERWRITE : MODALS.SAVE);
               setIsBoxOpen(true);
             }}
@@ -158,7 +163,10 @@ export const LLMSummary = ({
             variant="contained"
             sx={{ width: '6.75rem', padding: '8px 0', borderRadius: '6px' }}
             disabled={!llmSummary}
-            onClick={downloadCSV}
+            onClick={() => {
+              downloadCSV();
+              trackAmplitudeEvent(`[Download-aisummary-LLMSummary] Button Clicked`);
+            }}
           >
             Download
           </Button>
