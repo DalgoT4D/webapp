@@ -158,7 +158,7 @@ export const DBTSetup = ({
       }
     }
     if (data.gitrepoUrl) {
-      var changes = data.gitrepoUrl !== gitrepoUrl;
+      let changes = data.gitrepoUrl !== gitrepoUrl;
       if (data.gitrepoAccessToken && !gitrepoAccessToken) {
         // added an access token
         changes = true;
