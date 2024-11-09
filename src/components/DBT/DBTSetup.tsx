@@ -158,16 +158,29 @@ export const DBTSetup = ({
       }
     }
     if (data.gitrepoUrl) {
+      var changes = data.gitrepoUrl !== gitrepoUrl;
+      if (data.gitrepoAccessToken && !gitrepoAccessToken) {
+        // added an access token
+        changes = true;
+      }
+      if (gitrepoAccessToken && !data.gitrepoAccessToken) {
+        // removed an access token
+        changes = true;
+      }
       if (
-        data.gitrepoUrl === gitrepoUrl &&
-        !data.gitrepoAccessToken &&
-        !data.gitrepoAccessToken.match(/^[*]+$/)
+        gitrepoAccessToken &&
+        data.gitrepoAccessToken &&
+        !data.gitrepoAccessToken.match(/^\*+$/)
       ) {
+        // changed an access token
+        changes = true;
+      }
+      if (!changes) {
         return;
       }
       const updateGitPayload = {
         gitrepoUrl: data.gitrepoUrl,
-        gitrepoAccessToken: data.gitrepoAccessToken,
+        gitrepoAccessToken: data.gitrepoAccessToken.match(/^\*+$/) ? null : data.gitrepoAccessToken,
       };
       setExpandLogs(true);
       try {
@@ -177,6 +190,13 @@ export const DBTSetup = ({
           gitrepo_access_token: data.gitrepoAccessToken ? '*********' : null,
           default_schema: data.schema,
         });
+        if (data.gitrepoAccessToken) {
+          gitrepoAccessToken = '*********';
+        } else {
+          gitrepoAccessToken = '';
+        }
+        gitrepoUrl = data.gitrepoUrl;
+        schema = data.schema;
         await delay(1000);
 
         checkProgress(message.task_id, 'clone-github-repo');
