@@ -16,6 +16,7 @@ interface DBTSetupProps {
   showDialog: boolean;
   setShowDialog: (...args: any) => any;
   gitrepoUrl: string;
+  gitrepoAccessToken: string;
   schema: string;
   mode: string;
   setWorkspace: (...args: any) => any;
@@ -34,6 +35,7 @@ export const DBTSetup = ({
   showDialog,
   setShowDialog,
   gitrepoUrl,
+  gitrepoAccessToken,
   schema,
   mode,
   setWorkspace,
@@ -156,7 +158,11 @@ export const DBTSetup = ({
       }
     }
     if (data.gitrepoUrl) {
-      if (data.gitrepoUrl === gitrepoUrl && !data.gitrepoAccessToken) {
+      if (
+        data.gitrepoUrl === gitrepoUrl &&
+        !data.gitrepoAccessToken &&
+        !data.gitrepoAccessToken.match(/^[*]+$/)
+      ) {
         return;
       }
       const updateGitPayload = {
@@ -168,6 +174,7 @@ export const DBTSetup = ({
         const message = await httpPut(session, 'dbt/github/', updateGitPayload);
         setWorkspace({
           gitrepo_url: data.gitrepoUrl,
+          gitrepo_access_token: data.gitrepoAccessToken ? '*********' : null,
           default_schema: data.schema,
         });
         await delay(1000);
@@ -212,6 +219,7 @@ export const DBTSetup = ({
             data-testid="github-pat"
             label="Personal access token"
             variant="outlined"
+            defaultValue={gitrepoAccessToken}
             register={register}
             name="gitrepoAccessToken"
             error={!!errors.gitrepoAccessToken}
