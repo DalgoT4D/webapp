@@ -45,6 +45,7 @@ export const DBTSetup = ({
     handleSubmit,
     reset,
     formState: { errors },
+    setValue,
   } = useForm<DBTCreateWorkspaceParams>();
   const { data: session }: any = useSession();
   const [progressMessages, setProgressMessages] = useState<any[]>([]);
@@ -75,6 +76,12 @@ export const DBTSetup = ({
       errorToast(err.message, [], toastContext);
     }
   };
+
+  useEffect(() => {
+    setValue('gitrepoUrl', gitrepoUrl);
+    setValue('gitrepoAccessToken', gitrepoAccessToken);
+    setValue('schema', schema);
+  }, [gitrepoUrl, gitrepoAccessToken, schema]);
 
   useEffect(() => {
     setLogs(
@@ -224,7 +231,6 @@ export const DBTSetup = ({
             data-testid="github-url"
             label="GitHub repo URL"
             variant="outlined"
-            defaultValue={gitrepoUrl}
             register={register}
             name="gitrepoUrl"
             required
@@ -239,7 +245,6 @@ export const DBTSetup = ({
             data-testid="github-pat"
             label="Personal access token"
             variant="outlined"
-            defaultValue={gitrepoAccessToken}
             register={register}
             name="gitrepoAccessToken"
             error={!!errors.gitrepoAccessToken}
@@ -253,7 +258,6 @@ export const DBTSetup = ({
             data-testid="dbt-target-schema"
             label="dbt target schema"
             variant="outlined"
-            defaultValue={schema}
             register={register}
             name="schema"
             required
