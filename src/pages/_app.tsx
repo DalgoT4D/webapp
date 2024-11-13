@@ -9,6 +9,8 @@ import { StyledEngineProvider } from '@mui/material/styles';
 import { Main } from '@/components/Layouts/Main';
 import ContextProvider from '@/contexts/ContextProvider';
 import { TrackingProvider } from '@/contexts/TrackingContext';
+import { SettingsProvider } from '@/contexts/SettingsContext';
+
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
     <ContextProvider value={1}>
@@ -18,9 +20,11 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
             <CssBaseline />
             <SessionProvider session={session} refetchOnWindowFocus={false}>
               <Main>
-                <TrackingProvider session={session}>
-                  <Component {...pageProps} />
-                </TrackingProvider>
+                <SettingsProvider>
+                  <TrackingProvider session={session}>
+                    <Component {...pageProps} />
+                  </TrackingProvider>
+                </SettingsProvider>
               </Main>
             </SessionProvider>
           </ThemeProvider>

@@ -104,19 +104,34 @@ export const sideMenu: MenuOption[] = [
     // hide: !showElementaryMenu,
     minimize: true,
   },
-
-  {
-    index: 5,
-    title: 'User management',
-    path: '/user-management',
-    icon: () => <SupervisorAccountIcon />,
-    className: 'usermanagement_walkthrough',
-  },
   {
     index: 6,
     title: 'Notifications',
     path: '/notifications',
     icon: () => <MarkEmailUnreadIcon />,
     className: 'notification_walkthrough',
+  },
+  {
+    index: 7,
+    title: 'Settings',
+    path: '/settings',
+    icon: (selected: boolean) => <PipelineIcon fill={getColor(selected)} />,
+    className: 'settings_walkthrough',
+  },
+  {
+    index: 7.1,
+    title: 'User management',
+    path: '/settings/user-management',
+    parent: 7,
+    icon: () => <SupervisorAccountIcon />,
+    className: 'usermanagement_walkthrough',
+  },
+  {
+    index: 7.2,
+    title: 'AI settings',
+    icon: (selected: boolean) => <TransformIcon fill={getColor(selected)} />,
+    parent: 7,
+    path: '/settings/ai-settings',
+    className: 'aisettings_walkthrough',
   },
 ];
