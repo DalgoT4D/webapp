@@ -14,6 +14,7 @@ import { PageHead } from '@/components/PageHead';
 import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
 import { OverWriteDialog } from '@/components/DataAnalysis/OverwriteBox';
 import { useRouter } from 'next/router';
+import { DeactivatedMsg } from '@/components/DataAnalysis/DeactivatedMsg';
 interface ProgressResult {
   response?: Array<any>;
   session_id?: string;
@@ -46,7 +47,8 @@ export default function DataAnalysis() {
   const [loading, setLoading] = useState(false);
   const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
   const [resetState, setResetState] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
+  const [openDisclaimer, setOpenDisclaimer] = useState(false);
+  const [openDeactivateMsg, setOpenDeactivateMsg] = useState(false);
   const [selectedSession, setSelectedSession] = useState();
   const [isBoxOpen, setIsBoxOpen] = useState(false);
   const [modalName, setModalName] = useState(MODALS.SAVE);
@@ -58,8 +60,13 @@ export default function DataAnalysis() {
       if (orgSlug && session?.user?.email) {
         (async () => {
           const response = await httpGet(session, `currentuserv2?org_slug=${orgSlug}`);
-          if (response?.length === 1 && !response[0]?.llm_optin) {
-            setIsOpen(true);
+          if (response?.length === 1) {
+            if (!response[0].is_llm_active) {
+              setOpenDeactivateMsg(true);
+            }
+            if (!response[0]?.llm_optin) {
+              setOpenDisclaimer(true);
+            }
           }
         })();
       }
@@ -390,7 +397,13 @@ export default function DataAnalysis() {
             handleEditSession={handleEditSession}
           />
         )}
-        {isOpen && <Disclaimer open={isOpen} setIsOpen={setIsOpen} />}
+        {openDisclaimer && (
+          <Disclaimer open={openDisclaimer} setIsOpen={setOpenDisclaimer} isOrgPrefernce={false} />
+        )}
+
+        {openDeactivateMsg && (
+          <DeactivatedMsg open={openDeactivateMsg} setIsOpen={setOpenDeactivateMsg} />
+        )}
         {isBoxOpen && (
           <OverWriteDialog
             open={isBoxOpen}

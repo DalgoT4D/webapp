@@ -23,7 +23,7 @@ export const ServicesInfo = () => {
 
   const getServicesVersions = async () => {
     try {
-      const { success, res } = await httpGet(session, `orgpreferences/11/toolinfo`);
+      const { success, res } = await httpGet(session, `orgpreferences/toolinfo`);
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
         return;

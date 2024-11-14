@@ -1,7 +1,7 @@
+import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { SettingsContext } from '@/contexts/SettingsContext';
-import { httpPut } from '@/helpers/http';
+import { httpGet, httpPut } from '@/helpers/http';
 import { Box, CircularProgress, Switch, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useState } from 'react';
@@ -9,16 +9,22 @@ import { useContext, useEffect, useState } from 'react';
 export const AIEnablePanel = () => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
-  const settingsContext: any = useContext(SettingsContext);
-  const { orgPreference, userSettings, fetchOrgPreference, fetchUserSettings } = settingsContext;
+  const [orgPreference, setOrgPreference] = useState<any>([]);
+  const [llm_optin, setllm_optin] = useState(false);
+  const [openDisclaimer, setOpenDisclaimer] = useState(false);
+  const [loading, setLoading] = useState(false);
   console.log(orgPreference, 'orgPreference');
-  const { data: orgPreferenceData, loading } = orgPreference;
   const permissions = globalContext?.Permissions.state || [];
 
   const approve_disapprove_llm = async () => {
+    if (!llm_optin && !orgPreference.llm_optin && !openDisclaimer) {
+      setOpenDisclaimer(true);
+      return;
+    }
+
     try {
-      const { success, res } = await httpPut(session, `orgpreferences/11/llm_approval`, {
-        llm_optin: !orgPreferenceData.llm_optin,
+      const { success, res } = await httpPut(session, `orgpreferences/llm_approval`, {
+        llm_optin: !orgPreference?.llm_optin,
       });
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
@@ -30,11 +36,28 @@ export const AIEnablePanel = () => {
       errorToast(error.message, [], globalContext);
     }
   };
+  const fetchOrgPreference = async () => {
+    setLoading(true);
+    try {
+      const { success, res } = await httpGet(session, `orgpreferences/`);
+      if (!success) {
+        errorToast('Something went wrong', [], globalContext);
+        return;
+      }
+      setOrgPreference(res);
+      setllm_optin(res.llm_optin);
+    } catch (error: any) {
+      console.error(error);
+      errorToast(error.message, [], globalContext);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    if (session) {
+    if (session && !openDisclaimer) {
       fetchOrgPreference();
     }
-  }, [session]);
+  }, [session, openDisclaimer]);
 
   return (
     <>
@@ -73,12 +96,16 @@ export const AIEnablePanel = () => {
             <Switch
               data-testid={`enable-disable-llm`}
               disabled={!permissions.includes('can_edit_llm_settings')}
-              checked={orgPreferenceData?.llm_optin}
-              value={orgPreferenceData?.llm_optin}
+              checked={llm_optin}
+              value={llm_optin}
               onChange={approve_disapprove_llm}
             />
           </Box>
         </Box>
+      )}
+
+      {openDisclaimer && (
+        <Disclaimer open={openDisclaimer} setIsOpen={setOpenDisclaimer} isOrgPrefernce={true} />
       )}
     </>
   );

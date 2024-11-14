@@ -12,17 +12,39 @@ type Org = {
   is_demo: boolean;
 };
 
-export const Disclaimer = ({ open, setIsOpen }: { open: boolean; setIsOpen: any }) => {
+export const Disclaimer = ({
+  open,
+  setIsOpen,
+  isOrgPrefernce = false,
+}: {
+  open: boolean;
+  setIsOpen: any;
+  isOrgPrefernce: boolean;
+}) => {
   const { data: session } = useSession();
   const trackAmplitudeEvent: any = useTracking();
 
-  const handleOkayButton = async () => {
+  const handleUserPreference = async () => {
     try {
       const response = await httpPut(session, 'v1/organizations/user_self', {
         toupdate_email: session?.user?.email,
         llm_optin: true,
       });
       if (response && response.email) {
+        setIsOpen(false);
+      }
+    } catch (error) {
+      console.log(error, 'error');
+      return;
+    }
+  };
+  // isOrgPrefernce
+  const handleOrgPreference = async () => {
+    try {
+      const response = await httpPut(session, 'orgpreferences/llm_approval', {
+        llm_optin: true,
+      });
+      if (response && response.success) {
         setIsOpen(false);
       }
     } catch (error) {
@@ -65,8 +87,11 @@ export const Disclaimer = ({ open, setIsOpen }: { open: boolean; setIsOpen: any 
         <Button
           onClick={() => {
             trackAmplitudeEvent(`[Accept-llmDisclaimer-LLMSummary] Button Clicked`);
-
-            handleOkayButton();
+            if (isOrgPrefernce) {
+              handleOrgPreference();
+            } else {
+              handleUserPreference();
+            }
           }}
           variant="contained"
           sx={{ width: '5rem' }}
