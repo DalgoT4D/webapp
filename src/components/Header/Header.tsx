@@ -138,6 +138,9 @@ export const Header = ({
   const handleCreateOrgClick = () => {
     setShowOrgCreateForm(true);
   };
+  const handleChangePassword = () => {
+    router.push('/changepassword');
+  };
 
   return (
     <Paper className={styles.Header}>
@@ -265,6 +268,14 @@ export const Header = ({
               ))}
           </Box>
         </Box>
+        <MenuItem
+          sx={{
+            borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
+          }}
+          onClick={() => handleChangePassword()}
+        >
+          Change Password
+        </MenuItem>
         <MenuItem
           sx={{
             borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
