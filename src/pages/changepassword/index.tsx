@@ -10,16 +10,16 @@ import {
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import Input from '@/components/UI/Input/Input';
 import { httpPost } from '../../helpers/http';
 import { PageHead } from '@/components/PageHead';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
-import Auth from '@/components/Layouts/Auth';
-
+import SuccessIcon from '@/assets/icons/success.svg';
+import Image from 'next/image';
 const ChangePassword = () => {
   const {
     register,
@@ -89,9 +89,11 @@ const ChangePassword = () => {
           }}
         >
           {showSuccess ? (
-            <Box>
-              <Box></Box>
-              <Box sx={{ textAlign: 'center', marginBottom: '37px' }}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Box sx={{ mb: '31px' }}>
+                <Image src={SuccessIcon} alt="check icon" />{' '}
+              </Box>
+              <Box sx={{ marginBottom: '37px' }}>
                 <Typography
                   sx={{
                     fontWeight: 700,
