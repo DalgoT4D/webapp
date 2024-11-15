@@ -1,8 +1,9 @@
 import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPut } from '@/helpers/http';
-import { Box, CircularProgress, Switch, Typography } from '@mui/material';
+import { Box, CircularProgress, Switch, Tooltip, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useState } from 'react';
 
@@ -13,7 +14,6 @@ export const AIEnablePanel = () => {
   const [llm_optin, setllm_optin] = useState(false);
   const [openDisclaimer, setOpenDisclaimer] = useState(false);
   const [loading, setLoading] = useState(false);
-  console.log(orgPreference, 'orgPreference');
   const permissions = globalContext?.Permissions.state || [];
 
   const approve_disapprove_llm = async () => {
@@ -45,7 +45,8 @@ export const AIEnablePanel = () => {
         return;
       }
       setOrgPreference(res);
-      setllm_optin(res.llm_optin);
+      console.log(res.llm_optin, 'llmoptin');
+      setllm_optin(res?.llm_optin);
     } catch (error: any) {
       console.error(error);
       errorToast(error.message, [], globalContext);
@@ -66,44 +67,48 @@ export const AIEnablePanel = () => {
       >
         Details
       </Typography>
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-          <CircularProgress />
+      <Box
+        sx={{
+          width: '100%',
+          boxShadow: '0px 4px 8px 0px rgba(9, 37, 64, 0.08)',
+          backgroundColor: '#FFFFFF',
+          borderRadius: '12px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '30px 48px 30px 40px',
+          alignItems: 'center',
+        }}
+      >
+        <Box sx={{ width: '50%' }}>
+          <Typography sx={{ color: '#0F2440E0', fontWeight: 700, fontSize: '20px' }}>
+            Enable LLM function for data analysis
+          </Typography>
+          <Typography sx={{ color: 'rgba(15, 36, 64, 0.68)', fontSize: '14px', fontWeight: 500 }}>
+            I consent and grant permission for this information to be shared with the OpenAI
+            platform in order to produce the necessary data
+          </Typography>
         </Box>
-      ) : (
-        <Box
-          sx={{
-            width: '100%',
-            boxShadow: '0px 4px 8px 0px rgba(9, 37, 64, 0.08)',
-            backgroundColor: '#FFFFFF',
-            borderRadius: '12px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '30px 48px 30px 40px',
-            alignItems: 'center',
-          }}
-        >
-          <Box sx={{ width: '50%' }}>
-            <Typography sx={{ color: '#0F2440E0', fontWeight: 700, fontSize: '20px' }}>
-              Enable LLM function for data analysis
-            </Typography>
-            <Typography sx={{ color: 'rgba(15, 36, 64, 0.68)', fontSize: '14px', fontWeight: 500 }}>
-              I consent and grant permission for this information to be shared with the OpenAI
-              platform in order to produce the necessary data
-            </Typography>
-          </Box>
-          <Box>
-            <Switch
-              data-testid={`enable-disable-llm`}
-              disabled={!permissions.includes('can_edit_llm_settings')}
-              checked={llm_optin}
-              value={llm_optin}
-              onChange={approve_disapprove_llm}
-            />
-          </Box>
+        <Box>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Box display={'flex'} alignItems={'center'}>
+              {!permissions.includes('can_edit_llm_settings') && (
+                <InfoTooltip title={'You currently do not have access to modify this setting.'} />
+              )}
+              <Switch
+                data-testid={`enable-disable-llm`}
+                disabled={!permissions.includes('can_edit_llm_settings')}
+                checked={llm_optin ? true : false}
+                value={llm_optin}
+                onChange={approve_disapprove_llm}
+              />
+            </Box>
+          )}
         </Box>
-      )}
-
+      </Box>
       {openDisclaimer && (
         <Disclaimer open={openDisclaimer} setIsOpen={setOpenDisclaimer} isOrgPrefernce={true} />
       )}
