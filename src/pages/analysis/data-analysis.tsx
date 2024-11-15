@@ -59,13 +59,15 @@ export default function DataAnalysis() {
     try {
       if (orgSlug && session?.user?.email) {
         (async () => {
-          const response = await httpGet(session, `currentuserv2?org_slug=${orgSlug}`);
-          if (response?.length === 1) {
-            if (!response[0].is_llm_active) {
+          const { success, res } = await httpGet(session, `userpreferences/`);
+          if (success) {
+            if (!res.is_llm_active) {
               setOpenDeactivateMsg(true);
+              return;
             }
-            if (!response[0]?.llm_optin) {
+            if (!res.llm_optin) {
               setOpenDisclaimer(true);
+              return;
             }
           }
         })();

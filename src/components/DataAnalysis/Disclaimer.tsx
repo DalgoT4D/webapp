@@ -2,6 +2,9 @@ import { useTracking } from '@/contexts/TrackingContext';
 import { httpPut } from '@/helpers/http';
 import { Box, Button, Dialog, DialogActions, DialogTitle, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
+import { errorToast } from '../ToastMessage/ToastHelper';
+import { useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 type Org = {
   name: string;
@@ -23,32 +26,43 @@ export const Disclaimer = ({
 }) => {
   const { data: session } = useSession();
   const trackAmplitudeEvent: any = useTracking();
+  const globalContext = useContext(GlobalContext);
 
   const handleUserPreference = async () => {
     try {
-      const response = await httpPut(session, 'v1/organizations/user_self', {
-        toupdate_email: session?.user?.email,
+      const { success, res } = await httpPut(session, 'userpreferences/', {
         llm_optin: true,
       });
-      if (response && response.email) {
+      if (!success) {
+        errorToast('Something went wrong', [], globalContext);
+        return;
+      }
+      if (success) {
         setIsOpen(false);
       }
-    } catch (error) {
-      console.log(error, 'error');
+    } catch (error: any) {
+      console.error(error, 'error');
+      errorToast(error.message, [], globalContext);
+
       return;
     }
   };
   // isOrgPrefernce
   const handleOrgPreference = async () => {
     try {
-      const response = await httpPut(session, 'orgpreferences/llm_approval', {
+      const { success, res } = await httpPut(session, 'orgpreferences/llm_approval', {
         llm_optin: true,
       });
-      if (response && response.success) {
+      if (!success) {
+        errorToast('Something went wrong', [], globalContext);
+        return;
+      }
+      if (success) {
         setIsOpen(false);
       }
-    } catch (error) {
-      console.log(error, 'error');
+    } catch (error: any) {
+      console.error(error, 'error');
+      errorToast(error.message, [], globalContext);
       return;
     }
   };
