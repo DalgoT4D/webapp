@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useState } from 'react';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { Box, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import AirbyteLogo from '@/assets/images/airbytelogo.webp';
 import PrefectLogo from '@/assets/images/prefect-logo-black.png';
 import DBT from '@/assets/images/dbt.png';
@@ -18,10 +18,11 @@ const TOOLS_LOGO: any = {
 export const ServicesInfo = () => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
-
+  const [loader, setLoader] = useState(false);
   const [toolInfo, setToolnfo] = useState([]);
 
   const getServicesVersions = async () => {
+    setLoader(true);
     try {
       const { success, res } = await httpGet(session, `orgpreferences/toolinfo`);
       if (!success) {
@@ -32,6 +33,8 @@ export const ServicesInfo = () => {
     } catch (error: any) {
       console.error(error);
       errorToast(error.message, [], globalContext);
+    } finally {
+      setLoader(false);
     }
   };
   useEffect(() => {
@@ -39,10 +42,10 @@ export const ServicesInfo = () => {
       getServicesVersions();
     }
   }, [session]);
-
+  if (loader) return <CircularProgress />;
   return (
     <>
-      <Typography sx={{ color: '#7D8998', fontWeight: '700', fontSize: '14px' }}>
+      <Typography sx={{ color: '#7D8998', fontWeight: '700', fontSize: '14px', mt: '40px' }}>
         Component overview
       </Typography>
       <Box
@@ -55,7 +58,7 @@ export const ServicesInfo = () => {
           justifyContent: 'space-between',
         }}
       >
-        {toolInfo.length &&
+        {!!toolInfo.length &&
           toolInfo.map((tool) => {
             const [toolName, toolData]: [toolName: string, toolData: any] = Object.entries(tool)[0];
             return (

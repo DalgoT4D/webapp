@@ -11,6 +11,9 @@ import ExploreIcon from '@/assets/icons/explore';
 import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 
 import { primaryColor } from './theme';
+import Settings from '@/assets/icons/settings';
+import User from '@/assets/icons/manage_accounts';
+import AiSettings from '@/assets/icons/aisettings';
 
 export const drawerWidth = 250;
 
@@ -115,21 +118,21 @@ export const sideMenu: MenuOption[] = [
     index: 7,
     title: 'Settings',
     path: '/settings',
-    icon: (selected: boolean) => <PipelineIcon fill={getColor(selected)} />,
+    icon: (selected: boolean) => <Settings fill={getColor(selected)} />,
     className: 'settings_walkthrough',
   },
   {
     index: 7.1,
-    title: 'User management',
+    title: 'User',
     path: '/settings/user-management',
     parent: 7,
-    icon: () => <SupervisorAccountIcon />,
+    icon: (selected: boolean) => <User fill={getColor(selected)} />,
     className: 'usermanagement_walkthrough',
   },
   {
     index: 7.2,
     title: 'AI settings',
-    icon: (selected: boolean) => <TransformIcon fill={getColor(selected)} />,
+    icon: (selected: boolean) => <AiSettings fill={getColor(selected)} />,
     parent: 7,
     path: '/settings/ai-settings',
     className: 'aisettings_walkthrough',
