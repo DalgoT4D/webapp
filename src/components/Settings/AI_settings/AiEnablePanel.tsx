@@ -6,18 +6,33 @@ import { httpGet, httpPut } from '@/helpers/http';
 import { Box, CircularProgress, Switch, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useState } from 'react';
-
+export type OrganizationResponse = {
+  success: boolean;
+  res: Orgpreference;
+};
+export type Orgpreference = {
+  org: {
+    name: string;
+    slug: string;
+    type: string;
+  };
+  llm_optin: boolean;
+  llm_optin_approved_by: string | null;
+  llm_optin_date: string | null;
+  enable_discord_notifications: boolean;
+  discord_webhook: string | null;
+};
 export const AIEnablePanel = () => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
-  const [orgPreference, setOrgPreference] = useState<any>([]);
+  const [orgPreference, setOrgPreference] = useState<Orgpreference | null>(null);
   const [llm_optin, setllm_optin] = useState(false);
   const [openDisclaimer, setOpenDisclaimer] = useState(false);
   const [loading, setLoading] = useState(false);
   const permissions = globalContext?.Permissions.state || [];
 
   const approve_disapprove_llm = async () => {
-    if (!llm_optin && !orgPreference.llm_optin && !openDisclaimer) {
+    if (!llm_optin && !orgPreference?.llm_optin && !openDisclaimer) {
       setOpenDisclaimer(true);
       return;
     }
@@ -39,7 +54,7 @@ export const AIEnablePanel = () => {
   const fetchOrgPreference = async () => {
     setLoading(true);
     try {
-      const { success, res } = await httpGet(session, `orgpreferences/`);
+      const { success, res }: OrganizationResponse = await httpGet(session, `orgpreferences/`);
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
         return;

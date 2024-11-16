@@ -6,6 +6,29 @@ import { useContext, useEffect, useState } from 'react';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import moment from 'moment';
+import { calculatePlanStatus } from '@/utils/common';
+type OrgPlan = {
+  success: boolean;
+  res: {
+    org: {
+      name: string;
+      slug: string;
+      type: string;
+    };
+    base_plan: string;
+    superset_included: boolean;
+    subscription_duration: string;
+    features: {
+      pipeline: string[];
+      superset: string[];
+      aiFeatures: string[];
+      dataQuality: string[];
+    };
+    start_date: string;
+    end_date: string;
+    can_upgrade_plan: boolean;
+  };
+};
 
 export const SubscriptionInfo = () => {
   const [orgPlan, setOrgPlan] = useState<any>([]);
@@ -17,7 +40,7 @@ export const SubscriptionInfo = () => {
   const getOrgPlan = async () => {
     setLoader(true);
     try {
-      const { success, res } = await httpGet(session, `orgpreferences/org-plan`);
+      const { success, res }: OrgPlan = await httpGet(session, `orgpreferences/org-plan`);
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
         return;
@@ -200,14 +223,19 @@ export const SubscriptionInfo = () => {
               </Typography>
               &nbsp;-&nbsp;
               {(() => {
-                const daysRemaining = moment(orgPlan.end_date).diff(moment(), 'days');
-                const isLessThanAWeek = daysRemaining < 7;
-
+                const { isExpired, isLessThanAWeek, daysRemaining } = calculatePlanStatus(
+                  orgPlan.end_date
+                );
                 return (
-                  <Typography fontWeight={600} color={isLessThanAWeek ? '#FF0000' : '#00897B'}>
-                    {daysRemaining > 0
-                      ? `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} remaining`
-                      : '0 days remaining'}
+                  <Typography
+                    fontWeight={600}
+                    color={isExpired ? '#FF0000' : isLessThanAWeek ? '#FF0000' : '#00897B'}
+                  >
+                    {isExpired
+                      ? 'Plan has expired'
+                      : daysRemaining > 0
+                        ? `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} remaining`
+                        : '0 days remaining'}
                   </Typography>
                 );
               })()}
