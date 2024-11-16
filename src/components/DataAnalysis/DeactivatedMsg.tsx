@@ -1,10 +1,11 @@
 import { useTracking } from '@/contexts/TrackingContext';
-import { httpPut } from '@/helpers/http';
+import { httpPost, httpPut } from '@/helpers/http';
 import { Box, Button, Dialog, DialogActions, DialogTitle, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 
 type Org = {
   name: string;
@@ -25,20 +26,23 @@ export const DeactivatedMsg = ({ open, setIsOpen }: { open: boolean; setIsOpen: 
   const trackAmplitudeEvent: any = useTracking();
 
   const handleEnableButton = async () => {
-    //make condition on enable
-    router.push('/settings/ai-settings');
-    // try {
-    //     const response = await httpPut(session, 'v1/organizations/user_self', {
-    //         toupdate_email: session?.user?.email,
-    //         llm_optin: true,
-    //     });
-    //     if (response && response.email) {
-    //         setIsOpen(false);
-    //     }
-    // } catch (error) {
-    //     console.log(error, 'error');
-    //     return;
-    // }
+    if (permissions.includes('can_edit_llm_settings')) {
+      router.push('/settings/ai-settings');
+      return;
+    }
+    try {
+      const { success, res } = await httpPost(session, 'userpreferences/llm_analysis/request', {});
+      if (!success) {
+        errorToast('Something went wrong', [], globalContext);
+        return;
+      }
+      successToast(res, [], globalContext);
+      return;
+    } catch (error: any) {
+      console.error(error, 'error');
+      errorToast(error.message, [], globalContext);
+      return;
+    }
   };
 
   return (

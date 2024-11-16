@@ -1,18 +1,9 @@
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpGet } from '@/helpers/http';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  Paper,
-  Typography,
-} from '@mui/material';
+import { httpGet, httpPost } from '@/helpers/http';
+import { Box, Button, CircularProgress, List, ListItem, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useState } from 'react';
-import { errorToast } from '../ToastMessage/ToastHelper';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import moment from 'moment';
 
@@ -21,17 +12,39 @@ export const SubscriptionInfo = () => {
   const { data: session } = useSession();
   const [loader, setLoader] = useState(false);
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions?.state || [];
 
   const getOrgPlan = async () => {
     setLoader(true);
     try {
       const { success, res } = await httpGet(session, `orgpreferences/org-plan`);
-      console.log(res, 'res');
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
         return;
       } else {
         setOrgPlan(res);
+      }
+    } catch (error: any) {
+      console.error(error);
+      errorToast(error.message, [], globalContext);
+    } finally {
+      setLoader(false);
+    }
+  };
+  const hanldeUpgradePlan = async () => {
+    setLoader(true);
+    try {
+      const { success, res } = await httpPost(session, `orgpreferences/org-plan/upgrade`, {});
+
+      if (!success) {
+        errorToast('Something went wrong', [], globalContext);
+        return;
+      } else {
+        successToast(
+          `Upgrade org's plan request have been successfully registered`,
+          [],
+          globalContext
+        );
       }
     } catch (error: any) {
       console.error(error);
@@ -96,8 +109,14 @@ export const SubscriptionInfo = () => {
 
                 <Button
                   variant="contained"
-                  disabled={!orgPlan.can_upgrade_plan}
+                  disabled={
+                    !(
+                      orgPlan.can_upgrade_plan &&
+                      permissions?.includes('can_initiate_org_plan_upgrade')
+                    )
+                  }
                   sx={{ p: '8px 24px' }}
+                  onClick={hanldeUpgradePlan}
                 >
                   Upgrade
                 </Button>
