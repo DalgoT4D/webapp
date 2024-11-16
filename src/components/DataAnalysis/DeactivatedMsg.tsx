@@ -42,6 +42,8 @@ export const DeactivatedMsg = ({ open, setIsOpen }: { open: boolean; setIsOpen: 
       console.error(error, 'error');
       errorToast(error.message, [], globalContext);
       return;
+    } finally {
+      router.push('/pipeline');
     }
   };
 
