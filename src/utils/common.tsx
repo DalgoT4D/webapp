@@ -165,3 +165,20 @@ export const copyToClipboard = (dataToCopy: any) => {
       return false;
     });
 };
+
+export const calculatePlanStatus = (endDateStr: string) => {
+  const endDate = moment.utc(endDateStr);
+  const now = moment.utc();
+
+  const daysRemaining = endDate.diff(now, 'days');
+  const hoursRemaining = endDate.diff(now, 'hours');
+  const isExpired = hoursRemaining <= 0;
+  const isLessThanAWeek = !isExpired && daysRemaining < 7;
+
+  return {
+    isExpired,
+    isLessThanAWeek,
+    daysRemaining,
+    hoursRemaining,
+  };
+};

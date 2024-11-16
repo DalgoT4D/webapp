@@ -17,16 +17,29 @@ const TOOLS_LOGO: any = {
   Elementary: ElementaryLogo,
   Superset: SupersetLogo,
 };
+type ServiceVersion = {
+  [serviceName: string]: {
+    version: string;
+  };
+};
+
+type ServiceVersionsResponse = {
+  success: boolean;
+  res: ServiceVersion[];
+};
 export const ServicesInfo = () => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
   const [loader, setLoader] = useState(false);
-  const [toolInfo, setToolnfo] = useState([]);
+  const [toolInfo, setToolnfo] = useState<ServiceVersion[]>([]);
 
   const getServicesVersions = async () => {
     setLoader(true);
     try {
-      const { success, res } = await httpGet(session, `orgpreferences/toolinfo`);
+      const { success, res }: ServiceVersionsResponse = await httpGet(
+        session,
+        `orgpreferences/toolinfo`
+      );
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
         return;

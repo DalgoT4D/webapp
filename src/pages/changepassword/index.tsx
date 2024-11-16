@@ -82,7 +82,7 @@ const ChangePassword = () => {
             boxShadow: '0px 6px 11px 0px rgba(64, 68, 77, 0.06)',
             backgroundColor: 'rgba(255, 255, 255, 1)',
             borderRadius: '12px',
-            height: '480px',
+            minHeight: '480px',
             width: '480px',
             padding: '40px',
           }}
