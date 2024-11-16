@@ -30,16 +30,15 @@ export const Disclaimer = ({
 
   const handleUserPreference = async () => {
     try {
-      const { success, res } = await httpPut(session, 'userpreferences/', {
+      const { success } = await httpPut(session, 'userpreferences/', {
         llm_optin: true,
       });
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
         return;
       }
-      if (success) {
-        setIsOpen(false);
-      }
+      setIsOpen(false);
+      return;
     } catch (error: any) {
       console.error(error, 'error');
       errorToast(error.message, [], globalContext);
@@ -50,16 +49,16 @@ export const Disclaimer = ({
   // isOrgPrefernce
   const handleOrgPreference = async () => {
     try {
-      const { success, res } = await httpPut(session, 'orgpreferences/llm_approval', {
+      const { success } = await httpPut(session, 'orgpreferences/llm_approval', {
         llm_optin: true,
       });
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
         return;
       }
-      if (success) {
-        setIsOpen(false);
-      }
+
+      setIsOpen(false);
+      return;
     } catch (error: any) {
       console.error(error, 'error');
       errorToast(error.message, [], globalContext);

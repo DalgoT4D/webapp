@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PreferencesForm from '../PreferencesForm';
 import useSWR from 'swr';
-import { SessionProvider, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
