@@ -25,7 +25,6 @@ const ChangePassword = () => {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm({
     defaultValues: {
       password: '',

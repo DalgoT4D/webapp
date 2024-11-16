@@ -1,5 +1,5 @@
 import { useTracking } from '@/contexts/TrackingContext';
-import { httpPost, httpPut } from '@/helpers/http';
+import { httpPost } from '@/helpers/http';
 import { Box, Button, Dialog, DialogActions, DialogTitle, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';

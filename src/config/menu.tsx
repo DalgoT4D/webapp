@@ -6,7 +6,6 @@ import TransformIcon from '@/assets/icons/transform';
 import PipelineIcon from '@/assets/icons/pipeline';
 import OrchestrateIcon from '@/assets/icons/orchestrate';
 import DataQualityIcon from '@/assets/icons/dataQuality';
-import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import ExploreIcon from '@/assets/icons/explore';
 import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 

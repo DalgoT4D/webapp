@@ -3,7 +3,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPut } from '@/helpers/http';
-import { Box, CircularProgress, Switch, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, Switch, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useState } from 'react';
 
@@ -23,7 +23,7 @@ export const AIEnablePanel = () => {
     }
 
     try {
-      const { success, res } = await httpPut(session, `orgpreferences/llm_approval`, {
+      const { success } = await httpPut(session, `orgpreferences/llm_approval`, {
         llm_optin: !orgPreference?.llm_optin,
       });
       if (!success) {
@@ -45,8 +45,7 @@ export const AIEnablePanel = () => {
         return;
       }
       setOrgPreference(res);
-      console.log(res.llm_optin, 'llmoptin');
-      setllm_optin(res?.llm_optin);
+      setllm_optin(res.llm_optin);
     } catch (error: any) {
       console.error(error);
       errorToast(error.message, [], globalContext);

@@ -34,7 +34,7 @@ export const SubscriptionInfo = () => {
   const hanldeUpgradePlan = async () => {
     setLoader(true);
     try {
-      const { success, res } = await httpPost(session, `orgpreferences/org-plan/upgrade`, {});
+      const { success } = await httpPost(session, `orgpreferences/org-plan/upgrade`, {});
 
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
