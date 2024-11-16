@@ -1,7 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { Disclaimer } from '../Disclaimer'; // Update the path accordingly
+import { Disclaimer } from '../Disclaimer'; // Update the path as needed
 import { httpPut } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
 
 jest.mock('@/helpers/http', () => ({
   httpPut: jest.fn(),
@@ -9,6 +10,10 @@ jest.mock('@/helpers/http', () => ({
 
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
+}));
+
+jest.mock('@/components/ToastMessage/ToastHelper', () => ({
+  errorToast: jest.fn(),
 }));
 
 describe('Disclaimer Component', () => {
@@ -25,7 +30,7 @@ describe('Disclaimer Component', () => {
   it('should render the disclaimer dialog', () => {
     const setIsOpen = jest.fn();
 
-    render(<Disclaimer open={true} setIsOpen={setIsOpen} />);
+    render(<Disclaimer open={true} setIsOpen={setIsOpen} isOrgPrefernce={false} />);
 
     // Check if the disclaimer title is rendered
     expect(screen.getByText('Disclaimer')).toBeInTheDocument();
@@ -37,11 +42,11 @@ describe('Disclaimer Component', () => {
     ).toBeInTheDocument();
   });
 
-  it('should call handleOkayButton and close the dialog on successful API call', async () => {
+  it('should call handleUserPreference and close the dialog on successful API call when isOrgPrefernce is false', async () => {
     const setIsOpen = jest.fn();
-    (httpPut as jest.Mock).mockResolvedValue({ email: 'test@example.com' });
+    (httpPut as jest.Mock).mockResolvedValue({ success: true });
 
-    render(<Disclaimer open={true} setIsOpen={setIsOpen} />);
+    render(<Disclaimer open={true} setIsOpen={setIsOpen} isOrgPrefernce={false} />);
 
     // Simulate clicking the "Okay" button
     const okayButton = screen.getByText('Okay');
@@ -51,34 +56,61 @@ describe('Disclaimer Component', () => {
     await waitFor(() => {
       expect(httpPut).toHaveBeenCalledWith(
         { user: { email: 'test@example.com' } },
-        'v1/organizations/user_self',
-        {
-          toupdate_email: 'test@example.com',
-          llm_optin: true,
-        }
+        'userpreferences/',
+        { llm_optin: true }
       );
       expect(setIsOpen).toHaveBeenCalledWith(false);
     });
   });
 
-  it('should handle API failure and log error', async () => {
+  it('should call handleOrgPreference and close the dialog on successful API call when isOrgPrefernce is true', async () => {
     const setIsOpen = jest.fn();
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-    (httpPut as jest.Mock).mockRejectedValue(new Error('API Error'));
+    (httpPut as jest.Mock).mockResolvedValue({ success: true });
 
-    render(<Disclaimer open={true} setIsOpen={setIsOpen} />);
+    render(<Disclaimer open={true} setIsOpen={setIsOpen} isOrgPrefernce={true} />);
 
     // Simulate clicking the "Okay" button
     const okayButton = screen.getByText('Okay');
     fireEvent.click(okayButton);
 
-    // Wait for the error log
+    // Wait for the API call and dialog close
+    await waitFor(() => {
+      expect(httpPut).toHaveBeenCalledWith(
+        { user: { email: 'test@example.com' } },
+        'orgpreferences/llm_approval',
+        { llm_optin: true }
+      );
+      expect(setIsOpen).toHaveBeenCalledWith(false);
+    });
+  });
+
+  it('should handle API failure and show an error toast', async () => {
+    const setIsOpen = jest.fn();
+    (httpPut as jest.Mock).mockRejectedValue(new Error('API Error'));
+
+    render(<Disclaimer open={true} setIsOpen={setIsOpen} isOrgPrefernce={false} />);
+
+    // Simulate clicking the "Okay" button
+    const okayButton = screen.getByText('Okay');
+    fireEvent.click(okayButton);
+
+    // Wait for the error toast
     await waitFor(() => {
       expect(httpPut).toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith(new Error('API Error'), 'error');
+      expect(errorToast).toHaveBeenCalledWith('API Error', [], expect.any(Object));
       expect(setIsOpen).not.toHaveBeenCalled();
     });
+  });
 
-    consoleSpy.mockRestore();
+  it('should close the dialog when setIsOpen is called', () => {
+    const setIsOpen = jest.fn();
+
+    render(<Disclaimer open={true} setIsOpen={setIsOpen} isOrgPrefernce={false} />);
+
+    // Simulate clicking the "Okay" button
+    const okayButton = screen.getByText('Okay');
+    fireEvent.click(okayButton);
+
+    expect(setIsOpen).not.toHaveBeenCalled();
   });
 });
