@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpPut } from '@/helpers/http';
+import InfoTooltip from '../UI/Tooltip/Tooltip';
 
 interface PreferencesFormProps {
   showForm: boolean;
@@ -70,22 +71,29 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
             />
           )}
         />
+
         <Controller
           name="enable_discord_notifications"
           control={control}
           render={({ field }) => (
-            <FormControlLabel
-              control={
-                <Switch
-                  {...field}
-                  checked={field.value}
-                  disabled={!permissions.includes('can_edit_discord_notifications_settings')}
-                />
-              }
-              label="Enable Discord Notifications"
-            />
+            <>
+              <FormControlLabel
+                control={
+                  <Switch
+                    {...field}
+                    checked={field.value}
+                    disabled={!permissions.includes('can_edit_org_notification_settings')}
+                  />
+                }
+                label="Enable Discord Notifications"
+              />
+              {!permissions.includes('can_edit_org_notification_settings') && (
+                <InfoTooltip title={'You currently do not have access to modify this setting.'} />
+              )}
+            </>
           )}
         />
+
         {enableDiscordNotifications && (
           <Input
             error={!!errors.discord_webhook}
@@ -96,7 +104,7 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
             sx={{ width: '100%', mt: '1rem' }}
             required
             label="Discord Webhook"
-            disabled={!permissions.includes('can_edit_discord_notifications_settings')}
+            disabled={!permissions.includes('can_edit_org_notification_settings')}
             variant="outlined"
             register={register}
             name="discord_webhook"
@@ -116,7 +124,7 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
       });
 
       // Update org preferences (Discord settings) only if the user has permission
-      if (permissions.includes('can_edit_discord_notifications_settings')) {
+      if (permissions.includes('can_edit_org_notification_settings')) {
         await httpPut(session, 'orgpreferences/enable-discord-notifications', {
           enable_discord_notifications: values.enable_discord_notifications,
           discord_webhook: values.enable_discord_notifications ? values.discord_webhook : '',

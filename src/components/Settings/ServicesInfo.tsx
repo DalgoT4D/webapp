@@ -4,16 +4,18 @@ import { useContext, useEffect, useState } from 'react';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { Box, CircularProgress, Typography } from '@mui/material';
-import AirbyteLogo from '@/assets/images/airbytelogo.webp';
+import AirbyteLogo from '@/assets/images/airbyte.ico';
 import PrefectLogo from '@/assets/images/prefect-logo-black.png';
+import ElementaryLogo from '@/assets/icons/elementary.svg';
+import SupersetLogo from '@/assets/images/supersetlogo.png';
 import DBT from '@/assets/images/dbt.png';
 import Image from 'next/image';
 const TOOLS_LOGO: any = {
   Airbyte: AirbyteLogo,
   Prefect: PrefectLogo,
   DBT: DBT,
-  Elementary: AirbyteLogo,
-  Superset: AirbyteLogo,
+  Elementary: ElementaryLogo,
+  Superset: SupersetLogo,
 };
 export const ServicesInfo = () => {
   const { data: session } = useSession();
