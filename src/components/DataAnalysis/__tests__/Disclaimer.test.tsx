@@ -57,7 +57,7 @@ describe('Disclaimer Component', () => {
       expect(httpPut).toHaveBeenCalledWith(
         { user: { email: 'test@example.com' } },
         'userpreferences/',
-        { llm_optin: true }
+        { disclaimer_shown: true }
       );
       expect(setIsOpen).toHaveBeenCalledWith(false);
     });

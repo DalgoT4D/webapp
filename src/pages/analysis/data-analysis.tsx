@@ -65,7 +65,7 @@ export default function DataAnalysis() {
               setOpenDeactivateMsg(true);
               return;
             }
-            if (!res.llm_optin) {
+            if (!res.disclaimer_shown) {
               setOpenDisclaimer(true);
               return;
             }
