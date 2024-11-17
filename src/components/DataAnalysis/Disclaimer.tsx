@@ -31,7 +31,7 @@ export const Disclaimer = ({
   const handleUserPreference = async () => {
     try {
       const { success } = await httpPut(session, 'userpreferences/', {
-        llm_optin: true,
+        disclaimer_shown: true,
       });
       if (!success) {
         errorToast('Something went wrong', [], globalContext);
