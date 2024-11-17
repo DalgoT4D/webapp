@@ -105,7 +105,7 @@ describe('SubscriptionInfo Component', () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.getByText('0 days remaining')).toBeInTheDocument();
+      expect(screen.getByText('Plan has expired')).toBeInTheDocument();
     });
   });
 
