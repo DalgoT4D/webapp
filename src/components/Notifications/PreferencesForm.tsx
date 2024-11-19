@@ -88,7 +88,11 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
                 label="Enable Discord Notifications"
               />
               {!permissions.includes('can_edit_org_notification_settings') && (
-                <InfoTooltip title={'You currently do not have access to modify this setting.'} />
+                <InfoTooltip
+                  title={
+                    "Please reach out to your organization's Account Manager to enable this feature"
+                  }
+                />
               )}
             </>
           )}
