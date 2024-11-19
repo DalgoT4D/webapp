@@ -134,7 +134,9 @@ describe('DeactivatedMsg Component', () => {
     fireEvent.click(enableButton);
 
     await waitFor(() => {
-      expect(trackAmplitudeEvent).toHaveBeenCalledWith(`[Enable-LLMAnalysis] Button Clicked`);
+      expect(trackAmplitudeEvent).toHaveBeenCalledWith(
+        `[Request-Enable-LLMAnalysis] Button Clicked`
+      );
     });
   });
 });
