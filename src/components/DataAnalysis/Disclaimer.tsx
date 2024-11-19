@@ -99,10 +99,11 @@ export const Disclaimer = ({
       >
         <Button
           onClick={() => {
-            trackAmplitudeEvent(`[Accept-llmDisclaimer-LLMSummary] Button Clicked`);
             if (isOrgPrefernce) {
               handleOrgPreference();
+              trackAmplitudeEvent('[AI-feature-Enabled] Button clicked');
             } else {
+              trackAmplitudeEvent(`[Accept-llmDisclaimer-LLMSummary] Button Clicked`);
               handleUserPreference();
             }
           }}

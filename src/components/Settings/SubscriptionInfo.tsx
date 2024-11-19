@@ -7,6 +7,7 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import moment from 'moment';
 import { calculatePlanStatus } from '@/utils/common';
+import { useTracking } from '@/contexts/TrackingContext';
 type OrgPlan = {
   success: boolean;
   res: {
@@ -36,6 +37,7 @@ export const SubscriptionInfo = () => {
   const [loader, setLoader] = useState(false);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions?.state || [];
+  const trackAmplitudeEvent = useTracking();
 
   const getOrgPlan = async () => {
     setLoader(true);
@@ -55,6 +57,7 @@ export const SubscriptionInfo = () => {
     }
   };
   const hanldeUpgradePlan = async () => {
+    trackAmplitudeEvent('[Plan Upgrade] Button clicked');
     setLoader(true);
     try {
       const { success } = await httpPost(session, `orgpreferences/org-plan/upgrade`, {});

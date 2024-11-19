@@ -88,8 +88,7 @@ export const DeactivatedMsg = ({ open, setIsOpen }: { open: boolean; setIsOpen: 
       >
         <Button
           onClick={() => {
-            trackAmplitudeEvent(`[Enable-LLMAnalysis] Button Clicked`);
-
+            trackAmplitudeEvent(`[Request-Enable-LLMAnalysis] Button Clicked`);
             handleEnableButton();
           }}
           variant="contained"
