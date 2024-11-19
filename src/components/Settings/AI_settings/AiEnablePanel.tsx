@@ -2,6 +2,7 @@ import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { useTracking } from '@/contexts/TrackingContext';
 import { httpGet, httpPut } from '@/helpers/http';
 import { Box, CircularProgress, Switch, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
@@ -30,8 +31,12 @@ export const AIEnablePanel = () => {
   const [openDisclaimer, setOpenDisclaimer] = useState(false);
   const [loading, setLoading] = useState(false);
   const permissions = globalContext?.Permissions.state || [];
+  const trackAmplitudeEvent = useTracking();
 
   const approve_disapprove_llm = async () => {
+    if (orgPreference?.llm_optin) {
+      trackAmplitudeEvent('[AI-feature-Disabled] Button clicked');
+    }
     if (!llm_optin && !orgPreference?.llm_optin && !openDisclaimer) {
       setOpenDisclaimer(true);
       return;
