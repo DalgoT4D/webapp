@@ -118,7 +118,7 @@ export const SubscriptionInfo = () => {
                     >
                       {orgPlan.base_plan}&nbsp;
                     </Typography>
-                    {orgPlan.superset_included ? (
+                    {orgPlan.superset_included && !orgPlan.base_plan.includes('Free trial') ? (
                       <Typography
                         sx={{ fontWeight: 700, color: 'rgba(15, 36, 64, 1)', fontSize: '28px' }}
                       >
@@ -166,7 +166,7 @@ export const SubscriptionInfo = () => {
                       <Typography
                         sx={{ ml: 1, fontSize: '15px', fontWeight: 600, color: '#0F2440AD' }}
                       >
-                        {orgPlan.features?.pipeline.join(' | ')}
+                        {orgPlan.features?.pipeline?.join(' | ')}
                       </Typography>
                     </ListItem>
 
