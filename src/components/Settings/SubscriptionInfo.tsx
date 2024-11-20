@@ -248,7 +248,7 @@ export const SubscriptionInfo = () => {
                         ? 'Plan has expired'
                         : daysRemaining > 0
                           ? `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} remaining`
-                          : '0 days remaining'}
+                          : 'Plan is expiring today'}
                     </Typography>
                   );
                 })()}

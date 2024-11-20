@@ -29,7 +29,7 @@ export const DeactivatedMsg = ({
   const globalContext = useContext(GlobalContext);
 
   const permissions = globalContext?.Permissions.state || [];
-
+  const isEnableDisabled = enable_llm_requested && !permissions.includes('can_edit_llm_settings');
   const router = useRouter();
   const trackAmplitudeEvent: any = useTracking();
 
@@ -101,11 +101,11 @@ export const DeactivatedMsg = ({
           }}
           variant="contained"
           sx={{ width: '148px' }}
-          disabled={enable_llm_requested}
+          disabled={isEnableDisabled}
         >
-          {enable_llm_requested ? 'Already Requested' : 'Enable'}
+          {isEnableDisabled ? 'Request In Progress' : 'Enable'}
         </Button>
-        {enable_llm_requested && (
+        {isEnableDisabled && (
           <Button
             onClick={() => {
               router.push('/pipeline');
