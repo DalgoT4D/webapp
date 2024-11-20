@@ -8,6 +8,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import moment from 'moment';
 import { calculatePlanStatus } from '@/utils/common';
 import { useTracking } from '@/contexts/TrackingContext';
+import InfoTooltip from '../UI/Tooltip/Tooltip';
 type OrgPlan = {
   success: boolean;
   res: {
@@ -136,18 +137,23 @@ export const SubscriptionInfo = () => {
                     </Typography>
                   </Box>
 
-                  <Button
-                    variant="contained"
-                    disabled={
-                      !orgPlan.can_upgrade_plan ||
-                      !permissions?.includes('can_initiate_org_plan_upgrade') ||
-                      orgPlan.upgrade_requested
-                    }
-                    sx={{ p: '8px 24px' }}
-                    onClick={hanldeUpgradePlan}
-                  >
-                    Upgrade
-                  </Button>
+                  <Box display="flex" alignItems="center" justifyItems="center" gap="1rem">
+                    {orgPlan.upgrade_requested && (
+                      <InfoTooltip title={'The request to upgrade the plan has been registered'} />
+                    )}
+                    <Button
+                      variant="contained"
+                      disabled={
+                        !orgPlan.can_upgrade_plan ||
+                        !permissions?.includes('can_initiate_org_plan_upgrade') ||
+                        orgPlan.upgrade_requested
+                      }
+                      sx={{ p: '8px 24px' }}
+                      onClick={hanldeUpgradePlan}
+                    >
+                      Upgrade
+                    </Button>
+                  </Box>
                 </Box>
 
                 {/* Features Section */}
