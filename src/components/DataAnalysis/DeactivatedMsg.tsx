@@ -16,7 +16,15 @@ type Org = {
   is_demo: boolean;
 };
 
-export const DeactivatedMsg = ({ open, setIsOpen }: { open: boolean; setIsOpen: any }) => {
+export const DeactivatedMsg = ({
+  open,
+  setIsOpen,
+  enable_llm_requested,
+}: {
+  open: boolean;
+  setIsOpen: any;
+  enable_llm_requested: boolean;
+}) => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
 
@@ -93,9 +101,21 @@ export const DeactivatedMsg = ({ open, setIsOpen }: { open: boolean; setIsOpen: 
           }}
           variant="contained"
           sx={{ width: '148px' }}
+          disabled={enable_llm_requested}
         >
-          Enable
+          {enable_llm_requested ? 'Already Requested' : 'Enable'}
         </Button>
+        {enable_llm_requested && (
+          <Button
+            onClick={() => {
+              router.push('/pipeline');
+            }}
+            variant="contained"
+            sx={{ width: '148px' }}
+          >
+            Cancel
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );
