@@ -28,6 +28,7 @@ type OrgPlan = {
     start_date: string;
     end_date: string;
     can_upgrade_plan: boolean;
+    upgrade_requested: boolean;
   };
 };
 
@@ -58,7 +59,6 @@ export const SubscriptionInfo = () => {
   };
   const hanldeUpgradePlan = async () => {
     trackAmplitudeEvent('[Plan Upgrade] Button clicked');
-    setLoader(true);
     try {
       const { success } = await httpPost(session, `orgpreferences/org-plan/upgrade`, {});
 
@@ -75,8 +75,6 @@ export const SubscriptionInfo = () => {
     } catch (error: any) {
       console.error(error);
       errorToast(error.message, [], globalContext);
-    } finally {
-      setLoader(false);
     }
   };
   useEffect(() => {
@@ -136,10 +134,9 @@ export const SubscriptionInfo = () => {
                 <Button
                   variant="contained"
                   disabled={
-                    !(
-                      orgPlan.can_upgrade_plan &&
-                      permissions?.includes('can_initiate_org_plan_upgrade')
-                    )
+                    !orgPlan.can_upgrade_plan ||
+                    !permissions?.includes('can_initiate_org_plan_upgrade') ||
+                    orgPlan.upgrade_requested
                   }
                   sx={{ p: '8px 24px' }}
                   onClick={hanldeUpgradePlan}
