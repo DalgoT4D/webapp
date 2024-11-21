@@ -37,13 +37,13 @@ export const Disclaimer = ({
         errorToast('Something went wrong', [], globalContext);
         return;
       }
-      setIsOpen(false);
-      return;
     } catch (error: any) {
       console.error(error, 'error');
       errorToast(error.message, [], globalContext);
 
       return;
+    } finally {
+      setIsOpen(false);
     }
   };
   // isOrgPrefernce
@@ -56,13 +56,12 @@ export const Disclaimer = ({
         errorToast('Something went wrong', [], globalContext);
         return;
       }
-
-      setIsOpen(false);
-      return;
     } catch (error: any) {
       console.error(error, 'error');
       errorToast(error.message, [], globalContext);
       return;
+    } finally {
+      setIsOpen(false);
     }
   };
 
