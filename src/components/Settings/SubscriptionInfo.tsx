@@ -72,6 +72,7 @@ export const SubscriptionInfo = () => {
           [],
           globalContext
         );
+        getOrgPlan();
       }
     } catch (error: any) {
       console.error(error);
