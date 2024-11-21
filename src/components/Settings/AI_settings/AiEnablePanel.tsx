@@ -1,5 +1,5 @@
 import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useTracking } from '@/contexts/TrackingContext';
@@ -50,6 +50,7 @@ export const AIEnablePanel = () => {
         errorToast('Something went wrong', [], globalContext);
         return;
       }
+      successToast('AI data anlysis feature is enabled', [], globalContext);
       fetchOrgPreference();
     } catch (error: any) {
       console.error(error);
