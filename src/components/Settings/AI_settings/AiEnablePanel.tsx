@@ -50,7 +50,7 @@ export const AIEnablePanel = () => {
         errorToast('Something went wrong', [], globalContext);
         return;
       }
-      successToast('AI data anlysis feature is enabled', [], globalContext);
+      successToast('AI data anlysis feature is disabled', [], globalContext);
       fetchOrgPreference();
     } catch (error: any) {
       console.error(error);
