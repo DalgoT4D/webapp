@@ -678,7 +678,7 @@ export const Connections = () => {
         show={showConfirmResetDialog}
         handleClose={() => handleCancelClearConnection()}
         handleConfirm={() => clearConnection(clearConnDeploymentId)}
-        message="Clearing the connection will remove all data at the warehouse under the connection's schema."
+        message="Clearing the connection will remove all data at the warehouse in the connection's destination table."
       />
       <LogCard logs={syncLogs} expand={expandSyncLogs} setExpand={setExpandSyncLogs} />
     </>
