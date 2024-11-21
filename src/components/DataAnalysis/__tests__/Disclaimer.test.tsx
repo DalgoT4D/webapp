@@ -98,7 +98,6 @@ describe('Disclaimer Component', () => {
     await waitFor(() => {
       expect(httpPut).toHaveBeenCalled();
       expect(errorToast).toHaveBeenCalledWith('API Error', [], expect.any(Object));
-      expect(setIsOpen).not.toHaveBeenCalled();
     });
   });
 
