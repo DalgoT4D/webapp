@@ -182,3 +182,7 @@ export const calculatePlanStatus = (endDateStr: string) => {
     hoursRemaining,
   };
 };
+
+export const formatDateTimeStringToLocalTimeZone = (dateTimeString: string) => {
+  return moment(dateTimeString).format('Do MMM hh:mmA');
+};

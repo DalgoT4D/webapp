@@ -6,7 +6,8 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
-import { delay } from '@/utils/common';
+import { delay, formatDateTimeStringToLocalTimeZone } from '@/utils/common';
+import { SchemaChangeData } from './PendingActions';
 
 interface SchemaChangeDetailsFormProps {
   connectionId: string;
@@ -14,7 +15,8 @@ interface SchemaChangeDetailsFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
   setConnectionId: (...args: any) => any;
-  fetchPendingActions: () => Promise<void>;
+  schemaChangeData: undefined | SchemaChangeData;
+  refreshSchemaChangePendingActions: (...args: any) => any;
 }
 
 type CursorFieldConfig = {
@@ -40,7 +42,8 @@ const SchemaChangeDetailsForm = ({
   refreshConnectionsList,
   showForm,
   setShowForm,
-  fetchPendingActions,
+  schemaChangeData,
+  refreshSchemaChangePendingActions,
 }: SchemaChangeDetailsFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -57,7 +60,6 @@ const SchemaChangeDetailsForm = ({
   const [catalogId, setCatalogId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [hasBreakingChanges, setHasBreakingChanges] = useState<boolean>(false);
-  const searchInputRef: any = useRef();
   const inputRef: any = useRef(null);
   const shouldFocusInput: any = useRef(null);
 
@@ -177,7 +179,6 @@ const SchemaChangeDetailsForm = ({
     setSourceStreams([]);
     setFilteredSourceStreams([]);
     setShowForm(false);
-    searchInputRef.current = '';
   };
 
   const onSubmit = async (data: any) => {
@@ -201,8 +202,9 @@ const SchemaChangeDetailsForm = ({
         await httpPost(session, `airbyte/v1/connections/${connectionId}/schema_update/schedule`, {
           catalogDiff: catalogDiff,
         });
-        successToast('Initiated schema update changes', [], globalContext);
+        successToast('Success', [], globalContext);
         setLoading(false);
+        refreshSchemaChangePendingActions();
       }
       handleClose();
       refreshConnectionsList();
@@ -420,14 +422,14 @@ const SchemaChangeDetailsForm = ({
         handleSubmit={handleSubmit(onSubmit)}
         formContent={<FormContent />}
         formActions={
-          <>
+          <Box sx={{}}>
             {tableData.length > 0 && (
               <Button
                 variant="contained"
                 type="submit"
                 disabled={hasBreakingChanges}
                 data-testid="approveschemachange"
-                sx={{ marginTop: '20px' }}
+                sx={{ marginTop: '20px', marginRight: '10px' }}
               >
                 Yes, I approve
               </Button>
@@ -440,7 +442,13 @@ const SchemaChangeDetailsForm = ({
             >
               Close
             </Button>
-          </>
+            {tableData.length > 0 && schemaChangeData?.is_connection_large && (
+              <Typography sx={{ marginTop: '5px' }}>
+                Note: The schema changes will be applied at{' '}
+                {formatDateTimeStringToLocalTimeZone(schemaChangeData.next_job_at)}
+              </Typography>
+            )}
+          </Box>
         }
         loading={loading}
       ></CustomDialog>

@@ -15,13 +15,33 @@ import Image from 'next/image';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import SchemaChangeDetailsForm from './SchemaChangeDetailsForm';
+import { formatDateTimeStringToLocalTimeZone, lastRunTime } from '@/utils/common';
+import { PrefectFlowRun } from '../DBT/DBTTarget';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import { FlowRun } from '../Flows/SingleFlowRunHistory';
 
 interface PendingActionsAccordionProps {
   refreshConnectionsList: (...args: any) => any;
 }
 
+interface SchemaChangeDataJob {
+  flow_run_id: string;
+  job_type: string;
+  scheduled_at: string;
+  run: FlowRun | undefined | null;
+}
+export interface SchemaChangeData {
+  change_type: string;
+  connection_id: string;
+  created_at: string;
+  is_connection_large: boolean;
+  schedule_job: null | SchemaChangeDataJob;
+  next_job_at: string;
+}
+
 const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccordionProps) => {
-  const [schemaChangeData, setSchemaChangeData] = useState<any[]>([]);
+  const [schemaChangeData, setSchemaChangeData] = useState<SchemaChangeData[]>([]);
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
   const [connectionNameMap, setConnectionNameMap] = useState<Record<string, string>>({});
@@ -58,6 +78,48 @@ const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccor
     return null;
   }
 
+  const upComingSchedule = (schemaChange: SchemaChangeData) => {
+    if (schemaChange.schedule_job && !schemaChange.schedule_job.run) {
+      return (
+        <Typography
+          variant="body1"
+          sx={{ fontWeight: 'semi-bold' }}
+        >{`Scheduled at : ${formatDateTimeStringToLocalTimeZone(
+          schemaChange.schedule_job.scheduled_at
+        )}`}</Typography>
+      );
+    }
+    return null;
+  };
+
+  const lastJobStatus = (schemaChange: SchemaChangeData) => {
+    if (schemaChange.schedule_job?.run) {
+      return (
+        <Box sx={{ alignItems: 'center', justifyContent: 'center' }}>
+          Last run:{' '}
+          {lastRunTime(
+            schemaChange.schedule_job?.run.startTime ||
+              schemaChange.schedule_job.run.expectedStartTime
+          )}{' '}
+          {schemaChange.schedule_job?.run.status == 'COMPLETED' ? (
+            <>
+              Success
+              <TaskAltIcon sx={{ color: '#399D47' }} />
+            </>
+          ) : schemaChange.schedule_job?.run.status == 'FAILED' ? (
+            <>
+              Failed
+              <WarningAmberIcon sx={{ color: '#981F1F' }} />
+            </>
+          ) : (
+            ''
+          )}
+        </Box>
+      );
+    }
+    return null;
+  };
+
   return (
     <>
       <Accordion sx={{ marginBottom: '16px' }}>
@@ -72,7 +134,7 @@ const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccor
         </AccordionSummary>
         <AccordionDetails>
           <Box sx={{ width: '100%' }}>
-            {schemaChangeData.map((schemaChange: any, index: number) => {
+            {schemaChangeData.map((schemaChange: SchemaChangeData, index: number) => {
               const connectionId = schemaChange.connection_id;
               const connectionName = connectionNameMap[connectionId];
               const schemaChangeType = schemaChange.change_type;
@@ -99,16 +161,19 @@ const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccor
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Image style={{ marginRight: 10 }} src={connectionIcon} alt="connection icon" />
-                    <Typography variant="body1" fontWeight={800}>
-                      {connectionName} &nbsp;&nbsp;&nbsp;
-                      {schemaChangeType && (
-                        <Typography component="span" sx={labelStyles}>
-                          {schemaChangeType === 'breaking' ? 'Breaking' : 'Updates'}
-                        </Typography>
-                      )}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                      <Typography variant="body1" fontWeight={800}>
+                        {connectionName} &nbsp;&nbsp;&nbsp;
+                        {schemaChangeType && (
+                          <Typography component="span" sx={labelStyles}>
+                            {schemaChangeType === 'breaking' ? 'Breaking' : 'Updates'}
+                          </Typography>
+                        )}
+                      </Typography>
+                      {upComingSchedule(schemaChange)}
+                      {lastJobStatus(schemaChange)}
+                    </Box>
                   </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}></Typography>
                   <Button variant="outlined" onClick={() => handleViewClick(connectionId)}>
                     View
                   </Button>
@@ -126,7 +191,10 @@ const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccor
             refreshConnectionsList={refreshConnectionsList}
             showForm={openPopup}
             setShowForm={setOpenPopup}
-            fetchPendingActions={fetchData}
+            refreshSchemaChangePendingActions={fetchData}
+            schemaChangeData={schemaChangeData.find(
+              (change) => change.connection_id == selectedConnectionId
+            )}
           />
         </DialogContent>
       </Dialog>
