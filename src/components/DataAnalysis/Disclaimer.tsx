@@ -2,6 +2,9 @@ import { useTracking } from '@/contexts/TrackingContext';
 import { httpPut } from '@/helpers/http';
 import { Box, Button, Dialog, DialogActions, DialogTitle, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
+import { useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 type Org = {
   name: string;
@@ -12,22 +15,53 @@ type Org = {
   is_demo: boolean;
 };
 
-export const Disclaimer = ({ open, setIsOpen }: { open: boolean; setIsOpen: any }) => {
+export const Disclaimer = ({
+  open,
+  setIsOpen,
+  isOrgPrefernce = false,
+}: {
+  open: boolean;
+  setIsOpen: any;
+  isOrgPrefernce: boolean;
+}) => {
   const { data: session } = useSession();
   const trackAmplitudeEvent: any = useTracking();
+  const globalContext = useContext(GlobalContext);
 
-  const handleOkayButton = async () => {
+  const handleUserPreference = async () => {
     try {
-      const response = await httpPut(session, 'v1/organizations/user_self', {
-        toupdate_email: session?.user?.email,
+      const { success } = await httpPut(session, 'userpreferences/', {
+        disclaimer_shown: true,
+      });
+      if (!success) {
+        errorToast('Something went wrong', [], globalContext);
+        return;
+      }
+    } catch (error: any) {
+      console.error(error, 'error');
+      errorToast(error.message, [], globalContext);
+      return;
+    } finally {
+      setIsOpen(false);
+    }
+  };
+  // isOrgPrefernce
+  const handleOrgPreference = async () => {
+    try {
+      const { success } = await httpPut(session, 'orgpreferences/llm_approval', {
         llm_optin: true,
       });
-      if (response && response.email) {
-        setIsOpen(false);
+      if (!success) {
+        errorToast('Something went wrong', [], globalContext);
+        return;
       }
-    } catch (error) {
-      console.log(error, 'error');
+      successToast('AI analysis feature is now enabled', [], globalContext);
+    } catch (error: any) {
+      console.error(error, 'error');
+      errorToast(error.message, [], globalContext);
       return;
+    } finally {
+      setIsOpen(false);
     }
   };
 
@@ -64,9 +98,13 @@ export const Disclaimer = ({ open, setIsOpen }: { open: boolean; setIsOpen: any 
       >
         <Button
           onClick={() => {
-            trackAmplitudeEvent(`[Accept-llmDisclaimer-LLMSummary] Button Clicked`);
-
-            handleOkayButton();
+            if (isOrgPrefernce) {
+              handleOrgPreference();
+              trackAmplitudeEvent('[AI-feature-Enabled] Button clicked');
+            } else {
+              trackAmplitudeEvent(`[Accept-llmDisclaimer-LLMSummary] Button Clicked`);
+              handleUserPreference();
+            }
           }}
           variant="contained"
           sx={{ width: '5rem' }}
