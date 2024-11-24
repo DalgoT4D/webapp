@@ -123,10 +123,14 @@ const MainDashboard = ({ children }: any) => {
       {redirectTo === 'dashboard' && (
         <>
           <Header openMenu={openMenu} setOpenMenu={setOpenMenu} />
-          <Box sx={{ display: 'flex', pt: 6 }}>
-            <SideDrawer openMenu={openMenu} setOpenMenu={setOpenMenu} />
-            {children}
-          </Box>
+          {router.pathname === '/changepassword' ? (
+            children
+          ) : (
+            <Box sx={{ display: 'flex', pt: 6 }}>
+              <SideDrawer openMenu={openMenu} setOpenMenu={setOpenMenu} />
+              {children}
+            </Box>
+          )}
         </>
       )}
     </SWRConfig>

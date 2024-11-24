@@ -7,7 +7,8 @@ import { signOut, useSession } from 'next-auth/react';
 import Logo from '@/assets/images/logo.svg';
 import Image from 'next/image';
 import { useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+
 import CreateOrgForm from '../Org/CreateOrgForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
@@ -58,6 +59,7 @@ export const Header = ({
   };
   const { data: session }: any = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [orgs, setOrgs] = useState<Array<AutoCompleteOption>>([]);
 
@@ -138,11 +140,14 @@ export const Header = ({
   const handleCreateOrgClick = () => {
     setShowOrgCreateForm(true);
   };
+  const handleChangePassword = () => {
+    router.push('/changepassword');
+  };
 
   return (
     <Paper className={styles.Header}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, ml: 1.8 }}>
-        {!hideMenu && (
+      <Box sx={{ display: 'flex', alignItems: 'center', ml: 1.8 }}>
+        {!hideMenu && pathname !== '/changepassword' && (
           <IconButton
             onClick={() => setOpenMenu(!openMenu)}
             sx={{
@@ -160,7 +165,16 @@ export const Header = ({
             <Image src={HamburgerIcon} alt="Hamburger-icon" />
           </IconButton>
         )}
-        <Image src={Logo} alt="dalgo logo" />
+        <Box
+          sx={{
+            ml: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Image src={Logo} alt="dalgo logo" />
+        </Box>
       </Box>
       <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto', gap: '20px' }}>
         <IconButton
@@ -265,6 +279,14 @@ export const Header = ({
               ))}
           </Box>
         </Box>
+        <MenuItem
+          sx={{
+            borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
+          }}
+          onClick={() => handleChangePassword()}
+        >
+          Change Password
+        </MenuItem>
         <MenuItem
           sx={{
             borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
