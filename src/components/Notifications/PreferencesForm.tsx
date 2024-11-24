@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpPut } from '@/helpers/http';
+import InfoTooltip from '../UI/Tooltip/Tooltip';
 
 interface PreferencesFormProps {
   showForm: boolean;
@@ -22,9 +23,11 @@ type PreferencesFormInput = {
 
 const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
   const { data: session }: any = useSession();
-  const { data: preferences, mutate } = useSWR(`userpreferences/`);
+  const { data: preferences, mutate: mutateUserPreferences } = useSWR(`userpreferences/`);
+  const { data: orgPreferences, mutate: mutateOrgPreferences } = useSWR(`orgpreferences/`);
   const [loading, setLoading] = useState<boolean>(false);
   const globalContext = useContext(GlobalContext);
+  const permissions = globalContext?.Permissions?.state || [];
   const {
     handleSubmit,
     register,
@@ -37,14 +40,16 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
 
   useEffect(() => {
     if (preferences && showForm) {
+      setValue('enable_email_notifications', preferences.res.enable_email_notifications || false);
+    }
+    if (orgPreferences && showForm) {
       setValue(
         'enable_discord_notifications',
-        preferences.res.enable_discord_notifications || false
+        orgPreferences.res.enable_discord_notifications || false
       );
-      setValue('enable_email_notifications', preferences.res.enable_email_notifications || false);
-      setValue('discord_webhook', preferences.res.discord_webhook || '');
+      setValue('discord_webhook', orgPreferences.res.discord_webhook || '');
     }
-  }, [preferences, setValue, showForm]);
+  }, [preferences, orgPreferences, setValue, showForm]);
 
   const enableDiscordNotifications = watch('enable_discord_notifications');
 
@@ -66,16 +71,33 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
             />
           )}
         />
+
         <Controller
           name="enable_discord_notifications"
           control={control}
           render={({ field }) => (
-            <FormControlLabel
-              control={<Switch {...field} checked={field.value} />}
-              label="Enable Discord Notifications"
-            />
+            <>
+              <FormControlLabel
+                control={
+                  <Switch
+                    {...field}
+                    checked={field.value}
+                    disabled={!permissions.includes('can_edit_org_notification_settings')}
+                  />
+                }
+                label="Enable Discord Notifications"
+              />
+              {!permissions.includes('can_edit_org_notification_settings') && (
+                <InfoTooltip
+                  title={
+                    "Please reach out to your organization's Account Manager to enable this feature"
+                  }
+                />
+              )}
+            </>
           )}
         />
+
         {enableDiscordNotifications && (
           <Input
             error={!!errors.discord_webhook}
@@ -83,9 +105,10 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
               !!errors.discord_webhook &&
               'Discord webhook is required to enable discord notifications!'
             }
-            sx={{ width: '100%' }}
+            sx={{ width: '100%', mt: '1rem' }}
             required
             label="Discord Webhook"
+            disabled={!permissions.includes('can_edit_org_notification_settings')}
             variant="outlined"
             register={register}
             name="discord_webhook"
@@ -97,18 +120,30 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
 
   const onSubmit = async (values: any) => {
     setLoading(true);
+
     try {
+      // Update user preferences (email notifications)
       await httpPut(session, 'userpreferences/', {
         enable_email_notifications: values.enable_email_notifications,
-        enable_discord_notifications: values.enable_discord_notifications,
-        discord_webhook: values.enable_discord_notifications ? values.discord_webhook : '',
       });
-      mutate();
+
+      // Update org preferences (Discord settings) only if the user has permission
+      if (permissions.includes('can_edit_org_notification_settings')) {
+        await httpPut(session, 'orgpreferences/enable-discord-notifications', {
+          enable_discord_notifications: values.enable_discord_notifications,
+          discord_webhook: values.enable_discord_notifications ? values.discord_webhook : '',
+        });
+
+        mutateOrgPreferences(); // Revalidate org preferences
+      }
+
+      mutateUserPreferences(); // Revalidate user preferences
       handleClose();
       successToast('Preferences updated successfully.', [], globalContext);
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
     }
+
     setLoading(false);
   };
 
@@ -122,7 +157,12 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
         formContent={formContent}
         formActions={
           <Box>
-            <Button variant="contained" type="submit" data-testid="savebutton">
+            <Button
+              variant="contained"
+              type="submit"
+              data-testid="savebutton"
+              disabled={loading} // Disable button while loading
+            >
               Update Preferences
             </Button>
             <Button
