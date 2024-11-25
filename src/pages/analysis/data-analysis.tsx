@@ -14,6 +14,7 @@ import { PageHead } from '@/components/PageHead';
 import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
 import { OverWriteDialog } from '@/components/DataAnalysis/OverwriteBox';
 import { useRouter } from 'next/router';
+import { DeactivatedMsg } from '@/components/DataAnalysis/DeactivatedMsg';
 interface ProgressResult {
   response?: Array<any>;
   session_id?: string;
@@ -23,6 +24,13 @@ interface ProgressEntry {
   message: string;
   status: 'running' | 'completed' | 'failed';
   result?: ProgressResult;
+}
+
+interface UserPreferences {
+  enable_email_notifications: boolean;
+  disclaimer_shown: boolean;
+  is_llm_active: boolean;
+  enable_llm_requested: boolean;
 }
 export const MODALS = {
   SAVE: 'SAVE',
@@ -46,20 +54,29 @@ export default function DataAnalysis() {
   const [loading, setLoading] = useState(false);
   const [openSavedSessionDialog, setOpenSavedSessionDialog] = useState(false);
   const [resetState, setResetState] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
+  const [openDisclaimer, setOpenDisclaimer] = useState(false);
+  const [openDeactivateMsg, setOpenDeactivateMsg] = useState(false);
   const [selectedSession, setSelectedSession] = useState();
   const [isBoxOpen, setIsBoxOpen] = useState(false);
   const [modalName, setModalName] = useState(MODALS.SAVE);
-
+  const [userpreferences, setUserPreferences] = useState<UserPreferences | any>(null);
   //for the discalimer page.
   useEffect(() => {
     const orgSlug = localStorage.getItem('org-slug');
     try {
       if (orgSlug && session?.user?.email) {
         (async () => {
-          const response = await httpGet(session, `currentuserv2?org_slug=${orgSlug}`);
-          if (response?.length === 1 && !response[0]?.llm_optin) {
-            setIsOpen(true);
+          const { success, res } = await httpGet(session, `userpreferences/`);
+          if (success) {
+            setUserPreferences(res);
+            if (!res.is_llm_active) {
+              setOpenDeactivateMsg(true);
+              return;
+            }
+            if (!res.disclaimer_shown) {
+              setOpenDisclaimer(true);
+              return;
+            }
           }
         })();
       }
@@ -390,7 +407,17 @@ export default function DataAnalysis() {
             handleEditSession={handleEditSession}
           />
         )}
-        {isOpen && <Disclaimer open={isOpen} setIsOpen={setIsOpen} />}
+        {openDisclaimer && (
+          <Disclaimer open={openDisclaimer} setIsOpen={setOpenDisclaimer} isOrgPrefernce={false} />
+        )}
+
+        {openDeactivateMsg && (
+          <DeactivatedMsg
+            open={openDeactivateMsg}
+            setIsOpen={setOpenDeactivateMsg}
+            enable_llm_requested={userpreferences?.enable_llm_requested}
+          />
+        )}
         {isBoxOpen && (
           <OverWriteDialog
             open={isBoxOpen}
