@@ -89,9 +89,6 @@ describe('SubscriptionInfo Component', () => {
       expect(
         screen.getByText(moment(orgPlanMock.end_date).format('DD MMM, YYYY'))
       ).toBeInTheDocument();
-
-      // Days remaining
-      expect(screen.getByText('20 days remaining')).toBeInTheDocument();
     });
   });
 

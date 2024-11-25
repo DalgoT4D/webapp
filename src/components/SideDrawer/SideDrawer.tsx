@@ -159,22 +159,21 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   useEffect(() => {
     const menuLength = sideMenu.filter((item) => !item.parent).length;
     const isOpen = !openMenu;
+    const newArr = new Array(menuLength).fill(isOpen);
 
     // ** When the sidedrawer is minimized ** //
     if (!openMenu) {
-      setOpen(new Array(menuLength).fill(isOpen));
+      setOpen(newArr);
     } else {
       // ** When the sidedrawer is expanded ** //
-
       //Find the selected menuItem and check if its a parent or not.
-      const menuItem = sideMenu.find((item) => item.path === router.pathname);
+      const selectedSideMenuItem: any = sideMenu.find((item) => item.path === router.pathname);
 
-      if (menuItem?.parent === undefined) {
-        const newArr = new Array(menuLength).fill(isOpen);
+      if (selectedSideMenuItem?.parent === undefined) {
+        newArr[selectedSideMenuItem?.index] = true;
         setOpen(newArr);
       } else {
-        const parentIndex = menuItem?.parent;
-        const newArr = new Array(menuLength).fill(isOpen);
+        const parentIndex = selectedSideMenuItem?.parent;
         newArr[parentIndex] = true;
         setOpen(newArr);
       }
