@@ -167,13 +167,13 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
       // ** When the sidedrawer is expanded ** //
 
       //Find the selected menuItem and check if its a parent or not.
-      let menuItem = sideMenu.find((item) => item.path === router.pathname);
+      const menuItem = sideMenu.find((item) => item.path === router.pathname);
 
       if (menuItem?.parent === undefined) {
         const newArr = new Array(menuLength).fill(isOpen);
         setOpen(newArr);
       } else {
-        let parentIndex = menuItem?.parent;
+        const parentIndex = menuItem?.parent;
         const newArr = new Array(menuLength).fill(isOpen);
         newArr[parentIndex] = true;
         setOpen(newArr);
