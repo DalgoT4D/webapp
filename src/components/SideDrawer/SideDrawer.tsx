@@ -16,7 +16,7 @@ import {
 import MuiDrawer from '@mui/material/Drawer';
 import { styled, Theme, CSSObject } from '@mui/material/styles';
 
-import { MenuOption, drawerWidth, sideMenu } from '@/config/menu';
+import { drawerWidth, getSideMenu } from '@/config/menu';
 
 // assets
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
@@ -31,6 +31,18 @@ export interface ItemButtonProps {
   onClick: (item: MenuOption) => void;
   children?: ReactNode;
   disabled?: boolean;
+}
+
+interface MenuOption {
+  index: number;
+  title: string;
+  path: string;
+  icon: (selected: boolean) => JSX.Element;
+  parent?: number;
+  className?: string;
+  permission?: string;
+  hide?: boolean;
+  minimize?: boolean;
 }
 
 const ItemButton: React.FC<ItemButtonProps> = ({
@@ -111,6 +123,8 @@ const Drawer = styled(MuiDrawer, {
 export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const router = useRouter();
   const globalContext = useContext(GlobalContext);
+  const unread_count = globalContext?.unread_count?.state;
+  const sideMenu: MenuOption[] = getSideMenu(unread_count);
   const { state } = globalContext?.UnsavedChanges ?? {};
   const [open, setOpen] = useState(
     new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
