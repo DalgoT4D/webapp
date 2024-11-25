@@ -20,7 +20,7 @@ interface MenuProps {
   handleEdit?: () => void;
   handleRefresh?: () => void;
   handleDelete?: () => void;
-  handleResetConnection?: () => void;
+  handleClearConnection?: () => void;
   handleResendInvitation?: () => void;
   hasEditPermission?: boolean;
   hasDeletePermission?: boolean;
@@ -36,7 +36,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   handleEdit,
   handleRefresh,
   handleDelete,
-  handleResetConnection,
+  handleClearConnection,
   handleResendInvitation,
   hasEditPermission = true,
   hasDeletePermission = true,
@@ -109,12 +109,12 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </Box>
     )}
     <Divider style={{ margin: 0 }} />
-    {eleType === 'connection' && handleResetConnection && (
-      <MenuItem onClick={() => handleResetConnection()} disabled={!hasResetPermission}>
+    {eleType === 'connection' && handleClearConnection && (
+      <MenuItem onClick={() => handleClearConnection()} disabled={!hasResetPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <RestartAltIcon sx={{ width: 16 }} />
         </ListItemIcon>
-        Reset
+        Clear
       </MenuItem>
     )}
   </Menu>
