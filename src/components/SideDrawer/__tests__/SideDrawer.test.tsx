@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { SideDrawer } from '../SideDrawer';
-import { sideMenu } from '@/config/menu';
+import { getSideMenu } from '@/config/menu';
 import { useRouter } from 'next/router';
-
+const sideMenu = getSideMenu(4);
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
 }));
@@ -51,9 +51,9 @@ describe('SideDrawer', () => {
 
   it('should render all side menu items which are not hidden', () => {
     sideMenu
-      .filter((item) => !item.hide)
+      .filter((item) => !item.hide && !item.parent)
       .forEach((item) => {
-        if (item.index < 6) {
+        if (item.index) {
           //FIX THIS
           const menuItem = screen.getByTestId(`menu-item-${item.index}`);
           expect(menuItem).toBeInTheDocument();
@@ -79,24 +79,16 @@ describe('SideDrawer', () => {
   it('should render child items when expanded or vice versa', async () => {
     const toggleSwitch = screen.getByTestId(`expand-toggle-2`);
     expect(toggleSwitch).toBeInTheDocument();
-    expect(screen.getByTestId('menu-item-2.1')).toBeInTheDocument();
-    expect(screen.getByTestId('menu-item-2.2')).toBeInTheDocument();
-    expect(screen.getByTestId('menu-item-2.3')).toBeInTheDocument();
 
+    expect(screen.queryByTestId('menu-item-2.1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('menu-item-2.2')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('menu-item-2.3')).not.toBeInTheDocument();
     fireEvent.click(toggleSwitch);
 
     await waitFor(() => {
-      expect(screen.queryByTestId('menu-item-2.1')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('menu-item-2.2')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('menu-item-2.3')).not.toBeInTheDocument();
-    });
-
-    fireEvent.click(toggleSwitch);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('menu-item-2.1')).toBeInTheDocument();
-      expect(screen.getByTestId('menu-item-2.2')).toBeInTheDocument();
-      expect(screen.getByTestId('menu-item-2.3')).toBeInTheDocument();
+      expect(screen.queryByTestId('menu-item-2.1')).toBeInTheDocument();
+      expect(screen.queryByTestId('menu-item-2.2')).toBeInTheDocument();
+      expect(screen.queryByTestId('menu-item-2.3')).toBeInTheDocument();
     });
   });
 
