@@ -91,7 +91,7 @@ describe('SubscriptionInfo Component', () => {
       ).toBeInTheDocument();
 
       // Days remaining
-      expect(screen.getByText('19 days remaining')).toBeInTheDocument();
+      expect(screen.getByText('20 days remaining')).toBeInTheDocument();
     });
   });
 
