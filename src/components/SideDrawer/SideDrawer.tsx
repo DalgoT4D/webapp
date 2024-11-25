@@ -127,7 +127,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const sideMenu: MenuOption[] = getSideMenu(unread_count);
   const { state } = globalContext?.UnsavedChanges ?? {};
   const [open, setOpen] = useState(
-    new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
+    new Array(sideMenu.filter((item) => !item.parent).length).fill(false)
   );
   const [selectedIndex, setSelectedIndex] = useState(
     sideMenu.find((item) => item.path === router.pathname)?.index
@@ -157,7 +157,9 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   };
 
   useEffect(() => {
-    setOpen(new Array(sideMenu.filter((item) => !item.parent).length).fill(true));
+    const isOpen = !openMenu;
+    const menuLength = sideMenu.filter((item) => !item.parent).length;
+    setOpen(new Array(menuLength).fill(isOpen));
   }, [openMenu]);
 
   useEffect(() => {
