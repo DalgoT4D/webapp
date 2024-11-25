@@ -3,16 +3,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Header } from './Header';
 import { useSession, signOut } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 // Mock the dependencies
 jest.mock('next-auth/react');
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  usePathname: jest.fn(),
 }));
 
 const mockUseSession = useSession as jest.Mock;
 const mockUseRouter = useRouter as jest.Mock;
+const mockUsePathname = usePathname as jest.Mock;
 const mockSignOut = signOut as jest.Mock;
 describe('Header Component', () => {
   const setOpenMenu = jest.fn();
@@ -28,6 +30,7 @@ describe('Header Component', () => {
       },
       status: 'authenticated',
     });
+    mockUsePathname.mockReturnValue('/');
     jest.clearAllMocks();
   });
 

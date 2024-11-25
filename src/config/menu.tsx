@@ -6,11 +6,13 @@ import TransformIcon from '@/assets/icons/transform';
 import PipelineIcon from '@/assets/icons/pipeline';
 import OrchestrateIcon from '@/assets/icons/orchestrate';
 import DataQualityIcon from '@/assets/icons/dataQuality';
-import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import ExploreIcon from '@/assets/icons/explore';
 import { primaryColor } from './theme';
 import Unread_Notifications from '@/assets/icons/notifications_unread';
 import Notifications from '@/assets/icons/notifications';
+import Settings from '@/assets/icons/settings';
+import User from '@/assets/icons/manage_accounts';
+import AiSettings from '@/assets/icons/aisettings';
 
 export const drawerWidth = 250;
 
@@ -93,20 +95,35 @@ export const getSideMenu = (unread_count: any) => {
       // hide: !showElementaryMenu,
       minimize: true,
     },
-
     {
       index: 5,
-      title: 'User management',
-      path: '/user-management',
-      icon: () => <SupervisorAccountIcon />,
-      className: 'usermanagement_walkthrough',
-    },
-    {
-      index: 6,
       title: 'Notifications',
       path: '/notifications',
       icon: () => (unread_count > 0 ? <Unread_Notifications /> : <Notifications />),
       className: 'notification_walkthrough',
+    },
+    {
+      index: 6,
+      title: 'Settings',
+      path: '/settings',
+      icon: (selected: boolean) => <Settings fill={getColor(selected)} />,
+      className: 'settings_walkthrough',
+    },
+    {
+      index: 6.1,
+      title: 'User',
+      path: '/settings/user-management',
+      parent: 6,
+      icon: (selected: boolean) => <User fill={getColor(selected)} />,
+      className: 'usermanagement_walkthrough',
+    },
+    {
+      index: 6.2,
+      title: 'AI settings',
+      icon: (selected: boolean) => <AiSettings fill={getColor(selected)} />,
+      parent: 6,
+      path: '/settings/ai-settings',
+      className: 'aisettings_walkthrough',
     },
   ];
 };
