@@ -68,6 +68,7 @@ export const Header = ({
   const [selectedOrg, setSelectedOrg] = useState<AutoCompleteOption | null | undefined>(null);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
+  const setUnreadCount = globalContext?.unread_count.dispatch;
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
     setAnchorEl(event);
@@ -143,6 +144,10 @@ export const Header = ({
   const handleChangePassword = () => {
     router.push('/changepassword');
   };
+
+  useEffect(() => {
+    setUnreadCount(unread_count?.res);
+  }, [unread_count?.res]);
 
   return (
     <Paper className={styles.Header}>
