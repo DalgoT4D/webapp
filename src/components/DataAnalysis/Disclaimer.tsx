@@ -2,7 +2,7 @@ import { useTracking } from '@/contexts/TrackingContext';
 import { httpPut } from '@/helpers/http';
 import { Box, Button, Dialog, DialogActions, DialogTitle, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
-import { errorToast } from '../ToastMessage/ToastHelper';
+import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { useContext } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
@@ -37,13 +37,12 @@ export const Disclaimer = ({
         errorToast('Something went wrong', [], globalContext);
         return;
       }
-      setIsOpen(false);
-      return;
     } catch (error: any) {
       console.error(error, 'error');
       errorToast(error.message, [], globalContext);
-
       return;
+    } finally {
+      setIsOpen(false);
     }
   };
   // isOrgPrefernce
@@ -56,13 +55,13 @@ export const Disclaimer = ({
         errorToast('Something went wrong', [], globalContext);
         return;
       }
-
-      setIsOpen(false);
-      return;
+      successToast('AI analysis feature is now enabled', [], globalContext);
     } catch (error: any) {
       console.error(error, 'error');
       errorToast(error.message, [], globalContext);
       return;
+    } finally {
+      setIsOpen(false);
     }
   };
 

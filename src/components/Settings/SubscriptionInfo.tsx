@@ -8,6 +8,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import moment from 'moment';
 import { calculatePlanStatus } from '@/utils/common';
 import { useTracking } from '@/contexts/TrackingContext';
+import InfoTooltip from '../UI/Tooltip/Tooltip';
 type OrgPlan = {
   success: boolean;
   res: {
@@ -28,6 +29,7 @@ type OrgPlan = {
     start_date: string;
     end_date: string;
     can_upgrade_plan: boolean;
+    upgrade_requested: boolean;
   };
 };
 
@@ -58,7 +60,6 @@ export const SubscriptionInfo = () => {
   };
   const hanldeUpgradePlan = async () => {
     trackAmplitudeEvent('[Plan Upgrade] Button clicked');
-    setLoader(true);
     try {
       const { success } = await httpPost(session, `orgpreferences/org-plan/upgrade`, {});
 
@@ -71,12 +72,11 @@ export const SubscriptionInfo = () => {
           [],
           globalContext
         );
+        getOrgPlan();
       }
     } catch (error: any) {
       console.error(error);
       errorToast(error.message, [], globalContext);
-    } finally {
-      setLoader(false);
     }
   };
   useEffect(() => {
@@ -142,19 +142,23 @@ export const SubscriptionInfo = () => {
                     </Typography>
                   </Box>
 
-                  <Button
-                    variant="contained"
-                    disabled={
-                      !(
-                        orgPlan.can_upgrade_plan &&
-                        permissions?.includes('can_initiate_org_plan_upgrade')
-                      )
-                    }
-                    sx={{ p: '8px 24px' }}
-                    onClick={hanldeUpgradePlan}
-                  >
-                    Upgrade
-                  </Button>
+                  <Box display="flex" alignItems="center" justifyItems="center" gap="1rem">
+                    {orgPlan.upgrade_requested && (
+                      <InfoTooltip title={'The request to upgrade the plan has been registered'} />
+                    )}
+                    <Button
+                      variant="contained"
+                      disabled={
+                        !orgPlan.can_upgrade_plan ||
+                        !permissions?.includes('can_initiate_org_plan_upgrade') ||
+                        orgPlan.upgrade_requested
+                      }
+                      sx={{ p: '8px 24px' }}
+                      onClick={hanldeUpgradePlan}
+                    >
+                      Upgrade
+                    </Button>
+                  </Box>
                 </Box>
 
                 {/* Features Section */}
@@ -166,7 +170,7 @@ export const SubscriptionInfo = () => {
                       <Typography
                         sx={{ ml: 1, fontSize: '15px', fontWeight: 600, color: '#0F2440AD' }}
                       >
-                        {orgPlan.features?.pipeline?.join(' | ')}
+                        {orgPlan.features?.pipeline.join(' | ')}
                       </Typography>
                     </ListItem>
 

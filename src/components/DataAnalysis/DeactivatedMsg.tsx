@@ -16,12 +16,20 @@ type Org = {
   is_demo: boolean;
 };
 
-export const DeactivatedMsg = ({ open, setIsOpen }: { open: boolean; setIsOpen: any }) => {
+export const DeactivatedMsg = ({
+  open,
+  setIsOpen,
+  enable_llm_requested,
+}: {
+  open: boolean;
+  setIsOpen: any;
+  enable_llm_requested: boolean;
+}) => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
 
   const permissions = globalContext?.Permissions.state || [];
-
+  const isEnableDisabled = enable_llm_requested && !permissions.includes('can_edit_llm_settings');
   const router = useRouter();
   const trackAmplitudeEvent: any = useTracking();
 
@@ -93,9 +101,21 @@ export const DeactivatedMsg = ({ open, setIsOpen }: { open: boolean; setIsOpen: 
           }}
           variant="contained"
           sx={{ width: '148px' }}
+          disabled={isEnableDisabled}
         >
-          Enable
+          {isEnableDisabled ? 'Request In Progress' : 'Enable'}
         </Button>
+        {isEnableDisabled && (
+          <Button
+            onClick={() => {
+              router.push('/pipeline');
+            }}
+            variant="contained"
+            sx={{ width: '148px' }}
+          >
+            Cancel
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

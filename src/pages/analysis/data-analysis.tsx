@@ -25,6 +25,13 @@ interface ProgressEntry {
   status: 'running' | 'completed' | 'failed';
   result?: ProgressResult;
 }
+
+interface UserPreferences {
+  enable_email_notifications: boolean;
+  disclaimer_shown: boolean;
+  is_llm_active: boolean;
+  enable_llm_requested: boolean;
+}
 export const MODALS = {
   SAVE: 'SAVE',
   OVERWRITE: 'OVERWRITE',
@@ -52,7 +59,7 @@ export default function DataAnalysis() {
   const [selectedSession, setSelectedSession] = useState();
   const [isBoxOpen, setIsBoxOpen] = useState(false);
   const [modalName, setModalName] = useState(MODALS.SAVE);
-
+  const [userpreferences, setUserPreferences] = useState<UserPreferences | any>(null);
   //for the discalimer page.
   useEffect(() => {
     const orgSlug = localStorage.getItem('org-slug');
@@ -61,6 +68,7 @@ export default function DataAnalysis() {
         (async () => {
           const { success, res } = await httpGet(session, `userpreferences/`);
           if (success) {
+            setUserPreferences(res);
             if (!res.is_llm_active) {
               setOpenDeactivateMsg(true);
               return;
@@ -404,7 +412,11 @@ export default function DataAnalysis() {
         )}
 
         {openDeactivateMsg && (
-          <DeactivatedMsg open={openDeactivateMsg} setIsOpen={setOpenDeactivateMsg} />
+          <DeactivatedMsg
+            open={openDeactivateMsg}
+            setIsOpen={setOpenDeactivateMsg}
+            enable_llm_requested={userpreferences?.enable_llm_requested}
+          />
         )}
         {isBoxOpen && (
           <OverWriteDialog

@@ -1,5 +1,5 @@
 import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useTracking } from '@/contexts/TrackingContext';
@@ -50,6 +50,7 @@ export const AIEnablePanel = () => {
         errorToast('Something went wrong', [], globalContext);
         return;
       }
+      successToast('AI data anlysis feature is disabled', [], globalContext);
       fetchOrgPreference();
     } catch (error: any) {
       console.error(error);
@@ -115,7 +116,11 @@ export const AIEnablePanel = () => {
           ) : (
             <Box display={'flex'} alignItems={'center'}>
               {!permissions.includes('can_edit_llm_settings') && (
-                <InfoTooltip title={'You currently do not have access to modify this setting.'} />
+                <InfoTooltip
+                  title={
+                    "Please reach out to your organization's Account Manager to enable this feature"
+                  }
+                />
               )}
               <Switch
                 data-testid={`enable-disable-llm`}
