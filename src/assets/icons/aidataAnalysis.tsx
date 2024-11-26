@@ -1,5 +1,5 @@
 import * as React from 'react';
-const AiAnalysis = (props: any) => (
+const AIDataAnalysis = (props: any) => (
   <svg width="25" height="20" viewBox="0 0 25 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M8.91332 17.5081H3C1.89543 17.5081 1 16.6127 1 15.5081V4.6875C1 3.58293 1.89543 2.6875 3 2.6875H11.5294C12.634 2.6875 13.5294 3.58293 13.5294 4.6875V9.43344"
@@ -44,4 +44,4 @@ const AiAnalysis = (props: any) => (
     />
   </svg>
 );
-export default AiAnalysis;
+export default AIDataAnalysis;

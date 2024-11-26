@@ -15,6 +15,7 @@ jest.mock('next/navigation', () => ({
 const mockUseSession = useSession as jest.Mock;
 const mockUseRouter = useRouter as jest.Mock;
 const mockUsePathname = usePathname as jest.Mock;
+const mockDispatch = jest.fn();
 const mockSignOut = signOut as jest.Mock;
 describe('Header Component', () => {
   const setOpenMenu = jest.fn();
@@ -31,6 +32,7 @@ describe('Header Component', () => {
       status: 'authenticated',
     });
     mockUsePathname.mockReturnValue('/');
+    mockDispatch(4);
     jest.clearAllMocks();
   });
 
@@ -71,6 +73,7 @@ describe('Header Component', () => {
     CurrentOrg: {
       dispatch: jest.fn(),
     },
+    unread_count: { state: 4, dispatch: mockDispatch },
   };
 
   const renderComponent = () =>
