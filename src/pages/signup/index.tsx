@@ -32,6 +32,7 @@ export const SignUp = () => {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -88,6 +89,7 @@ export const SignUp = () => {
               placeholder="eg. user@domain.com"
               register={register}
               name="username"
+              onBlur={(e) => setValue('username', e.target.value.trim())}
               required
             />
 
@@ -166,6 +168,7 @@ export const SignUp = () => {
               register={register}
               placeholder="Enter code"
               name="signupcode"
+              onBlur={(e) => setValue('signupcode', e.target.value.trim())}
               required
             />
             <Button
