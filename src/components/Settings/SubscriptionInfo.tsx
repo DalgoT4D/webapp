@@ -104,7 +104,12 @@ export const SubscriptionInfo = () => {
               {/* Plan Details Section */}
               <Box sx={{ margin: '24px 32px' }}>
                 <Box
-                  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}
                 >
                   {/* Plan Information */}
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -113,11 +118,10 @@ export const SubscriptionInfo = () => {
                     >
                       {orgPlan.base_plan}&nbsp;
                     </Typography>
-                    {orgPlan.superset_included ? (
+                    {orgPlan.superset_included && !orgPlan.base_plan.includes('Free trial') ? (
                       <Typography
                         sx={{ fontWeight: 700, color: 'rgba(15, 36, 64, 1)', fontSize: '28px' }}
                       >
-                        {' '}
                         + Superset
                       </Typography>
                     ) : (
@@ -211,49 +215,63 @@ export const SubscriptionInfo = () => {
                 </Box>
               </Box>
               {/* bottom duration remaining */}
-              <Box
-                display="flex"
-                sx={{
-                  backgroundColor: '#EBF6F4',
-                  padding: '20px 24px',
-                  borderRadius: '8px',
-                  margin: '8px 8px 0 8px',
-                }}
-              >
-                <Typography color={'#0F244099'} fontWeight={600}>
-                  Start date
-                </Typography>
-                &nbsp;
-                <Typography fontWeight={700} color={'#0F2440'}>
-                  {moment(orgPlan.start_date).format('DD MMM, YYYY')}
-                </Typography>
-                &nbsp;-&nbsp;
-                <Typography color={'#0F244099'} fontWeight={600}>
-                  End date
-                </Typography>
-                &nbsp;
-                <Typography fontWeight={700} color={'#0F2440'}>
-                  {moment(orgPlan.end_date).format('DD MMM, YYYY')}
-                </Typography>
-                &nbsp;-&nbsp;
-                {(() => {
-                  const { isExpired, isLessThanAWeek, daysRemaining } = calculatePlanStatus(
-                    orgPlan.end_date
-                  );
-                  return (
-                    <Typography
-                      fontWeight={600}
-                      color={isExpired ? '#FF0000' : isLessThanAWeek ? '#FF0000' : '#00897B'}
-                    >
-                      {isExpired
-                        ? 'Plan has expired'
-                        : daysRemaining > 0
-                          ? `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} remaining`
-                          : 'Plan is expiring today'}
-                    </Typography>
-                  );
-                })()}
-              </Box>
+              {!orgPlan.start_date && !orgPlan.end_date ? (
+                ''
+              ) : (
+                <Box
+                  display="flex"
+                  sx={{
+                    backgroundColor: '#EBF6F4',
+                    padding: '20px 24px',
+                    borderRadius: '8px',
+                    margin: '8px 8px 0 8px',
+                  }}
+                >
+                  {orgPlan.start_date && (
+                    <>
+                      {' '}
+                      <Typography color={'#0F244099'} fontWeight={600}>
+                        Start date
+                      </Typography>
+                      &nbsp;
+                      <Typography fontWeight={700} color={'#0F2440'}>
+                        {moment(orgPlan.start_date).format('DD MMM, YYYY')}
+                      </Typography>
+                    </>
+                  )}
+
+                  {orgPlan.end_date && (
+                    <>
+                      &nbsp;-&nbsp;{' '}
+                      <Typography color={'#0F244099'} fontWeight={600}>
+                        End date
+                      </Typography>
+                      &nbsp;
+                      <Typography fontWeight={700} color={'#0F2440'}>
+                        {moment(orgPlan.end_date).format('DD MMM, YYYY')}
+                      </Typography>
+                      &nbsp;-&nbsp;
+                      {(() => {
+                        const { isExpired, isLessThanAWeek, daysRemaining } = calculatePlanStatus(
+                          orgPlan.end_date
+                        );
+                        return (
+                          <Typography
+                            fontWeight={600}
+                            color={isExpired ? '#FF0000' : isLessThanAWeek ? '#FF0000' : '#00897B'}
+                          >
+                            {isExpired
+                              ? 'Plan has expired'
+                              : daysRemaining > 0
+                                ? `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} remaining`
+                                : '0 days remaining'}
+                          </Typography>
+                        );
+                      })()}
+                    </>
+                  )}
+                </Box>
+              )}
             </>
           )
         )}
