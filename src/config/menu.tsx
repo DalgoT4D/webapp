@@ -27,7 +27,7 @@ export const getSideMenu = (unread_count: any) => {
       path: '/analysis',
       icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
       className: 'analysis_walkthrough',
-      minimize: true,
+      minimize: false,
     },
     {
       index: 0.1,
@@ -36,7 +36,7 @@ export const getSideMenu = (unread_count: any) => {
       icon: (selected: boolean) => <UsageIcon fill={getColor(selected)} />,
       parent: 0,
       className: 'usage_walkthrough',
-      minimize: true,
+      minimize: false,
     },
     {
       index: 0.2,
@@ -93,7 +93,7 @@ export const getSideMenu = (unread_count: any) => {
       icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
       className: 'data_quality_walkthrough',
       // hide: !showElementaryMenu,
-      minimize: true,
+      minimize: false,
     },
     {
       index: 4,
