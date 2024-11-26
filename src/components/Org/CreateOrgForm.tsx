@@ -60,7 +60,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
   };
 
   const onSubmit = async (data: any) => {
-    let payload = {
+    const payload = {
       name: data.name,
       base_plan: data.base_plan,
       subscription_duration: data.duration,
@@ -90,7 +90,6 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     if (newlyCreatedOrg) localStorage.setItem('org-slug', newlyCreatedOrg);
   }, [newlyCreatedOrg]);
 
-  const base_plan = watch('base_plan');
   const formContent = (
     <>
       <Box sx={{ mt: 2 }}>
