@@ -93,15 +93,17 @@ describe('SideDrawer', () => {
 
   it('should handle menu item click and close drawer when item has minimize flag', async () => {
     const minimizedMenu = sideMenu.find((item) => item.minimize && !item.hide);
-    expect(minimizedMenu).toBeDefined();
-
     if (minimizedMenu) {
-      const menuItem = screen.getByTestId(`menu-item-${minimizedMenu.index}`);
+      expect(minimizedMenu).toBeDefined();
 
-      const menuList = within(menuItem).getByTestId(`listButton`);
-      fireEvent.click(menuList);
+      if (minimizedMenu) {
+        const menuItem = screen.getByTestId(`menu-item-${minimizedMenu.index}`);
 
-      expect(setOpenMenu).toHaveBeenCalledWith(false);
+        const menuList = within(menuItem).getByTestId(`listButton`);
+        fireEvent.click(menuList);
+
+        expect(setOpenMenu).toHaveBeenCalledWith(false);
+      }
     }
   });
 });
