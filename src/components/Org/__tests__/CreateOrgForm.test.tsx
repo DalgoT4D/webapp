@@ -1,11 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { CreateOrgForm } from '../CreateOrgForm';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
-import { httpPost } from '@/helpers/http';
 
 // Mock dependencies
 jest.mock('next-auth/react');
