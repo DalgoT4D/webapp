@@ -26,6 +26,7 @@ export const Login = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -79,6 +80,7 @@ export const Login = () => {
               register={register}
               name="username"
               helperText={errors.username?.message}
+              onBlur={(e) => setValue('username', e.target.value.trim())}
             />
             <Input
               error={!!errors.password}

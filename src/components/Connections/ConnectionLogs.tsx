@@ -80,9 +80,15 @@ interface ConnectionLogsProps {
   connection: Connection | undefined;
 }
 
-const columns = ['Date', 'Records synced', 'Bytes synced', 'Duration', 'Actions'];
+const columns = ['Job', 'Date', 'Records synced', 'Bytes synced', 'Duration', 'Actions'];
+
+enum ConnectionJobType {
+  sync = 'sync',
+  reset_connection = 'reset_connection',
+}
 
 interface LogObject {
+  job_type: ConnectionJobType;
   attempt_no: number;
   bytesEmitted: string;
   date: string;
@@ -92,6 +98,7 @@ interface LogObject {
   recordsEmitted: number;
   status: string;
   totalTimeInSeconds: number;
+  resetConfig: any | null;
 }
 
 const LogsColumn = ({
@@ -237,6 +244,22 @@ const Row = ({
           background: logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
         }}
       >
+        <TableCell
+          sx={{
+            fontWeight: 600,
+            borderTopLeftRadius: '10px',
+            borderBottomLeftRadius: '10px',
+          }}
+        >
+          {logDetail.job_type === ConnectionJobType.sync ? 'Sync' : 'Reset/Clear'}
+          <br />
+          {logDetail?.resetConfig && (
+            <>
+              streams:{' '}
+              {logDetail.resetConfig?.streamsToReset.map((stream: any) => stream.name).join(', ')}
+            </>
+          )}
+        </TableCell>
         <TableCell
           sx={{
             fontWeight: 600,

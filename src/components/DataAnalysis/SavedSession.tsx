@@ -23,6 +23,7 @@ import moment from 'moment';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import InfoTooltip from '../UI/Tooltip/Tooltip';
+import { useTracking } from '@/contexts/TrackingContext';
 interface QueryResponse {
   prompt: string;
   response: string;
@@ -65,7 +66,7 @@ export const SavedSession = memo(
     const [currentPageIndex, setCurrentPageIndex] = useState(0); // Page index starts from 0
     const [savedSessions, setSavedSession] = useState<Session[]>([]);
     const [loading, setLoading] = useState(false);
-
+    const trackAmplitudeEvent: any = useTracking();
     const getSavedSessions = async (pageIndex: number, rowsPerPage: number) => {
       setLoading(true);
       try {
@@ -274,6 +275,7 @@ export const SavedSession = memo(
                     savedSessions.map((row: any, idx) => (
                       <TableRow
                         onClick={() => {
+                          trackAmplitudeEvent(`[View-a-saved-session-LLMSummary] Button Clicked`);
                           handleEditSession({
                             prompt: row.response[0].prompt,
                             summary: row.response[0].response,

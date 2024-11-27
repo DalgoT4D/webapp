@@ -77,7 +77,8 @@ export type Connection = {
   normalize: boolean;
   status: string;
   syncCatalog: object;
-  resetConnDeploymentId: string;
+  resetConnDeploymentId: string | null;
+  clearConnDeploymentId: string | null;
 };
 // type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
@@ -240,7 +241,8 @@ export const Connections = () => {
   const permissions = globalContext?.Permissions.state || [];
   const [connectionId, setConnectionId] = useState<string>('');
   const [logsConnection, setLogsConnection] = useState<Connection>();
-  const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
+  // const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
+  const [clearConnDeploymentId, setClearConnDeploymentId] = useState<string | null>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<Array<string>>([]);
   const syncLogs = useConnSyncLogs();
   const setSyncLogs = useConnSyncLogsUpdate();
@@ -253,13 +255,16 @@ export const Connections = () => {
   const open = Boolean(anchorEl);
   const handleClick = (connection: Connection, event: HTMLElement | null) => {
     setConnectionId(connection.connectionId);
-    setResetDeploymentId(connection.resetConnDeploymentId);
+    // setResetDeploymentId(connection.resetConnDeploymentId);
+    console.log(connection);
+    console.log(connection.clearConnDeploymentId);
+    setClearConnDeploymentId(connection.clearConnDeploymentId);
     setAnchorEl(event);
   };
   const handleClose = (isEditMode?: string) => {
     if (isEditMode !== 'EDIT') {
       setConnectionId('');
-      setResetDeploymentId('');
+      setClearConnDeploymentId('');
     }
     setAnchorEl(null);
   };
@@ -283,6 +288,8 @@ export const Connections = () => {
       return 'FAILED';
     }
   };
+
+  console.log('outside', clearConnDeploymentId);
 
   const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
     try {
@@ -363,13 +370,20 @@ export const Connections = () => {
     handleCancelDeleteConnection();
   };
 
-  const resetConnection = (deploymentId: string) => {
+  const clearConnection = (deploymentId: string | null) => {
+    console.log('here inside', deploymentId);
     (async () => {
       try {
+        if (!deploymentId) {
+          errorToast('Deployment not created', [], globalContext);
+          return;
+        }
+
         setResetLoading(true);
         const message = await httpPost(session, `prefect/v1/flows/${deploymentId}/flow_run/`, {});
         if (message.success) {
-          successToast('Reset connection initiated successfully', [], globalContext);
+          successToast('Clear connection initiated successfully', [], globalContext);
+          mutate();
         }
       } catch (err: any) {
         console.error(err);
@@ -378,7 +392,7 @@ export const Connections = () => {
         setResetLoading(true);
       }
     })();
-    handleCancelResetConnection();
+    handleCancelClearConnection();
   };
 
   // eslint-disable-next-line react/display-name
@@ -565,12 +579,12 @@ export const Connections = () => {
     setShowConfirmDeleteDialog(false);
   };
 
-  const handleCancelResetConnection = () => {
+  const handleCancelClearConnection = () => {
     setShowConfirmResetDialog(false);
   };
 
-  const handleResetConnection = () => {
-    handleClose();
+  const handleClearConnection = () => {
+    handleClose('EDIT');
     setShowConfirmResetDialog(true);
     trackAmplitudeEvent('[Reset-connection] Button Clicked');
   };
@@ -631,7 +645,7 @@ export const Connections = () => {
         handleEdit={handleEditConnection}
         handleRefresh={RefreshConnection}
         handleDelete={handleDeleteConnection}
-        handleResetConnection={handleResetConnection}
+        handleClearConnection={handleClearConnection}
         hasResetPermission={permissions.includes('can_reset_connection')}
         hasDeletePermission={permissions.includes('can_delete_connection')}
         hasEditPermission={permissions.includes('can_edit_connection')}
@@ -662,9 +676,9 @@ export const Connections = () => {
       <ConfirmationDialog
         loading={resetLoading}
         show={showConfirmResetDialog}
-        handleClose={() => handleCancelResetConnection()}
-        handleConfirm={() => resetConnection(resetDeploymentId)}
-        message="Resetting the connection will clear all data at the warehouse."
+        handleClose={() => handleCancelClearConnection()}
+        handleConfirm={() => clearConnection(clearConnDeploymentId)}
+        message="Clearing the connection will remove all data at the warehouse in the connection's destination table."
       />
       <LogCard logs={syncLogs} expand={expandSyncLogs} setExpand={setExpandSyncLogs} />
     </>
