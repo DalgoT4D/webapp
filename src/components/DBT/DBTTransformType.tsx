@@ -74,6 +74,7 @@ type DBTSetupStage = 'create-workspace' | 'complete' | '';
 const DBTTransformType = ({ transformType }: { transformType: TransformType }) => {
   const [workspace, setWorkspace] = useState({
     status: '',
+    gitrepo_access_token: '',
     gitrepo_url: '',
     default_schema: '',
   });
@@ -384,6 +385,7 @@ const DBTTransformType = ({ transformType }: { transformType: TransformType }) =
                           showDialog={showConnectRepoDialog}
                           setShowDialog={setShowConnectRepoDialog}
                           gitrepoUrl=""
+                          gitrepoAccessToken=""
                           schema=""
                           mode="create"
                           setWorkspace={setWorkspace}
@@ -398,6 +400,7 @@ const DBTTransformType = ({ transformType }: { transformType: TransformType }) =
                           showDialog={showConnectRepoDialog}
                           setShowDialog={setShowConnectRepoDialog}
                           gitrepoUrl={workspace?.gitrepo_url}
+                          gitrepoAccessToken={workspace?.gitrepo_access_token}
                           schema={workspace?.default_schema}
                           mode="edit"
                           setWorkspace={setWorkspace}

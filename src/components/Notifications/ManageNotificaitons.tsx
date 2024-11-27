@@ -16,7 +16,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { ErrorOutline, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
-
+const Long_Notification_Length = 130;
 interface Notification {
   id: number;
   urgent: boolean;
@@ -134,7 +134,7 @@ const ManageNotifications = ({
         >
           <TableBody>
             {data?.res?.map((notification: Notification) => {
-              const isMessageLong = notification.message.length > 100;
+              const isMessageLong = notification.message.length > Long_Notification_Length;
 
               return (
                 <TableRow
@@ -186,11 +186,11 @@ const ManageNotifications = ({
                           color: notification.read_status ? '#798696' : '#0F2440E0',
                         }}
                       >
-                        <Typography sx={{ fontWeight: 500, fontSize: '15px' }}>
+                        <Typography sx={{ fontWeight: 700, fontSize: '15px' }}>
                           {/* Truncate the text only when it's not expanded */}
                           {expandedRow === notification.id
                             ? notification.message
-                            : truncateText(notification.message, 100)}
+                            : truncateText(notification.message, Long_Notification_Length)}
                         </Typography>
                         <Typography sx={{ fontWeight: 600, fontSize: '12px' }}>
                           {moment(new Date(notification.timestamp)).fromNow()}

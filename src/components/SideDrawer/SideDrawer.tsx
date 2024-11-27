@@ -16,7 +16,7 @@ import {
 import MuiDrawer from '@mui/material/Drawer';
 import { styled, Theme, CSSObject } from '@mui/material/styles';
 
-import { MenuOption, drawerWidth, sideMenu } from '@/config/menu';
+import { drawerWidth, getSideMenu } from '@/config/menu';
 
 // assets
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
@@ -31,6 +31,18 @@ export interface ItemButtonProps {
   onClick: (item: MenuOption) => void;
   children?: ReactNode;
   disabled?: boolean;
+}
+
+interface MenuOption {
+  index: number;
+  title: string;
+  path: string;
+  icon: (selected: boolean) => JSX.Element;
+  parent?: number;
+  className?: string;
+  permission?: string;
+  hide?: boolean;
+  minimize?: boolean;
 }
 
 const ItemButton: React.FC<ItemButtonProps> = ({
@@ -111,9 +123,11 @@ const Drawer = styled(MuiDrawer, {
 export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const router = useRouter();
   const globalContext = useContext(GlobalContext);
+  const unread_count = globalContext?.unread_count?.state;
+  const sideMenu: MenuOption[] = getSideMenu(unread_count);
   const { state } = globalContext?.UnsavedChanges ?? {};
   const [open, setOpen] = useState(
-    new Array(sideMenu.filter((item) => !item.parent).length).fill(true)
+    new Array(sideMenu.filter((item) => !item.parent).length).fill(false)
   );
   const [selectedIndex, setSelectedIndex] = useState(
     sideMenu.find((item) => item.path === router.pathname)?.index
@@ -127,7 +141,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
     newOpen[idx] = !newOpen[idx];
     setOpen(newOpen);
   };
-
+  //This redirects the page when we try to got to some tab without saving a session in AI Data summary.
   useEffect(() => {
     if (state) return;
     setSelectedIndex(sideMenu.find((item) => item.path === router.pathname)?.index);
@@ -143,7 +157,27 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   };
 
   useEffect(() => {
-    setOpen(new Array(sideMenu.filter((item) => !item.parent).length).fill(true));
+    const menuLength = sideMenu.filter((item) => !item.parent).length;
+    const isOpen = !openMenu;
+    const newArr = new Array(menuLength).fill(isOpen);
+
+    // ** When the sidedrawer is minimized ** //
+    if (!openMenu) {
+      setOpen(newArr);
+    } else {
+      // ** When the sidedrawer is expanded ** //
+      //Find the selected menuItem and check if its a parent or not.
+      const selectedSideMenuItem: any = sideMenu.find((item) => item.path === router.pathname);
+
+      if (selectedSideMenuItem?.parent === undefined) {
+        newArr[selectedSideMenuItem?.index] = true;
+        setOpen(newArr);
+      } else {
+        const parentIndex = selectedSideMenuItem?.parent;
+        newArr[parentIndex] = true;
+        setOpen(newArr);
+      }
+    }
   }, [openMenu]);
 
   useEffect(() => {
@@ -157,7 +191,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
         const itemColor = selectedIndex === item.index ? 'primary' : 'inherit';
         if (item.hide) return null;
         return (
-          !item.parent && (
+          item.parent === undefined && (
             <Fragment key={item.title}>
               <ListItem
                 sx={{ px: 1.5, py: 0.5 }}

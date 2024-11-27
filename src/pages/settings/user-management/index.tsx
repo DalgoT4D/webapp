@@ -41,7 +41,7 @@ const UserManagement = () => {
   };
   const { value, handleChange } = useQueryParams({
     tabsObj,
-    basePath: '/user-management',
+    basePath: '/settings/user-management',
     defaultTab: 'users',
   });
   const handleClickInviteUser = () => {

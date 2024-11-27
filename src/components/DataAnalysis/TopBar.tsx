@@ -1,7 +1,10 @@
 import { Box, Button, Typography } from '@mui/material';
 import InfoTooltip from '../UI/Tooltip/Tooltip';
 import Folder from '@mui/icons-material/Folder';
+import { useTracking } from '@/contexts/TrackingContext';
 export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
+  const trackAmplitudeEvent: any = useTracking();
+
   return (
     <>
       <Box
@@ -66,7 +69,10 @@ export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
                   color: '#FFFFFF',
                 },
               }}
-              onClick={handleOpenSavedSession}
+              onClick={() => {
+                handleOpenSavedSession();
+                trackAmplitudeEvent(`[Saved-sessions-LLMSummary] Button Clicked`);
+              }}
             >
               <Folder />
               <Typography sx={{ fontWeight: 700, fontSize: '16px' }}>Saved Sessions</Typography>
@@ -78,6 +84,7 @@ export const TopBar = ({ handleOpenSavedSession, handleNewSession }: any) => {
               id="create-new-button"
               sx={{ width: '100%', height: '2rem' }}
               onClick={() => {
+                trackAmplitudeEvent(`[+New-LLMSummary] Button Clicked`);
                 handleNewSession();
               }}
             >

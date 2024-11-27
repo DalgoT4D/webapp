@@ -16,6 +16,7 @@ interface DBTSetupProps {
   showDialog: boolean;
   setShowDialog: (...args: any) => any;
   gitrepoUrl: string;
+  gitrepoAccessToken: string;
   schema: string;
   mode: string;
   setWorkspace: (...args: any) => any;
@@ -34,6 +35,7 @@ export const DBTSetup = ({
   showDialog,
   setShowDialog,
   gitrepoUrl,
+  gitrepoAccessToken,
   schema,
   mode,
   setWorkspace,
@@ -43,6 +45,7 @@ export const DBTSetup = ({
     handleSubmit,
     reset,
     formState: { errors },
+    setValue,
   } = useForm<DBTCreateWorkspaceParams>();
   const { data: session }: any = useSession();
   const [progressMessages, setProgressMessages] = useState<any[]>([]);
@@ -73,6 +76,12 @@ export const DBTSetup = ({
       errorToast(err.message, [], toastContext);
     }
   };
+
+  useEffect(() => {
+    setValue('gitrepoUrl', gitrepoUrl);
+    setValue('gitrepoAccessToken', gitrepoAccessToken);
+    setValue('schema', schema);
+  }, [gitrepoUrl, gitrepoAccessToken, schema]);
 
   useEffect(() => {
     setLogs(
@@ -156,20 +165,45 @@ export const DBTSetup = ({
       }
     }
     if (data.gitrepoUrl) {
-      if (data.gitrepoUrl === gitrepoUrl && !data.gitrepoAccessToken) {
+      let changes = data.gitrepoUrl !== gitrepoUrl;
+      if (data.gitrepoAccessToken && !gitrepoAccessToken) {
+        // added an access token
+        changes = true;
+      }
+      if (gitrepoAccessToken && !data.gitrepoAccessToken) {
+        // removed an access token
+        changes = true;
+      }
+      if (
+        gitrepoAccessToken &&
+        data.gitrepoAccessToken &&
+        !data.gitrepoAccessToken.match(/^\*+$/)
+      ) {
+        // changed an access token
+        changes = true;
+      }
+      if (!changes) {
         return;
       }
       const updateGitPayload = {
         gitrepoUrl: data.gitrepoUrl,
-        gitrepoAccessToken: data.gitrepoAccessToken,
+        gitrepoAccessToken: data.gitrepoAccessToken.match(/^\*+$/) ? null : data.gitrepoAccessToken,
       };
       setExpandLogs(true);
       try {
         const message = await httpPut(session, 'dbt/github/', updateGitPayload);
         setWorkspace({
           gitrepo_url: data.gitrepoUrl,
+          gitrepo_access_token: data.gitrepoAccessToken ? '*********' : null,
           default_schema: data.schema,
         });
+        if (data.gitrepoAccessToken) {
+          gitrepoAccessToken = '*********';
+        } else {
+          gitrepoAccessToken = '';
+        }
+        gitrepoUrl = data.gitrepoUrl;
+        schema = data.schema;
         await delay(1000);
 
         checkProgress(message.task_id, 'clone-github-repo');
@@ -197,7 +231,6 @@ export const DBTSetup = ({
             data-testid="github-url"
             label="GitHub repo URL"
             variant="outlined"
-            defaultValue={gitrepoUrl}
             register={register}
             name="gitrepoUrl"
             required
@@ -225,7 +258,6 @@ export const DBTSetup = ({
             data-testid="dbt-target-schema"
             label="dbt target schema"
             variant="outlined"
-            defaultValue={schema}
             register={register}
             name="schema"
             required

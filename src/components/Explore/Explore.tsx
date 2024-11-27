@@ -35,6 +35,17 @@ export const Explore = () => {
     setLoading(true);
     httpGet(session, 'warehouse/sync_tables')
       .then((response: WarehouseTable[]) => {
+        response.sort((a, b) => {
+          //Comparing schemas
+          if (a.schema < b.schema) return -1;
+          if (a.schema > b.schema) return 1;
+
+          // if schemas are same, then compare by the input name.
+          if (a.input_name < b.input_name) return -1;
+          if (a.input_name > b.input_name) return 1;
+
+          return 0; // if input name and schema are same
+        });
         setSourcesModels(response);
         successToast('Tables synced with warehouse', [], globalContext);
       })

@@ -33,7 +33,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 
 const makeReadable = (label: string) => {
   if (label.startsWith('run-airbyte-connection-flow-v1')) {
-    return 'Airbyte sync';
+    return 'sync';
   }
   const readableObject: any = {
     'shellop-git-pull': 'Git pull',
@@ -80,6 +80,7 @@ interface RunObject {
   start_time: string;
   state_name: string;
   state_type: string;
+  parameters: any | null;
 }
 
 interface DeploymentObject {
@@ -183,6 +184,10 @@ const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }
 
   const open = !!action;
 
+  const runName = run?.parameters?.connection_name
+    ? `${run?.parameters.connection_name} ${makeReadable(run.label)}`
+    : makeReadable(run.label);
+
   return (
     <Box>
       <Box
@@ -196,7 +201,7 @@ const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }
       >
         <Box sx={{ width: '30%' }}>
           <Box>
-            <strong>{makeReadable(run.label)}</strong>
+            <strong>{runName}</strong>
           </Box>
         </Box>
         <Box
