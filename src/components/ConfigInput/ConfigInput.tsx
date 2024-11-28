@@ -1,4 +1,12 @@
-import { Autocomplete, Box, IconButton, InputAdornment } from '@mui/material';
+import {
+  Autocomplete,
+  Box,
+  FormControlLabel,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  Switch,
+} from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import MultiTagInput from '../MultiTagInput';
 import { Controller } from 'react-hook-form';
@@ -252,6 +260,36 @@ export const ConfigInput = ({ specs, control, setFormValue, entity }: ConfigInpu
                       />
                     )}
                   />
+                )}
+              />
+              <Box sx={{ m: 2 }} />
+            </React.Fragment>
+          ) : spec.type === 'boolean' ? (
+            <React.Fragment key={spec.field}>
+              <Controller
+                name={spec.field}
+                control={control}
+                render={({ field: { ref, onChange, value, ...rest }, fieldState }) => (
+                  <>
+                    <FormControlLabel
+                      sx={{ margin: '0' }}
+                      labelPlacement="start"
+                      label={
+                        <InputLabel
+                          sx={{ marginBottom: '5px', mt: '5px' }}
+                        >{`${spec.title}${spec.required ? '*' : ''}`}</InputLabel>
+                      }
+                      control={
+                        <Switch
+                          {...rest}
+                          checked={value}
+                          onChange={(event) => {
+                            onChange(event.target.checked);
+                          }}
+                        />
+                      }
+                    />
+                  </>
                 )}
               />
               <Box sx={{ m: 2 }} />
