@@ -8,8 +8,6 @@ import OrchestrateIcon from '@/assets/icons/orchestrate';
 import DataQualityIcon from '@/assets/icons/dataQuality';
 import ExploreIcon from '@/assets/icons/explore';
 import { primaryColor } from './theme';
-import Unread_Notifications from '@/assets/icons/notifications_unread';
-import Notifications from '@/assets/icons/notifications';
 import Settings from '@/assets/icons/settings';
 import User from '@/assets/icons/manage_accounts';
 import AiSettings from '@/assets/icons/aisettings';
@@ -18,7 +16,7 @@ export const drawerWidth = 250;
 
 const getColor = (selected: boolean) => (selected ? primaryColor : '');
 
-export const getSideMenu = (unread_count: any) => {
+export const getSideMenu = () => {
   return [
     // This will be added at a later stage
     {
@@ -97,31 +95,24 @@ export const getSideMenu = (unread_count: any) => {
     },
     {
       index: 4,
-      title: 'Notifications',
-      path: '/notifications',
-      icon: () => (unread_count > 0 ? <Unread_Notifications /> : <Notifications />),
-      className: 'notification_walkthrough',
-    },
-    {
-      index: 5,
       title: 'Settings',
       path: '/settings',
       icon: (selected: boolean) => <Settings fill={getColor(selected)} />,
       className: 'settings_walkthrough',
     },
     {
-      index: 5.1,
+      index: 4.1,
       title: 'User',
       path: '/settings/user-management',
-      parent: 5,
+      parent: 4,
       icon: (selected: boolean) => <User fill={getColor(selected)} />,
       className: 'usermanagement_walkthrough',
     },
     {
-      index: 5.2,
+      index: 4.2,
       title: 'AI settings',
       icon: (selected: boolean) => <AiSettings fill={getColor(selected)} />,
-      parent: 5,
+      parent: 4,
       path: '/settings/ai-settings',
       className: 'aisettings_walkthrough',
     },
