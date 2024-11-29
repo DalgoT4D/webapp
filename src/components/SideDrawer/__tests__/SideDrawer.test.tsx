@@ -4,7 +4,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { SideDrawer } from '../SideDrawer';
 import { getSideMenu } from '@/config/menu';
 import { useRouter } from 'next/router';
-const sideMenu = getSideMenu(4);
+const sideMenu = getSideMenu();
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
 }));

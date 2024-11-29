@@ -1,5 +1,5 @@
-import { Box, Menu, MenuItem, Paper, Typography, IconButton, Badge } from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import { Box, Menu, MenuItem, Paper, Typography, IconButton } from '@mui/material';
+
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
 import LogoutIcon from '@/assets/icons/logout.svg';
@@ -8,13 +8,14 @@ import Logo from '@/assets/images/logo.svg';
 import Image from 'next/image';
 import { useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-
 import CreateOrgForm from '../Org/CreateOrgForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
 // assets
 import HamburgerIcon from '../../assets/icons/hamburger.svg';
 import useSWR from 'swr';
+import Unread_Notifications from '@/assets/icons/notifications_unread';
+import Notifications from '@/assets/icons/notifications';
 
 type Org = {
   name: string;
@@ -68,7 +69,6 @@ export const Header = ({
   const [selectedOrg, setSelectedOrg] = useState<AutoCompleteOption | null | undefined>(null);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
-  const setUnreadCount = globalContext?.unread_count.dispatch;
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
     setAnchorEl(event);
@@ -145,10 +145,6 @@ export const Header = ({
     router.push('/changepassword');
   };
 
-  useEffect(() => {
-    setUnreadCount(unread_count?.res);
-  }, [unread_count?.res]);
-
   return (
     <Paper className={styles.Header}>
       <Box sx={{ display: 'flex', alignItems: 'center', ml: 1.8 }}>
@@ -188,9 +184,7 @@ export const Header = ({
             borderRadius: '50%',
           }}
         >
-          <Badge color="primary" badgeContent={unread_count?.res}>
-            <NotificationsIcon style={{ color: '#312c2cde' }} />
-          </Badge>
+          {unread_count?.res > 0 ? <Unread_Notifications /> : <Notifications />}
         </IconButton>
         <Typography variant="h6">{selectedOrg?.label}</Typography>
         <Image
