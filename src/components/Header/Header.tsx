@@ -1,4 +1,4 @@
-import { Box, Menu, MenuItem, Paper, Typography, IconButton, Badge } from '@mui/material';
+import { Box, Menu, MenuItem, Paper, Typography, IconButton } from '@mui/material';
 
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
