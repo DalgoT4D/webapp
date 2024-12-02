@@ -174,10 +174,13 @@ const FlowCreate = ({
           if (data.transformTasks.length === 0) {
             tasksToApply = [];
           }
-
+          //if "data.transformTasks" and "tasksToApply" are same then the alignment is simple else advanced.
           if (
             data.transformTasks.length > 0 &&
-            data.transformTasks.length !== tasksToApply.length
+            !data.transformTasks.every(
+              (task: { uuid: string; seq: number }, index: number) =>
+                task.seq === tasksToApply[index].seq
+            )
           ) {
             const uuidOrder = data.transformTasks.reduce((acc: any, obj: any) => {
               acc[obj.uuid] = obj.seq;
@@ -426,7 +429,7 @@ const FlowCreate = ({
                     name="tasks"
                     control={control}
                     render={({ field }) =>
-                      alignment === 'simple' ? (
+                      alignment === 'simple' ? ( // if its simple
                         <FormControlLabel
                           key={field.name}
                           control={
@@ -446,7 +449,7 @@ const FlowCreate = ({
                           label="Run all tasks"
                         />
                       ) : (
-                        <TaskSequence field={field} options={tasks} />
+                        <TaskSequence field={field} options={tasks} /> // if advanced is selected
                       )
                     }
                   />
