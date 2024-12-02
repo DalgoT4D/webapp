@@ -175,13 +175,11 @@ const FlowCreate = ({
             tasksToApply = [];
           }
           //if "data.transformTasks" and "tasksToApply" are same then the alignment is simple else advanced.
-          if (
-            data.transformTasks.length > 0 &&
-            !data.transformTasks.every(
-              (task: { uuid: string; seq: number }, index: number) =>
-                task.seq === tasksToApply[index].seq
-            )
-          ) {
+          const ifTasksAligned = data.transformTasks.every(
+            (task: { uuid: string; seq: number }, index: number) =>
+              task.uuid === tasksToApply[index].uuid
+          );
+          if (data.transformTasks.length > 0 && !ifTasksAligned) {
             const uuidOrder = data.transformTasks.reduce((acc: any, obj: any) => {
               acc[obj.uuid] = obj.seq;
               return acc;
