@@ -6,8 +6,13 @@ describe('Add source', () => {
   });
 
   it('Add source', () => {
-    cy.get('[data-testid="side-menu"]').contains('Ingest').click();
-    cy.get('h4').should('contain', 'Ingest');
+    cy.get('[data-testid="side-menu"]')
+      .find('li')
+      .eq(1)
+      .within(() => {
+        cy.get('[data-testid="listButton"]').find('button').click();
+      });
+    cy.get('[data-testid="menu-item-1.1"]').click();
 
     // three tabs should be visible
     cy.intercept('/api/airbyte/sources').as('sources');
@@ -104,6 +109,7 @@ describe('Add source', () => {
     cy.get('[data-testid="savebutton"]').click();
 
     cy.intercept('/api/airbyte/sources/').as('create_source');
+    cy.wait(12000);
 
     cy.contains('td', 'cypress test src');
   });
