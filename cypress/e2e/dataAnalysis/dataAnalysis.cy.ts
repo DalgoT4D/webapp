@@ -1,6 +1,11 @@
 describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => {
-  beforeEach(() => {
-    cy.login('Admin');
+  beforeEach(function () {
+    const adminTests = ['should get to Data analysis tab and then enable it'];
+    let role = 'Pipeline_Manager';
+    if (adminTests.some((test) => this.currentTest.title.includes(test))) {
+      role = 'Admin';
+    }
+    cy.login(role);
     cy.get('[data-testid="side-menu"]')
       .find('li')
       .eq(0)
@@ -8,6 +13,41 @@ describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => 
         cy.get('[data-testid="listButton"]').find('button').click();
       });
     cy.get('[data-testid="menu-item-0.2"]').click();
+  });
+
+  it('should get to Data analysis tab and then enable it', () => {
+    cy.get('button')
+      .contains('Enable')
+      .then(($button) => {
+        // Check if the button exists in the DOM
+        if ($button.length > 0) {
+          cy.wrap($button).click();
+
+          // Verify 'AI Settings' section is visible
+          cy.contains('h4', 'AI Settings').should('be.visible');
+          cy.contains('p', 'Enable LLM function for data analysis');
+          cy.get('[type="checkbox"]').should('not.be.checked');
+
+          // Check the checkbox
+          cy.get('[type="checkbox"]').check();
+          cy.contains('button', 'Okay').click();
+
+          // Go back to the LLM tab
+          cy.get('[data-testid="side-menu"]')
+            .find('li')
+            .eq(0)
+            .within(() => {
+              cy.get('[data-testid="listButton"]').find('button').click();
+            });
+          cy.get('[data-testid="menu-item-0.2"]').click();
+
+          // Assert that the 'Enable' button is no longer present (i.e., disabled)
+          cy.contains('button', 'Enable').should('not.exist');
+        } else {
+          // If the button doesn't exist, log a message and skip further actions
+          cy.log('Enable button not found, skipping test');
+        }
+      });
   });
 
   it('should create a summary, save it', () => {
@@ -59,58 +99,9 @@ describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => 
 
     // Start polling
     waitForPollingToComplete();
-
-    // cy.contains('button', 'Save').click();
-
-    // // Step 5: Wait for the save operation to complete
-    // cy.intercept('POST', '/api/warehouse/ask/**/save').as('saveSession');
-    // cy.wait('@saveSession').then((interception) => {
-    //   expect(interception.response.statusCode).to.eq(200);
-    //   cy.contains('Test Session saved successfully').should('exist');
-    // });
-
-    // // Step 6: Open the saved sessions list and select the saved session
-    // cy.get('[data-testid="saved-sessions-button"]').click();
-    // cy.contains('Test Session').click();
-
-    // // Step 7: Verify the saved session data is loaded
-    // cy.contains('Test Session').should('exist');
-    // cy.contains('SELECT * FROM users;').should('exist');
-    // cy.contains('Summary generated successfully').should('exist');
-
-    // // Step 8: Modify the prompt in the opened session
-    // cy.get('textarea[placeholder="Enter your customized prompt here"]')
-    //   .clear()
-    //   .type('SELECT * FROM orders WHERE status = "shipped";')
-    //   .should('have.value', 'SELECT * FROM orders WHERE status = "shipped";');
-
-    // // Step 9: Generate a new summary for the modified prompt
-    // cy.get('[data-testid="submit-button"]').click();
-    // cy.intercept('POST', '/api/warehouse/ask/**').as('generateNewSummary');
-    // cy.wait('@generateNewSummary').then((interception) => {
-    //   expect(interception.response.statusCode).to.eq(200);
-    //   cy.contains('New summary generated successfully').should('exist');
-    // });
-
-    // // Step 10: Save the new summary under the same session name
-    // cy.get('[data-testid="save-session-button"]').click();
-    // cy.get('[data-testid="confirm-overwrite-button"]').click();
-
-    // // Step 11: Wait for the overwrite save operation to complete
-    // cy.intercept('POST', '/api/warehouse/ask/**/save').as('overwriteSession');
-    // cy.wait('@overwriteSession').then((interception) => {
-    //   expect(interception.response.statusCode).to.eq(200);
-    //   cy.contains('Test Session saved successfully').should('exist');
-    // });
-
-    // // Step 12: Re-open the session and verify updated data
-    // cy.get('[data-testid="saved-sessions-button"]').click();
-    // cy.contains('Test Session').click();
-    // cy.contains('SELECT * FROM orders WHERE status = "shipped";').should('exist');
-    // cy.contains('New summary generated successfully').should('exist');
   });
 
-  it.only('opens a saved summary', () => {
+  it('opens a saved summary', () => {
     cy.intercept('POST', '/api/warehouse/ask/**/save').as('saveSession');
     cy.wait('@saveSession').then((interception) => {
       expect(interception.response.statusCode).to.eq(200);
