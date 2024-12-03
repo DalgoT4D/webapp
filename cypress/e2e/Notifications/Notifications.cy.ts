@@ -1,6 +1,6 @@
 describe('Notifications', () => {
   beforeEach(() => {
-    cy.login();
+    cy.login('Admin');
   });
 
   it('renders the notifications if any and mark them read or unread', () => {

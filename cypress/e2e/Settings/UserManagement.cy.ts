@@ -1,6 +1,6 @@
 describe('User management', () => {
   beforeEach(() => {
-    cy.login();
+    cy.login('Admin');
   });
   it('Invites a new user', () => {
     // Go to user management

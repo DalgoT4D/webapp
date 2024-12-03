@@ -1,6 +1,6 @@
 describe('Orchestrate', () => {
   beforeEach(() => {
-    cy.login();
+    cy.login('Admin');
   });
 
   it('Creates a pipleine', () => {

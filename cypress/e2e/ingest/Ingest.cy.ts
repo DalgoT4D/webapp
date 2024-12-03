@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 describe('Ingest', () => {
   beforeEach(() => {
-    cy.login();
+    cy.login('Admin');
   });
 
   it('Ingest in sub menu', () => {

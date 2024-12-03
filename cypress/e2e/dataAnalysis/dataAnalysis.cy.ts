@@ -1,9 +1,6 @@
 describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => {
   beforeEach(() => {
-    cy.login();
-  });
-
-  it.only('should create a summary, save it, open saved session, modify, and save again', () => {
+    cy.login('Admin');
     cy.get('[data-testid="side-menu"]')
       .find('li')
       .eq(0)
@@ -11,6 +8,9 @@ describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => 
         cy.get('[data-testid="listButton"]').find('button').click();
       });
     cy.get('[data-testid="menu-item-0.2"]').click();
+  });
+
+  it('should create a summary, save it', () => {
     // Step 1: Enter a SQL query
     cy.get('[data-testid="sqlTest-box"]').type('select * from staging.worldometer_data');
 
@@ -48,7 +48,6 @@ describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => 
           //       console.log($textarea, 'TEXTAREA');
           //     })
           //     .click();
-          cy.get('.MuiDialog-container .MuiInputBase-root').click({ multiple: true });
 
           // .type('Test Saved Summary');
         } else {
@@ -109,5 +108,17 @@ describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => 
     // cy.contains('Test Session').click();
     // cy.contains('SELECT * FROM orders WHERE status = "shipped";').should('exist');
     // cy.contains('New summary generated successfully').should('exist');
+  });
+
+  it.only('opens a saved summary', () => {
+    cy.intercept('POST', '/api/warehouse/ask/**/save').as('saveSession');
+    cy.wait('@saveSession').then((interception) => {
+      expect(interception.response.statusCode).to.eq(200);
+      cy.contains('Test Session saved successfully').should('exist');
+    });
+
+    // Step 6: Open the saved sessions list and select the saved session
+    cy.get('[data-testid="saved-sessions-button"]').click();
+    cy.contains('Test Session').click();
   });
 });
