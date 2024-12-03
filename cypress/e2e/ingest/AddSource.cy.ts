@@ -1,6 +1,6 @@
 describe('Add source', () => {
   beforeEach(() => {
-    cy.login();
+    cy.login('Admin');
     cy.intercept('/api/dashboard/v1').as('dashboard');
     cy.wait(['@dashboard']);
   });

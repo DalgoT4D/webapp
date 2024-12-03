@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 describe('Header', () => {
   beforeEach(() => {
-    cy.login();
+    cy.login('Admin');
     // need to wait since the create org api takes time
     // cypress is intelligent to figure out the call with just the dynamic path
     cy.intercept('/api/dashboard/v1').as('dashboard');
