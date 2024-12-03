@@ -123,8 +123,7 @@ const Drawer = styled(MuiDrawer, {
 export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const router = useRouter();
   const globalContext = useContext(GlobalContext);
-  const unread_count = globalContext?.unread_count?.state;
-  const sideMenu: MenuOption[] = getSideMenu(unread_count);
+  const sideMenu: MenuOption[] = getSideMenu();
   const { state } = globalContext?.UnsavedChanges ?? {};
   const [open, setOpen] = useState(
     new Array(sideMenu.filter((item) => !item.parent).length).fill(false)
@@ -170,7 +169,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
       const selectedSideMenuItem: any = sideMenu.find((item) => item.path === router.pathname);
 
       if (selectedSideMenuItem?.parent === undefined) {
-        newArr[selectedSideMenuItem?.index] = true;
+        newArr[selectedSideMenuItem?.index] = false;
         setOpen(newArr);
       } else {
         const parentIndex = selectedSideMenuItem?.parent;

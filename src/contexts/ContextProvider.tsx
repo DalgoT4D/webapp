@@ -1,4 +1,4 @@
-import { createContext, useReducer, useState } from 'react';
+import { createContext, useReducer } from 'react';
 import {
   ToastReducer,
   initialToastState,
@@ -30,7 +30,6 @@ interface context {
   CurrentOrg: { state: CurrentOrgStateInterface; dispatch: any };
   OrgUsers: { state: Array<OrgUserStateInterface>; dispatch: any };
   UnsavedChanges: { state: boolean; dispatch: any };
-  unread_count: { state: number | null; dispatch: any };
 }
 export const GlobalContext = createContext<context | null>(null);
 
@@ -60,7 +59,6 @@ const ContextProvider = ({ children }: any) => {
     UnsavedChangesReducer,
     initialUnsavedChangesState
   );
-  const [unreadCount, setUnreadCount] = useState<number | null>(null);
   // You can add other reducers here to have global state for different use cases with the same global context
   return (
     <GlobalContext.Provider
@@ -70,7 +68,6 @@ const ContextProvider = ({ children }: any) => {
         CurrentOrg: { state: currentOrg, dispatch: currentOrgDispatch },
         OrgUsers: { state: orgUsers, dispatch: orgUsersDispatch },
         UnsavedChanges: { state: unsavedChanges, dispatch: unsavedChangesDispatch },
-        unread_count: { state: unreadCount, dispatch: setUnreadCount },
       }}
     >
       {children}
