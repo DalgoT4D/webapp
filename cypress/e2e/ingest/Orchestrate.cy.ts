@@ -85,4 +85,25 @@ describe('Orchestrate', () => {
     cy.get('[data-testid="deletetestid"]').click();
     cy.contains('button', 'I Understand the consequences, confirm').click();
   });
+
+  it.only('deletes connection and source too', () => {
+    cy.get('[data-testid="side-menu"]')
+      .find('li')
+      .eq(1)
+      .within(() => {
+        cy.get('[data-testid="listButton"]').find('button').click();
+      });
+    cy.get('[data-testid="menu-item-1.1"]').click();
+    cy.get('[role="tab"][tabindex="0"]').should('contain', 'Connections');
+    cy.get('[data-testid="MoreHorizIcon"]').click();
+    cy.get('[data-testid="deletetestid"]').click();
+    cy.contains('button', 'I Understand the consequences, confirm').click();
+
+    //changing tab.
+    cy.get('[role="tab"]').eq(1).should('contain', 'Sources');
+    cy.get('[role="tab"]').eq(1).click();
+    cy.get('[data-testid="MoreHorizIcon"]').click();
+    cy.get('[data-testid="deletetestid"]').click();
+    cy.contains('button', 'I Understand the consequences, confirm').click();
+  });
 });
