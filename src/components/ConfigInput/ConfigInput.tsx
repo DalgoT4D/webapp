@@ -273,10 +273,17 @@ export const ConfigInput = ({ specs, control, setFormValue, entity }: ConfigInpu
                   <>
                     <FormControlLabel
                       sx={{ margin: '0' }}
-                      labelPlacement="start"
+                      labelPlacement="end"
                       label={
                         <InputLabel
-                          sx={{ marginBottom: '5px', mt: '5px' }}
+                          sx={{
+                            marginBottom: '5px',
+                            mt: '5px',
+                            maxWidth: '100%',
+                            whiteSpace: 'normal',
+                            wordWrap: 'break-word',
+                            overflow: 'hidden',
+                          }}
                         >{`${spec.title}${spec.required ? '*' : ''}`}</InputLabel>
                       }
                       control={
