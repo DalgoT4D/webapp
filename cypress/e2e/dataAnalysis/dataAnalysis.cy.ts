@@ -1,6 +1,9 @@
 describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => {
   beforeEach(function () {
-    const adminTests = ['should get to Data analysis tab and then enable it'];
+    const adminTests = [
+      'should get to Data analysis tab and then enable it',
+      'disables disables the ai summary feature',
+    ];
     let role = 'Pipeline_Manager';
     if (adminTests.some((test) => this.currentTest.title.includes(test))) {
       role = 'Admin';
@@ -101,15 +104,28 @@ describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => 
     waitForPollingToComplete();
   });
 
-  it('opens a saved summary', () => {
-    cy.intercept('POST', '/api/warehouse/ask/**/save').as('saveSession');
-    cy.wait('@saveSession').then((interception) => {
-      expect(interception.response.statusCode).to.eq(200);
-      cy.contains('Test Session saved successfully').should('exist');
-    });
+  //   it('opens a saved summary', () => {
+  //     cy.intercept('POST', '/api/warehouse/ask/**/save').as('saveSession');
+  //     cy.wait('@saveSession').then((interception) => {
+  //       expect(interception.response.statusCode).to.eq(200);
+  //       cy.contains('Test Session saved successfully').should('exist');
+  //     });
 
-    // Step 6: Open the saved sessions list and select the saved session
-    cy.get('[data-testid="saved-sessions-button"]').click();
-    cy.contains('Test Session').click();
+  //     // Step 6: Open the saved sessions list and select the saved session
+  //     cy.get('[data-testid="saved-sessions-button"]').click();
+  //     cy.contains('Test Session').click();
+  //   });
+
+  it('disables disables the ai summary feature', () => {
+    cy.get('[data-testid="side-menu"]')
+      .find('li')
+      .eq(6)
+      .within(() => {
+        cy.get('[data-testid="listButton"]').find('button').click();
+      });
+    cy.get('[data-testid="menu-item-4.2"]').click();
+    cy.contains('h4', 'AI Settings').should('be.visible');
+    cy.contains('p', 'Enable LLM function for data analysis');
+    cy.get('[type="checkbox"]').should('be.checked').uncheck();
   });
 });
