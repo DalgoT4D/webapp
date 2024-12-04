@@ -1,9 +1,6 @@
 describe('Orchestrate', () => {
   beforeEach(() => {
     cy.login('Admin');
-  });
-
-  it('Creates a pipleine', () => {
     cy.get('[data-testid="side-menu"]').contains('Pipeline overview').should('be.visible');
 
     cy.get('[data-testid="side-menu"]')
@@ -14,6 +11,9 @@ describe('Orchestrate', () => {
       });
 
     cy.get('[data-testid="side-menu"]').contains('Orchestrate').click();
+  });
+
+  it('Creates a pipleine', () => {
     cy.get('[data-testid="add-new-pipeline"]').contains('+ New Pipeline').click({ force: true });
 
     //filling the details
@@ -49,12 +49,40 @@ describe('Orchestrate', () => {
 
     //Save this
     //api intercept here.
+    cy.intercept('POST', 'api/prefect/v1/flows/').as('createFlow');
     cy.contains('button', 'Save changes').click();
-    cy.contains('td', 'cypress orchestrate test');
-
-    //run manually an orchestrate
-
-    //her too inctercept and see
+    cy.wait('@createFlow').then((interception) => {
+      expect(interception.response.statusCode).to.eq(200);
+      cy.contains('td', 'cypress orchestrate test');
+    });
+  });
+  it('checks the sync operation', () => {
+    cy.intercept('POST', '/api/prefect/v1/flows/*/flow_run/').as('createFlowTask');
     cy.get('[data-testid="btn-quickrundeployment-cypress orchestrate test"]').click();
+
+    cy.intercept('GET', 'api/prefect/v1/flows/').as('pollsync');
+    cy.wait('@createFlowTask').then((interception) => {
+      expect(interception.response.statusCode).to.eq(200);
+    });
+
+    function waitForPollingToComplete() {
+      cy.wait('@pollsync').then((interception) => {
+        const lock = interception.response?.body[0]?.lock;
+        console.log(interception?.response?.body[0], 'LOCK');
+        // Check if the second progress item exists and has a status of 'completed'
+        if (lock === 'complete' || lock == null) {
+          cy.get('[data-testid="flowstate-cypress orchestrate test"]').contains('success');
+        } else {
+          // If not completed, call the function recursively to wait for the next poll
+          waitForPollingToComplete();
+        }
+      });
+    }
+    waitForPollingToComplete();
+
+    //DELETE THE FLOW
+    cy.get('[data-testid="MoreHorizIcon"]').click();
+    cy.get('[data-testid="deletetestid"]').click();
+    cy.contains('button', 'I Understand the consequences, confirm').click();
   });
 });
