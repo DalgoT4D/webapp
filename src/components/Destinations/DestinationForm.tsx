@@ -145,13 +145,8 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
               setValue
             );
           }
-          //removing unwanted boolean fields
-          const unwantedBooleanFieldsOrder = [11, 12];
-          const filteredSpecsConfigFields = specsConfigFields.filter(
-            (item: any) => !unwantedBooleanFieldsOrder.includes(item.order)
-          );
 
-          setDestinationDefSpecs(filteredSpecsConfigFields);
+          setDestinationDefSpecs(specsConfigFields);
         } catch (err: any) {
           console.error(err);
           errorToast(err.message, [], globalContext);
