@@ -68,7 +68,7 @@ describe('Orchestrate', () => {
     function waitForPollingToComplete() {
       cy.wait('@pollsync').then((interception) => {
         const lock = interception.response?.body[0]?.lock;
-        console.log(interception?.response?.body[0], 'LOCK');
+        console.log(interception.response?.body[0], 'LOCK');
         // Check if the second progress item exists and has a status of 'completed'
         if (lock === 'complete' || lock == null) {
           cy.get('[data-testid="flowstate-cypress orchestrate test"]').contains('success');
