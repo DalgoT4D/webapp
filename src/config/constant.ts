@@ -3,6 +3,10 @@ export const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 export const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
 export const showElementaryMenu = process.env.NEXT_PUBLIC_SHOW_ELEMENTARY_MENU === 'true';
 export const showDataInsightsTab = process.env.NEXT_PUBLIC_SHOW_DATA_INSIGHTS_TAB === 'true';
+export const showDataAnalysisTab = process.env.NEXT_PUBLIC_SHOW_DATA_ANALYSIS_TAB === 'true';
+export const showSupersetUsageTab = process.env.NEXT_PUBLIC_SHOW_SUPERSET_USAGE_TAB === 'true';
+export const showSupersetAnalysisTab =
+  process.env.NEXT_PUBLIC_SHOW_SUPERSET_ANALYSIS_TAB === 'true';
 export const defaultLoadMoreLimit = parseInt(
   process.env.NEXT_PUBLIC_DEFAULT_LOAD_MORE_LIMIT || '3'
 );
