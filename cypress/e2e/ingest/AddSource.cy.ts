@@ -109,7 +109,7 @@ describe('Add source', () => {
     cy.get('[data-testid="savebutton"]').click();
 
     cy.intercept('/api/airbyte/sources/').as('create_source');
-    cy.wait(12000);
+    cy.wait(10000);
 
     cy.contains('td', 'cypress test src');
   });

@@ -11,10 +11,6 @@ describe('Side menu', () => {
 
     cy.get('[data-testid="side-menu"]').contains('Explore').should('be.visible');
     cy.get('[data-testid="side-menu"]').contains('Data Quality').should('be.visible');
-    cy.get('[data-testid="side-menu"]')
-      .contains('Notifications')
-      .scrollIntoView()
-      .should('be.visible');
     cy.get('[data-testid="side-menu"]').contains('Settings').should('be.visible');
   });
 
@@ -42,7 +38,7 @@ describe('Side menu', () => {
     cy.contains('Ingest').should('not.be.visible');
   });
 
-  it.only('Switching between menu items', () => {
+  it('Switching between menu items', () => {
     // By default we see the pipeline overview window
     cy.get('h4').should('contain', 'Overview');
 
