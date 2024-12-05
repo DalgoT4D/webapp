@@ -109,6 +109,7 @@ export const Destinations = () => {
         wtype: w_house.wtype,
         icon: w_house.airbyte_destination.icon,
         connectionConfiguration: w_house.airbyte_destination.connectionConfiguration,
+        ssl: w_house.ssl,
       } as Warehouse);
     }
   }, [data]);
