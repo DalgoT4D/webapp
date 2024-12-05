@@ -29,6 +29,7 @@ describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => 
           // Verify 'AI Settings' section is visible
           cy.contains('h4', 'AI Settings').should('be.visible');
           cy.contains('p', 'Enable LLM function for data analysis');
+          cy.wait(2000);
           cy.get('[type="checkbox"]').should('not.be.checked');
 
           // Check the checkbox
@@ -126,6 +127,7 @@ describe('Data Analysis Workflow - Create, Save, Modify, and Save Again', () => 
     cy.get('[data-testid="menu-item-4.2"]').click();
     cy.contains('h4', 'AI Settings').should('be.visible');
     cy.contains('p', 'Enable LLM function for data analysis');
+    cy.wait(2000);
     cy.get('[type="checkbox"]').should('be.checked').uncheck();
   });
 });
