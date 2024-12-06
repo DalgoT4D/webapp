@@ -21,17 +21,24 @@ describe('Add Connection', () => {
     cy.contains('label', 'Name*').parent().find('input').type('cypress test con');
 
     // Open the dropdown
+
+    cy.intercept('GET', 'api/airbyte/sources/*/schema_catalog').as('schemaCatalog');
     cy.contains('label', 'Select source').parent().find('.MuiAutocomplete-popupIndicator').click();
     // Wait for the dropdown options to be visible, then click the item
     cy.get('.MuiAutocomplete-listbox').should('be.visible');
     cy.contains('.MuiAutocomplete-option', 'cypress test src').click();
-    cy.wait(2000);
-    cy.get('[data-testid="stream-sync-0"]').click();
+
+    cy.wait('@schemaCatalog').then((intercept) => {
+      expect(intercept.response.statusCode).to.eq(200);
+      cy.get('[data-testid="stream-sync-0"]').click();
+    });
 
     //intercept the api call here.
-
+    cy.intercept('POST', 'api/airbyte/v1/connections/').as('createConnection');
     cy.get('[type="submit"]').should('contain', 'Connect').should('not.be.disabled').click();
-
-    cy.contains('td', 'cypress test con');
+    cy.wait('@createConnection').then((intercept) => {
+      expect(intercept.response.statusCode).to.eq(200);
+      cy.contains('td', 'cypress test con');
+    });
   });
 });

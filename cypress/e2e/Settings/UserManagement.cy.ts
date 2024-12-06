@@ -17,8 +17,8 @@ describe('User management', () => {
 
     cy.contains('button', 'Invite user').click();
     cy.get('[name="invited_email"]')
-      .type('himanshu.dube13@gmail.com')
-      .should('have.value', 'himanshu.dube13@gmail.com');
+      .type('dummy@gmail.com')
+      .should('have.value', 'dummy@gmail.com');
 
     cy.contains('label', 'Role*').parent().find('.MuiInputBase-formControl').click();
     cy.get('.MuiMenu-list') // Escape special characters like ":" in the ID
@@ -30,7 +30,7 @@ describe('User management', () => {
 
     //clicking on pending invitations and checking and deleting
     cy.get('[role="tab"][tabindex="-1"]').should('contain', 'Pending Invitations').click();
-    cy.contains('td', 'himanshu.dube13@gmail.com').should('be.visible');
+    cy.contains('td', 'dummy@gmail.com').should('be.visible');
 
     //deleting the invite
     cy.get('[data-testid="MoreHorizIcon"]').click();
@@ -38,6 +38,6 @@ describe('User management', () => {
     cy.contains('button', 'I Understand the consequences, confirm').click();
 
     //deletd
-    cy.contains('td', 'himanshu.dube13@gmail.com').should('not.exist');
+    cy.contains('td', 'dummy@gmail.com').should('not.exist');
   });
 });
