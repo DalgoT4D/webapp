@@ -190,7 +190,9 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const getList = (
     <List component="div" data-testid="side-menu">
       {sideMenu.map((item) => {
-        const hasChildren = sideMenu.filter((sideItem) => sideItem.parent === item.index);
+        const hasUnhiddenChildren = sideMenu.filter(
+          (sideItem) => sideItem.parent === item.index && !sideItem.hide
+        );
         const itemColor = selectedIndex === item.index ? 'primary' : 'inherit';
         if (item.hide) return null;
         return (
@@ -210,7 +212,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                     handleListItemClick(item);
                   }}
                 >
-                  {hasChildren.length > 0 && openMenu && (
+                  {hasUnhiddenChildren.length > 0 && openMenu && (
                     <IconButton
                       sx={{ padding: 0 }}
                       data-testid={`expand-toggle-${item.index}`}
@@ -225,7 +227,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                   )}
                 </ItemButton>
               </ListItem>
-              {hasChildren.length > 0 && (
+              {hasUnhiddenChildren.length > 0 && (
                 <Collapse
                   in={open[item.index]}
                   key={item.index}
@@ -234,7 +236,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
                   unmountOnExit
                 >
                   <List component="div" disablePadding sx={{ ml: openMenu ? 4 : 0 }}>
-                    {hasChildren.map((subitem) => {
+                    {hasUnhiddenChildren.map((subitem) => {
                       if (subitem.hide) {
                         return null;
                       }
