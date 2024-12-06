@@ -11,7 +11,12 @@ import { primaryColor } from './theme';
 import Settings from '@/assets/icons/settings';
 import User from '@/assets/icons/manage_accounts';
 import AiSettings from '@/assets/icons/aisettings';
-
+import {
+  showDataAnalysisTab,
+  showElementaryMenu,
+  showSupersetAnalysisTab,
+  showSupersetUsageTab,
+} from './constant';
 export const drawerWidth = 250;
 
 const getColor = (selected: boolean) => (selected ? primaryColor : '');
@@ -26,6 +31,7 @@ export const getSideMenu = () => {
       icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
       className: 'analysis_walkthrough',
       minimize: false,
+      hide: !showSupersetAnalysisTab,
     },
     {
       index: 0.1,
@@ -35,6 +41,7 @@ export const getSideMenu = () => {
       parent: 0,
       className: 'usage_walkthrough',
       minimize: false,
+      hide: !showSupersetUsageTab,
     },
     {
       index: 0.2,
@@ -44,6 +51,7 @@ export const getSideMenu = () => {
       parent: 0,
       className: 'data_analysis',
       minimize: false,
+      hide: !showDataAnalysisTab,
     },
     {
       index: 1,
@@ -90,7 +98,7 @@ export const getSideMenu = () => {
       path: '/data-quality',
       icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
       className: 'data_quality_walkthrough',
-      // hide: !showElementaryMenu,
+      hide: !showElementaryMenu,
       minimize: false,
     },
     {
