@@ -10,6 +10,8 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import { demoAccDestSchema } from '@/config/constant';
 import Input from '../UI/Input/Input';
+import { generateWebsocketUrl } from '@/helpers/websocket';
+import useWebSocket from 'react-use-websocket';
 
 interface CreateConnectionFormProps {
   connectionId: string;
@@ -59,7 +61,7 @@ const CreateConnectionForm = ({
   const isAnyCursorAbsent = useMemo(() => {
     return filteredSourceStreams.some((stream) => !stream.cursorField);
   }, [filteredSourceStreams]);
-
+  console.log(filteredSourceStreams, 'filtered source stream');
   const [loading, setLoading] = useState<boolean>(false);
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
   const [normalize, setNormalize] = useState<boolean>(false);
@@ -77,7 +79,7 @@ const CreateConnectionForm = ({
   const setupInitialStreamsState = (catalog: any, connectionId: string | undefined | null) => {
     const action = connectionId ? 'edit' : 'create';
 
-    const streams = catalog.streams.map((el: any) => {
+    const streams = catalog?.streams.map((el: any) => {
       const stream = {
         name: el.stream.name,
         supportsIncremental: el.stream.supportedSyncModes.indexOf('incremental') > -1,
@@ -168,32 +170,51 @@ const CreateConnectionForm = ({
   }, [sourcesData]);
 
   // source selection changes
+  const [socketUrl, setSocketUrl] = useState<string | null>(null);
+  const { sendJsonMessage, lastJsonMessage }: any = useWebSocket(socketUrl, {
+    share: false,
+    onError(event) {
+      console.error('Socket error:', event);
+      setLoading(false);
+    },
+    onMessage(event) {
+      const { data, message, status }: any = JSON.parse(event.data);
+      const catalog = data?.result?.catalog;
+      setLoading(false);
+      if (status == 'success' && catalog) {
+        const streams: SourceStream[] = setupInitialStreamsState(catalog, connectionId);
+        setSourceStreams(streams);
+        setFilteredSourceStreams(streams);
+      } else if (status == 'error') {
+        errorToast(message, [], globalContext);
+      }
+    },
+  });
+  // const source_schema_catalog = lastJsonMessage?.data?.result?.catalog
+  useEffect(() => {
+    if (session) {
+      setSocketUrl(generateWebsocketUrl('airbyte/connection/schema_catalog', session));
+    }
+  }, [session]);
   useEffect(() => {
     if (watchSourceSelection?.id && !connectionId) {
-      (async () => {
-        setLoading(true);
-        try {
-          const message = await httpGet(
-            session,
-            `airbyte/sources/${watchSourceSelection.id}/schema_catalog`
-          );
-          const streams: SourceStream[] = setupInitialStreamsState(
-            message['catalog'],
-            connectionId
-          );
-          setSourceStreams(streams);
-          setFilteredSourceStreams(streams);
-        } catch (err: any) {
-          if (err.cause) {
-            errorToast(err.cause.detail, [], globalContext);
-          } else {
-            errorToast(err.message, [], globalContext);
-          }
-        }
-        setLoading(false);
-      })();
+      setLoading(true);
+      sendJsonMessage({
+        sourceId: watchSourceSelection.id,
+      });
     }
   }, [watchSourceSelection]);
+  // useEffect(() => {
+  //   if (source_schema_catalog) {
+  //     setLoading(false)
+  //     const streams: SourceStream[] = setupInitialStreamsState(
+  //       source_schema_catalog,
+  //       connectionId
+  //     );
+  //     setSourceStreams(streams);
+  //     setFilteredSourceStreams(streams);
+  //   }
+  // }, [source_schema_catalog])
 
   const handleClose = () => {
     reset();
