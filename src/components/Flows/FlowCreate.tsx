@@ -168,18 +168,30 @@ const FlowCreate = ({
         setLoading(true);
         try {
           const data: any = await httpGet(session, `prefect/v1/flows/${flowId}`);
-
+          console.log(data, 'data');
           let tasksToApply = tasks.filter(ValidateDefaultTasksToApplyInPipeline);
 
           if (data.transformTasks.length === 0) {
             tasksToApply = [];
           }
+
           //if "data.transformTasks" and "tasksToApply" are same then the alignment is simple else advanced.
           const ifTasksAligned = data.transformTasks.every(
             (task: { uuid: string; seq: number }, index: number) =>
               task.uuid === tasksToApply[index].uuid
           );
+          const dbtCloudRegx = /^dbtcloud(?:-.+)?/;
+
+          const dbtCloudTasks = data.transformTasks.filter((item: any) =>
+            dbtCloudRegx.test(item.slug)
+          );
+          const dbtCliTasks = data.transformTasks.filter(
+            (item: any) => !dbtCloudRegx.test(item.slug)
+          );
+
           if (data.transformTasks.length > 0 && !ifTasksAligned) {
+          }
+          const arrangeTheDataAccToUUID = (transformTasks: any, alignment: string) => {
             const uuidOrder = data.transformTasks.reduce((acc: any, obj: any) => {
               acc[obj.uuid] = obj.seq;
               return acc;
@@ -187,9 +199,8 @@ const FlowCreate = ({
             tasksToApply = tasks
               .filter((obj) => uuidOrder.hasOwnProperty(obj.uuid))
               .sort((a, b) => uuidOrder[a.uuid] - uuidOrder[b.uuid]);
-            setAlignment('advanced');
-          }
-
+            setAlignment(alignment);
+          };
           const cronObject = convertCronToString(data.cron);
 
           reset({
@@ -420,6 +431,9 @@ const FlowCreate = ({
                   </ToggleButton>
                   <ToggleButton sx={{ padding: '4px 11px' }} value="advanced">
                     Advanced
+                  </ToggleButton>
+                  <ToggleButton sx={{ padding: '4px 11px' }} value="dbt-cloud">
+                    DBT Cloud
                   </ToggleButton>
                 </ToggleButtonGroup>
                 <Box sx={{ mt: 2 }}>

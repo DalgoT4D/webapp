@@ -89,7 +89,8 @@ const CreateOrgTaskForm = ({ mutate, showForm, setShowForm }: CreateOrgTaskFormP
           .map((task: MasterTask) => {
             return { id: task.slug, label: task.slug };
           });
-        setMasterTasks(tasksDropDownRows);
+        console.log(tasksDropDownRows, 'taskdropdown');
+        setMasterTasks([...tasksDropDownRows, { id: 'dbt-cloud', label: 'dbt-cloud' }]);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], globalContext);
