@@ -190,6 +190,10 @@ const CreateConnectionForm = ({
       sendJsonMessage({
         sourceId: watchSourceSelection.id,
       });
+      setLoading(true);
+      sendJsonMessage({
+        sourceId: watchSourceSelection.id,
+      });
     }
   }, [watchSourceSelection]);
 
