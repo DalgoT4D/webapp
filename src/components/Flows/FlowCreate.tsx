@@ -290,6 +290,7 @@ const FlowCreate = ({
         const response = await httpPost(session, 'prefect/v1/flows/', {
           name: data.name,
           connections: selectedConns,
+          alignment: alignment, // this field will be used in backend to differentiate bw cli and cloud tasks.
           cron: cronExpression,
           transformTasks: data.tasks.map((task: TransformTask, index: number) => ({
             uuid: task.uuid,
