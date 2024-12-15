@@ -4,6 +4,11 @@ import { Session } from 'next-auth';
 import CreateConnectionForm from '../CreateConnectionForm';
 import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
+import { Server } from 'mock-socket';
+import { generateWebsocketUrl } from '@/helpers/websocket';
+jest.mock('@/helpers/websocket', () => ({
+  generateWebsocketUrl: jest.fn(),
+}));
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -157,6 +162,13 @@ describe('Edit connection', () => {
   //   });
 
   it('Edit connection - success', async () => {
+    const mockServer = new Server('wss://mock-websocket-url');
+    const mockGenerateWebsocketUrl = generateWebsocketUrl;
+
+    // Mock the generateWebsocketUrl function
+    mockGenerateWebsocketUrl.mockImplementation((path, session) => {
+      return 'wss://mock-websocket-url';
+    });
     const initialFetch = jest
       .fn()
       .mockResolvedValueOnce({
