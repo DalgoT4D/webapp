@@ -3,6 +3,8 @@ import { SessionProvider } from 'next-auth/react';
 import { SWRConfig } from 'swr';
 import '@testing-library/jest-dom';
 import { Connections } from '../Connections';
+import { generateWebsocketUrl } from '@/helpers/websocket';
+import { Server } from 'mock-socket';
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -10,6 +12,10 @@ jest.mock('next/router', () => ({
       push: jest.fn(),
     };
   },
+}));
+
+jest.mock('@/helpers/websocket', () => ({
+  generateWebsocketUrl: jest.fn(),
 }));
 
 describe('Clear connection suite', () => {
@@ -34,6 +40,13 @@ describe('Clear connection suite', () => {
   });
 
   it('clears the connection successfully and handles failure', async () => {
+    const mockServer = new Server('wss://mock-websocket-url');
+    const mockGenerateWebsocketUrl = generateWebsocketUrl;
+
+    // Mock the generateWebsocketUrl function
+    mockGenerateWebsocketUrl.mockImplementation((path, session) => {
+      return 'wss://mock-websocket-url';
+    });
     // Mock fetch for initial connections data
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
       ok: true,

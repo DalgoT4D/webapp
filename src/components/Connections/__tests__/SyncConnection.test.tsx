@@ -6,6 +6,8 @@ import { SWRConfig } from 'swr';
 import { Connections } from '../Connections';
 import userEvent from '@testing-library/user-event';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { generateWebsocketUrl } from '@/helpers/websocket';
+import { Server } from 'mock-socket';
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -16,6 +18,9 @@ jest.mock('next/router', () => ({
 }));
 
 jest.mock('./../../../utils/common');
+jest.mock('@/helpers/websocket', () => ({
+  generateWebsocketUrl: jest.fn(),
+}));
 
 describe('Sync connection suite', () => {
   const user = userEvent.setup();
@@ -87,6 +92,14 @@ describe('Sync connection suite', () => {
   );
 
   it('Sync connection', async () => {
+    const mockServer = new Server('wss://mock-websocket-url');
+    const mockGenerateWebsocketUrl = generateWebsocketUrl;
+
+    // Mock the generateWebsocketUrl function
+    mockGenerateWebsocketUrl.mockImplementation((path, session) => {
+      return 'wss://mock-websocket-url';
+    });
+
     (global as any).fetch = jest
       .fn()
       .mockResolvedValueOnce({
