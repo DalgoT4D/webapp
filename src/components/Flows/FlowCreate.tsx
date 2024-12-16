@@ -168,7 +168,6 @@ const FlowCreate = ({
         setLoading(true);
         try {
           const data: any = await httpGet(session, `prefect/v1/flows/${flowId}`);
-          console.log(data, 'data');
           let tasksToApply = tasks.filter(ValidateDefaultTasksToApplyInPipeline);
 
           if (data.transformTasks.length === 0) {
@@ -180,18 +179,7 @@ const FlowCreate = ({
             (task: { uuid: string; seq: number }, index: number) =>
               task.uuid === tasksToApply[index].uuid
           );
-          const dbtCloudRegx = /^dbtcloud(?:-.+)?/;
-
-          const dbtCloudTasks = data.transformTasks.filter((item: any) =>
-            dbtCloudRegx.test(item.slug)
-          );
-          const dbtCliTasks = data.transformTasks.filter(
-            (item: any) => !dbtCloudRegx.test(item.slug)
-          );
-
           if (data.transformTasks.length > 0 && !ifTasksAligned) {
-          }
-          const arrangeTheDataAccToUUID = (transformTasks: any, alignment: string) => {
             const uuidOrder = data.transformTasks.reduce((acc: any, obj: any) => {
               acc[obj.uuid] = obj.seq;
               return acc;
@@ -199,8 +187,9 @@ const FlowCreate = ({
             tasksToApply = tasks
               .filter((obj) => uuidOrder.hasOwnProperty(obj.uuid))
               .sort((a, b) => uuidOrder[a.uuid] - uuidOrder[b.uuid]);
-            setAlignment(alignment);
-          };
+            setAlignment('advanced');
+          }
+
           const cronObject = convertCronToString(data.cron);
 
           reset({
@@ -290,7 +279,6 @@ const FlowCreate = ({
         const response = await httpPost(session, 'prefect/v1/flows/', {
           name: data.name,
           connections: selectedConns,
-          alignment: alignment, // this field will be used in backend to differentiate bw cli and cloud tasks.
           cron: cronExpression,
           transformTasks: data.tasks.map((task: TransformTask, index: number) => ({
             uuid: task.uuid,
@@ -432,9 +420,6 @@ const FlowCreate = ({
                   </ToggleButton>
                   <ToggleButton sx={{ padding: '4px 11px' }} value="advanced">
                     Advanced
-                  </ToggleButton>
-                  <ToggleButton sx={{ padding: '4px 11px' }} value="dbt-cloud">
-                    DBT Cloud
                   </ToggleButton>
                 </ToggleButtonGroup>
                 <Box sx={{ mt: 2 }}>
