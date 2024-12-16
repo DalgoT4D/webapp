@@ -99,7 +99,9 @@ export const TaskSequence = ({ field, options: initialOptions }: TaskSequencePro
         >
           {node.rowIndex + 1}
         </Box>
-        <Box sx={{ p: '4px 12px', background: '#F5FAFA', width: '100%' }}>{node.data.command}</Box>
+        <Box sx={{ p: '4px 12px', background: '#F5FAFA', width: '100%' }}>
+          {node.data.command || node.data?.slug.replace(/-/g, ' ')}
+        </Box>
         <Box
           sx={{
             p: '4px 12px',
@@ -157,7 +159,7 @@ export const TaskSequence = ({ field, options: initialOptions }: TaskSequencePro
       <Autocomplete
         data-testid="tasksequence"
         inputValue=""
-        getOptionLabel={(task: any) => task.command}
+        getOptionLabel={(task: any) => task.command || task.slug?.replace(/-/g, ' ')}
         placeholder="Select"
         options={autocompleteOptions}
         onChange={handleSelect}
