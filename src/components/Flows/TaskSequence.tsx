@@ -100,7 +100,7 @@ export const TaskSequence = ({ field, options: initialOptions }: TaskSequencePro
           {node.rowIndex + 1}
         </Box>
         <Box sx={{ p: '4px 12px', background: '#F5FAFA', width: '100%' }}>
-          {node.data.command || node.data?.slug.replace(/-/g, ' ')}
+          {node.data.command || node.data.slug.replace(/-/g, ' ')}
         </Box>
         <Box
           sx={{
