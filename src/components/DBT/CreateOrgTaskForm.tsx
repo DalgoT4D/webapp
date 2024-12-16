@@ -5,7 +5,7 @@ import ListItem from '@mui/material/ListItem';
 import CustomDialog from '../Dialog/CustomDialog';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '../UI/Input/Input';
-import { TASK_GITPULL, TASK_DBTCLEAN, TASK_DOCSGENERATE } from '@/config/constant';
+import { TASK_GITPULL, TASK_DBTCLEAN, TASK_DBTCLOUD_JOB } from '@/config/constant';
 import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { httpGet, httpPost } from '@/helpers/http';
@@ -90,7 +90,7 @@ const CreateOrgTaskForm = ({ mutate, showForm, setShowForm }: CreateOrgTaskFormP
             return { id: task.slug, label: task.slug };
           });
         console.log(tasksDropDownRows, 'taskdropdown');
-        setMasterTasks([...tasksDropDownRows, { id: 'dbt-cloud', label: 'dbt-cloud' }]);
+        setMasterTasks([...tasksDropDownRows]);
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], globalContext);
@@ -155,6 +155,8 @@ const CreateOrgTaskForm = ({ mutate, showForm, setShowForm }: CreateOrgTaskFormP
     }
     setLoading(false);
   };
+
+  const isDbtCloudTask = () => selectedTask?.id === TASK_DBTCLOUD_JOB;
 
   const FormContent = () => {
     return (
@@ -286,12 +288,13 @@ const CreateOrgTaskForm = ({ mutate, showForm, setShowForm }: CreateOrgTaskFormP
               </Button>
             </List>
           </Box>
-
           <Box sx={{ m: 2 }} />
+        </Box>
+        {!isDbtCloudTask() && (
           <InputLabel>
             <Command task={selectedTask} flags={selectedFlags} options={optionsRef} />
           </InputLabel>
-        </Box>
+        )}
       </>
     );
   };
