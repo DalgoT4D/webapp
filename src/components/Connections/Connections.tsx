@@ -540,6 +540,9 @@ export const Connections = () => {
 
       setRows(tempRows);
       setRowValues(tempRowValues);
+    } else {
+      setRows([]);
+      setRowValues([]);
     }
   };
 
