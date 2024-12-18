@@ -65,7 +65,6 @@ class ConnectorConfigInput {
 
   prepareSpecsToRender() {
     this.specsToRender = ConnectorConfigInput.traverseSpecs([], this.specsData, 'config', [], []);
-    console.log(this.specsToRender, 'specs to render');
     return this.specsToRender;
   }
 
@@ -165,11 +164,8 @@ class ConnectorConfigInput {
         let commonField: string[] = [];
 
         // Find common property among all array elements of 'oneOf' array
-
         if (value['oneOf'] && value['oneOf'].length > 1) {
-          // Works for more than one element, because for 1 element we cannot find one commonField. The array would be filled with all the properties.
           value['oneOf']?.forEach((ele: any) => {
-            //Fills the common array with all fields in 1st iteration and filters the uncommon fields with subsequent iterations.
             if (commonField.length > 0) {
               commonField = Object.keys(ele?.properties)
                 .filter((key: any) => 'const' in ele?.properties[key]) // mongodb connector case. Only cluster type had const property and was not at the top level but with the other properties that were to be rendered if a cluster type is selected.
@@ -177,12 +173,6 @@ class ConnectorConfigInput {
             } else {
               commonField = Object.keys(ele?.properties);
             }
-          });
-        } else if (value['oneOf'] && value['oneOf'].length == 1) {
-          value['oneOf']?.forEach((ele: any) => {
-            commonField = Object.keys(ele?.properties).filter(
-              (key: any) => 'const' in ele.properties[key]
-            );
           });
         }
 
