@@ -168,12 +168,12 @@ const FlowCreate = ({
         setLoading(true);
         try {
           const data: any = await httpGet(session, `prefect/v1/flows/${flowId}`);
-
           let tasksToApply = tasks.filter(ValidateDefaultTasksToApplyInPipeline);
 
           if (data.transformTasks.length === 0) {
             tasksToApply = [];
           }
+
           //if "data.transformTasks" and "tasksToApply" are same then the alignment is simple else advanced.
           const ifTasksAligned = data.transformTasks.every(
             (task: { uuid: string; seq: number }, index: number) =>
