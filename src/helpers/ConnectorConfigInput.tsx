@@ -207,7 +207,6 @@ class ConnectorConfigInput {
           });
         } else if (value['oneOf'] && value['oneOf'].length === 1) {
           const ele = value['oneOf'][0];
-          console.log(ele, 'element');
           commonField = Object.keys(ele?.properties).filter(
             (key: any) => 'const' in ele.properties[key]
           );
@@ -228,7 +227,6 @@ class ConnectorConfigInput {
             enum: [],
             specs: [],
           };
-          console.log(objResult, 'objresult');
           result.push(objResult);
           value?.oneOf?.forEach((eachEnum: any) => {
             ConnectorConfigInput.traverseSpecs(
