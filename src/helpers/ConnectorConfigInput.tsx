@@ -58,7 +58,7 @@ class ConnectorConfigInput {
   }
 
   setOrderToChildProperties() {
-    ConnectorConfigInput.traverseSpecsToSetOrder(this.specsData, null, 0);
+    ConnectorConfigInput.traverseSpecsToSetOrder(this.specsData, { count: 0 });
 
     return this.specsData;
   }
@@ -79,20 +79,51 @@ class ConnectorConfigInput {
     return this.specsToRender.concat(childSpecs);
   }
 
-  static traverseSpecsToSetOrder(data: any, parentOrder: number | null = null, ordCounter = 0) {
-    const dataProperties: any = data.properties;
+  static traverseSpecsToSetOrder(data: any, globalCounter = { count: 0 }) {
+    //global counter as an object such that we have a single counter. (pass by refernce concept for objects)
+    if (!globalCounter || typeof globalCounter.count !== 'number') {
+      globalCounter = { count: 0 }; // Ensure initialization
+    }
+
+    const dataProperties = data.properties;
 
     if (dataProperties) {
-      for (const key of Object.keys(dataProperties)) {
-        const parent: any = dataProperties[key];
-        if (parentOrder) parent['order'] = parentOrder + ordCounter;
+      const sortedKeys = Object.keys(dataProperties).sort(
+        (a, b) => dataProperties[a].order - dataProperties[b].order
+      ); //sorting the keys array based on the parent order, such that the order same as airbyte is maintained.
 
-        // check for which property we have the 'oneOf' key i.e. nested level
-        // each nested property should have parentOrder + 0.1
-        if (parent && parent?.oneOf) {
+      for (const key of sortedKeys) {
+        const parent = dataProperties[key];
+
+        // Increment global counter and assign it as the order
+        globalCounter.count++;
+        parent['order'] = globalCounter.count;
+
+        /**
+         * Data structure is like:
+         * {
+         * properties:{
+         *   x : {
+         *     oneof: [
+         *             {properties: { y: {oneOf: {.....so on}}}
+         *                 }
+         *               ]
+         *         }
+         *   }
+         * }
+         */
+        //Recursively checking if parent has oneOf (array of Objects) or properties (Object).
+
+        // nest objects containing oneOf property.
+        if (parent?.oneOf) {
           for (const oneOfObject of parent.oneOf) {
-            ConnectorConfigInput.traverseSpecsToSetOrder(oneOfObject, parent['order'], 0.1);
+            ConnectorConfigInput.traverseSpecsToSetOrder(oneOfObject, globalCounter);
           }
+        }
+
+        // recursively calling the function if data has properites.
+        if (parent?.properties) {
+          ConnectorConfigInput.traverseSpecsToSetOrder(parent, globalCounter);
         }
       }
     }
@@ -174,6 +205,12 @@ class ConnectorConfigInput {
               commonField = Object.keys(ele?.properties);
             }
           });
+        } else if (value['oneOf'] && value['oneOf'].length === 1) {
+          const ele = value['oneOf'][0];
+          console.log(ele, 'element');
+          commonField = Object.keys(ele?.properties).filter(
+            (key: any) => 'const' in ele.properties[key]
+          );
         }
 
         // an object type can either have oneOf or properties
@@ -191,6 +228,7 @@ class ConnectorConfigInput {
             enum: [],
             specs: [],
           };
+          console.log(objResult, 'objresult');
           result.push(objResult);
           value?.oneOf?.forEach((eachEnum: any) => {
             ConnectorConfigInput.traverseSpecs(
