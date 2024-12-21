@@ -81,9 +81,6 @@ class ConnectorConfigInput {
 
   static traverseSpecsToSetOrder(data: any, globalCounter = { count: 0 }) {
     //global counter as an object such that we have a single counter. (pass by refernce concept for objects)
-    if (!globalCounter || typeof globalCounter.count !== 'number') {
-      globalCounter = { count: 0 }; // Ensure initialization
-    }
 
     const dataProperties = data.properties;
 
