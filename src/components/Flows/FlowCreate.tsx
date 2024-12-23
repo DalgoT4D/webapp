@@ -175,7 +175,7 @@ const FlowCreate = ({
           }
 
           //if "data.transformTasks" and "tasksToApply" are same then the alignment is simple else advanced.
-          // In case of cloud job, the taskToApply is an empty array as there are not system tasks being fetched, hence the check.
+          // In the case of dbt cloud job, the taskToApply is an empty array as there are no system tasks being fetched, hence the check.
           const ifTasksAligned =
             tasksToApply.length &&
             data.transformTasks.every(
