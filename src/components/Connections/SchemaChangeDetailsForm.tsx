@@ -120,24 +120,27 @@ const SchemaChangeDetailsForm = ({
               } else if (transform.transformType === 'add_stream') {
                 changedColumns.push(`+Stream: ${tableName}`);
               } else {
-                changedColumns = transform.updateStream.reduce((columns: string[], update: any) => {
-                  if (
-                    update.transformType === 'add_field' ||
-                    update.transformType === 'remove_field' ||
-                    update.transformType === 'update_field_schema'
-                  ) {
-                    if (update.transformType === 'update_field_schema') {
-                      columns.push(`+${update.fieldName.join(', ')}`);
-                    } else {
-                      columns.push(
-                        `${
-                          update.transformType === 'add_field' ? '+' : '-'
-                        }${update.fieldName.join(', ')}`
-                      );
+                changedColumns = transform.updateStream.fieldTransforms.reduce(
+                  (columns: string[], update: any) => {
+                    if (
+                      update.transformType === 'add_field' ||
+                      update.transformType === 'remove_field' ||
+                      update.transformType === 'update_field_schema'
+                    ) {
+                      if (update.transformType === 'update_field_schema') {
+                        columns.push(`+${update.fieldName.join(', ')}`);
+                      } else {
+                        columns.push(
+                          `${
+                            update.transformType === 'add_field' ? '+' : '-'
+                          }${update.fieldName.join(', ')}`
+                        );
+                      }
                     }
-                  }
-                  return columns;
-                }, []);
+                    return columns;
+                  },
+                  []
+                );
               }
 
               return { name: tableName, changedColumns };
