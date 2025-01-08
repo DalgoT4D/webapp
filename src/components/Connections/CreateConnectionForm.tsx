@@ -34,6 +34,8 @@ interface SourceStream {
   destinationSyncMode: string; // append | overwrite | append_dedup
   cursorFieldConfig: CursorFieldConfig; // this will not be posted to backend
   cursorField: string;
+  primaryKeyOptions: string[];
+  primaryKey: string;
 }
 
 const CreateConnectionForm = ({
@@ -80,6 +82,7 @@ const CreateConnectionForm = ({
     const action = connectionId ? 'edit' : 'create';
 
     const streams = catalog?.streams.map((el: any) => {
+      console.log(el, 'el');
       const stream = {
         name: el.stream.name,
         supportsIncremental: el.stream.supportedSyncModes.indexOf('incremental') > -1,
@@ -91,6 +94,8 @@ const CreateConnectionForm = ({
           cursorFieldOptions: [],
         },
         cursorField: '',
+        primaryKeyOptions: [], //contains dropdown options for primary key
+        primaryKey: '',
       };
 
       const cursorFieldObj = stream.cursorFieldConfig;
@@ -118,6 +123,18 @@ const CreateConnectionForm = ({
         if ('cursorField' in el.config)
           stream.cursorField = el.config.cursorField.length > 0 ? el.config.cursorField[0] : '';
       }
+      //to do -  check the data structure again and make the primary keys multiple select
+      if ('sourceDefinedPrimaryKey' in el.stream) {
+        stream.primaryKey =
+          el.stream.sourceDefinedPrimaryKey.length > 0
+            ? el.stream.sourceDefinedPrimaryKey[0][0]
+            : [];
+      }
+      //find the place in if else block where we can set the primary key.
+      if ('primaryKey' in el.config) {
+        stream.primaryKeyOptions = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
+        stream.primaryKey = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
+      }
 
       return stream;
     });
@@ -138,6 +155,7 @@ const CreateConnectionForm = ({
           });
           setValue('destinationSchema', data?.destinationSchema);
           const streams = setupInitialStreamsState(data?.syncCatalog, connectionId);
+          console.log(streams, 'streams');
           setSourceStreams(streams);
           setFilteredSourceStreams(streams);
           setNormalize(data?.normalize || false);
@@ -205,6 +223,7 @@ const CreateConnectionForm = ({
 
     if (status == 'success' && source_schema_catalog) {
       const streams: SourceStream[] = setupInitialStreamsState(source_schema_catalog, connectionId);
+      console.log(streams, 'Streams');
       setSourceStreams(streams);
       setFilteredSourceStreams(streams);
     } else if (status == 'error') {
@@ -240,6 +259,7 @@ const CreateConnectionForm = ({
           syncMode: stream.syncMode, // incremental | full_refresh
           destinationSyncMode: stream.destinationSyncMode, // append | overwrite | append_dedup
           cursorField: stream.cursorField,
+          primaryKey: stream.primaryKey,
         };
       }),
       normalize,
@@ -324,6 +344,10 @@ const CreateConnectionForm = ({
 
   const updateCursorField = (value: string, stream: SourceStream) => {
     updateThisStreamTo_(stream, { ...stream, cursorField: value });
+  };
+
+  const updatePrimaryKey = (value: string, stream: SourceStream) => {
+    updateThisStreamTo_(stream, { ...stream, primaryKey: value });
   };
 
   const handleSyncAllStreams = (checked: boolean) => {
@@ -477,6 +501,9 @@ const CreateConnectionForm = ({
                     <TableCell key="cursorfield" align="center">
                       Cursor Field
                     </TableCell>
+                    <TableCell key="primarykey" align="center">
+                      Primary Key
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell key="searchstream" align="center">
@@ -589,6 +616,27 @@ const CreateConnectionForm = ({
                                   </MenuItem>
                                 )
                               )}
+                            </Select>
+                          </TableCell>
+                          <TableCell key="primarykey" align="center">
+                            <Select
+                              data-testid={`stream-primarykey-${idx}`}
+                              disabled={
+                                !stream.selected ||
+                                !stream.supportsIncremental ||
+                                stream.syncMode !== 'incremental'
+                              }
+                              value={stream.primaryKey}
+                              onChange={(event) => {
+                                updatePrimaryKey(event.target.value, stream);
+                              }}
+                            >
+                              {stream.primaryKeyOptions.length > 0 &&
+                                stream.primaryKeyOptions?.map((option: string) => (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                                ))}
                             </Select>
                           </TableCell>
                         </TableRow>
