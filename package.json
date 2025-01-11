@@ -18,12 +18,12 @@
   "dependencies": {
     "@amplitude/analytics-browser": "^2.11.8",
     "@dagrejs/dagre": "^1.1.4",
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.11.5",
+    "@emotion/react": "^11.13.5",
+    "@emotion/styled": "^11.13.5",
     "@mui/icons-material": "5.16.8",
     "@mui/material": "^5.16.6",
     "@mui/x-date-pickers": "^6.20.1",
-    "@sentry/nextjs": "8.35.0",
+    "@sentry/nextjs": "8.41.0",
     "@superset-ui/embedded-sdk": "^0.1.2",
     "@tanstack/react-table": "^8.20.5",
     "@types/d3": "^7.4.2",
@@ -35,7 +35,7 @@
     "eslint-config-next": "^14.2.18",
     "mock-socket": "^9.3.1",
     "moment": "^2.30.1",
-    "next": "^14.2.18",
+    "next": "^14.2.21",
     "next-auth": "^4.24.10",
     "react": "^18.3.1",
     "react-arborist": "^3.4.0",
@@ -50,7 +50,7 @@
     "remark-gfm": "^4.0.0",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.2.4",
-    "typescript": "5.6.3",
+    "typescript": "5.7.2",
     "use-resize-observer": "^9.1.0"
   },
   "resolutions": {
