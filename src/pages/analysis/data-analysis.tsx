@@ -15,6 +15,7 @@ import { Disclaimer } from '@/components/DataAnalysis/Disclaimer';
 import { OverWriteDialog } from '@/components/DataAnalysis/OverwriteBox';
 import { useRouter } from 'next/router';
 import { DeactivatedMsg } from '@/components/DataAnalysis/DeactivatedMsg';
+import { ChatInterface } from '@/components/DataAnalysis/chat_with_your_data/ChatInterface';
 interface ProgressResult {
   response?: Array<any>;
   session_id?: string;
@@ -328,37 +329,31 @@ export default function DataAnalysis() {
       <Box
         sx={{
           p: '3rem 3rem',
-          width: '100%',
+          width: '60%',
           display: 'flex',
           gap: '1rem',
+          margin: '0 auto',
         }}
       >
         <Box
           sx={{
             ...customCss,
-            width: '45%',
+            width: '100%',
             flexDirection: 'column',
           }}
         >
           {/* Top saved Session Option */}
-          <TopBar
+          {/* <TopBar
             handleOpenSavedSession={handleOpenSavedSession}
             handleNewSession={handleNewSession}
-          />
+          /> */}
 
           {/* SQL write Area */}
-          <SqlWrite
-            getLLMSummary={getLLMSummary}
-            resetState={resetState}
-            setResetState={setResetState}
-            prompt={prompt}
-            newSessionId={newSessionId}
-            oldSessionMetaInfo={oldSessionMetaInfo}
-          />
+          <ChatInterface />
         </Box>
 
         {/* Final Summary */}
-        <LLMSummary
+        {/* <LLMSummary
           resetState={resetState}
           setModalName={setModalName}
           setIsBoxOpen={setIsBoxOpen}
@@ -367,7 +362,7 @@ export default function DataAnalysis() {
           newSessionId={newSessionId}
           oldSessionMetaInfo={oldSessionMetaInfo}
           handleNewSession={handleNewSession}
-        />
+        /> */}
 
         {/* Loader full screen */}
         {loading && (
