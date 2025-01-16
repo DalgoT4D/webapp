@@ -23,14 +23,15 @@ export const ChatInterface = ({
   const { data: session }: any = useSession();
   const { control, setValue, watch, handleSubmit, reset } = useForm({
     defaultValues: {
-      prompt: '',
+      userMessage: '',
     },
   });
-  const selectedPrompt = watch('prompt');
+  const userMessage = watch('userMessage');
 
   //chatting with the bot.
   const onSubmit = () => {
-    sendJsonMessage({ message: selectedPrompt, action: 'ask_bot', thread_uuid: thread_uuid });
+    sendJsonMessage({ message: userMessage, action: 'ask_bot', thread_uuid: thread_uuid });
+    setValue('userMessage', '');
   };
   return (
     <>

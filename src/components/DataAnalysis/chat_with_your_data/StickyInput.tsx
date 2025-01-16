@@ -1,7 +1,7 @@
 import { Box, Button, TextField } from '@mui/material';
 import { Controller } from 'react-hook-form';
 
-export const StickyInputBox = ({ handleSubmit, onSubmit, control }) => {
+export const StickyInputBox = ({ handleSubmit, onSubmit, control }: any) => {
   return (
     <Box
       sx={{
@@ -24,7 +24,7 @@ export const StickyInputBox = ({ handleSubmit, onSubmit, control }) => {
         }}
       >
         <Controller
-          name="prompt"
+          name="userMessage"
           control={control}
           render={({ field }) => (
             <TextField
