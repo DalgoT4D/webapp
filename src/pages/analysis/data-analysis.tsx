@@ -177,6 +177,7 @@ export default function Explore() {
               setChatMessages={setChatMessages}
               setCurrentThread={setCurrentThread}
               currentThread={currentThread}
+              setThreads={setThreads}
             />
           </ResizableBox>
           {/*  */}

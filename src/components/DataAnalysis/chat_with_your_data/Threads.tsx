@@ -29,11 +29,13 @@ export const Threads = ({
   setChatMessages,
   setCurrentThread,
   currentThread,
+  setThreads,
 }: {
   threads: Thread[];
   currentThread: Thread | null;
   setChatMessages: (...args: any) => any;
   setCurrentThread: (...args: any) => any;
+  setThreads: (...args: any) => any;
 }) => {
   const { data: session }: any = useSession();
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export const Threads = ({
     lastJsonMessage,
   }: {
     sendJsonMessage: (...args: any) => any;
-    lastJsonMessage: { data?: { messages: ChatMessage[] }; status: string; message: string } | null;
+    lastJsonMessage: { data: any; status: string; message: string } | null;
   } = useWebSocket(socketUrl, {
     share: true,
     onError(event) {
@@ -59,7 +61,11 @@ export const Threads = ({
   useEffect(() => {
     // set the messages of current select thread
     if (lastJsonMessage && lastJsonMessage.data) {
-      setChatMessages(lastJsonMessage.data.messages);
+      if (lastJsonMessage.data.messages) {
+        setChatMessages(lastJsonMessage.data.messages);
+      } else if (lastJsonMessage.data.threads) {
+        setThreads(lastJsonMessage.data.threads);
+      }
     }
   }, [lastJsonMessage]);
 

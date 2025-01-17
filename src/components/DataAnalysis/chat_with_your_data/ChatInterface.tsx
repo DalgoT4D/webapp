@@ -84,7 +84,7 @@ export const ChatInterface = ({
         >
           {/* Top box will have chats  */}
           <Box sx={{}}>
-            {chatMessages.length &&
+            {chatMessages?.length > 0 &&
               chatMessages.map((message: ChatMessage, index: any) => {
                 if (message.type === ChatMessageType.HUMAN) {
                   return <UserPrompts key={index} message={message} />;
