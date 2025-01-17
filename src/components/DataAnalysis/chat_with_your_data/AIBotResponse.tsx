@@ -1,12 +1,13 @@
 import { Box } from '@mui/material';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { ChatMessage } from './ChatInterface';
 
-export const Responses = ({ input }) => {
+export const AIBotResponse = ({ message }: { message: ChatMessage }) => {
   return (
     <>
       <Box
-        key={input}
+        key={message.id}
         sx={{ display: 'flex', justifyContent: 'flex-start', padding: '5px 0 5px 30px' }}
       >
         <Box
@@ -18,7 +19,7 @@ export const Responses = ({ input }) => {
             maxWidth: '90%',
           }}
         >
-          <Markdown remarkPlugins={[remarkGfm]}>{input}</Markdown>
+          <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
         </Box>
       </Box>
     </>

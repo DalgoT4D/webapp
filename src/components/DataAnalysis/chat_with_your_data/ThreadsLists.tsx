@@ -2,15 +2,15 @@ import { Box, Divider, Tab, Tabs, Typography } from '@mui/material';
 
 export const ThreadsLists = ({ threadsList, sendJsonMessage, thread_uuid, setValue }: any) => {
   const fetchSingleThread = (thread: any) => {
-    setValue('aiGeneratedSql', thread.sql);
+    setValue('aiGeneratedSql', thread.meta.sql);
     setValue('thread_uuid', thread.uuid);
-    sendJsonMessage({ action: 'get_messages', thread_uuid: thread.uuid });
+    sendJsonMessage({ action: 'get_messages', params: { thread_uuid: thread.uuid } });
   };
   console.log(threadsList, 'ThreadLists');
   return (
     <>
       <Box>
-        <Typography variant="h4">Threads</Typography>
+        <Typography variant="h4">Conversations</Typography>
         <Divider />
 
         {threadsList.length ? (
@@ -20,7 +20,7 @@ export const ThreadsLists = ({ threadsList, sendJsonMessage, thread_uuid, setVal
                 dir="bottom"
                 sx={{ border: thread_uuid === thread.uuid ? '1px solid red' : 'none' }}
                 key={index}
-                label={thread.name}
+                label={thread.meta.user_prompt}
                 onClick={() => {
                   fetchSingleThread(thread);
                 }}

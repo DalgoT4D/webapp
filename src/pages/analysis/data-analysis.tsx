@@ -86,7 +86,7 @@ export default function Explore() {
 
       if (response.message === 'Messages fetched successfully') {
         //this is when some old thread is selected and we are fetching the old messages.
-        setValue('chatMessages', response.data.messages);
+        setValue('chatMessages', response.data.messages.reverse());
       } else if (response.message === 'Thread created successfully') {
         // this is when the user creates a new thread.
         setValue('aiGeneratedSql', response.data.sql);

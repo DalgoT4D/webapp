@@ -3,10 +3,22 @@ import { useForm } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useContext } from 'react';
 import { UserPrompts } from './UserPrompts';
-import { Responses } from './Responses';
+import { AIBotResponse } from './AIBotResponse';
 import { StickyInputBox } from './StickyInput';
 
 import { useSession } from 'next-auth/react';
+
+export enum ChatMessageType {
+  HUMAN = 'human',
+  BOT = 'ai',
+}
+
+export interface ChatMessage {
+  content: string;
+  created_at: string;
+  type: string;
+  id: number;
+}
 
 // this can be the parent component and we can fetch the chat here and then send them as props to the children.
 // if its a old chat that also we can fetch and show
@@ -48,11 +60,11 @@ export const ChatInterface = ({
           {/* Top box will have chats  */}
           <Box sx={{}}>
             {chatMessages.length &&
-              chatMessages.map((chat: any, index: any) => {
-                if (chat.includes('Human')) {
-                  return <UserPrompts key={index} input={chat} />;
+              chatMessages.map((message: ChatMessage, index: any) => {
+                if (message.type === ChatMessageType.HUMAN) {
+                  return <UserPrompts key={index} message={message} />;
                 } else {
-                  return <Responses key={index} input={chat} />;
+                  return <AIBotResponse key={index} message={message} />;
                 }
               })}
           </Box>
