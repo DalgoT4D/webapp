@@ -8,12 +8,8 @@ export const GenerateSql = ({
   handleSubmit,
   onSubmit,
   aiGeneratedSql,
-  thread_uuid,
+  currentThread,
 }: any) => {
-  useEffect(() => {
-    if (thread_uuid) {
-    }
-  }, [thread_uuid]);
   return (
     <>
       <Box>

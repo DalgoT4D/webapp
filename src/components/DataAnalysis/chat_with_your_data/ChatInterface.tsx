@@ -1,12 +1,15 @@
 import { Box } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { UserPrompts } from './UserPrompts';
 import { AIBotResponse } from './AIBotResponse';
 import { StickyInputBox } from './StickyInput';
 
 import { useSession } from 'next-auth/react';
+import useWebSocket from 'react-use-websocket';
+import { generateWebsocketUrl } from '@/helpers/websocket';
+import { Thread } from './Threads';
 
 export enum ChatMessageType {
   HUMAN = 'human',
@@ -26,11 +29,14 @@ export interface ChatMessage {
 // Good this is the same parnet compmpoennt then.
 
 export const ChatInterface = ({
-  thread_uuid,
-  aiGeneratedSql,
-  sendJsonMessage,
+  currentThread,
   chatMessages,
-}: any) => {
+  setChatMessages,
+}: {
+  currentThread: Thread | null;
+  chatMessages: ChatMessage[];
+  setChatMessages: (...args: any) => any;
+}) => {
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const { control, setValue, watch, handleSubmit, reset } = useForm({
@@ -40,9 +46,28 @@ export const ChatInterface = ({
   });
   const userMessage = watch('userMessage');
 
+  const [socketUrl, setSocketUrl] = useState<string | null>(null);
+  const { sendJsonMessage, lastMessage, getWebSocket } = useWebSocket(socketUrl, {
+    share: true,
+    onError(event) {
+      console.error('Socket error:', event);
+    },
+  });
+
+  useEffect(() => {
+    if (session) {
+      setSocketUrl(generateWebsocketUrl('chat/bot', session));
+    }
+  }, [session]);
+
+  useEffect(() => {}, [lastMessage]);
+
   //chatting with the bot.
   const onSubmit = () => {
-    sendJsonMessage({ message: userMessage, action: 'ask_bot', thread_uuid: thread_uuid });
+    sendJsonMessage({
+      action: 'ask_bot',
+      params: { thread_uuid: currentThread?.uuid, message: userMessage },
+    });
     setValue('userMessage', '');
   };
   return (
