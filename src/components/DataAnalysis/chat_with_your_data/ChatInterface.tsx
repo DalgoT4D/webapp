@@ -47,7 +47,13 @@ export const ChatInterface = ({
   const userMessage = watch('userMessage');
 
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
-  const { sendJsonMessage, lastMessage, getWebSocket } = useWebSocket(socketUrl, {
+  const {
+    sendJsonMessage,
+    lastJsonMessage,
+  }: {
+    sendJsonMessage: (...args: any) => any;
+    lastJsonMessage: { data: any; status: string; message: string } | null;
+  } = useWebSocket(socketUrl, {
     share: true,
     onError(event) {
       console.error('Socket error:', event);
@@ -60,13 +66,33 @@ export const ChatInterface = ({
     }
   }, [session]);
 
-  useEffect(() => {}, [lastMessage]);
+  useEffect(() => {
+    if (lastJsonMessage && lastJsonMessage.data && lastJsonMessage.status === 'success') {
+      if (lastJsonMessage.data.response) {
+        sendJsonMessage({ action: 'get_messages', params: { thread_uuid: currentThread?.uuid } });
+      } else if (lastJsonMessage.data.messages) {
+        setChatMessages(lastJsonMessage.data.messages);
+      }
+    }
+  }, [lastJsonMessage]);
 
-  const onSubmit = () => {
-    sendJsonMessage({
-      action: 'ask_bot',
-      params: { thread_uuid: currentThread?.uuid, message: userMessage },
-    });
+  const onSubmit = async (data: any) => {
+    if (currentThread && currentThread.status === ThreadStatus.OPEN) {
+      sendJsonMessage({
+        action: 'ask_bot',
+        params: { thread_uuid: currentThread.uuid, message: userMessage },
+      });
+    }
+    // push the user chat message
+    setChatMessages([
+      ...chatMessages,
+      {
+        content: userMessage,
+        created_at: new Date().toISOString(),
+        type: ChatMessageType.HUMAN,
+        id: 0,
+      },
+    ]);
     setValue('userMessage', '');
   };
 
