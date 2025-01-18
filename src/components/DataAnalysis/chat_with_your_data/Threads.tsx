@@ -1,13 +1,17 @@
 import { generateWebsocketUrl } from '@/helpers/websocket';
-import { Box, Divider, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Divider, IconButton, Tab, Tabs, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
-import { ChatMessage } from './ChatInterface';
+import Image from 'next/image';
+import DeleteIcon from '@/assets/icons/delete.svg';
+import { error } from 'console';
+import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 export enum ThreadStatus {
   OPEN = 'open',
-  CLOSED = 'closed',
+  CLOSED = 'close',
 }
 
 export interface ThreadMeta {
@@ -24,33 +28,62 @@ export interface Thread {
   updated_at: string;
 }
 
+export enum WebSocketResponseStatus {
+  SUCCESS = 'success',
+  ERROR = 'error',
+}
+
 export const Threads = ({
   threads,
   setChatMessages,
   setCurrentThread,
   currentThread,
   setThreads,
+  refreshThreads,
 }: {
   threads: Thread[];
   currentThread: Thread | null;
   setChatMessages: (...args: any) => any;
   setCurrentThread: (...args: any) => any;
   setThreads: (...args: any) => any;
+  refreshThreads: boolean;
 }) => {
+  const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const {
     sendJsonMessage,
-    lastJsonMessage,
   }: {
     sendJsonMessage: (...args: any) => any;
     lastJsonMessage: { data: any; status: string; message: string } | null;
   } = useWebSocket(socketUrl, {
     share: true,
+    onOpen: () => {
+      sendJsonMessage({ action: 'get_threads' });
+    },
+    onMessage: (event) => {
+      let lastMessage = JSON.parse(event.data);
+      onMessageReceived(lastMessage);
+    },
     onError(event) {
       console.error('Socket error:', event);
     },
   });
+
+  const onMessageReceived = (jsonMessage: any) => {
+    if (jsonMessage && jsonMessage.data && jsonMessage.status === WebSocketResponseStatus.SUCCESS) {
+      if (jsonMessage.data.messages) {
+        setChatMessages(jsonMessage.data.messages);
+      } else if (jsonMessage.data.threads && jsonMessage.data.threads.length > 0) {
+        setThreads(jsonMessage.data.threads);
+        if (!currentThread) setCurrentThread(jsonMessage.data.threads[0]);
+      }
+    } else if (jsonMessage && jsonMessage.status === WebSocketResponseStatus.ERROR) {
+      errorToast(jsonMessage.message, [], globalContext);
+    } else {
+      console.log('Something went wrong; probably a refresh & lastMessage is null', jsonMessage);
+    }
+  };
 
   useEffect(() => {
     if (session) {
@@ -59,21 +92,20 @@ export const Threads = ({
   }, [session]);
 
   useEffect(() => {
-    // set the messages of current select thread
-    if (lastJsonMessage && lastJsonMessage.data) {
-      if (lastJsonMessage.data.messages) {
-        setChatMessages(lastJsonMessage.data.messages);
-      } else if (lastJsonMessage.data.threads) {
-        setThreads(lastJsonMessage.data.threads);
-      }
+    if (session && refreshThreads) {
+      sendJsonMessage({ action: 'get_threads' });
     }
-  }, [lastJsonMessage]);
+  }, [refreshThreads]);
 
   const onSelectThread = (thread: Thread) => {
-    // setValue('aiGeneratedSql', thread.meta.sql);
-    // setValue('thread_uuid', thread.uuid);
     setCurrentThread(thread);
     sendJsonMessage({ action: 'get_messages', params: { thread_uuid: thread.uuid } });
+  };
+
+  const onCloseThread = (thread: Thread) => {
+    sendJsonMessage({ action: 'close_thread', params: { thread_uuid: thread.uuid } });
+    sendJsonMessage({ action: 'get_threads' });
+    setCurrentThread(null);
   };
 
   return (
@@ -84,17 +116,73 @@ export const Threads = ({
 
         {threads.length ? (
           <Tabs orientation="vertical" variant="scrollable">
-            {threads.map((thread: Thread, index: number) => (
-              <Tab
-                dir="bottom"
-                sx={{ border: currentThread?.uuid === thread.uuid ? '1px solid red' : 'none' }}
-                key={index}
-                label={thread.meta.user_prompt}
-                onClick={() => {
-                  onSelectThread(thread);
-                }}
-              />
-            ))}
+            {threads
+              .filter((thread) => thread.status === ThreadStatus.OPEN)
+              .map((thread: Thread, index: number) => (
+                <>
+                  {' '}
+                  <Tab
+                    dir="bottom"
+                    sx={{
+                      border: currentThread?.uuid === thread.uuid ? '1px solid #2196F3' : 'none',
+                    }}
+                    key={index}
+                    label={
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          width: '100%',
+                        }}
+                      >
+                        <span>{thread.meta.user_prompt}</span>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCloseThread(thread);
+                          }}
+                        >
+                          <Image src={DeleteIcon} alt="delete icon" />
+                        </IconButton>
+                      </Box>
+                    }
+                    onClick={() => {
+                      onSelectThread(thread);
+                    }}
+                  />
+                </>
+              ))}
+
+            <Divider sx={{ my: 2 }} />
+
+            {threads
+              .filter((thread) => thread.status === ThreadStatus.CLOSED)
+              .map((thread: Thread, index: number) => (
+                <Tab
+                  dir="bottom"
+                  key={index}
+                  label={
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                      }}
+                    >
+                      <span>{thread.meta.user_prompt}</span>
+                    </Box>
+                  }
+                  sx={{
+                    border: currentThread?.uuid === thread.uuid ? '1px solid #2196F3' : 'none',
+                  }}
+                  onClick={() => {
+                    onSelectThread(thread);
+                  }}
+                />
+              ))}
           </Tabs>
         ) : (
           <Typography variant="body1">No threads available</Typography>

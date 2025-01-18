@@ -9,7 +9,7 @@ import { StickyInputBox } from './StickyInput';
 import { useSession } from 'next-auth/react';
 import useWebSocket from 'react-use-websocket';
 import { generateWebsocketUrl } from '@/helpers/websocket';
-import { Thread } from './Threads';
+import { Thread, ThreadStatus } from './Threads';
 
 export enum ChatMessageType {
   HUMAN = 'human',
@@ -62,7 +62,6 @@ export const ChatInterface = ({
 
   useEffect(() => {}, [lastMessage]);
 
-  //chatting with the bot.
   const onSubmit = () => {
     sendJsonMessage({
       action: 'ask_bot',
@@ -70,6 +69,7 @@ export const ChatInterface = ({
     });
     setValue('userMessage', '');
   };
+
   return (
     <>
       <Box>
@@ -97,7 +97,9 @@ export const ChatInterface = ({
           <Box></Box>
         </Box>
 
-        <StickyInputBox handleSubmit={handleSubmit} onSubmit={onSubmit} control={control} />
+        {currentThread?.status === ThreadStatus.OPEN && (
+          <StickyInputBox handleSubmit={handleSubmit} onSubmit={onSubmit} control={control} />
+        )}
       </Box>
     </>
   );
