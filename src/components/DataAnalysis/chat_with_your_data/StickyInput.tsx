@@ -8,10 +8,10 @@ export const StickyInputBox = ({ handleSubmit, onSubmit, control }: any) => {
         position: 'sticky', // Makes it stick to the bottom
         bottom: 0, // Aligns it to the bottom of the page/container
         zIndex: 1000, // Ensures it stays on top of other elements
-        backgroundColor: '#f9f9f9', // Background color
-        borderTop: '1px solid #ddd', // Subtle top border for separation
-        padding: '1rem', // Padding for spacing
-        boxShadow: '0 -2px 5px rgba(0, 0, 0, 0.1)', // Shadow for better visibility
+        // backgroundColor: '#f9f9f9', // Background color
+        // borderTop: '1px solid #ddd', // Subtle top border for separation
+        // padding: '1rem', // Padding for spacing
+        // boxShadow: '0 -2px 5px rgba(0, 0, 0, 0.1)', // Shadow for better visibility
       }}
     >
       <Box

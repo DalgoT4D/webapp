@@ -1,20 +1,11 @@
 import { PageHead } from '@/components/PageHead';
 
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Box,
-  Dialog,
-  Divider,
-  Typography,
-} from '@mui/material';
+import { Box, Dialog, Divider, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { TopNavBar, Transition } from '@/components/DBT/DBTTransformType';
 import { ResizableBox } from 'react-resizable';
-import PreviewPane from '@/components/TransformWorkflow/FlowEditor/Components/LowerSectionTabs/PreviewPane';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GenerateSql } from '@/components/DataAnalysis/chat_with_your_data/GenerateSql';
@@ -23,15 +14,11 @@ import {
   ChatInterface,
   ChatMessage,
 } from '@/components/DataAnalysis/chat_with_your_data/ChatInterface';
-import { ExpandMore } from '@mui/icons-material';
+
 import useWebSocket from 'react-use-websocket';
 import { generateWebsocketUrl } from '@/helpers/websocket';
-import {
-  Thread,
-  Threads,
-  WebSocketResponseStatus,
-} from '@/components/DataAnalysis/chat_with_your_data/Threads';
-import PreviewPaneSql from '@/components/TransformWorkflow/FlowEditor/Components/LowerSectionTabs/PreivewPaneSql';
+import { Thread, Threads } from '@/components/DataAnalysis/chat_with_your_data/Threads';
+import { PreviewPaneSql } from '@/components/DataAnalysis/chat_with_your_data/PreviewTable';
 
 export default function Explore() {
   const { data: session } = useSession();
@@ -65,12 +52,15 @@ export default function Explore() {
   const { setValue, watch } = useForm({
     defaultValues: {
       aiGeneratedSql: '',
+      userPrompt: '',
       tableData: [],
     },
   });
 
   const aiGeneratedSql = watch('aiGeneratedSql');
   const tableData = watch('tableData');
+  const userPrompt = watch('userPrompt');
+  console.log(userPrompt, 'user!@@!@!!@!@!@!@!@!@');
 
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const {
@@ -103,7 +93,9 @@ export default function Explore() {
 
   useEffect(() => {
     if (currentThread) {
+      console.log(currentThread, 'currentThread');
       setValue('aiGeneratedSql', currentThread.meta.sql);
+      setValue('userPrompt', currentThread.meta.user_prompt);
     }
   }, [currentThread]);
 
@@ -127,17 +119,21 @@ export default function Explore() {
             display: 'flex',
             overflow: 'inherit',
             position: 'relative',
+            height: '80vh',
           }}
         >
           {/* LEFT SIDE TO VIEW THE THREADS */}
-          <ResizableBox
+          {/* <ResizableBox
             axis="x"
             width={width_R}
             onResize={onResize_R}
             minConstraints={[280, Infinity]}
             maxConstraints={[550, Infinity]}
             resizeHandles={['e']}
-          >
+          > */}
+          <Box style={{ width: '30vw' }}>
+            {' '}
+            {/* Ensure scrollable content */}
             <Threads
               threads={threads.current}
               setThreads={setThreads}
@@ -146,75 +142,76 @@ export default function Explore() {
               currentThread={currentThread}
               refreshThreads={refreshThreads}
             />
-          </ResizableBox>
+          </Box>
+          {/* </ResizableBox> */}
 
           <Divider orientation="vertical" sx={{ color: 'black' }} />
+          {/* Chat with your data. */}
 
           <Box sx={{ width: `calc(100% - ${width}px)` }}>
             <Box>
               <Box sx={{ height: 'unset' }}>
-                <Accordion>
-                  <AccordionSummary
-                    expandIcon={<ExpandMore />}
-                    aria-controls="panel2-content"
-                    id="panel2-header"
-                  >
-                    <Typography component="span"> Chat With Your Data</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <ChatInterface
-                      chatMessages={chatMessages}
-                      currentThread={currentThread}
-                      setChatMessages={setChatMessages}
-                    />
-                  </AccordionDetails>
-                </Accordion>
+                <ChatInterface
+                  chatMessages={chatMessages}
+                  currentThread={currentThread}
+                  aiGeneratedSql={aiGeneratedSql}
+                  setChatMessages={setChatMessages}
+                />
               </Box>
             </Box>
-            <Divider orientation="vertical" sx={{ color: 'black' }} />
-
-            <ResizableBox
-              axis="x"
-              width={width}
-              onResize={onResize}
-              minConstraints={[280, Infinity]}
-              maxConstraints={[550, Infinity]}
-              resizeHandles={['w']}
-            >
-              {/* Here we will add the sql generated prompt and also the chat with your data thing. */}
-
-              <Box>
-                <PreviewPaneSql height={height} initialSqlString={currentThread?.meta.sql} />
-              </Box>
-
-              {/* <Box
-                sx={{
-                  height: '44px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  background: '#F5FAFA',
-                  borderTop: '1px solid #CCCCCC',
-                  borderBottom: '1px solid #CCCCCC',
-                }}
-              ></Box> */}
-            </ResizableBox>
           </Box>
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMore />}
-              aria-controls="panel1-content"
-              id="panel1-header"
-            >
-              <Typography component="span">AI SQL Generation</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <GenerateSql
-                aiGeneratedSql={aiGeneratedSql}
-                triggerRefreshThreads={triggerRefreshThreads}
-              />
-            </AccordionDetails>
-          </Accordion>
+          {/* Chat with your data. */}
+          <Divider orientation="vertical" sx={{ color: 'black' }} />
+          {/* <ResizableBox axis="x"
+            width={width}
+            onResize={onResize}
+            minConstraints={[280, Infinity]}
+            maxConstraints={[550, Infinity]}
+            resizeHandles={['w']}> */}
+
+          {/* <Accordion>
+              <AccordionSummary
+                expandIcon={<ExpandMore />}
+                aria-controls="panel1-content"
+                id="panel1-header"
+              >
+              </AccordionSummary>
+              <AccordionDetails>
+              </AccordionDetails>
+            </Accordion> */}
+          <Box sx={{ width: '30vw' }}>
+            <GenerateSql
+              aiGeneratedSql={aiGeneratedSql}
+              userPrompt={userPrompt}
+              triggerRefreshThreads={triggerRefreshThreads}
+            />
+          </Box>
+          {/* </ResizableBox> */}
         </Box>
+
+        {/* 
+        <ResizableBox
+          axis="y"
+          width={width_R}
+          onResize={onResize_R}
+          minConstraints={[280, Infinity]}
+          maxConstraints={[550, Infinity]}
+          resizeHandles={['n']}
+        >
+          <PreviewPaneSql height={height} initialSqlString={aiGeneratedSql} />
+
+        </ResizableBox> */}
+        {/* <ResizableBox
+          axis="y"
+          resizeHandles={['n']}
+          width={Infinity}
+          height={300}
+          onResize={onResize}
+          minConstraints={[Infinity, 100]}
+        > */}
+        <PreviewPaneSql height={100} initialSqlString={aiGeneratedSql} />
+        {/* <PreviewPaneSql height={300} initialSqlString={aiGeneratedSql} /> */}
+        {/* </ResizableBox> */}
       </Dialog>
     </>
   );

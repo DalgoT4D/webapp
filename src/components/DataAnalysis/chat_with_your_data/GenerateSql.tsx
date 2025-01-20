@@ -1,15 +1,17 @@
 import { generateWebsocketUrl } from '@/helpers/websocket';
 import { ArrowCircleUp } from '@mui/icons-material';
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button, TextField, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 
 export const GenerateSql = ({
   aiGeneratedSql,
+  userPrompt,
   triggerRefreshThreads,
 }: {
   aiGeneratedSql: string;
+  userPrompt: string;
   triggerRefreshThreads: (...args: any) => void;
 }) => {
   const { data: session }: any = useSession();
@@ -46,10 +48,17 @@ export const GenerateSql = ({
   };
 
   useEffect(() => {
+    if (userPrompt) {
+      setSqlFilterDataPrompt(userPrompt);
+    }
+  }, [userPrompt]);
+
+  useEffect(() => {
     if (lastJsonMessage) {
       if (lastJsonMessage.status === 'success') {
         // make sure the lastest thread is set to current thread
         triggerRefreshThreads();
+
         console.log('Success:', lastJsonMessage.message);
       } else {
         console.error('Error:', lastJsonMessage.message);
@@ -61,10 +70,20 @@ export const GenerateSql = ({
     <>
       <Box>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Typography variant="h4">Ask Away</Typography>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '4px 4px',
+          }}
+        >
           <TextField
             placeholder="Enter your customized prompt here"
             multiline
-            rows={1}
+            rows={4}
             fullWidth
             value={sqlFilterDataPrompt}
             onChange={(e) => setSqlFilterDataPrompt(e.target.value)}
@@ -93,7 +112,6 @@ export const GenerateSql = ({
               value={aiGeneratedSql}
               variant="outlined"
             />
-            <Button>Run</Button>
           </Box>
         )}
       </Box>

@@ -7,7 +7,7 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-const PreviewPaneSql = ({
+const PreviewPaneSql_ishan = ({
   height,
   initialSqlString,
 }: {
@@ -21,6 +21,7 @@ const PreviewPaneSql = ({
   const toastContext = useContext(GlobalContext);
 
   const fetchData = async () => {
+    console.log(initialSqlString, 'intitiasqlstring');
     setLoading(true);
     try {
       const response = await httpPost(session, `warehouse/v1/table_data/run_sql`, {
@@ -28,6 +29,7 @@ const PreviewPaneSql = ({
         limit: 10,
         offset: 0,
       });
+      console.log(response, 'responseof the fetch data.');
       const { rows, columns } = response;
       setData(rows);
       setColumns(columns.map((col: string) => ({ accessorKey: col, header: col })));
@@ -80,4 +82,4 @@ const PreviewPaneSql = ({
   );
 };
 
-export default PreviewPaneSql;
+export default PreviewPaneSql_ishan;

@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useContext, useEffect, useState } from 'react';
@@ -32,9 +32,11 @@ export const ChatInterface = ({
   currentThread,
   chatMessages,
   setChatMessages,
+  aiGeneratedSql,
 }: {
   currentThread: Thread | null;
   chatMessages: ChatMessage[];
+  aiGeneratedSql: string;
   setChatMessages: (...args: any) => any;
 }) => {
   const globalContext = useContext(GlobalContext);
@@ -99,9 +101,12 @@ export const ChatInterface = ({
   return (
     <>
       <Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Typography variant="h4">Chat With Your Data</Typography>
+        </Box>
         <Box
           sx={{
-            height: '60vh',
+            height: '50vh',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
@@ -123,7 +128,7 @@ export const ChatInterface = ({
           <Box></Box>
         </Box>
 
-        {currentThread?.status === ThreadStatus.OPEN && (
+        {aiGeneratedSql && (
           <StickyInputBox handleSubmit={handleSubmit} onSubmit={onSubmit} control={control} />
         )}
       </Box>

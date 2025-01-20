@@ -21,9 +21,16 @@ import {
   getSortedRowModel,
   flexRender,
 } from '@tanstack/react-table';
+import { httpPost } from '@/helpers/http';
 
-const PreviewPane = ({ height }: { height: number }) => {
-  const [modelToPreview, setModelToPreview] = useState();
+export const PreviewPaneSql = ({
+  height,
+  initialSqlString,
+}: {
+  height: number;
+  initialSqlString: any;
+}) => {
+  // const [modelToPreview, setModelToPreview] = useState();
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
 
@@ -37,9 +44,8 @@ const PreviewPane = ({ height }: { height: number }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(1); // Page index
   const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
   const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
-
+  const [loading, setLoading] = useState<boolean>(false);
   // download in progress flag
-  const [downloadInProgress, setDownloadInProgress] = useState(false);
 
   const handleSort = (columnId: string) => {
     if (sortedColumn === columnId) {
@@ -56,7 +62,32 @@ const PreviewPane = ({ height }: { height: number }) => {
       data,
     };
   }, [columns, data]);
+  const fetchData = async () => {
+    console.log(initialSqlString, 'intitiasqlstring');
+    setLoading(true);
+    try {
+      const response = await httpPost(session, `warehouse/v1/table_data/run_sql`, {
+        sql: initialSqlString,
+        limit: 10,
+        offset: 0,
+      });
+      console.log(response, 'responseof the fetch data.');
+      const { rows, columns } = response;
+      setData(rows);
+      setColumns(columns.map((col: string) => ({ accessorKey: col, header: col })));
+    } catch (error) {
+      errorToast('Error fetching preview data', [], toastContext);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    if (initialSqlString) {
+      fetchData();
+    }
+  }, [session, initialSqlString]);
+  console.log(tableData, 'tableData');
   // Update useTable hook
   const { getHeaderGroups, getRowModel } = useReactTable({
     columns: tableData.columns,
@@ -67,7 +98,7 @@ const PreviewPane = ({ height }: { height: number }) => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  return modelToPreview ? (
+  return data ? (
     <Box>
       <Box
         sx={{
@@ -75,10 +106,11 @@ const PreviewPane = ({ height }: { height: number }) => {
           display: 'flex',
           justifyContent: 'space-between',
           padding: '8px 20px 8px 44px',
+          border: '1px solid grey',
         }}
       ></Box>
       <Box>
-        <Box sx={{ height: height - 150, overflow: 'auto' }}>
+        <Box sx={{ height: '25vh', overflow: 'auto' }}>
           <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
             <TableHead>
               {getHeaderGroups().map((headerGroup: any) => (
@@ -168,5 +200,3 @@ const PreviewPane = ({ height }: { height: number }) => {
     </Box>
   );
 };
-
-export default PreviewPane;
