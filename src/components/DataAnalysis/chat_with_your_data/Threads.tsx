@@ -159,7 +159,7 @@ export const Threads = ({
               ))}
 
             <Divider sx={{ my: 2 }} />
-
+            {/* 
             {threads
               .filter((thread) => thread.status === ThreadStatus.CLOSED)
               .map((thread: Thread, index: number) => (
@@ -185,7 +185,7 @@ export const Threads = ({
                     onSelectThread(thread);
                   }}
                 />
-              ))}
+              ))} */}
           </Box>
           {/* ) : (
             <Box>
