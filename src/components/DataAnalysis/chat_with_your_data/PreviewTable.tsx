@@ -87,7 +87,6 @@ export const PreviewPaneSql = ({
       fetchData();
     }
   }, [session, initialSqlString]);
-  console.log(tableData, 'tableData');
   // Update useTable hook
   const { getHeaderGroups, getRowModel } = useReactTable({
     columns: tableData.columns,

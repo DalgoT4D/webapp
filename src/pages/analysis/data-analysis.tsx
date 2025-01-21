@@ -26,10 +26,9 @@ export default function Explore() {
   const globalContext = useContext(GlobalContext);
   const [loading, setLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  // const [threads, setThreads] = useState<Thread[]>([]);
-  const threads = useRef<Thread[]>([]);
+  const [threads, setThreads] = useState<Thread[]>([]);
   const [currentThread, setCurrentThread] = useState<Thread | null>(null);
-  const [refreshThreads, setRefreshThreads] = useState<boolean>(false); // just a toggle to refetch threads list
+  const refreshThreads = useRef<boolean>(false); // just a toggle to refetch threads list
 
   const [dialogueOpen, setDialogueOpen] = useState(true);
   const [width, setWidth] = useState(400);
@@ -38,15 +37,15 @@ export default function Explore() {
   const [height, setheight] = useState(500);
   const [height_R, setheight_R] = useState(500);
 
-  const setThreads = (newThreads: Thread[]) => {
-    threads.current = newThreads;
-  };
+  // const onResize = (event: any, { size }: any) => {
+  //   setWidth(size.width);
+  // };
+  // const onResize_R = (event: any, { size }: any) => {
+  //   setWidth_R(size.width);
+  // };
 
-  const onResize = (event: any, { size }: any) => {
-    setWidth(size.width);
-  };
-  const onResize_R = (event: any, { size }: any) => {
-    setWidth_R(size.width);
+  const setRefreshThreads = (value: boolean) => {
+    refreshThreads.current = !refreshThreads.current;
   };
 
   const { setValue, watch } = useForm({
@@ -60,7 +59,6 @@ export default function Explore() {
   const aiGeneratedSql = watch('aiGeneratedSql');
   const tableData = watch('tableData');
   const userPrompt = watch('userPrompt');
-  console.log(userPrompt, 'user!@@!@!!@!@!@!@!@!@');
 
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const {
@@ -99,9 +97,20 @@ export default function Explore() {
     }
   }, [currentThread]);
 
-  const triggerRefreshThreads = () => {
+  const triggerRefreshThreads = async () => {
+    // refersh the threads list
+    // sendJsonMessage({ action: 'get_threads' });
+    console.log('In main refreshing threads function');
     setRefreshThreads(!refreshThreads);
   };
+
+  // useEffect(() => {
+  //   if (lastJsonMessage && lastJsonMessage.data && lastJsonMessage.status === 'success') {
+  //     if (lastJsonMessage.data.threads) {
+  //       setThreads(lastJsonMessage.data.threads);
+  //     }
+  //   }
+  // }, [lastJsonMessage]);
 
   return (
     <>
@@ -135,12 +144,11 @@ export default function Explore() {
             {' '}
             {/* Ensure scrollable content */}
             <Threads
-              threads={threads.current}
+              threads={threads}
               setThreads={setThreads}
               setChatMessages={setChatMessages}
               setCurrentThread={setCurrentThread}
               currentThread={currentThread}
-              refreshThreads={refreshThreads}
             />
           </Box>
           {/* </ResizableBox> */}
@@ -184,6 +192,8 @@ export default function Explore() {
               aiGeneratedSql={aiGeneratedSql}
               userPrompt={userPrompt}
               triggerRefreshThreads={triggerRefreshThreads}
+              setThreads={setThreads}
+              setCurrentThread={setCurrentThread}
             />
           </Box>
           {/* </ResizableBox> */}

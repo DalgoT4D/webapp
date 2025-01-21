@@ -4,15 +4,20 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
+import { Thread, ThreadStatus } from './Threads';
 
 export const GenerateSql = ({
   aiGeneratedSql,
   userPrompt,
   triggerRefreshThreads,
+  setThreads,
+  setCurrentThread,
 }: {
   aiGeneratedSql: string;
   userPrompt: string;
   triggerRefreshThreads: (...args: any) => void;
+  setThreads: (...args: any) => void;
+  setCurrentThread: (...args: any) => void;
 }) => {
   const { data: session }: any = useSession();
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
@@ -56,10 +61,16 @@ export const GenerateSql = ({
   useEffect(() => {
     if (lastJsonMessage) {
       if (lastJsonMessage.status === 'success') {
-        // make sure the lastest thread is set to current thread
-        triggerRefreshThreads();
-
-        console.log('Success:', lastJsonMessage.message);
+        if (
+          lastJsonMessage.data &&
+          lastJsonMessage.data.threads &&
+          lastJsonMessage.data.threads.length > 0
+        ) {
+          setThreads(lastJsonMessage.data.threads);
+          setCurrentThread(
+            lastJsonMessage.data.threads.filter((th: Thread) => th.status === ThreadStatus.OPEN)[0]
+          );
+        }
       } else {
         console.error('Error:', lastJsonMessage.message);
       }

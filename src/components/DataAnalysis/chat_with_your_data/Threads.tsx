@@ -8,6 +8,7 @@ import DeleteIcon from '@/assets/icons/delete.svg';
 import { error } from 'console';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { Mutable } from 'next/dist/client/components/router-reducer/router-reducer-types';
 
 export enum ThreadStatus {
   OPEN = 'open',
@@ -39,18 +40,17 @@ export const Threads = ({
   setCurrentThread,
   currentThread,
   setThreads,
-  refreshThreads,
 }: {
   threads: Thread[];
   currentThread: Thread | null;
   setChatMessages: (...args: any) => any;
   setCurrentThread: (...args: any) => any;
   setThreads: (...args: any) => any;
-  refreshThreads: boolean;
 }) => {
   const globalContext = useContext(GlobalContext);
   const { data: session }: any = useSession();
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
+
   const {
     sendJsonMessage,
   }: {
@@ -75,9 +75,10 @@ export const Threads = ({
       if (jsonMessage.data.messages) {
         setChatMessages(jsonMessage.data.messages);
       } else if (jsonMessage.data.threads && jsonMessage.data.threads.length > 0) {
-        // setThreads(jsonMessage?.data?.threads);
         setThreads(jsonMessage.data.threads);
-        setCurrentThread(jsonMessage.data.threads[0]);
+        setCurrentThread(
+          jsonMessage.data.threads.filter((th: Thread) => th.status === ThreadStatus.OPEN)[0]
+        );
       }
     } else if (jsonMessage && jsonMessage.status === WebSocketResponseStatus.ERROR) {
       errorToast(jsonMessage.message, [], globalContext);
@@ -87,21 +88,14 @@ export const Threads = ({
   };
 
   useEffect(() => {
-    if (threads.length) {
-      setCurrentThread(threads[0]);
-    }
-  }, [threads]);
-  useEffect(() => {
     if (session) {
       setSocketUrl(generateWebsocketUrl('chat/bot', session));
     }
   }, [session]);
 
   useEffect(() => {
-    if (session) {
-      sendJsonMessage({ action: 'get_threads' });
-    }
-  }, [session]);
+    if (socketUrl) sendJsonMessage({ action: 'get_threads' });
+  }, [socketUrl]);
 
   const onSelectThread = (thread: Thread) => {
     setCurrentThread(thread);
@@ -111,7 +105,6 @@ export const Threads = ({
   const onCloseThread = (thread: Thread) => {
     sendJsonMessage({ action: 'close_thread', params: { thread_uuid: thread.uuid } });
     sendJsonMessage({ action: 'get_threads' });
-    // setCurrentThread(null);
   };
 
   return (
@@ -123,56 +116,20 @@ export const Threads = ({
         <Divider />
 
         <Box sx={{ overflowY: 'scroll', height: '55vh', padding: '10px 10px' }}>
-          {true ? (
-            <Box>
-              {threads
-                .filter((thread) => thread.status === ThreadStatus.OPEN)
-                .map((thread: Thread, index: number) => (
-                  <>
-                    {' '}
-                    <Tab
-                      dir="bottom"
-                      sx={{
-                        backgroundColor: currentThread?.uuid === thread.uuid ? '#D0E2E2' : 'none',
-                        color: currentThread?.uuid === thread.uuid ? '#0F2440' : 'black',
-                      }}
-                      key={index}
-                      label={
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            width: '100%',
-                          }}
-                        >
-                          <span>{thread.meta.user_prompt}</span>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onCloseThread(thread);
-                            }}
-                          >
-                            <Image src={DeleteIcon} alt="delete icon" />
-                          </IconButton>
-                        </Box>
-                      }
-                      onClick={() => {
-                        onSelectThread(thread);
-                      }}
-                    />
-                  </>
-                ))}
-
-              <Divider sx={{ my: 2 }} />
-
-              {threads
-                .filter((thread) => thread.status === ThreadStatus.CLOSED)
-                .map((thread: Thread, index: number) => (
+          {/* {true ? ( */}
+          <Box>
+            {threads
+              .filter((thread) => thread.status === ThreadStatus.OPEN)
+              .map((thread: Thread, index: number) => (
+                <>
+                  {' '}
                   <Tab
                     dir="bottom"
-                    key={index}
+                    sx={{
+                      backgroundColor: currentThread?.uuid === thread.uuid ? '#D0E2E2' : 'none',
+                      color: currentThread?.uuid === thread.uuid ? '#0F2440' : 'black',
+                    }}
+                    key={thread.uuid}
                     label={
                       <Box
                         sx={{
@@ -183,22 +140,58 @@ export const Threads = ({
                         }}
                       >
                         <span>{thread.meta.user_prompt}</span>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCloseThread(thread);
+                          }}
+                        >
+                          <Image src={DeleteIcon} alt="delete icon" />
+                        </IconButton>
                       </Box>
                     }
-                    sx={{
-                      border: currentThread?.uuid === thread.uuid ? '1px solid #2196F3' : 'none',
-                    }}
                     onClick={() => {
                       onSelectThread(thread);
                     }}
                   />
-                ))}
-            </Box>
-          ) : (
+                </>
+              ))}
+
+            <Divider sx={{ my: 2 }} />
+
+            {threads
+              .filter((thread) => thread.status === ThreadStatus.CLOSED)
+              .map((thread: Thread, index: number) => (
+                <Tab
+                  dir="bottom"
+                  key={index}
+                  label={
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                      }}
+                    >
+                      <span>{thread.meta.user_prompt}</span>
+                    </Box>
+                  }
+                  sx={{
+                    border: currentThread?.uuid === thread.uuid ? '1px solid #2196F3' : 'none',
+                  }}
+                  onClick={() => {
+                    onSelectThread(thread);
+                  }}
+                />
+              ))}
+          </Box>
+          {/* ) : (
             <Box>
               <Typography variant="body1">No threads available</Typography>
             </Box>
-          )}
+          )} */}
         </Box>
       </Box>
     </>
