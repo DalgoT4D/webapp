@@ -104,14 +104,6 @@ export default function Explore() {
     setRefreshThreads(!refreshThreads);
   };
 
-  // useEffect(() => {
-  //   if (lastJsonMessage && lastJsonMessage.data && lastJsonMessage.status === 'success') {
-  //     if (lastJsonMessage.data.threads) {
-  //       setThreads(lastJsonMessage.data.threads);
-  //     }
-  //   }
-  // }, [lastJsonMessage]);
-
   return (
     <>
       <PageHead title="Dalgo | Data Analysis" />

@@ -1,5 +1,5 @@
 import { generateWebsocketUrl } from '@/helpers/websocket';
-import { Box, Divider, IconButton, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Divider, IconButton, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useRef, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
@@ -128,6 +128,7 @@ export const Threads = ({
                     sx={{
                       backgroundColor: currentThread?.uuid === thread.uuid ? '#D0E2E2' : 'none',
                       color: currentThread?.uuid === thread.uuid ? '#0F2440' : 'black',
+                      textTransform: 'lowercase',
                     }}
                     key={thread.uuid}
                     label={
@@ -158,7 +159,7 @@ export const Threads = ({
                 </>
               ))}
 
-            <Divider sx={{ my: 2 }} />
+            {/* <Divider sx={{ my: 2 }} /> */}
             {/* 
             {threads
               .filter((thread) => thread.status === ThreadStatus.CLOSED)
