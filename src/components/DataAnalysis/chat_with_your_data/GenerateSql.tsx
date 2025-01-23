@@ -55,6 +55,8 @@ export const GenerateSql = ({
   useEffect(() => {
     if (userPrompt) {
       setSqlFilterDataPrompt(userPrompt);
+    } else {
+      setSqlFilterDataPrompt('');
     }
   }, [userPrompt]);
 

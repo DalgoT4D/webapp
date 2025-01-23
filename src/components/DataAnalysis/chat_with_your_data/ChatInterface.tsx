@@ -101,6 +101,8 @@ export const ChatInterface = ({
   useEffect(() => {
     if (currentThread) {
       sendJsonMessage({ action: 'get_messages', params: { thread_uuid: currentThread.uuid } });
+    } else {
+      setChatMessages([]);
     }
   }, [currentThread]);
 

@@ -68,7 +68,7 @@ export const PreviewPaneSql = ({
     try {
       const response = await httpPost(session, `warehouse/v1/table_data/run_sql`, {
         sql: initialSqlString,
-        limit: 10,
+        limit: 500,
         offset: 0,
       });
       console.log(response, 'responseof the fetch data.');
@@ -85,6 +85,9 @@ export const PreviewPaneSql = ({
   useEffect(() => {
     if (initialSqlString) {
       fetchData();
+    } else {
+      setData([]);
+      setColumns([]);
     }
   }, [session, initialSqlString]);
   // Update useTable hook

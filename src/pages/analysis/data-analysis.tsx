@@ -94,6 +94,9 @@ export default function Explore() {
       console.log(currentThread, 'currentThread');
       setValue('aiGeneratedSql', currentThread.meta.sql);
       setValue('userPrompt', currentThread.meta.user_prompt);
+    } else {
+      setValue('aiGeneratedSql', '');
+      setValue('userPrompt', '');
     }
   }, [currentThread]);
 

@@ -12,8 +12,8 @@ export const AIBotResponse = ({ message }: { message: ChatMessage }) => {
       >
         <Box
           sx={{
-            backgroundColor: '#F4F9F9',
-            color: '#0F2440',
+            backgroundColor: '#0A6B4A',
+            color: 'white',
             padding: '5px',
             borderRadius: '5px',
             maxWidth: '90%',
