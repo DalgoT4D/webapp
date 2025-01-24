@@ -541,9 +541,8 @@ const CreateConnectionForm = ({
                             <Switch
                               data-testid={`stream-incremental-${idx}`}
                               disabled={
-                                !stream.cursorField ||
-                                !stream.supportsIncremental ||
-                                !stream.selected
+                                // !stream.cursorField ||
+                                !stream.supportsIncremental || !stream.selected
                               }
                               checked={
                                 stream.supportsIncremental && ifIncremental && stream.selected
