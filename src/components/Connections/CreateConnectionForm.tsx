@@ -1,7 +1,16 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import CustomDialog from '../Dialog/CustomDialog';
-import { Autocomplete, Box, Button, Switch, Select, MenuItem, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Switch,
+  Select,
+  MenuItem,
+  TextField,
+  Checkbox,
+} from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -36,6 +45,7 @@ interface SourceStream {
   cursorField: string;
   primaryKeyOptions: string[];
   primaryKey: string;
+  isSourceDefinedPrimaryKey: boolean;
 }
 
 const CreateConnectionForm = ({
@@ -95,7 +105,8 @@ const CreateConnectionForm = ({
         },
         cursorField: '',
         primaryKeyOptions: [], //contains dropdown options for primary key
-        primaryKey: '',
+        primaryKey: [], //this can be multiple hence we have to make it an array. This is a composite primary key.
+        isSourceDefinedPrimaryKey: false,
       };
 
       const cursorFieldObj = stream.cursorFieldConfig;
@@ -123,15 +134,18 @@ const CreateConnectionForm = ({
         if ('cursorField' in el.config)
           stream.cursorField = el.config.cursorField.length > 0 ? el.config.cursorField[0] : '';
       }
-      //to do -  check the data structure again and make the primary keys multiple select
+      //Some sources are able to determine the primary key that they use without any user input. For example, in JDBC database sources, the primary key can be defined in the table's metadata. Most APIs also have pre-determined primary keys.
       if ('sourceDefinedPrimaryKey' in el.stream) {
         stream.primaryKey =
           el.stream.sourceDefinedPrimaryKey.length > 0
-            ? el.stream.sourceDefinedPrimaryKey[0][0]
+            ? el.stream.sourceDefinedPrimaryKey[0][0] // sourceDefinedPrimaryKey = [["id"]]
             : [];
+        stream.isSourceDefinedPrimaryKey = true;
       }
       //find the place in if else block where we can set the primary key.
+      //Some sources cannot define the primary key without user input or the user may want to specify their own primary key on the destination that is different from the source definition. In these cases, select the field in the stream that should be used as the primary key. Multiple primary keys can also be selected to form a composite primary key.
       if ('primaryKey' in el.config) {
+        console.log(el.config, 'Elconfig');
         stream.primaryKeyOptions = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
         stream.primaryKey = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
       }
@@ -626,17 +640,25 @@ const CreateConnectionForm = ({
                                 !stream.supportsIncremental ||
                                 stream.syncMode !== 'incremental'
                               }
+                              multiple
                               value={stream.primaryKey}
                               onChange={(event) => {
                                 updatePrimaryKey(event.target.value, stream);
                               }}
+                              // renderValue={(selected) => selected.join(', ')}
                             >
                               {stream.primaryKeyOptions.length > 0 &&
-                                stream.primaryKeyOptions?.map((option: string) => (
-                                  <MenuItem key={option} value={option}>
-                                    {option}
-                                  </MenuItem>
-                                ))}
+                                ['name', 'age', 'clothes', 'form'].map(
+                                  (option: string, index: number) => (
+                                    <MenuItem key={option} value={option}>
+                                      <Checkbox
+                                        checked={stream.primaryKey.indexOf(option) > -1}
+                                        // Disable the checkbox
+                                      />
+                                      {option}
+                                    </MenuItem>
+                                  )
+                                )}
                             </Select>
                           </TableCell>
                         </TableRow>
