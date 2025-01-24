@@ -78,18 +78,20 @@ const nonBreakingData = {
               streamDescriptor: {
                 name: 'worldometer_data',
               },
-              updateStream: [
-                {
-                  transformType: 'add_field',
-                  fieldName: ['Second new column'],
-                  breaking: false,
-                },
-                {
-                  transformType: 'add_field',
-                  fieldName: ['New column of nulls'],
-                  breaking: false,
-                },
-              ],
+              updateStream: {
+                fieldTransforms: [
+                  {
+                    transformType: 'add_field',
+                    fieldName: ['Second new column'],
+                    breaking: false,
+                  },
+                  {
+                    transformType: 'add_field',
+                    fieldName: ['New column of nulls'],
+                    breaking: false,
+                  },
+                ],
+              },
             },
           ],
         },
@@ -347,18 +349,20 @@ describe('SchemaChangeDetailsForm', () => {
                   streamDescriptor: {
                     name: 'worldometer_data',
                   },
-                  updateStream: [
-                    {
-                      transformType: 'add_field',
-                      fieldName: ['Second new column'],
-                      breaking: false,
-                    },
-                    {
-                      transformType: 'add_field',
-                      fieldName: ['New column of nulls'],
-                      breaking: false,
-                    },
-                  ],
+                  updateStream: {
+                    fieldTransforms: [
+                      {
+                        transformType: 'add_field',
+                        fieldName: ['Second new column'],
+                        breaking: false,
+                      },
+                      {
+                        transformType: 'add_field',
+                        fieldName: ['New column of nulls'],
+                        breaking: false,
+                      },
+                    ],
+                  },
                 },
               ],
             },
