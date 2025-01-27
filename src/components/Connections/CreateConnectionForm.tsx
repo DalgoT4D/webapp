@@ -540,10 +540,7 @@ const CreateConnectionForm = ({
                           <TableCell key="inc" align="center">
                             <Switch
                               data-testid={`stream-incremental-${idx}`}
-                              disabled={
-                                // !stream.cursorField ||
-                                !stream.supportsIncremental || !stream.selected
-                              }
+                              disabled={!stream.supportsIncremental || !stream.selected}
                               checked={
                                 stream.supportsIncremental && ifIncremental && stream.selected
                               }
@@ -580,6 +577,12 @@ const CreateConnectionForm = ({
                               onChange={(event) => {
                                 updateCursorField(event.target.value, stream);
                               }}
+                              required={ifIncremental}
+                              onInvalid={(e: any) =>
+                                e.target.setCustomValidity(
+                                  'Cursor field is required for incremental streams'
+                                )
+                              }
                             >
                               {stream.cursorFieldConfig?.cursorFieldOptions.map(
                                 (option: string) => (
