@@ -190,7 +190,7 @@ export const Elementary = () => {
             setShowSetupElementaryButtom(true);
           }
         } catch (err: any) {
-          if ((err.message = 'dbt is not configured for this client')) {
+          if (err.message === 'dbt is not configured for this client') {
             setDbtStatus('dbt is not configured for this client');
           }
           errorToast(err.message, [], globalContext);
@@ -201,6 +201,28 @@ export const Elementary = () => {
     }
   }, [session]);
 
+  const pollForTaskRun = async (taskId: string) => {
+    try {
+      const response = await httpGet(session, 'tasks/stp/' + taskId);
+      const lastMessage: any =
+        response['progress'] && response['progress'].length > 0
+          ? response['progress'][response['progress'].length - 1]
+          : null;
+
+      if (!['completed', 'failed'].includes(lastMessage?.status)) {
+        await delay(3000);
+        await pollForTaskRun(taskId);
+      } else if (lastMessage?.status === 'failed') {
+        errorToast(lastMessage?.message, [], globalContext);
+        return;
+      } else if (lastMessage?.status === 'completed') {
+        successToast(lastMessage?.message, [], globalContext);
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+  };
   const createElementaryProfile = async () => {
     try {
       const response = await httpPost(session, `prefect/tasks/elementary-lock/`, {});
@@ -214,8 +236,9 @@ export const Elementary = () => {
   const createElementaryTrackingTables = async () => {
     try {
       const response = await httpPost(session, `/create-elementary-tracking-tables/`, {});
-      if (response.status && response.status == 'success') {
-        successToast('Elementary Tracking Tables created successfully', [], globalContext);
+      if (response.task_id) {
+        await delay(3000);
+        pollForTaskRun(response.request_uuid);
       }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
@@ -227,6 +250,7 @@ export const Elementary = () => {
       if (response.status && response.status == 'success') {
         successToast('Edr deployment created successfully', [], globalContext);
       }
+      // response contains status
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
     }
@@ -239,10 +263,12 @@ export const Elementary = () => {
       setElementaryStatus(response);
 
       if (Object.keys(response.missing).length === 0) {
-        //call apis
-        createElementaryProfile();
-        createElementaryTrackingTables();
-        createEdrDeployment();
+        // Wait for all API calls including polling to complete before setting loading to false
+        await Promise.all([
+          createElementaryProfile(),
+          createElementaryTrackingTables(),
+          createEdrDeployment(),
+        ]);
       }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
@@ -254,17 +280,35 @@ export const Elementary = () => {
   if (dbtStatus) {
     return (
       <>
-        <Box data-testid="outerbox" sx={{ width: '100%', pt: 3, pr: 3, pl: 3 }}>
+        <Box
+          data-testid="outerbox"
+          sx={{
+            width: '100%',
+            pt: 3,
+            pr: 3,
+            pl: 3,
+          }}
+        >
           <Box
             sx={{
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              height: 'calc(100vh - 210px)',
+              height: '20vh',
+              textAlign: 'center',
+              backgroundColor: 'white',
+              borderRadius: '10px',
             }}
           >
-            <Typography sx={{ fontSize: '25px' }}>{dbtStatus}</Typography>
+            <Typography
+              sx={{
+                fontSize: { xs: '20px', sm: '25px', md: '30px' },
+                fontWeight: 400,
+              }}
+            >
+              {dbtStatus}
+            </Typography>
           </Box>
         </Box>
       </>
