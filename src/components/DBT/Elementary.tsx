@@ -36,8 +36,8 @@ type ElementaryStatus = {
 const isEmpty = (obj: any) => Object.keys(obj).length === 0;
 const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementaryStatus | null }) => {
   if (!elementaryStatus) return null;
-  const hasExists = !isEmpty(elementaryStatus?.exists);
-  const hasMissing = !isEmpty(elementaryStatus?.missing);
+  const hasExists = !isEmpty(elementaryStatus.exists);
+  const hasMissing = !isEmpty(elementaryStatus.missing);
 
   // Don't render if both sections are empty
   if (!hasExists && !hasMissing) {
