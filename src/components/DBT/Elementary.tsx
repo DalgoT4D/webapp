@@ -51,8 +51,8 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
         margin: 'auto',
         mt: 3,
         display: 'flex',
-        flexDirection: 'row', // Ensures items are side by side
-        gap: 2, // Adds spacing between the cards
+        flexDirection: 'row',
+        gap: 2,
       }}
     >
       {hasExists && (
@@ -111,8 +111,6 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
     </Box>
   );
 };
-
-export default MappingComponent;
 
 export const Elementary = () => {
   const [loading, setLoading] = useState(true);
@@ -241,7 +239,6 @@ export const Elementary = () => {
       setElementaryStatus(response);
 
       if (Object.keys(response.missing).length === 0) {
-        //means elementary exists now correctly.
         //call apis
         createElementaryProfile();
         createElementaryTrackingTables();
