@@ -271,6 +271,7 @@ export const Elementary = () => {
           createElementaryTrackingTables(),
           createEdrDeployment(),
         ]);
+        setShowSetupElementaryButtom(false);
       }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
