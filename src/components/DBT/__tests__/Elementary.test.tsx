@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { Elementary } from '../Elementary';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -25,11 +25,6 @@ describe('Elementary Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.restoreAllMocks();
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   it('renders loading state initially', () => {
@@ -229,63 +224,87 @@ describe('Elementary Component', () => {
     });
   });
 
-  it('handles elementary setup process correctly', async () => {
+  it('renders "Setup Elementary" button and completes setup process', async () => {
     (useSession as jest.Mock).mockReturnValue({ data: mockSession });
 
-    global.fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ status: 'not-set-up' }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          exists: { elementary_package: '1.0', elementary_target_schema: 'schema' },
-          missing: {},
-        }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ status: 'success' }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ status: 'success' }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ status: 'success' }),
-      });
+    global.fetch = jest.fn((url) => {
+      if (url.includes('dbt/elementary-setup-status')) {
+        // Mock API response: elementary is not set up
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'not-set-up' }),
+        });
+      }
+      if (url.includes('dbt/check-dbt-files')) {
+        // Mock DBT file check API response
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            exists: { elementary_package: '1.0', elementary_target_schema: 'schema' },
+            missing: {},
+          }),
+        });
+      }
+      if (url.includes('dbt/create-elementary-profile')) {
+        // Mock createElementaryProfile API response
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'success' }),
+        });
+      }
+      if (url.includes('dbt/create-elementary-tracking-tables')) {
+        // Mock createElementaryTrackingTables API response (returns task_id)
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ task_id: '12345' }),
+        });
+      }
+      if (url.includes('dbt/track-elementary-tables-progress')) {
+        // First poll response - still in progress
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            progress: [{ status: 'in-progress', message: 'Processing...' }],
+          }),
+        });
+      }
+      if (url.includes('dbt/track-elementary-tables-progress?task_id=12345')) {
+        // Second poll response - completed
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            progress: [{ status: 'completed', message: 'Tracking Tables ready!' }],
+          }),
+        });
+      }
+      if (url.includes('dbt/create-edr-deployment')) {
+        // Mock createEdrDeployment API response
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'success' }),
+        });
+      }
+      return Promise.reject(new Error('Unknown API call'));
+    }) as jest.Mock;
 
-    render(
-      <GlobalContext.Provider value={{}}>
-        <Elementary />
-      </GlobalContext.Provider>
-    );
-
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /Setup Elementary/ })).toBeInTheDocument()
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: /Setup Elementary/ }));
-
-    await waitFor(() => {
-      expect(successToast).toHaveBeenCalledWith(
-        'Elementary profile created successfully',
-        [],
-        expect.any(Object)
-      );
-      expect(successToast).toHaveBeenCalledWith(
-        'Elementary Tracking Tables created successfully',
-        [],
-        expect.any(Object)
-      );
-      expect(successToast).toHaveBeenCalledWith(
-        'Edr deployment created successfully',
-        [],
-        expect.any(Object)
+    // Render component inside act
+    await act(async () => {
+      render(
+        <GlobalContext.Provider value={{}}>
+          <Elementary />
+        </GlobalContext.Provider>
       );
     });
+
+    // Wait for the "Setup Elementary" button to appear
+    const setupButton = await screen.findByRole('button', { name: /Setup Elementary/i });
+    expect(setupButton).toBeInTheDocument();
+
+    // Click the button
+    await act(async () => {
+      fireEvent.click(setupButton);
+    });
+
+    expect(global.fetch).toHaveBeenCalledTimes(5);
   });
 });

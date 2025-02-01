@@ -177,27 +177,29 @@ export const Elementary = () => {
     }
   };
 
+  const checkElementarySetupStatus = async () => {
+    try {
+      const response = await httpGet(session, `dbt/elementary-setup-status`);
+
+      if (response.status == 'set-up') {
+        fetchElementaryToken();
+        checkForLock();
+      } else if (response.status == 'not-set-up') {
+        //setup elementary button
+        setShowSetupElementaryButtom(true);
+      }
+    } catch (err: any) {
+      if (err.message === 'dbt is not configured for this client') {
+        setDbtStatus('dbt is not configured for this client');
+      }
+      errorToast(err.message, [], globalContext);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     if (session) {
-      (async () => {
-        try {
-          const response = await httpGet(session, `dbt/elementary-setup-status`);
-          if (response.status == 'set-up') {
-            fetchElementaryToken();
-            checkForLock();
-          } else if (response.status == 'not-set-up') {
-            //setup elementary button
-            setShowSetupElementaryButtom(true);
-          }
-        } catch (err: any) {
-          if (err.message === 'dbt is not configured for this client') {
-            setDbtStatus('dbt is not configured for this client');
-          }
-          errorToast(err.message, [], globalContext);
-        } finally {
-          setLoading(false);
-        }
-      })();
+      checkElementarySetupStatus();
     }
   }, [session]);
 
