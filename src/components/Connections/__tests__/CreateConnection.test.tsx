@@ -19,6 +19,16 @@ jest.mock('@/helpers/websocket', () => ({
   generateWebsocketUrl: jest.fn(),
 }));
 describe('Create connection', () => {
+  let mockServer: Server;
+
+  afterEach(async () => {
+    if (mockServer) {
+      await new Promise((resolve) => {
+        mockServer.stop(resolve); // Fully stop the WebSocket server
+      });
+    }
+  });
+
   const mockSession: Session = {
     expires: 'false',
     user: { email: 'a' },
@@ -47,7 +57,7 @@ describe('Create connection', () => {
   ];
 
   it('mocks generateWebsocketUrl and tests WebSocket connection', async () => {
-    const mockServer = new Server('wss://mock-websocket-url');
+    mockServer = new Server('wss://mock-websocket-url');
     const mockGenerateWebsocketUrl = generateWebsocketUrl;
 
     // Mock the generateWebsocketUrl function
@@ -98,7 +108,7 @@ describe('Create connection', () => {
     );
 
     // Clean up the mock WebSocket server
-    mockServer.close();
+    //mockServer.close();
   });
 
   it('renders the form', () => {
@@ -132,7 +142,7 @@ describe('Create connection', () => {
   });
 
   it('checks source stream selection and WebSocket interactions', async () => {
-    const mockServer = new Server('wss://mock-websocket-url');
+    mockServer = new Server('wss://mock-websocket-url');
     const mockGenerateWebsocketUrl = generateWebsocketUrl;
 
     // Mock the generateWebsocketUrl function
@@ -224,20 +234,21 @@ describe('Create connection', () => {
       expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2); // Header + Streams
       // Step 4: Validate table headers
       const headerCells = within(sourceStreamTableRows[0]).getAllByRole('columnheader');
-      expect(headerCells.length).toBe(5);
+      expect(headerCells.length).toBe(6);
       expect(headerCells[0].textContent).toBe('Stream');
       expect(headerCells[1].textContent).toBe('Sync?');
       expect(headerCells[2].textContent).toBe('Incremental?');
       expect(headerCells[3].textContent).toBe('Destination');
       expect(headerCells[4].textContent).toBe('Cursor Field');
+      expect(headerCells[5].textContent).toBe('Primary Key');
 
       // Clean up the mock WebSocket server
-      mockServer.close();
+      //mockServer.close();
     });
   });
 
   it('create connection success with WebSocket and fetch interactions', async () => {
-    const mockServer = new Server('wss://mock-websocket-url');
+    mockServer = new Server('wss://mock-websocket-url');
     const mockGenerateWebsocketUrl = generateWebsocketUrl;
 
     // Mock the generateWebsocketUrl function
@@ -345,11 +356,11 @@ describe('Create connection', () => {
     expect(mockCreateConnectionFetch).toHaveBeenCalledTimes(1);
 
     // Clean up mock server
-    mockServer.close();
+    //mockServer.close();
   });
 
   it('create connection failed with WebSocket and fetch interactions', async () => {
-    const mockServer = new Server('wss://mock-websocket-url');
+    mockServer = new Server('wss://mock-websocket-url');
     const mockGenerateWebsocketUrl = generateWebsocketUrl;
 
     // Mock the generateWebsocketUrl function
@@ -457,6 +468,6 @@ describe('Create connection', () => {
     expect(mockCreateConnectionFetch).toHaveBeenCalledTimes(1);
 
     //check  how to show this test failed.
-    mockServer.close();
+    //mockServer.close();
   });
 });

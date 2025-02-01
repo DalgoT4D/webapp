@@ -1,7 +1,16 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import CustomDialog from '../Dialog/CustomDialog';
-import { Autocomplete, Box, Button, Switch, Select, MenuItem, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Switch,
+  Select,
+  MenuItem,
+  TextField,
+  Checkbox,
+} from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -34,6 +43,9 @@ interface SourceStream {
   destinationSyncMode: string; // append | overwrite | append_dedup
   cursorFieldConfig: CursorFieldConfig; // this will not be posted to backend
   cursorField: string;
+  primaryKeyOptions: string[];
+  primaryKey: string;
+  isSourceDefinedPrimaryKey: boolean;
 }
 
 const CreateConnectionForm = ({
@@ -61,7 +73,6 @@ const CreateConnectionForm = ({
   const isAnyCursorAbsent = useMemo(() => {
     return filteredSourceStreams.some((stream) => !stream.cursorField);
   }, [filteredSourceStreams]);
-  console.log(filteredSourceStreams, 'filtered source stream');
   const [loading, setLoading] = useState<boolean>(false);
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
   const [normalize, setNormalize] = useState<boolean>(false);
@@ -91,6 +102,9 @@ const CreateConnectionForm = ({
           cursorFieldOptions: [],
         },
         cursorField: '',
+        primaryKeyOptions: [], //contains dropdown options for primary key
+        primaryKey: [], //this can be multiple hence we have to make it an array. This is a composite primary key.
+        isSourceDefinedPrimaryKey: false,
       };
 
       const cursorFieldObj = stream.cursorFieldConfig;
@@ -117,6 +131,20 @@ const CreateConnectionForm = ({
         // overwrite default if the cursor field is set
         if ('cursorField' in el.config)
           stream.cursorField = el.config.cursorField.length > 0 ? el.config.cursorField[0] : '';
+      }
+      //Some sources are able to determine the primary key that they use without any user input.
+      if ('sourceDefinedPrimaryKey' in el.stream) {
+        stream.primaryKey =
+          el.stream.sourceDefinedPrimaryKey.length > 0
+            ? el.stream.sourceDefinedPrimaryKey[0][0] // sourceDefinedPrimaryKey = [["id"]]
+            : [];
+        stream.isSourceDefinedPrimaryKey = true;
+      }
+
+      //compostie primary keys can also be selected.
+      if ('primaryKey' in el.config) {
+        stream.primaryKeyOptions = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
+        stream.primaryKey = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
       }
 
       return stream;
@@ -240,6 +268,7 @@ const CreateConnectionForm = ({
           syncMode: stream.syncMode, // incremental | full_refresh
           destinationSyncMode: stream.destinationSyncMode, // append | overwrite | append_dedup
           cursorField: stream.cursorField,
+          primaryKey: stream.primaryKey,
         };
       }),
       normalize,
@@ -324,6 +353,10 @@ const CreateConnectionForm = ({
 
   const updateCursorField = (value: string, stream: SourceStream) => {
     updateThisStreamTo_(stream, { ...stream, cursorField: value });
+  };
+
+  const updatePrimaryKey = (value: string, stream: SourceStream) => {
+    updateThisStreamTo_(stream, { ...stream, primaryKey: value });
   };
 
   const handleSyncAllStreams = (checked: boolean) => {
@@ -477,6 +510,9 @@ const CreateConnectionForm = ({
                     <TableCell key="cursorfield" align="center">
                       Cursor Field
                     </TableCell>
+                    <TableCell key="primarykey" align="center">
+                      Primary Key
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell key="searchstream" align="center">
@@ -591,6 +627,33 @@ const CreateConnectionForm = ({
                                   </MenuItem>
                                 )
                               )}
+                            </Select>
+                          </TableCell>
+                          <TableCell key="primarykey" align="center">
+                            <Select
+                              data-testid={`stream-primarykey-${idx}`}
+                              disabled={
+                                !stream.selected ||
+                                !stream.supportsIncremental ||
+                                stream.syncMode !== 'incremental'
+                              }
+                              multiple
+                              value={stream.primaryKey}
+                              onChange={(event) => {
+                                updatePrimaryKey(event.target.value, stream);
+                              }}
+                              renderValue={(selected: any) => selected.join(', ')}
+                            >
+                              {stream.primaryKeyOptions.length > 0 &&
+                                stream.primaryKeyOptions.map((option: string, index: number) => (
+                                  <MenuItem key={option} value={option}>
+                                    <Checkbox
+                                      checked={stream.primaryKey.indexOf(option) > -1}
+                                      // Disable the checkbox
+                                    />
+                                    {option}
+                                  </MenuItem>
+                                ))}
                             </Select>
                           </TableCell>
                         </TableRow>
