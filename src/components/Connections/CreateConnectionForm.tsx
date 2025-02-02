@@ -630,11 +630,7 @@ const CreateConnectionForm = ({
                           <TableCell key="primarykey" align="center">
                             <Select
                               data-testid={`stream-primarykey-${idx}`}
-                              disabled={
-                                !stream.selected ||
-                                !stream.supportsIncremental ||
-                                stream.syncMode !== 'incremental'
-                              }
+                              disabled={!stream.selected}
                               multiple
                               value={stream.primaryKey}
                               onChange={(event) => {
