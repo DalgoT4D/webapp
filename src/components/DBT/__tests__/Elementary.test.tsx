@@ -245,6 +245,15 @@ describe('Elementary Component', () => {
           }),
         });
       }
+      if (url.includes('dbt/git_pull/')) {
+        // Mock DBT file check API response
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+          }),
+        });
+      }
       if (url.includes('dbt/create-elementary-profile')) {
         // Mock createElementaryProfile API response
         return Promise.resolve({
@@ -305,6 +314,6 @@ describe('Elementary Component', () => {
       fireEvent.click(setupButton);
     });
 
-    expect(global.fetch).toHaveBeenCalledTimes(5);
+    expect(global.fetch).toHaveBeenCalledTimes(6);
   });
 });
