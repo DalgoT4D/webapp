@@ -268,7 +268,7 @@ export const Elementary = () => {
       if (Object.keys(response.missing).length === 0) {
         // Wait for all API calls including polling to complete before setting loading to false
         // git pull
-        const response: any = await httpGet(session, 'dbt/git_pull/"');
+        const response: any = await httpGet(session, 'dbt/git_pull/');
         if (!response.success) errorToast('Something went wrong', [], globalContext);
 
         await createElementaryProfile();
