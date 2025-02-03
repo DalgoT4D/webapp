@@ -20,6 +20,7 @@ import { delay } from '@/utils/common';
 import SyncIcon from '@/assets/icons/sync.svg';
 import Image from 'next/image';
 import styles from '@/styles/Common.module.css';
+import { error } from 'console';
 
 type ElementaryStatus = {
   exists: {
@@ -61,7 +62,7 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
           {/* Scroll inside the Card */}
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Existing Items
+              Existing
             </Typography>
             <List>
               {Object.entries(elementaryStatus.exists).map(([key, value]) => (
@@ -80,7 +81,7 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
           {/* Scroll inside the Card */}
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Missing Items
+              Missing : Please add these missing lines to your dbt project
             </Typography>
             <List>
               {Object.entries(elementaryStatus.missing).map(([key, value]) => (
@@ -266,11 +267,13 @@ export const Elementary = () => {
 
       if (Object.keys(response.missing).length === 0) {
         // Wait for all API calls including polling to complete before setting loading to false
-        await Promise.all([
-          createElementaryProfile(),
-          createElementaryTrackingTables(),
-          createEdrDeployment(),
-        ]);
+        // git pull
+        const response: any = await httpGet(session, 'dbt/git_pull/"');
+        if (!response.success) errorToast('Something went wrong', [], globalContext);
+
+        await createElementaryProfile();
+        await createElementaryTrackingTables();
+        await createEdrDeployment();
         setShowSetupElementaryButtom(false);
       }
     } catch (err: any) {
