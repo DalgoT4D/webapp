@@ -34,6 +34,10 @@ type CursorFieldConfig = {
   sourceDefinedCursor: boolean;
   cursorFieldOptions: string[];
 };
+type PrimayKeyConfig = {
+  sourceDefinedPrimaryKey: boolean;
+  primaryKeyOptions: string[];
+};
 
 interface SourceStream {
   name: string;
@@ -43,9 +47,8 @@ interface SourceStream {
   destinationSyncMode: string; // append | overwrite | append_dedup
   cursorFieldConfig: CursorFieldConfig; // this will not be posted to backend
   cursorField: string;
-  primaryKeyOptions: string[];
+  primaryKeyConfig: PrimayKeyConfig;
   primaryKey: string;
-  isSourceDefinedPrimaryKey: boolean;
 }
 
 const CreateConnectionForm = ({
@@ -102,9 +105,11 @@ const CreateConnectionForm = ({
           cursorFieldOptions: [],
         },
         cursorField: '',
-        primaryKeyOptions: [], //contains dropdown options for primary key
-        primaryKey: [], //this can be multiple hence we have to make it an array. This is a composite primary key.
-        isSourceDefinedPrimaryKey: false,
+        primaryKeyConfig: {
+          sourceDefinedPrimaryKey: false,
+          primaryKeyOptions: [],
+        },
+        primaryKey: [], // eg.[[id]], [[id, airbyte_raw]]etc. this can be multiple hence we have to make it an array. This can be a composite primary key.
       };
 
       const cursorFieldObj = stream.cursorFieldConfig;
@@ -132,19 +137,25 @@ const CreateConnectionForm = ({
         if ('cursorField' in el.config)
           stream.cursorField = el.config.cursorField.length > 0 ? el.config.cursorField[0] : '';
       }
-      //Some sources are able to determine the primary key that they use without any user input.
-      if ('sourceDefinedPrimaryKey' in el.stream) {
-        stream.primaryKey =
-          el.stream.sourceDefinedPrimaryKey.length > 0
-            ? el.stream.sourceDefinedPrimaryKey[0][0] // sourceDefinedPrimaryKey = [["id"]]
-            : [];
-        stream.isSourceDefinedPrimaryKey = true;
-      }
 
-      //compostie primary keys can also be selected.
-      if ('primaryKey' in el.config) {
-        stream.primaryKeyOptions = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
-        stream.primaryKey = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
+      const primaryKeyObj = stream.primaryKeyConfig;
+
+      if ('sourceDefinedPrimaryKey' in el.stream && el.stream.sourceDefinedPrimaryKey.length > 0)
+        primaryKeyObj.sourceDefinedPrimaryKey = true;
+
+      if (primaryKeyObj.sourceDefinedPrimaryKey) {
+        stream.primaryKey = el.config.primaryKey[0];
+        primaryKeyObj.primaryKeyOptions = el.config.primaryKey[0];
+      } else {
+        // user needs to define the primary key
+        // available options are picked from the stream's jsonSchema (cols)
+        if ('jsonSchema' in el.stream)
+          primaryKeyObj.primaryKeyOptions = Object.keys(el.stream.jsonSchema.properties) as any;
+
+        // overwrite default if the primary key field is set
+        if ('primaryKey' in el.config) {
+          stream.primaryKey = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
+        }
       }
 
       return stream;
@@ -632,7 +643,17 @@ const CreateConnectionForm = ({
                           <TableCell key="primarykey" align="center">
                             <Select
                               data-testid={`stream-primarykey-${idx}`}
-                              disabled={!stream.selected}
+                              disabled={
+                                !stream.selected ||
+                                !stream.supportsIncremental ||
+                                stream.syncMode !== 'incremental'
+                              }
+                              required={ifIncremental}
+                              onInvalid={(e: any) =>
+                                e.target.setCustomValidity(
+                                  'Primary Key is required for incremental streams'
+                                )
+                              }
                               multiple
                               value={stream.primaryKey}
                               onChange={(event) => {
@@ -640,16 +661,18 @@ const CreateConnectionForm = ({
                               }}
                               renderValue={(selected: any) => selected.join(', ')}
                             >
-                              {stream.primaryKeyOptions.length > 0 &&
-                                stream.primaryKeyOptions.map((option: string, index: number) => (
-                                  <MenuItem key={option} value={option}>
-                                    <Checkbox
-                                      checked={stream.primaryKey.indexOf(option) > -1}
-                                      // Disable the checkbox
-                                    />
-                                    {option}
-                                  </MenuItem>
-                                ))}
+                              {stream.primaryKeyConfig?.primaryKeyOptions?.length > 0 &&
+                                stream.primaryKeyConfig.primaryKeyOptions.map(
+                                  (option: string, index: number) => (
+                                    <MenuItem key={option} value={option}>
+                                      <Checkbox
+                                        checked={stream.primaryKey.indexOf(option) > -1}
+                                        // Disable the checkbox
+                                      />
+                                      {option}
+                                    </MenuItem>
+                                  )
+                                )}
                             </Select>
                           </TableCell>
                         </TableRow>
