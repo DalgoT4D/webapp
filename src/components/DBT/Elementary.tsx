@@ -20,7 +20,6 @@ import { delay } from '@/utils/common';
 import SyncIcon from '@/assets/icons/sync.svg';
 import Image from 'next/image';
 import styles from '@/styles/Common.module.css';
-import { error } from 'console';
 
 type ElementaryStatus = {
   exists: {
@@ -33,8 +32,8 @@ type ElementaryStatus = {
   };
 };
 
-// Function to check if an object is empty
 const isEmpty = (obj: any) => Object.keys(obj).length === 0;
+
 const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementaryStatus | null }) => {
   if (!elementaryStatus) return null;
   const hasExists = !isEmpty(elementaryStatus.exists);
@@ -58,8 +57,6 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
     >
       {hasExists && (
         <Card sx={{ flex: 0.5, maxHeight: '60vh', overflowY: 'auto' }} variant="outlined">
-          {' '}
-          {/* Scroll inside the Card */}
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Existing
@@ -67,7 +64,27 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
             <List>
               {Object.entries(elementaryStatus.exists).map(([key, value]) => (
                 <ListItem key={key}>
-                  <ListItemText primary={key} secondary={value} />
+                  <ListItemText
+                    primary={key}
+                    secondary={
+                      typeof value === 'object' ? (
+                        <Box
+                          component="pre"
+                          sx={{
+                            whiteSpace: 'pre-wrap',
+                            backgroundColor: '#f4f4f4',
+                            padding: 2,
+                            borderRadius: 1,
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          {JSON.stringify(value, null, 2)}
+                        </Box>
+                      ) : (
+                        value
+                      )
+                    }
+                  />
                 </ListItem>
               ))}
             </List>
@@ -77,8 +94,6 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
 
       {hasMissing && (
         <Card sx={{ flex: 1, maxHeight: '60vh', overflowY: 'auto' }} variant="outlined">
-          {' '}
-          {/* Scroll inside the Card */}
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Missing : Please add these missing lines to your dbt project
@@ -262,14 +277,15 @@ export const Elementary = () => {
   const handleCheckDbtFiles = async () => {
     setLoading(true);
     try {
+      const response1: any = await httpPost(session, 'dbt/git_pull/', {});
+      if (!response1.success) errorToast('Something went wrong', [], globalContext);
+      // first will be git pull, which pulls the latest changes and then the dbt files are checked.
       const response: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
       setElementaryStatus(response);
 
       if (Object.keys(response.missing).length === 0) {
         // Wait for all API calls including polling to complete before setting loading to false
         // git pull
-        const response: any = await httpGet(session, 'dbt/git_pull/');
-        if (!response.success) errorToast('Something went wrong', [], globalContext);
 
         await createElementaryProfile();
         await createElementaryTrackingTables();
