@@ -219,8 +219,8 @@ export const Elementary = () => {
     }
   }, [session]);
 
-  const pollForTaskRun = async (taskId: string) => {
-    const response = await httpGet(session, 'tasks/stp/' + taskId);
+  const pollForTaskRun = async (taskId: string, hashKey: string) => {
+    const response = await httpGet(session, `tasks/${taskId}?hashkey=${hashKey}`);
     const lastMessage: any =
       response['progress'] && response['progress'].length > 0
         ? response['progress'][response['progress'].length - 1]
@@ -228,7 +228,7 @@ export const Elementary = () => {
 
     if (!['completed', 'failed'].includes(lastMessage?.status)) {
       await delay(3000);
-      await pollForTaskRun(taskId);
+      await pollForTaskRun(taskId, hashKey);
     } else if (lastMessage?.status === 'failed') {
       errorToast(lastMessage?.message, [], globalContext);
       return;
@@ -248,9 +248,9 @@ export const Elementary = () => {
   };
   const createElementaryTrackingTables = async () => {
     const response = await httpPost(session, `dbt/create-elementary-tracking-tables/`, {});
-    if (response.task_id) {
+    if (response.task_id && response.hashKey) {
       await delay(3000);
-      pollForTaskRun(response.task_id);
+      await pollForTaskRun(response.task_id, response.hashKey);
     } else {
       throw new Error('failed to fetch task_id');
     }
@@ -268,8 +268,8 @@ export const Elementary = () => {
   const handleCheckDbtFiles = async () => {
     setLoading(true);
     try {
-      const response1: any = await httpPost(session, 'dbt/git_pull/', {});
-      if (!response1.success) errorToast('Something went wrong', [], globalContext);
+      const response_git_pull: any = await httpPost(session, 'dbt/git_pull/', {});
+      if (!response_git_pull.success) errorToast('Something went wrong', [], globalContext);
       // first will be git pull, which pulls the latest changes and then the dbt files are checked.
       const response: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
       setElementaryStatus(response);
