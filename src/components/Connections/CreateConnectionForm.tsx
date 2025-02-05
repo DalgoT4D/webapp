@@ -646,7 +646,8 @@ const CreateConnectionForm = ({
                               disabled={
                                 !stream.selected ||
                                 !stream.supportsIncremental ||
-                                stream.syncMode !== 'incremental'
+                                stream.syncMode !== 'incremental' ||
+                                stream.destinationSyncMode !== 'append_dedup'
                               }
                               required={ifIncremental}
                               onInvalid={(e: any) =>
@@ -657,7 +658,9 @@ const CreateConnectionForm = ({
                               multiple
                               value={stream.primaryKey}
                               onChange={(event) => {
-                                updatePrimaryKey(event.target.value, stream);
+                                if (!stream.primaryKeyConfig.sourceDefinedPrimaryKey) {
+                                  updatePrimaryKey(event.target.value, stream);
+                                }
                               }}
                               renderValue={(selected: any) => selected.join(', ')}
                             >
@@ -667,7 +670,7 @@ const CreateConnectionForm = ({
                                     <MenuItem key={option} value={option}>
                                       <Checkbox
                                         checked={stream.primaryKey.indexOf(option) > -1}
-                                        // Disable the checkbox
+                                        disabled={stream.primaryKeyConfig.sourceDefinedPrimaryKey}
                                       />
                                       {option}
                                     </MenuItem>
