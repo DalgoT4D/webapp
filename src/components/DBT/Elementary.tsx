@@ -243,7 +243,7 @@ export const Elementary = () => {
   };
   const createElementaryProfile = async () => {
     try {
-      const response = await httpPost(session, `prefect/tasks/elementary-lock/`, {});
+      const response = await httpPost(session, `/create-elementary-profile/`, {});
       if (response.status && response.status == 'success') {
         successToast('Elementary profile created successfully', [], globalContext);
       }
