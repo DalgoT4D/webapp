@@ -4,7 +4,7 @@ import { Box, CircularProgress, Paper, Typography } from '@mui/material';
 import Pattern from '@/assets/images/pattern.png';
 import { PageHead } from '@/components/PageHead';
 import moment from 'moment';
-
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { delay, lastRunTime } from '@/utils/common';
@@ -317,11 +317,23 @@ export default function Home() {
                             )}
                             {!run.lock && (
                               <>
-                                <Image
-                                  style={{ marginRight: 8 }}
-                                  src={CheckIcon}
-                                  alt="check icon"
-                                />{' '}
+                                {run.runs[0].status == 'FAILED' ? (
+                                  <WarningAmberIcon
+                                    sx={{
+                                      paddingBottom: '3px',
+                                      fontWeight: 800,
+                                      fontSize: '25px',
+                                      color: '#981F1F',
+                                      marginRight: '5px',
+                                    }}
+                                  />
+                                ) : (
+                                  <Image
+                                    style={{ marginRight: 8 }}
+                                    src={CheckIcon}
+                                    alt="check icon"
+                                  />
+                                )}
                                 last run performed {lastRunTime(run.runs[0].startTime)}
                               </>
                             )}
