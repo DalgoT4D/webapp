@@ -250,7 +250,7 @@ export const Elementary = () => {
     const response = await httpPost(session, `dbt/create-elementary-tracking-tables/`, {});
     if (response.task_id) {
       await delay(3000);
-      pollForTaskRun(response.request_uuid);
+      pollForTaskRun(response.task_id);
     } else {
       throw new Error('failed to fetch task_id');
     }
