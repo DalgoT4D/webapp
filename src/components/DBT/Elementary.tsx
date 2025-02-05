@@ -220,57 +220,48 @@ export const Elementary = () => {
   }, [session]);
 
   const pollForTaskRun = async (taskId: string) => {
-    try {
-      const response = await httpGet(session, 'tasks/stp/' + taskId);
-      const lastMessage: any =
-        response['progress'] && response['progress'].length > 0
-          ? response['progress'][response['progress'].length - 1]
-          : null;
+    const response = await httpGet(session, 'tasks/stp/' + taskId);
+    const lastMessage: any =
+      response['progress'] && response['progress'].length > 0
+        ? response['progress'][response['progress'].length - 1]
+        : null;
 
-      if (!['completed', 'failed'].includes(lastMessage?.status)) {
-        await delay(3000);
-        await pollForTaskRun(taskId);
-      } else if (lastMessage?.status === 'failed') {
-        errorToast(lastMessage?.message, [], globalContext);
-        return;
-      } else if (lastMessage?.status === 'completed') {
-        successToast(lastMessage?.message, [], globalContext);
-      }
-    } catch (err: any) {
-      console.error(err);
-      errorToast(err.message, [], globalContext);
+    if (!['completed', 'failed'].includes(lastMessage?.status)) {
+      await delay(3000);
+      await pollForTaskRun(taskId);
+    } else if (lastMessage?.status === 'failed') {
+      errorToast(lastMessage?.message, [], globalContext);
+      return;
+    } else if (lastMessage?.status === 'completed') {
+      successToast(lastMessage?.message, [], globalContext);
+    } else {
+      throw new Error('Error while running the task.');
     }
   };
   const createElementaryProfile = async () => {
-    try {
-      const response = await httpPost(session, `dbt/create-elementary-profile/`, {});
-      if (response.status && response.status == 'success') {
-        successToast('Elementary profile created successfully', [], globalContext);
-      }
-    } catch (err: any) {
-      errorToast(err.message, [], globalContext);
+    const response = await httpPost(session, `dbt/create-elementary-profile/`, {});
+    if (response.status && response.status == 'success') {
+      successToast('Elementary profile created successfully', [], globalContext);
+    } else {
+      throw new Error('Failed to create elementary profile');
     }
   };
   const createElementaryTrackingTables = async () => {
-    try {
-      const response = await httpPost(session, `dbt/create-elementary-tracking-tables/`, {});
-      if (response.task_id) {
-        await delay(3000);
-        pollForTaskRun(response.request_uuid);
-      }
-    } catch (err: any) {
-      errorToast(err.message, [], globalContext);
+    const response = await httpPost(session, `dbt/create-elementary-tracking-tables/`, {});
+    if (response.task_id) {
+      await delay(3000);
+      pollForTaskRun(response.request_uuid);
+    } else {
+      throw new Error('failed to fetch task_id');
     }
   };
   const createEdrDeployment = async () => {
-    try {
-      const response = await httpPost(session, `dbt/create-edr-deployment/`, {});
-      if (response.status && response.status == 'success') {
-        successToast('Edr deployment created successfully', [], globalContext);
-      }
-      // response contains status
-    } catch (err: any) {
-      errorToast(err.message, [], globalContext);
+    const response = await httpPost(session, `dbt/create-edr-deployment/`, {});
+
+    if (response.status && response.status === 'success') {
+      successToast('Edr deployment created successfully', [], globalContext);
+    } else {
+      throw new Error('Failed to create EDR deployment');
     }
   };
 
@@ -357,7 +348,7 @@ export const Elementary = () => {
             ) : (
               <>
                 <Typography sx={{ fontSize: '25px ' }}>
-                  `You currently dont have elementary setup. Please click the button below to setup
+                  You currently dont have elementary setup. Please click the button below to setup
                   elementary.
                 </Typography>
                 <Button onClick={handleCheckDbtFiles} variant="contained">
