@@ -248,9 +248,9 @@ export const Elementary = () => {
   };
   const createElementaryTrackingTables = async () => {
     const response = await httpPost(session, `dbt/create-elementary-tracking-tables/`, {});
-    if (response.task_id && response.hashKey) {
+    if (response.task_id && response.hashkey) {
       await delay(3000);
-      await pollForTaskRun(response.task_id, response.hashKey);
+      await pollForTaskRun(response.task_id, response.hashkey);
     } else {
       throw new Error('failed to fetch task_id');
     }
