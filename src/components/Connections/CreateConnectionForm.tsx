@@ -109,7 +109,7 @@ const CreateConnectionForm = ({
           sourceDefinedPrimaryKey: false,
           primaryKeyOptions: [],
         },
-        primaryKey: [], // eg.[[id]], [[id, airbyte_raw]]etc. this can be multiple hence we have to make it an array. This can be a composite primary key.
+        primaryKey: [], // eg.[[id]], [[id], [airbyte_raw]]etc. this can be multiple hence we have to make it an array. This can be a composite primary key.
       };
 
       const cursorFieldObj = stream.cursorFieldConfig;
@@ -144,8 +144,8 @@ const CreateConnectionForm = ({
         primaryKeyObj.sourceDefinedPrimaryKey = true;
 
       if (primaryKeyObj.sourceDefinedPrimaryKey) {
-        stream.primaryKey = el.config.primaryKey[0];
-        primaryKeyObj.primaryKeyOptions = el.config.primaryKey[0];
+        stream.primaryKey = el.config.primaryKey.flat();
+        primaryKeyObj.primaryKeyOptions = el.config.primaryKey.flat();
       } else {
         // user needs to define the primary key
         // available options are picked from the stream's jsonSchema (cols)
@@ -154,7 +154,7 @@ const CreateConnectionForm = ({
 
         // overwrite default if the primary key field is set
         if ('primaryKey' in el.config) {
-          stream.primaryKey = el.config.primaryKey.length > 0 ? el.config.primaryKey[0] : [];
+          stream.primaryKey = el.config.primaryKey.length > 0 ? el.config.primaryKey.flat() : [];
         }
       }
 
