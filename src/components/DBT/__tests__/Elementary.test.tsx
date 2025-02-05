@@ -314,6 +314,6 @@ describe('Elementary Component', () => {
       fireEvent.click(setupButton);
     });
 
-    expect(global.fetch).toHaveBeenCalledTimes(6);
+    expect(global.fetch).toHaveBeenCalledTimes(5);
   });
 });
