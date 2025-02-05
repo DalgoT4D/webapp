@@ -243,7 +243,7 @@ export const Elementary = () => {
   };
   const createElementaryProfile = async () => {
     try {
-      const response = await httpPost(session, `/create-elementary-profile/`, {});
+      const response = await httpPost(session, `dbt/create-elementary-profile/`, {});
       if (response.status && response.status == 'success') {
         successToast('Elementary profile created successfully', [], globalContext);
       }
@@ -253,7 +253,7 @@ export const Elementary = () => {
   };
   const createElementaryTrackingTables = async () => {
     try {
-      const response = await httpPost(session, `/create-elementary-tracking-tables/`, {});
+      const response = await httpPost(session, `dbt/create-elementary-tracking-tables/`, {});
       if (response.task_id) {
         await delay(3000);
         pollForTaskRun(response.request_uuid);
@@ -264,7 +264,7 @@ export const Elementary = () => {
   };
   const createEdrDeployment = async () => {
     try {
-      const response = await httpPost(session, `/create-edr-deployment/`, {});
+      const response = await httpPost(session, `dbt/create-edr-deployment/`, {});
       if (response.status && response.status == 'success') {
         successToast('Edr deployment created successfully', [], globalContext);
       }
