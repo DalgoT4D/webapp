@@ -60,7 +60,7 @@ export const ServicesInfo = () => {
   if (loader) return <CircularProgress />;
   return (
     <>
-      <Typography sx={{ color: '#7D8998', fontWeight: '700', fontSize: '14px', mt: '40px' }}>
+      <Typography sx={{ color: '#7D8998', fontWeight: '700', fontSize: '14px', mt: '25px' }}>
         Component overview
       </Typography>
       <Box
