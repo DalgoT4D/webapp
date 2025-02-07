@@ -10,6 +10,7 @@ export const showSupersetAnalysisTab =
 export const defaultLoadMoreLimit = parseInt(
   process.env.NEXT_PUBLIC_DEFAULT_LOAD_MORE_LIMIT || '3'
 );
+export const dalgoWhitelistIps = process.env.NEXT_PUBLIC_DALGO_WHITELIST_IPS?.split(',');
 
 export const flowRunLogsOffsetLimit = 200;
 
