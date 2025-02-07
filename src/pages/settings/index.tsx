@@ -26,7 +26,12 @@ const Settings = () => {
               backgroundColor: '#FFFFFF',
             }}
           >
-            <Typography sx={{ fontWeight: 700 }} variant="h6" gutterBottom color="#00897B">
+            <Typography
+              sx={{ fontWeight: 700, fontSize: '20px' }}
+              variant="h6"
+              gutterBottom
+              color="#00897B"
+            >
               Dalgo runs on the following IP addresses, please whitelist these in your firewall if
               you need to:
             </Typography>
@@ -39,7 +44,10 @@ const Settings = () => {
                   <ListItemText
                     primary={ip}
                     primaryTypographyProps={{
-                      sx: { fontWeight: 700, color: '#000' },
+                      sx: {
+                        color: '#000',
+                        fontSize: '1.125rem',
+                      },
                       variant: 'h6',
                     }}
                   />
