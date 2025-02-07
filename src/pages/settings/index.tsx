@@ -15,7 +15,7 @@ const Settings = () => {
           Settings
         </Typography>
         <SubscriptionInfo />
-        {dalgoWhitelistIps?.length && (
+        {dalgoWhitelistIps?.length > 0 && (
           <Box
             sx={{
               boxShadow: '0px 4px 8px 0px rgba(9, 37, 64, 0.08)',
