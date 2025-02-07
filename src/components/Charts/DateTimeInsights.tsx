@@ -182,7 +182,9 @@ export const DateTimeInsights: React.FC<DateTimeInsightsProps> = ({
             </Box>
           )}
           <Box sx={{ position: 'relative', mt: 5 }}>
-            {newData === 'loading' && <Skeleton height={100} width={700} />}
+            {newData === 'loading' && (
+              <Skeleton data-testid="MuiSkeleton-root" height={100} width={700} />
+            )}
             {newData === 'available' && <BarChart data={barChartData} />}
             {newData === 'unavailable' && (
               <Box sx={{ width: 700, textAlign: 'center' }}>No Data available</Box>
