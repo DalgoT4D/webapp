@@ -224,96 +224,268 @@ describe('Elementary Component', () => {
     });
   });
 
-  it('renders "Setup Elementary" button and completes setup process', async () => {
+  it('renders MappingComponent with existing and missing items', async () => {
     (useSession as jest.Mock).mockReturnValue({ data: mockSession });
 
-    global.fetch = jest.fn((url) => {
-      if (url.includes('dbt/elementary-setup-status')) {
-        // Mock API response: elementary is not set up
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ status: 'not-set-up' }),
-        });
-      }
-      if (url.includes('dbt/check-dbt-files')) {
-        // Mock DBT file check API response
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            exists: { elementary_package: '1.0', elementary_target_schema: 'schema' },
-            missing: {},
-          }),
-        });
-      }
-      if (url.includes('dbt/git_pull/')) {
-        // Mock DBT file check API response
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            success: true,
-          }),
-        });
-      }
-      if (url.includes('dbt/create-elementary-profile')) {
-        // Mock createElementaryProfile API response
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ status: 'success' }),
-        });
-      }
-      if (url.includes('dbt/create-elementary-tracking-tables')) {
-        // Mock createElementaryTrackingTables API response (returns task_id)
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ task_id: '12345' }),
-        });
-      }
-      if (url.includes('dbt/track-elementary-tables-progress')) {
-        // First poll response - still in progress
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            progress: [{ status: 'in-progress', message: 'Processing...' }],
-          }),
-        });
-      }
-      if (url.includes('dbt/track-elementary-tables-progress?task_id=12345')) {
-        // Second poll response - completed
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            progress: [{ status: 'completed', message: 'Tracking Tables ready!' }],
-          }),
-        });
-      }
-      if (url.includes('dbt/create-edr-deployment')) {
-        // Mock createEdrDeployment API response
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ status: 'success' }),
-        });
-      }
-      return Promise.reject(new Error('Unknown API call'));
-    }) as jest.Mock;
+    const mockElementaryStatus = {
+      exists: {
+        elementary_package: '1.0.0',
+        elementary_target_schema: 'test_schema',
+      },
+      missing: {
+        elementary_package: 'package_config',
+        elementary_target_schema: 'schema_config',
+      },
+    };
 
-    // Render component inside act
-    await act(async () => {
-      render(
-        <GlobalContext.Provider value={{}}>
-          <Elementary />
-        </GlobalContext.Provider>
-      );
-    });
+    // Mock all required API calls in sequence
+    global.fetch = jest
+      .fn()
+      // First call: elementary-setup-status
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ status: 'not-set-up' }),
+      })
+      // Second call: git_pull
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
+      // Third call: check-dbt-files
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockElementaryStatus,
+      });
 
-    // Wait for the "Setup Elementary" button to appear
-    const setupButton = await screen.findByRole('button', { name: /Setup Elementary/i });
-    expect(setupButton).toBeInTheDocument();
+    render(
+      <GlobalContext.Provider value={{}}>
+        <Elementary />
+      </GlobalContext.Provider>
+    );
+
+    // Wait for the setup button to appear
+    const setupButton = await screen.findByRole('button', { name: /Setup Elementary/ });
 
     // Click the button
     await act(async () => {
       fireEvent.click(setupButton);
     });
 
-    expect(global.fetch).toHaveBeenCalledTimes(5);
+    // Verify the mapping component renders correctly
+    await waitFor(() => {
+      // Check "Existing" section
+      expect(screen.getByText('Existing')).toBeInTheDocument();
+      expect(screen.getAllByText('packages.yml')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('dbt_project.yml')[0]).toBeInTheDocument();
+      expect(screen.getByText('1.0.0')).toBeInTheDocument();
+      expect(screen.getByText('test_schema')).toBeInTheDocument();
+
+      // Check "Missing" section
+      expect(screen.getByText(/Missing : Please add these missing lines/)).toBeInTheDocument();
+      expect(screen.getByText('package_config')).toBeInTheDocument();
+      expect(screen.getByText('schema_config')).toBeInTheDocument();
+    });
+
+    // Verify API calls
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('dbt/git_pull/'),
+      expect.any(Object)
+    );
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('dbt/check-dbt-files'),
+      expect.any(Object)
+    );
+  });
+
+  it('renders MappingComponent with only existing items', async () => {
+    (useSession as jest.Mock).mockReturnValue({ data: mockSession });
+
+    const mockElementaryStatus = {
+      exists: {
+        elementary_package: '1.0.0',
+      },
+      missing: {},
+    };
+
+    // Mock all required API calls in sequence
+    global.fetch = jest
+      .fn()
+      // First call: elementary-setup-status
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ status: 'not-set-up' }),
+      })
+      // Second call: git_pull
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
+      // Third call: check-dbt-files
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockElementaryStatus,
+      });
+
+    render(
+      <GlobalContext.Provider value={{}}>
+        <Elementary />
+      </GlobalContext.Provider>
+    );
+
+    // Wait for the setup button to appear
+    const setupButton = await screen.findByRole('button', { name: /Setup Elementary/ });
+
+    // Click the button
+    await act(async () => {
+      fireEvent.click(setupButton);
+    });
+
+    // Verify the mapping component renders correctly
+    await waitFor(() => {
+      expect(screen.getByText('Existing')).toBeInTheDocument();
+      expect(screen.getByText('packages.yml')).toBeInTheDocument();
+      expect(screen.queryByText(/Missing/)).not.toBeInTheDocument();
+    });
+
+    // Verify API calls
+    expect(global.fetch).toHaveBeenCalledTimes(4);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('dbt/git_pull/'),
+      expect.any(Object)
+    );
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('dbt/check-dbt-files'),
+      expect.any(Object)
+    );
+  });
+
+  it('handles the complete setup process successfully', async () => {
+    (useSession as jest.Mock).mockReturnValue({ data: mockSession });
+
+    const mockFetch = jest
+      .fn()
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'not-set-up' }),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true }),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({
+            exists: {},
+            missing: {},
+          }),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'success' }),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({ task_id: 'test-id', hashkey: 'test-hash' }),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({
+            progress: [{ status: 'completed', message: 'Success' }],
+          }),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'success' }),
+        })
+      );
+
+    global.fetch = mockFetch;
+
+    render(
+      <GlobalContext.Provider value={{}}>
+        <Elementary />
+      </GlobalContext.Provider>
+    );
+
+    const setupButton = await screen.findByRole('button', { name: /Setup Elementary/ });
+    fireEvent.click(setupButton);
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledTimes(5);
+      expect(successToast).toHaveBeenCalledWith(
+        'Elementary profile created successfully',
+        [],
+        expect.any(Object)
+      );
+    });
+  });
+
+  it('handles setup process failure', async () => {
+    (useSession as jest.Mock).mockReturnValue({ data: mockSession });
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ status: 'not-set-up' }),
+      })
+      .mockRejectedValueOnce(new Error('Setup failed'));
+
+    render(
+      <GlobalContext.Provider value={{}}>
+        <Elementary />
+      </GlobalContext.Provider>
+    );
+
+    const setupButton = await screen.findByRole('button', { name: /Setup Elementary/ });
+    fireEvent.click(setupButton);
+
+    await waitFor(() => {
+      expect(errorToast).toHaveBeenCalledWith('Setup failed', [], expect.any(Object));
+    });
+  });
+
+  it('handles lock check errors correctly', async () => {
+    (useSession as jest.Mock).mockReturnValue({ data: mockSession });
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ status: 'set-up' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          token: 'test-token',
+          created_on_utc: new Date().toISOString(),
+        }),
+      })
+      .mockRejectedValueOnce(new Error('Lock check failed'));
+
+    render(
+      <GlobalContext.Provider value={{}}>
+        <Elementary />
+      </GlobalContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(errorToast).toHaveBeenCalledWith('Lock check failed', [], expect.any(Object));
+      expect(screen.getByText(/Last generated:/)).toBeInTheDocument();
+    });
   });
 });
