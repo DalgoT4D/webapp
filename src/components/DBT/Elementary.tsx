@@ -47,16 +47,14 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
   return (
     <Box
       sx={{
-        height: '70vh',
         margin: 'auto',
-        mt: 3,
         display: 'flex',
         flexDirection: 'row',
         gap: 2,
       }}
     >
       {hasExists && (
-        <Card sx={{ flex: 0.5, maxHeight: '60vh', overflowY: 'auto' }} variant="outlined">
+        <Card sx={{ flex: 0.5 }} variant="outlined">
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Existing
@@ -65,7 +63,7 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
               {Object.entries(elementaryStatus.exists).map(([key, value]) => (
                 <ListItem key={key}>
                   <ListItemText
-                    primary={key}
+                    primary={key === 'elementary_package' ? 'packages.yml' : 'dbt_project.yml'}
                     secondary={
                       typeof value === 'object' ? (
                         <Box
@@ -93,7 +91,7 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
       )}
 
       {hasMissing && (
-        <Card sx={{ flex: 1, maxHeight: '60vh', overflowY: 'auto' }} variant="outlined">
+        <Card sx={{ flex: 1 }} variant="outlined">
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Missing : Please add these missing lines to your dbt project
@@ -102,7 +100,7 @@ const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementarySt
               {Object.entries(elementaryStatus.missing).map(([key, value]) => (
                 <ListItem key={key}>
                   <ListItemText
-                    primary={key}
+                    primary={key === 'elementary_package' ? 'packages.yml' : 'dbt_project.yml'}
                     secondary={
                       <Box
                         component="pre"
@@ -338,7 +336,6 @@ export const Elementary = () => {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              height: 'calc(100vh - 210px)',
               gap: '2rem',
               mt: 3,
             }}
