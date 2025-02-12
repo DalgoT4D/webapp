@@ -226,6 +226,7 @@ const CreateOrgTaskForm = ({ mutate, showForm, setShowForm }: CreateOrgTaskFormP
                 return (
                   <ListItem
                     key={item.id}
+                    data-testid="optionsListItems"
                     sx={{
                       display: 'flex',
                       gap: '10px',
@@ -260,11 +261,12 @@ const CreateOrgTaskForm = ({ mutate, showForm, setShowForm }: CreateOrgTaskFormP
                       variant="outlined"
                       register={register}
                       autoFocus
-                    ></Input>
+                    />
 
                     <Button
                       type="button"
                       variant="outlined"
+                      data-testid={`remove-option-button-${index}`}
                       onClick={() => {
                         remove(index);
                         optionsRef.current = getValues()['options'];
@@ -279,6 +281,7 @@ const CreateOrgTaskForm = ({ mutate, showForm, setShowForm }: CreateOrgTaskFormP
                 type="button"
                 variant="outlined"
                 sx={{ marginTop: '10px' }}
+                data-testid="add-option-button"
                 onClick={() => {
                   optionsRef.current = getValues()['options'];
                   append({ key: '', value: '' });
