@@ -28,6 +28,6 @@ jobs:
               exit 1
             fi
             git pull
-            /home/ddp/.yarn/bin/yarn install
-            /home/ddp/.yarn/bin/yarn build
+            yarn install
+            yarn build
             /home/ddp/.yarn/bin/pm2 restart ddp-webapp
