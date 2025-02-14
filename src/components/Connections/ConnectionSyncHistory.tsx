@@ -17,9 +17,7 @@ import {
 } from '@mui/material';
 import { Transition } from '../DBT/DBTTransformType';
 import Close from '@mui/icons-material/Close';
-import { useContext, useEffect, useRef, useState } from 'react';
-import styles from '@/styles/Common.module.css';
-import SyncIcon from '@/assets/icons/sync.svg';
+import { useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { Connection } from './Connections';
@@ -34,7 +32,6 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import useSWR from 'swr';
 import { useTracking } from '@/contexts/TrackingContext';
-import Image from 'next/image';
 
 const fetchAirbyteSyncs = async (connectionId: string, session: any, offset = 0) => {
   try {
@@ -302,16 +299,9 @@ const Row = ({
             borderBottomLeftRadius: '10px',
           }}
         >
-          {connectionSyncJob.status === 'running' ? (
-            <Image
-              src={SyncIcon}
-              className={styles.SyncIcon}
-              alt="sync icon"
-              data-testid="sync-icon"
-            />
-          ) : (
-            moment(connectionSyncJob.date).format('MMMM D, YYYY')
-          )}
+          {connectionSyncJob.status !== 'running'
+            ? moment(connectionSyncJob.date).format('MMMM D, YYYY')
+            : ''}
         </TableCell>
 
         <TableCell sx={{ fontWeight: 500 }}>
