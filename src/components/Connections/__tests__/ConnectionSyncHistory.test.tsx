@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ConnectionLogs } from '../ConnectionLogs';
+import { ConnectionSyncHistory } from '../ConnectionSyncHistory';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import moment from 'moment';
@@ -107,7 +107,7 @@ describe('ConnectionLogs Component', () => {
 
   it('renders the ConnectionLogs dialog', async () => {
     renderWithProviders(
-      <ConnectionLogs setShowLogsDialog={jest.fn()} connection={sampleConnection} />
+      <ConnectionSyncHistory setShowLogsDialog={jest.fn()} connection={sampleConnection} />
     );
 
     expect(screen.getByText('Connection History')).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe('ConnectionLogs Component', () => {
   it('calls setShowLogsDialog on close button click', () => {
     const setShowLogsDialog = jest.fn();
     renderWithProviders(
-      <ConnectionLogs setShowLogsDialog={setShowLogsDialog} connection={sampleConnection} />
+      <ConnectionSyncHistory setShowLogsDialog={setShowLogsDialog} connection={sampleConnection} />
     );
 
     fireEvent.click(screen.getByLabelText('close'));
@@ -131,7 +131,7 @@ describe('ConnectionLogs Component', () => {
   it('loads more logs when "load more" is clicked', async () => {
     mockedHttpGet.mockResolvedValueOnce({ history: sampleLogs, totalSyncs: sampleTotalSyncs });
     renderWithProviders(
-      <ConnectionLogs setShowLogsDialog={jest.fn()} connection={sampleConnection} />
+      <ConnectionSyncHistory setShowLogsDialog={jest.fn()} connection={sampleConnection} />
     );
 
     await waitFor(() => expect(screen.getByText('load more')).toBeInTheDocument());
@@ -143,7 +143,7 @@ describe('ConnectionLogs Component', () => {
   it('displays no information message if no logs are available', async () => {
     mockedHttpGet.mockResolvedValueOnce({ history: [] });
     renderWithProviders(
-      <ConnectionLogs setShowLogsDialog={jest.fn()} connection={sampleConnection} />
+      <ConnectionSyncHistory setShowLogsDialog={jest.fn()} connection={sampleConnection} />
     );
 
     await waitFor(() => expect(screen.getByText('No information available')).toBeInTheDocument());
@@ -151,7 +151,7 @@ describe('ConnectionLogs Component', () => {
 
   it('renders AI summary when "AI summary" button is clicked', async () => {
     renderWithProviders(
-      <ConnectionLogs setShowLogsDialog={jest.fn()} connection={sampleConnection} />
+      <ConnectionSyncHistory setShowLogsDialog={jest.fn()} connection={sampleConnection} />
     );
 
     await waitFor(() => expect(screen.getByText('100MB')).toBeInTheDocument());
@@ -168,7 +168,9 @@ describe('ConnectionLogs Component', () => {
     }
   });
   it('renders without crashing when no connection is provided', () => {
-    renderWithProviders(<ConnectionLogs setShowLogsDialog={jest.fn()} connection={undefined} />);
+    renderWithProviders(
+      <ConnectionSyncHistory setShowLogsDialog={jest.fn()} connection={undefined} />
+    );
 
     expect(screen.getByText('Connection History')).toBeInTheDocument();
     expect(screen.getByText('No information available')).toBeInTheDocument();
@@ -178,7 +180,7 @@ describe('ConnectionLogs Component', () => {
     mockedHttpGet.mockResolvedValueOnce(['Detailed Log 1', 'Detailed Log 2']); // For detailed logs
 
     renderWithProviders(
-      <ConnectionLogs setShowLogsDialog={jest.fn()} connection={sampleConnection} />
+      <ConnectionSyncHistory setShowLogsDialog={jest.fn()} connection={sampleConnection} />
     );
 
     await waitFor(() => expect(screen.getByText('300MB')).toBeInTheDocument());
