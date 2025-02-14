@@ -282,6 +282,7 @@ const Row = ({
           }}
         >
           {connectionSyncJob.job_type === ConnectionJobType.sync ? 'Sync' : 'Reset/Clear'}
+          {connectionSyncJob.status === 'running' ? ' running' : ''}
           <br />
           {connectionSyncJob?.resetConfig && (
             <>
