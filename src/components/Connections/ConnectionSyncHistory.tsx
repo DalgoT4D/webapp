@@ -251,7 +251,7 @@ const Row = ({
 
   const [action, setAction] = useState<'detail' | 'summary' | null>(null);
 
-  useEffect(() => {
+  const handleLogActions = (action: string) => {
     if (action === 'summary' && summarizedLogs.length < 1) {
       summarizeLogs();
       trackAmplitudeEvent('[ai-summary] Button clicked');
@@ -261,7 +261,7 @@ const Row = ({
         pollForDetailedSyncLogs();
       }
     }
-  }, [action]);
+  };
 
   return (
     <>
@@ -333,6 +333,7 @@ const Row = ({
             disabled={detailedLogsLoading || summarizedLogsLoading}
             onChange={(event, newAction) => {
               setAction(newAction);
+              handleLogActions(newAction);
               trackAmplitudeEvent('[connection-logs] Button clicked');
             }}
             aria-label="text alignment"
