@@ -26,7 +26,7 @@ import DownIcon from '@mui/icons-material/KeyboardArrowDown';
 import moment from 'moment';
 import { FlowInterface } from './Flows';
 import { delay, formatDuration } from '@/utils/common';
-import { TopNavBar } from '../Connections/ConnectionLogs';
+import { TopNavBar } from '../Connections/ConnectionSyncHistory';
 import { defaultLoadMoreLimit, flowRunLogsOffsetLimit } from '@/config/constant';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';

@@ -33,7 +33,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import useSWR from 'swr';
 import { useTracking } from '@/contexts/TrackingContext';
 
-const fetchAirbyteLogs = async (connectionId: string, session: any, offset = 0) => {
+const fetchAirbyteSyncs = async (connectionId: string, session: any, offset = 0) => {
   try {
     const response = await httpGet(
       session,
@@ -75,7 +75,7 @@ export const TopNavBar = ({ handleClose, title }: any) => (
   </Box>
 );
 
-interface ConnectionLogsProps {
+interface ConnectionSyncHistoryProps {
   setShowLogsDialog: (value: boolean) => any;
   connection: Connection | undefined;
 }
@@ -87,7 +87,7 @@ enum ConnectionJobType {
   reset_connection = 'reset_connection',
 }
 
-interface LogObject {
+interface ConnectionSyncJobObject {
   job_type: ConnectionJobType;
   attempt_no: number;
   bytesEmitted: string;
@@ -126,7 +126,7 @@ const LogsColumn = ({
       }}
     >
       {logsLoading || summarizedLogsLoading ? <LinearProgress color="inherit" /> : null}
-      {action === 'summary'
+      {action === 'summary' && summarizedLogs
         ? summarizedLogs.length > 0 && (
             <Alert icon={false} severity="success" sx={{ mb: 2 }}>
               {summarizedLogs.map((result: any, index: number) => (
@@ -156,17 +156,20 @@ const LogsColumn = ({
 
 const Row = ({
   allowLogsSummary,
-  logDetail,
+  connectionSyncJob,
   connectionId,
+  refereshSyncJobHistory,
 }: {
   allowLogsSummary: boolean;
-  logDetail: LogObject;
+  connectionSyncJob: ConnectionSyncJobObject;
   connectionId: string;
+  refereshSyncJobHistory: (...args: any[]) => any;
 }) => {
   const globalContext = useContext(GlobalContext);
   const [summarizedLogs, setSummarizedLogs] = useState([]);
   const [detailedLogs, setDetailedLogs] = useState([]);
   const [summarizedLogsLoading, setSummarizedLogsLoading] = useState(false);
+  // const detailedLogsLoading = useRef<any[]>([]);
   const [detailedLogsLoading, setDetailedLogsLoading] = useState(false);
   const { data: session }: any = useSession();
   const trackAmplitudeEvent = useTracking();
@@ -187,12 +190,13 @@ const Row = ({
     }
     setSummarizedLogsLoading(false);
   };
+
   const summarizeLogs = async () => {
     setSummarizedLogsLoading(true);
     try {
       const response = await httpGet(
         session,
-        `airbyte/v1/connections/${connectionId}/logsummary?job_id=${logDetail.job_id}&attempt_number=${logDetail.attempt_no}`
+        `airbyte/v1/connections/${connectionId}/logsummary?job_id=${connectionSyncJob.job_id}&attempt_number=${connectionSyncJob.attempt_no}`
       );
 
       await delay(3000);
@@ -208,8 +212,9 @@ const Row = ({
     try {
       const response = await httpGet(
         session,
-        `airbyte/v1/logs?job_id=${logDetail.job_id}&attempt_number=${logDetail.attempt_no}`
+        `airbyte/v1/logs?job_id=${connectionSyncJob.job_id}&attempt_number=${connectionSyncJob.attempt_no}`
       );
+
       setDetailedLogs(response);
     } catch (err: any) {
       console.error(err);
@@ -218,30 +223,55 @@ const Row = ({
     setDetailedLogsLoading(false);
   };
 
+  const pollForDetailedSyncLogs = async () => {
+    try {
+      const response: { status: string } = await httpGet(
+        session,
+        `airbyte/jobs/${connectionSyncJob.job_id}/status`
+      );
+      const currentJobStatus: string = response.status;
+
+      const logs = await httpGet(
+        session,
+        `airbyte/v1/logs?job_id=${connectionSyncJob.job_id}&attempt_number=${connectionSyncJob.attempt_no}`
+      );
+
+      if (currentJobStatus === 'running') {
+        setDetailedLogs(logs);
+        await delay(3000);
+        await pollForDetailedSyncLogs();
+      } else {
+        refereshSyncJobHistory();
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+  };
+
   const [action, setAction] = useState<'detail' | 'summary' | null>(null);
 
-  const handleAction = (
-    event: React.MouseEvent<HTMLElement>,
-    newAction: 'detail' | 'summary' | null
-  ) => {
-    if (newAction === 'summary' && summarizedLogs.length < 1) {
+  const handleLogActions = (action: string) => {
+    if (action === 'summary' && summarizedLogs.length < 1) {
       summarizeLogs();
       trackAmplitudeEvent('[ai-summary] Button clicked');
-    } else if (newAction === 'detail' && detailedLogs.length < 1) {
+    } else if (action === 'detail' && detailedLogs.length < 1) {
       getDetailedLogs();
-      trackAmplitudeEvent('[connection-logs] Button clicked');
+      if (connectionSyncJob.status === 'running') {
+        pollForDetailedSyncLogs();
+      }
     }
-    setAction(newAction);
   };
+
   return (
     <>
       <TableRow
-        key={logDetail.job_id}
+        key={connectionSyncJob.job_id}
         sx={{
           position: 'relative',
           p: 2,
 
-          background: logDetail.status === 'failed' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
+          background: connectionSyncJob.status === 'failed' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
         }}
       >
         <TableCell
@@ -251,12 +281,15 @@ const Row = ({
             borderBottomLeftRadius: '10px',
           }}
         >
-          {logDetail.job_type === ConnectionJobType.sync ? 'Sync' : 'Reset/Clear'}
+          {connectionSyncJob.job_type === ConnectionJobType.sync ? 'Sync' : 'Reset/Clear'}
+          {connectionSyncJob.status === 'running' ? ' running' : ''}
           <br />
-          {logDetail?.resetConfig && (
+          {connectionSyncJob?.resetConfig && (
             <>
               streams:{' '}
-              {logDetail.resetConfig?.streamsToReset.map((stream: any) => stream.name).join(', ')}
+              {connectionSyncJob.resetConfig?.streamsToReset
+                .map((stream: any) => stream.name)
+                .join(', ')}
             </>
           )}
         </TableCell>
@@ -267,17 +300,21 @@ const Row = ({
             borderBottomLeftRadius: '10px',
           }}
         >
-          {moment(logDetail.date).format('MMMM D, YYYY')}
+          {connectionSyncJob.status !== 'running'
+            ? moment(connectionSyncJob.date).format('MMMM D, YYYY')
+            : ''}
         </TableCell>
 
-        <TableCell sx={{ fontWeight: 500 }}>{logDetail.recordsEmitted.toLocaleString()}</TableCell>
-        <TableCell sx={{ fontWeight: 500 }}>{logDetail.bytesEmitted}</TableCell>
+        <TableCell sx={{ fontWeight: 500 }}>
+          {connectionSyncJob.recordsEmitted.toLocaleString()}
+        </TableCell>
+        <TableCell sx={{ fontWeight: 500 }}>{connectionSyncJob.bytesEmitted}</TableCell>
         <TableCell
           sx={{
             fontWeight: 500,
           }}
         >
-          {formatDuration(logDetail.totalTimeInSeconds)}
+          {formatDuration(connectionSyncJob.totalTimeInSeconds)}
         </TableCell>
         <TableCell
           sx={{
@@ -294,14 +331,18 @@ const Row = ({
             value={action}
             exclusive
             disabled={detailedLogsLoading || summarizedLogsLoading}
-            onChange={handleAction}
+            onChange={(event, newAction) => {
+              setAction(newAction);
+              handleLogActions(newAction);
+              trackAmplitudeEvent('[connection-logs] Button clicked');
+            }}
             aria-label="text alignment"
           >
             <ToggleButton value="detail" aria-label="left" data-testid="logs">
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
-            {allowLogsSummary && logDetail.status === 'failed' && (
+            {allowLogsSummary && connectionSyncJob.status === 'failed' && (
               <ToggleButton
                 value="summary"
                 aria-label="right"
@@ -329,31 +370,37 @@ const Row = ({
   );
 };
 
-export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
+export const ConnectionSyncHistory: React.FC<ConnectionSyncHistoryProps> = ({
   setShowLogsDialog,
   connection,
 }) => {
   const { data: session }: any = useSession();
   const { data: flags } = useSWR('organizations/flags');
-  const [logDetails, setLogDetails] = useState<LogObject[]>([]);
+  const [connectionSyncJobs, setConnectionSyncJobs] = useState<ConnectionSyncJobObject[]>([]);
   const [offset, setOffset] = useState(defaultLoadMoreLimit);
   const [totalSyncs, setTotalSyncs] = useState(0);
   const [loadMorePressed, setLoadMorePressed] = useState(false);
   const [loading, setLoading] = useState(false);
   const showLoadMore = totalSyncs > offset; //derived value
-  useEffect(() => {
-    (async () => {
-      if (connection) {
-        setLoading(true);
-        const { history = [], totalSyncs = 0 }: { history: LogObject[]; totalSyncs: number } =
-          await fetchAirbyteLogs(connection.connectionId, session);
-        if (history) {
-          setLogDetails(history);
-          setTotalSyncs(totalSyncs);
-        }
-        setLoading(false);
+  const refereshSyncJobHistory = async () => {
+    if (connection) {
+      setLoading(true);
+      const {
+        history = [],
+        totalSyncs = 0,
+      }: { history: ConnectionSyncJobObject[]; totalSyncs: number } = await fetchAirbyteSyncs(
+        connection.connectionId,
+        session
+      );
+      if (history) {
+        setConnectionSyncJobs(history);
+        setTotalSyncs(totalSyncs);
       }
-    })();
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    refereshSyncJobHistory();
   }, []);
   return (
     <Dialog
@@ -415,17 +462,18 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
             </TableHead>
 
             <TableBody>
-              {logDetails.map((logDetail) => (
+              {connectionSyncJobs.map((connectionSyncJob) => (
                 <Row
                   allowLogsSummary={!!flags?.allowLogsSummary}
-                  key={logDetail.job_id}
-                  logDetail={logDetail}
+                  key={connectionSyncJob.job_id}
+                  connectionSyncJob={connectionSyncJob}
                   connectionId={connection?.connectionId ? connection.connectionId : ''}
+                  refereshSyncJobHistory={refereshSyncJobHistory}
                 />
               ))}
             </TableBody>
           </Table>
-          {logDetails.length > 0 ? (
+          {connectionSyncJobs.length > 0 ? (
             showLoadMore && (
               <Box
                 sx={{
@@ -449,13 +497,10 @@ export const ConnectionLogs: React.FC<ConnectionLogsProps> = ({
                       const {
                         history = [],
                         totalSyncs = 0,
-                      }: { history: LogObject[]; totalSyncs: number } = await fetchAirbyteLogs(
-                        connection.connectionId,
-                        session,
-                        offset
-                      );
+                      }: { history: ConnectionSyncJobObject[]; totalSyncs: number } =
+                        await fetchAirbyteSyncs(connection.connectionId, session, offset);
                       if (history) {
-                        setLogDetails((logs) => [...logs, ...history]);
+                        setConnectionSyncJobs((logs) => [...logs, ...history]);
                         setOffset((offset) => offset + defaultLoadMoreLimit);
                         setTotalSyncs(totalSyncs);
                       }
