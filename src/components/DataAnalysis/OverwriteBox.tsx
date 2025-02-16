@@ -195,7 +195,7 @@ export const OverWriteDialog = ({
           },
           onClick: () => {
             trackAmplitudeEvent(`[Submit-Feedback-LLMSummary] Button Clicked`);
-            handleSubmit((data) => submitFeedback(data.feedback));
+            handleSubmit((data) => submitFeedback(data.feedback))();
           },
         },
       ],
