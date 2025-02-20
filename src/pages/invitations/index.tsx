@@ -36,10 +36,10 @@ const AcceptInvite = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (router.isReady && router.query?.invite_code) {
+    if (router.query?.invite_code) {
       setInvitationCode(String(router.query?.invite_code));
     }
-  }, [router.isReady, router.query]);
+  }, [router.query]);
 
   const acceptInviteApiCall = async (password: string, invite_code: string) => {
     if (invite_code && invite_code.length > 0) {
@@ -49,9 +49,9 @@ const AcceptInvite = () => {
           invite_code: invite_code,
           ...(password && password.length > 0 && { password: password }),
         });
-        successToast('Invitation successfully accepted', [], globalContext);
         session.clear();
-        router.replace('/login');
+        router.push('/login');
+        successToast('Invitation successfully accepted', [], globalContext);
       } catch (err: any) {
         if (err.cause.detail === 'password is required') setIsUserPresent(false);
         else {
