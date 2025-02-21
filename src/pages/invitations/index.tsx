@@ -1,4 +1,3 @@
-'use client';
 import styles from '@/styles/Login.module.css';
 import Auth from '@/components/Layouts/Auth';
 import React, { useContext, useEffect, useState } from 'react';
@@ -7,7 +6,7 @@ import { Box, Button, CircularProgress, IconButton, InputAdornment } from '@mui/
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
@@ -50,15 +49,16 @@ const AcceptInvite = () => {
           invite_code: invite_code,
           ...(password && password.length > 0 && { password: password }),
         });
-        router.push('/login');
         successToast('Invitation successfully accepted', [], globalContext);
+        signOut({ callbackUrl: '/login' }); // This will handle both logout and redirect
       } catch (err: any) {
         if (err.cause.detail === 'password is required') setIsUserPresent(false);
         else {
           errorToast(err.cause.detail, [], globalContext);
         }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
   };
 
