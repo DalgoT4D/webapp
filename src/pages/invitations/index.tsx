@@ -1,3 +1,4 @@
+'use client';
 import styles from '@/styles/Login.module.css';
 import Auth from '@/components/Layouts/Auth';
 import React, { useContext, useEffect, useState } from 'react';
@@ -49,7 +50,6 @@ const AcceptInvite = () => {
           invite_code: invite_code,
           ...(password && password.length > 0 && { password: password }),
         });
-        session.clear();
         router.push('/login');
         successToast('Invitation successfully accepted', [], globalContext);
       } catch (err: any) {
