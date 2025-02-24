@@ -453,7 +453,7 @@ const CreateConnectionForm = ({
     setSomeStreamSelected(sourceStreams.some((stream) => stream.selected));
   }, [sourceStreams]);
 
-  const FormContent = () => {
+  const FormContent = useMemo(() => {
     return (
       <>
         <Box key={connectionId ? 'edit-mode' : 'add-new-mode'} sx={{ pt: 2, pb: 4 }}>
@@ -688,7 +688,15 @@ const CreateConnectionForm = ({
         </Box>
       </>
     );
-  };
+  }, [
+    filteredSourceStreams,
+    connectionId,
+    sources,
+    sourceStreams,
+    selectAllStreams,
+    incrementalAllStreams,
+    isAnyCursorAbsent,
+  ]);
 
   return (
     <>
@@ -700,7 +708,7 @@ const CreateConnectionForm = ({
         show={showForm}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
-        formContent={<FormContent />}
+        formContent={FormContent}
         formActions={
           <>
             <Button variant="contained" type="submit" disabled={!someStreamSelected}>
