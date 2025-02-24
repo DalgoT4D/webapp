@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import CustomDialog from '../Dialog/CustomDialog';
 import {
@@ -717,4 +717,4 @@ const CreateConnectionForm = ({
   );
 };
 
-export default CreateConnectionForm;
+export default memo(CreateConnectionForm);
