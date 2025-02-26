@@ -111,43 +111,34 @@ const UpperSection = () => {
   const { control, setValue, watch, handleSubmit, reset } = useForm({
     defaultValues: {
       prompt: '',
-      sqlText: `WITH OrderSummary AS (
-    SELECT 
-        o.order_id,
-        o.customer_id,
-        c.customer_name,
-        o.order_date,
-        SUM(od.quantity * od.unit_price) AS total_amount
-    FROM orders o
-    JOIN order_details od ON o.order_id = od.order_id
-    JOIN customers c ON o.customer_id = c.customer_id
-    GROUP BY o.order_id, o.customer_id, c.customer_name, o.order_date
-),
-HighValueOrders AS (
-    SELECT order_id, customer_id, total_amount
-    FROM OrderSummary
-    WHERE total_amount > 5000
-)
-SELECT 
-    hvo.order_id,
-    hvo.customer_id,
-    os.customer_name,
-    hvo.total_amount,
-    p.product_name,
-    od.quantity,
-    od.unit_price,
-    (od.quantity * od.unit_price) AS line_total
-FROM HighValueOrders hvo
-JOIN OrderSummary os ON hvo.order_id = os.order_id
-JOIN order_details od ON hvo.order_id = od.order_id
-JOIN products p ON od.product_id = p.product_id
-ORDER BY hvo.total_amount DESC, os.customer_name;
+      sqlText: `SELECT 
+    customers.customer_id,
+    customers.first_name,
+    customers.last_name,
+    orders.order_id,
+    orders.order_date,
+    SUM(order_items.quantity * order_items.price) AS total_spent
+FROM customers
+JOIN orders ON customers.customer_id = orders.customer_id
+JOIN order_items ON orders.order_id = order_items.order_id
+WHERE orders.order_date >= '2023-01-01'
+GROUP BY customers.customer_id, orders.order_id
+ORDER BY total_spent DESC;
 `,
+      summary: `
+      Summary: This query retrieves customer details along with their total spending amount for each order. 
+It joins three tables ('customers', 'orders', and "order_items") to aggregate the total cost per order 
+by multiplying the "quantity" and "price" fields. The results are grouped by "customer_id" and "order_id", 
+then sorted in descending order based on the total spending amount. Additionally, it filters orders placed 
+from January 1, 2023, onward.
+
+      `,
     },
   });
 
   const user_prompt = watch('prompt');
   const sqlText = watch('sqlText');
+  const summary = watch('summary');
 
   const pollForTaskGetSql = async (taskId: string) => {
     try {
@@ -178,7 +169,7 @@ ORDER BY hvo.total_amount DESC, os.customer_name;
   const handleGenerateSql = async () => {
     setLoading(true);
     try {
-      const response: { request_uuid: string } = await httpPost(session, `/generate-sql`, {
+      const response: { request_uuid: string } = await httpPost(session, `warehouse/v1/ask/`, {
         user_prompt,
       });
       if (!response?.request_uuid) {
@@ -222,20 +213,65 @@ ORDER BY hvo.total_amount DESC, os.customer_name;
           {/* SQL Input Field - Should Take Up Available Space */}
           <Box
             sx={{
-              border: '2px dashed #ccc', // Dashed border to indicate space for SQL
+              border: '2px dashed #ccc',
               borderRadius: '10px',
               padding: '1rem',
-              backgroundColor: '#F8FAFC', // Light background
-              boxShadow: '0 2px 10px rgba(0,0,0,0.05)', // Subtle shadow
-              height: '400px', // Fixed height for outer container
+              backgroundColor: '#F8FAFC',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+              height: '400px',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-start',
               alignItems: 'flex-start',
-              overflowY: 'auto', // Makes this container scrollable
+              overflowY: 'auto',
               position: 'relative',
             }}
           >
+            {/* Sticky Buttons on Top Right */}
+            <Box
+              sx={{
+                position: 'sticky',
+                zIndex: '1000',
+                alignItems: 'flex-end',
+                justifyContent: 'flex-end',
+                width: '100%',
+                top: '10px',
+                right: '10px',
+                display: 'flex',
+                gap: '8px',
+              }}
+            >
+              <Button
+                variant="contained"
+                color="secondary"
+                sx={{
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  padding: '6px 12px',
+                  boxShadow: '0px 2px 5px rgba(0,0,0,0.2)',
+                }}
+                // onClick={handleSave} // Define this function
+              >
+                Save
+              </Button>
+
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  padding: '6px 12px',
+                  boxShadow: '0px 2px 5px rgba(0,0,0,0.2)',
+                }}
+                // onClick={handleDownload} // Define this function
+              >
+                Download
+              </Button>
+            </Box>
+
             {/* Placeholder Text Before SQL Appears */}
             {!sqlText && (
               <Typography sx={{ color: '#aaa', fontSize: '14px', fontStyle: 'italic' }}>
@@ -247,22 +283,24 @@ ORDER BY hvo.total_amount DESC, os.customer_name;
             {sqlText && (
               <Box
                 sx={{
-                  maxWidth: '100%',
+                  alignSelf: 'flex-start',
+                  maxWidth: '75%',
                   minWidth: '50%',
-                  padding: '10px',
+                  padding: '12px',
                   backgroundColor: '#E8F5F5',
-                  borderRadius: '10px',
+                  borderRadius: '18px 18px 4px 18px',
                   fontFamily: 'monospace',
-                  fontSize: '14px',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                  fontSize: '16px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
                   position: 'relative',
-                  overflow: 'visible', // Allows the TextField to grow freely
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.5rem',
                 }}
               >
-                {/* SQL Text Field - Expands Dynamically */}
+                <Typography sx={{ fontSize: '14px', fontWeight: 'bold', color: '#444' }}>
+                  SQL Generated
+                </Typography>
                 <Controller
                   name="sqlText"
                   control={control}
@@ -272,10 +310,10 @@ ORDER BY hvo.total_amount DESC, os.customer_name;
                       id="outlined-multiline-static"
                       sx={{
                         fontFamily: 'monospace',
-                        fontSize: '14px',
+                        fontSize: '16px',
                         borderRadius: '6px',
-                        backgroundColor: 'transparent', // Blends with bubble
-                        width: '100%', // Ensures it doesn’t shrink
+                        backgroundColor: 'transparent',
+                        width: '100%',
                       }}
                       placeholder={`SELECT * \nFROM table_name`}
                       fullWidth
@@ -292,6 +330,53 @@ ORDER BY hvo.total_amount DESC, os.customer_name;
                   )}
                 />
               </Box>
+            )}
+
+            {/* Summary Message Bubble - Right Side */}
+            {summary && (
+              <Box
+                sx={{
+                  alignSelf: 'flex-end',
+                  maxWidth: '75%',
+                  minWidth: '50%',
+                  padding: '12px',
+                  backgroundColor: '#FDE9D9',
+                  borderRadius: '18px 4px 18px 18px',
+                  fontFamily: 'monospace',
+                  fontSize: '16px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                }}
+              >
+                <Typography sx={{ fontSize: '14px', fontWeight: 'bold', color: '#444' }}>
+                  Summary Generated
+                </Typography>
+                <Typography sx={{ fontSize: '16px' }}>{summary}</Typography>
+              </Box>
+            )}
+
+            {/* Fixed "Summarize" Button */}
+            {!summary && (
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{
+                  position: 'absolute',
+                  bottom: '10px',
+                  right: '10px',
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  padding: '6px 12px',
+                  boxShadow: '0px 2px 5px rgba(0,0,0,0.2)',
+                }}
+                // onClick={handleSummarize} // Add your function here
+              >
+                Summarize
+              </Button>
             )}
           </Box>
 
