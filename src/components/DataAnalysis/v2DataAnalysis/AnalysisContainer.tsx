@@ -1,8 +1,5 @@
 import { TopBar } from '@/components/DataAnalysis/TopBar';
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Backdrop,
   Box,
   Button,
@@ -11,7 +8,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -19,13 +16,13 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost } from '@/helpers/http';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import { delay } from '@/utils/common';
-import { ExpandMore } from '@mui/icons-material';
 import { PreviewTable } from '@/components/DataAnalysis/v2DataAnalysis/PreviewTable';
-import { SQLText } from './sqlText';
+import { SQLText } from './SqlText';
 import { AISummary } from './AISummary';
-import { MODALS } from '@/pages/analysis/data-analysis';
+import { downloadCSV, MODALS } from '@/pages/analysis/data-analysis';
 import { OverWriteDialog } from '../OverwriteBox';
 import { SavedSession } from '../SavedSession';
+import { useRouter } from 'next/router';
 
 interface ProgressResult {
   response?: Array<any>;
@@ -41,42 +38,6 @@ interface ProgressEntry {
 interface ProgressResponse {
   progress: ProgressEntry[];
 }
-const ResizeBoxContainer = ({ sqlText }: { sqlText: string }) => {
-  const [isAccordionOpen, setIsAccordionOpen] = useState(true);
-
-  return (
-    <Box sx={{ width: '100%' }}>
-      {/* Accordion Wrapper */}
-      <Accordion
-        expanded={isAccordionOpen}
-        onChange={() => setIsAccordionOpen(!isAccordionOpen)}
-        sx={{
-          borderRadius: '10px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          backgroundColor: '#F8FAFC',
-          marginBottom: '1rem',
-        }}
-      >
-        {/* Accordion Header */}
-        <AccordionSummary
-          expandIcon={<ExpandMore />}
-          sx={{
-            backgroundColor: '#E3F2FD',
-            borderBottom: '1px solid #ddd',
-            borderRadius: isAccordionOpen ? '10px 10px 0 0' : '10px',
-          }}
-        >
-          <Typography sx={{ fontWeight: 'bold' }}> SQL Preview</Typography>
-        </AccordionSummary>
-
-        {/* Accordion Content - Resizable SQL Box */}
-        <AccordionDetails sx={{ padding: '0' }}>
-          <PreviewTable sqlText={sqlText} />
-        </AccordionDetails>
-      </Accordion>
-    </Box>
-  );
-};
 export const AnalysisContainer = () => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
@@ -85,6 +46,11 @@ export const AnalysisContainer = () => {
   const [isBoxOpen, setIsBoxOpen] = useState(false);
   const [modalName, setModalName] = useState(MODALS.SAVE);
   const [selectedSession, setSelectedSession] = useState();
+  const [savedSql, setSavedSql] = useState('');
+  const [resetState, setResetState] = useState(true);
+  const [attemptedRoute, setAttemptedRoute] = useState(null);
+  const router = useRouter();
+  const { dispatch, state } = globalContext?.UnsavedChanges ?? {};
 
   const [{ newSessionId, ...oldSessionMetaInfo }, setSessionMetaInfo] = useState({
     newSessionId: '',
@@ -101,6 +67,7 @@ export const AnalysisContainer = () => {
       summary: '',
     },
   });
+  console.log({ newSessionId, oldSessionMetaInfo }, 'newSessionId, oldSessionMetaInfo');
 
   const handleEditSession = (info: any, openEdit: boolean) => {
     setSelectedSession(info);
@@ -112,6 +79,7 @@ export const AnalysisContainer = () => {
     }
     console.log(info, 'info');
     setValue('sqlText', info.sqlText);
+    setSavedSql(info.sqlText);
     if (info.summary) {
       setValue('summary', info.summary);
     }
@@ -152,15 +120,14 @@ export const AnalysisContainer = () => {
         successToast(lastMessage?.message, [], globalContext);
         //sql is generated using wren.
         if ('sql' in lastMessage.result) {
-          // setValue('sqlText', lastMessage?.result?.sql);
-          setValue('sqlText', `SELECT * FROM destinations_v2."1_text"`);
-          setSessionMetaInfo({
-            ...oldSessionMetaInfo,
-            newSessionId: lastMessage?.result?.session_id,
-          });
+          setValue('sqlText', lastMessage?.result?.sql);
         } else {
           setValue('summary', lastMessage?.result?.response[0]?.response);
         }
+        setSessionMetaInfo({
+          ...oldSessionMetaInfo,
+          newSessionId: lastMessage?.result?.session_id,
+        });
       }
     } catch (err: any) {
       console.error(err.message);
@@ -192,10 +159,14 @@ export const AnalysisContainer = () => {
   const handleSummarize = async () => {
     setLoading(true);
     try {
-      const response: { request_uuid: string } = await httpPost(session, `warehouse/ask/`, {
-        sql: `SELECT * FROM destinations_v2."1_text"`,
-        user_prompt: 'Summarize the results of the query',
-      });
+      const response: { request_uuid: string } = await httpPost(
+        session,
+        `warehouse/v1/ask/${newSessionId}/summarize`,
+        {
+          sql: sqlText,
+          user_prompt: 'Summarize the results of the query',
+        }
+      );
       if (!response?.request_uuid) {
         errorToast('Something went wrong', [], globalContext);
         return { error: 'ERROR' };
@@ -216,29 +187,115 @@ export const AnalysisContainer = () => {
     handleSaveSession(overwrite, oldSessionIdToSend, sessionName);
   };
 
+  const handleNewSession = (shouldRefreshState: boolean | undefined) => {
+    //should refreshstate is when the save or overwrite api works.
+    // !newSessionId is for the case when a old session is opened so it has only oldsessionId.
+    if (shouldRefreshState || !newSessionId) {
+      setSessionMetaInfo({
+        newSessionId: '',
+        session_status: '',
+        sqlText: '',
+        taskId: '',
+        session_name: '',
+        oldSessionId: '',
+      });
+      setValue('sqlText', '');
+      setValue('summary', '');
+      setValue('prompt', '');
+    }
+    setResetState(true);
+  };
+
   const handleSaveSession = async (
     overwrite: boolean,
     old_session_id: string | null,
     session_name: string
   ) => {
+    const sessionID = newSessionId ? newSessionId : oldSessionMetaInfo.oldSessionId;
+    console.log(sessionID, 'sessionID');
     try {
       const response: { success: number } = await httpPost(
         session,
-        `warehouse/ask/${newSessionId}/save`,
+        `warehouse/v1/ask/${sessionID}/save`,
         {
           session_name,
           overwrite,
           old_session_id,
+          sql: sqlText,
         }
       );
       if (response.success) {
         successToast(`${session_name} saved successfully`, [], globalContext);
-        // handleNewSession(true);
+        handleNewSession(true);
       }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
     } finally {
       setIsBoxOpen(false);
+    }
+  };
+
+  const hasSqlChanged = sqlText !== savedSql;
+
+  const handleFeedback = async (session_id: string, feedback: string) => {
+    try {
+      const response: { success: number } = await httpPost(
+        session,
+        `warehouse/ask/${session_id}/feedback`,
+        {
+          feedback,
+        }
+      );
+      if (response.success) {
+        successToast(`Feedback sent successfully`, [], globalContext);
+      }
+    } catch (err: any) {
+      errorToast(err.message, [], globalContext);
+    } finally {
+      setIsBoxOpen(false);
+    }
+  };
+
+  const submitFeedback = (feedback: string) => {
+    let sessionIdToSend: any;
+    if (newSessionId) {
+      // if we have a newsession or if we have oldsession but again create a new summary (both oldsessionid and newsessionid).
+      sessionIdToSend = newSessionId;
+    } else if (oldSessionMetaInfo.oldSessionId) {
+      //during edit when we have a oldsession id.
+      sessionIdToSend = oldSessionMetaInfo.oldSessionId;
+    }
+    handleFeedback(sessionIdToSend, feedback);
+  };
+
+  //Warns user to save the session before moving to some other tab.
+  useEffect(() => {
+    const handleRouteChange = (url: any) => {
+      if (
+        (oldSessionMetaInfo.oldSessionId && newSessionId && state === false) ||
+        (newSessionId && !oldSessionMetaInfo.oldSessionId && state === false)
+      ) {
+        router.events.emit('routeChangeError');
+        setModalName(MODALS.UNSAVED_CHANGES);
+        setIsBoxOpen(true);
+        dispatch({ type: 'SET_UNSAVED_CHANGES' });
+        setAttemptedRoute(url);
+        throw 'Unsaved changes, route change aborted';
+      }
+    };
+
+    router.events.on('routeChangeStart', handleRouteChange);
+
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange);
+      dispatch({ type: 'CLEAR_UNSAVED_CHANGES' });
+    };
+  }, [router, oldSessionMetaInfo.oldSessionId, state, newSessionId]);
+
+  const onConfirmNavigation = () => {
+    if (attemptedRoute) {
+      dispatch({ type: 'SET_UNSAVED_CHANGES' });
+      router.push(attemptedRoute);
     }
   };
 
@@ -292,7 +349,10 @@ export const AnalysisContainer = () => {
           }}
         >
           {/* Top Bar */}
-          <TopBar handleOpenSavedSession={handleOpenSavedSession} handleNewSession={() => {}} />
+          <TopBar
+            handleOpenSavedSession={handleOpenSavedSession}
+            handleNewSession={handleNewSession}
+          />
 
           {/* SQL Input Field - Should Take Up Available Space */}
           <Box
@@ -316,6 +376,7 @@ export const AnalysisContainer = () => {
                 overflowY: 'auto', // Makes this section scrollable
                 width: '100%',
                 paddingRight: '10px', // Optional: Prevents scrollbar overlap
+                paddingBottom: '2rem',
               }}
             >
               {/* Section: SQL AI Generated */}
@@ -334,7 +395,8 @@ export const AnalysisContainer = () => {
                 Preview Data Table
               </Typography>
               <Divider sx={{ width: '100%', mb: 2 }} />
-              <ResizeBoxContainer sqlText={sqlText} />
+
+              <PreviewTable sqlText={sqlText} sessionName={oldSessionMetaInfo.session_name} />
 
               {/* Section: Summary */}
               <Typography
@@ -344,24 +406,38 @@ export const AnalysisContainer = () => {
               </Typography>
               <Divider sx={{ width: '100%', mb: 2 }} />
 
-              {summary && <AISummary summary={summary} />}
-
-              {!summary && (
-                <Button
-                  variant="contained"
-                  color="primary"
+              {summary ? (
+                <AISummary summary={summary} />
+              ) : (
+                <Box
                   sx={{
-                    marginTop: 2,
-                    borderRadius: '20px',
-                    textTransform: 'none',
-                    fontWeight: 'bold',
-                    padding: '6px 12px',
-                    boxShadow: '0px 2px 5px rgba(0,0,0,0.2)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '10px',
                   }}
-                  onClick={handleSummarize}
                 >
-                  Summarize
-                </Button>
+                  {!sqlText ? (
+                    <Typography variant="h6">View the Summary of the data here</Typography>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      disabled={!sqlText}
+                      sx={{
+                        marginTop: 2,
+                        borderRadius: '20px',
+                        textTransform: 'none',
+                        fontWeight: 'bold',
+                        padding: '6px 12px',
+                        boxShadow: '0px 2px 5px rgba(0,0,0,0.2)',
+                      }}
+                      onClick={handleSummarize}
+                    >
+                      Summarize
+                    </Button>
+                  )}
+                </Box>
               )}
             </Box>
 
@@ -381,7 +457,7 @@ export const AnalysisContainer = () => {
             >
               <Button
                 variant="outlined"
-                // disabled={!newSessionId}
+                disabled={!sqlText || !hasSqlChanged}
                 onClick={() => {
                   setModalName(oldSessionMetaInfo.oldSessionId ? MODALS.OVERWRITE : MODALS.SAVE);
                   setIsBoxOpen(true);
@@ -398,11 +474,10 @@ export const AnalysisContainer = () => {
               <Button
                 variant="contained"
                 sx={{ width: '6.75rem', padding: '8px 0', borderRadius: '6px' }}
-                // disabled={!llmSummary}
-                // onClick={() => {
-                //     downloadCSV();
-                //     trackAmplitudeEvent(`[Download-aisummary-LLMSummary] Button Clicked`);
-                // }}
+                disabled={!sqlText}
+                onClick={() => {
+                  downloadCSV(oldSessionMetaInfo, user_prompt, summary, newSessionId);
+                }}
               >
                 Download
               </Button>
@@ -425,6 +500,7 @@ export const AnalysisContainer = () => {
               render={({ field }) => (
                 <TextField
                   data-testid="prompt-box"
+                  disabled={sqlText !== '' || oldSessionMetaInfo.session_name !== ''}
                   id="outlined-multiline-static"
                   sx={{
                     borderRadius: '6px',
@@ -459,7 +535,7 @@ export const AnalysisContainer = () => {
                 minHeight: '52px',
                 padding: '0.4rem',
                 width: '8rem',
-                alignSelf: 'flex-end', // Ensures alignment with input field
+                alignSelf: 'flex-end',
                 backgroundColor: '#00897B',
                 color: '#FFFFFF',
                 '&:hover': {
@@ -470,10 +546,10 @@ export const AnalysisContainer = () => {
                   color: '#9E9E9E',
                 },
               }}
-              disabled={loading}
+              disabled={sqlText !== '' || oldSessionMetaInfo.session_name !== ''}
               onClick={handleGenerateSql}
             >
-              {loading ? 'Generating...' : 'Submit'}
+              Submit
             </Button>
           </Box>
         </Box>
@@ -494,9 +570,9 @@ export const AnalysisContainer = () => {
             setIsBoxOpen={setIsBoxOpen}
             modalName={modalName}
             onSubmit={onSubmit}
-            submitFeedback={() => {}}
-            onConfirmNavigation={() => {}}
-            handleNewSession={() => {}}
+            submitFeedback={submitFeedback}
+            onConfirmNavigation={onConfirmNavigation}
+            handleNewSession={handleNewSession}
             setModalName={setModalName}
             oldSessionMetaInfo={oldSessionMetaInfo}
             handleEditSession={handleEditSession}

@@ -1,8 +1,9 @@
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpPost } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
 import {
   Box,
+  Button,
   Table,
   TableBody,
   TableCell,
@@ -10,6 +11,7 @@ import {
   TablePagination,
   TableRow,
   TableSortLabel,
+  Typography,
 } from '@mui/material';
 import {
   useReactTable,
@@ -21,7 +23,13 @@ import {
 import { useSession } from 'next-auth/react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 
-export const PreviewTable = ({ sqlText }: { sqlText: string }) => {
+export const PreviewTable = ({
+  sqlText,
+  sessionName,
+}: {
+  sqlText: string;
+  sessionName: string;
+}) => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
   const [data, setData] = useState([]);
@@ -59,7 +67,7 @@ export const PreviewTable = ({ sqlText }: { sqlText: string }) => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const getPreivewData = async (sql: string) => {
+  const getPreivewData = async (sql: string, pageSize: number) => {
     setLoading(true);
     const offset = (currentPageIndex - 1) * pageSize; // Calculate the offset based on current page and page size
     try {
@@ -70,36 +78,68 @@ export const PreviewTable = ({ sqlText }: { sqlText: string }) => {
       });
       console.log(response, 'responseof the fetch data.');
       const { rows, columns, totalRows } = response; // Assuming `totalRows` is included in the response
-      setData(rows);
+      console.log(response, 'response');
+      setData(rows.slice(0, pageSize)); // Set the data to be displayed on the current page
       setColumns(columns.map((col: string) => ({ accessorKey: col, header: col })));
-      setTotalCount(totalRows); // Set the total row count from the API
-      setPageCount(Math.ceil(totalRows / pageSize)); // Set the page count based on total rows and page size
     } catch (error) {
       errorToast('Error fetching preview data', [], globalContext);
     } finally {
       setLoading(false);
     }
   };
+  const fetchTotalRows = async () => {
+    try {
+      const response = await httpGet(session, `warehouse/row_count/sql`);
+      const { totalRows } = response;
+      setTotalCount(totalRows); // Set the total row count from the API
+      setPageCount(Math.ceil(totalRows / pageSize)); // Set the page count based on total rows and page size
+    } catch (error: any) {
+      console.error(error.message);
+      errorToast(error.message, [], globalContext);
+    }
+  };
 
   useEffect(() => {
-    if (sqlText) {
-      getPreivewData(sqlText);
+    if (sessionName) {
+      getPreivewData(sqlText, pageSize);
     }
-  }, [sqlText, currentPageIndex, pageSize]); // Dependency on currentPageIndex and pageSize to refetch data
+    // if (!totalCount) {
+    //   fetchTotalRows();
+    // }
+    if (!sqlText) {
+      setData([]);
+    }
+  }, [sqlText, sessionName]); // Dependency on currentPageIndex and pageSize to refetch data
 
+  if (!data.length) {
+    return (
+      <>
+        {sqlText ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', padding: '10px' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={!sqlText}
+              onClick={() => getPreivewData(sqlText, pageSize)}
+            >
+              Preview Data
+            </Button>
+          </Box>
+        ) : (
+          <Typography
+            variant="h6"
+            sx={{ display: 'flex', justifyContent: 'center', padding: '10px' }}
+          >
+            View the preview data here
+          </Typography>
+        )}
+      </>
+    );
+  }
   return (
     <>
-      {data ? (
+      {data.length ? (
         <Box>
-          <Box
-            sx={{
-              alignItems: 'center',
-              display: 'flex',
-              justifyContent: 'space-between',
-              padding: '8px 20px 8px 44px',
-              border: '1px solid grey',
-            }}
-          ></Box>
           <Box>
             <Box sx={{ maxHeight: '50vh', overflow: 'auto' }}>
               <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
@@ -181,10 +221,14 @@ export const PreviewTable = ({ sqlText }: { sqlText: string }) => {
               count={totalCount}
               rowsPerPage={pageSize}
               page={currentPageIndex - 1}
-              onPageChange={(e, newPage) => setCurrentPageIndex(newPage + 1)}
+              onPageChange={(e, newPage) => {
+                setCurrentPageIndex(newPage + 1);
+                getPreivewData(sqlText, pageSize);
+              }}
               onRowsPerPageChange={(e: any) => {
                 setPageSize(e.target.value);
                 setCurrentPageIndex(1);
+                getPreivewData(sqlText, e.target.value);
               }}
               sx={{ marginRight: '20px', display: 'block' }} // Ensure pagination is always visible
             />
