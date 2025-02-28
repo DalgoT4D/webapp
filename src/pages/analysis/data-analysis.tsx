@@ -404,6 +404,7 @@ export default function DataAnalysis() {
             open={openSavedSessionDialog}
             onClose={handleCloseSavedSession}
             handleEditSession={handleEditSession}
+            version="v0"
           />
         )}
         {openDisclaimer && (

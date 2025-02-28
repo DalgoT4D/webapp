@@ -54,10 +54,12 @@ export const SavedSession = memo(
     open,
     onClose,
     handleEditSession,
+    version,
   }: {
     open: boolean;
     onClose: any;
     handleEditSession: any;
+    version: string;
   }) => {
     const { data: session } = useSession();
     const globalContext = useContext(GlobalContext);
@@ -73,7 +75,7 @@ export const SavedSession = memo(
         const offset = pageIndex * rowsPerPage;
         const response: PaginatedSessions = await httpGet(
           session,
-          `warehouse/ask/sessions?limit=${rowsPerPage}&offset=${offset}`
+          `warehouse/ask/sessions?limit=${rowsPerPage}&offset=${offset}&version=${version}`
         );
         if (!response.rows) {
           errorToast('Something went wrong', [], globalContext);
@@ -277,8 +279,8 @@ export const SavedSession = memo(
                         onClick={() => {
                           trackAmplitudeEvent(`[View-a-saved-session-LLMSummary] Button Clicked`);
                           handleEditSession({
-                            prompt: row.response[0].prompt,
-                            summary: row.response[0].response,
+                            prompt: row.response ? row?.response[0]?.prompt : '',
+                            summary: row.response ? row.response[0].response : '',
                             oldSessionId: row.session_id,
                             session_status: row.session_status,
                             session_name: row.session_name,
