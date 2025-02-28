@@ -103,13 +103,13 @@ export const PreviewTable = ({
     if (sessionName) {
       getPreivewData(sqlText, pageSize);
     }
-    // if (!totalCount) {
-    //   fetchTotalRows();
-    // }
+    if (!totalCount) {
+      fetchTotalRows();
+    }
     if (!sqlText) {
       setData([]);
     }
-  }, [sqlText, sessionName]); // Dependency on currentPageIndex and pageSize to refetch data
+  }, [sqlText, sessionName, totalCount]); // Dependency on currentPageIndex and pageSize to refetch data
 
   if (!data.length) {
     return (
