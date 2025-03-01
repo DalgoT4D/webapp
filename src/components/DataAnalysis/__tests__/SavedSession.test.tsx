@@ -40,6 +40,7 @@ const defaultProps = {
   open: true,
   onClose: mockOnClose,
   handleEditSession: mockHandleEditSession,
+  version: 'v1',
 };
 
 const mockGlobalContext = {
@@ -105,7 +106,7 @@ describe('SavedSession Component', () => {
     await waitFor(() => {
       expect(httpGet).toHaveBeenCalledWith(
         mockSession,
-        'warehouse/ask/sessions?limit=10&offset=10'
+        'warehouse/ask/sessions?limit=10&offset=10&version=v1'
       );
     });
   });
