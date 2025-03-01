@@ -103,7 +103,7 @@ export const PreviewTable = ({
     if (sessionName) {
       getPreivewData(sqlText, pageSize);
     }
-    if (!totalCount) {
+    if (data.length && !totalCount) {
       fetchTotalRows();
     }
     if (!sqlText) {
