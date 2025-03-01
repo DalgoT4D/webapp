@@ -77,7 +77,7 @@ export const PreviewTable = ({
         offset: offset,
       });
       console.log(response, 'responseof the fetch data.');
-      const { rows, columns, totalRows } = response; // Assuming `totalRows` is included in the response
+      const { rows, columns } = response; // Assuming `totalRows` is included in the response
       console.log(response, 'response');
       setData(rows.slice(0, pageSize)); // Set the data to be displayed on the current page
       setColumns(columns.map((col: string) => ({ accessorKey: col, header: col })));
@@ -127,10 +127,10 @@ export const PreviewTable = ({
           </Box>
         ) : (
           <Typography
-            variant="h6"
-            sx={{ display: 'flex', justifyContent: 'center', padding: '10px' }}
+            variant="h3"
+            sx={{ color: 'grey', fontSize: '16px', fontStyle: 'italic', width: '100%' }}
           >
-            View the preview data here
+            View the preview Data here..
           </Typography>
         )}
       </>

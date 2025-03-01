@@ -5,8 +5,20 @@ import { Box, IconButton, Typography } from '@mui/material';
 import Image from 'next/image';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-
-export const AISummary = ({ summary }: { summary: string }) => {
+import { handleCopyClick } from '../LLMSummary';
+import { useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
+import { MODALS } from '@/pages/analysis/data-analysis';
+export const AISummary = ({
+  summary,
+  setModalName,
+  setIsBoxOpen,
+}: {
+  summary: string;
+  setModalName: any;
+  setIsBoxOpen: any;
+}) => {
+  const globalContext = useContext(GlobalContext);
   return (
     <>
       <Box
@@ -75,16 +87,17 @@ export const AISummary = ({ summary }: { summary: string }) => {
         >
           <IconButton
             disabled={!summary}
-            // onClick={handleCopyClick}
+            onClick={() => {
+              handleCopyClick(summary, null, globalContext);
+            }}
           >
             <ContentCopy sx={{ color: summary && '#0F2440AD' }} />
           </IconButton>
           <IconButton
-            // onClick={() => {
-            //     trackAmplitudeEvent(`[Dislike-summary] Button Clicked`);
-            //     setModalName(MODALS.FEEDBACK_FORM);
-            //     setIsBoxOpen(true);
-            // }}
+            onClick={() => {
+              setModalName(MODALS.FEEDBACK_FORM);
+              setIsBoxOpen(true);
+            }}
             disabled={!summary}
           >
             <ThumbDownAltOutlined sx={{ color: summary && '#0F2440AD' }} />

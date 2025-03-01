@@ -6,7 +6,7 @@ export const SQLText = ({ sqlText, control }: { sqlText: string; control: any })
     <>
       {/* Placeholder Text Before SQL Appears */}
       {!sqlText && (
-        <Typography sx={{ color: '#aaa', fontSize: '14px', fontStyle: 'italic', width: '100%' }}>
+        <Typography sx={{ color: '#aaa', fontSize: '16px', fontStyle: 'italic', width: '100%' }}>
           SQL will appear here...
         </Typography>
       )}

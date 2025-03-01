@@ -54,6 +54,16 @@ export const getSideMenu = () => {
       hide: !showDataAnalysisTab,
     },
     {
+      index: 0.3,
+      title: 'AI Analysis',
+      path: '/analysis/ai-data-analysis',
+      icon: (selected: boolean) => <AiAnalysisIcon fill={getColor(selected)} />,
+      parent: 0,
+      className: 'data_analysis',
+      minimize: false,
+      hide: !showDataAnalysisTab,
+    },
+    {
       index: 1,
       title: 'Pipeline overview',
       path: '/pipeline',

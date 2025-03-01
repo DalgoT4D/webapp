@@ -199,9 +199,7 @@ export const AnalysisContainer = () => {
         session_name: '',
         oldSessionId: '',
       });
-      setValue('sqlText', '');
-      setValue('summary', '');
-      setValue('prompt', '');
+      reset();
     }
     setResetState(true);
   };
@@ -407,31 +405,31 @@ export const AnalysisContainer = () => {
               <Divider sx={{ width: '100%', mb: 2 }} />
 
               {summary ? (
-                <AISummary summary={summary} />
+                <AISummary
+                  summary={summary}
+                  setIsBoxOpen={setIsBoxOpen}
+                  setModalName={setModalName}
+                />
               ) : (
                 <Box
                   sx={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    padding: '10px',
+                    padding: '', //checkthis
                   }}
                 >
                   {!sqlText ? (
-                    <Typography variant="h6">View the Summary of the data here</Typography>
+                    <Typography
+                      sx={{ color: 'grey', fontSize: '16px', fontStyle: 'italic', width: '100%' }}
+                    >
+                      View the text analysis of the data here...
+                    </Typography>
                   ) : (
                     <Button
                       variant="contained"
                       color="primary"
                       disabled={!sqlText}
-                      sx={{
-                        marginTop: 2,
-                        borderRadius: '20px',
-                        textTransform: 'none',
-                        fontWeight: 'bold',
-                        padding: '6px 12px',
-                        boxShadow: '0px 2px 5px rgba(0,0,0,0.2)',
-                      }}
                       onClick={handleSummarize}
                     >
                       Summarize
@@ -464,7 +462,7 @@ export const AnalysisContainer = () => {
                 }}
                 sx={{
                   width: '6.75rem',
-                  padding: '8px 0',
+                  padding: '6px',
                   borderRadius: '6px',
                   boxShadow: '0px 2px 4px 0px #09254029',
                 }}
@@ -473,7 +471,7 @@ export const AnalysisContainer = () => {
               </Button>
               <Button
                 variant="contained"
-                sx={{ width: '6.75rem', padding: '8px 0', borderRadius: '6px' }}
+                sx={{ width: '6.75rem', padding: '6px', borderRadius: '6px' }}
                 disabled={!sqlText}
                 onClick={() => {
                   downloadCSV(oldSessionMetaInfo, user_prompt, summary, newSessionId);
