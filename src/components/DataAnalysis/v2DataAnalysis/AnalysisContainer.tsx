@@ -162,11 +162,12 @@ export const AnalysisContainer = () => {
   };
 
   const handleSummarize = async () => {
+    const sessionID = newSessionId ? newSessionId : oldSessionMetaInfo.oldSessionId;
     setLoading(true);
     try {
       const response: { request_uuid: string } = await httpPost(
         session,
-        `warehouse/v1/ask/${newSessionId}/summarize`,
+        `warehouse/v1/ask/${sessionID}/summarize/`,
         {
           sql: removeTrailingSemiColon(sqlText),
           user_prompt: 'Summarize the results of the query',
@@ -215,11 +216,11 @@ export const AnalysisContainer = () => {
     session_name: string
   ) => {
     const sessionID = newSessionId ? newSessionId : oldSessionMetaInfo.oldSessionId;
-    console.log(sessionID, 'sessionID');
+
     try {
       const response: { success: number } = await httpPost(
         session,
-        `warehouse/v1/ask/${sessionID}/save`,
+        `warehouse/v1/ask/${sessionID}/save/`,
         {
           session_name,
           overwrite,
@@ -244,7 +245,7 @@ export const AnalysisContainer = () => {
     try {
       const response: { success: number } = await httpPost(
         session,
-        `warehouse/ask/${session_id}/feedback`,
+        `warehouse/ask/${session_id}/feedback/`,
         {
           feedback,
         }

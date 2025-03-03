@@ -71,7 +71,7 @@ export const PreviewTable = ({
     setLoading(true);
     const offset = (currentPageIndex - 1) * pageSize; // Calculate the offset based on current page and page size
     try {
-      const response = await httpPost(session, `warehouse/table_data/run_sql`, {
+      const response = await httpPost(session, `warehouse/table_data/run_sql/`, {
         sql: sql,
         limit: pageSize,
         offset: offset,
@@ -90,7 +90,7 @@ export const PreviewTable = ({
   const fetchTotalRows = async () => {
     const offset = (currentPageIndex - 1) * pageSize;
     try {
-      const response = await httpPost(session, `warehouse/row_count/sql`, {
+      const response = await httpPost(session, `warehouse/row_count/sql/`, {
         sql: sqlText,
         limit: pageSize,
         offset: offset,

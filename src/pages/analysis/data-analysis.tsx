@@ -241,7 +241,7 @@ export default function DataAnalysis() {
     try {
       const response: { success: number } = await httpPost(
         session,
-        `warehouse/ask/${newSessionId}/save`,
+        `warehouse/ask/${newSessionId}/save/`,
         {
           session_name,
           overwrite,
