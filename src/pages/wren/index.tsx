@@ -12,11 +12,11 @@ const MyIFrame = () => {
   const fetchWrenUrl = async () => {
     try {
       const response = await httpGet(session, `organizations/wren`);
-      if (!response.hostname) {
+      if (!response.wren_url) {
         errorToast('No hostname found for Wren', [], globalContext);
       }
-      const { hostname, port } = response;
-      setWrenUrl(`http://${hostname}:${port}/`);
+      const { wren_url } = response;
+      setWrenUrl(wren_url);
     } catch (error: any) {
       errorToast(error.message, [], globalContext);
       console.error(error, 'error');
