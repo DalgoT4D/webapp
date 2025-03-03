@@ -88,11 +88,16 @@ export const PreviewTable = ({
     }
   };
   const fetchTotalRows = async () => {
+    const offset = (currentPageIndex - 1) * pageSize;
     try {
-      const response = await httpGet(session, `warehouse/row_count/sql`);
-      const { totalRows } = response;
-      setTotalCount(totalRows); // Set the total row count from the API
-      setPageCount(Math.ceil(totalRows / pageSize)); // Set the page count based on total rows and page size
+      const response = await httpPost(session, `warehouse/row_count/sql`, {
+        sql: sqlText,
+        limit: pageSize,
+        offset: offset,
+      });
+      const { row_count } = response;
+      setTotalCount(row_count); // Set the total row count from the API
+      setPageCount(Math.ceil(row_count / pageSize)); // Set the page count based on total rows and page size
     } catch (error: any) {
       console.error(error.message);
       errorToast(error.message, [], globalContext);
@@ -103,7 +108,7 @@ export const PreviewTable = ({
     if (sessionName) {
       getPreivewData(sqlText, pageSize);
     }
-    if (data.length && !totalCount) {
+    if (sqlText && !totalCount) {
       fetchTotalRows();
     }
     if (!sqlText) {

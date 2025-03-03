@@ -38,6 +38,11 @@ interface ProgressEntry {
 interface ProgressResponse {
   progress: ProgressEntry[];
 }
+
+const removeTrailingSemiColon = (sql: string) => {
+  return sql.endsWith(';') ? sql.slice(0, -1) : sql;
+};
+
 export const AnalysisContainer = () => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
@@ -78,8 +83,8 @@ export const AnalysisContainer = () => {
       return;
     }
     console.log(info, 'info');
-    setValue('sqlText', info.sqlText);
     setSavedSql(info.sqlText);
+    setValue('sqlText', info.sqlText);
     if (info.summary) {
       setValue('summary', info.summary);
     }
@@ -163,7 +168,7 @@ export const AnalysisContainer = () => {
         session,
         `warehouse/v1/ask/${newSessionId}/summarize`,
         {
-          sql: sqlText,
+          sql: removeTrailingSemiColon(sqlText),
           user_prompt: 'Summarize the results of the query',
         }
       );
@@ -190,7 +195,7 @@ export const AnalysisContainer = () => {
   const handleNewSession = (shouldRefreshState: boolean | undefined) => {
     //should refreshstate is when the save or overwrite api works.
     // !newSessionId is for the case when a old session is opened so it has only oldsessionId.
-    if (shouldRefreshState || !newSessionId) {
+    if (shouldRefreshState || !newSessionId || !oldSessionMetaInfo.session_name) {
       setSessionMetaInfo({
         newSessionId: '',
         session_status: '',
@@ -219,7 +224,7 @@ export const AnalysisContainer = () => {
           session_name,
           overwrite,
           old_session_id,
-          sql: sqlText,
+          sql: removeTrailingSemiColon(sqlText),
         }
       );
       if (response.success) {
@@ -394,7 +399,10 @@ export const AnalysisContainer = () => {
               </Typography>
               <Divider sx={{ width: '100%', mb: 2 }} />
 
-              <PreviewTable sqlText={sqlText} sessionName={oldSessionMetaInfo.session_name} />
+              <PreviewTable
+                sqlText={removeTrailingSemiColon(sqlText)}
+                sessionName={oldSessionMetaInfo.session_name}
+              />
 
               {/* Section: Summary */}
               <Typography
