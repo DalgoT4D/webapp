@@ -1,10 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { CreateOrgForm } from '../CreateOrgForm';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import { httpPost } from '@/helpers/http';
 
 // Mock dependencies
 jest.mock('next-auth/react');
@@ -13,7 +14,12 @@ jest.mock('../../../helpers/http');
 jest.mock('../../ToastMessage/ToastHelper');
 
 describe('CreateOrgForm Component', () => {
-  const mockSession = { data: { user: { name: 'Test User' } } };
+  const mockSession = {
+    data: {
+      expires: 'false',
+      user: { email: 'a' },
+    },
+  };
   const mockRouter = { refresh: jest.fn() };
   const mockGlobalContext = {};
 
@@ -71,97 +77,97 @@ describe('CreateOrgForm Component', () => {
       expect(screen.getByText(/Organization name is required/i)).toBeInTheDocument();
     });
   });
-  // it('submits the form correctly and handles the response', async () => {
-  //   const closeSideMenu = jest.fn();
-  //   const setShowForm = jest.fn();
-  //   // Mock the response for httpPost
-  //   httpPost.mockResolvedValueOnce({ slug: 'new-org-slug' });
+  it('submits the form correctly and handles the response', async () => {
+    const closeSideMenu = jest.fn();
+    const setShowForm = jest.fn();
+    // Mock the response for httpPost
+    httpPost.mockResolvedValueOnce({ slug: 'new-org-slug' });
 
-  //   // Render the component
-  //   render(
-  //     <GlobalContext.Provider value={{}}>
-  //       <CreateOrgForm
-  //         closeSideMenu={closeSideMenu}
-  //         showForm={true}
-  //         setShowForm={setShowForm}
-  //       />
-  //     </GlobalContext.Provider>
-  //   );
+    // Render the component
+    render(
+      <GlobalContext.Provider value={mockGlobalContext}>
+        <CreateOrgForm closeSideMenu={closeSideMenu} showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
 
-  //   // Fill in the organization name
-  //   const inputOrgDiv = screen.getByTestId('input-orgname');
-  //   const inputOrg = within(inputOrgDiv).getByRole('textbox');
-  //   fireEvent.change(inputOrg, { target: { value: 'New Org' } });
+    // Fill in the organization name
+    const inputOrgDiv = screen.getByTestId('input-orgname');
+    const inputOrg = within(inputOrgDiv).getByRole('textbox');
+    fireEvent.change(inputOrg, { target: { value: 'New Org' } });
 
-  //   // Select base plan
-  //   const basePlanAutoComplete = screen.getByTestId('baseplan');
+    // Select base plan
+    const basePlanAutoComplete = screen.getByTestId('baseplan');
+    const basePlanTextInput = within(basePlanAutoComplete).getByRole('combobox');
+    basePlanAutoComplete.focus();
+    await fireEvent.change(basePlanTextInput, {
+      target: { value: 'Dalgo' },
+    });
+    fireEvent.keyDown(basePlanAutoComplete, { key: 'ArrowDown' });
+    await act(() => fireEvent.keyDown(basePlanAutoComplete, { key: 'Enter' }));
 
-  //   // Check if the dropdown exists
-  //   await waitFor(() => {
-  //     expect(basePlanAutoComplete).toBeInTheDocument();
-  //   });
+    // Select superset included
+    const supersetIncludedAutoComplete = screen.getByTestId('superset_included');
+    const supersetIncludedValue = within(supersetIncludedAutoComplete).getByRole('combobox');
+    supersetIncludedAutoComplete.focus();
+    await fireEvent.change(supersetIncludedValue, {
+      target: { value: 'Yes' },
+    });
+    fireEvent.keyDown(supersetIncludedAutoComplete, { key: 'ArrowDown' });
+    await act(() => fireEvent.keyDown(supersetIncludedAutoComplete, { key: 'Enter' }));
 
-  //   // Select the input text box inside Autocomplete
-  //   const basePlanTextInput = within(basePlanAutoComplete).getByRole('combobox');
-  //   basePlanAutoComplete.focus();
+    // Select duration
+    const selectDurationAutoComplete = screen.getByTestId('duration');
+    const selectDurationInput = within(selectDurationAutoComplete).getByRole('combobox');
+    selectDurationAutoComplete.focus();
+    await fireEvent.change(selectDurationInput, {
+      target: { value: 'Monthly' },
+    });
+    fireEvent.keyDown(selectDurationAutoComplete, { key: 'ArrowDown' });
+    await act(() => fireEvent.keyDown(selectDurationAutoComplete, { key: 'Enter' }));
 
-  //   // Update the input text value
-  //   await fireEvent.change(basePlanTextInput, {
-  //     target: { value: 'Dalgo' },
-  //   });
+    // Select start date
+    const startDateInput = screen.getByTestId('startDate').querySelector('input');
 
-  //   // Navigate and select the option
-  //   fireEvent.keyDown(basePlanAutoComplete, { key: 'ArrowDown' });
-  //   await act(() => fireEvent.keyDown(basePlanAutoComplete, { key: 'Enter' }));
+    if (startDateInput) {
+      await act(async () => {
+        fireEvent.input(startDateInput, { target: { value: '2024-01-01' } });
+      });
+    }
 
-  //   // Assert the value is selected
-  //   expect(basePlanTextInput).toHaveValue('Dalgo');
+    // End date
+    const endDateInput = screen.getByTestId('endDate').querySelector('input');
 
-  //   // Select the "Dalgo" option
-  //   fireEvent.click(screen.getByText('Free Trial'));
+    if (endDateInput) {
+      await act(async () => {
+        fireEvent.input(endDateInput, { target: { value: '2024-02-01' } });
+      });
+    }
+    // Submit the form
+    fireEvent.click(screen.getByTestId('savebutton'));
+    console.log(mockSession, 'horin');
+    // Verify the API call
+    await waitFor(() => {
+      expect(httpPost).toHaveBeenCalledWith(mockSession.data, 'v1/organizations/', {
+        name: 'New Org',
+        base_plan: 'Dalgo',
+        subscription_duration: 'Monthly',
+        can_upgrade_plan: false,
+        superset_included: true,
+        start_date: '2024-01-01T00:00:00.000Z',
+        end_date: '2024-02-01T00:00:00.000Z',
+      });
+    });
 
-  //   // Select duration
-  //   const durationDiv = screen.getByLabelText('Select Duration');
-  //   fireEvent.mouseDown(durationDiv);
-  //   const durationOption = screen.getByText('Monthly');
-  //   fireEvent.click(durationOption);
-
-  //   // Select superset included
-  //   const supersetDiv = screen.getByLabelText('Is Superset Included?');
-  //   fireEvent.mouseDown(supersetDiv);
-  //   const supersetOption = screen.getByText('Yes');
-  //   fireEvent.click(supersetOption);
-
-  //   // Fill start date
-  //   const startDateInput = screen.getByLabelText('Start Date');
-  //   fireEvent.change(startDateInput, { target: { value: '2023-11-01' } });
-
-  //   // Fill end date
-  //   const endDateInput = screen.getByLabelText('End Date');
-  //   fireEvent.change(endDateInput, { target: { value: '2023-12-01' } });
-
-  //   // Submit the form
-  //   const saveButton = screen.getByTestId('savebutton');
-  //   fireEvent.click(saveButton);
-
-  //   // Assert that httpPost is called with correct payload
-  //   await waitFor(() => {
-  //     expect(httpPost).toHaveBeenCalledWith(
-  //       { user: { name: 'Test User' } }, // Adjust session mock as needed
-  //       'v1/organizations/',
-  //       {
-  //         name: 'New Org',
-  //         base_plan: 'Dalgo',
-  //         subscription_duration: 'Monthly',
-  //         can_upgrade_plan: false,
-  //         superset_included: true,
-  //         start_date: '2023-11-01T00:00:00.000Z',
-  //         end_date: '2023-12-01T00:00:00.000Z',
-  //       }
-  //     );
-  //     expect(localStorage.getItem('org-slug')).toBe('new-org-slug');
-  //     expect(closeSideMenu).toHaveBeenCalled();
-  //     expect(setShowForm).toHaveBeenCalledWith(false);
-  //   });
-  // });
+    // Verify form cleanup and navigation
+    await waitFor(() => {
+      expect(localStorage.getItem('org-slug')).toBe('new-org-slug');
+      expect(closeSideMenu).toHaveBeenCalled();
+      expect(setShowForm).toHaveBeenCalledWith(false);
+      expect(successToast).toHaveBeenCalledWith(
+        'Organization created successfully!',
+        [],
+        expect.anything()
+      );
+    });
+  });
 });

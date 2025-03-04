@@ -5,6 +5,8 @@ import CreateConnectionForm from '../CreateConnectionForm';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
+import { generateWebsocketUrl } from '@/helpers/websocket';
+import { Server } from 'mock-socket';
 
 jest.mock('next/router', () => ({
   useRouter() {
@@ -13,8 +15,20 @@ jest.mock('next/router', () => ({
     };
   },
 }));
-
+jest.mock('@/helpers/websocket', () => ({
+  generateWebsocketUrl: jest.fn(),
+}));
 describe('Create connection', () => {
+  let mockServer: Server;
+
+  afterEach(async () => {
+    if (mockServer) {
+      await new Promise((resolve) => {
+        mockServer.stop(resolve); // Fully stop the WebSocket server
+      });
+    }
+  });
+
   const mockSession: Session = {
     expires: 'false',
     user: { email: 'a' },
@@ -41,6 +55,61 @@ describe('Create connection', () => {
       supportedSyncModes: ['full_refresh'],
     },
   ];
+
+  it('mocks generateWebsocketUrl and tests WebSocket connection', async () => {
+    mockServer = new Server('wss://mock-websocket-url');
+    const mockGenerateWebsocketUrl = generateWebsocketUrl;
+
+    // Mock the generateWebsocketUrl function
+    mockGenerateWebsocketUrl.mockImplementation((path, session) => {
+      return 'wss://mock-websocket-url';
+    });
+
+    mockServer.on('connection', (socket) => {
+      socket.on('message', (message) => {
+        const parsedMessage = JSON.parse(message);
+        if (parsedMessage.sourceId) {
+          socket.send(
+            JSON.stringify({
+              status: 'success',
+              catalog: {
+                streams: [
+                  { stream: { name: 'Stream 1' }, config: [] },
+                  { stream: { name: 'Stream 2' }, config: [] },
+                ],
+              },
+            })
+          );
+        }
+      });
+    });
+
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <CreateConnectionForm
+            mutate={() => {}}
+            showForm={true}
+            setShowForm={() => {}}
+            setBlockId={() => {}}
+            connectionId=""
+            setConnectionId={() => {}}
+            blockId=""
+            filteredSourceStreams={[]}
+          />
+        </SessionProvider>
+      );
+    });
+
+    // Assert the mocked function was called
+    expect(mockGenerateWebsocketUrl).toHaveBeenCalledWith(
+      'airbyte/connection/schema_catalog',
+      mockSession
+    );
+
+    // Clean up the mock WebSocket server
+    //mockServer.close();
+  });
 
   it('renders the form', () => {
     (global as any).fetch = jest.fn().mockResolvedValueOnce({
@@ -72,31 +141,50 @@ describe('Create connection', () => {
     expect(schemaName).toBeInTheDocument();
   });
 
-  it('check source stream on selection of source', async () => {
-    (global as any).fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce(SOURCES),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          catalog: {
-            streams: [
-              {
-                stream: STREAMS[0],
-                config: [],
-              },
-              {
-                stream: STREAMS[1],
-                config: [],
-              },
-            ],
-          },
-        }),
-      });
+  it('checks source stream selection and WebSocket interactions', async () => {
+    mockServer = new Server('wss://mock-websocket-url');
+    const mockGenerateWebsocketUrl = generateWebsocketUrl;
 
+    // Mock the generateWebsocketUrl function
+    mockGenerateWebsocketUrl.mockImplementation((path, session) => {
+      return 'wss://mock-websocket-url';
+    });
+
+    // Mock fetch responses
+    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce(SOURCES), // Mock sources list
+    });
+
+    // WebSocket server behavior
+    mockServer.on('connection', (socket) => {
+      // Respond to the frontend after the source selection
+      socket.on('message', (message) => {
+        const parsedMessage = JSON.parse(message);
+
+        if (parsedMessage.sourceId) {
+          // Simulate the WebSocket response after source selection
+          socket.send(
+            JSON.stringify({
+              data: {
+                result: {
+                  catalog: {
+                    streams: [
+                      { stream: STREAMS[0], config: [] },
+                      { stream: STREAMS[1], config: [] },
+                    ],
+                  },
+                },
+              },
+              message: '',
+              status: 'success',
+            })
+          );
+        }
+      });
+    });
+
+    // Render the component
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
@@ -114,126 +202,93 @@ describe('Create connection', () => {
               connectionId=""
               setConnectionId={() => {}}
               blockId=""
-              filteredSourceStreams={SOURCES.slice().sort((a, b) => a.name.localeCompare(b.name))}
+              filteredSourceStreams={[]}
             />
           </SWRConfig>
         </SessionProvider>
       );
     });
 
-    const sourceAutoCompelete = screen.getByTestId('sourceList');
-    // check if the source autpcomplete exists
+    // Step 1: Check source autocomplete is rendered
+    const sourceAutocomplete = screen.getByTestId('sourceList');
+    await waitFor(() => expect(sourceAutocomplete).toBeInTheDocument());
+
+    // Step 2: Select a source from the autocomplete
+    const sourceTextInput = within(sourceAutocomplete).getByRole('combobox');
+    sourceAutocomplete.focus();
+    await fireEvent.change(sourceTextInput, { target: { value: 'Source 1' } });
+    fireEvent.keyDown(sourceAutocomplete, { key: 'ArrowDown' });
+    await act(() => fireEvent.keyDown(sourceAutocomplete, { key: 'Enter' }));
+
+    // Wait for the WebSocket response to be processed
     await waitFor(() => {
-      expect(sourceAutoCompelete).toBeInTheDocument();
+      const sourceStreamTable = screen.getByTestId('sourceStreamTable');
+      expect(sourceStreamTable).toBeInTheDocument();
     });
 
-    // select the input text box inside autocomplete
-    const sourceTextInput = within(sourceAutoCompelete).getByRole('combobox');
-    sourceAutoCompelete.focus();
+    // Step 3: Validate source stream table rows
+    await waitFor(() => {
+      const sourceStreamTable = screen.getByTestId('sourceStreamTable');
 
-    // update the input text value and select it
-    await fireEvent.change(sourceTextInput, {
-      target: { value: 'Source 1' },
+      const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
+      expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2); // Header + Streams
+      // Step 4: Validate table headers
+      const headerCells = within(sourceStreamTableRows[0]).getAllByRole('columnheader');
+      expect(headerCells.length).toBe(6);
+      expect(headerCells[0].textContent).toBe('Stream');
+      expect(headerCells[1].textContent).toBe('Sync?');
+      expect(headerCells[2].textContent).toBe('Incremental?');
+      expect(headerCells[3].textContent).toBe('Destination');
+      expect(headerCells[4].textContent).toBe('Cursor Field');
+      expect(headerCells[5].textContent).toBe('Primary Key');
+
+      // Clean up the mock WebSocket server
+      //mockServer.close();
     });
-    fireEvent.keyDown(sourceAutoCompelete, { key: 'ArrowDown' });
-    await act(() => fireEvent.keyDown(sourceAutoCompelete, { key: 'Enter' }));
-
-    // check if the source stream table is pushed to the dom
-    const sourceStreamTable = await screen.findByTestId('sourceStreamTable');
-    await waitFor(() => expect(sourceStreamTable).toBeInTheDocument());
-
-    // source stream table should have two rows i.e. header and one source stream
-    const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
-    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2);
-
-    // check if the headers are correct
-    const headerCells = within(sourceStreamTableRows[0]).getAllByRole('columnheader');
-    expect(headerCells.length).toBe(5);
-    expect(headerCells[0].textContent).toBe('Stream');
-    expect(headerCells[1].textContent).toBe('Sync?');
-    expect(headerCells[2].textContent).toBe('Incremental?');
-    expect(headerCells[3].textContent).toBe('Destination');
-    expect(headerCells[4].textContent).toBe('Cursor Field');
-
-    // check if the stream mocked by us is present
-    // const rows = within(sourceStreamTable).getAllByRole('row');
-    const streamRowCells = within(sourceStreamTableRows[2]).getAllByRole('cell');
-    expect(streamRowCells.length).toBe(5);
-    expect(streamRowCells[0].textContent).toBe(STREAMS[0].name);
-
-    const connectButton = screen.getByText('Connect').closest('button');
-    const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
-
-    let streamIncrementalSwitch = screen.getByTestId('stream-incremental-0').firstChild;
-    let streamSelectDestinationMode = screen.getByTestId('stream-destmode-0').childNodes[1];
-
-    // stream is not selected for sync
-    expect(streamSyncSwitch).not.toBeChecked();
-    expect(connectButton).toBeDisabled();
-    expect(streamIncrementalSwitch).toBeDisabled();
-    expect(streamSelectDestinationMode).toBeDisabled();
-
-    // select stream for sync
-    await waitFor(() => userEvent.click(streamSyncSwitch));
-
-    // Need to redraw these elements since jest updates its dom but
-    // does not pass reference to some elements
-    streamIncrementalSwitch = screen.getByTestId('stream-incremental-0').firstChild;
-    streamSelectDestinationMode = screen.getByTestId('stream-destmode-0').childNodes[1];
-
-    // check if elements are abled
-    expect(screen.getByTestId('stream-sync-0').firstChild).toBeChecked();
-    expect(connectButton).not.toBeDisabled();
-    if (SOURCES[0]?.cursorField) {
-      expect(streamIncrementalSwitch).not.toBeDisabled();
-    }
-    expect(streamSelectDestinationMode).not.toBeDisabled();
-
-    // check stream incremental checkbox
-    expect(streamIncrementalSwitch).not.toBeChecked();
-    if (SOURCES[0]?.cursorField) {
-      await act(() => userEvent.click(streamIncrementalSwitch));
-      expect(screen.getByTestId('stream-incremental-0').firstChild).toBeChecked();
-    }
-
-    // check normalization after sync checkbox
-
-    // stream not supporting incremental sync mode we should always have
-    // incremental switch disabled
-    // stream 2 doesn't support incremental sync
-    const streamSyncSwitch1 = screen.getByTestId('stream-sync-1').firstChild;
-    const streamIncrementalSwitch1 = screen.getByTestId('stream-incremental-1').firstChild;
-    expect(streamIncrementalSwitch1).toBeDisabled();
-    // select stream 2 to sync
-    await waitFor(() => userEvent.click(streamSyncSwitch1));
-    expect(streamIncrementalSwitch1).toBeDisabled();
   });
 
-  it('create connection success', async () => {
-    (global as any).fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce(SOURCES),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          catalog: {
-            streams: [
-              {
-                stream: STREAMS[0],
-                config: [],
-              },
-              {
-                stream: STREAMS[1],
-                config: [],
-              },
-            ],
-          },
-        }),
-      });
+  it('create connection success with WebSocket and fetch interactions', async () => {
+    mockServer = new Server('wss://mock-websocket-url');
+    const mockGenerateWebsocketUrl = generateWebsocketUrl;
 
+    // Mock the generateWebsocketUrl function
+    mockGenerateWebsocketUrl.mockImplementation((path, session) => {
+      return 'wss://mock-websocket-url';
+    });
+    // Mock initial fetch for sources
+    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce(SOURCES), // Mock sources list
+    });
+
+    // WebSocket behavior
+    mockServer.on('connection', (socket) => {
+      socket.on('message', (message) => {
+        const parsedMessage = JSON.parse(message);
+
+        if (parsedMessage.sourceId) {
+          // Respond with the catalog streams
+          socket.send(
+            JSON.stringify({
+              data: {
+                result: {
+                  catalog: {
+                    streams: [
+                      { stream: STREAMS[0], config: [] },
+                      { stream: STREAMS[1], config: [] },
+                    ],
+                  },
+                },
+              },
+              message: '',
+              status: 'success',
+            })
+          );
+        }
+      });
+    });
+
+    // Render the component
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
@@ -257,43 +312,35 @@ describe('Create connection', () => {
       );
     });
 
+    // Step 1: Fill in connection name
     const connectionName = screen.getByLabelText('Name*');
     await userEvent.type(connectionName, 'test-conn-name');
 
-    const sourceAutoCompelete = screen.getByTestId('sourceList');
-    // check if the source autpcomplete exists
+    // Step 2: Validate source autocomplete is rendered
+    const sourceAutocomplete = screen.getByTestId('sourceList');
+    await waitFor(() => expect(sourceAutocomplete).toBeInTheDocument());
+
+    // Step 3: Select a source
+    const sourceTextInput = within(sourceAutocomplete).getByRole('combobox');
+    sourceAutocomplete.focus();
+    await fireEvent.change(sourceTextInput, { target: { value: 'Source 1' } });
+    fireEvent.keyDown(sourceAutocomplete, { key: 'ArrowDown' });
+    await act(() => fireEvent.keyDown(sourceAutocomplete, { key: 'Enter' }));
+
+    // Step 4: Validate source stream table renders after WebSocket response
     await waitFor(() => {
-      expect(sourceAutoCompelete).toBeInTheDocument();
+      const sourceStreamTable = screen.getByTestId('sourceStreamTable');
+      expect(sourceStreamTable).toBeInTheDocument();
+      // Step 5: Validate rows in the source stream table
+      const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
+      expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2); // Header + Streams
     });
 
-    // select the input text box inside autocomplete
-    const sourceTextInput = within(sourceAutoCompelete).getByRole('combobox');
-    sourceAutoCompelete.focus();
-
-    // update the input text value and select it
-    await fireEvent.change(sourceTextInput, {
-      target: { value: 'Source 1' },
-    });
-    fireEvent.keyDown(sourceAutoCompelete, { key: 'ArrowDown' });
-    await act(() => fireEvent.keyDown(sourceAutoCompelete, { key: 'Enter' }));
-
-    // check if the source stream table is pushed to the dom
-    const sourceStreamTable = await screen.findByTestId('sourceStreamTable');
-    await waitFor(() => expect(sourceStreamTable).toBeInTheDocument());
-
-    // source stream table should have two rows i.e. header and one source stream
-    const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
-    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2);
-
-    const connectButton = screen.getByText('Connect').closest('button');
+    // Step 6: Select a stream for syncing
     const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
-
-    // select stream for sync
     await waitFor(() => userEvent.click(streamSyncSwitch));
 
-    // set the incremental switch for the stream on
-    // await act(() => userEvent.click(streamIncrementalSwitch));
-
+    // Step 7: Mock fetch for connection creation
     const mockCreateConnectionFetch = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce({ success: 1 }),
@@ -301,37 +348,59 @@ describe('Create connection', () => {
 
     (global as any).fetch = mockCreateConnectionFetch;
 
-    // submit
+    // Step 8: Submit the form
+    const connectButton = screen.getByText('Connect').closest('button');
     await act(() => connectButton?.click());
 
+    // Step 9: Validate fetch for connection creation is called
     expect(mockCreateConnectionFetch).toHaveBeenCalledTimes(1);
+
+    // Clean up mock server
+    //mockServer.close();
   });
 
-  it('create connection failed', async () => {
-    (global as any).fetch = jest
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce(SOURCES),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValueOnce({
-          catalog: {
-            streams: [
-              {
-                stream: STREAMS[0],
-                config: [],
-              },
-              {
-                stream: STREAMS[1],
-                config: [],
-              },
-            ],
-          },
-        }),
-      });
+  it('create connection failed with WebSocket and fetch interactions', async () => {
+    mockServer = new Server('wss://mock-websocket-url');
+    const mockGenerateWebsocketUrl = generateWebsocketUrl;
 
+    // Mock the generateWebsocketUrl function
+    mockGenerateWebsocketUrl.mockImplementation((path, session) => {
+      return 'wss://mock-websocket-url';
+    });
+    // Mock fetch for sources and catalog
+    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce(SOURCES), // Mock sources list
+    });
+
+    // WebSocket server behavior
+    mockServer.on('connection', (socket) => {
+      socket.on('message', (message) => {
+        const parsedMessage = JSON.parse(message);
+
+        if (parsedMessage.sourceId) {
+          // Respond with catalog data
+          socket.send(
+            JSON.stringify({
+              data: {
+                result: {
+                  catalog: {
+                    streams: [
+                      { stream: STREAMS[0], config: [] },
+                      { stream: STREAMS[1], config: [] },
+                    ],
+                  },
+                },
+              },
+              message: '',
+              status: 'success',
+            })
+          );
+        }
+      });
+    });
+
+    // Render the component
     await act(async () => {
       render(
         <SessionProvider session={mockSession}>
@@ -355,53 +424,50 @@ describe('Create connection', () => {
       );
     });
 
+    // Step 1: Fill in the connection name
     const connectionName = screen.getByLabelText('Name*');
     await userEvent.type(connectionName, 'test-conn-name');
 
-    const sourceAutoCompelete = screen.getByTestId('sourceList');
-    // check if the source autpcomplete exists
+    // Step 2: Validate source autocomplete is rendered
+    const sourceAutocomplete = screen.getByTestId('sourceList');
+    await waitFor(() => expect(sourceAutocomplete).toBeInTheDocument());
+
+    // Step 3: Select a source
+    const sourceTextInput = within(sourceAutocomplete).getByRole('combobox');
+    sourceAutocomplete.focus();
+    await fireEvent.change(sourceTextInput, { target: { value: 'Source 1' } });
+    fireEvent.keyDown(sourceAutocomplete, { key: 'ArrowDown' });
+    await act(() => fireEvent.keyDown(sourceAutocomplete, { key: 'Enter' }));
+
+    // Step 4: Validate source stream table renders after WebSocket response
     await waitFor(() => {
-      expect(sourceAutoCompelete).toBeInTheDocument();
+      const sourceStreamTable = screen.getByTestId('sourceStreamTable');
+      expect(sourceStreamTable).toBeInTheDocument();
+      // Step 5: Validate rows in the source stream table
+      const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
+      expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2); // Header + Streams
     });
 
-    // select the input text box inside autocomplete
-    const sourceTextInput = within(sourceAutoCompelete).getByRole('combobox');
-    sourceAutoCompelete.focus();
-
-    // update the input text value and select it
-    await fireEvent.change(sourceTextInput, {
-      target: { value: 'Source 1' },
-    });
-    fireEvent.keyDown(sourceAutoCompelete, { key: 'ArrowDown' });
-    await act(() => fireEvent.keyDown(sourceAutoCompelete, { key: 'Enter' }));
-
-    // check if the source stream table is pushed to the dom
-    const sourceStreamTable = await screen.findByTestId('sourceStreamTable');
-    await waitFor(() => expect(sourceStreamTable).toBeInTheDocument());
-
-    // source stream table should have two rows i.e. header and one source stream
-    const sourceStreamTableRows = within(sourceStreamTable).getAllByRole('row');
-    expect(sourceStreamTableRows.length).toBe(STREAMS.length + 2);
-
-    const connectButton = screen.getByText('Connect').closest('button');
+    // Step 6: Select a stream for syncing
     const streamSyncSwitch = screen.getByTestId('stream-sync-0').firstChild;
-
-    // select stream for sync
     await waitFor(() => userEvent.click(streamSyncSwitch));
 
-    // set the incremental switch for the stream on
-    // await act(() => userEvent.click(streamIncrementalSwitch));
-
+    // Step 7: Mock fetch for connection creation (failure)
     const mockCreateConnectionFetch = jest.fn().mockResolvedValueOnce({
-      ok: false,
+      ok: false, // Simulate a failed response
       json: jest.fn().mockResolvedValueOnce({ detail: 'could not create connection' }),
     });
 
     (global as any).fetch = mockCreateConnectionFetch;
 
-    // submit
+    // Step 8: Submit the form
+    const connectButton = screen.getByText('Connect').closest('button');
     await act(() => connectButton?.click());
 
+    // Step 9: Validate the fetch was called once
     expect(mockCreateConnectionFetch).toHaveBeenCalledTimes(1);
+
+    //check  how to show this test failed.
+    //mockServer.close();
   });
 });

@@ -4,7 +4,8 @@ import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import { SWRConfig } from 'swr';
 import { Connections } from '../Connections';
-
+import { generateWebsocketUrl } from '@/helpers/websocket';
+import { Server } from 'mock-socket';
 // const user = userEvent.setup();
 
 jest.mock('next/router', () => ({
@@ -13,6 +14,10 @@ jest.mock('next/router', () => ({
       push: jest.fn(),
     };
   },
+}));
+
+jest.mock('@/helpers/websocket', () => ({
+  generateWebsocketUrl: jest.fn(),
 }));
 
 describe('Delete connection', () => {
@@ -52,6 +57,14 @@ describe('Delete connection', () => {
   beforeEach(() => {});
 
   it('delete connection', async () => {
+    const mockServer = new Server('wss://mock-websocket-url');
+    const mockGenerateWebsocketUrl = generateWebsocketUrl;
+
+    // Mock the generateWebsocketUrl function
+    mockGenerateWebsocketUrl.mockImplementation((path, session) => {
+      return 'wss://mock-websocket-url';
+    });
+
     (global as any).fetch = jest
       .fn()
       .mockResolvedValueOnce({

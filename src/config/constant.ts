@@ -10,6 +10,7 @@ export const showSupersetAnalysisTab =
 export const defaultLoadMoreLimit = parseInt(
   process.env.NEXT_PUBLIC_DEFAULT_LOAD_MORE_LIMIT || '3'
 );
+export const dalgoWhitelistIps = process.env.NEXT_PUBLIC_DALGO_WHITELIST_IPS?.split(',') || [];
 
 export const flowRunLogsOffsetLimit = 200;
 
@@ -24,6 +25,7 @@ export const TASK_DBTCLEAN = 'dbt-clean';
 export const TASK_DBTDEPS = 'dbt-deps';
 export const TASK_GITPULL = 'git-pull';
 export const TASK_DOCSGENERATE = 'dbt-docs-generate';
+export const TASK_DBTCLOUD_JOB = 'dbt-cloud-job';
 
 // Demo account
 export const demoAccDestSchema = process.env.NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA;

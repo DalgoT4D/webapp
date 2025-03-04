@@ -372,7 +372,6 @@ export default function DataAnalysis() {
         {/* Loader full screen */}
         {loading && (
           <>
-            {/* <FullPageBackground> */}
             <Backdrop
               open={!!loading}
               sx={{

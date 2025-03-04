@@ -152,6 +152,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
           render={({ field }) => (
             <Autocomplete
               options={['Yes', 'No']}
+              data-testid="superset_included"
               value={field.value || null}
               onChange={(e, data) => field.onChange(data)} // Update the value
               renderInput={(params) => (
@@ -176,6 +177,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
           render={({ field }) => (
             <Autocomplete
               options={durationOptions}
+              data-testid="duration"
               value={field.value}
               onChange={(e, data) => field.onChange(data)}
               renderInput={(params) => (
@@ -208,6 +210,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
             <Input
               {...field}
               type="date"
+              data-testid="startDate"
               error={!!errors.startDate}
               helperText={errors.startDate?.message}
               sx={{ mb: 2, width: '100%' }}
@@ -244,6 +247,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
               {...field}
               type="date"
               error={!!errors.endDate}
+              data-testid="endDate"
               helperText={errors.endDate?.message}
               sx={{ mb: 2, width: '100%' }}
               label="End Date"

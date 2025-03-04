@@ -1,7 +1,17 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { backendUrl } from '@/config/constant';
-import { Box, Button, Card, CircularProgress, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+} from '@mui/material';
 import { httpGet, httpPost } from '@/helpers/http';
 import moment from 'moment';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -11,12 +21,120 @@ import SyncIcon from '@/assets/icons/sync.svg';
 import Image from 'next/image';
 import styles from '@/styles/Common.module.css';
 
+type ElementaryStatus = {
+  exists: {
+    elementary_package?: string;
+    elementary_target_schema?: string;
+  };
+  missing: {
+    elementary_package?: string;
+    elementary_target_schema?: string;
+  };
+};
+
+const isEmpty = (obj: any) => Object.keys(obj).length === 0;
+
+const MappingComponent = ({ elementaryStatus }: { elementaryStatus: ElementaryStatus | null }) => {
+  if (!elementaryStatus) return null;
+  const hasExists = !isEmpty(elementaryStatus.exists);
+  const hasMissing = !isEmpty(elementaryStatus.missing);
+
+  // Don't render if both sections are empty
+  if (!hasExists && !hasMissing) {
+    return null;
+  }
+
+  return (
+    <Box
+      sx={{
+        margin: 'auto',
+        display: 'flex',
+        flexDirection: 'row',
+        gap: 2,
+      }}
+    >
+      {hasExists && (
+        <Card sx={{ flex: 0.5 }} variant="outlined">
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Existing
+            </Typography>
+            <List>
+              {Object.entries(elementaryStatus.exists).map(([key, value]) => (
+                <ListItem key={key}>
+                  <ListItemText
+                    primary={key === 'elementary_package' ? 'packages.yml' : 'dbt_project.yml'}
+                    secondary={
+                      typeof value === 'object' ? (
+                        <Box
+                          component="pre"
+                          sx={{
+                            whiteSpace: 'pre-wrap',
+                            backgroundColor: '#f4f4f4',
+                            padding: 2,
+                            borderRadius: 1,
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          {JSON.stringify(value, null, 2)}
+                        </Box>
+                      ) : (
+                        value
+                      )
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </CardContent>
+        </Card>
+      )}
+
+      {hasMissing && (
+        <Card sx={{ flex: 1 }} variant="outlined">
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Missing : Please add these missing lines to your dbt project
+            </Typography>
+            <List>
+              {Object.entries(elementaryStatus.missing).map(([key, value]) => (
+                <ListItem key={key}>
+                  <ListItemText
+                    primary={key === 'elementary_package' ? 'packages.yml' : 'dbt_project.yml'}
+                    secondary={
+                      <Box
+                        component="pre"
+                        sx={{
+                          whiteSpace: 'pre-wrap',
+                          backgroundColor: '#f4f4f4',
+                          padding: 2,
+                          borderRadius: 1,
+                          fontFamily: 'monospace',
+                        }}
+                      >
+                        {value}
+                      </Box>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </CardContent>
+        </Card>
+      )}
+    </Box>
+  );
+};
+
 export const Elementary = () => {
   const [loading, setLoading] = useState(true);
   const [elementaryToken, setElementaryToken] = useState<string>('');
   const [generatedAt, setGeneratedAt] = useState<string>('');
   const [generateReportLock, setGenerateReportLock] = useState(false);
   const globalContext = useContext(GlobalContext);
+  const [showSetupElementaryButtom, setShowSetupElementaryButtom] = useState(false);
+  const [dbtStatus, setDbtStatus] = useState('');
+  const [elementaryStatus, setElementaryStatus] = useState<ElementaryStatus | null>(null);
   const { data: session }: any = useSession();
 
   const refreshReport = async () => {
@@ -73,82 +191,241 @@ export const Elementary = () => {
     }
   };
 
+  const checkElementarySetupStatus = async () => {
+    try {
+      const response = await httpGet(session, `dbt/elementary-setup-status`);
+
+      if (response.status == 'set-up') {
+        fetchElementaryToken();
+        checkForLock();
+      } else if (response.status == 'not-set-up') {
+        //setup elementary button
+        setShowSetupElementaryButtom(true);
+      }
+    } catch (err: any) {
+      if (err.message === 'dbt is not configured for this client') {
+        setDbtStatus('dbt is not configured for this client');
+      }
+      errorToast(err.message, [], globalContext);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     if (session) {
-      fetchElementaryToken();
-      checkForLock();
+      checkElementarySetupStatus();
     }
-  }, []);
+  }, [session]);
+
+  const pollForTaskRun = async (taskId: string, hashKey: string) => {
+    const response = await httpGet(session, `tasks/${taskId}?hashkey=${hashKey}`);
+    const lastMessage: any =
+      response['progress'] && response['progress'].length > 0
+        ? response['progress'][response['progress'].length - 1]
+        : null;
+
+    if (!['completed', 'failed'].includes(lastMessage?.status)) {
+      await delay(3000);
+      await pollForTaskRun(taskId, hashKey);
+    } else if (lastMessage?.status === 'failed') {
+      errorToast(lastMessage?.message, [], globalContext);
+      return;
+    } else if (lastMessage?.status === 'completed') {
+      successToast(lastMessage?.message, [], globalContext);
+    } else {
+      throw new Error('Error while running the task.');
+    }
+  };
+  const createElementaryProfile = async () => {
+    const response = await httpPost(session, `dbt/create-elementary-profile/`, {});
+    if (response.status && response.status == 'success') {
+      successToast('Elementary profile created successfully', [], globalContext);
+    } else {
+      throw new Error('Failed to create elementary profile');
+    }
+  };
+  const createElementaryTrackingTables = async () => {
+    const response = await httpPost(session, `dbt/create-elementary-tracking-tables/`, {});
+    if (response.task_id && response.hashkey) {
+      await delay(3000);
+      await pollForTaskRun(response.task_id, response.hashkey);
+    } else {
+      throw new Error('failed to fetch task_id');
+    }
+  };
+  const createEdrDeployment = async () => {
+    const response = await httpPost(session, `dbt/create-edr-deployment/`, {});
+
+    if (response.status && response.status === 'success') {
+      successToast('Edr deployment created successfully', [], globalContext);
+    } else {
+      throw new Error('Failed to create EDR deployment');
+    }
+  };
+
+  const handleCheckDbtFiles = async () => {
+    setLoading(true);
+    try {
+      const response_git_pull: any = await httpPost(session, 'dbt/git_pull/', {});
+      if (!response_git_pull.success) errorToast('Something went wrong', [], globalContext);
+      // first will be git pull, which pulls the latest changes and then the dbt files are checked.
+      const response: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
+      setElementaryStatus(response);
+
+      if (Object.keys(response.missing).length === 0) {
+        // Wait for all API calls including polling to complete before setting loading to false
+        // git pull
+
+        await createElementaryProfile();
+        await createElementaryTrackingTables();
+        await createEdrDeployment();
+        setShowSetupElementaryButtom(false);
+      }
+    } catch (err: any) {
+      errorToast(err.message, [], globalContext);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (dbtStatus) {
+    return (
+      <>
+        <Box
+          data-testid="outerbox"
+          sx={{
+            width: '100%',
+            pt: 3,
+            pr: 3,
+            pl: 3,
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '20vh',
+              textAlign: 'center',
+              backgroundColor: 'white',
+              borderRadius: '10px',
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: { xs: '20px', sm: '25px', md: '30px' },
+                fontWeight: 400,
+              }}
+            >
+              {dbtStatus}
+            </Typography>
+          </Box>
+        </Box>
+      </>
+    );
+  }
 
   return (
     <>
       <Box data-testid="outerbox" sx={{ width: '100%', pt: 3, pr: 3, pl: 3 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            mb: 1,
-          }}
-        >
-          {elementaryToken && (
-            <Typography variant="h6">
-              <strong> Last generated:</strong> {generatedAt}
-            </Typography>
-          )}
-
-          <Button
-            sx={{ ml: 'auto' }}
-            onClick={() => refreshReport()}
-            disabled={generateReportLock}
-            variant="contained"
+        {showSetupElementaryButtom ? (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '2rem',
+              mt: 3,
+            }}
           >
-            {generateReportLock ? (
-              <>
-                <Image
-                  src={SyncIcon}
-                  className={styles.SyncIcon}
-                  alt="sync icon"
-                  style={{ marginRight: '4px' }}
-                  data-testid="sync-icon"
-                />
-                Generating report
-              </>
+            {loading ? (
+              <CircularProgress />
             ) : (
-              ' Regenerate report'
+              <>
+                <Typography sx={{ fontSize: '25px ' }}>
+                  You currently dont have elementary setup. Please click the button below to setup
+                  elementary.
+                </Typography>
+                <Button onClick={handleCheckDbtFiles} variant="contained">
+                  Setup Elementary
+                </Button>
+              </>
             )}
-          </Button>
-        </Box>
-        <Card
-          sx={{
-            background: 'white',
-            display: 'flex',
-            flexDirection: 'column',
-            borderRadius: '8px',
-            height: '100%',
-            width: '100%',
-            padding: '1rem',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          {loading ? (
-            <CircularProgress />
-          ) : elementaryToken ? (
-            <Box width="100%" height="calc(100vh - 210px)" sx={{ flexGrow: 1 }}>
-              <iframe
-                src={backendUrl + `/elementary/${elementaryToken}`}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-              ></iframe>
+
+            <MappingComponent elementaryStatus={elementaryStatus} />
+          </Box>
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                mb: 1,
+              }}
+            >
+              {elementaryToken && (
+                <Typography variant="h6">
+                  <strong> Last generated:</strong> {generatedAt}
+                </Typography>
+              )}
+
+              <Button
+                sx={{ ml: 'auto' }}
+                onClick={() => refreshReport()}
+                disabled={generateReportLock}
+                variant="contained"
+              >
+                {generateReportLock ? (
+                  <>
+                    <Image
+                      src={SyncIcon}
+                      className={styles.SyncIcon}
+                      alt="sync icon"
+                      style={{ marginRight: '4px' }}
+                      data-testid="sync-icon"
+                    />
+                    Generating report
+                  </>
+                ) : (
+                  ' Regenerate report'
+                )}
+              </Button>
             </Box>
-          ) : (
-            <Typography variant="h6">
-              No report available. Please click on the button above to generate if you believe a
-              report should be available.
-            </Typography>
-          )}
-        </Card>
+            <Card
+              sx={{
+                background: 'white',
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: '8px',
+                height: '100%',
+                width: '100%',
+                padding: '1rem',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              {loading ? (
+                <CircularProgress />
+              ) : elementaryToken ? (
+                <Box width="100%" height="calc(100vh - 210px)" sx={{ flexGrow: 1 }}>
+                  <iframe
+                    src={backendUrl + `/elementary/${elementaryToken}`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                  ></iframe>
+                </Box>
+              ) : (
+                <Typography variant="h6">
+                  No report available. Please click on the button above to generate if you believe a
+                  report should be available.
+                </Typography>
+              )}
+            </Card>
+          </>
+        )}
       </Box>
     </>
   );
