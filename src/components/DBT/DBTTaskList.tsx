@@ -243,6 +243,14 @@ export const DBTTaskList = ({
         .filter((task: TransformTask) => task.slug != TASK_DOCSGENERATE)
         .map((task: TransformTask) => [
           <Box
+            key={`label-${task.uuid}`}
+            sx={{ display: 'flex', alignItems: 'center', marginLeft: '10px' }}
+          >
+            <Typography variant="body2" fontWeight={400}>
+              {task.label}
+            </Typography>
+          </Box>,
+          <Box
             key={`name-${task.uuid}`}
             sx={{ display: 'flex', alignItems: 'center', marginLeft: '10px' }}
           >
@@ -338,7 +346,7 @@ export const DBTTaskList = ({
         hasCreatePermission={permissions.includes('can_create_orgtask')}
         openDialog={handleCreateOpenOrgTaskDialog}
         title="Task"
-        headers={{ values: ['Command'] }}
+        headers={{ values: ['Label', 'Command'] }}
         rows={rows}
         height={80}
       />

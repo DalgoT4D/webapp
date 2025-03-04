@@ -25,7 +25,7 @@ import { ActionsMenu } from '../UI/Menu/Menu';
 import { LogCard } from '@/components/Logs/LogCard';
 import { TaskLock } from '../Flows/Flows';
 import { useConnSyncLogs, useConnSyncLogsUpdate } from '@/contexts/ConnectionSyncLogsContext';
-import { ConnectionLogs } from './ConnectionLogs';
+import { ConnectionSyncHistory } from './ConnectionSyncHistory';
 import PendingActionsAccordion from './PendingActions';
 import { useSyncLock } from '@/customHooks/useSyncLock';
 import { useTracking } from '@/contexts/TrackingContext';
@@ -484,7 +484,7 @@ export const Connections = () => {
             {jobStatus}
           </Typography>
         </Box>
-        {jobStatus && ['success', 'failed'].includes(jobStatus) && (
+        {jobStatus && (
           <Button
             variant="contained"
             sx={{
@@ -540,6 +540,9 @@ export const Connections = () => {
 
       setRows(tempRows);
       setRowValues(tempRowValues);
+    } else {
+      setRows([]);
+      setRowValues([]);
     }
   };
 
@@ -634,7 +637,7 @@ export const Connections = () => {
   return (
     <>
       {showLogsDialog && (
-        <ConnectionLogs setShowLogsDialog={setShowLogsDialog} connection={logsConnection} />
+        <ConnectionSyncHistory setShowLogsDialog={setShowLogsDialog} connection={logsConnection} />
       )}
       <PendingActionsAccordion refreshConnectionsList={mutate} />
       <ActionsMenu

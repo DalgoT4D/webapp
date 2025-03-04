@@ -1,7 +1,16 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 import CustomDialog from '../Dialog/CustomDialog';
-import { Autocomplete, Box, Button, Switch, Select, MenuItem, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Switch,
+  Select,
+  MenuItem,
+  TextField,
+  Checkbox,
+} from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
@@ -10,6 +19,8 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { useSession } from 'next-auth/react';
 import { demoAccDestSchema } from '@/config/constant';
 import Input from '../UI/Input/Input';
+import { generateWebsocketUrl } from '@/helpers/websocket';
+import useWebSocket from 'react-use-websocket';
 
 interface CreateConnectionFormProps {
   connectionId: string;
@@ -23,6 +34,10 @@ type CursorFieldConfig = {
   sourceDefinedCursor: boolean;
   cursorFieldOptions: string[];
 };
+type PrimayKeyConfig = {
+  sourceDefinedPrimaryKey: boolean;
+  primaryKeyOptions: string[];
+};
 
 interface SourceStream {
   name: string;
@@ -32,6 +47,8 @@ interface SourceStream {
   destinationSyncMode: string; // append | overwrite | append_dedup
   cursorFieldConfig: CursorFieldConfig; // this will not be posted to backend
   cursorField: string;
+  primaryKeyConfig: PrimayKeyConfig;
+  primaryKey: string;
 }
 
 const CreateConnectionForm = ({
@@ -59,7 +76,6 @@ const CreateConnectionForm = ({
   const isAnyCursorAbsent = useMemo(() => {
     return filteredSourceStreams.some((stream) => !stream.cursorField);
   }, [filteredSourceStreams]);
-
   const [loading, setLoading] = useState<boolean>(false);
   const [someStreamSelected, setSomeStreamSelected] = useState<boolean>(false);
   const [normalize, setNormalize] = useState<boolean>(false);
@@ -77,7 +93,7 @@ const CreateConnectionForm = ({
   const setupInitialStreamsState = (catalog: any, connectionId: string | undefined | null) => {
     const action = connectionId ? 'edit' : 'create';
 
-    const streams = catalog.streams.map((el: any) => {
+    const streams = catalog?.streams.map((el: any) => {
       const stream = {
         name: el.stream.name,
         supportsIncremental: el.stream.supportedSyncModes.indexOf('incremental') > -1,
@@ -89,6 +105,11 @@ const CreateConnectionForm = ({
           cursorFieldOptions: [],
         },
         cursorField: '',
+        primaryKeyConfig: {
+          sourceDefinedPrimaryKey: false,
+          primaryKeyOptions: [],
+        },
+        primaryKey: [], // eg.[[id]], [[id], [airbyte_raw]]etc. this can be multiple hence we have to make it an array. This can be a composite primary key.
       };
 
       const cursorFieldObj = stream.cursorFieldConfig;
@@ -115,6 +136,26 @@ const CreateConnectionForm = ({
         // overwrite default if the cursor field is set
         if ('cursorField' in el.config)
           stream.cursorField = el.config.cursorField.length > 0 ? el.config.cursorField[0] : '';
+      }
+
+      const primaryKeyObj = stream.primaryKeyConfig;
+
+      if ('sourceDefinedPrimaryKey' in el.stream && el.stream.sourceDefinedPrimaryKey.length > 0)
+        primaryKeyObj.sourceDefinedPrimaryKey = true;
+
+      if (primaryKeyObj.sourceDefinedPrimaryKey) {
+        stream.primaryKey = el.config.primaryKey.flat();
+        primaryKeyObj.primaryKeyOptions = el.config.primaryKey.flat();
+      } else {
+        // user needs to define the primary key
+        // available options are picked from the stream's jsonSchema (cols)
+        if ('jsonSchema' in el.stream)
+          primaryKeyObj.primaryKeyOptions = Object.keys(el.stream.jsonSchema.properties) as any;
+
+        // overwrite default if the primary key field is set
+        if ('primaryKey' in el.config) {
+          stream.primaryKey = el.config.primaryKey.length > 0 ? el.config.primaryKey.flat() : [];
+        }
       }
 
       return stream;
@@ -168,32 +209,50 @@ const CreateConnectionForm = ({
   }, [sourcesData]);
 
   // source selection changes
+  const [socketUrl, setSocketUrl] = useState<string | null>(null);
+  const { sendJsonMessage, lastJsonMessage }: any = useWebSocket(socketUrl, {
+    share: false,
+    onError(event) {
+      console.error('Socket error:', event);
+      setLoading(false);
+    },
+  });
+
+  useEffect(() => {
+    if (session) {
+      setSocketUrl(generateWebsocketUrl('airbyte/connection/schema_catalog', session));
+    }
+  }, [session]);
   useEffect(() => {
     if (watchSourceSelection?.id && !connectionId) {
-      (async () => {
-        setLoading(true);
-        try {
-          const message = await httpGet(
-            session,
-            `airbyte/sources/${watchSourceSelection.id}/schema_catalog`
-          );
-          const streams: SourceStream[] = setupInitialStreamsState(
-            message['catalog'],
-            connectionId
-          );
-          setSourceStreams(streams);
-          setFilteredSourceStreams(streams);
-        } catch (err: any) {
-          if (err.cause) {
-            errorToast(err.cause.detail, [], globalContext);
-          } else {
-            errorToast(err.message, [], globalContext);
-          }
-        }
-        setLoading(false);
-      })();
+      setLoading(true);
+      sendJsonMessage({
+        sourceId: watchSourceSelection.id,
+      });
+      setLoading(true);
+      sendJsonMessage({
+        sourceId: watchSourceSelection.id,
+      });
     }
   }, [watchSourceSelection]);
+
+  useEffect(() => {
+    if (!lastJsonMessage) return;
+
+    const { data, message, status } = lastJsonMessage;
+    const source_schema_catalog = data?.result?.catalog;
+
+    if (status == 'success' && source_schema_catalog) {
+      const streams: SourceStream[] = setupInitialStreamsState(source_schema_catalog, connectionId);
+      setSourceStreams(streams);
+      setFilteredSourceStreams(streams);
+    } else if (status == 'error') {
+      setSourceStreams([]);
+      setFilteredSourceStreams([]);
+      errorToast(message, [], globalContext);
+    }
+    setLoading(false);
+  }, [lastJsonMessage]);
 
   const handleClose = () => {
     reset();
@@ -220,6 +279,7 @@ const CreateConnectionForm = ({
           syncMode: stream.syncMode, // incremental | full_refresh
           destinationSyncMode: stream.destinationSyncMode, // append | overwrite | append_dedup
           cursorField: stream.cursorField,
+          primaryKey: stream.primaryKey,
         };
       }),
       normalize,
@@ -306,6 +366,10 @@ const CreateConnectionForm = ({
     updateThisStreamTo_(stream, { ...stream, cursorField: value });
   };
 
+  const updatePrimaryKey = (value: string, stream: SourceStream) => {
+    updateThisStreamTo_(stream, { ...stream, primaryKey: value });
+  };
+
   const handleSyncAllStreams = (checked: boolean) => {
     setSelectAllStreams(checked);
     if (!checked && incrementalAllStreams) {
@@ -389,7 +453,7 @@ const CreateConnectionForm = ({
     setSomeStreamSelected(sourceStreams.some((stream) => stream.selected));
   }, [sourceStreams]);
 
-  const FormContent = () => {
+  const FormContent = useMemo(() => {
     return (
       <>
         <Box key={connectionId ? 'edit-mode' : 'add-new-mode'} sx={{ pt: 2, pb: 4 }}>
@@ -457,6 +521,9 @@ const CreateConnectionForm = ({
                     <TableCell key="cursorfield" align="center">
                       Cursor Field
                     </TableCell>
+                    <TableCell key="primarykey" align="center">
+                      Primary Key
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell key="searchstream" align="center">
@@ -520,11 +587,7 @@ const CreateConnectionForm = ({
                           <TableCell key="inc" align="center">
                             <Switch
                               data-testid={`stream-incremental-${idx}`}
-                              disabled={
-                                !stream.cursorField ||
-                                !stream.supportsIncremental ||
-                                !stream.selected
-                              }
+                              disabled={!stream.supportsIncremental || !stream.selected}
                               checked={
                                 stream.supportsIncremental && ifIncremental && stream.selected
                               }
@@ -561,6 +624,12 @@ const CreateConnectionForm = ({
                               onChange={(event) => {
                                 updateCursorField(event.target.value, stream);
                               }}
+                              required={ifIncremental}
+                              onInvalid={(e: any) =>
+                                e.target.setCustomValidity(
+                                  'Cursor field is required for incremental streams'
+                                )
+                              }
                             >
                               {stream.cursorFieldConfig?.cursorFieldOptions.map(
                                 (option: string) => (
@@ -569,6 +638,44 @@ const CreateConnectionForm = ({
                                   </MenuItem>
                                 )
                               )}
+                            </Select>
+                          </TableCell>
+                          <TableCell key="primarykey" align="center">
+                            <Select
+                              data-testid={`stream-primarykey-${idx}`}
+                              disabled={
+                                !stream.selected ||
+                                !stream.supportsIncremental ||
+                                stream.syncMode !== 'incremental' ||
+                                stream.destinationSyncMode !== 'append_dedup'
+                              }
+                              required={ifIncremental}
+                              onInvalid={(e: any) =>
+                                e.target.setCustomValidity(
+                                  'Primary Key is required for incremental streams'
+                                )
+                              }
+                              multiple
+                              value={stream.primaryKey}
+                              onChange={(event) => {
+                                if (!stream.primaryKeyConfig.sourceDefinedPrimaryKey) {
+                                  updatePrimaryKey(event.target.value, stream);
+                                }
+                              }}
+                              renderValue={(selected: any) => selected.join(', ')}
+                            >
+                              {stream.primaryKeyConfig?.primaryKeyOptions?.length > 0 &&
+                                stream.primaryKeyConfig.primaryKeyOptions.map(
+                                  (option: string, index: number) => (
+                                    <MenuItem key={option} value={option}>
+                                      <Checkbox
+                                        checked={stream.primaryKey.indexOf(option) > -1}
+                                        disabled={stream.primaryKeyConfig.sourceDefinedPrimaryKey}
+                                      />
+                                      {option}
+                                    </MenuItem>
+                                  )
+                                )}
                             </Select>
                           </TableCell>
                         </TableRow>
@@ -581,7 +688,15 @@ const CreateConnectionForm = ({
         </Box>
       </>
     );
-  };
+  }, [
+    filteredSourceStreams,
+    connectionId,
+    sources,
+    sourceStreams,
+    selectAllStreams,
+    incrementalAllStreams,
+    isAnyCursorAbsent,
+  ]);
 
   return (
     <>
@@ -593,7 +708,7 @@ const CreateConnectionForm = ({
         show={showForm}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
-        formContent={<FormContent />}
+        formContent={FormContent}
         formActions={
           <>
             <Button variant="contained" type="submit" disabled={!someStreamSelected}>
@@ -610,4 +725,4 @@ const CreateConnectionForm = ({
   );
 };
 
-export default CreateConnectionForm;
+export default memo(CreateConnectionForm);
