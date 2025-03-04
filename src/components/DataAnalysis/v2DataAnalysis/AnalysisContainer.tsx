@@ -72,7 +72,6 @@ export const AnalysisContainer = () => {
       summary: '',
     },
   });
-  console.log({ newSessionId, oldSessionMetaInfo }, 'newSessionId, oldSessionMetaInfo');
 
   const handleEditSession = (info: any, openEdit: boolean) => {
     setSelectedSession(info);
@@ -82,9 +81,9 @@ export const AnalysisContainer = () => {
       setModalName(MODALS.EDIT_SESSION_WARNING);
       return;
     }
-    console.log(info, 'info');
     setSavedSql(info.sqlText);
     setValue('sqlText', info.sqlText);
+    setValue('prompt', info.prompt);
     if (info.summary) {
       setValue('summary', info.summary);
     }
@@ -239,7 +238,7 @@ export const AnalysisContainer = () => {
     }
   };
 
-  const hasSqlChanged = sqlText !== savedSql;
+  const sqlChanged = sqlText !== savedSql;
 
   const handleFeedback = async (session_id: string, feedback: string) => {
     try {
@@ -403,6 +402,7 @@ export const AnalysisContainer = () => {
               <PreviewTable
                 sqlText={removeTrailingSemiColon(sqlText)}
                 sessionName={oldSessionMetaInfo.session_name}
+                sqlChanged={sqlChanged}
               />
 
               {/* Section: Summary */}
@@ -464,7 +464,7 @@ export const AnalysisContainer = () => {
             >
               <Button
                 variant="outlined"
-                disabled={!sqlText || !hasSqlChanged}
+                disabled={!sqlText || !sqlChanged}
                 onClick={() => {
                   setModalName(oldSessionMetaInfo.oldSessionId ? MODALS.OVERWRITE : MODALS.SAVE);
                   setIsBoxOpen(true);
@@ -492,73 +492,85 @@ export const AnalysisContainer = () => {
           </Box>
 
           {/* Prompt + Button Wrapper - Always at Bottom */}
-          <Box
-            sx={{
-              display: 'flex',
-              gap: '1rem',
-              alignItems: 'flex-start',
-              marginTop: 'auto', // Pushes this container to the bottom
+          <form
+            onSubmit={(e) => {
+              e.preventDefault(); // Prevent page refresh
+              handleGenerateSql(); // Trigger the submit action
             }}
+            style={{ width: '100%' }} // Ensure full width for proper alignment
           >
-            {/* Prompt Input */}
-            <Controller
-              name="prompt"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  data-testid="prompt-box"
-                  disabled={sqlText !== '' || oldSessionMetaInfo.session_name !== ''}
-                  id="outlined-multiline-static"
-                  sx={{
-                    borderRadius: '6px',
-                    flexGrow: 1,
-                    '& .MuiInputBase-root': {
-                      minHeight: '56px',
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                    },
-                  }}
-                  placeholder="Enter a prompt"
-                  fullWidth
-                  multiline
-                  minRows={1}
-                  maxRows={6}
-                  {...field}
-                  InputProps={{
-                    style: {
-                      backgroundColor: '#E8F5F5',
-                      borderRadius: '6px',
-                    },
-                  }}
-                />
-              )}
-            />
-
-            {/* Submit Button */}
-            <Button
-              variant="contained"
-              id="create-new-button"
+            <Box
               sx={{
-                minHeight: '52px',
-                padding: '0.4rem',
-                width: '8rem',
-                alignSelf: 'flex-end',
-                backgroundColor: '#00897B',
-                color: '#FFFFFF',
-                '&:hover': {
-                  backgroundColor: '#00695C',
-                },
-                '&:disabled': {
-                  backgroundColor: '#E0E0E0',
-                  color: '#9E9E9E',
-                },
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'flex-start',
+                marginTop: 'auto',
               }}
-              disabled={sqlText !== '' || oldSessionMetaInfo.session_name !== ''}
-              onClick={handleGenerateSql}
             >
-              Submit
-            </Button>
-          </Box>
+              {/* Prompt Input */}
+              <Controller
+                name="prompt"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    data-testid="prompt-box"
+                    id="outlined-multiline-static"
+                    sx={{
+                      borderRadius: '6px',
+                      flexGrow: 1,
+                      '& .MuiInputBase-root': {
+                        minHeight: '56px',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                      },
+                    }}
+                    placeholder="Enter a prompt"
+                    fullWidth
+                    multiline
+                    minRows={1}
+                    maxRows={6}
+                    {...field}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault(); // Prevent new line
+                        handleGenerateSql(); // Call submit function
+                      }
+                    }}
+                    InputProps={{
+                      style: {
+                        backgroundColor: '#E8F5F5',
+                        borderRadius: '6px',
+                      },
+                    }}
+                  />
+                )}
+              />
+
+              {/* Submit Button */}
+              <Button
+                variant="contained"
+                id="create-new-button"
+                sx={{
+                  minHeight: '52px',
+                  padding: '0.4rem',
+                  width: '8rem',
+                  alignSelf: 'flex-end',
+                  backgroundColor: '#00897B',
+                  color: '#FFFFFF',
+                  '&:hover': {
+                    backgroundColor: '#00695C',
+                  },
+                  '&:disabled': {
+                    backgroundColor: '#E0E0E0',
+                    color: '#9E9E9E',
+                  },
+                }}
+                type="submit" // Ensures form submission when Enter is pressed
+              >
+                Submit
+              </Button>
+            </Box>
+          </form>
         </Box>
 
         {/* Saved Session Dailog */}

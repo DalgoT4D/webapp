@@ -4,6 +4,7 @@ import { httpGet, httpPost } from '@/helpers/http';
 import {
   Box,
   Button,
+  CircularProgress,
   Table,
   TableBody,
   TableCell,
@@ -26,9 +27,11 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 export const PreviewTable = ({
   sqlText,
   sessionName,
+  sqlChanged,
 }: {
   sqlText: string;
   sessionName: string;
+  sqlChanged: boolean;
 }) => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
@@ -41,6 +44,7 @@ export const PreviewTable = ({
   const [sortedColumn, setSortedColumn] = useState<string | undefined>(); // Track sorted column
   const [sortOrder, setSortOrder] = useState(1); // Track sort order (1 for ascending, -1 for descending)
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSort = (columnId: string) => {
     if (sortedColumn === columnId) {
@@ -67,22 +71,22 @@ export const PreviewTable = ({
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const getPreivewData = async (sql: string, pageSize: number) => {
+  const getPreviewData = async (sql: string, pageSize: number) => {
     setLoading(true);
-    const offset = (currentPageIndex - 1) * pageSize; // Calculate the offset based on current page and page size
+    const offset = (currentPageIndex - 1) * pageSize;
     try {
       const response = await httpPost(session, `warehouse/table_data/run_sql/`, {
         sql: sql,
         limit: pageSize,
         offset: offset,
       });
-      console.log(response, 'responseof the fetch data.');
-      const { rows, columns } = response; // Assuming `totalRows` is included in the response
-      console.log(response, 'response');
-      setData(rows.slice(0, pageSize)); // Set the data to be displayed on the current page
+      const { rows, columns } = response;
+      setData(rows.slice(0, pageSize));
       setColumns(columns.map((col: string) => ({ accessorKey: col, header: col })));
-    } catch (error) {
-      errorToast('Error fetching preview data', [], globalContext);
+    } catch (error: any) {
+      console.error(error.message);
+      setErrorMessage(error.message);
+      // errorToast('Error fetching preview data', [], globalContext);
     } finally {
       setLoading(false);
     }
@@ -105,37 +109,67 @@ export const PreviewTable = ({
   };
 
   useEffect(() => {
-    if (sessionName) {
-      getPreivewData(sqlText, pageSize);
+    if (sessionName && !sqlChanged) {
+      getPreviewData(sqlText, pageSize);
     }
     if (sqlText && !totalCount) {
       fetchTotalRows();
     }
-    if (!sqlText) {
+    if (!sqlText || sqlChanged) {
       setData([]);
+      setErrorMessage('');
     }
-  }, [sqlText, sessionName, totalCount]); // Dependency on currentPageIndex and pageSize to refetch data
+  }, [sqlText, sessionName, totalCount, sqlChanged]); // Dependency on currentPageIndex and pageSize to refetch data
 
   if (!data.length) {
     return (
       <>
         {sqlText ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', padding: '10px' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={!sqlText}
-              onClick={() => getPreivewData(sqlText, pageSize)}
-            >
-              Preview Data
-            </Button>
-          </Box>
+          <>
+            <Box sx={{ display: 'flex', justifyContent: 'center', padding: '10px' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => {
+                  getPreviewData(sqlText, pageSize);
+                  setErrorMessage('');
+                }}
+                disabled={!sqlText}
+                style={{
+                  opacity: loading ? 0.6 : 1,
+                  pointerEvents: loading ? 'none' : 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                Preview Data
+                {loading && <CircularProgress size={20} style={{ color: 'white' }} />}
+              </Button>
+            </Box>
+            {errorMessage && (
+              <Typography
+                variant="h3"
+                sx={{
+                  color: 'red',
+                  fontSize: '16px',
+                  fontStyle: 'italic',
+                  width: '100%',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'normal',
+                }}
+              >
+                Error: {errorMessage}
+              </Typography>
+            )}
+          </>
         ) : (
           <Typography
             variant="h3"
             sx={{ color: 'grey', fontSize: '16px', fontStyle: 'italic', width: '100%' }}
           >
-            View the preview Data here..
+            "View the preview Data here.."
           </Typography>
         )}
       </>
@@ -228,14 +262,14 @@ export const PreviewTable = ({
               page={currentPageIndex - 1}
               onPageChange={(e, newPage) => {
                 setCurrentPageIndex(newPage + 1);
-                getPreivewData(sqlText, pageSize);
+                getPreviewData(sqlText, pageSize);
               }}
               onRowsPerPageChange={(e: any) => {
                 setPageSize(e.target.value);
                 setCurrentPageIndex(1);
-                getPreivewData(sqlText, e.target.value);
+                getPreviewData(sqlText, e.target.value);
               }}
-              sx={{ marginRight: '20px', display: 'block' }} // Ensure pagination is always visible
+              sx={{ marginRight: '20px', display: 'block' }}
             />
           </Box>
         </Box>
