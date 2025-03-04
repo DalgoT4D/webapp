@@ -169,7 +169,7 @@ export const PreviewTable = ({
             variant="h3"
             sx={{ color: 'grey', fontSize: '16px', fontStyle: 'italic', width: '100%' }}
           >
-            "View the preview Data here.."
+            View the preview Data here..
           </Typography>
         )}
       </>

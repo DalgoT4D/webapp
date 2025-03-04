@@ -464,7 +464,7 @@ export const AnalysisContainer = () => {
             >
               <Button
                 variant="outlined"
-                disabled={!sqlText || !sqlChanged}
+                disabled={!sqlText}
                 onClick={() => {
                   setModalName(oldSessionMetaInfo.oldSessionId ? MODALS.OVERWRITE : MODALS.SAVE);
                   setIsBoxOpen(true);
