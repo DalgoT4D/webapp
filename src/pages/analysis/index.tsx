@@ -26,21 +26,27 @@ export default function Analysis() {
         }
       }
     });
+
     // ask the iframe where it's at
-    const intervalId = setInterval(function () {
+    const intervalId = setInterval(() => {
       if (iframeRefHidden?.current) {
         if (globalContext?.CurrentOrg?.state.viz_url) {
           iframeRefHidden.current.contentWindow.location.href =
             globalContext?.CurrentOrg?.state.viz_url;
-          setTimeout(() => {
+
+          // Waiting for iframe to load and then send a message
+          iframeRefHidden.current.onload = () => {
             iframeRefHidden?.current?.contentWindow?.postMessage(
               { ask: 'locationStatus' },
-              globalContext?.CurrentOrg?.state.viz_url
+              globalContext.CurrentOrg.state.viz_url
             );
-          }, 500);
+            // clearing the interval since iframe is set
+            clearInterval(intervalId);
+          };
         }
       }
     }, 2000);
+
     return () => {
       clearInterval(intervalId);
     };
