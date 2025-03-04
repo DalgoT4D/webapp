@@ -45,6 +45,35 @@ export const MODALS = {
 interface ProgressResponse {
   progress: ProgressEntry[];
 }
+
+export const downloadCSV = (
+  sessionMetaInfo: any,
+  prompt: string,
+  summary: string,
+  newSessionId: string
+) => {
+  const csv = jsonToCSV([
+    {
+      session_name: sessionMetaInfo.session_name || null,
+      sqlText: sessionMetaInfo.sqlText || null,
+      prompt,
+      summary,
+      session_status: sessionMetaInfo.session_status || null,
+      taskId: sessionMetaInfo.taskId || null,
+      newSessionId: newSessionId || null,
+      oldSessionId: sessionMetaInfo.oldSessionId || null,
+    },
+  ]);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'summary.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 export default function DataAnalysis() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -133,28 +162,6 @@ export default function DataAnalysis() {
       ...info,
     });
   };
-  const downloadCSV = () => {
-    const csv = jsonToCSV([
-      {
-        session_name: oldSessionMetaInfo.session_name || null,
-        sqlText: oldSessionMetaInfo.sqlText || null,
-        prompt,
-        summary,
-        session_status: oldSessionMetaInfo.session_status || null,
-        taskId: oldSessionMetaInfo.taskId || null,
-        newSessionId: newSessionId || null,
-        oldSessionId: oldSessionMetaInfo.oldSessionId || null,
-      },
-    ]);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'summary.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   //polling
   const pollForTaskRun = async (taskId: string) => {
@@ -234,7 +241,7 @@ export default function DataAnalysis() {
     try {
       const response: { success: number } = await httpPost(
         session,
-        `warehouse/ask/${newSessionId}/save`,
+        `warehouse/ask/${newSessionId}/save/`,
         {
           session_name,
           overwrite,
@@ -363,7 +370,7 @@ export default function DataAnalysis() {
           setModalName={setModalName}
           setIsBoxOpen={setIsBoxOpen}
           llmSummary={summary}
-          downloadCSV={downloadCSV}
+          downloadCSV={() => downloadCSV(oldSessionMetaInfo, prompt, summary, newSessionId)}
           newSessionId={newSessionId}
           oldSessionMetaInfo={oldSessionMetaInfo}
           handleNewSession={handleNewSession}
@@ -404,6 +411,7 @@ export default function DataAnalysis() {
             open={openSavedSessionDialog}
             onClose={handleCloseSavedSession}
             handleEditSession={handleEditSession}
+            version="v0"
           />
         )}
         {openDisclaimer && (
@@ -445,3 +453,4 @@ const customCss = {
   padding: '2rem',
   //   borderColor: '#FFFFFF',
 };
+export {};

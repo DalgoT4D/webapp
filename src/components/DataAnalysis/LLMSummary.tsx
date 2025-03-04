@@ -12,6 +12,22 @@ import { ContentCopy, ThumbDownAltOutlined } from '@mui/icons-material';
 import { MODALS } from '@/pages/analysis/data-analysis';
 import { useTracking } from '@/contexts/TrackingContext';
 
+export const handleCopyClick = async (
+  llmSummary: string,
+  trackAmplitudeEvent: any,
+  globalContext: any
+) => {
+  const copyRes: boolean = await copyToClipboard(llmSummary);
+  if (trackAmplitudeEvent) {
+    trackAmplitudeEvent(`[Copy-LLMSummary] Button Clicked`);
+  }
+  if (copyRes) {
+    successToast('Successfully copied to clipboard', [], globalContext);
+  } else {
+    errorToast('Some problem with copying. Please try again', [], globalContext);
+  }
+};
+
 export const LLMSummary = ({
   resetState,
   llmSummary,
@@ -34,15 +50,6 @@ export const LLMSummary = ({
   const trackAmplitudeEvent: any = useTracking();
 
   // Function to handle copying text ->
-  const handleCopyClick = async () => {
-    const copyRes: boolean = await copyToClipboard(llmSummary);
-    trackAmplitudeEvent(`[Copy-LLMSummary] Button Clicked`);
-    if (copyRes) {
-      successToast('Successfully copied to clipboard', [], globalContext);
-    } else {
-      errorToast('Some problem with copying. Please try again', [], globalContext);
-    }
-  };
 
   // checks for the route change->
   //cover both cases, while editing, and the first time too wehn the user creats a analysis.
@@ -124,7 +131,12 @@ export const LLMSummary = ({
               right: '1.25rem',
             }}
           >
-            <IconButton disabled={!llmSummary} onClick={handleCopyClick}>
+            <IconButton
+              disabled={!llmSummary}
+              onClick={() => {
+                handleCopyClick(llmSummary, trackAmplitudeEvent, globalContext);
+              }}
+            >
               <ContentCopy sx={{ color: llmSummary && '#0F2440AD' }} />
             </IconButton>
             <IconButton
