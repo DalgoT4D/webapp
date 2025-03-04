@@ -340,7 +340,7 @@ export const AnalysisContainer = () => {
           boxShadow: '0 4px 8px rgba(9, 37, 64, 0.08)',
           backgroundColor: '#FFFFFF',
           borderRadius: '12px',
-          padding: '1rem 3rem',
+          padding: '1rem 2rem',
         }}
       >
         <Box

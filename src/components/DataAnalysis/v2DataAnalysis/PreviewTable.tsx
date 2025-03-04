@@ -146,8 +146,8 @@ export const PreviewTable = ({
       {data.length ? (
         <Box>
           <Box>
-            <Box sx={{ maxHeight: '50vh', overflow: 'auto' }}>
-              <Table stickyHeader sx={{ width: '100%', borderSpacing: 0 }}>
+            <Box sx={{ maxHeight: '50vh', overflow: 'auto', width: '100%' }}>
+              <Table stickyHeader sx={{ maxWidth: '100%', tableLayout: 'auto', borderSpacing: 0 }}>
                 <TableHead>
                   {getHeaderGroups().map((headerGroup: any) => (
                     <TableRow key={headerGroup.id}>
@@ -186,7 +186,7 @@ export const PreviewTable = ({
                     </TableRow>
                   ))}
                 </TableHead>
-                <TableBody sx={{ borderColor: '#dddddd' }}>
+                <TableBody sx={{ borderColor: '#dddddd', maxWwidth: '100%' }}>
                   {getRowModel().rows.length > 0 ? (
                     getRowModel().rows.map((row: any) => {
                       return (

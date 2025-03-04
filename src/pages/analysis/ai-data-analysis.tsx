@@ -8,14 +8,24 @@ const AIDataAnalysis = () => {
       <PageHead title="Dalgo | AI Data Analysis" />
       <Box
         sx={{
-          p: '3rem 3rem',
-          width: '100%',
+          p: '3rem',
+          flexGrow: 1,
+          maxHeight: '100vh',
           display: 'flex',
-          gap: '1rem',
           flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
-        <AnalysisContainer />
+        <Box
+          sx={{
+            width: '100%',
+            flexGrow: 1,
+            overflow: 'auto',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <AnalysisContainer />
+        </Box>
       </Box>
     </>
   );

@@ -29,6 +29,7 @@ export const AISummary = ({
           fontWeight: 600,
           fontSize: '20px',
           gap: '.2rem',
+          width: '100%',
         }}
       >
         AI Analysis
