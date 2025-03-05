@@ -12,6 +12,7 @@ import Settings from '@/assets/icons/settings';
 import User from '@/assets/icons/manage_accounts';
 import AiSettings from '@/assets/icons/aisettings';
 import {
+  orgSlugsWithAccessToV2DataAnalysisTab,
   showDataAnalysisTab,
   showElementaryMenu,
   showSupersetAnalysisTab,
@@ -20,6 +21,8 @@ import {
 export const drawerWidth = 250;
 
 const getColor = (selected: boolean) => (selected ? primaryColor : '');
+const org_slug = typeof window !== 'undefined' ? localStorage.getItem('org-slug') || '' : '';
+const isV2DataAnalysisTabVisible = orgSlugsWithAccessToV2DataAnalysisTab.includes(org_slug);
 
 export const getSideMenu = () => {
   return [
@@ -55,13 +58,13 @@ export const getSideMenu = () => {
     },
     {
       index: 0.3,
-      title: 'AI Analysis',
+      title: 'AI Analysis v2',
       path: '/analysis/ai-data-analysis',
       icon: (selected: boolean) => <AiAnalysisIcon fill={getColor(selected)} />,
       parent: 0,
       className: 'data_analysis',
       minimize: false,
-      hide: !showDataAnalysisTab,
+      hide: !isV2DataAnalysisTabVisible,
     },
     {
       index: 1,

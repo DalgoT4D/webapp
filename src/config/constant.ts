@@ -10,6 +10,8 @@ export const showSupersetAnalysisTab =
 export const defaultLoadMoreLimit = parseInt(
   process.env.NEXT_PUBLIC_DEFAULT_LOAD_MORE_LIMIT || '3'
 );
+export const orgSlugsWithAccessToV2DataAnalysisTab =
+  process.env.NEXT_PUBLIC_SHOW_V2DATAANALYSIS_ORGS_SLUG?.split(',') || [];
 export const dalgoWhitelistIps = process.env.NEXT_PUBLIC_DALGO_WHITELIST_IPS?.split(',') || [];
 
 export const flowRunLogsOffsetLimit = 200;
