@@ -167,6 +167,8 @@ const Actions = memo(
     handleClick: any;
   }) => {
     const { deploymentId, connectionId, lock } = connection;
+    const globalContext = useContext(GlobalContext);
+    const { data: session }: any = useSession();
     const { tempSyncState, setTempSyncState } = useSyncLock(lock);
     const trackAmplitudeEvent: any = useTracking();
     const isSyncConnectionIdPresent = syncingConnectionIds.includes(connectionId);
@@ -177,8 +179,33 @@ const Actions = memo(
         setTempSyncState(false);
       }
     };
+
+    const handleCancelSync = async () => {
+      try {
+        const res: any = await httpGet(session, `prefect/flow_runs/${lock?.flowRunId}/set_state`);
+        if (!res.success) {
+          errorToast('Something Went wrong', [], globalContext);
+        }
+        successToast('Queued job cancelled successfully', [], globalContext);
+      } catch (error: any) {
+        errorToast(error.message, [], globalContext);
+      }
+    };
+
     return (
       <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
+        {lock?.status == null && (
+          <Button
+            variant="contained"
+            onClick={handleCancelSync}
+            disabled={lock?.status !== 'queued'}
+            sx={{ marginRight: '10px' }}
+            key={'cancel-queued-sync-' + idx}
+          >
+            Cancel queued sync
+          </Button>
+        )}
+
         <Button
           variant="contained"
           onClick={async () => {
@@ -244,6 +271,7 @@ export const Connections = () => {
   // const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
   const [clearConnDeploymentId, setClearConnDeploymentId] = useState<string | null>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<Array<string>>([]);
+  const [flowRunIds, setFlowRunIds] = useState<string[]>([]);
   const syncLogs = useConnSyncLogs();
   const setSyncLogs = useConnSyncLogsUpdate();
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
