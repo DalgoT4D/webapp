@@ -194,7 +194,7 @@ const Actions = memo(
 
     return (
       <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
-        {lock?.status == null && (
+        {lock?.status == 'queued' && (
           <Button
             variant="contained"
             onClick={handleCancelSync}
