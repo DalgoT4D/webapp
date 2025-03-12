@@ -187,6 +187,7 @@ const Actions = memo(
         const res: any = await httpGet(session, `prefect/flow_runs/${flow_run_id}/set_state`);
         if (!res.success) {
           errorToast('Something Went wrong', [], globalContext);
+          return;
         }
         successToast('Queued job cancelled successfully', [], globalContext);
       } catch (error: any) {
@@ -278,7 +279,6 @@ export const Connections = () => {
   // const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
   const [clearConnDeploymentId, setClearConnDeploymentId] = useState<string | null>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<Array<string>>([]);
-  const [flowRunIds, setFlowRunIds] = useState<string[]>([]);
   const syncLogs = useConnSyncLogs();
   const setSyncLogs = useConnSyncLogsUpdate();
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
