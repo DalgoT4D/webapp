@@ -108,7 +108,7 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
 };
 
 interface ProjectTreeProps {
-  dbtSourceModels: DbtSourceModel[];
+  dbtSourceModels: WarehouseTable[];
   handleNodeClick: (...args: any) => void;
   handleSyncClick: (...args: any) => void;
   isSyncing?: boolean;
