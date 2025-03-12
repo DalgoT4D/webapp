@@ -172,6 +172,7 @@ const Actions = memo(
     const { tempSyncState, setTempSyncState } = useSyncLock(lock);
     const trackAmplitudeEvent: any = useTracking();
     const isSyncConnectionIdPresent = syncingConnectionIds.includes(connectionId);
+    const [loading, setLoading] = useState(false);
 
     const handlingSyncState = async () => {
       const res: any = await syncConnection(deploymentId, connectionId);
@@ -180,25 +181,31 @@ const Actions = memo(
       }
     };
 
-    const handleCancelSync = async () => {
+    const handleCancelSync = async (flow_run_id: string) => {
+      setLoading(true);
       try {
-        const res: any = await httpGet(session, `prefect/flow_runs/${lock?.flowRunId}/set_state`);
+        const res: any = await httpGet(session, `prefect/flow_runs/${flow_run_id}/set_state`);
         if (!res.success) {
           errorToast('Something Went wrong', [], globalContext);
         }
         successToast('Queued job cancelled successfully', [], globalContext);
       } catch (error: any) {
         errorToast(error.message, [], globalContext);
+      } finally {
+        await delay(5000);
+        setLoading(false);
       }
     };
 
     return (
       <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
-        {lock?.status == 'queued' && (
+        {lock?.status === 'queued' && lock?.flowRunId && (
           <Button
             variant="contained"
-            onClick={handleCancelSync}
-            disabled={lock?.status !== 'queued'}
+            onClick={() => {
+              handleCancelSync(lock.flowRunId as string);
+            }}
+            disabled={loading ? true : false}
             sx={{ marginRight: '10px' }}
             key={'cancel-queued-sync-' + idx}
           >
