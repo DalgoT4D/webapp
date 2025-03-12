@@ -419,6 +419,25 @@ const Canvas = ({
     if (shouldRefreshGraph) setRedrawGraph(!redrawGraph); //calls api in parent and this comp rerenders.
   };
 
+  const handleDeleteSourceTreeNode = async (
+    nodeId: string,
+    type: string,
+    shouldRefreshGraph = true,
+    isDummy = false
+  ) => {
+    console.log('delete source node');
+    try {
+      if (type === SRC_MODEL_NODE && !isDummy)
+        await httpDelete(session, `transform/dbt_project/source/${nodeId}/`);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setTempLockCanvas(false);
+    }
+
+    if (shouldRefreshGraph) setRedrawGraph(!redrawGraph);
+  };
+
   const addSrcModelNodeToCanvas = (dbtSourceModel: DbtSourceModel | null | undefined) => {
     if (dbtSourceModel) {
       const position = getNextNodePosition(nodes);
@@ -469,6 +488,16 @@ const Canvas = ({
     if (canvasAction.type === 'delete-node') {
       setTempLockCanvas(true);
       handleDeleteNode(
+        canvasAction.data.nodeId,
+        canvasAction.data.nodeType,
+        canvasAction.data.shouldRefreshGraph, // by default always refresh canvas
+        canvasAction.data.isDummy !== undefined ? canvasAction.data.isDummy : false
+      );
+    }
+
+    if (canvasAction.type == 'delete-source-tree-node') {
+      setTempLockCanvas(true);
+      handleDeleteSourceTreeNode(
         canvasAction.data.nodeId,
         canvasAction.data.nodeType,
         canvasAction.data.shouldRefreshGraph, // by default always refresh canvas
