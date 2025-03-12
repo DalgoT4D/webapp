@@ -55,11 +55,11 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
       <Box sx={{ display: 'flex', width: '100%' }}>
         <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>{name}</Typography>
         {node.isLeaf && (
-          <>
-            <AddIcon sx={{ ml: 'auto', cursor: 'pointer' }} />
-            {node.data.input_type == 'source' && (
+          <Box sx={{ display: 'flex', ml: 'auto', alignItems: 'center' }}>
+            <AddIcon sx={{ cursor: 'pointer' }} />
+            {node.data?.input_type == 'source' && (
               <DeleteIcon
-                sx={{ ml: 'auto', cursor: 'pointer' }}
+                sx={{ cursor: 'pointer' }}
                 fontSize="small"
                 onClick={(event) => {
                   event.stopPropagation();
@@ -75,7 +75,7 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
                 }}
               />
             )}
-          </>
+          </Box>
         )}
         {!node.isLeaf &&
           node.level === 0 &&
