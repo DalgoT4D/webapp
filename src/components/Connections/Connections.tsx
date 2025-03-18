@@ -209,6 +209,7 @@ const Actions = memo(
             disabled={loading ? true : false}
             sx={{ marginRight: '10px' }}
             key={'cancel-queued-sync-' + idx}
+            data-testid={`cancel-queued-sync-${connection.connectionId}`}
           >
             Cancel queued sync
           </Button>

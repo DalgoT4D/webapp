@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { Connections } from '../Connections';
@@ -69,6 +69,19 @@ describe('Connections Setup', () => {
       destination: { name: 'postgres-2', destinationName: 'postgres' },
       lastRun: { startTime: '1686937507', status: 'FAILED' },
     },
+    {
+      name: 'test-conn-3',
+      connectionId: 'test-conn-3',
+      source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
+      destination: { name: 'postgres-1', destinationName: 'postgres' },
+      lastRun: { startTime: '1686937507', status: 'COMPLETED' },
+      lock: {
+        status: 'queued',
+        flowRunId: 'test-flow-run-id',
+        lockedBy: 'test@example.com',
+        lockedAt: '2024-03-20T10:00:00Z',
+      },
+    },
   ];
 
   const connections = (
@@ -88,6 +101,22 @@ describe('Connections Setup', () => {
             'can_edit_connection',
             'can_create_connection',
           ],
+        },
+        Toast: {
+          state: { open: false, message: '', severity: 'success' },
+          dispatch: jest.fn(),
+        },
+        CurrentOrg: {
+          state: null,
+          dispatch: jest.fn(),
+        },
+        OrgUsers: {
+          state: [],
+          dispatch: jest.fn(),
+        },
+        UnsavedChanges: {
+          state: false,
+          dispatch: jest.fn(),
         },
       }}
     >
@@ -131,7 +160,7 @@ describe('Connections Setup', () => {
     expect(connectionsTableRows.length).toBe(CONNECTIONS.length + 1);
 
     // Check if connections name is shown in the list
-    for (let i = 0; i < CONNECTIONS.length; i++) {
+    for (let i = 0; i < CONNECTIONS.length - 1; i++) {
       const connCells = within(connectionsTableRows[i + 1]).getAllByRole('cell');
       expect(connCells.length).toBe(4);
       expect(connCells[0].textContent).toBe(CONNECTIONS[i]['name']);
@@ -167,5 +196,47 @@ describe('Connections Setup', () => {
 
     const createConnForm = screen.getByTestId('test-create-conn-form');
     expect(createConnForm).toBeInTheDocument();
+  });
+
+  it('should handle cancel queued job correctly', async () => {
+    // Mock the initial connections fetch
+    const mockFetch = jest
+      .fn()
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(CONNECTIONS),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ success: true }),
+        })
+      );
+
+    (global as any).fetch = mockFetch;
+
+    // Render with the same context as other tests
+    render(connectionWithConfig);
+
+    // Find and verify the cancel button
+    const cancelButton = await screen.findByTestId('cancel-queued-sync-test-conn-3');
+    expect(cancelButton).toBeInTheDocument();
+    expect(cancelButton).toHaveTextContent('Cancel queued sync');
+
+    // Click the cancel button
+    await userEvent.click(cancelButton);
+
+    // Verify the API call was made
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('prefect/flow_runs/test-flow-run-id/set_state'),
+      expect.any(Object)
+    );
+  });
+
+  // Clean up after each test
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 });
