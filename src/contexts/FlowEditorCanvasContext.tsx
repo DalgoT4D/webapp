@@ -38,6 +38,7 @@ interface Action {
   type:
     | 'add-srcmodel-node'
     | 'delete-node'
+    | 'delete-source-tree-node'
     | 'refresh-canvas'
     | 'open-opconfig-panel'
     | 'close-reset-opconfig-panel'
