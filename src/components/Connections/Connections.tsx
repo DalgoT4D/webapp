@@ -209,7 +209,7 @@ const Actions = memo(
             onClick={() => {
               handleCancelSync(lock.flowRunId as string);
             }}
-            disabled={loading ? true : false}
+            disabled={loading}
             sx={{ marginRight: '10px' }}
             key={'cancel-queued-sync-' + idx}
             data-testid={`cancel-queued-sync-${connection.connectionId}`}
