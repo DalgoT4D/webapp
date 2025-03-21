@@ -4,6 +4,7 @@ import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@/assets/icons/datatable.svg';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { DbtSourceModel, WarehouseTable } from './Canvas';
 import AddIcon from '@mui/icons-material/Add';
 import useResizeObserver from 'use-resize-observer';
@@ -11,11 +12,14 @@ import { trimString } from '@/utils/common';
 import Image from 'next/image';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
+import { SRC_MODEL_NODE } from '../constant';
 
 const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const width = node.tree.props.width;
+  const { setCanvasAction } = useCanvasAction();
 
   const stringLengthWithWidth = Math.abs(width / 15);
   /* This node instance can do many things. See the API reference. */
@@ -50,7 +54,29 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
       )}
       <Box sx={{ display: 'flex', width: '100%' }}>
         <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>{name}</Typography>
-        {node.isLeaf && <AddIcon sx={{ ml: 'auto', cursor: 'pointer' }} />}
+        {node.isLeaf && (
+          <Box sx={{ display: 'flex', ml: 'auto', alignItems: 'center' }}>
+            <AddIcon sx={{ cursor: 'pointer' }} />
+            {node.data?.input_type == 'source' && (
+              <DeleteIcon
+                sx={{ cursor: 'pointer' }}
+                fontSize="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setCanvasAction({
+                    type: 'delete-source-tree-node',
+                    data: {
+                      nodeId: node.id,
+                      nodeType: SRC_MODEL_NODE,
+                      shouldRefreshGraph: true,
+                      isDummy: node.data?.isDummy,
+                    },
+                  });
+                }}
+              />
+            )}
+          </Box>
+        )}
         {!node.isLeaf &&
           node.level === 0 &&
           (!isSyncing ? (
@@ -131,6 +157,7 @@ const ProjectTree = ({
       constructAndSetProjectTreeData(dbtSourceModels);
     }
   }, [dbtSourceModels]);
+
   return (
     <Box
       sx={{
