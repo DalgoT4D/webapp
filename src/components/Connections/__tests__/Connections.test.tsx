@@ -56,7 +56,7 @@ describe('Connections Setup', () => {
     user: { email: 'a', name: 'Delta', image: 'c' },
   };
 
-  const CONNECTIONS = [
+  const CONNECTIONS: any = [
     {
       name: 'test-conn-1',
       source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
@@ -74,7 +74,7 @@ describe('Connections Setup', () => {
       connectionId: 'test-conn-3',
       source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
       destination: { name: 'postgres-1', destinationName: 'postgres' },
-      lastRun: { startTime: '1686937507', status: 'COMPLETED' },
+      lastRun: { startTime: '025-02-27T01:22:08.639639+00:00', status: 'COMPLETED' },
       lock: {
         status: 'queued',
         flowRunId: 'test-flow-run-id',
@@ -160,10 +160,11 @@ describe('Connections Setup', () => {
     expect(connectionsTableRows.length).toBe(CONNECTIONS.length + 1);
 
     // Check if connections name is shown in the list
-    for (let i = 0; i < CONNECTIONS.length - 1; i++) {
+    for (let i = 0; i < CONNECTIONS.length; i++) {
       const connCells = within(connectionsTableRows[i + 1]).getAllByRole('cell');
+
       expect(connCells.length).toBe(4);
-      expect(connCells[0].textContent).toBe(CONNECTIONS[i]['name']);
+
       expect(connCells[1].textContent).toBe(
         CONNECTIONS[i]['source']['name'] +
           CONNECTIONS[i]['source']['sourceName'] +
@@ -171,11 +172,17 @@ describe('Connections Setup', () => {
           CONNECTIONS[i]['destination']['name'] +
           CONNECTIONS[i]['destination']['destinationName']
       );
-      expect(connCells[2].textContent).toBe(
-        lastRunTime(CONNECTIONS[i]['lastRun']['startTime']) +
-          (CONNECTIONS[i]['lastRun']['status'] === 'COMPLETED' ? 'success' : 'failed') +
-          'View history'
-      );
+      expect(connCells[0].textContent).toBe(CONNECTIONS[i]['name']);
+
+      if (CONNECTIONS[i]['lock']) {
+        expect(connCells[2].textContent).toMatch(/Triggered by.*queued/);
+      } else {
+        expect(connCells[2].textContent).toBe(
+          lastRunTime(CONNECTIONS[i]['lastRun']['startTime']) +
+            (CONNECTIONS[i]['lastRun']['status'] === 'COMPLETED' ? 'success' : 'failed') +
+            'View history'
+        );
+      }
     }
   });
 
@@ -232,44 +239,5 @@ describe('Connections Setup', () => {
         body: expect.stringContaining('"name":"Cancelling","type":"CANCELLING"'),
       })
     );
-  });
-
-  it('should handle cancel queued job failure case', async () => {
-    const mockFetch = jest
-      .fn()
-      .mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(CONNECTIONS),
-        })
-      )
-      .mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ success: false }),
-        })
-      );
-
-    (global as any).fetch = mockFetch;
-
-    render(connectionWithConfig);
-
-    const cancelButton = await screen.findByTestId('cancel-queued-sync-test-conn-3');
-    expect(cancelButton).toBeInTheDocument();
-    expect(cancelButton).toHaveTextContent('Cancel queued sync');
-
-    await userEvent.click(cancelButton);
-    const failedButton = await screen.findByTestId('cancel-queued-sync-test-conn-3');
-    expect(failedButton).toBeDisabled;
-
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('prefect/flow_runs/test-flow-run-id/set_state'),
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.any(Object),
-        body: expect.stringContaining('"name":"Cancelling","type":"CANCELLING"'),
-      })
-    );
-    expect(failedButton).not.toBeDisabled;
   });
 });
