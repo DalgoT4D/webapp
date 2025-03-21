@@ -198,8 +198,43 @@ describe('Connections Setup', () => {
     expect(createConnForm).toBeInTheDocument();
   });
 
-  it('should handle cancel queued job correctly', async () => {
-    // Mock the initial connections fetch
+  it('should handle cancel queued job success case', async () => {
+    const mockFetch = jest
+      .fn()
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(CONNECTIONS),
+        })
+      )
+      .mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: false,
+          json: () => Promise.resolve({ success: true }),
+        })
+      );
+
+    (global as any).fetch = mockFetch;
+
+    render(connectionWithConfig);
+
+    const cancelButton = await screen.findByTestId('cancel-queued-sync-test-conn-3');
+    expect(cancelButton).toBeInTheDocument();
+    expect(cancelButton).toHaveTextContent('Cancel queued sync');
+
+    await userEvent.click(cancelButton);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('prefect/flow_runs/test-flow-run-id/set_state'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.any(Object),
+        body: expect.stringContaining('"name":"Cancelling","type":"CANCELLING"'),
+      })
+    );
+  });
+
+  it('should handle cancel queued job failure case', async () => {
     const mockFetch = jest
       .fn()
       .mockImplementationOnce(() =>
@@ -211,32 +246,30 @@ describe('Connections Setup', () => {
       .mockImplementationOnce(() =>
         Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ success: true }),
+          json: () => Promise.resolve({ success: false }),
         })
       );
 
     (global as any).fetch = mockFetch;
 
-    // Render with the same context as other tests
     render(connectionWithConfig);
 
-    // Find and verify the cancel button
     const cancelButton = await screen.findByTestId('cancel-queued-sync-test-conn-3');
     expect(cancelButton).toBeInTheDocument();
     expect(cancelButton).toHaveTextContent('Cancel queued sync');
 
-    // Click the cancel button
     await userEvent.click(cancelButton);
+    const failedButton = await screen.findByTestId('cancel-queued-sync-test-conn-3');
+    expect(failedButton).toBeDisabled;
 
-    // Verify the API call was made
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('prefect/flow_runs/test-flow-run-id/set_state'),
-      expect.any(Object)
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.any(Object),
+        body: expect.stringContaining('"name":"Cancelling","type":"CANCELLING"'),
+      })
     );
-  });
-
-  // Clean up after each test
-  afterEach(() => {
-    jest.clearAllMocks();
+    expect(failedButton).not.toBeDisabled;
   });
 });
