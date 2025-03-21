@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { Connections } from '../Connections';
