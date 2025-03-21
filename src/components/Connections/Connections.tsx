@@ -184,7 +184,10 @@ const Actions = memo(
     const handleCancelSync = async (flow_run_id: string) => {
       setLoading(true);
       try {
-        const res: any = await httpGet(session, `prefect/flow_runs/${flow_run_id}/set_state`);
+        const res: any = await httpPost(session, `prefect/flow_runs/${flow_run_id}/set_state`, {
+          state: { name: 'Cancelling', type: 'CANCELLING' },
+          force: true,
+        });
         if (!res.success) {
           errorToast('Something Went wrong', [], globalContext);
           return;
