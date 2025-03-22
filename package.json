@@ -25,7 +25,7 @@
     "@mui/x-date-pickers": "^6.20.1",
     "@sentry/nextjs": "8.47.0",
     "@superset-ui/embedded-sdk": "^0.1.2",
-    "@tanstack/react-table": "^8.20.5",
+    "@tanstack/react-table": "^8.21.2",
     "@types/d3": "^7.4.2",
     "@types/react-resizable": "^3.0.8",
     "ag-grid-react": "^31.2.1",
