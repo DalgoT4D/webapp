@@ -167,9 +167,12 @@ const Actions = memo(
     handleClick: any;
   }) => {
     const { deploymentId, connectionId, lock } = connection;
+    const globalContext = useContext(GlobalContext);
+    const { data: session }: any = useSession();
     const { tempSyncState, setTempSyncState } = useSyncLock(lock);
     const trackAmplitudeEvent: any = useTracking();
     const isSyncConnectionIdPresent = syncingConnectionIds.includes(connectionId);
+    const [loading, setLoading] = useState(false);
 
     const handlingSyncState = async () => {
       const res: any = await syncConnection(deploymentId, connectionId);
@@ -177,8 +180,44 @@ const Actions = memo(
         setTempSyncState(false);
       }
     };
+
+    const handleCancelSync = async (flow_run_id: string) => {
+      setLoading(true);
+      try {
+        const res: any = await httpPost(session, `prefect/flow_runs/${flow_run_id}/set_state`, {
+          state: { name: 'Cancelling', type: 'CANCELLING' },
+          force: true,
+        });
+        if (!res.success) {
+          errorToast('Something Went wrong', [], globalContext);
+          return;
+        }
+        successToast('Queued job cancelled successfully', [], globalContext);
+      } catch (error: any) {
+        errorToast(error.message, [], globalContext);
+      } finally {
+        await delay(5000);
+        setLoading(false);
+      }
+    };
+
     return (
       <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'sync-' + idx}>
+        {lock?.status === 'queued' && lock?.flowRunId && (
+          <Button
+            variant="contained"
+            onClick={() => {
+              handleCancelSync(lock.flowRunId as string);
+            }}
+            disabled={loading}
+            sx={{ marginRight: '10px' }}
+            key={'cancel-queued-sync-' + idx}
+            data-testid={`cancel-queued-sync-${connection.connectionId}`}
+          >
+            Cancel queued sync
+          </Button>
+        )}
+
         <Button
           variant="contained"
           onClick={async () => {
