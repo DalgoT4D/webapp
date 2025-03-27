@@ -7375,14 +7375,14 @@ queue-microtask@^1.2.2:
   resolved "https://registry.yarnpkg.com/queue-microtask/-/queue-microtask-1.2.3.tgz#4929228bbc724dfac43e0efb058caf7b6cfb6243"
   integrity sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==
 
-react-arborist@^3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/react-arborist/-/react-arborist-3.4.0.tgz#8ef3de2c81d3b8cea0f4f4575c1971bd80c556c5"
-  integrity sha512-QI46oRGXJr0oaQfqqVobIiIoqPp5Y5gM69D2A2P7uHVif+X75XWnScR5drC7YDKgJ4CXVaDeFwnYKOWRRfncMg==
+react-arborist@^3.4.3:
+  version "3.4.3"
+  resolved "https://registry.yarnpkg.com/react-arborist/-/react-arborist-3.4.3.tgz#982791a07d1e279f279be88162c920112f3cee90"
+  integrity sha512-yFnq1nIQhT2uJY4TZVz2tgAiBb9lxSyvF4vC3S8POCK8xLzjGIxVv3/4dmYquQJ7AHxaZZArRGHiHKsEewKdTQ==
   dependencies:
     react-dnd "^14.0.3"
     react-dnd-html5-backend "^14.0.3"
-    react-window "^1.8.10"
+    react-window "^1.8.11"
     redux "^5.0.0"
     use-sync-external-store "^1.2.0"
 
@@ -7525,10 +7525,10 @@ react-use-websocket@^4.10.0:
   resolved "https://registry.yarnpkg.com/react-use-websocket/-/react-use-websocket-4.11.1.tgz#6c6546c4921c057e8a6ee418fd01705bffa80d8e"
   integrity sha512-39e8mK2a2A1h8uY3ePF45b2q0vwMOmaEy7J5qEhQg4n7vYa5oDLmqutG36kZQgAQ/3KCZS0brlGRbbZJ0+zfKQ==
 
-react-window@^1.8.10:
-  version "1.8.10"
-  resolved "https://registry.yarnpkg.com/react-window/-/react-window-1.8.10.tgz#9e6b08548316814b443f7002b1cf8fd3a1bdde03"
-  integrity sha512-Y0Cx+dnU6NLa5/EvoHukUD0BklJ8qITCtVEPY1C/nL8wwoZ0b5aEw8Ff1dOVHw7fCzMt55XfJDd8S8W8LCaUCg==
+react-window@^1.8.11:
+  version "1.8.11"
+  resolved "https://registry.yarnpkg.com/react-window/-/react-window-1.8.11.tgz#a857b48fa85bd77042d59cc460964ff2e0648525"
+  integrity sha512-+SRbUVT2scadgFSWx+R1P754xHPEqvcfSfVX10QYg6POOz+WNgkN48pS+BtZNIMGiL1HYrSEiCkwsMS15QogEQ==
   dependencies:
     "@babel/runtime" "^7.0.0"
     memoize-one ">=3.1.1 <6"
