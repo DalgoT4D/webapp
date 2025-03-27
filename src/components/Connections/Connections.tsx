@@ -8,6 +8,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import LoopIcon from '@mui/icons-material/Loop';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import CancelIcon from '@/assets/icons/cancel';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useSession } from 'next-auth/react';
 import { httpDelete, httpGet, httpPost } from '@/helpers/http';
@@ -214,7 +215,7 @@ const Actions = memo(
             key={'cancel-queued-sync-' + idx}
             data-testid={`cancel-queued-sync-${connection.connectionId}`}
           >
-            Cancel queued sync
+            Cancel
           </Button>
         )}
 
@@ -328,8 +329,6 @@ export const Connections = () => {
     }
   };
 
-  console.log('outside', clearConnDeploymentId);
-
   const fetchAndSetFlowRunLogs = async (flow_run_id: string) => {
     try {
       const response = await httpGet(session, `prefect/flow_runs/${flow_run_id}/logs`);
@@ -350,7 +349,8 @@ export const Connections = () => {
     let flowRunStatus: string = await fetchFlowRunStatus(flow_run_id);
 
     await fetchAndSetFlowRunLogs(flow_run_id);
-    while (!['COMPLETED', 'FAILED'].includes(flowRunStatus)) {
+    console.log(flowRunStatus, 'flowrunstates');
+    while (!['COMPLETED', 'FAILED', 'CANCELLED'].includes(flowRunStatus)) {
       await delay(5000);
       await fetchAndSetFlowRunLogs(flow_run_id);
       flowRunStatus = await fetchFlowRunStatus(flow_run_id);
@@ -443,6 +443,8 @@ export const Connections = () => {
     // things when the connection is locked
     if (connection.lock?.status === 'running') {
       jobStatus = 'running';
+    } else if (connection.lock?.status === 'cancelled') {
+      jobStatus = 'cancelled';
     } else if (connection.lock?.status === 'locked' || connection.lock?.status === 'complete') {
       jobStatus = 'locked';
     } else if (
@@ -457,6 +459,9 @@ export const Connections = () => {
       if (connection.lastRun?.status === 'COMPLETED') {
         jobStatus = 'success';
         jobStatusColor = '#399D47';
+      } else if (connection.lastRun.status === 'CANCELLED') {
+        jobStatus = 'cancelled';
+        jobStatusColor = '#DAA520';
       } else {
         jobStatus = 'failed';
         jobStatusColor = '#981F1F';
@@ -468,6 +473,8 @@ export const Connections = () => {
 
       if (status === 'running') {
         return <LoopIcon sx={sx} />;
+      } else if (status === 'cancelled') {
+        return <CancelIcon sx={sx} />;
       } else if (status === 'locked') {
         return <LockIcon sx={sx} />;
       } else if (status === 'queued') {
@@ -484,7 +491,7 @@ export const Connections = () => {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {jobStatus &&
-          (['success', 'failed'].includes(jobStatus) ? (
+          (['success', 'failed', 'cancelled'].includes(jobStatus) ? (
             <Typography variant="subtitle2" fontWeight={600}>
               {lastRunTime(connection.lastRun?.startTime)}
             </Typography>
