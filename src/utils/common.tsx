@@ -14,6 +14,8 @@ export const localTimezone = () => {
 // 0 1 * * *
 // WE ASSUME AND REQUIRE that d-o-m and m are always "*"
 const cronToLocalTZ = (expression: string) => {
+  if (!expression) return '';
+
   const fields = expression.split(' ');
 
   if (fields.length === 6) {
@@ -24,63 +26,38 @@ const cronToLocalTZ = (expression: string) => {
     return '';
   }
 
-  let timezoneOffset = new Date().getTimezoneOffset();
-  // timezoneOffset = 6 * 60;
-  timezoneOffset = -timezoneOffset;
+  // Parse the original cron values
+  const minutes = parseInt(fields[0], 10);
+  const hours = parseInt(fields[1], 10);
 
-  const hours = Math.round(timezoneOffset / 60 - 0.5);
-  const minutes = timezoneOffset - 60 * hours;
+  const utcTime = moment.utc().hour(hours).minute(minutes);
 
-  const newFields = [];
-  let newHours = parseInt(fields[1], 10) + hours;
-  let newMinutes = parseInt(fields[0], 10) + minutes;
-  let newDoW = fields[4];
+  const localTime = utcTime.local();
 
-  if (newMinutes >= 60) {
-    newMinutes -= 60;
-    newHours += 1;
-  } else if (newMinutes < 0) {
-    newMinutes += 60;
-    newHours -= 1;
+  // Check if day boundary was crossed
+  const dayCrossed = utcTime.format('YYYY-MM-DD') !== localTime.format('YYYY-MM-DD');
+
+  // Only adjust day of week if it's specified and day boundary was crossed
+  if (fields[4] !== '*' && dayCrossed) {
+    const daysOfWeek = fields[4].split(',').map((d) => parseInt(d, 10));
+
+    // Determine the direction of day shift
+    const dayShift = utcTime.isBefore(localTime) ? 1 : -1;
+
+    // Adjust each day of week
+    const adjustedDays = daysOfWeek
+      .map((day) => {
+        let newDay = (day + dayShift) % 7;
+        if (newDay < 0) newDay += 7;
+        return newDay;
+      })
+      .join(',');
+
+    return `${localTime.minute()} ${localTime.hour()} ${fields[2]} ${fields[3]} ${adjustedDays}`;
   }
 
-  const adjustDaysBy = function (dowStr: string, delta: number) {
-    let dowInt = parseInt(dowStr, 10);
-    dowInt += delta;
-    while (dowInt >= 7) {
-      dowInt -= 7;
-    }
-    while (dowInt < 0) {
-      dowInt += 7;
-    }
-    return String(dowInt);
-  };
-
-  if (newHours >= 24) {
-    newHours -= 24;
-    if (newDoW !== '*') {
-      newDoW = newDoW
-        .split(',')
-        .map((dowStr: string) => adjustDaysBy(dowStr, 1))
-        .join(',');
-    }
-  } else if (newHours < 0) {
-    newHours += 24;
-    if (newDoW !== '*') {
-      newDoW = newDoW
-        .split(',')
-        .map((dowStr: string) => adjustDaysBy(dowStr, -1))
-        .join(',');
-    }
-  }
-
-  newFields.push(newMinutes);
-  newFields.push(newHours);
-  newFields.push(fields[2]);
-  newFields.push(fields[3]);
-  newFields.push(newDoW);
-
-  return newFields.join(' ');
+  // If no day adjustment needed, just update the time
+  return `${localTime.minute()} ${localTime.hour()} ${fields[2]} ${fields[3]} ${fields[4]}`;
 };
 
 export const cronToString = (expression: string) => {
