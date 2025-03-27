@@ -197,7 +197,7 @@ const Actions = memo(
       } catch (error: any) {
         errorToast(error.message, [], globalContext);
       } finally {
-        await delay(5000);
+        await delay(6000);
         setLoading(false);
       }
     };
@@ -445,7 +445,7 @@ export const Connections = () => {
       jobStatus = 'running';
     } else if (connection.lock?.status === 'cancelled') {
       jobStatus = 'cancelled';
-    } else if (connection.lock?.status === 'locked' || connection.lock?.status === 'complete') {
+    } else if (connection.lock?.status === 'locked') {
       jobStatus = 'locked';
     } else if (
       syncingConnectionIds.includes(connection.connectionId) ||
