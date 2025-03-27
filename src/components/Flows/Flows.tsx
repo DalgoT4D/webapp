@@ -27,7 +27,7 @@ import { useTracking } from '@/contexts/TrackingContext';
 export interface TaskLock {
   lockedBy: string;
   lockedAt: string;
-  status: 'queued' | 'running' | 'locked' | 'complete';
+  status: 'queued' | 'running' | 'locked' | 'complete' | 'cancelled';
   flowRunId?: string;
   celeryTaskId?: string;
 }
