@@ -26,6 +26,12 @@ const cronToLocalTZ = (expression: string) => {
     return '';
   }
 
+  // Validating that day of month and month are always "*"
+  if (fields[2] !== '*' || fields[3] !== '*') {
+    console.warn('cronToLocalTZ: Expected day of month and month to be "*"');
+    return expression;
+  }
+
   // Parse the original cron values
   const minutes = parseInt(fields[0], 10);
   const hours = parseInt(fields[1], 10);
@@ -53,11 +59,11 @@ const cronToLocalTZ = (expression: string) => {
       })
       .join(',');
 
-    return `${localTime.minute()} ${localTime.hour()} ${fields[2]} ${fields[3]} ${adjustedDays}`;
+    return `${localTime.minutes()} ${localTime.hours()} ${fields[2]} ${fields[3]} ${adjustedDays}`;
   }
 
   // If no day adjustment needed, just update the time
-  return `${localTime.minute()} ${localTime.hour()} ${fields[2]} ${fields[3]} ${fields[4]}`;
+  return `${localTime.minutes()} ${localTime.hours()} ${fields[2]} ${fields[3]} ${fields[4]}`;
 };
 
 export const cronToString = (expression: string) => {
