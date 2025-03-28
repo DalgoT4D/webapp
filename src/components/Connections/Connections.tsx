@@ -445,7 +445,7 @@ export const Connections = () => {
       jobStatus = 'running';
     } else if (connection.lock?.status === 'cancelled') {
       jobStatus = 'cancelled';
-    } else if (connection.lock?.status === 'locked') {
+    } else if (connection.lock?.status === 'locked' || connection.lock?.status === 'complete') {
       jobStatus = 'locked';
     } else if (
       syncingConnectionIds.includes(connection.connectionId) ||
