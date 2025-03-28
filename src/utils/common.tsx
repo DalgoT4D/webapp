@@ -14,6 +14,8 @@ export const localTimezone = () => {
 // 0 1 * * *
 // WE ASSUME AND REQUIRE that d-o-m and m are always "*"
 const cronToLocalTZ = (expression: string) => {
+  if (!expression) return '';
+
   const fields = expression.split(' ');
 
   if (fields.length === 6) {
@@ -24,67 +26,36 @@ const cronToLocalTZ = (expression: string) => {
     return '';
   }
 
-  let timezoneOffset = new Date().getTimezoneOffset();
-  // timezoneOffset = 6 * 60;
-  timezoneOffset = -timezoneOffset;
-
-  const hours = Math.round(timezoneOffset / 60 - 0.5);
-  const minutes = timezoneOffset - 60 * hours;
-
-  const newFields = [];
-  let newHours = parseInt(fields[1], 10) + hours;
-  let newMinutes = parseInt(fields[0], 10) + minutes;
-  let newDoW = fields[4];
-
-  if (newMinutes >= 60) {
-    newMinutes -= 60;
-    newHours += 1;
-  } else if (newMinutes < 0) {
-    newMinutes += 60;
-    newHours -= 1;
+  // Validating that day of month and month are always "*"
+  if (fields[2] !== '*' || fields[3] !== '*') {
+    console.warn('cronToLocalTZ: Expected day of month and month to be "*"');
+    return expression;
   }
 
-  const adjustDaysBy = function (dowStr: string, delta: number) {
-    let dowInt = parseInt(dowStr, 10);
-    dowInt += delta;
-    while (dowInt >= 7) {
-      dowInt -= 7;
-    }
-    while (dowInt < 0) {
-      dowInt += 7;
-    }
-    return String(dowInt);
-  };
+  try {
+    const [minutes, hours] = fields; // these are the UTC minutes and hours
 
-  if (newHours >= 24) {
-    newHours -= 24;
-    if (newDoW !== '*') {
-      newDoW = newDoW
-        .split(',')
-        .map((dowStr: string) => adjustDaysBy(dowStr, 1))
-        .join(',');
-    }
-  } else if (newHours < 0) {
-    newHours += 24;
-    if (newDoW !== '*') {
-      newDoW = newDoW
-        .split(',')
-        .map((dowStr: string) => adjustDaysBy(dowStr, -1))
-        .join(',');
-    }
+    // Create moment in UTC with the cron time
+    const utcTime = moment.utc().hours(parseInt(hours, 10)).minutes(parseInt(minutes, 10));
+
+    // Convert to local time
+    const localTime = utcTime.local();
+
+    return `${localTime.minutes()} ${localTime.hours()} ${fields[2]} ${fields[3]} ${fields[4]}`;
+  } catch (error) {
+    console.error('Error converting cron expression to local timezone:', error);
+    return expression;
   }
-
-  newFields.push(newMinutes);
-  newFields.push(newHours);
-  newFields.push(fields[2]);
-  newFields.push(fields[3]);
-  newFields.push(newDoW);
-
-  return newFields.join(' ');
 };
 
 export const cronToString = (expression: string) => {
-  return cronstrue.toString(cronToLocalTZ(expression), { verbose: true });
+  try {
+    const localCron = cronToLocalTZ(expression);
+    return cronstrue.toString(localCron, { verbose: true });
+  } catch (error) {
+    console.error('Error converting cron to human readable format:', error);
+    return expression;
+  }
 };
 
 export const getOrgHeaderValue = (verb: string, path: string) => {
