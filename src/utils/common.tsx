@@ -32,42 +32,30 @@ const cronToLocalTZ = (expression: string) => {
     return expression;
   }
 
-  // Parse the original cron values
-  const minutes = parseInt(fields[0], 10);
-  const hours = parseInt(fields[1], 10);
+  try {
+    const [minutes, hours] = fields; // these are the UTC minutes and hours
 
-  const utcTime = moment.utc().hour(hours).minute(minutes);
+    // Create moment in UTC with the cron time
+    const utcTime = moment.utc().hours(parseInt(hours, 10)).minutes(parseInt(minutes, 10));
 
-  const localTime = utcTime.local();
+    // Convert to local time
+    const localTime = utcTime.local();
 
-  // Check if day boundary was crossed
-  const dayCrossed = utcTime.format('YYYY-MM-DD') !== localTime.format('YYYY-MM-DD');
-
-  // Only adjust day of week if it's specified and day boundary was crossed
-  if (fields[4] !== '*' && dayCrossed) {
-    const daysOfWeek = fields[4].split(',').map((d) => parseInt(d, 10));
-
-    // Determine the direction of day shift
-    const dayShift = utcTime.isBefore(localTime) ? 1 : -1;
-
-    // Adjust each day of week
-    const adjustedDays = daysOfWeek
-      .map((day) => {
-        let newDay = (day + dayShift) % 7;
-        if (newDay < 0) newDay += 7;
-        return newDay;
-      })
-      .join(',');
-
-    return `${localTime.minutes()} ${localTime.hours()} ${fields[2]} ${fields[3]} ${adjustedDays}`;
+    return `${localTime.minutes()} ${localTime.hours()} ${fields[2]} ${fields[3]} ${fields[4]}`;
+  } catch (error) {
+    console.error('Error converting cron expression to local timezone:', error);
+    return expression;
   }
-
-  // If no day adjustment needed, just update the time
-  return `${localTime.minutes()} ${localTime.hours()} ${fields[2]} ${fields[3]} ${fields[4]}`;
 };
 
 export const cronToString = (expression: string) => {
-  return cronstrue.toString(cronToLocalTZ(expression), { verbose: true });
+  try {
+    const localCron = cronToLocalTZ(expression);
+    return cronstrue.toString(localCron, { verbose: true });
+  } catch (error) {
+    console.error('Error converting cron to human readable format:', error);
+    return expression;
+  }
 };
 
 export const getOrgHeaderValue = (verb: string, path: string) => {
