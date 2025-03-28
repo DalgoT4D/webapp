@@ -227,7 +227,7 @@ describe('Connections Setup', () => {
 
     const cancelButton = await screen.findByTestId('cancel-queued-sync-test-conn-3');
     expect(cancelButton).toBeInTheDocument();
-    expect(cancelButton).toHaveTextContent('Cancel queued sync');
+    expect(cancelButton).toHaveTextContent('Cancel');
 
     await userEvent.click(cancelButton);
 
