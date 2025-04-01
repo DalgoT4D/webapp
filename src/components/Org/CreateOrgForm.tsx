@@ -153,12 +153,18 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
           <Controller
             name="email"
             control={control}
-            rules={{ required: 'Account manager email is required' }}
+            rules={{
+              required: 'Account manager email is required',
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: 'Invalid email address',
+              },
+            }}
             render={({ field }) => (
               <Input
                 {...field}
                 data-testid="input-email"
-                error={!!errors.name}
+                error={!!errors.email}
                 helperText={errors.email?.message}
                 sx={{ mb: 2, width: '100%' }}
                 label="Email - Account Manager"
