@@ -21,7 +21,16 @@ describe('CreateOrgForm Component', () => {
     },
   };
   const mockRouter = { refresh: jest.fn() };
-  const mockGlobalContext = {};
+  const mockGlobalContext = {
+    Permissions: {
+      state: [],
+      dispatch: jest.fn(),
+    },
+    Toast: { showToast: jest.fn() },
+    CurrentOrg: null,
+    OrgUsers: [],
+    UnsavedChanges: { hasUnsavedChanges: false, setHasUnsavedChanges: jest.fn() },
+  };
 
   beforeEach(() => {
     (useSession as jest.Mock).mockReturnValue(mockSession);
@@ -144,14 +153,107 @@ describe('CreateOrgForm Component', () => {
     }
     // Submit the form
     fireEvent.click(screen.getByTestId('savebutton'));
-    console.log(mockSession, 'horin');
     // Verify the API call
     await waitFor(() => {
       expect(httpPost).toHaveBeenCalledWith(mockSession.data, 'v1/organizations/', {
         name: 'New Org',
         base_plan: 'Dalgo',
+        email: '',
         subscription_duration: 'Monthly',
         can_upgrade_plan: false,
+        superset_included: true,
+        start_date: '2024-01-01T00:00:00.000Z',
+        end_date: '2024-02-01T00:00:00.000Z',
+      });
+    });
+
+    // Verify form cleanup and navigation
+    await waitFor(() => {
+      expect(localStorage.getItem('org-slug')).toBe('new-org-slug');
+      expect(closeSideMenu).toHaveBeenCalled();
+      expect(setShowForm).toHaveBeenCalledWith(false);
+      expect(successToast).toHaveBeenCalledWith(
+        'Organization created successfully!',
+        [],
+        expect.anything()
+      );
+    });
+  });
+
+  it('submits the form correctly and handles the response when trial is free trial', async () => {
+    const closeSideMenu = jest.fn();
+    const setShowForm = jest.fn();
+    // Mock the response for httpPost
+    (httpPost as jest.Mock).mockResolvedValueOnce({ slug: 'new-org-slug' });
+
+    // Render the component
+    renderComponent({ closeSideMenu, setShowForm });
+
+    // Fill in the organization name
+    const inputOrgDiv = screen.getByTestId('input-orgname');
+    const inputOrg = within(inputOrgDiv).getByRole('textbox');
+    fireEvent.change(inputOrg, { target: { value: 'New Org' } });
+
+    // Select Free Trial plan - using the more reliable way
+    const basePlanAutoComplete = screen.getByTestId('baseplan');
+    const basePlanTextInput = within(basePlanAutoComplete).getByRole('combobox');
+
+    // Open dropdown and select Free Trial
+    await act(async () => {
+      basePlanAutoComplete.focus();
+      fireEvent.change(basePlanTextInput, { target: { value: 'Free Trial' } });
+      fireEvent.keyDown(basePlanAutoComplete, { key: 'ArrowDown' });
+      fireEvent.keyDown(basePlanAutoComplete, { key: 'Enter' });
+    });
+
+    // Wait for and fill in email input that should appear
+    await waitFor(() => {
+      const inputEmailDiv = screen.getByTestId('input-email');
+      const inputEmail = within(inputEmailDiv).getByRole('textbox');
+      fireEvent.change(inputEmail, { target: { value: 'test@example.com' } });
+    });
+
+    // Select superset included
+    const supersetIncludedAutoComplete = screen.getByTestId('superset_included');
+    const supersetIncludedValue = within(supersetIncludedAutoComplete).getByRole('combobox');
+    await act(async () => {
+      supersetIncludedAutoComplete.focus();
+      fireEvent.change(supersetIncludedValue, { target: { value: 'Yes' } });
+      fireEvent.keyDown(supersetIncludedAutoComplete, { key: 'ArrowDown' });
+      fireEvent.keyDown(supersetIncludedAutoComplete, { key: 'Enter' });
+    });
+
+    // Note: Duration should automatically be set to 'Trial' for Free Trial plan
+
+    // Select start date
+    const startDateInput = screen.getByTestId('startDate').querySelector('input');
+    if (startDateInput) {
+      await act(async () => {
+        fireEvent.input(startDateInput, { target: { value: '2024-01-01' } });
+      });
+    }
+
+    // End date
+    const endDateInput = screen.getByTestId('endDate').querySelector('input');
+    if (endDateInput) {
+      await act(async () => {
+        fireEvent.input(endDateInput, { target: { value: '2024-02-01' } });
+      });
+    }
+
+    // Submit the form
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('savebutton'));
+    });
+
+    // Verify the API call with correct Free Trial values
+    await waitFor(() => {
+      expect(httpPost).toHaveBeenCalledWith(mockSession.data, 'v1/organizations/', {
+        name: 'New Org',
+        base_plan: 'Free Trial',
+        email: 'test@example.com',
+        subscription_duration: 'Trial',
+        can_upgrade_plan: true,
         superset_included: true,
         start_date: '2024-01-01T00:00:00.000Z',
         end_date: '2024-02-01T00:00:00.000Z',

@@ -45,12 +45,14 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     defaultValues: {
       name: '',
       base_plan: '', //DALGO , Free trail and Internal
+      email: '',
       superset_included: '',
       duration: '',
       startDate: '',
       endDate: '',
     },
   });
+  const base_plan = watch('base_plan');
   const globalContext = useContext(GlobalContext);
 
   const handleClose = () => {
@@ -63,6 +65,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     const payload = {
       name: data.name,
       base_plan: data.base_plan,
+      email: data.email ? data.email : '',
       subscription_duration: data.duration,
       can_upgrade_plan: !data.superset_included || data.base_plan === 'Free Trial' ? true : false,
       superset_included: data.superset_included === 'Yes' ? true : false,
@@ -128,6 +131,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
                   setValue('duration', 'Trial');
                 } else {
                   setValue('duration', '');
+                  setValue('email', '');
                 }
               }}
               renderInput={(params) => (
@@ -144,6 +148,25 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
           )}
         />
 
+        {/* Account manager's email: To send the credentials to the account manager conducting the POC */}
+        {base_plan === OrgPlan.FREE_TRIAL && (
+          <Controller
+            name="email"
+            control={control}
+            rules={{ required: 'Account manager email is required' }}
+            render={({ field }) => (
+              <Input
+                {...field}
+                data-testid="input-email"
+                error={!!errors.name}
+                helperText={errors.email?.message}
+                sx={{ mb: 2, width: '100%' }}
+                label="Email - Account Manager"
+                variant="outlined"
+              />
+            )}
+          />
+        )}
         {/* Superset included */}
         <Controller
           name="superset_included"
