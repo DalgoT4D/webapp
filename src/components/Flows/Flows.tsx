@@ -30,6 +30,9 @@ export interface TaskLock {
   status: 'queued' | 'running' | 'locked' | 'complete' | 'cancelled';
   flowRunId?: string;
   celeryTaskId?: string;
+  queuePosition?: number;
+  minWaitTime?: number;
+  maxWaitTime?: number;
 }
 
 export interface FlowInterface {
