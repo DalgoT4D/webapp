@@ -30,6 +30,7 @@ import { ConnectionSyncHistory } from './ConnectionSyncHistory';
 import PendingActionsAccordion from './PendingActions';
 import { useSyncLock } from '@/customHooks/useSyncLock';
 import { useTracking } from '@/contexts/TrackingContext';
+import { formatDuration } from '@/utils/common';
 
 type PrefectFlowRun = {
   id: string;
@@ -80,6 +81,11 @@ export type Connection = {
   syncCatalog: object;
   resetConnDeploymentId: string | null;
   clearConnDeploymentId: string | null;
+  queuedFlowRunWaitTime: {
+    max_wait_time: number;
+    min_wait_time: number;
+    queue_no: number;
+  } | null;
 };
 // type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
@@ -478,6 +484,30 @@ export const Connections = () => {
       } else if (status === 'locked') {
         return <LockIcon sx={sx} />;
       } else if (status === 'queued') {
+        // Only show tooltip if we have valid queue information
+        const queueInfo = connection.queuedFlowRunWaitTime;
+        if (
+          queueInfo &&
+          queueInfo.queue_no > 0 &&
+          queueInfo.min_wait_time > 0 &&
+          queueInfo.max_wait_time > 0
+        ) {
+          return (
+            <Tooltip
+              title={
+                <Box>
+                  <Typography variant="body2">Position in queue: {queueInfo.queue_no}</Typography>
+                  <Typography variant="body2">
+                    Estimated wait: {formatDuration(queueInfo.min_wait_time)} -{' '}
+                    {formatDuration(queueInfo.max_wait_time)}
+                  </Typography>
+                </Box>
+              }
+            >
+              <ScheduleIcon sx={sx} />
+            </Tooltip>
+          );
+        }
         return <ScheduleIcon sx={sx} />;
       } else if (status === 'success') {
         return <TaskAltIcon sx={sx} />;
