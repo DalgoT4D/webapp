@@ -23,6 +23,7 @@ import { localTimezone } from '@/utils/common';
 import { FlowLogs } from './FlowLogs';
 import { useSyncLock } from '@/customHooks/useSyncLock';
 import { useTracking } from '@/contexts/TrackingContext';
+import { QueueTooltip, QueuedRuntimeInfo } from '../Connections/Connections';
 
 export interface TaskLock {
   lockedBy: string;
@@ -30,9 +31,6 @@ export interface TaskLock {
   status: 'queued' | 'running' | 'locked' | 'complete' | 'cancelled';
   flowRunId?: string;
   celeryTaskId?: string;
-  queuePosition?: number;
-  minWaitTime?: number;
-  maxWaitTime?: number;
 }
 
 export interface FlowInterface {
@@ -43,6 +41,7 @@ export interface FlowInterface {
   lastRun: FlowRun | null;
   lock: TaskLock | undefined | null;
   status: boolean;
+  queuedFlowRunWaitTime: QueuedRuntimeInfo | null;
 }
 
 export interface FlowsInterface {
@@ -103,6 +102,7 @@ const flowLastRun = (flow: FlowInterface) => {
     </>
   );
 };
+
 const Actions = memo(
   ({
     flow,
@@ -190,6 +190,112 @@ const Actions = memo(
 );
 Actions.displayName = 'Action'; //adding a display name to Actions which react cannot infer due to HOC memo.
 
+const StatusIcon = memo(
+  ({
+    sx,
+    status,
+    queueInfo,
+  }: {
+    sx: SxProps;
+    status: string | null;
+    queueInfo: QueuedRuntimeInfo | null;
+  }) => {
+    if (status === null) return null;
+
+    if (status === 'running') {
+      return <LoopIcon sx={sx} />;
+    } else if (status === 'locked') {
+      return <LockIcon sx={sx} />;
+    } else if (status === 'queued') {
+      return <QueueTooltip queueInfo={queueInfo} />;
+    } else if (status === 'success') {
+      return <TaskAltIcon sx={sx} />;
+    } else if (status === 'failed') {
+      return <WarningAmberIcon sx={sx} />;
+    }
+
+    return null;
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.status === nextProps.status &&
+      prevProps.queueInfo?.queue_no === nextProps.queueInfo?.queue_no &&
+      prevProps.queueInfo?.min_wait_time === nextProps.queueInfo?.min_wait_time &&
+      prevProps.queueInfo?.max_wait_time === nextProps.queueInfo?.max_wait_time
+    );
+  }
+);
+
+StatusIcon.displayName = 'StatusIcon';
+
+const flowState = (flow: FlowInterface, runningDeploymentIds: string[]) => {
+  let jobStatus: string | null = null;
+  let jobStatusColor = 'grey';
+
+  // things when the connection is locked
+  if (flow.lock?.status === 'running') {
+    jobStatus = 'running';
+  } else if (flow.lock?.status === 'locked' || flow.lock?.status === 'complete') {
+    jobStatus = 'locked';
+  } else if (runningDeploymentIds.includes(flow.deploymentId) || flow.lock?.status === 'queued') {
+    jobStatus = 'queued';
+  }
+
+  if (jobStatus === null && flow.lastRun) {
+    const state_name = flow.lastRun?.state_name;
+    const status = state_name === 'DBT_TEST_FAILED' ? 'dbt tests failed' : flow.lastRun?.status;
+    if (status === 'dbt tests failed') {
+      jobStatus = 'dbt test failed';
+      jobStatusColor = '#df8e14';
+    } else if (status === 'COMPLETED') {
+      jobStatus = 'success';
+      jobStatusColor = '#399D47';
+    } else {
+      jobStatus = 'failed';
+      jobStatusColor = '#981F1F';
+    }
+  }
+
+  return (
+    <Box
+      data-testid={'flowstate-' + flow.name}
+      sx={{
+        width: 100,
+        display: 'flex',
+        gap: '3px',
+        alignItems: 'center',
+      }}
+    >
+      <StatusIcon
+        sx={{
+          alignItems: 'center',
+          fontWeight: 700,
+          fontSize: 'large',
+          color: jobStatusColor,
+        }}
+        status={jobStatus}
+        queueInfo={flow.queuedFlowRunWaitTime}
+      />
+      {jobStatus ? (
+        <Typography component="p" fontWeight={700} color={jobStatusColor}>
+          {jobStatus}
+        </Typography>
+      ) : (
+        <Box
+          sx={{
+            display: 'flex',
+            color: '#399D47',
+            gap: '3px',
+            alignItems: 'center',
+          }}
+        >
+          &mdash;
+        </Box>
+      )}
+    </Box>
+  );
+};
+
 export const Flows = ({ flows, updateCrudVal, mutate, setSelectedFlowId }: FlowsInterface) => {
   const [runningDeploymentIds, setRunningDeploymentIds] = useState<string[]>([]);
   const [deploymentId, setDeploymentId] = useState<string>('');
@@ -221,91 +327,6 @@ export const Flows = ({ flows, updateCrudVal, mutate, setSelectedFlowId }: Flows
   const handleClick = (blockId: string, event: HTMLElement | null) => {
     setDeploymentId(blockId);
     setAnchorEl(event);
-  };
-
-  const flowState = (flow: FlowInterface) => {
-    let jobStatus: string | null = null;
-    let jobStatusColor = 'grey';
-
-    // things when the connection is locked
-    if (flow.lock?.status === 'running') {
-      jobStatus = 'running';
-    } else if (flow.lock?.status === 'locked' || flow.lock?.status === 'complete') {
-      jobStatus = 'locked';
-    } else if (runningDeploymentIds.includes(flow.deploymentId) || flow.lock?.status === 'queued') {
-      jobStatus = 'queued';
-    }
-
-    if (jobStatus === null && flow.lastRun) {
-      const state_name = flow.lastRun?.state_name;
-      const status = state_name === 'DBT_TEST_FAILED' ? 'dbt tests failed' : flow.lastRun?.status;
-      if (status === 'dbt tests failed') {
-        jobStatus = 'dbt test failed';
-        jobStatusColor = '#df8e14';
-      } else if (status === 'COMPLETED') {
-        jobStatus = 'success';
-        jobStatusColor = '#399D47';
-      } else {
-        jobStatus = 'failed';
-        jobStatusColor = '#981F1F';
-      }
-    }
-
-    const StatusIcon = ({ sx, status }: { sx: SxProps; status: string | null }) => {
-      if (status === null) return null;
-
-      if (status === 'running') {
-        return <LoopIcon sx={sx} />;
-      } else if (status === 'locked') {
-        return <LockIcon sx={sx} />;
-      } else if (status === 'queued') {
-        return <ScheduleIcon sx={sx} />;
-      } else if (status === 'success') {
-        return <TaskAltIcon sx={sx} />;
-      } else if (status === 'failed') {
-        return <WarningAmberIcon sx={sx} />;
-      }
-
-      return null;
-    };
-
-    return (
-      <Box
-        data-testid={'flowstate-' + flow.name}
-        sx={{
-          width: 100,
-          display: 'flex',
-          gap: '3px',
-          alignItems: 'center',
-        }}
-      >
-        <StatusIcon
-          sx={{
-            alignItems: 'center',
-            fontWeight: 700,
-            fontSize: 'large',
-            color: jobStatusColor,
-          }}
-          status={jobStatus}
-        />
-        {jobStatus ? (
-          <Typography component="p" fontWeight={700} color={jobStatusColor}>
-            {jobStatus}
-          </Typography>
-        ) : (
-          <Box
-            sx={{
-              display: 'flex',
-              color: '#399D47',
-              gap: '3px',
-              alignItems: 'center',
-            }}
-          >
-            &mdash;
-          </Box>
-        )}
-      </Box>
-    );
   };
 
   const handleQuickRunDeployment = async (deploymentId: string) => {
@@ -365,9 +386,8 @@ export const Flows = ({ flows, updateCrudVal, mutate, setSelectedFlowId }: Flows
           )}
         </Box>,
         flowStatus(flow.status),
-
         flowLastRun(flow),
-        flowState(flow),
+        flowState(flow, runningDeploymentIds),
         <Actions
           key={`actions-${flow.deploymentId}`}
           flow={flow}
@@ -384,7 +404,7 @@ export const Flows = ({ flows, updateCrudVal, mutate, setSelectedFlowId }: Flows
       ]);
     }
     return [];
-  }, [flows]);
+  }, [flows, runningDeploymentIds]);
 
   const handleClickCreateFlow = () => {
     updateCrudVal('create');
