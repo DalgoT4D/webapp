@@ -171,16 +171,67 @@ const QueueTooltip = memo(
     return (
       <Tooltip
         title={
-          <Box>
-            <Typography variant="body2">Position in queue: {queueInfo.queue_no}</Typography>
-            <Typography variant="body2">
-              Estimated wait time: {formatDuration(queueInfo.min_wait_time)} -{' '}
-              {formatDuration(queueInfo.max_wait_time)}
+          <Box sx={{ p: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
+              <Typography variant="subtitle2" fontWeight={600}>
+                Queue Information
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ mb: 0.5 }}>
+              Position in queue: <strong>{queueInfo.queue_no}</strong>
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 0.5 }}>
+              Estimated wait time: <strong>{formatDuration(queueInfo.min_wait_time)}</strong> -{' '}
+              <strong>{formatDuration(queueInfo.max_wait_time)}</strong>
             </Typography>
           </Box>
         }
       >
-        <ScheduleIcon />
+        <Box
+          sx={{
+            position: 'relative',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            '@keyframes pulse': {
+              '0%': {
+                transform: 'scale(1)',
+                opacity: 1,
+              },
+              '50%': {
+                transform: 'scale(1.1)',
+                opacity: 0.8,
+              },
+              '100%': {
+                transform: 'scale(1)',
+                opacity: 1,
+              },
+            },
+          }}
+        >
+          <ScheduleIcon
+            sx={{
+              animation: 'pulse 2s infinite',
+              cursor: 'help',
+              '&:hover': {
+                color: 'primary.main',
+              },
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              top: -2,
+              right: -2,
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              backgroundColor: 'primary.main',
+              animation: 'pulse 2s infinite',
+            }}
+          />
+        </Box>
       </Tooltip>
     );
   }
