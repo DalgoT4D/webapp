@@ -431,10 +431,7 @@ const FlowCreate = ({
                         <>
                           You can create your own custom tasks from the transformation page.
                           <br />
-                          <Link
-                            style={{ color: 'white' }}
-                            href="http://localhost:3000/pipeline/transform"
-                          >
+                          <Link style={{ color: 'white' }} href="/pipeline/transform">
                             Click here
                           </Link>{' '}
                           and then select + New Task to get started.
