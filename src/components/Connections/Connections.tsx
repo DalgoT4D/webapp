@@ -67,6 +67,12 @@ type Destination = {
   workspaceId: string;
 };
 
+export type QueuedRuntimeInfo = {
+  max_wait_time: number;
+  min_wait_time: number;
+  queue_no: number;
+};
+
 export type Connection = {
   name: string;
   connectionId: string;
@@ -81,11 +87,7 @@ export type Connection = {
   syncCatalog: object;
   resetConnDeploymentId: string | null;
   clearConnDeploymentId: string | null;
-  queuedFlowRunWaitTime: {
-    max_wait_time: number;
-    min_wait_time: number;
-    queue_no: number;
-  } | null;
+  queuedFlowRunWaitTime: QueuedRuntimeInfo | null;
 };
 // type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
@@ -153,89 +155,83 @@ const getSourceDest = (connection: Connection) => (
   </Box>
 );
 
-const QueueTooltip = memo(
-  ({
-    queueInfo,
-  }: {
-    queueInfo: { queue_no: number; min_wait_time: number; max_wait_time: number } | null;
-  }) => {
-    if (
-      !queueInfo ||
-      queueInfo.queue_no <= 0 ||
-      queueInfo.min_wait_time <= 0 ||
-      queueInfo.max_wait_time <= 0
-    ) {
-      return <ScheduleIcon />;
-    }
+export const QueueTooltip = memo(({ queueInfo }: { queueInfo: QueuedRuntimeInfo | null }) => {
+  if (
+    !queueInfo ||
+    queueInfo.queue_no <= 0 ||
+    queueInfo.min_wait_time <= 0 ||
+    queueInfo.max_wait_time <= 0
+  ) {
+    return <ScheduleIcon />;
+  }
 
-    return (
-      <Tooltip
-        title={
-          <Box sx={{ p: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
-              <Typography variant="subtitle2" fontWeight={600}>
-                Queue Information
-              </Typography>
-            </Box>
-            <Typography variant="body2" sx={{ mb: 0.5 }}>
-              Position in queue: <strong>{queueInfo.queue_no}</strong>
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 0.5 }}>
-              Estimated wait time: <strong>{formatDuration(queueInfo.min_wait_time)}</strong> -{' '}
-              <strong>{formatDuration(queueInfo.max_wait_time)}</strong>
+  return (
+    <Tooltip
+      title={
+        <Box sx={{ p: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
+            <Typography variant="subtitle2" fontWeight={600}>
+              Queue Information
             </Typography>
           </Box>
-        }
+          <Typography variant="body2" sx={{ mb: 0.5 }}>
+            Position in queue: <strong>{queueInfo.queue_no}</strong>
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 0.5 }}>
+            Estimated wait time: <strong>{formatDuration(queueInfo.min_wait_time)}</strong> -{' '}
+            <strong>{formatDuration(queueInfo.max_wait_time)}</strong>
+          </Typography>
+        </Box>
+      }
+    >
+      <Box
+        sx={{
+          position: 'relative',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          '@keyframes pulse': {
+            '0%': {
+              transform: 'scale(1)',
+              opacity: 1,
+            },
+            '50%': {
+              transform: 'scale(1.1)',
+              opacity: 0.8,
+            },
+            '100%': {
+              transform: 'scale(1)',
+              opacity: 1,
+            },
+          },
+        }}
       >
-        <Box
+        <ScheduleIcon
           sx={{
-            position: 'relative',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            '@keyframes pulse': {
-              '0%': {
-                transform: 'scale(1)',
-                opacity: 1,
-              },
-              '50%': {
-                transform: 'scale(1.1)',
-                opacity: 0.8,
-              },
-              '100%': {
-                transform: 'scale(1)',
-                opacity: 1,
-              },
+            animation: 'pulse 2s infinite',
+            cursor: 'help',
+            '&:hover': {
+              color: 'primary.main',
             },
           }}
-        >
-          <ScheduleIcon
-            sx={{
-              animation: 'pulse 2s infinite',
-              cursor: 'help',
-              '&:hover': {
-                color: 'primary.main',
-              },
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -2,
-              right: -2,
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              backgroundColor: 'primary.main',
-              animation: 'pulse 2s infinite',
-            }}
-          />
-        </Box>
-      </Tooltip>
-    );
-  }
-);
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            backgroundColor: 'primary.main',
+            animation: 'pulse 2s infinite',
+          }}
+        />
+      </Box>
+    </Tooltip>
+  );
+});
 
 QueueTooltip.displayName = 'QueueTooltip';
 
