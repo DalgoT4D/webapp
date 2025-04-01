@@ -29,7 +29,8 @@ import { Connection } from '@/components/Connections/Connections';
 import { TransformTask } from '../DBT/DBTTarget';
 import { TaskSequence } from './TaskSequence';
 import { localTimezone } from '@/utils/common';
-
+import InfoTooltip from '../UI/Tooltip/Tooltip';
+import Link from 'next/link';
 interface FlowCreateInterface {
   updateCrudVal: (...args: any) => any;
   mutate: (...args: any) => any;
@@ -409,22 +410,41 @@ const FlowCreate = ({
               </Box>
               <Box>
                 <InputLabel sx={{ marginBottom: '5px' }}>Transform tasks</InputLabel>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <ToggleButtonGroup
+                    color="primary"
+                    value={alignment}
+                    exclusive
+                    onChange={handleChange}
+                    aria-label="Platform"
+                  >
+                    <ToggleButton sx={{ padding: '4px 11px' }} value="simple">
+                      Simple
+                    </ToggleButton>
+                    <ToggleButton sx={{ padding: '4px 11px' }} value="advanced">
+                      Advanced
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                  <Box sx={{ paddingTop: '5px', paddingLeft: '5px' }}>
+                    <InfoTooltip
+                      title={
+                        <>
+                          You can create your own custom tasks from the transformation page.
+                          <br />
+                          <Link
+                            style={{ color: 'white' }}
+                            href="http://localhost:3000/pipeline/transform"
+                          >
+                            Click here
+                          </Link>{' '}
+                          and then select + New Task to get started.
+                        </>
+                      }
+                      placement="top"
+                    />
+                  </Box>
+                </Box>
 
-                <ToggleButtonGroup
-                  color="primary"
-                  sx={{ mt: 1 }}
-                  value={alignment}
-                  exclusive
-                  onChange={handleChange}
-                  aria-label="Platform"
-                >
-                  <ToggleButton sx={{ padding: '4px 11px' }} value="simple">
-                    Simple
-                  </ToggleButton>
-                  <ToggleButton sx={{ padding: '4px 11px' }} value="advanced">
-                    Advanced
-                  </ToggleButton>
-                </ToggleButtonGroup>
                 <Box sx={{ mt: 2 }}>
                   <Controller
                     name="tasks"
