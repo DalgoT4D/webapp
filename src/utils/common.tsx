@@ -110,7 +110,7 @@ export const formatDuration = (seconds: number) => {
   let formattedDuration = '';
   let metricCount = 0;
 
-  if (days > 0 && metricCount < 2) {
+  if (days > 0) {
     formattedDuration += `${days}d `;
     metricCount++;
   }
