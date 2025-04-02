@@ -1,7 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { QueueTooltip } from '../Connections';
-import ScheduleIcon from '@mui/icons-material/Schedule';
 import { QueuedRuntimeInfo } from '../Connections';
 
 // Mock the MUI Tooltip component to make testing easier
