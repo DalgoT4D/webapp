@@ -162,7 +162,7 @@ export const QueueTooltip = memo(({ queueInfo }: { queueInfo: QueuedRuntimeInfo 
     queueInfo.min_wait_time <= 0 ||
     queueInfo.max_wait_time <= 0
   ) {
-    return <ScheduleIcon />;
+    return <ScheduleIcon data-testid="schedule-icon" />;
   }
 
   return (
