@@ -30,6 +30,7 @@ import { ConnectionSyncHistory } from './ConnectionSyncHistory';
 import PendingActionsAccordion from './PendingActions';
 import { useSyncLock } from '@/customHooks/useSyncLock';
 import { useTracking } from '@/contexts/TrackingContext';
+import { formatDuration } from '@/utils/common';
 
 type PrefectFlowRun = {
   id: string;
@@ -66,6 +67,12 @@ type Destination = {
   workspaceId: string;
 };
 
+export type QueuedRuntimeInfo = {
+  max_wait_time: number;
+  min_wait_time: number;
+  queue_no: number;
+};
+
 export type Connection = {
   name: string;
   connectionId: string;
@@ -80,6 +87,7 @@ export type Connection = {
   syncCatalog: object;
   resetConnDeploymentId: string | null;
   clearConnDeploymentId: string | null;
+  queuedFlowRunWaitTime: QueuedRuntimeInfo | null;
 };
 // type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
@@ -146,6 +154,118 @@ const getSourceDest = (connection: Connection) => (
     </Box>
   </Box>
 );
+
+export const QueueTooltip = memo(({ queueInfo }: { queueInfo: QueuedRuntimeInfo | null }) => {
+  if (
+    !queueInfo ||
+    queueInfo.queue_no <= 0 ||
+    queueInfo.min_wait_time <= 0 ||
+    queueInfo.max_wait_time <= 0
+  ) {
+    return <ScheduleIcon data-testid="schedule-icon" />;
+  }
+
+  return (
+    <Tooltip
+      title={
+        <Box sx={{ p: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
+            <Typography variant="subtitle2" fontWeight={600}>
+              Queue Information
+            </Typography>
+          </Box>
+          <Typography variant="body2" sx={{ mb: 0.5 }}>
+            Position in queue: <strong>{queueInfo.queue_no}</strong>
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 0.5 }}>
+            Estimated wait time: <strong>{formatDuration(queueInfo.min_wait_time)}</strong> -{' '}
+            <strong>{formatDuration(queueInfo.max_wait_time)}</strong>
+          </Typography>
+        </Box>
+      }
+    >
+      <Box
+        sx={{
+          position: 'relative',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          '@keyframes pulse': {
+            '0%': {
+              transform: 'scale(1)',
+              opacity: 1,
+            },
+            '50%': {
+              transform: 'scale(1.1)',
+              opacity: 0.8,
+            },
+            '100%': {
+              transform: 'scale(1)',
+              opacity: 1,
+            },
+          },
+        }}
+      >
+        <ScheduleIcon
+          sx={{
+            animation: 'pulse 2s infinite',
+            cursor: 'help',
+            '&:hover': {
+              color: 'primary.main',
+            },
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            backgroundColor: 'primary.main',
+            animation: 'pulse 2s infinite',
+          }}
+        />
+      </Box>
+    </Tooltip>
+  );
+});
+
+QueueTooltip.displayName = 'QueueTooltip';
+
+const StatusIcon = memo(
+  ({ sx, status, queueInfo }: { sx: SxProps; status: string | null; queueInfo: any }) => {
+    if (status === null) return null;
+
+    if (status === 'running') {
+      return <LoopIcon sx={sx} />;
+    } else if (status === 'cancelled') {
+      return <CancelIcon sx={sx} />;
+    } else if (status === 'locked') {
+      return <LockIcon sx={sx} />;
+    } else if (status === 'queued') {
+      return <QueueTooltip queueInfo={queueInfo} />;
+    } else if (status === 'success') {
+      return <TaskAltIcon sx={sx} />;
+    } else if (status === 'failed') {
+      return <WarningAmberIcon sx={sx} />;
+    }
+
+    return null;
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.status === nextProps.status &&
+      prevProps.queueInfo?.queue_no === nextProps.queueInfo?.queue_no &&
+      prevProps.queueInfo?.min_wait_time === nextProps.queueInfo?.min_wait_time &&
+      prevProps.queueInfo?.max_wait_time === nextProps.queueInfo?.max_wait_time
+    );
+  }
+);
+
+StatusIcon.displayName = 'StatusIcon';
 
 const Actions = memo(
   ({
@@ -274,6 +394,134 @@ const Actions = memo(
   }
 );
 Actions.displayName = 'Action'; //display name added.
+
+const SyncStatus = memo(
+  ({
+    connection,
+    syncingConnectionIds,
+    setShowLogsDialog,
+    setLogsConnection,
+    trackAmplitudeEvent,
+  }: {
+    connection: Connection;
+    syncingConnectionIds: string[];
+    setShowLogsDialog: (show: boolean) => void;
+    setLogsConnection: (connection: Connection) => void;
+    trackAmplitudeEvent: (event: string) => void;
+  }) => {
+    let jobStatus: string | null = null;
+    let jobStatusColor = 'grey';
+
+    // things when the connection is locked
+    if (connection.lock?.status === 'running') {
+      jobStatus = 'running';
+    } else if (connection.lock?.status === 'cancelled') {
+      jobStatus = 'cancelled';
+    } else if (connection.lock?.status === 'locked' || connection.lock?.status === 'complete') {
+      jobStatus = 'locked';
+    } else if (
+      syncingConnectionIds.includes(connection.connectionId) ||
+      connection.lock?.status === 'queued'
+    ) {
+      jobStatus = 'queued';
+    }
+
+    // if lock is not there; check for last run
+    if (jobStatus === null && connection.lastRun) {
+      if (connection.lastRun?.status === 'COMPLETED') {
+        jobStatus = 'success';
+        jobStatusColor = '#399D47';
+      } else if (connection.lastRun.status === 'CANCELLED') {
+        jobStatus = 'cancelled';
+        jobStatusColor = '#DAA520';
+      } else {
+        jobStatus = 'failed';
+        jobStatusColor = '#981F1F';
+      }
+    }
+
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {jobStatus &&
+          (['success', 'failed', 'cancelled'].includes(jobStatus) ? (
+            <Typography variant="subtitle2" fontWeight={600}>
+              {lastRunTime(connection.lastRun?.startTime)}
+            </Typography>
+          ) : (
+            <>
+              {connection.lock && (
+                <>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    Triggered by: {trimEmail(connection.lock.lockedBy)}
+                  </Typography>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    {lastRunTime(connection.lock.lockedAt)}
+                  </Typography>
+                </>
+              )}
+            </>
+          ))}
+        <Box
+          data-testid={`connectionstate-${jobStatus}`}
+          sx={{
+            display: 'flex',
+            gap: '3px',
+            alignItems: 'center',
+          }}
+        >
+          <StatusIcon
+            sx={{
+              alignItems: 'center',
+              fontWeight: 700,
+              fontSize: 'large',
+              color: jobStatusColor,
+            }}
+            status={jobStatus}
+            queueInfo={connection.queuedFlowRunWaitTime}
+          />
+          <Typography component="p" fontWeight={700} color={jobStatusColor}>
+            {jobStatus}
+          </Typography>
+        </Box>
+        {jobStatus && (
+          <Button
+            variant="contained"
+            sx={{
+              paddingY: '4px',
+              paddingX: '2px',
+              width: '80%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onClick={() => {
+              setShowLogsDialog(true);
+              setLogsConnection(connection);
+              trackAmplitudeEvent('[View history] Button clicked');
+            }}
+          >
+            View history
+          </Button>
+        )}
+      </Box>
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.connection.lock?.status === nextProps.connection.lock?.status &&
+      prevProps.connection.lastRun?.status === nextProps.connection.lastRun?.status &&
+      prevProps.connection.queuedFlowRunWaitTime?.queue_no ===
+        nextProps.connection.queuedFlowRunWaitTime?.queue_no &&
+      prevProps.connection.queuedFlowRunWaitTime?.min_wait_time ===
+        nextProps.connection.queuedFlowRunWaitTime?.min_wait_time &&
+      prevProps.connection.queuedFlowRunWaitTime?.max_wait_time ===
+        nextProps.connection.queuedFlowRunWaitTime?.max_wait_time &&
+      prevProps.syncingConnectionIds.includes(prevProps.connection.connectionId) ===
+        nextProps.syncingConnectionIds.includes(nextProps.connection.connectionId)
+    );
+  }
+);
+
+SyncStatus.displayName = 'SyncStatus';
 
 export const Connections = () => {
   const { data: session }: any = useSession();
@@ -434,125 +682,6 @@ export const Connections = () => {
     handleCancelClearConnection();
   };
 
-  // eslint-disable-next-line react/display-name
-
-  const getLastSync = (connection: Connection) => {
-    let jobStatus: string | null = null;
-    let jobStatusColor = 'grey';
-
-    // things when the connection is locked
-    if (connection.lock?.status === 'running') {
-      jobStatus = 'running';
-    } else if (connection.lock?.status === 'cancelled') {
-      jobStatus = 'cancelled';
-    } else if (connection.lock?.status === 'locked' || connection.lock?.status === 'complete') {
-      jobStatus = 'locked';
-    } else if (
-      syncingConnectionIds.includes(connection.connectionId) ||
-      connection.lock?.status === 'queued'
-    ) {
-      jobStatus = 'queued';
-    }
-
-    // if lock is not there; check for last run
-    if (jobStatus === null && connection.lastRun) {
-      if (connection.lastRun?.status === 'COMPLETED') {
-        jobStatus = 'success';
-        jobStatusColor = '#399D47';
-      } else if (connection.lastRun.status === 'CANCELLED') {
-        jobStatus = 'cancelled';
-        jobStatusColor = '#DAA520';
-      } else {
-        jobStatus = 'failed';
-        jobStatusColor = '#981F1F';
-      }
-    }
-
-    const StatusIcon = ({ sx, status }: { sx: SxProps; status: string | null }) => {
-      if (status === null) return null;
-
-      if (status === 'running') {
-        return <LoopIcon sx={sx} />;
-      } else if (status === 'cancelled') {
-        return <CancelIcon sx={sx} />;
-      } else if (status === 'locked') {
-        return <LockIcon sx={sx} />;
-      } else if (status === 'queued') {
-        return <ScheduleIcon sx={sx} />;
-      } else if (status === 'success') {
-        return <TaskAltIcon sx={sx} />;
-      } else if (status === 'failed') {
-        return <WarningAmberIcon sx={sx} />;
-      }
-
-      return null;
-    };
-
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {jobStatus &&
-          (['success', 'failed', 'cancelled'].includes(jobStatus) ? (
-            <Typography variant="subtitle2" fontWeight={600}>
-              {lastRunTime(connection.lastRun?.startTime)}
-            </Typography>
-          ) : (
-            <>
-              {connection.lock && (
-                <>
-                  <Typography variant="subtitle2" fontWeight={600}>
-                    Triggered by: {trimEmail(connection.lock.lockedBy)}
-                  </Typography>
-                  <Typography variant="subtitle2" fontWeight={600}>
-                    {lastRunTime(connection.lock.lockedAt)}
-                  </Typography>
-                </>
-              )}
-            </>
-          ))}
-        <Box
-          data-testid={`connectionstate-${jobStatus}`}
-          sx={{
-            display: 'flex',
-            gap: '3px',
-            alignItems: 'center',
-          }}
-        >
-          <StatusIcon
-            sx={{
-              alignItems: 'center',
-              fontWeight: 700,
-              fontSize: 'large',
-              color: jobStatusColor,
-            }}
-            status={jobStatus}
-          />
-          <Typography component="p" fontWeight={700} color={jobStatusColor}>
-            {jobStatus}
-          </Typography>
-        </Box>
-        {jobStatus && (
-          <Button
-            variant="contained"
-            sx={{
-              paddingY: '4px',
-              paddingX: '2px',
-              width: '80%',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-            onClick={() => {
-              setShowLogsDialog(true);
-              setLogsConnection(connection);
-              trackAmplitudeEvent('[View history] Button clicked');
-            }}
-          >
-            View history
-          </Button>
-        )}
-      </Box>
-    );
-  };
-
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
       const tempRows = data.map((connection: any) => [
@@ -563,7 +692,14 @@ export const Connections = () => {
           </Typography>
         </Box>,
         getSourceDest(connection),
-        getLastSync(connection),
+        <SyncStatus
+          key={`sync-status-${connection.blockId}`}
+          connection={connection}
+          syncingConnectionIds={syncingConnectionIds}
+          setShowLogsDialog={setShowLogsDialog}
+          setLogsConnection={setLogsConnection}
+          trackAmplitudeEvent={trackAmplitudeEvent}
+        />,
         <Actions
           key={`actions-${connection.blockId}`}
           connection={connection}
@@ -575,14 +711,9 @@ export const Connections = () => {
           open={open}
           handleClick={handleClick}
         />,
-        // ),
       ]);
 
-      const tempRowValues = data.map((connection: any) => [
-        connection.name, // as we are only sorting by connection name...
-        null,
-        null,
-      ]);
+      const tempRowValues = data.map((connection: any) => [connection.name, null, null]);
 
       setRows(tempRows);
       setRowValues(tempRowValues);

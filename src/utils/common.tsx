@@ -108,17 +108,21 @@ export const formatDuration = (seconds: number) => {
   const secs = Math.floor(duration.seconds());
 
   let formattedDuration = '';
+  let metricCount = 0;
 
   if (days > 0) {
     formattedDuration += `${days}d `;
+    metricCount++;
   }
-  if (hours > 0) {
+  if (hours > 0 && metricCount < 2) {
     formattedDuration += `${hours}h `;
+    metricCount++;
   }
-  if (minutes > 0) {
+  if (minutes > 0 && metricCount < 2) {
     formattedDuration += `${minutes}m `;
+    metricCount++;
   }
-  if (secs > 0 || formattedDuration === '') {
+  if ((secs > 0 || formattedDuration === '') && metricCount < 2) {
     formattedDuration += `${secs}s`;
   }
 
