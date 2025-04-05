@@ -72,8 +72,6 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     } else if (response?.status === 'failed') {
       errorToast(response?.message, [], globalContext);
       return;
-    } else if (response?.status === 'completed') {
-      successToast(response?.message, [], globalContext);
     } else {
       throw new Error('Error while running the task.');
     }
@@ -95,7 +93,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     setWaitForOrgCreation(true);
     try {
       if (data.base_plan === OrgPlan.FREE_TRIAL) {
-        const res = await httpPost(session, '/v1/organizations/free_trial', payload);
+        const res = await httpPost(session, 'v1/organizations/free_trial', payload);
         if (!res?.task_id) {
           errorToast('Failed to create a task', [], globalContext);
           return;
