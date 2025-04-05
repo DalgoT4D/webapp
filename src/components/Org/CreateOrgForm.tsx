@@ -81,11 +81,9 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     const payload = {
       name: data.name,
       base_plan: data.base_plan,
-      email: data.email ? data.email : '',
-      superset_ec2_machine_id: data.superset_ec2_machine_id ? data.superset_ec2_machine_id : '',
-      superset_port: data.superset_port ? data.superset_port : '',
       subscription_duration: data.duration,
-      can_upgrade_plan: !data.superset_included || data.base_plan === 'Free Trial' ? true : false,
+      can_upgrade_plan:
+        !data.superset_included || data.base_plan === OrgPlan.FREE_TRIAL ? true : false,
       superset_included: data.superset_included === 'Yes' ? true : false,
       start_date: data.startDate ? new Date(data.startDate).toISOString() : null,
       end_date: data.endDate ? new Date(data.endDate).toISOString() : null,
@@ -93,7 +91,12 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     setWaitForOrgCreation(true);
     try {
       if (data.base_plan === OrgPlan.FREE_TRIAL) {
-        const res = await httpPost(session, 'v1/organizations/free_trial', payload);
+        const res = await httpPost(session, 'v1/organizations/free_trial', {
+          ...payload,
+          superset_ec2_machine_id: data.superset_ec2_machine_id,
+          superset_port: data.superset_port,
+          email: data.email,
+        });
         if (!res?.task_id) {
           errorToast('Failed to create a task', [], globalContext);
           return;
@@ -233,6 +236,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
               <Input
                 {...field}
                 data-testid="input-superset_port"
+                type="number"
                 error={!!errors.superset_port}
                 helperText={errors.superset_port?.message}
                 sx={{ mb: 2, width: '100%' }}
