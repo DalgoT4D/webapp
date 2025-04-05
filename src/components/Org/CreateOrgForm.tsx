@@ -46,6 +46,8 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
       name: '',
       base_plan: '', //DALGO , Free trail and Internal
       email: '',
+      superset_ec2_machine_id: '',
+      superset_port: '',
       superset_included: '',
       duration: '',
       startDate: '',
@@ -66,6 +68,8 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
       name: data.name,
       base_plan: data.base_plan,
       email: data.email ? data.email : '',
+      superset_ec2_machine_id: data.superset_ec2_machine_id ? data.superset_ec2_machine_id : '',
+      superset_port: data.superset_port ? data.superset_port : '',
       subscription_duration: data.duration,
       can_upgrade_plan: !data.superset_included || data.base_plan === 'Free Trial' ? true : false,
       superset_included: data.superset_included === 'Yes' ? true : false,
@@ -168,6 +172,48 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
                 helperText={errors.email?.message}
                 sx={{ mb: 2, width: '100%' }}
                 label="Email - Account Manager"
+                variant="outlined"
+              />
+            )}
+          />
+        )}
+        {/* superset ec2 machine id */}
+        {base_plan === OrgPlan.FREE_TRIAL && (
+          <Controller
+            name="superset_ec2_machine_id"
+            control={control}
+            rules={{
+              required: 'Superset ec2 machine id is required',
+            }}
+            render={({ field }) => (
+              <Input
+                {...field}
+                data-testid="input-superset_ec2_machine_id"
+                error={!!errors.superset_ec2_machine_id}
+                helperText={errors.superset_ec2_machine_id?.message}
+                sx={{ mb: 2, width: '100%' }}
+                label="Superset EC2 Machine ID"
+                variant="outlined"
+              />
+            )}
+          />
+        )}
+        {/* superset port */}
+        {base_plan === OrgPlan.FREE_TRIAL && (
+          <Controller
+            name="superset_port"
+            control={control}
+            rules={{
+              required: 'Superset port is required',
+            }}
+            render={({ field }) => (
+              <Input
+                {...field}
+                data-testid="input-superset_port"
+                error={!!errors.superset_port}
+                helperText={errors.superset_port?.message}
+                sx={{ mb: 2, width: '100%' }}
+                label="Superset Port"
                 variant="outlined"
               />
             )}
