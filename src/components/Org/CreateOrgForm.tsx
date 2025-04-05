@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
-import { httpPost } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
 import Input from '@/components/UI/Input/Input';
 import Autocomplete from '@mui/material/Autocomplete';
 import CustomDialog from '../Dialog/CustomDialog';
+import { delay } from '@/utils/common';
 
 interface CreateOrgFormProps {
   closeSideMenu: (...args: any) => any;
@@ -63,6 +64,21 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     closeSideMenu();
   };
 
+  const pollForTaskRun = async (taskId: string) => {
+    const response = await httpGet(session, `/celery/${taskId}`);
+    if (!['completed', 'failed'].includes(response?.status)) {
+      await delay(3000);
+      await pollForTaskRun(taskId);
+    } else if (response?.status === 'failed') {
+      errorToast(response?.message, [], globalContext);
+      return;
+    } else if (response?.status === 'completed') {
+      successToast(response?.message, [], globalContext);
+    } else {
+      throw new Error('Error while running the task.');
+    }
+  };
+
   const onSubmit = async (data: any) => {
     const payload = {
       name: data.name,
@@ -78,19 +94,28 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     };
     setWaitForOrgCreation(true);
     try {
-      const res = await httpPost(session, 'v1/organizations/', payload);
-      if (res?.slug) {
-        setNewlyCreatedOrg(res.slug);
+      if (data.base_plan === OrgPlan.FREE_TRIAL) {
+        const res = await httpPost(session, '/v1/organizations/free_trial', payload);
+        if (!res?.task_id) {
+          errorToast('Failed to create a task', [], globalContext);
+          return;
+        }
+        await pollForTaskRun(res?.task_id);
+      } else {
+        const res = await httpPost(session, 'v1/organizations/', payload);
+        if (res?.slug) {
+          setNewlyCreatedOrg(res.slug);
+        }
       }
       handleClose();
       successToast('Organization created successfully!', [], globalContext);
-      setWaitForOrgCreation(false);
       router.refresh();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
+      setWaitForOrgCreation(false);
     }
-    setWaitForOrgCreation(false);
   };
 
   useEffect(() => {
