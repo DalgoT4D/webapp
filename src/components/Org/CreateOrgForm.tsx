@@ -72,6 +72,8 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
     } else if (response?.status === 'failed') {
       errorToast(response?.message, [], globalContext);
       return;
+    } else if (response?.status === 'completed') {
+      return;
     } else {
       throw new Error('Error while running the task.');
     }
