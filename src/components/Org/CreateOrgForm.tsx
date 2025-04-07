@@ -65,14 +65,14 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
   };
 
   const pollForTaskRun = async (taskId: string) => {
-    const response = await httpGet(session, `/celery/${taskId}`);
-    if (!['completed', 'failed'].includes(response?.status)) {
+    const response = await httpGet(session, `tasks/celery/${taskId}`);
+    if (!['SUCCESS', 'FAILURE'].includes(response?.status)) {
       await delay(3000);
       await pollForTaskRun(taskId);
-    } else if (response?.status === 'failed') {
+    } else if (response?.status === 'FAILED') {
       errorToast(response?.message, [], globalContext);
       return;
-    } else if (response?.status === 'completed') {
+    } else if (response?.status === 'SUCCESS') {
       return;
     } else {
       throw new Error('Error while running the task.');
