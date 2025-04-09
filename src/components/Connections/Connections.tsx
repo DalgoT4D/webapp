@@ -685,9 +685,17 @@ export const Connections = () => {
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
       setRows((prevRows) => {
-        const tempRows = data.map((connection: any, index: number) => {
-          if (connection.lock === null && prevRows[index]) {
-            return prevRows[index];
+        const prevRowsMap = new Map();
+        data.forEach((conn: any, idx: number) => {
+          if (prevRows[idx]) {
+            prevRowsMap.set(conn.connectionId, prevRows[idx]);
+          }
+        });
+
+        const tempRows = data.map((connection: any) => {
+          // Check if we have this connection in previous rows and if it's not locked
+          if (connection.lock === null && prevRowsMap.has(connection.connectionId)) {
+            return prevRowsMap.get(connection.connectionId);
           }
 
           return [
