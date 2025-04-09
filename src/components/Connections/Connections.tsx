@@ -684,38 +684,45 @@ export const Connections = () => {
 
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
-      const tempRows = data.map((connection: any) => [
-        <Box key={`name-${connection.blockId}`} sx={{ display: 'flex', alignItems: 'center' }}>
-          <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
-          <Typography variant="body1" fontWeight={600}>
-            {connection.name}
-          </Typography>
-        </Box>,
-        getSourceDest(connection),
-        <SyncStatus
-          key={`sync-status-${connection.blockId}`}
-          connection={connection}
-          syncingConnectionIds={syncingConnectionIds}
-          setShowLogsDialog={setShowLogsDialog}
-          setLogsConnection={setLogsConnection}
-          trackAmplitudeEvent={trackAmplitudeEvent}
-        />,
-        <Actions
-          key={`actions-${connection.blockId}`}
-          connection={connection}
-          idx={connection.blockId}
-          permissions={permissions}
-          syncConnection={syncConnection}
-          syncingConnectionIds={syncingConnectionIds}
-          setSyncingConnectionIds={setSyncingConnectionIds}
-          open={open}
-          handleClick={handleClick}
-        />,
-      ]);
+      setRows((prevRows) => {
+        const tempRows = data.map((connection: any, index: number) => {
+          if (connection.lock === null && prevRows[index]) {
+            return prevRows[index];
+          }
 
+          return [
+            <Box key={`name-${connection.blockId}`} sx={{ display: 'flex', alignItems: 'center' }}>
+              <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
+              <Typography variant="body1" fontWeight={600}>
+                {connection.name}
+              </Typography>
+            </Box>,
+            getSourceDest(connection),
+            <SyncStatus
+              key={`sync-status-${connection.blockId}`}
+              connection={connection}
+              syncingConnectionIds={syncingConnectionIds}
+              setShowLogsDialog={setShowLogsDialog}
+              setLogsConnection={setLogsConnection}
+              trackAmplitudeEvent={trackAmplitudeEvent}
+            />,
+            <Actions
+              key={`actions-${connection.blockId}`}
+              connection={connection}
+              idx={connection.blockId}
+              permissions={permissions}
+              syncConnection={syncConnection}
+              syncingConnectionIds={syncingConnectionIds}
+              setSyncingConnectionIds={setSyncingConnectionIds}
+              open={open}
+              handleClick={handleClick}
+            />,
+          ];
+        });
+
+        return tempRows;
+      });
       const tempRowValues = data.map((connection: any) => [connection.name, null, null]);
-
-      setRows(tempRows);
       setRowValues(tempRowValues);
     } else {
       setRows([]);
