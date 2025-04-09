@@ -19,6 +19,17 @@ interface TransformTypeResponse {
   transform_type: TransformType;
 }
 
+export const fetchTransformType = async (session: any) => {
+  try {
+    const { transform_type } = await httpGet(session, 'dbt/dbt_transform/');
+
+    return { transform_type: transform_type as TransformType };
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 const Transform = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
@@ -40,19 +51,8 @@ const Transform = () => {
   };
 
   useEffect(() => {
-    const fetchTransformType = async () => {
-      try {
-        const { transform_type } = await httpGet(session, 'dbt/dbt_transform/');
-
-        return { transform_type: transform_type as TransformType };
-      } catch (error) {
-        console.error(error);
-        throw error;
-      }
-    };
-
     if (session) {
-      fetchTransformType()
+      fetchTransformType(session)
         .then((response: TransformTypeResponse) => {
           const transformType = response.transform_type;
           if (transformType === 'ui' || transformType === 'github')
