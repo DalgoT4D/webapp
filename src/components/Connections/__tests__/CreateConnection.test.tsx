@@ -306,6 +306,7 @@ describe('Create connection', () => {
               connectionId=""
               setConnectionId={() => {}}
               blockId=""
+              closeActionMenu={() => {}}
             />
           </SWRConfig>
         </SessionProvider>
@@ -418,6 +419,7 @@ describe('Create connection', () => {
               connectionId=""
               setConnectionId={() => {}}
               blockId=""
+              closeActionMenu={() => {}}
             />
           </SWRConfig>
         </SessionProvider>
