@@ -96,6 +96,7 @@ describe('Create connection', () => {
             setConnectionId={() => {}}
             blockId=""
             filteredSourceStreams={[]}
+            closeActionMenu={() => {}}
           />
         </SessionProvider>
       );
@@ -127,6 +128,7 @@ describe('Create connection', () => {
           setShowForm={() => {}}
           blockId=""
           setBlockId={() => {}}
+          closeActionMenu={() => {}}
         />
       </SessionProvider>
     );
@@ -203,6 +205,7 @@ describe('Create connection', () => {
               setConnectionId={() => {}}
               blockId=""
               filteredSourceStreams={[]}
+              closeActionMenu={() => {}}
             />
           </SWRConfig>
         </SessionProvider>
