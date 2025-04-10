@@ -28,6 +28,7 @@ interface CreateConnectionFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
   setConnectionId: (...args: any) => any;
+  closeActionMenu: (...args: any) => any;
 }
 
 type CursorFieldConfig = {
@@ -57,6 +58,7 @@ const CreateConnectionForm = ({
   mutate,
   showForm,
   setShowForm,
+  closeActionMenu,
 }: CreateConnectionFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -257,6 +259,7 @@ const CreateConnectionForm = ({
   const handleClose = () => {
     reset();
     setConnectionId('');
+    closeActionMenu();
     setSourceStreams([]);
     setFilteredSourceStreams([]);
     setShowForm(false);
@@ -304,6 +307,8 @@ const CreateConnectionForm = ({
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
+      closeActionMenu();
     }
     setLoading(false);
   };
