@@ -241,7 +241,7 @@ describe('Connections Setup', () => {
     );
   });
 
-  it('should filter connections based on debounced search input', async () => {
+  it('should filter connections based on search input', async () => {
     const mockFetch = jest
       .fn()
       .mockResolvedValueOnce({

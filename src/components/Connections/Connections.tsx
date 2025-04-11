@@ -750,6 +750,8 @@ export const Connections = () => {
   }, [session, data]);
 
   useEffect(() => {
+    if (!data) return;
+
     if (searchTerm === '') {
       updateRows(data);
     } else {
