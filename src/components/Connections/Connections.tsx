@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import useSWR from 'swr';
-import { CircularProgress, Box, Typography, Tooltip, SxProps } from '@mui/material';
+import { CircularProgress, Box, Typography, Tooltip, SxProps, TextField } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 import SyncIcon from '@/assets/icons/sync.svg';
@@ -563,6 +563,9 @@ export const Connections = () => {
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
+
+  const [searchTerm, setSearchTerm] = useState('');
+
   const trackAmplitudeEvent = useTracking();
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -746,6 +749,23 @@ export const Connections = () => {
     }
   }, [session, data]);
 
+  useEffect(() => {
+    if (searchTerm === '') {
+      updateRows(data);
+    } else {
+      const filtered = data.filter((conn: any) => {
+        const lower = searchTerm.toLowerCase().trim();
+        return (
+          conn.name?.toLowerCase().includes(lower) ||
+          conn.source?.sourceName?.toLowerCase().includes(lower) ||
+          conn.destination?.destinationName?.toLowerCase().includes(lower)
+        );
+      });
+
+      updateRows(filtered);
+    }
+  }, [searchTerm]);
+
   const handleClickOpen = () => {
     setShowDialog(true);
   };
@@ -837,6 +857,16 @@ export const Connections = () => {
         showForm={showDialog}
         setShowForm={setShowDialog}
       />
+      <Box mb={2} display="flex" justifyContent="flex-end">
+        <TextField
+          label="Search Connections"
+          variant="outlined"
+          size="small"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{ width: 300 }}
+        />
+      </Box>
       <List
         hasCreatePermission={permissions.includes('can_create_connection')}
         openDialog={handleClickOpen}
