@@ -12,6 +12,7 @@ import {
   Link,
   Typography,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import MuiDrawer from '@mui/material/Drawer';
 import { styled, Theme, CSSObject } from '@mui/material/styles';
@@ -23,6 +24,8 @@ import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { ProductWalk } from '../ProductWalk/ProductWalk';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { demoProductWalkthrough } from '@/config/constant';
+import { fetchTransformType, TransformType } from '@/pages/pipeline/transform';
+import { useSession } from 'next-auth/react';
 
 export interface ItemButtonProps {
   openMenu: boolean;
@@ -123,11 +126,14 @@ const Drawer = styled(MuiDrawer, {
 export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const router = useRouter();
   const globalContext = useContext(GlobalContext);
-  const sideMenu: MenuOption[] = getSideMenu();
+  const { data: session } = useSession();
+  const [transformType, setTransformType] = useState<any>('');
+  const sideMenu: MenuOption[] = getSideMenu({ transformType });
   const { state } = globalContext?.UnsavedChanges ?? {};
   const [open, setOpen] = useState(
     new Array(sideMenu.filter((item) => !item.parent).length).fill(false)
   );
+  const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(
     sideMenu.find((item) => item.path === router.pathname)?.index
   );
@@ -182,6 +188,17 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
       }
     }
   }, [openMenu]);
+
+  useEffect(() => {
+    if (!session) return;
+    const getTransformType = async () => {
+      setLoading(true);
+      const { transform_type } = await fetchTransformType(session);
+      setTransformType(transform_type);
+      setLoading(false);
+    };
+    getTransformType();
+  }, [session]);
 
   useEffect(() => {
     setRunWalkThrough(true);
@@ -280,7 +297,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
       open={openMenu}
       variant="permanent"
     >
-      {getList}
+      {loading ? <CircularProgress /> : getList}
       {openMenu && (
         <Box
           sx={{
