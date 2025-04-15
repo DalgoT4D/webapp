@@ -46,7 +46,7 @@ const Invitations = ({
   const [showConfirmResendialog, setShowConfirmResendialog] = useState<boolean>(false);
   const [invitationToBeDeleted, setInvitationToBeDeleted] = useState<Invitation | null>(null);
   const [invitationToBeResent, setInvitationToBeResent] = useState<Invitation | null>(null);
-
+  const [rows, setRows] = useState<any[]>([]);
   const openActionMenu = Boolean(anchorEl);
   const handleClick = (invitation: Invitation, event: HTMLElement | null) => {
     setInvitationToBeResent(invitation);
@@ -86,36 +86,37 @@ const Invitations = ({
     setShowConfirmResendialog(false);
   };
 
-  let rows = [];
-  rows = useMemo(() => {
+  useEffect(() => {
+    console.log('data', data);
     if (data && data.length > 0) {
-      return data.map((invitation: Invitation, idx: number) => [
-        <Typography key={'email-' + idx} variant="body1" fontWeight={600}>
-          {invitation.invited_email}
-        </Typography>,
-        <Typography key={'role-' + idx} variant="subtitle2" fontWeight={600}>
-          {invitation.invited_role.name}
-        </Typography>,
-        <Typography key={'sent-on-' + idx} variant="subtitle2" fontWeight={600}>
-          {moment.utc(invitation.invited_on).local().format('Do MMM hh:mm A').toString()}
-        </Typography>,
-        <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'action-box-' + idx}>
-          <Button
-            aria-controls={openActionMenu ? 'basic-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={openActionMenu ? 'true' : undefined}
-            onClick={(event) => handleClick(invitation, event.currentTarget)}
-            variant="contained"
-            key={'menu-' + idx}
-            color="info"
-            sx={{ px: 0, minWidth: 32 }}
-          >
-            <MoreHorizIcon />
-          </Button>
-        </Box>,
-      ]);
+      setRows(
+        data.map((invitation: Invitation, idx: number) => [
+          <Typography key={'email-' + idx} variant="body1" fontWeight={600}>
+            {invitation.invited_email}
+          </Typography>,
+          <Typography key={'role-' + idx} variant="subtitle2" fontWeight={600}>
+            {invitation.invited_role.name}
+          </Typography>,
+          <Typography key={'sent-on-' + idx} variant="subtitle2" fontWeight={600}>
+            {moment.utc(invitation.invited_on).local().format('Do MMM hh:mm A').toString()}
+          </Typography>,
+          <Box sx={{ justifyContent: 'end', display: 'flex' }} key={'action-box-' + idx}>
+            <Button
+              aria-controls={openActionMenu ? 'basic-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={openActionMenu ? 'true' : undefined}
+              onClick={(event) => handleClick(invitation, event.currentTarget)}
+              variant="contained"
+              key={'menu-' + idx}
+              color="info"
+              sx={{ px: 0, minWidth: 32 }}
+            >
+              <MoreHorizIcon />
+            </Button>
+          </Box>,
+        ])
+      );
     }
-    return [];
   }, [data]);
 
   const deleteInvitation = async (invitation: Invitation | null) => {
@@ -166,7 +167,13 @@ const Invitations = ({
         handleDelete={handleClickDeleteAction}
         handleResendInvitation={handleClickResendAction}
       />
-      <List openDialog={() => {}} title="" headers={headers} rows={rows} onlyList={true} />
+      <List
+        openDialog={() => {}}
+        title="invitations"
+        headers={headers}
+        rows={rows}
+        onlyList={true}
+      />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
         handleClose={() => handleCancelDeleteInvitation()}
