@@ -297,6 +297,94 @@ describe('Invitations', () => {
     expect(deleteInvitationApiMockSuccess).toHaveBeenCalledTimes(2);
   });
 
+  // it('new invitation appears in the list after some time', async () => {
+  //   const initialInvitations = [
+  //     {
+  //       id: 59,
+  //       invited_email: 'test@gmail.com',
+  //       invited_role: {
+  //         uuid: 'fake-uuid-1',
+  //         name: 'test-role',
+  //       },
+  //       invited_on: '2023-08-18T13:00:00.000Z',
+  //     },
+  //   ];
+
+  //   const updatedInvitations = [
+  //     ...initialInvitations,
+  //     {
+  //       id: 60,
+  //       invited_email: 'newuser@gmail.com',
+  //       invited_role: {
+  //         uuid: 'fake-uuid-2',
+  //         name: 'new-role',
+  //       },
+  //       invited_on: '2023-08-19T13:00:00.000Z',
+  //     },
+  //   ];
+
+  //   // Mock initial fetch
+  //   const initialFetch = jest.fn().mockResolvedValueOnce({
+  //     ok: true,
+  //     json: jest.fn().mockResolvedValueOnce(initialInvitations),
+  //   });
+
+  //   (global as any).fetch = initialFetch;
+
+  //   const { rerender } = render(
+  //     <SessionProvider session={mockSession}>
+  //       <SWRConfig
+  //         value={{
+  //           dedupingInterval: 0,
+  //           fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
+  //         }}
+  //       >
+  //         <Invitations mutateInvitationsParent={false} setMutateInvitationsParent={() => {}} />
+  //       </SWRConfig>
+  //     </SessionProvider>
+  //   );
+
+  //   // Verify initial state
+  //   const initialTable = screen.getByRole('table');
+  //   const initialRows = within(initialTable).getAllByRole('row');
+  //   expect(initialRows.length).toBe(2); // header + 1 row
+
+  //   // Mock updated fetch with new invitation
+  //   const updatedFetch = jest.fn().mockResolvedValueOnce({
+  //     ok: true,
+  //     json: jest.fn().mockResolvedValueOnce(updatedInvitations),
+  //   });
+
+  //   (global as any).fetch = updatedFetch;
+
+  //   // Rerender with updated data
+  //   await act(async () => {
+  //     rerender(
+  //       <SessionProvider session={mockSession}>
+  //         <SWRConfig
+  //           value={{
+  //             dedupingInterval: 0,
+  //             fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
+  //           }}
+  //         >
+  //           <Invitations mutateInvitationsParent={true} setMutateInvitationsParent={() => {}} />
+  //         </SWRConfig>
+  //       </SessionProvider>
+  //     );
+  //   });
+
+  //   // Verify updated state
+  //   const updatedTable = screen.getByRole('table');
+  //   const updatedRows = within(updatedTable).getAllByRole('row');
+  //   expect(updatedRows.length).toBe(3); // header + 2 rows
+
+  //   // Verify new invitation data
+  //   const newRow = updatedRows[2];
+  //   const newRowCells = newRow.childNodes;
+  //   expect(newRowCells[0].textContent).toBe('newuser@gmail.com');
+  //   expect(newRowCells[1].textContent).toBe('new-role');
+  // });
+
   it('new invitation appears in the list after some time', async () => {
     const initialInvitations = [
       {
@@ -307,19 +395,6 @@ describe('Invitations', () => {
           name: 'test-role',
         },
         invited_on: '2023-08-18T13:00:00.000Z',
-      },
-    ];
-
-    const updatedInvitations = [
-      ...initialInvitations,
-      {
-        id: 60,
-        invited_email: 'newuser@gmail.com',
-        invited_role: {
-          uuid: 'fake-uuid-2',
-          name: 'new-role',
-        },
-        invited_on: '2023-08-19T13:00:00.000Z',
       },
     ];
 
@@ -347,9 +422,23 @@ describe('Invitations', () => {
     // Verify initial state
     const initialTable = screen.getByRole('table');
     const initialRows = within(initialTable).getAllByRole('row');
+    console.log('initialRows', initialRows);
     expect(initialRows.length).toBe(2); // header + 1 row
 
     // Mock updated fetch with new invitation
+
+    const updatedInvitations = [
+      ...initialInvitations,
+      {
+        id: 60,
+        invited_email: 'newuser@gmail.com',
+        invited_role: {
+          uuid: 'fake-uuid-2',
+          name: 'new-role',
+        },
+        invited_on: '2023-08-19T13:00:00.000Z',
+      },
+    ];
     const updatedFetch = jest.fn().mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce(updatedInvitations),
@@ -357,28 +446,17 @@ describe('Invitations', () => {
 
     (global as any).fetch = updatedFetch;
 
-    // Rerender with updated data
     await act(async () => {
-      rerender(
-        <SessionProvider session={mockSession}>
-          <SWRConfig
-            value={{
-              dedupingInterval: 0,
-              fetcher: (resource) => fetch(resource, {}).then((res) => res.json()),
-            }}
-          >
-            <Invitations mutateInvitationsParent={true} setMutateInvitationsParent={() => {}} />
-          </SWRConfig>
-        </SessionProvider>
-      );
+      // Wait for the polling interval
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     });
 
-    // Verify updated state
+    // This should fail in main branch since the component won't update automatically
     const updatedTable = screen.getByRole('table');
     const updatedRows = within(updatedTable).getAllByRole('row');
     expect(updatedRows.length).toBe(3); // header + 2 rows
 
-    // Verify new invitation data
+    // These assertions will also fail in main branch
     const newRow = updatedRows[2];
     const newRowCells = newRow.childNodes;
     expect(newRowCells[0].textContent).toBe('newuser@gmail.com');
