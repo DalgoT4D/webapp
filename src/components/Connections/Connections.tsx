@@ -856,24 +856,36 @@ export const Connections = () => {
         showForm={showDialog}
         setShowForm={setShowDialog}
       />
-      <Box mb={2} display="flex" justifyContent="flex-end">
-        <TextField
-          label="Search Connections"
-          variant="outlined"
-          size="small"
-          onChange={(e) => onSearchValueChange(e.target.value)}
-          sx={{ width: 300 }}
+      <Box>
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <TextField
+            label="Search Connections"
+            variant="outlined"
+            size="small"
+            onChange={(e) => onSearchValueChange(e.target.value)}
+            sx={{ width: 300 }}
+          />
+          <Button
+            data-testid="add-new-connection"
+            variant="contained"
+            onClick={handleClickOpen}
+            disabled={!permissions.includes('can_create_connection')}
+            className="connectionadd_walkthrough"
+          >
+            + New Connection
+          </Button>
+        </Box>
+        <List
+          onlyList
+          hasCreatePermission={permissions.includes('can_create_connection')}
+          openDialog={handleClickOpen}
+          title="Connection"
+          headers={headers}
+          rows={rows}
+          rowValues={rowValues}
+          height={115}
         />
       </Box>
-      <List
-        hasCreatePermission={permissions.includes('can_create_connection')}
-        openDialog={handleClickOpen}
-        title="Connection"
-        headers={headers}
-        rows={rows}
-        rowValues={rowValues}
-        height={115}
-      />
       <ConfirmationDialog
         loading={deleteLoading}
         show={showConfirmDeleteDialog}
