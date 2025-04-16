@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, useRef } from 'react';
 import useSWR from 'swr';
 import { CircularProgress, Box, Typography, Tooltip, SxProps, TextField } from '@mui/material';
 import { List } from '../List/List';
@@ -564,6 +564,8 @@ export const Connections = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const trackAmplitudeEvent = useTracking();
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -732,7 +734,12 @@ export const Connections = () => {
         updatedData = await httpGet(session, 'airbyte/v1/connections');
         isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
         await delay(3000);
-        updateRows(updatedData);
+
+        if (searchInputRef.current) {
+          onSearchValueChange(searchInputRef.current.value, updatedData);
+        } else {
+          updateRows(updatedData);
+        }
       }
     } catch (error) {
       console.log(error);
@@ -747,7 +754,7 @@ export const Connections = () => {
     }
   }, [session, data]);
 
-  const onSearchValueChange = (value: string) => {
+  const onSearchValueChange = (value: string, data: any[]) => {
     if (!data) return;
 
     const lower = value.toLowerCase().trim();
@@ -862,7 +869,8 @@ export const Connections = () => {
             label="Search Connections"
             variant="outlined"
             size="small"
-            onChange={(e) => onSearchValueChange(e.target.value)}
+            inputRef={searchInputRef}
+            onChange={(e) => onSearchValueChange(e.target.value, data)}
             sx={{ width: 300 }}
           />
           <Button
