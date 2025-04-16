@@ -21,6 +21,7 @@ interface InviteUserFormProps {
   mutate: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
+  setMutateInvitationsParent: (...args: any) => any; // ✅ ADD THIS PROP
 }
 
 type InviteUserFormInput = {
@@ -28,7 +29,12 @@ type InviteUserFormInput = {
   invited_role_uuid: string;
 };
 
-const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) => {
+const InviteUserForm = ({
+  mutate,
+  showForm,
+  setShowForm,
+  setMutateInvitationsParent, // ✅ ADD HERE TOO
+}: InviteUserFormProps) => {
   const { data: session }: any = useSession();
   const { data: roles } = useSWR(`data/roles`);
   const [loading, setLoading] = useState<boolean>(false);
@@ -50,6 +56,26 @@ const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) 
     reset();
     setShowForm(false);
   };
+
+  const onSubmit = async (data: any) => {
+    setLoading(true);
+    try {
+      await httpPost(session, 'v1/organizations/users/invite/', {
+        invited_email: data.invited_email,
+        invited_role_uuid: data.invited_role_uuid,
+      });
+
+      mutate(); // ✅ refresh users list
+      setMutateInvitationsParent(true); // ✅ refresh pending invitations list
+
+      handleClose();
+      successToast('Invitation sent over email', [], globalContext);
+    } catch (err: any) {
+      errorToast(err.message, [], globalContext);
+    }
+    setLoading(false);
+  };
+
   const formContent = (
     <>
       <Box sx={{ pt: 2, pb: 4 }}>
@@ -62,7 +88,7 @@ const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) 
           required
           register={register}
           name="invited_email"
-        ></Input>
+        />
         {roles && (
           <Controller
             control={control}
@@ -80,12 +106,11 @@ const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) 
                   placeholder="Select role"
                   onChange={(event) => field.onChange(event.target.value)}
                 >
-                  {roles &&
-                    roles.map((role: any) => (
-                      <MenuItem key={role.uuid} value={role.uuid}>
-                        {role.name}
-                      </MenuItem>
-                    ))}
+                  {roles.map((role: any) => (
+                    <MenuItem key={role.uuid} value={role.uuid}>
+                      {role.name}
+                    </MenuItem>
+                  ))}
                 </Select>
                 {fieldState.error && (
                   <FormHelperText sx={{ color: 'red' }}>{fieldState.error.message}</FormHelperText>
@@ -99,49 +124,31 @@ const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) 
     </>
   );
 
-  const onSubmit = async (data: any) => {
-    setLoading(true);
-    try {
-      await httpPost(session, 'v1/organizations/users/invite/', {
-        invited_email: data.invited_email,
-        invited_role_uuid: data.invited_role_uuid,
-      });
-      mutate();
-      handleClose();
-      successToast('Invitation sent over email', [], globalContext);
-    } catch (err: any) {
-      errorToast(err.message, [], globalContext);
-    }
-    setLoading(false);
-  };
-
   return (
-    <>
-      <CustomDialog
-        title={'Invite User'}
-        show={showForm}
-        handleClose={handleClose}
-        handleSubmit={handleSubmit(onSubmit)}
-        formContent={formContent}
-        formActions={
-          <Box>
-            <Button variant="contained" type="submit" data-testid="savebutton">
-              Send invitation
-            </Button>
-            <Button
-              color="secondary"
-              variant="outlined"
-              onClick={handleClose}
-              data-testid="cancelbutton"
-              sx={{ marginLeft: '5px' }}
-            >
-              Cancel
-            </Button>
-          </Box>
-        }
-        loading={loading}
-      />
-    </>
+    <CustomDialog
+      title={'Invite User'}
+      show={showForm}
+      handleClose={handleClose}
+      handleSubmit={handleSubmit(onSubmit)}
+      formContent={formContent}
+      formActions={
+        <Box>
+          <Button variant="contained" type="submit" data-testid="savebutton">
+            Send invitation
+          </Button>
+          <Button
+            color="secondary"
+            variant="outlined"
+            onClick={handleClose}
+            data-testid="cancelbutton"
+            sx={{ marginLeft: '5px' }}
+          >
+            Cancel
+          </Button>
+        </Box>
+      }
+      loading={loading}
+    />
   );
 };
 
