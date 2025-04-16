@@ -87,7 +87,6 @@ const Invitations = ({
   };
 
   useEffect(() => {
-    console.log('data', data);
     if (data && data.length > 0) {
       setRows(
         data.map((invitation: Invitation, idx: number) => [

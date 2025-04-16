@@ -360,7 +360,7 @@ describe('Invitations', () => {
 
     await act(async () => {
       // Wait for the polling interval
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     });
 
     // This should fail in main branch since the component won't update automatically
