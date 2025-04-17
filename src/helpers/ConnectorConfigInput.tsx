@@ -137,7 +137,7 @@ class ConnectorConfigInput {
     if (exclude.length > 0) {
       if (exclude[0] in data?.properties) {
         dropdownEnums.push(
-          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum[0]
+          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum?.[0]
         );
       }
     }
@@ -195,17 +195,17 @@ class ConnectorConfigInput {
         if (value['oneOf'] && value['oneOf'].length > 1) {
           value['oneOf']?.forEach((ele: any) => {
             if (commonField.length > 0) {
-              commonField = Object.keys(ele?.properties)
-                .filter((key: any) => 'const' in ele?.properties[key]) // mongodb connector case. Only cluster type had const property and was not at the top level but with the other properties that were to be rendered if a cluster type is selected.
+              commonField = Object.keys(ele?.properties || {})
+                .filter((key: any) => 'const' in (ele?.properties || {})[key]) // mongodb connector case. Only cluster type had const property and was not at the top level but with the other properties that were to be rendered if a cluster type is selected.
                 .filter((value: any) => commonField.includes(value));
             } else {
-              commonField = Object.keys(ele?.properties);
+              commonField = Object.keys(ele?.properties || {});
             }
           });
         } else if (value['oneOf'] && value['oneOf'].length === 1) {
           const ele = value['oneOf'][0];
-          commonField = Object.keys(ele?.properties).filter(
-            (key: any) => 'const' in ele.properties[key]
+          commonField = Object.keys(ele?.properties || {}).filter(
+            (key: any) => 'const' in (ele?.properties || {})[key]
           );
         }
 
@@ -243,7 +243,7 @@ class ConnectorConfigInput {
         ...value,
         field: objParentKey,
         parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
-        required: data?.required.includes(key),
+        required: Array.isArray(data?.required) ? data.required.includes(key) : false,
       });
     }
 
