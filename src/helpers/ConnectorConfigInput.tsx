@@ -161,14 +161,17 @@ class ConnectorConfigInput {
     data: any,
     parent = 'config',
     exclude: any[] = [],
-    dropdownEnums: any[] = []
+    dropdownEnums: any[] = [],
+    existingFieldsTracking?: string[]
   ) {
-    // Push the parent enum in the array
+    // Push the parent enum in the array without duplicates
     if (exclude.length > 0) {
       if (exclude[0] in data?.properties) {
-        dropdownEnums.push(
-          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum?.[0]
-        );
+        const enumValue =
+          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum?.[0];
+        if (enumValue !== undefined && !dropdownEnums.includes(enumValue)) {
+          dropdownEnums.push(enumValue);
+        }
       }
     }
 
@@ -201,36 +204,74 @@ class ConnectorConfigInput {
 
       result.push(objResult);
 
+      // Get const values for each oneOf option first to populate enum correctly
       data?.oneOf?.forEach((eachEnum: any) => {
+        const fieldNameStr =
+          Array.isArray(commonField) && commonField.length > 0 ? commonField[0] : commonField;
+
+        // Try to get const value for enum
+        if (
+          typeof fieldNameStr === 'string' &&
+          eachEnum.properties?.[fieldNameStr]?.const !== undefined
+        ) {
+          const constValue = eachEnum.properties[fieldNameStr].const;
+          if (!objResult.enum.includes(constValue)) {
+            objResult.enum.push(constValue);
+          }
+        }
+        // If no const value, use title as fallback
+        else if (eachEnum.title && !objResult.enum.includes(eachEnum.title)) {
+          objResult.enum.push(eachEnum.title);
+        }
+      });
+
+      // Process each oneOf option schema separately
+      data?.oneOf?.forEach((eachEnum: any) => {
+        // Pass existing spec fields to check for duplicates
+        const existingFields = objResult.specs.map((s: ConnectorSpec) => s.field);
         ConnectorConfigInput.traverseSpecs(
           objResult.specs,
           eachEnum,
           parent,
           commonField,
-          objResult.enum
+          objResult.enum,
+          existingFields
         );
       });
     }
+
+    // Identify if this connector has a streams array at the top level
+    const hasStreamsArray = data?.properties?.streams?.type === 'array';
+
+    // Identify fields that should be hidden at the top level
+    const fieldsToSkipAtTopLevel = hasStreamsArray ? ['format'] : [];
 
     for (const [key, value] of Object.entries<any>(data?.properties || {})) {
       // The parent oneOf key has already been added to the array
       if (exclude.includes(key)) continue;
 
+      // Skip fields that should only be processed inside streams
+      if (parent === 'config' && fieldsToSkipAtTopLevel.includes(key)) continue;
+
       const objParentKey = `${parent}.${key}`;
 
-      // Special handling for streams array in S3
-      if (key === 'streams' && value?.type === 'array' && value?.items?.type === 'object') {
+      // Special handling for arrays of objects in a more generalized way
+      if (value?.type === 'array' && value?.items?.type === 'object') {
         const streamProperties = value.items.properties || {};
+        const formatProperty = streamProperties.format;
+        let formatOptions = [];
 
-        // Create a special object for the streams array that includes format information
-        const streamFormatOptions =
-          streamProperties.format?.oneOf?.map((format: any) => ({
+        // Check if there's a format property with oneOf schema (like in S3)
+        if (formatProperty?.oneOf) {
+          formatOptions = formatProperty.oneOf.map((format: any) => ({
             label: format.title || format.properties?.filetype?.default || 'Unknown',
             value: format.properties?.filetype?.default || 'unknown',
             schema: format,
-          })) || [];
+          }));
+        }
 
-        const arrayItemProps = {
+        // Create a standardized object for any array of objects
+        const arrayItemProps: ConnectorSpec = {
           field: objParentKey,
           type: value.type,
           order: value?.order,
@@ -239,34 +280,45 @@ class ConnectorConfigInput {
           parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
           required: Array.isArray(data?.required) ? data.required.includes(key) : false,
           isArrayOfObjects: true,
-          isS3StreamConfig: true, // Special flag for S3 streams
           objectSchema: value.items,
-          formatOptions: streamFormatOptions,
+          // Check if this is a streams array with format options
+          isS3StreamConfig: key === 'streams' && formatOptions.length > 0,
+          formatOptions: formatOptions.length > 0 ? formatOptions : undefined,
+          // Include static properties for any complex array items
           staticProperties: Object.entries(streamProperties)
-            .filter(([propKey]) => propKey !== 'format')
+            .filter(([propKey]) => propKey !== 'format' || !formatProperty?.oneOf)
             .map(([propKey, propValue]: [string, any]) => ({
               key: propKey,
               ...propValue,
             })),
+          // Default value required by ConnectorSpec type
+          default: undefined,
+          airbyte_secret: false,
+          specs: [],
+          enum: undefined,
         };
 
-        result.push(arrayItemProps);
-        continue;
-      }
+        // Add nested specs by recursively processing the items schema
+        if (Object.keys(streamProperties).length > 0) {
+          // Process nested properties within the array items
+          const nestedSpecs = ConnectorConfigInput.traverseSpecs(
+            [],
+            value.items,
+            objParentKey,
+            [],
+            []
+          );
 
-      // Handle regular array type with object items
-      else if (value?.type === 'array' && value?.items?.type === 'object') {
-        const arrayItemProps = {
-          field: objParentKey,
-          type: value.type,
-          order: value?.order,
-          title: value?.title,
-          description: value?.description,
-          parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
-          required: Array.isArray(data?.required) ? data.required.includes(key) : false,
-          isArrayOfObjects: true,
-          objectSchema: value.items,
-        };
+          // If this array has format options, filter out format field from top level specs
+          // as it will be handled specially by formatOptions
+          if (arrayItemProps.formatOptions?.length) {
+            arrayItemProps.specs = nestedSpecs.filter(
+              (spec: ConnectorSpec) => !spec.field.endsWith('.format')
+            );
+          } else {
+            arrayItemProps.specs = nestedSpecs;
+          }
+        }
 
         result.push(arrayItemProps);
         continue;
@@ -311,19 +363,41 @@ class ConnectorConfigInput {
             enum: [] as string[],
             specs: [],
           };
+
           result.push(objResult);
+
+          // Collect all enum values first
           value?.oneOf?.forEach((eachEnum: any) => {
-            // Push the title to enum array if available
-            if (eachEnum.title && !objResult.enum.includes(eachEnum.title)) {
+            const fieldNameStr = Array.isArray(fieldName) ? fieldName[0] : fieldName;
+
+            // Try to get const value from the discriminator field
+            if (
+              typeof fieldNameStr === 'string' &&
+              eachEnum.properties?.[fieldNameStr]?.const !== undefined
+            ) {
+              const constValue = eachEnum.properties[fieldNameStr].const;
+              if (!objResult.enum.includes(constValue)) {
+                objResult.enum.push(constValue);
+              }
+            }
+            // If no const value, use title as fallback
+            else if (eachEnum.title && !objResult.enum.includes(eachEnum.title)) {
               objResult.enum.push(eachEnum.title);
             }
+          });
 
+          // Keep track of field names already added to avoid duplicates
+          const existingFields: string[] = [];
+
+          // Process each oneOf option schema separately
+          value?.oneOf?.forEach((eachEnum: any) => {
             ConnectorConfigInput.traverseSpecs(
               objResult.specs,
               eachEnum,
               objParentKey,
               fieldName,
-              objResult.enum
+              objResult.enum,
+              existingFields
             );
           });
         }
@@ -331,12 +405,20 @@ class ConnectorConfigInput {
         continue;
       }
 
+      // Skip if this field has already been processed (to avoid duplicates)
+      if (existingFieldsTracking && existingFieldsTracking.includes(objParentKey)) continue;
+
       result.push({
         ...value,
         field: objParentKey,
         parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
         required: Array.isArray(data?.required) ? data.required.includes(key) : false,
       });
+
+      // Add this field to the list of processed fields
+      if (existingFieldsTracking) {
+        existingFieldsTracking.push(objParentKey);
+      }
     }
 
     // Todo: need to find a better way to do this
