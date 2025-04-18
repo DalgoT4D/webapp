@@ -19,6 +19,24 @@ export type ConnectorSpec = {
   specs?: Array<ConnectorSpec>;
   order: number;
   pattern?: string;
+  description?: string;
+  isArrayOfObjects?: boolean;
+  objectSchema?: any;
+  isS3StreamConfig?: boolean;
+  formatOptions?: Array<{
+    label: string;
+    value: string;
+    schema: any;
+  }>;
+  staticProperties?: Array<{
+    key: string;
+    title?: string;
+    type?: string;
+    description?: string;
+    default?: any;
+    required?: boolean;
+    [key: string]: any;
+  }>;
 };
 
 class ConnectorConfigInput {
@@ -86,7 +104,7 @@ class ConnectorConfigInput {
 
     if (dataProperties) {
       const sortedKeys = Object.keys(dataProperties).sort(
-        (a, b) => dataProperties[a].order - dataProperties[b].order
+        (a, b) => (dataProperties[a].order || 0) - (dataProperties[b].order || 0)
       ); //sorting the keys array based on the parent order, such that the order same as airbyte is maintained.
 
       for (const key of sortedKeys) {
@@ -111,6 +129,18 @@ class ConnectorConfigInput {
          */
         //Recursively checking if parent has oneOf (array of Objects) or properties (Object).
 
+        // Handle array type with items that have properties
+        if (parent?.type === 'array' && parent?.items?.properties) {
+          ConnectorConfigInput.traverseSpecsToSetOrder(parent.items, globalCounter);
+        }
+
+        // Handle array type with items that have oneOf
+        if (parent?.type === 'array' && parent?.items?.oneOf) {
+          for (const oneOfItem of parent.items.oneOf) {
+            ConnectorConfigInput.traverseSpecsToSetOrder(oneOfItem, globalCounter);
+          }
+        }
+
         // nest objects containing oneOf property.
         if (parent?.oneOf) {
           for (const oneOfObject of parent.oneOf) {
@@ -118,7 +148,7 @@ class ConnectorConfigInput {
           }
         }
 
-        // recursively calling the function if data has properites.
+        // recursively calling the function if data has properties.
         if (parent?.properties) {
           ConnectorConfigInput.traverseSpecsToSetOrder(parent, globalCounter);
         }
@@ -131,14 +161,17 @@ class ConnectorConfigInput {
     data: any,
     parent = 'config',
     exclude: any[] = [],
-    dropdownEnums: any[] = []
+    dropdownEnums: any[] = [],
+    existingFieldsTracking?: string[]
   ) {
-    // Push the parent enum in the array
+    // Push the parent enum in the array without duplicates
     if (exclude.length > 0) {
       if (exclude[0] in data?.properties) {
-        dropdownEnums.push(
-          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum[0]
-        );
+        const enumValue =
+          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum?.[0];
+        if (enumValue !== undefined && !dropdownEnums.includes(enumValue)) {
+          dropdownEnums.push(enumValue);
+        }
       }
     }
 
@@ -159,34 +192,137 @@ class ConnectorConfigInput {
       }
 
       const objResult = {
-        field: `${parent}.${commonField}`,
+        field: `${parent}.${commonField.length > 0 ? commonField : 'type'}`,
         type: data?.type,
         order: data?.order,
         title: data?.title,
         description: data?.description,
         parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
-        enum: [],
+        enum: [] as string[],
         specs: [],
       };
 
       result.push(objResult);
 
+      // Get const values for each oneOf option first to populate enum correctly
       data?.oneOf?.forEach((eachEnum: any) => {
+        const fieldNameStr =
+          Array.isArray(commonField) && commonField.length > 0 ? commonField[0] : commonField;
+
+        // Try to get const value for enum
+        if (
+          typeof fieldNameStr === 'string' &&
+          eachEnum.properties?.[fieldNameStr]?.const !== undefined
+        ) {
+          const constValue = eachEnum.properties[fieldNameStr].const;
+          if (!objResult.enum.includes(constValue)) {
+            objResult.enum.push(constValue);
+          }
+        }
+        // If no const value, use title as fallback
+        else if (eachEnum.title && !objResult.enum.includes(eachEnum.title)) {
+          objResult.enum.push(eachEnum.title);
+        }
+      });
+
+      // Process each oneOf option schema separately
+      data?.oneOf?.forEach((eachEnum: any) => {
+        // Pass existing spec fields to check for duplicates
+        const existingFields = objResult.specs.map((s: ConnectorSpec) => s.field);
         ConnectorConfigInput.traverseSpecs(
           objResult.specs,
           eachEnum,
           parent,
           commonField,
-          objResult.enum
+          objResult.enum,
+          existingFields
         );
       });
     }
+
+    // Identify if this connector has a streams array at the top level
+    const hasStreamsArray = data?.properties?.streams?.type === 'array';
+
+    // Identify fields that should be hidden at the top level
+    const fieldsToSkipAtTopLevel = hasStreamsArray ? ['format'] : [];
 
     for (const [key, value] of Object.entries<any>(data?.properties || {})) {
       // The parent oneOf key has already been added to the array
       if (exclude.includes(key)) continue;
 
+      // Skip fields that should only be processed inside streams
+      if (parent === 'config' && fieldsToSkipAtTopLevel.includes(key)) continue;
+
       const objParentKey = `${parent}.${key}`;
+
+      // Special handling for arrays of objects in a more generalized way
+      if (value?.type === 'array' && value?.items?.type === 'object') {
+        const streamProperties = value.items.properties || {};
+        const formatProperty = streamProperties.format;
+        let formatOptions = [];
+
+        // Check if there's a format property with oneOf schema (like in S3)
+        if (formatProperty?.oneOf) {
+          formatOptions = formatProperty.oneOf.map((format: any) => ({
+            label: format.title || format.properties?.filetype?.default || 'Unknown',
+            value: format.properties?.filetype?.default || 'unknown',
+            schema: format,
+          }));
+        }
+
+        // Create a standardized object for any array of objects
+        const arrayItemProps: ConnectorSpec = {
+          field: objParentKey,
+          type: value.type,
+          order: value?.order,
+          title: value?.title,
+          description: value?.description,
+          parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
+          required: Array.isArray(data?.required) ? data.required.includes(key) : false,
+          isArrayOfObjects: true,
+          objectSchema: value.items,
+          // Check if this is a streams array with format options
+          isS3StreamConfig: key === 'streams' && formatOptions.length > 0,
+          formatOptions: formatOptions.length > 0 ? formatOptions : undefined,
+          // Include static properties for any complex array items
+          staticProperties: Object.entries(streamProperties)
+            .filter(([propKey]) => propKey !== 'format' || !formatProperty?.oneOf)
+            .map(([propKey, propValue]: [string, any]) => ({
+              key: propKey,
+              ...propValue,
+            })),
+          // Default value required by ConnectorSpec type
+          default: undefined,
+          airbyte_secret: false,
+          specs: [],
+          enum: undefined,
+        };
+
+        // Add nested specs by recursively processing the items schema
+        if (Object.keys(streamProperties).length > 0) {
+          // Process nested properties within the array items
+          const nestedSpecs = ConnectorConfigInput.traverseSpecs(
+            [],
+            value.items,
+            objParentKey,
+            [],
+            []
+          );
+
+          // If this array has format options, filter out format field from top level specs
+          // as it will be handled specially by formatOptions
+          if (arrayItemProps.formatOptions?.length) {
+            arrayItemProps.specs = nestedSpecs.filter(
+              (spec: ConnectorSpec) => !spec.field.endsWith('.format')
+            );
+          } else {
+            arrayItemProps.specs = nestedSpecs;
+          }
+        }
+
+        result.push(arrayItemProps);
+        continue;
+      }
 
       if (value?.type === 'object') {
         let commonField: string[] = [];
@@ -195,17 +331,17 @@ class ConnectorConfigInput {
         if (value['oneOf'] && value['oneOf'].length > 1) {
           value['oneOf']?.forEach((ele: any) => {
             if (commonField.length > 0) {
-              commonField = Object.keys(ele?.properties)
-                .filter((key: any) => 'const' in ele?.properties[key]) // mongodb connector case. Only cluster type had const property and was not at the top level but with the other properties that were to be rendered if a cluster type is selected.
+              commonField = Object.keys(ele?.properties || {})
+                .filter((key: any) => 'const' in (ele?.properties || {})[key]) // mongodb connector case. Only cluster type had const property and was not at the top level but with the other properties that were to be rendered if a cluster type is selected.
                 .filter((value: any) => commonField.includes(value));
             } else {
-              commonField = Object.keys(ele?.properties);
+              commonField = Object.keys(ele?.properties || {});
             }
           });
         } else if (value['oneOf'] && value['oneOf'].length === 1) {
           const ele = value['oneOf'][0];
-          commonField = Object.keys(ele?.properties).filter(
-            (key: any) => 'const' in ele.properties[key]
+          commonField = Object.keys(ele?.properties || {}).filter(
+            (key: any) => 'const' in (ele?.properties || {})[key]
           );
         }
 
@@ -214,24 +350,54 @@ class ConnectorConfigInput {
           const specs = ConnectorConfigInput.traverseSpecs([], value, objParentKey, [], []);
           result.push(...specs);
         } else if (value['oneOf']) {
+          // If no common field is found, use 'type' as the discriminator field name
+          const fieldName = commonField.length > 0 ? commonField : ['type'];
+
           const objResult = {
-            field: `${objParentKey}.${commonField}`,
+            field: `${objParentKey}.${fieldName}`,
             type: value?.type,
             order: value?.order,
             title: value?.title,
             description: value?.description,
             parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
-            enum: [],
+            enum: [] as string[],
             specs: [],
           };
+
           result.push(objResult);
+
+          // Collect all enum values first
+          value?.oneOf?.forEach((eachEnum: any) => {
+            const fieldNameStr = Array.isArray(fieldName) ? fieldName[0] : fieldName;
+
+            // Try to get const value from the discriminator field
+            if (
+              typeof fieldNameStr === 'string' &&
+              eachEnum.properties?.[fieldNameStr]?.const !== undefined
+            ) {
+              const constValue = eachEnum.properties[fieldNameStr].const;
+              if (!objResult.enum.includes(constValue)) {
+                objResult.enum.push(constValue);
+              }
+            }
+            // If no const value, use title as fallback
+            else if (eachEnum.title && !objResult.enum.includes(eachEnum.title)) {
+              objResult.enum.push(eachEnum.title);
+            }
+          });
+
+          // Keep track of field names already added to avoid duplicates
+          const existingFields: string[] = [];
+
+          // Process each oneOf option schema separately
           value?.oneOf?.forEach((eachEnum: any) => {
             ConnectorConfigInput.traverseSpecs(
               objResult.specs,
               eachEnum,
               objParentKey,
-              commonField,
-              objResult.enum
+              fieldName,
+              objResult.enum,
+              existingFields
             );
           });
         }
@@ -239,16 +405,24 @@ class ConnectorConfigInput {
         continue;
       }
 
+      // Skip if this field has already been processed (to avoid duplicates)
+      if (existingFieldsTracking && existingFieldsTracking.includes(objParentKey)) continue;
+
       result.push({
         ...value,
         field: objParentKey,
         parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
-        required: data?.required.includes(key),
+        required: Array.isArray(data?.required) ? data.required.includes(key) : false,
       });
+
+      // Add this field to the list of processed fields
+      if (existingFieldsTracking) {
+        existingFieldsTracking.push(objParentKey);
+      }
     }
 
     // Todo: need to find a better way to do this
-    result.sort((a: any, b: any) => a.order - b.order);
+    result.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
     return result;
   }
