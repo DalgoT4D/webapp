@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
@@ -295,5 +295,96 @@ describe('Invitations', () => {
 
     // mutate is also called after the succesful delete
     expect(deleteInvitationApiMockSuccess).toHaveBeenCalledTimes(2);
+  });
+
+  it('should immediately show the newly invited user when revalidated', async () => {
+    // Initial invitation list:
+    const initialInvitations = [
+      {
+        id: 59,
+        invited_email: 'test@gmail.com',
+        invited_role: {
+          uuid: 'fake-uuid-1',
+          name: 'test-role',
+        },
+        invited_on: '2023-08-18T13:00:00.000Z',
+      },
+    ];
+
+    // Updated invitation list with a newly invited user:
+    const updatedInvitations = [
+      ...initialInvitations,
+      {
+        id: 60,
+        invited_email: 'newuser@example.com',
+        invited_role: {
+          uuid: 'fake-uuid-2',
+          name: 'new-role',
+        },
+        invited_on: '2023-08-19T14:00:00.000Z',
+      },
+    ];
+
+    // Simulate two fetch calls: first returns initial, then updated invitations.
+    let fetchCallCount = 0;
+    const fetchMock = jest.fn().mockImplementation(() => {
+      fetchCallCount++;
+      if (fetchCallCount === 1) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(initialInvitations),
+        });
+      } else {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(updatedInvitations),
+        });
+      }
+    });
+    (global as any).fetch = fetchMock;
+
+    // Create a mock for setMutateInvitationsParent
+    const setMutateInvitationsParentMock = jest.fn();
+
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <SWRConfig
+            value={{
+              dedupingInterval: 0,
+              fetcher: (resource) => fetch(resource).then((res) => res.json()),
+            }}
+          >
+            <Invitations
+              mutateInvitationsParent={true}
+              setMutateInvitationsParent={setMutateInvitationsParentMock}
+            />
+          </SWRConfig>
+        </SessionProvider>
+      );
+    });
+
+    // Check that the parent's flag is reset to false.
+    expect(setMutateInvitationsParentMock).toHaveBeenCalledWith(false);
+
+    // verify that the invitations table shows both the initial and newly added invitation:
+    const invitationsTable = screen.getByRole('table');
+    const tableRows = within(invitationsTable).getAllByRole('row');
+    const headerCells = within(invitationsTable).getAllByRole('columnheader');
+    expect(headerCells.length).toBe(4);
+    await waitFor(() => {
+      const invitationsTable = screen.getByRole('table');
+      const tableRows = within(invitationsTable).getAllByRole('row');
+      expect(tableRows.length).toBe(3); // header + 2 data rows
+    });
+
+    // Check that both emails are present.
+    const emails = tableRows
+      .slice(1) // skip header row
+      .map((row) => row.textContent);
+    expect(emails.some((text) => text?.includes('test@gmail.com'))).toBe(true);
+    await waitFor(() => {
+      expect(screen.getByText('newuser@example.com')).toBeInTheDocument();
+    });
   });
 });

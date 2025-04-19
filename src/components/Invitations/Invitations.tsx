@@ -43,7 +43,7 @@ const Invitations = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] = useState<boolean>(false);
-  const [showConfirmResendialog, setShowConfirmResendialog] = useState<boolean>(false);
+  const [showConfirmResendDialog, setShowConfirmResendDialog] = useState<boolean>(false);
   const [invitationToBeDeleted, setInvitationToBeDeleted] = useState<Invitation | null>(null);
   const [invitationToBeResent, setInvitationToBeResent] = useState<Invitation | null>(null);
 
@@ -66,15 +66,16 @@ const Invitations = ({
   const handleClickResendAction = () => {
     handleClose();
     // resendInvitation(invitationToBeResent);
-    setShowConfirmResendialog(true);
+    setShowConfirmResendDialog(true);
   };
 
+  // When parent's flag is true, revalidate immediately.
   useEffect(() => {
     if (mutateInvitationsParent) {
-      mutate();
+      mutate(); // re-fetch invitations from backend
       setMutateInvitationsParent(false);
     }
-  }, [mutateInvitationsParent]);
+  }, [mutateInvitationsParent, mutate, setMutateInvitationsParent]);
 
   const handleCancelDeleteInvitation = () => {
     setInvitationToBeDeleted(null);
@@ -83,7 +84,7 @@ const Invitations = ({
 
   const handleCancelResendInvitation = () => {
     setInvitationToBeResent(null);
-    setShowConfirmResendialog(false);
+    setShowConfirmResendDialog(false);
   };
 
   let rows = [];
@@ -116,15 +117,16 @@ const Invitations = ({
       ]);
     }
     return [];
-  }, [data]);
+  }, [data, openActionMenu]);
 
+  // Delete invitation and immediately revalidate the SWR data.
   const deleteInvitation = async (invitation: Invitation | null) => {
     if (invitation) {
       setLoading(true);
       try {
         await httpDelete(session, `users/invitations/delete/${invitation.id}`);
         successToast('Invitation rescinded successfully', [], globalContext);
-        mutate();
+        await mutate(); // revalidate right away
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], globalContext);
@@ -134,13 +136,14 @@ const Invitations = ({
     handleCancelDeleteInvitation();
   };
 
+  // Resend invitation and revalidate immediately.
   const resendInvitation = async (invitation: Invitation | null) => {
     if (invitation) {
       setLoading(true);
       try {
         await httpPost(session, `users/invitations/resend/${invitation.id}`, {});
         successToast('Invitation sent again', [], globalContext);
-        mutate();
+        await mutate(); // revalidate immediately
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], globalContext);
@@ -169,16 +172,16 @@ const Invitations = ({
       <List openDialog={() => {}} title="" headers={headers} rows={rows} onlyList={true} />
       <ConfirmationDialog
         show={showConfirmDeleteDialog}
-        handleClose={() => handleCancelDeleteInvitation()}
+        handleClose={handleCancelDeleteInvitation}
         handleConfirm={() => deleteInvitation(invitationToBeDeleted)}
         message="The invitation sent to this user becomes invalid."
         loading={loading}
       />
       <ConfirmationDialog
-        show={showConfirmResendialog}
-        handleClose={() => handleCancelResendInvitation()}
+        show={showConfirmResendDialog}
+        handleClose={handleCancelResendInvitation}
         handleConfirm={() => resendInvitation(invitationToBeResent)}
-        message="The will trigger another invitation email to the user."
+        message="This will trigger another invitation email to the user."
         loading={loading}
       />
     </>
