@@ -549,11 +549,8 @@ export const Connections = () => {
     setClearConnDeploymentId(connection.clearConnDeploymentId);
     setAnchorEl(event);
   };
-  const handleClose = (isEditMode?: string) => {
-    if (isEditMode !== 'EDIT') {
-      setConnectionId('');
-      setClearConnDeploymentId('');
-    }
+  const handleClose = () => {
+    setConnectionId('');
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
@@ -777,7 +774,7 @@ export const Connections = () => {
   };
 
   const handleDeleteConnection = () => {
-    handleClose('EDIT');
+    handleClose();
     setShowConfirmDeleteDialog(true);
   };
 
@@ -790,13 +787,12 @@ export const Connections = () => {
   };
 
   const handleClearConnection = () => {
-    handleClose('EDIT');
+    handleClose();
     setShowConfirmResetDialog(true);
     trackAmplitudeEvent('[Reset-connection] Button Clicked');
   };
 
   const handleEditConnection = () => {
-    handleClose('EDIT');
     setShowDialog(true);
   };
 
@@ -862,6 +858,7 @@ export const Connections = () => {
         mutate={mutate}
         showForm={showDialog}
         setShowForm={setShowDialog}
+        closeActionMenu={handleClose}
       />
       <Box>
         <Box display="flex" justifyContent="space-between" mb={1}>
