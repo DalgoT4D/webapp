@@ -18,6 +18,8 @@ jest.mock('next/router', () => ({
 }));
 
 describe('Invitations', () => {
+  const setMutateInvitationsParent = jest.fn();
+
   const mockSession: Session = {
     expires: 'true',
     user: { email: 'a' },
@@ -34,6 +36,45 @@ describe('Invitations', () => {
       invited_on: '2023-08-18T13:00:00.000Z',
     },
   ];
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should refresh data when mutateInvitationsParent is true', async () => {
+    const mutate = jest.fn();
+
+    // Mock SWR hook
+    jest.spyOn(require('swr'), 'default').mockImplementation(() => ({
+      data: invitations,
+      isLoading: false,
+      mutate,
+    }));
+
+    await act(() =>
+      render(
+        <SessionProvider session={mockSession}>
+          <SWRConfig
+            value={{
+              dedupingInterval: 0,
+              fetcher: jest.fn(),
+            }}
+          >
+            <Invitations
+              mutateInvitationsParent={true}
+              setMutateInvitationsParent={setMutateInvitationsParent}
+            />
+          </SWRConfig>
+        </SessionProvider>
+      )
+    );
+
+    // Verify that mutate was called
+    expect(mutate).toHaveBeenCalledTimes(1);
+
+    // Verify that setMutateInvitationsParent was called with false
+    expect(setMutateInvitationsParent).toHaveBeenCalledWith(false);
+  });
 
   it('initial render of the component', async () => {
     const invitationsMockFetch = jest.fn().mockResolvedValueOnce({
