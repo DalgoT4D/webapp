@@ -48,6 +48,7 @@
     "react-use-websocket": "^4.10.0",
     "reactflow": "^11.11.4",
     "remark-gfm": "^4.0.0",
+    "sharp": "^0.34.1",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.3.0",
     "typescript": "5.8.2",
