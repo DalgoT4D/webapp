@@ -1,6 +1,10 @@
+
 import { memo, useEffect, useState, useCallback, MouseEvent } from 'react';
+
+
+
 import useSWR from 'swr';
-import { CircularProgress, Box, Typography, Tooltip, SxProps } from '@mui/material';
+import { CircularProgress, Box, Typography, Tooltip, SxProps, TextField } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 import SyncIcon from '@/assets/icons/sync.svg';
@@ -580,11 +584,8 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
     setClearConnDeploymentId(connection.clearConnDeploymentId);
     setAnchorEl(event.currentTarget);
   };
-  const handleClose = (isEditMode?: string) => {
-    if (isEditMode !== 'EDIT') {
-      setConnectionId('');
-      setClearConnDeploymentId('');
-    }
+  const handleClose = () => {
+    setConnectionId('');
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
@@ -594,6 +595,9 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const trackAmplitudeEvent = useTracking();
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -762,7 +766,12 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
         updatedData = await httpGet(session, 'airbyte/v1/connections');
         isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
         await delay(3000);
-        updateRows(updatedData);
+
+        if (searchInputRef.current) {
+          onSearchValueChange(searchInputRef.current.value, updatedData);
+        } else {
+          updateRows(updatedData);
+        }
       }
     } catch (error) {
       console.log(error);
@@ -777,12 +786,30 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
     }
   }, [session, data]);
 
+  const onSearchValueChange = (value: string, data: any[]) => {
+    if (!data) return;
+
+    const lower = value.toLowerCase().trim();
+    if (lower === '') {
+      updateRows(data);
+    } else {
+      const filtered = data.filter((conn: any) => {
+        return (
+          conn.name?.toLowerCase().includes(lower) ||
+          conn.source?.sourceName?.toLowerCase().includes(lower) ||
+          conn.destination?.destinationName?.toLowerCase().includes(lower)
+        );
+      });
+      updateRows(filtered);
+    }
+  };
+
   const handleClickOpen = () => {
     setShowDialog(true);
   };
 
   const handleDeleteConnection = () => {
-    handleClose('EDIT');
+    handleClose();
     setShowConfirmDeleteDialog(true);
   };
 
@@ -795,13 +822,12 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
   };
 
   const handleClearConnection = () => {
-    handleClose('EDIT');
+    handleClose();
     setShowConfirmResetDialog(true);
     trackAmplitudeEvent('[Reset-connection] Button Clicked');
   };
 
   const handleEditConnection = () => {
-    handleClose('EDIT');
     setShowDialog(true);
   };
 
@@ -867,16 +893,39 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
         mutate={mutate}
         showForm={showDialog}
         setShowForm={setShowDialog}
+        closeActionMenu={handleClose}
       />
-      <List
-        hasCreatePermission={permissions.includes('can_create_connection')}
-        openDialog={handleClickOpen}
-        title="Connection"
-        headers={headers}
-        rows={rows}
-        rowValues={rowValues}
-        height={115}
-      />
+      <Box>
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <TextField
+            label="Search Connections"
+            variant="outlined"
+            size="small"
+            inputRef={searchInputRef}
+            onChange={(e) => onSearchValueChange(e.target.value, data)}
+            sx={{ width: 300 }}
+          />
+          <Button
+            data-testid="add-new-connection"
+            variant="contained"
+            onClick={handleClickOpen}
+            disabled={!permissions.includes('can_create_connection')}
+            className="connectionadd_walkthrough"
+          >
+            + New Connection
+          </Button>
+        </Box>
+        <List
+          onlyList
+          hasCreatePermission={permissions.includes('can_create_connection')}
+          openDialog={handleClickOpen}
+          title="Connection"
+          headers={headers}
+          rows={rows}
+          rowValues={rowValues}
+          height={115}
+        />
+      </Box>
       <ConfirmationDialog
         loading={deleteLoading}
         show={showConfirmDeleteDialog}
