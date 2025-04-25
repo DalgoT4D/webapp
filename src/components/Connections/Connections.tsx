@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, useCallback, MouseEvent } from 'react';
 import useSWR from 'swr';
 import { CircularProgress, Box, Typography, Tooltip, SxProps } from '@mui/material';
 import { List } from '../List/List';
@@ -88,6 +88,7 @@ export type Connection = {
   resetConnDeploymentId: string | null;
   clearConnDeploymentId: string | null;
   queuedFlowRunWaitTime: QueuedRuntimeInfo | null;
+  isSyncing?: boolean; // Added optional isSyncing property
 };
 // type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
@@ -523,7 +524,37 @@ const SyncStatus = memo(
 
 SyncStatus.displayName = 'SyncStatus';
 
-export const Connections = () => {
+interface ConnectionRowProps {
+  connection: Connection;
+  onSync: (connectionId: string) => void;
+  onCancelSync: (connectionId: string) => void;
+}
+
+const ConnectionRow = memo(({ connection, onSync, onCancelSync }: ConnectionRowProps) => {
+  const handleSync = useCallback(() => {
+    onSync(connection.connectionId);
+  }, [connection.connectionId, onSync]);
+
+  const handleCancelSync = useCallback(() => {
+    onCancelSync(connection.connectionId);
+  }, [connection.connectionId, onCancelSync]);
+
+  return (
+    <div>
+      <span>{connection.name}</span>
+      <button onClick={handleSync}>Sync</button>
+      {connection.isSyncing && <button onClick={handleCancelSync}>Cancel</button>}
+    </div>
+  );
+});
+
+interface ConnectionsProps {
+  connections: Connection[];
+  onSync: (connectionId: string) => void;
+  onCancelSync: (connectionId: string) => void;
+}
+
+const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
@@ -541,13 +572,13 @@ export const Connections = () => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const handleClick = (connection: Connection, event: HTMLElement | null) => {
+  const handleClick = (connection: Connection, event: MouseEvent<HTMLElement>) => {
     setConnectionId(connection.connectionId);
     // setResetDeploymentId(connection.resetConnDeploymentId);
     console.log(connection);
     console.log(connection.clearConnDeploymentId);
     setClearConnDeploymentId(connection.clearConnDeploymentId);
-    setAnchorEl(event);
+    setAnchorEl(event.currentTarget);
   };
   const handleClose = (isEditMode?: string) => {
     if (isEditMode !== 'EDIT') {
@@ -863,4 +894,6 @@ export const Connections = () => {
       <LogCard logs={syncLogs} expand={expandSyncLogs} setExpand={setExpandSyncLogs} />
     </>
   );
-};
+});
+
+export default Connections;
