@@ -1,10 +1,6 @@
-
 import { memo, useEffect, useState, useCallback, MouseEvent } from 'react';
-
-
-
 import useSWR from 'swr';
-import { CircularProgress, Box, Typography, Tooltip, SxProps, TextField } from '@mui/material';
+import { CircularProgress, Box, Typography, Tooltip, SxProps } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 import SyncIcon from '@/assets/icons/sync.svg';
@@ -528,30 +524,6 @@ const SyncStatus = memo(
 
 SyncStatus.displayName = 'SyncStatus';
 
-interface ConnectionRowProps {
-  connection: Connection;
-  onSync: (connectionId: string) => void;
-  onCancelSync: (connectionId: string) => void;
-}
-
-const ConnectionRow = memo(({ connection, onSync, onCancelSync }: ConnectionRowProps) => {
-  const handleSync = useCallback(() => {
-    onSync(connection.connectionId);
-  }, [connection.connectionId, onSync]);
-
-  const handleCancelSync = useCallback(() => {
-    onCancelSync(connection.connectionId);
-  }, [connection.connectionId, onCancelSync]);
-
-  return (
-    <div>
-      <span>{connection.name}</span>
-      <button onClick={handleSync}>Sync</button>
-      {connection.isSyncing && <button onClick={handleCancelSync}>Cancel</button>}
-    </div>
-  );
-});
-
 interface ConnectionsProps {
   connections: Connection[];
   onSync: (connectionId: string) => void;
@@ -584,8 +556,11 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
     setClearConnDeploymentId(connection.clearConnDeploymentId);
     setAnchorEl(event.currentTarget);
   };
-  const handleClose = () => {
-    setConnectionId('');
+  const handleClose = (isEditMode?: string) => {
+    if (isEditMode !== 'EDIT') {
+      setConnectionId('');
+      setClearConnDeploymentId('');
+    }
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
@@ -595,9 +570,7 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
-
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
+  const memoizedMutate = useCallback(() => mutate(), [mutate]);
   const trackAmplitudeEvent = useTracking();
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -663,7 +636,7 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
       successToast(`Sync initiated successfully`, [], globalContext);
 
       pollForFlowRun(response.flow_run_id);
-      mutate();
+      memoizedMutate();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
@@ -680,7 +653,7 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
         const message = await httpDelete(session, `airbyte/v1/connections/${connectionId}`);
         if (message.success) {
           successToast('Connection deleted', [], globalContext);
-          mutate();
+          memoizedMutate();
         }
       } catch (err: any) {
         console.error(err);
@@ -705,7 +678,7 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
         const message = await httpPost(session, `prefect/v1/flows/${deploymentId}/flow_run/`, {});
         if (message.success) {
           successToast('Clear connection initiated successfully', [], globalContext);
-          mutate();
+          memoizedMutate();
         }
       } catch (err: any) {
         console.error(err);
@@ -766,12 +739,7 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
         updatedData = await httpGet(session, 'airbyte/v1/connections');
         isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
         await delay(3000);
-
-        if (searchInputRef.current) {
-          onSearchValueChange(searchInputRef.current.value, updatedData);
-        } else {
-          updateRows(updatedData);
-        }
+        updateRows(updatedData);
       }
     } catch (error) {
       console.log(error);
@@ -786,30 +754,12 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
     }
   }, [session, data]);
 
-  const onSearchValueChange = (value: string, data: any[]) => {
-    if (!data) return;
-
-    const lower = value.toLowerCase().trim();
-    if (lower === '') {
-      updateRows(data);
-    } else {
-      const filtered = data.filter((conn: any) => {
-        return (
-          conn.name?.toLowerCase().includes(lower) ||
-          conn.source?.sourceName?.toLowerCase().includes(lower) ||
-          conn.destination?.destinationName?.toLowerCase().includes(lower)
-        );
-      });
-      updateRows(filtered);
-    }
-  };
-
   const handleClickOpen = () => {
     setShowDialog(true);
   };
 
   const handleDeleteConnection = () => {
-    handleClose();
+    handleClose('EDIT');
     setShowConfirmDeleteDialog(true);
   };
 
@@ -822,12 +772,13 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
   };
 
   const handleClearConnection = () => {
-    handleClose();
+    handleClose('EDIT');
     setShowConfirmResetDialog(true);
     trackAmplitudeEvent('[Reset-connection] Button Clicked');
   };
 
   const handleEditConnection = () => {
+    handleClose('EDIT');
     setShowDialog(true);
   };
 
@@ -846,7 +797,7 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
             return;
           } else if (lastStatus === 'completed') {
             successToast('Connection refreshed successfully', [], globalContext);
-            mutate();
+            memoizedMutate();
             return;
           }
         }
@@ -873,7 +824,7 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
       {showLogsDialog && (
         <ConnectionSyncHistory setShowLogsDialog={setShowLogsDialog} connection={logsConnection} />
       )}
-      <PendingActionsAccordion refreshConnectionsList={mutate} />
+      <PendingActionsAccordion refreshConnectionsList={memoizedMutate} />
       <ActionsMenu
         eleType="connection"
         anchorEl={anchorEl}
@@ -890,42 +841,19 @@ const Connections = memo(({ connections, onSync, onCancelSync }: ConnectionsProp
       <CreateConnectionForm
         setConnectionId={setConnectionId}
         connectionId={connectionId}
-        mutate={mutate}
+        mutate={memoizedMutate}
         showForm={showDialog}
         setShowForm={setShowDialog}
-        closeActionMenu={handleClose}
       />
-      <Box>
-        <Box display="flex" justifyContent="space-between" mb={1}>
-          <TextField
-            label="Search Connections"
-            variant="outlined"
-            size="small"
-            inputRef={searchInputRef}
-            onChange={(e) => onSearchValueChange(e.target.value, data)}
-            sx={{ width: 300 }}
-          />
-          <Button
-            data-testid="add-new-connection"
-            variant="contained"
-            onClick={handleClickOpen}
-            disabled={!permissions.includes('can_create_connection')}
-            className="connectionadd_walkthrough"
-          >
-            + New Connection
-          </Button>
-        </Box>
-        <List
-          onlyList
-          hasCreatePermission={permissions.includes('can_create_connection')}
-          openDialog={handleClickOpen}
-          title="Connection"
-          headers={headers}
-          rows={rows}
-          rowValues={rowValues}
-          height={115}
-        />
-      </Box>
+      <List
+        hasCreatePermission={permissions.includes('can_create_connection')}
+        openDialog={handleClickOpen}
+        title="Connection"
+        headers={headers}
+        rows={rows}
+        rowValues={rowValues}
+        height={115}
+      />
       <ConfirmationDialog
         loading={deleteLoading}
         show={showConfirmDeleteDialog}
