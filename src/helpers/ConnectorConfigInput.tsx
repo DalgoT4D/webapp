@@ -79,47 +79,30 @@ class ConnectorConfigInput {
     return this.specsToRender.concat(childSpecs);
   }
 
-  static traverseSpecsToSetOrder(data: any, globalCounter = { count: 0 }) {
-    //global counter as an object such that we have a single counter. (pass by refernce concept for objects)
-
+  static traverseSpecsToSetOrder(
+    data: { properties?: ConnectorProperties },
+    globalCounter: GlobalCounter = { count: 0 }
+  ) {
     const dataProperties = data.properties;
 
     if (dataProperties) {
       const sortedKeys = Object.keys(dataProperties).sort(
-        (a, b) => dataProperties[a].order - dataProperties[b].order
-      ); //sorting the keys array based on the parent order, such that the order same as airbyte is maintained.
+        (a, b) => (dataProperties[a].order || 0) - (dataProperties[b].order || 0)
+      );
 
       for (const key of sortedKeys) {
         const parent = dataProperties[key];
 
-        // Increment global counter and assign it as the order
         globalCounter.count++;
-        parent['order'] = globalCounter.count;
+        parent.order = globalCounter.count;
 
-        /**
-         * Data structure is like:
-         * {
-         * properties:{
-         *   x : {
-         *     oneof: [
-         *             {properties: { y: {oneOf: {.....so on}}}
-         *                 }
-         *               ]
-         *         }
-         *   }
-         * }
-         */
-        //Recursively checking if parent has oneOf (array of Objects) or properties (Object).
-
-        // nest objects containing oneOf property.
-        if (parent?.oneOf) {
+        if (parent.oneOf) {
           for (const oneOfObject of parent.oneOf) {
             ConnectorConfigInput.traverseSpecsToSetOrder(oneOfObject, globalCounter);
           }
         }
 
-        // recursively calling the function if data has properites.
-        if (parent?.properties) {
+        if (parent.properties) {
           ConnectorConfigInput.traverseSpecsToSetOrder(parent, globalCounter);
         }
       }
@@ -127,29 +110,37 @@ class ConnectorConfigInput {
   }
 
   static traverseSpecs(
-    result: any,
-    data: any,
+    result: Array<ConnectorSpec>,
+    data: {
+      properties?: ConnectorProperties;
+      type?: string;
+      oneOf?: Array<{ properties?: ConnectorProperties }>;
+      required?: Array<string>;
+    },
     parent = 'config',
-    exclude: any[] = [],
-    dropdownEnums: any[] = []
-  ) {
-    // Push the parent enum in the array
-    if (exclude.length > 0) {
-      if (exclude[0] in data?.properties) {
-        dropdownEnums.push(
-          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum[0]
-        );
+    exclude: Array<string> = [],
+    dropdownEnums: Array<unknown> = []
+  ): Array<ConnectorSpec> {
+    if (!data || typeof data !== 'object') {
+      console.warn('Invalid data provided to traverseSpecs:', data);
+      return result;
+    }
+
+    if (exclude.length > 0 && data.properties) {
+      const excludeKey = exclude[0];
+      if (excludeKey in data.properties) {
+        const property = data.properties[excludeKey];
+        dropdownEnums.push(property?.const || property?.enum?.[0] || null);
       }
     }
 
-    // for top level parent only. Applicable for parents that have no property value like e2e testing
-    if (data?.type === 'object' && data['oneOf']) {
+    if (data.type === 'object' && Array.isArray(data.oneOf)) {
       let commonField: string[] = [];
 
-      if (data['oneOf'].length > 1) {
-        data['oneOf']?.forEach((ele: any) => {
+      if (data.oneOf.length > 1) {
+        data.oneOf.forEach((ele) => {
           if (commonField.length > 0) {
-            commonField = Object.keys(ele?.properties || {}).filter((value: any) =>
+            commonField = Object.keys(ele?.properties || {}).filter((value) =>
               commonField.includes(value)
             );
           } else {
@@ -158,12 +149,12 @@ class ConnectorConfigInput {
         });
       }
 
-      const objResult = {
+      const objResult: ConnectorSpec = {
         field: `${parent}.${commonField}`,
-        type: data?.type,
-        order: data?.order,
-        title: data?.title,
-        description: data?.description,
+        type: data.type,
+        order: data.order || 0,
+        title: data.title || '',
+        description: data.description || '',
         parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
         enum: [],
         specs: [],
@@ -171,7 +162,7 @@ class ConnectorConfigInput {
 
       result.push(objResult);
 
-      data?.oneOf?.forEach((eachEnum: any) => {
+      data.oneOf.forEach((eachEnum) => {
         ConnectorConfigInput.traverseSpecs(
           objResult.specs,
           eachEnum,
@@ -182,50 +173,42 @@ class ConnectorConfigInput {
       });
     }
 
-    for (const [key, value] of Object.entries<any>(data?.properties || {})) {
-      // The parent oneOf key has already been added to the array
+    for (const [key, value] of Object.entries(data.properties || {})) {
       if (exclude.includes(key)) continue;
 
       const objParentKey = `${parent}.${key}`;
 
-      if (value?.type === 'object') {
+      if (value.type === 'object') {
         let commonField: string[] = [];
 
-        // Find common property among all array elements of 'oneOf' array
-        if (value['oneOf'] && value['oneOf'].length > 1) {
-          value['oneOf']?.forEach((ele: any) => {
+        if (Array.isArray(value.oneOf) && value.oneOf.length > 1) {
+          value.oneOf.forEach((ele) => {
             if (commonField.length > 0) {
-              commonField = Object.keys(ele?.properties)
-                .filter((key: any) => 'const' in ele?.properties[key]) // mongodb connector case. Only cluster type had const property and was not at the top level but with the other properties that were to be rendered if a cluster type is selected.
-                .filter((value: any) => commonField.includes(value));
+              commonField = Object.keys(ele?.properties || {}).filter((key) =>
+                commonField.includes(key)
+              );
             } else {
-              commonField = Object.keys(ele?.properties);
+              commonField = Object.keys(ele?.properties || {});
             }
           });
-        } else if (value['oneOf'] && value['oneOf'].length === 1) {
-          const ele = value['oneOf'][0];
-          commonField = Object.keys(ele?.properties).filter(
-            (key: any) => 'const' in ele.properties[key]
-          );
         }
 
-        // an object type can either have oneOf or properties
         if (value.properties) {
           const specs = ConnectorConfigInput.traverseSpecs([], value, objParentKey, [], []);
           result.push(...specs);
-        } else if (value['oneOf']) {
-          const objResult = {
+        } else if (value.oneOf) {
+          const objResult: ConnectorSpec = {
             field: `${objParentKey}.${commonField}`,
-            type: value?.type,
-            order: value?.order,
-            title: value?.title,
-            description: value?.description,
+            type: value.type,
+            order: value.order || 0,
+            title: value.title || '',
+            description: value.description || '',
             parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
             enum: [],
             specs: [],
           };
           result.push(objResult);
-          value?.oneOf?.forEach((eachEnum: any) => {
+          value.oneOf.forEach((eachEnum) => {
             ConnectorConfigInput.traverseSpecs(
               objResult.specs,
               eachEnum,
@@ -243,12 +226,11 @@ class ConnectorConfigInput {
         ...value,
         field: objParentKey,
         parent: dropdownEnums.length > 0 ? dropdownEnums[dropdownEnums.length - 1] : '',
-        required: data?.required.includes(key),
+        required: Array.isArray(data.required) && data.required.includes(key),
       });
     }
 
-    // Todo: need to find a better way to do this
-    result.sort((a: any, b: any) => a.order - b.order);
+    result.sort((a, b) => (a.order || 0) - (b.order || 0));
 
     return result;
   }
