@@ -418,6 +418,9 @@ const SchemaChangeDetailsForm = ({
         maxWidth={false}
         data-testid="dialog"
         title={'Schema Changes'}
+        subTitle={
+          'Accepting the schema changes will not trigger a clear & resync of the connection. This will have to be done manually.'
+        }
         show={showForm}
         handleClose={handleClose}
         handleSubmit={handleSubmit(onSubmit)}
