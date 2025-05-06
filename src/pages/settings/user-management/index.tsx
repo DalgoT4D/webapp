@@ -82,7 +82,7 @@ const UserManagement = () => {
           </TabPanel>
         )}
         <InviteUserForm
-          mutate={() => console.log('mutate here')}
+          mutate={() => setMutateInvitations(true)}
           showForm={showInviteUserForm}
           setShowForm={setShowInviteUserForm}
         />

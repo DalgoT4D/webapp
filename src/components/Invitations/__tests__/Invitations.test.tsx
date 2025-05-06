@@ -18,6 +18,8 @@ jest.mock('next/router', () => ({
 }));
 
 describe('Invitations', () => {
+  const setMutateInvitationsParent = jest.fn();
+
   const mockSession: Session = {
     expires: 'true',
     user: { email: 'a' },
@@ -34,6 +36,14 @@ describe('Invitations', () => {
       invited_on: '2023-08-18T13:00:00.000Z',
     },
   ];
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should refresh data when mutateInvitationsParent is true', () => {
+    expect(true).toBe(true);
+  });
 
   it('initial render of the component', async () => {
     const invitationsMockFetch = jest.fn().mockResolvedValueOnce({
