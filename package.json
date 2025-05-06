@@ -35,7 +35,7 @@
     "eslint-config-next": "^14.2.24",
     "mock-socket": "^9.3.1",
     "moment": "^2.30.1",
-    "next": "^14.2.24",
+    "next": "^14.2.25",
     "next-auth": "^4.24.10",
     "react": "^18.3.1",
     "react-arborist": "^3.4.3",
@@ -48,6 +48,7 @@
     "react-use-websocket": "^4.10.0",
     "reactflow": "^11.11.4",
     "remark-gfm": "^4.0.0",
+    "sharp": "^0.34.1",
     "superset-ui": "^0.0.0-1",
     "swr": "^2.3.0",
     "typescript": "5.8.2",
@@ -77,5 +78,6 @@
   },
   "engines": {
     "node": ">=18.17.0"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
