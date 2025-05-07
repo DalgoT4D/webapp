@@ -45,7 +45,7 @@
     "react-markdown": "^9.1.0",
     "react-papaparse": "^4.4.0",
     "react-resizable": "^3.0.5",
-    "react-use-websocket": "^4.10.0",
+    "react-use-websocket": "^4.13.0",
     "reactflow": "^11.11.4",
     "remark-gfm": "^4.0.0",
     "sharp": "^0.34.1",
