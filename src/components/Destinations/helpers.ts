@@ -105,7 +105,8 @@ export const getTableData = (warehouse: Warehouse, isSuperAdmin: boolean) => {
     {
       label: 'Airbyte Workspace ID',
       value: warehouse.airbyteWorkspaceId,
-      link: isSuperAdmin ? `${airbyteUrl}/${warehouse.airbyteWorkspaceId}` : undefined,
+      link:
+        isSuperAdmin && airbyteUrl ? `${airbyteUrl}/${warehouse.airbyteWorkspaceId}` : undefined,
     },
     {
       label: 'Docker Image Tag',
