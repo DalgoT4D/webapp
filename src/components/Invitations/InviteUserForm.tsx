@@ -18,9 +18,10 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { httpPost } from '@/helpers/http';
 
 interface InviteUserFormProps {
-  mutate: (...args: any) => any;
+  mutate: () => void;
   showForm: boolean;
-  setShowForm: (...args: any) => any;
+  setShowForm: (value: boolean) => void;
+  setMutateInvitationsParent: (value: boolean) => void;
 }
 
 type InviteUserFormInput = {
@@ -28,9 +29,14 @@ type InviteUserFormInput = {
   invited_role_uuid: string;
 };
 
-const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) => {
-  const { data: session }: any = useSession();
-  const { data: roles } = useSWR(`data/roles`);
+const InviteUserForm = ({
+  mutate,
+  showForm,
+  setShowForm,
+  setMutateInvitationsParent,
+}: InviteUserFormProps) => {
+  const { data: session } = useSession();
+  const { data: roles } = useSWR<{ uuid: string; name: string }[]>(`data/roles`);
   const [loading, setLoading] = useState<boolean>(false);
   const globalContext = useContext(GlobalContext);
   const {
@@ -80,12 +86,11 @@ const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) 
                   placeholder="Select role"
                   onChange={(event) => field.onChange(event.target.value)}
                 >
-                  {roles &&
-                    roles.map((role: any) => (
-                      <MenuItem key={role.uuid} value={role.uuid}>
-                        {role.name}
-                      </MenuItem>
-                    ))}
+                  {roles.map((role) => (
+                    <MenuItem key={role.uuid} value={role.uuid}>
+                      {role.name}
+                    </MenuItem>
+                  ))}
                 </Select>
                 {fieldState.error && (
                   <FormHelperText sx={{ color: 'red' }}>{fieldState.error.message}</FormHelperText>
@@ -99,7 +104,7 @@ const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) 
     </>
   );
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: InviteUserFormInput) => {
     setLoading(true);
     try {
       await httpPost(session, 'v1/organizations/users/invite/', {
@@ -107,10 +112,13 @@ const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) 
         invited_role_uuid: data.invited_role_uuid,
       });
       mutate();
+      setMutateInvitationsParent(true); // Trigger parent to refresh invitations
       handleClose();
       successToast('Invitation sent over email', [], globalContext);
-    } catch (err: any) {
-      errorToast(err.message, [], globalContext);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        errorToast(err.message, [], globalContext);
+      }
     }
     setLoading(false);
   };
