@@ -683,6 +683,19 @@ export const Connections = () => {
   };
 
   const updateRows = (data: any) => {
+    if (searchInputRef.current) {
+      const searchValue = searchInputRef.current.value.toLowerCase().trim();
+      if (searchValue !== '') {
+        data = data.filter((conn: any) => {
+          return (
+            conn.name?.toLowerCase().includes(searchValue) ||
+            conn.source?.sourceName?.toLowerCase().includes(searchValue) ||
+            conn.destination?.destinationName?.toLowerCase().includes(searchValue)
+          );
+        });
+      }
+    }
+
     if (data && data.length > 0) {
       const tempRows = data.map((connection: any) => [
         <Box key={`name-${connection.blockId}`} sx={{ display: 'flex', alignItems: 'center' }}>
@@ -731,12 +744,7 @@ export const Connections = () => {
         updatedData = await httpGet(session, 'airbyte/v1/connections');
         isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
         await delay(3000);
-
-        if (searchInputRef.current) {
-          onSearchValueChange(searchInputRef.current.value, updatedData);
-        } else {
-          updateRows(updatedData);
-        }
+        updateRows(updatedData);
       }
     } catch (error) {
       console.log(error);
@@ -750,24 +758,6 @@ export const Connections = () => {
       pollForConnectionsLockAndRefreshRows();
     }
   }, [session, data]);
-
-  const onSearchValueChange = (value: string, data: any[]) => {
-    if (!data) return;
-
-    const lower = value.toLowerCase().trim();
-    if (lower === '') {
-      updateRows(data);
-    } else {
-      const filtered = data.filter((conn: any) => {
-        return (
-          conn.name?.toLowerCase().includes(lower) ||
-          conn.source?.sourceName?.toLowerCase().includes(lower) ||
-          conn.destination?.destinationName?.toLowerCase().includes(lower)
-        );
-      });
-      updateRows(filtered);
-    }
-  };
 
   const handleClickOpen = () => {
     setShowDialog(true);
@@ -867,7 +857,7 @@ export const Connections = () => {
             variant="outlined"
             size="small"
             inputRef={searchInputRef}
-            onChange={(e) => onSearchValueChange(e.target.value, data)}
+            onChange={() => updateRows(data)}
             sx={{ width: 300 }}
           />
           <Button
