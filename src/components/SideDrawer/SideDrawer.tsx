@@ -330,7 +330,7 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
               </svg>
             </Box>
           </Link>
-          <Link href="https://dalgo.in/privacy-policy/" target="_blank">
+          <Link href="https://dalgo.org/privacy-policy/" target="_blank">
             <Box
               sx={{
                 display: 'flex',
