@@ -190,7 +190,7 @@ export const SignUp = () => {
             <Box sx={{ mt: 1, textAlign: 'center' }}>
               Need a signup code?{' '}
               <Link
-                href="https://dalgo.in/contact-us/"
+                href="https://dalgo.org/contact-us/"
                 target="_blank"
                 sx={{ textDecoration: 'none' }}
               >
