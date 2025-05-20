@@ -52,9 +52,11 @@ export const DBTSetup = ({
   const [setupStatus, setSetupStatus] = useState('not-started');
   const [failureMessage, setFailureMessage] = useState(null);
   const toastContext = useContext(GlobalContext);
+  const [loading, setLoading] = useState(false);
 
   const checkProgress = async function (taskId: string, hashKeyPrefix: string) {
     try {
+      setLoading(true);
       const orgSlug = toastContext?.CurrentOrg.state.slug;
       const hashKey = `${hashKeyPrefix}-${orgSlug}`;
       const message = await httpGet(session, `tasks/${taskId}?hashkey=${hashKey}`);
@@ -74,14 +76,18 @@ export const DBTSetup = ({
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    setValue('gitrepoUrl', gitrepoUrl);
-    setValue('gitrepoAccessToken', gitrepoAccessToken);
-    setValue('schema', schema);
-  }, [gitrepoUrl, gitrepoAccessToken, schema]);
+    if (showDialog) {
+      setValue('gitrepoUrl', gitrepoUrl);
+      setValue('gitrepoAccessToken', gitrepoAccessToken);
+      setValue('schema', schema);
+    }
+  }, [showDialog, gitrepoUrl, gitrepoAccessToken, schema]);
 
   useEffect(() => {
     setLogs(
@@ -109,13 +115,20 @@ export const DBTSetup = ({
   }, [setupStatus]);
 
   const onSubmit = async (data: DBTCreateWorkspaceParams) => {
-    handleClose();
-
-    if (mode === 'create') {
-      setSetupStatus('started');
-      createWorkspace(data);
-    } else {
-      editWorkspace(data);
+    try {
+      setLoading(true);
+      if (mode === 'create') {
+        setSetupStatus('started');
+        await createWorkspace(data);
+      } else {
+        await editWorkspace(data);
+      }
+      handleClose();
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], toastContext);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -138,11 +151,12 @@ export const DBTSetup = ({
     try {
       const message = await httpPost(session, 'dbt/workspace/', payload);
       await delay(1000);
-      checkProgress(message.task_id, 'setup-dbt-workspace');
+      await checkProgress(message.task_id, 'setup-dbt-workspace');
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], toastContext);
       setSetupStatus('failed');
+      throw err;
     }
   };
 
@@ -161,7 +175,7 @@ export const DBTSetup = ({
         console.error(err);
         errorToast(err.message, [], toastContext);
         setSetupStatus('failed');
-        return;
+        throw err;
       }
     }
     if (data.gitrepoUrl) {
@@ -206,11 +220,12 @@ export const DBTSetup = ({
         schema = data.schema;
         await delay(1000);
 
-        checkProgress(message.task_id, 'clone-github-repo');
+        await checkProgress(message.task_id, 'clone-github-repo');
       } catch (err: any) {
         console.error(err);
         errorToast(err.message, [], toastContext);
         setSetupStatus('failed');
+        throw err;
       }
     } else {
       setSetupStatus('completed');
@@ -288,6 +303,7 @@ export const DBTSetup = ({
             </Button>
           </>
         }
+        loading={loading}
       ></CustomDialog>
     </>
   );

@@ -18,6 +18,8 @@ export const usageDashboardId = process.env.NEXT_PUBLIC_USAGE_DASHBOARD_ID;
 
 export const usageDashboardDomain = process.env.NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN;
 
+export const airbyteUrl = process.env.NEXT_PUBLIC_AIRBYTE_URL;
+
 // Master task slugs
 export const TASK_DBTRUN = 'dbt-run';
 export const TASK_DBTTEST = 'dbt-test';
