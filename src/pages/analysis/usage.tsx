@@ -70,7 +70,7 @@ export default function Usage() {
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
               <Typography variant="h6">
                 Please contact the Dalgo team at{' '}
-                <a href="mailto:support@dalgo.in">support@dalgo.in</a> for more information
+                <a href="mailto:support@dalgo.org">support@dalgo.org</a> for more information
               </Typography>
             </Box>
           </>

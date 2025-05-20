@@ -1,5 +1,5 @@
 import { Warehouse, WarehouseTableRow } from './Destinations';
-
+import { airbyteUrl } from '@/config/constant';
 export const getTableData = (warehouse: Warehouse, isSuperAdmin: boolean) => {
   let tableData: WarehouseTableRow[] = [];
 
@@ -105,9 +105,8 @@ export const getTableData = (warehouse: Warehouse, isSuperAdmin: boolean) => {
     {
       label: 'Airbyte Workspace ID',
       value: warehouse.airbyteWorkspaceId,
-      link: isSuperAdmin
-        ? `http://localhost:8000/workspaces/${warehouse.airbyteWorkspaceId}`
-        : undefined,
+      link:
+        isSuperAdmin && airbyteUrl ? `${airbyteUrl}/${warehouse.airbyteWorkspaceId}` : undefined,
     },
     {
       label: 'Docker Image Tag',
