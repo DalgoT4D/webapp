@@ -20,6 +20,7 @@ export type FlowRun = {
   lastRun: string;
   startTime: string | null;
   expectedStartTime: string;
+  orguser: string | null;
 };
 
 interface SingleFlowRunHistoryProps {

@@ -25,7 +25,7 @@ import DownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 import moment from 'moment';
 import { FlowInterface } from './Flows';
-import { delay, formatDuration } from '@/utils/common';
+import { delay, formatDuration, trimEmail } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionSyncHistory';
 import { defaultLoadMoreLimit, flowRunLogsOffsetLimit } from '@/config/constant';
 import { errorToast } from '../ToastMessage/ToastHelper';
@@ -87,6 +87,7 @@ interface DeploymentObject {
   deployment_id: string;
   expectedStartTime: string;
   id: string;
+  orguser: string | null;
   runs: RunObject[];
   name: string;
   startTime: string;
@@ -284,6 +285,17 @@ const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }
 };
 
 const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
+  const flowRunStartTime = logDetail.startTime;
+  let flowRunStartedBy = null;
+  // we started recording manual triggering of flow-runs on 2025-05-20
+  if (flowRunStartTime && flowRunStartTime >= '2025-05-20T00:00:00.0+00:00') {
+    if (logDetail.orguser) {
+      flowRunStartedBy = trimEmail(logDetail.orguser);
+    } else {
+      flowRunStartedBy = 'System';
+    }
+  }
+
   return (
     <>
       <TableRow
@@ -304,6 +316,11 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
           }}
         >
           {moment(logDetail.startTime).format('MMMM D, YYYY')}
+          {flowRunStartedBy && (
+            <Typography fontWeight={600} component="p">
+              By: <strong>{flowRunStartedBy}</strong>
+            </Typography>
+          )}
         </TableCell>
 
         <TableCell
