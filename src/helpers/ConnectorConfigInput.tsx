@@ -28,11 +28,16 @@ class ConnectorConfigInput {
 
   constructor(type: string, data: ConnectorSpecificationsObject) {
     this.type = type;
-    this.specsData = { ...data };
+    this.specsData = { ...data }; //1.called first and contains all the spec definitions full object.
     this.specsToRender = [];
+    console.log(this.specsData, 'this.specsData');
   }
-
+  /**
+   *
+   * This block run fine.
+   */
   setValidOrderToAllProperties() {
+    //1. first to be called.
     // set order to all properties if not present
     const dataProperties: any = this.specsData['properties'];
     let maxOrder = -1;
@@ -40,9 +45,9 @@ class ConnectorConfigInput {
     if (dataProperties) {
       // specs get jumbled when we render them by order and the order starts with 0. So we increment by 1 to start ordering from 1
       for (const key of Object.keys(dataProperties)) {
-        const value: any = dataProperties[key];
+        const value: any = dataProperties[key]; //[constains array of keys name].
         dataProperties[key]['order'] = value?.order >= 0 ? value.order + 1 : -1;
-        if (dataProperties[key]['order'] > maxOrder) maxOrder = dataProperties[key]['order'];
+        if (dataProperties[key]['order'] > maxOrder) maxOrder = dataProperties[key]['order']; //so if value.order is 0,then it becomes 1, then maxOrder will be 1.
       }
     }
 
@@ -58,6 +63,7 @@ class ConnectorConfigInput {
   }
 
   setOrderToChildProperties() {
+    console.log(this.specsData, 'this.specsData');
     ConnectorConfigInput.traverseSpecsToSetOrder(this.specsData, { count: 0 });
 
     return this.specsData;

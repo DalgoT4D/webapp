@@ -2,6 +2,7 @@
   "name": "dalgo-webapp",
   "version": "2.2.1",
   "private": true,
+  "type": "commonjs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
