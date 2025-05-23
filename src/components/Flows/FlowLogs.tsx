@@ -24,7 +24,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import DownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 import moment from 'moment';
-import { FlowInterface } from './Flows';
+import { FlowInterface, getFlowRunStartedBy } from './Flows';
 import { delay, formatDuration, trimEmail } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionSyncHistory';
 import { defaultLoadMoreLimit, flowRunLogsOffsetLimit } from '@/config/constant';
@@ -285,16 +285,7 @@ const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }
 };
 
 const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
-  const flowRunStartTime = logDetail.startTime;
-  let flowRunStartedBy = null;
-  // we started recording manual triggering of flow-runs on 2025-05-20
-  if (flowRunStartTime && flowRunStartTime >= '2025-05-20T00:00:00.0+00:00') {
-    if (logDetail.orguser) {
-      flowRunStartedBy = trimEmail(logDetail.orguser);
-    } else {
-      flowRunStartedBy = 'System';
-    }
-  }
+  const flowRunStartedBy = getFlowRunStartedBy(logDetail.startTime, logDetail.orguser || 'System');
 
   return (
     <>
