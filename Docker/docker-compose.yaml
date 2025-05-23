@@ -1,6 +1,6 @@
 services:
   app:
-    image: test_app:latest
+    image: image_name:tagname #replace with the correct tag
     restart: always
     environment:
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
