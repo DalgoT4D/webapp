@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    image: image_name:tag #replace the value with proper tag
+    build:
+      context: ../
+      dockerfile: Docker/Dockerfile.dev
+    container_name: container_name #replace the value with container name
+    restart: always
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXT_PUBLIC_WEBSOCKET_URL=${NEXT_PUBLIC_WEBSOCKET_URL}
+      - NEXT_PUBLIC_USAGE_DASHBOARD_ID=${NEXT_PUBLIC_USAGE_DASHBOARD_ID}
+      - NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN=${NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN}
+      - NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA=${NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA}
+      - CYPRESS_BASE_URL=${CYPRESS_BASE_URL}
+      - NEXT_PUBLIC_DEMO_WALKTHROUGH_ENABLED=${NEXT_PUBLIC_DEMO_WALKTHROUGH_ENABLED}
+      - NEXT_PUBLIC_SHOW_ELEMENTARY_MENU=${NEXT_PUBLIC_SHOW_ELEMENTARY_MENU}
+      - NEXT_PUBLIC_SHOW_DATA_INSIGHTS_TAB=${NEXT_PUBLIC_SHOW_DATA_INSIGHTS_TAB}
+      - NEXT_PUBLIC_SHOW_DATA_ANALYSIS_TAB=${NEXT_PUBLIC_SHOW_DATA_ANALYSIS_TAB}
+      - NEXT_PUBLIC_SHOW_SUPERSET_USAGE_TAB=${NEXT_PUBLIC_SHOW_SUPERSET_USAGE_TAB}
+      - NEXT_PUBLIC_SHOW_SUPERSET_ANALYSIS_TAB=${NEXT_PUBLIC_SHOW_SUPERSET_ANALYSIS_TAB}
+      - NEXT_PUBLIC_AIRBYTE_URL=${NEXT_PUBLIC_AIRBYTE_URL}
+      - NEXT_PUBLIC_DALGO_WHITELIST_IPS=${NEXT_PUBLIC_DALGO_WHITELIST_IPS}
+    ports:
+      - '3000:3000'
+    volumes:
+      - ../:/app
+      - /app/node_modules
+    networks:
+      - dalgo-network
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+networks:
+  dalgo-network:
+    driver: bridge
