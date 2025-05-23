@@ -54,14 +54,19 @@ Make sure you have docker and docker compose installed.
 - Install [docker](https://docs.docker.com/engine/install/)
 - Install [docker compose](https://docs.docker.com/compose/install/)
 
-### Step 1: Copy .env file to Dcoker folder
+### Step 1: Copy .env file to Docker folder
 
 ### Step 2: Build the Docker image
 
 All the variables with NEXT_PUBLIC prefix need to be added to the build command. This is because we are running the application as standalone mode
-
-`docker build -f Docker/Dockerfile --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg NEXT_PUBLIC_BACKEND_URL="<url of django backend>" -t dalgo_frontend:0.1 .`
+Run the script: 
+```bash
+bash docker-build.sh "image_name:tag"
+```
+Once the image is built, add that image_name:tag to the Docker/docker-compose.yaml file
 
 ### Step 3: Start the application
-
-`docker compose -f Docker/docker-compose.yaml --env-file .env up`
+Run the script:
+```bash
+bash docker-compose.sh
+```
