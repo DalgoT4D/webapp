@@ -58,7 +58,7 @@ Make sure you have docker and docker compose installed.
 
 ### Step 2: Build the Docker image
 
-All the variables with NEXT_PUBLIC prefix need to be added to the build command. This is because we are running the application as standalone mode
+The env varibales will be picked up from the .env file during the yarn build stage. This will copy all the env variables starting with NEXT_PUBLIC_ (that get embedd into the javascript code). The env varibales starting without NEXT_PUBLIC_ will be picked up during run time. 
 Run the script: 
 ```bash
 bash docker-build.sh "image_name:tag"
