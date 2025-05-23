@@ -2,11 +2,11 @@ version: '3.8'
 
 services:
   app:
-    image: dalgo/frontend:dev
+    image: image_name:tag #replace the value with proper tag
     build:
       context: ../
       dockerfile: Docker/Dockerfile.dev
-    container_name: dalgo-frontend
+    container_name: container_name #replace the value with container name
     restart: always
     environment:
       - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
@@ -24,10 +24,7 @@ services:
       - NEXT_PUBLIC_SHOW_SUPERSET_USAGE_TAB=${NEXT_PUBLIC_SHOW_SUPERSET_USAGE_TAB}
       - NEXT_PUBLIC_SHOW_SUPERSET_ANALYSIS_TAB=${NEXT_PUBLIC_SHOW_SUPERSET_ANALYSIS_TAB}
       - NEXT_PUBLIC_AIRBYTE_URL=${NEXT_PUBLIC_AIRBYTE_URL}
-      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
-      - NEXT_PUBLIC_AMPLITUDE_ENV=${NEXT_PUBLIC_AMPLITUDE_ENV}
       - NEXT_PUBLIC_DALGO_WHITELIST_IPS=${NEXT_PUBLIC_DALGO_WHITELIST_IPS}
-      - NEXT_TELEMETRY_DISABLED=1
     ports:
       - '3000:3000'
     volumes:
