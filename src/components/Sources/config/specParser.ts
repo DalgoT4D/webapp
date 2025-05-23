@@ -70,11 +70,14 @@ function parseOneOfField(
     const optionRequired = Array.isArray(option.required) ? option.required : [];
     const optionFields = parseProperties(option.properties, path, optionRequired);
 
-    // Filter out the const field that we used for the enum
-    const relevantFields = optionFields.filter(
-      (field) =>
-        !Object.values(option.properties).find((p) => p.const && field.path.includes(p.const))
-    );
+    // Filter out the const field and any fields that match the parent key
+    const relevantFields = optionFields.filter((field) => {
+      const isConstField = Object.values(option.properties).find(
+        (p) => p.const && field.path.includes(p.const)
+      );
+      const isParentField = field.path[field.path.length - 1] === key;
+      return !isConstField && !isParentField;
+    });
 
     // Add parent value to each sub-field
     relevantFields.forEach((field) => {
