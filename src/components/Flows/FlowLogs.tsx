@@ -309,7 +309,10 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
           {moment(logDetail.startTime).format('MMMM D, YYYY')}
           {flowRunStartedBy && (
             <Typography fontWeight={600} component="p">
-              By: <strong>{flowRunStartedBy}</strong>
+              By:{' '}
+              <strong style={{ color: flowRunStartedBy === 'System' ? '#333333' : '#DAA520' }}>
+                {flowRunStartedBy}
+              </strong>
             </Typography>
           )}
         </TableCell>
