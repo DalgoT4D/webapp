@@ -76,6 +76,7 @@ function parseOneOfField(
         !Object.values(option.properties).find((p) => p.const && field.path.includes(p.const))
     );
 
+    // Add parent value to each sub-field
     relevantFields.forEach((field) => {
       field.parentValue = constProp?.const;
       subFields.push(field);

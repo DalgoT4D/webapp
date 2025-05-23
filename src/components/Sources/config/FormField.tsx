@@ -26,7 +26,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   // Only show field if it has no parent value or matches parent value
-  if (field.parentValue && field.parentValue !== parentValue) {
+  if (field.parentValue !== undefined && field.parentValue !== parentValue) {
     return null;
   }
 
@@ -44,6 +44,53 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
     );
   };
 
+  // Handle oneOf fields (dropdowns/radio buttons)
+  if (field.type === 'object' && field.enum) {
+    return (
+      <Box sx={{ mb: 2 }}>
+        <Controller
+          name={fieldPath}
+          control={control}
+          defaultValue={field.default}
+          rules={{ required: field.required && `${field.title} is required` }}
+          render={({ field: { value, onChange }, fieldState: { error } }) => (
+            <>
+              <Autocomplete
+                value={value}
+                onChange={(_, newValue) => onChange(newValue)}
+                options={field.enum || []}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={label}
+                    error={!!error}
+                    helperText={error?.message}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {renderDescription()}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+              {/* Render sub-fields if they exist and match the selected value */}
+              {field.subFields?.map((subField) => (
+                <Box key={subField.id} sx={{ mt: 2, ml: 2 }}>
+                  <FormField field={subField} parentValue={value} />
+                </Box>
+              ))}
+            </>
+          )}
+        />
+      </Box>
+    );
+  }
+
+  // Handle boolean fields
   if (field.type === 'boolean') {
     return (
       <Box sx={{ mb: 2 }}>
@@ -67,43 +114,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
     );
   }
 
-  if (field.type === 'object' && field.enum) {
-    return (
-      <Box sx={{ mb: 2 }}>
-        <Controller
-          name={fieldPath}
-          control={control}
-          defaultValue={field.default}
-          rules={{ required: field.required && `${field.title} is required` }}
-          render={({ field: { value, onChange }, fieldState: { error } }) => (
-            <Autocomplete
-              value={value}
-              onChange={(_, newValue) => onChange(newValue)}
-              options={field.enum || []}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={label}
-                  error={!!error}
-                  helperText={error?.message}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {renderDescription()}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-            />
-          )}
-        />
-      </Box>
-    );
-  }
-
+  // Handle array fields
   if (field.type === 'array') {
     return (
       <Box sx={{ mb: 2 }}>
@@ -143,7 +154,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
     );
   }
 
-  // Default to text input for strings and numbers
+  // Handle basic fields (text, number, password)
   return (
     <Box sx={{ mb: 2 }}>
       <Controller
