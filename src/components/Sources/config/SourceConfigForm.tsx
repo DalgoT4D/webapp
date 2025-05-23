@@ -29,7 +29,7 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
     setFieldGroups(groups);
   }, [spec]);
 
-  // Watch for changes in oneOf fields to control visibility of dependent fields
+  // Watch for changes in form values
   useEffect(() => {
     const subscription = methods.watch((value) => {
       // Find all object fields with enums (oneOf fields)
@@ -59,7 +59,7 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
     <FormProvider {...methods}>
       <Box>
         {fieldGroups.map((group) => (
-          <FormGroup key={group.id} group={group} selectedValue={selectedValues[group.id]} />
+          <FormGroup key={group.id} group={group} selectedValues={selectedValues} />
         ))}
       </Box>
     </FormProvider>
