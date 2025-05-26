@@ -1,0 +1,22 @@
+FROM node:23-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install necessary packages
+RUN apk add --no-cache libc6-compat bash
+
+# Copy only package files first (for caching)
+COPY package.json yarn.lock ./
+
+# Install dependencies
+RUN yarn install --frozen-lockfile --network-timeout 1000000
+
+# Copy the rest of your app source code
+COPY . .
+
+# Expose port 3000
+EXPOSE 3000
+
+# Run next dev for hot reload
+CMD ["yarn", "dev"]
