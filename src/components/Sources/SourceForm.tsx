@@ -132,7 +132,7 @@ const SourceForm = ({
           // Prefill the source config
           if (sourceId) {
             ConnectorConfigInput.prefillFormFields(
-              source.connectionConfiguration,
+              source?.connectionConfiguration || {},
               'config',
               setValue
             );
@@ -143,16 +143,20 @@ const SourceForm = ({
 
           if (sourceId) {
             specsConfigFields = connectorConfigInput.updateSpecsToRender(
-              source.connectionConfiguration
+              source?.connectionConfiguration || {}
             );
           } else {
-            specsConfigFields.forEach((spec: any) => setValue(spec.field, spec.default));
+            specsConfigFields.forEach((spec: any) => {
+              if (spec.default !== undefined) {
+                setValue(spec.field, spec.default);
+              }
+            });
           }
 
           setSourceDefSpecs(specsConfigFields);
         } catch (err: any) {
-          console.error(err);
-          errorToast(err.message, [], globalContext);
+          console.error('Error fetching specifications:', err);
+          errorToast('Failed to fetch source specifications. Please try again.', [], globalContext);
         }
       })();
     }
