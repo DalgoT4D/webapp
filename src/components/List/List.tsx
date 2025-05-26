@@ -23,6 +23,10 @@ interface ListProps {
   rowValues?: Array<Array<any>>;
 }
 
+interface ListComponentProps extends Pick<ListProps, 'headers' | 'height'> {
+  row: any;
+}
+
 export const List = ({
   title,
   openDialog,
@@ -106,36 +110,7 @@ export const List = ({
             </TableHead>
             <TableBody>
               {orderedRows.map((row: any, idx: number) => (
-                <TableRow
-                  key={idx}
-                  sx={{
-                    '&:last-child td, &:last-child th': { border: 0 },
-                    ...(height && { height }),
-                  }}
-                >
-                  {row.map(
-                    // if action is sent render with right align
-                    (column: any, idx: number) => (
-                      <TableCell
-                        key={idx}
-                        align={
-                          headers.values.length + 1 === row.length && idx === row.length - 1
-                            ? 'right'
-                            : 'left'
-                        }
-                      >
-                        {column}
-                      </TableCell>
-                    )
-                  )}
-                  {headers.values.length + 1 !== row.length ? ( // if actions is not sent render some text
-                    <TableCell sx={{ p: 1 }} align="right">
-                      Actions
-                    </TableCell>
-                  ) : (
-                    ''
-                  )}
-                </TableRow>
+                <ListComponent key={idx} row={row} height={height} headers={headers} />
               ))}
             </TableBody>
           </Table>
@@ -148,3 +123,34 @@ export const List = ({
     </>
   );
 };
+
+const ListComponent = React.memo(function ListComponent({
+  row,
+  height,
+  headers,
+}: ListComponentProps) {
+  // Calculate whether actions are included in the row data
+  const hasActionColumn = headers.values.length + 1 === row.length;
+
+  return (
+    <TableRow
+      sx={{
+        '&:last-child td, &:last-child th': { border: 0 },
+        ...(height && { height }),
+      }}
+    >
+      {row.map((column: any, idx: number) => (
+        <TableCell key={idx} align={hasActionColumn && idx === row.length - 1 ? 'right' : 'left'}>
+          {column}
+        </TableCell>
+      ))}
+
+      {/* Only render Actions cell if not included in row data */}
+      {!hasActionColumn && (
+        <TableCell sx={{ p: 1 }} align="right">
+          Actions
+        </TableCell>
+      )}
+    </TableRow>
+  );
+});
