@@ -32,11 +32,19 @@ function parseProperties(
   const fields: FormField[] = [];
 
   for (const [key, prop] of Object.entries(properties)) {
+    // Skip hidden fields
+    if (prop.airbyte_hidden) {
+      continue;
+    }
+
     const path = [...parentPath, key];
 
     if (prop.oneOf) {
       // Handle oneOf fields (usually dropdowns/radio buttons)
       fields.push(parseOneOfField(key, prop, path, required.includes(key)));
+    } else if (prop.type === 'array' && prop.items) {
+      // Handle array fields with complex items
+      fields.push(parseArrayField(key, prop, path, required.includes(key)));
     } else if (prop.type === 'object' && prop.properties) {
       // Recursively handle nested objects
       const nestedRequired = Array.isArray(prop.required) ? prop.required : [];
@@ -107,9 +115,40 @@ function parseOneOfField(
     title: prop.title || key,
     description: prop.description,
     required: isRequired,
+    hidden: prop.airbyte_hidden, // Track hidden fields
     displayType: prop.display_type || 'dropdown',
     enum: enumOptions.map((option) => option.value), // Keep simple array for backward compatibility
     enumOptions, // Store full option details for better rendering
+    subFields,
+    order: prop.order || 0,
+    group: prop.group,
+  };
+}
+
+function parseArrayField(
+  key: string,
+  prop: AirbyteProperty,
+  path: string[],
+  isRequired: boolean
+): FormField {
+  let subFields: FormField[] = [];
+
+  // If array items are objects with properties, parse them
+  if (prop.items?.type === 'object' && prop.items.properties) {
+    const itemRequired = Array.isArray(prop.items.required) ? prop.items.required : [];
+    subFields = parseProperties(prop.items.properties, [...path, '0'], itemRequired);
+  }
+
+  return {
+    id: path.join('.'),
+    type: 'array',
+    path,
+    title: prop.title || key,
+    description: prop.description,
+    required: isRequired,
+    hidden: prop.airbyte_hidden, // Track hidden fields
+    default: prop.default || [],
+    itemType: prop.items?.type || 'string',
     subFields,
     order: prop.order || 0,
     group: prop.group,
@@ -130,6 +169,7 @@ function parseBasicField(
     description: prop.description,
     required: isRequired,
     secret: prop.airbyte_secret,
+    hidden: prop.airbyte_hidden, // Track hidden fields
     default: prop.default,
     examples: prop.examples,
     pattern: prop.pattern,
