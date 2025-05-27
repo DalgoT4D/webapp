@@ -64,6 +64,9 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
                       result[nestedPath] = itemValue[subKey];
                     }
                   });
+
+                  // Recursively process nested objects for deeply nested structures
+                  processObject(itemValue, `${fullKey}.${index}.${itemKey}`);
                 }
               });
 

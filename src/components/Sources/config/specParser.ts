@@ -90,12 +90,24 @@ function parseOneOfField(
         if (propKey === constKey) return;
 
         const subFieldPath = [...path, propKey];
-        const subField = parseBasicField(
-          propKey,
-          propDef,
-          subFieldPath,
-          optionRequired.includes(propKey)
-        );
+
+        // Handle nested oneOf fields recursively
+        let subField: FormField;
+        if (propDef.oneOf) {
+          subField = parseOneOfField(
+            propKey,
+            propDef,
+            subFieldPath,
+            optionRequired.includes(propKey)
+          );
+        } else {
+          subField = parseBasicField(
+            propKey,
+            propDef,
+            subFieldPath,
+            optionRequired.includes(propKey)
+          );
+        }
 
         // Add parent value to identify which option this sub-field belongs to
         subField.parentValue = constValue;
@@ -106,6 +118,25 @@ function parseOneOfField(
         subFields.push(subField);
       });
     }
+  });
+
+  // Sort sub-fields: first by order (if specified), then alphabetically by title
+  subFields.sort((a, b) => {
+    // Group by parent value first to keep related fields together
+    if (a.parentValue !== b.parentValue) {
+      return 0; // Don't change order between different parent values
+    }
+
+    // Within the same parent value, sort by order first
+    const orderA = a.order || 999;
+    const orderB = b.order || 999;
+
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    // If same order (or both undefined), sort alphabetically by title
+    return (a.title || '').localeCompare(b.title || '');
   });
 
   return {
@@ -137,6 +168,19 @@ function parseArrayField(
   if (prop.items?.type === 'object' && prop.items.properties) {
     const itemRequired = Array.isArray(prop.items.required) ? prop.items.required : [];
     subFields = parseProperties(prop.items.properties, [...path, '0'], itemRequired);
+
+    // Sort sub-fields: first by order (if specified), then alphabetically by title
+    subFields.sort((a, b) => {
+      const orderA = a.order || 999;
+      const orderB = b.order || 999;
+
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+
+      // If same order (or both undefined), sort alphabetically by title
+      return (a.title || '').localeCompare(b.title || '');
+    });
   }
 
   return {
