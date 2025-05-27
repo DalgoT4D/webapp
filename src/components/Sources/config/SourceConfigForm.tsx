@@ -19,8 +19,33 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
   const [fieldGroups, setFieldGroups] = useState<FieldGroup[]>([]);
   const [selectedValues, setSelectedValues] = useState<Record<string, any>>({});
 
+  // Simple function to extract const values from objects for oneOf fields
+  const extractConstValues = (values: Record<string, any>): Record<string, any> => {
+    const result = { ...values };
+
+    Object.keys(values).forEach((key) => {
+      const value = values[key];
+      if (typeof value === 'object' && value !== null) {
+        // For objects, check if they have common const field names
+        if (value.cluster_type) result[key] = value.cluster_type;
+        if (value.auth_type) result[key] = value.auth_type;
+        if (value.method) result[key] = value.method;
+        // Add other common const field patterns as needed
+
+        // Also flatten the object properties to the form level
+        Object.keys(value).forEach((subKey) => {
+          if (subKey !== 'cluster_type' && subKey !== 'auth_type' && subKey !== 'method') {
+            result[`${key}.${subKey}`] = value[subKey];
+          }
+        });
+      }
+    });
+
+    return result;
+  };
+
   const methods = useForm({
-    defaultValues: initialValues,
+    defaultValues: extractConstValues(initialValues),
   });
 
   // Parse spec into field groups
