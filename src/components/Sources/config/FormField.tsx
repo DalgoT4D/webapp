@@ -66,7 +66,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
             let selectedValue = value;
 
             if (typeof value === 'object' && value !== null) {
-              // Try to find the const value in the object
+              // Try to find the const value in the object by checking each enum option
               const constValue = field.enum?.find((enumVal) => {
                 // Check if this enum value exists as a property value in the object
                 return Object.values(value).includes(enumVal);
@@ -81,14 +81,25 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                   onChange={(_, newValue) => {
                     // When a value is selected, we need to create the proper object structure
                     if (newValue) {
-                      // Find the option details if available
+                      // For simple oneOf fields, just set the const value
+                      // For complex oneOf fields with defaults, we might need to set more
                       const optionDetails = field.enumOptions?.find(
                         (opt) => opt.value === newValue
                       );
 
-                      // Create an object with the const field
-                      // For oneOf fields, we typically need to set the const value in the correct property
-                      onChange(newValue);
+                      // Check if this field has defaults by looking at existing subFields
+                      const hasSubFields = field.subFields?.some(
+                        (sf) => sf.parentValue === newValue
+                      );
+
+                      if (hasSubFields) {
+                        // For complex fields like header_definition, set just the const value for now
+                        // The sub-fields will handle their own values
+                        onChange(newValue);
+                      } else {
+                        // For simple const-only fields, just set the value
+                        onChange(newValue);
+                      }
                     } else {
                       onChange(null);
                     }
