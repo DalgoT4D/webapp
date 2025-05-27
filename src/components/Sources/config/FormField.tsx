@@ -38,7 +38,9 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
   }
 
   const fieldPath = field.path.join('.');
-  const label = `${field.title}${field.required ? '*' : ''}`;
+
+  // Create simple string label with optional text
+  const label = `${field.title}${field.required ? '*' : ' (optional)'}`;
 
   const renderDescription = () => {
     if (!field.description) return null;
@@ -50,6 +52,26 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
       </Tooltip>
     );
   };
+
+  // Component to wrap child fields in a nice visual container
+  const ChildFieldsContainer: React.FC<{ children: React.ReactNode; title?: React.ReactNode }> = ({
+    children,
+    title,
+  }) => (
+    <Box
+      sx={{
+        mt: 2,
+        p: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 1,
+        backgroundColor: 'grey.50',
+        position: 'relative',
+      }}
+    >
+      {children}
+    </Box>
+  );
 
   // Handle oneOf fields (dropdowns/radio buttons)
   if (field.type === 'object' && field.enum) {
@@ -129,11 +151,17 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                   )}
                 />
                 {/* Render sub-fields if they exist and match the selected value */}
-                {field.subFields?.map((subField) => (
-                  <Box key={subField.id} sx={{ mt: 2, ml: 2 }}>
-                    <FormField field={subField} parentValue={selectedValue} />
-                  </Box>
-                ))}
+                {field.subFields && field.subFields.length > 0 && selectedValue && (
+                  <ChildFieldsContainer
+                    title={`${field.enumOptions?.find((opt) => opt.value === selectedValue)?.title || selectedValue} Configuration`}
+                  >
+                    {field.subFields
+                      .filter((subField) => subField.parentValue === selectedValue)
+                      .map((subField) => (
+                        <FormField key={subField.id} field={subField} parentValue={selectedValue} />
+                      ))}
+                  </ChildFieldsContainer>
+                )}
               </>
             );
           }}
@@ -251,26 +279,26 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                 )}
 
                 {items.map((item: any, index: number) => (
-                  <Box
+                  <ChildFieldsContainer
                     key={index}
-                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 2, mb: 2 }}
+                    title={
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          width: '100%',
+                        }}
+                      >
+                        <Typography variant="subtitle2" component="span">
+                          {field.title?.replace(/s$/, '') || 'Item'} {index + 1}
+                        </Typography>
+                        <Button onClick={() => removeItem(index)} color="error" size="small">
+                          Remove
+                        </Button>
+                      </Box>
+                    }
                   >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        mb: 2,
-                      }}
-                    >
-                      <Typography variant="subtitle2">
-                        {field.title?.replace(/s$/, '') || 'Item'} {index + 1}
-                      </Typography>
-                      <Button onClick={() => removeItem(index)} color="error" size="small">
-                        Remove
-                      </Button>
-                    </Box>
-
                     {field.subFields?.map((subField) => {
                       // Create a new field with updated path for this array index
                       const indexedField = {
@@ -291,7 +319,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                         />
                       );
                     })}
-                  </Box>
+                  </ChildFieldsContainer>
                 ))}
 
                 {items.length === 0 && (
