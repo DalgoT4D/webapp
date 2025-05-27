@@ -24,7 +24,6 @@ interface FormFieldProps {
 export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
   const { control } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
-
   // Only show field if it has no parent value or matches parent value
   if (field.parentValue !== undefined && field.parentValue !== parentValue) {
     return null;
@@ -53,38 +52,72 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
           control={control}
           defaultValue={field.default}
           rules={{ required: field.required && `${field.title} is required` }}
-          render={({ field: { value, onChange }, fieldState: { error } }) => (
-            <>
-              <Autocomplete
-                value={value}
-                onChange={(_, newValue) => onChange(newValue)}
-                options={field.enum || []}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={label}
-                    error={!!error}
-                    helperText={error?.message}
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {renderDescription()}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-              {/* Render sub-fields if they exist and match the selected value */}
-              {field.subFields?.map((subField) => (
-                <Box key={subField.id} sx={{ mt: 2, ml: 2 }}>
-                  <FormField field={subField} parentValue={value} />
-                </Box>
-              ))}
-            </>
-          )}
+          render={({ field: { value, onChange }, fieldState: { error } }) => {
+            // For oneOf fields, the value might be an object with the const value
+            // We need to extract the const value to match against our enum
+            let selectedValue = value;
+
+            if (typeof value === 'object' && value !== null) {
+              // Try to find the const value in the object
+              const constValue = field.enum?.find((enumVal) => {
+                // Check if this enum value exists as a property value in the object
+                return Object.values(value).includes(enumVal);
+              });
+              selectedValue = constValue || null;
+            }
+
+            return (
+              <>
+                <Autocomplete
+                  value={selectedValue}
+                  onChange={(_, newValue) => {
+                    // When a value is selected, we need to create the proper object structure
+                    if (newValue) {
+                      // Find the option details if available
+                      const optionDetails = field.enumOptions?.find(
+                        (opt) => opt.value === newValue
+                      );
+
+                      // Create an object with the const field
+                      // For oneOf fields, we typically need to set the const value in the correct property
+                      onChange(newValue);
+                    } else {
+                      onChange(null);
+                    }
+                  }}
+                  options={field.enum || []}
+                  getOptionLabel={(option) => {
+                    // Use the title from enumOptions if available, otherwise use the option value
+                    const optionDetails = field.enumOptions?.find((opt) => opt.value === option);
+                    return optionDetails?.title || option;
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={label}
+                      error={!!error}
+                      helperText={error?.message}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {renderDescription()}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                />
+                {/* Render sub-fields if they exist and match the selected value */}
+                {field.subFields?.map((subField) => (
+                  <Box key={subField.id} sx={{ mt: 2, ml: 2 }}>
+                    <FormField field={subField} parentValue={selectedValue} />
+                  </Box>
+                ))}
+              </>
+            );
+          }}
         />
       </Box>
     );

@@ -57,44 +57,59 @@ function parseOneOfField(
   isRequired: boolean
 ): FormField {
   const subFields: FormField[] = [];
-  const enumValues: any[] = [];
+  const enumOptions: { value: any; title: string; description?: string }[] = [];
 
-  prop.oneOf?.forEach((option) => {
-    // Add the option's const/enum value to the parent's enum
-    const constProp = Object.values(option.properties).find((p) => p.const);
-    if (constProp?.const) {
-      enumValues.push(constProp.const);
+  prop.oneOf?.forEach((option, index) => {
+    // Find the const field that identifies this option
+    const constField = Object.entries(option.properties).find(([_, p]) => p.const);
+
+    if (constField) {
+      const [constKey, constProp] = constField;
+      const constValue = constProp.const;
+
+      // Add this option to the enum
+      enumOptions.push({
+        value: constValue,
+        title: option.title || constValue,
+        description: option.description,
+      });
+
+      // Parse the option's other properties as sub-fields (excluding the const field)
+      const optionRequired = Array.isArray(option.required) ? option.required : [];
+
+      Object.entries(option.properties).forEach(([propKey, propDef]) => {
+        // Skip the const field itself
+        if (propKey === constKey) return;
+
+        const subFieldPath = [...path, propKey];
+        const subField = parseBasicField(
+          propKey,
+          propDef,
+          subFieldPath,
+          optionRequired.includes(propKey)
+        );
+
+        // Add parent value to identify which option this sub-field belongs to
+        subField.parentValue = constValue;
+
+        // Make ID unique by including the parent path and const value
+        subField.id = `${path.join('.')}.${constValue}.${propKey}`;
+
+        subFields.push(subField);
+      });
     }
-
-    // Parse the option's other properties as sub-fields
-    const optionRequired = Array.isArray(option.required) ? option.required : [];
-    const optionFields = parseProperties(option.properties, path, optionRequired);
-
-    // Filter out the const field and any fields that match the parent key
-    const relevantFields = optionFields.filter((field) => {
-      const isConstField = Object.values(option.properties).find(
-        (p) => p.const && field.path.includes(p.const)
-      );
-      const isParentField = field.path[field.path.length - 1] === key;
-      return !isConstField && !isParentField;
-    });
-
-    // Add parent value to each sub-field
-    relevantFields.forEach((field) => {
-      field.parentValue = constProp?.const;
-      subFields.push(field);
-    });
   });
 
   return {
-    id: key,
+    id: path.join('.'), // Use full path for unique ID
     type: 'object',
     path,
     title: prop.title || key,
     description: prop.description,
     required: isRequired,
     displayType: prop.display_type || 'dropdown',
-    enum: enumValues,
+    enum: enumOptions.map((option) => option.value), // Keep simple array for backward compatibility
+    enumOptions, // Store full option details for better rendering
     subFields,
     order: prop.order || 0,
     group: prop.group,
@@ -108,7 +123,7 @@ function parseBasicField(
   isRequired: boolean
 ): FormField {
   return {
-    id: key,
+    id: path.join('.'), // Use full path for unique ID
     type: prop.type,
     path,
     title: prop.title || key,
