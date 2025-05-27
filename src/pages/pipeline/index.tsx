@@ -64,6 +64,7 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
       .reverse();
 
     // Generate random data for bar colors
+    const maxRuntime = Math.max(...data.map((item: any) => item.totalRunTime));
 
     const height = 48;
 
@@ -138,8 +139,8 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
       })
       .transition() // Apply transition animation
       .duration(1000) // Set the duration for the animation in milliseconds
-      .attr('y', () => height - barHeight) // Move the bars to their final y position
-      .attr('height', barHeight)
+      .attr('y', (d: any) => height - (d.totalRunTime / maxRuntime) * height)
+      .attr('height', (d: any) => (d.totalRunTime / maxRuntime) * height) // Move the bars to their final y position
       .style('position', 'relative');
 
     svg
