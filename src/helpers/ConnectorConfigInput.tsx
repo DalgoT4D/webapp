@@ -30,7 +30,6 @@ class ConnectorConfigInput {
     this.type = type;
     this.specsData = { ...data }; //1.called first and contains all the spec definitions full object.
     this.specsToRender = [];
-    console.log(this.specsData, 'this.specsData');
   }
   /**
    *
