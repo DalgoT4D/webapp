@@ -11,6 +11,8 @@ import {
   Switch,
   TextField,
   Tooltip,
+  Typography,
+  Button,
 } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
@@ -24,6 +26,12 @@ interface FormFieldProps {
 export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
   const { control } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
+
+  // Don't render hidden fields
+  if (field.hidden) {
+    return null;
+  }
+
   // Only show field if it has no parent value or matches parent value
   if (field.parentValue !== undefined && field.parentValue !== parentValue) {
     return null;
@@ -156,32 +164,144 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
           control={control}
           defaultValue={field.default || []}
           rules={{ required: field.required && `${field.title} is required` }}
-          render={({ field: { value, onChange }, fieldState: { error } }) => (
-            <Autocomplete
-              multiple
-              freeSolo
-              value={value || []}
-              onChange={(_, newValue) => onChange(newValue)}
-              options={[]}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={label}
-                  error={!!error}
-                  helperText={error?.message}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {renderDescription()}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
+          render={({ field: { value, onChange }, fieldState: { error } }) => {
+            // For simple arrays (like string arrays)
+            if (!field.subFields || field.subFields.length === 0) {
+              return (
+                <Autocomplete
+                  multiple
+                  freeSolo
+                  value={value || []}
+                  onChange={(_, newValue) => onChange(newValue)}
+                  options={[]}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={label}
+                      error={!!error}
+                      helperText={error?.message}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {renderDescription()}
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
                 />
-              )}
-            />
-          )}
+              );
+            }
+
+            // For complex arrays (like S3 streams)
+            const items = value || [];
+
+            const addItem = () => {
+              const newItem: Record<string, any> = {};
+              // Set default values for required fields
+              field.subFields?.forEach((subField) => {
+                if (subField.required && subField.default !== undefined) {
+                  const subPath = subField.path.slice(field.path.length + 1); // Remove the array path and index
+                  if (subPath.length === 1) {
+                    newItem[subPath[0]] = subField.default;
+                  }
+                }
+              });
+              onChange([...items, newItem]);
+            };
+
+            const removeItem = (index: number) => {
+              const newItems = items.filter((_: any, i: number) => i !== index);
+              onChange(newItems);
+            };
+
+            const updateItem = (index: number, itemData: Record<string, any>) => {
+              const newItems = [...items];
+              newItems[index] = { ...newItems[index], ...itemData };
+              onChange(newItems);
+            };
+
+            return (
+              <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">{label}</Typography>
+                  {renderDescription()}
+                  <Button onClick={addItem} variant="outlined" size="small" sx={{ ml: 'auto' }}>
+                    Add {field.title?.replace(/s$/, '') || 'Item'}
+                  </Button>
+                </Box>
+
+                {error && (
+                  <Typography color="error" variant="caption" sx={{ mb: 1 }}>
+                    {error.message}
+                  </Typography>
+                )}
+
+                {items.map((item: any, index: number) => (
+                  <Box
+                    key={index}
+                    sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 2, mb: 2 }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 2,
+                      }}
+                    >
+                      <Typography variant="subtitle2">
+                        {field.title?.replace(/s$/, '') || 'Item'} {index + 1}
+                      </Typography>
+                      <Button onClick={() => removeItem(index)} color="error" size="small">
+                        Remove
+                      </Button>
+                    </Box>
+
+                    {field.subFields?.map((subField) => {
+                      // Create a new field with updated path for this array index
+                      const indexedField = {
+                        ...subField,
+                        path: [
+                          ...field.path,
+                          index.toString(),
+                          ...subField.path.slice(field.path.length + 1),
+                        ],
+                        id: `${field.path.join('.')}.${index}.${subField.id.split('.').slice(-1)[0]}`,
+                      };
+
+                      return (
+                        <FormField
+                          key={indexedField.id}
+                          field={indexedField}
+                          parentValue={parentValue}
+                        />
+                      );
+                    })}
+                  </Box>
+                ))}
+
+                {items.length === 0 && (
+                  <Box
+                    sx={{
+                      p: 2,
+                      textAlign: 'center',
+                      border: '1px dashed',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      No {field.title?.toLowerCase() || 'items'} configured. Click "Add" to create
+                      one.
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            );
+          }}
         />
       </Box>
     );

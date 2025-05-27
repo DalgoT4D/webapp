@@ -3,6 +3,7 @@ export interface AirbyteProperty {
   title?: string;
   description?: string;
   airbyte_secret?: boolean;
+  airbyte_hidden?: boolean;
   required?: boolean;
   order?: number;
   const?: any;
@@ -50,6 +51,7 @@ export interface FormField {
   description?: string;
   required: boolean;
   secret?: boolean;
+  hidden?: boolean;
   default?: any;
   examples?: any[];
   pattern?: string;
@@ -66,6 +68,7 @@ export interface FormField {
   subFields?: FormField[];
   parentValue?: any;
   order: number;
+  itemType?: string;
 }
 
 export interface FieldGroup {
