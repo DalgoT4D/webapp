@@ -7,7 +7,6 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
-  InputLabel,
   Switch,
   TextField,
   Tooltip,
