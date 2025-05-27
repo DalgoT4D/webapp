@@ -70,7 +70,6 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
 
     // Set dimensions and margins for the bars
     const barWidth = 8;
-    const barHeight = height;
 
     const tooltip = d3
       .select('body')
