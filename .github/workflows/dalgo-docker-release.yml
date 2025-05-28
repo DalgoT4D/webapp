@@ -1,7 +1,6 @@
-# This workflow builds and pushes a new docker image
-# to dockerhub whenever a new release is published
+# .github/workflows/publish-production.yml
 
-name: Publish Docker image
+name: Publish Docker image to ghcr.io
 
 on:
   release:
@@ -9,42 +8,60 @@ on:
 
 jobs:
   push_image_to_registry:
-    name: Push Docker image to docker hub
+    name: Build and push to GHCR on release
     runs-on: ubuntu-latest
+    environment: production # taking secrets from the production environment on github.
+
     steps:
-      - name: Check out the repo
+      - name: Checkout code # checkout code from repo to the runner (github VM machine)
         uses: actions/checkout@v4
 
       - name: Set build date
         run: echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
 
       - name: Set release number
-        run: echo "RELEASE_NUMBER=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+        run: echo "RELEASE_NUMBER=${{ github.event.release.tag_name }}" >> $GITHUB_ENV #path to temp file from where the RELEASE_NUMBER is stored.
 
-      - name: Set up QEMU
+      - name: Set up QEMU # for cross-platform builds
         uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
+      - name: Set up Docker Buildx # for cross-platform builds
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to docker registry
+      - name: Login to GHCR # login to ghcr.io using the github token. (No PAT is required)
         uses: docker/login-action@v3
         with:
-          username: ${{secrets.DOCKERHUB_USERNAME}}
-          password: ${{secrets.DOCKERHUB_PASSWORD}}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push docker image to registry
+      - name: Build and push Docker image to GHCR # build the docker image using the Dockerfile and push it to ghcr.io
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Docker/Dockerfile
           target: deps
           platforms: linux/amd64,linux/arm64
-          build-args: |
+          build-args: | # build arguments for the docker image. (taking values from the github secrets - production environment)
             BUILD_DATE=${{ env.BUILD_DATE }}
+            NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+            NEXT_PUBLIC_USAGE_DASHBOARD_ID=${{ secrets.NEXT_PUBLIC_USAGE_DASHBOARD_ID }}
+            NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN=${{ secrets.NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN }}
+            NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA=${{ secrets.NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA }}
+            NEXT_PUBLIC_DEMO_WALKTHROUGH_ENABLED=${{ secrets.NEXT_PUBLIC_DEMO_WALKTHROUGH_ENABLED }}
+            NEXT_PUBLIC_WEBSOCKET_URL=${{ secrets.NEXT_PUBLIC_WEBSOCKET_URL }}
+            NEXT_PUBLIC_SHOW_ELEMENTARY_MENU=${{ secrets.NEXT_PUBLIC_SHOW_ELEMENTARY_MENU }}
+            NEXT_PUBLIC_SHOW_DATA_INSIGHTS_TAB=${{ secrets.NEXT_PUBLIC_SHOW_DATA_INSIGHTS_TAB }}
+            NEXT_PUBLIC_SHOW_DATA_ANALYSIS_TAB=${{ secrets.NEXT_PUBLIC_SHOW_DATA_ANALYSIS_TAB }}
+            NEXT_PUBLIC_SHOW_SUPERSET_USAGE_TAB=${{ secrets.NEXT_PUBLIC_SHOW_SUPERSET_USAGE_TAB }}
+            NEXT_PUBLIC_SHOW_SUPERSET_ANALYSIS_TAB=${{ secrets.NEXT_PUBLIC_SHOW_SUPERSET_ANALYSIS_TAB }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+            NEXT_PUBLIC_AMPLITUDE_ENV=${{ secrets.NEXT_PUBLIC_AMPLITUDE_ENV }}
+            NEXT_PUBLIC_DALGO_WHITELIST_IPS=${{ secrets.NEXT_PUBLIC_DALGO_WHITELIST_IPS }}
+            NEXT_PUBLIC_AIRBYTE_URL=${{ secrets.NEXT_PUBLIC_AIRBYTE_URL }}
           push: true
           tags: |
-            tech4dev/dalgo_frontend:${{ env.RELEASE_NUMBER }}
-            tech4dev/dalgo_frontend:latest
-          cache-from: type=registry,ref=tech4dev/dalgo_frontend:latest
+            ghcr.io/DalgoT4D/dalgo_frontend:${{ env.RELEASE_NUMBER }}
+            ghcr.io/DalgoT4D/dalgo_frontend:latest
+          cache-from: type=registry,ref=ghcr.io/dalgo/dalgo_frontend:latest
           cache-to: type=inline
