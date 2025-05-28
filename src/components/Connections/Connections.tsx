@@ -685,12 +685,19 @@ export const Connections = () => {
     handleCancelClearConnection();
   };
 
+  const sortingConnections = (data: any[]) => {
+    if (!data || data.length === 0) return [];
+    const sortedData = [...data].sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+    return sortedData;
+  };
+
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
       // Sort connections alphabetically by name (case-insensitive)
-      const sortedData = [...data].sort((a, b) =>
-        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-      );
+      const sortedData = sortingConnections(data);
+
       const tempRows = sortedData.map((connection: any) => [
         <Box key={`name-${connection.blockId}`} sx={{ display: 'flex', alignItems: 'center' }}>
           <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
@@ -773,9 +780,8 @@ export const Connections = () => {
         );
       });
       // Sort filtered results by name
-      const sortedFiltered = [...filtered].sort((a, b) =>
-        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-      );
+      const sortedFiltered = sortingConnections(filtered);
+
       updateRows(sortedFiltered);
     }
   };
