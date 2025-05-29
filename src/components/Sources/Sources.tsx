@@ -12,6 +12,7 @@ import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Image from 'next/image';
 import { ActionsMenu } from '../UI/Menu/Menu';
+import { NewSourceForm } from './config/NewSourceForm';
 
 const headers = {
   values: ['Source details', 'Type'],
@@ -202,7 +203,7 @@ export const Sources = () => {
         handleDelete={handleDeleteSource}
       />
 
-      <SourceForm
+      <NewSourceForm
         mutate={mutate}
         loading={loading}
         setLoading={setLoading}

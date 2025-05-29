@@ -12,11 +12,11 @@ interface SourceConfigFormProps {
 }
 
 export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
-  spec,
-  initialValues = {},
-  onChange,
+  spec, // individual source spec taht was selected.
+  initialValues = {}, //empty object while creating a new source and pre-filled values while editing a source.
+  onChange, // Callback function to notify parent component of changes
 }) => {
-  const [fieldGroups, setFieldGroups] = useState<FieldGroup[]>([]);
+  const [fieldGroups, setFieldGroups] = useState<FieldGroup[]>([]); // Holds the parsed field groups from the spec
   const [selectedValues, setSelectedValues] = useState<Record<string, any>>({});
 
   // Simple function to extract const values from objects for oneOf fields
@@ -31,7 +31,7 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
         const fullKey = prefix ? `${prefix}.${key}` : key;
 
         if (Array.isArray(value)) {
-          // Handle arrays (like S3 streams)
+          // Handle arrays
           result[fullKey] = value.map((item, index) => {
             if (typeof item === 'object' && item !== null) {
               const processedItem = { ...item };
@@ -41,28 +41,21 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
                 const itemValue = item[itemKey];
 
                 if (typeof itemValue === 'object' && itemValue !== null) {
-                  // Check for const values in nested objects (like format.filetype)
-                  if (itemValue.filetype) processedItem[itemKey] = itemValue.filetype;
-                  if (itemValue.cluster_type) processedItem[itemKey] = itemValue.cluster_type;
-                  if (itemValue.auth_type) processedItem[itemKey] = itemValue.auth_type;
-                  if (itemValue.method) processedItem[itemKey] = itemValue.method;
-                  if (itemValue.header_definition_type)
-                    processedItem[itemKey] = itemValue.header_definition_type;
+                  // Look for any const fields dynamically
+                  const constField = Object.entries(itemValue).find(
+                    ([_, prop]: [string, any]) =>
+                      typeof prop === 'object' && prop !== null && 'const' in prop
+                  );
+
+                  if (constField) {
+                    const [constKey, constProp] = constField;
+                    processedItem[itemKey] = (constProp as any).const;
+                  }
 
                   // Flatten other properties to the item level
                   Object.keys(itemValue).forEach((subKey) => {
-                    if (
-                      ![
-                        'filetype',
-                        'cluster_type',
-                        'auth_type',
-                        'method',
-                        'header_definition_type',
-                      ].includes(subKey)
-                    ) {
-                      const nestedPath = `${fullKey}.${index}.${itemKey}.${subKey}`;
-                      result[nestedPath] = itemValue[subKey];
-                    }
+                    const nestedPath = `${fullKey}.${index}.${itemKey}.${subKey}`;
+                    result[nestedPath] = itemValue[subKey];
                   });
 
                   // Recursively process nested objects for deeply nested structures
@@ -75,26 +68,20 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
             return item;
           });
         } else if (typeof value === 'object' && value !== null) {
-          // For objects, check if they have common const field names
-          if (value.cluster_type) result[fullKey] = value.cluster_type;
-          if (value.auth_type) result[fullKey] = value.auth_type;
-          if (value.method) result[fullKey] = value.method;
-          if (value.filetype) result[fullKey] = value.filetype;
-          if (value.header_definition_type) result[fullKey] = value.header_definition_type;
+          // For objects, look for const fields dynamically
+          const constField = Object.entries(value).find(
+            ([_, prop]: [string, any]) =>
+              typeof prop === 'object' && prop !== null && 'const' in prop
+          );
+
+          if (constField) {
+            const [constKey, constProp] = constField;
+            result[fullKey] = (constProp as any).const;
+          }
 
           // Also flatten the object properties to the form level
           Object.keys(value).forEach((subKey) => {
-            if (
-              ![
-                'cluster_type',
-                'auth_type',
-                'method',
-                'filetype',
-                'header_definition_type',
-              ].includes(subKey)
-            ) {
-              result[`${fullKey}.${subKey}`] = value[subKey];
-            }
+            result[`${fullKey}.${subKey}`] = value[subKey];
           });
 
           // Recursively process nested objects
@@ -113,7 +100,8 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
 
   // Parse spec into field groups
   useEffect(() => {
-    const groups = parseAirbyteSpec(spec);
+    const groups = parseAirbyteSpec(spec); // get the groups from the spec. All fields that share the same group value will be grouped into the same card in the UI
+    console.log(groups, 'groups');
     setFieldGroups(groups);
   }, [spec]);
 
@@ -126,7 +114,7 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
         .filter((field) => field.type === 'object' && field.enum);
 
       // Update selected values for oneOf fields
-      const newSelectedValues: Record<string, any> = {};
+      const newSelectedValues: any = {};
       oneOfFields.forEach((field) => {
         const fieldPath = field.path.join('.');
         newSelectedValues[fieldPath] = value[fieldPath];
@@ -153,3 +141,7 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
     </FormProvider>
   );
 };
+
+/**
+ * 1. check extractConstValues and parseAirbyteSpec functions.
+ */

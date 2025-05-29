@@ -38,8 +38,8 @@ export const NewSourceForm: React.FC<NewSourceFormProps> = ({
 }) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const [source, setSource] = useState<any>(null);
-  const [sourceSpec, setSourceSpec] = useState<any>(null);
+  const [source, setSource] = useState<any>(null); // Holds the current source data when editing.
+  const [sourceSpec, setSourceSpec] = useState<any>(null); // Holds the source specification for the selected source when editing and creating too..
   const [logs, setLogs] = useState<string[]>([]);
 
   const { handleSubmit, setValue, watch, reset, control } = useForm<SourceFormState>({
@@ -52,7 +52,7 @@ export const NewSourceForm: React.FC<NewSourceFormProps> = ({
 
   const selectedSourceDef = watch('sourceDef');
 
-  // WebSocket setup for connection testing
+  // WebSocket setup for check connection.
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const { sendJsonMessage, lastMessage } = useWebSocket(socketUrl, {
     share: false,
@@ -67,7 +67,7 @@ export const NewSourceForm: React.FC<NewSourceFormProps> = ({
     }
   }, [session]);
 
-  // Load existing source data
+  // Load existing source data during EDIT.
   useEffect(() => {
     if (showForm && sourceId && sourceDefs.length > 0) {
       setLoading(true);
@@ -189,11 +189,11 @@ export const NewSourceForm: React.FC<NewSourceFormProps> = ({
         label="Name*"
         variant="outlined"
       />
-
+      {/* select the source type */}
       <Autocomplete
         disabled={!!sourceId}
         value={selectedSourceDef}
-        onChange={(_, value) => setValue('sourceDef', value)}
+        onChange={(_, value) => setValue('sourceDef', value)} // select the source eg postgres, mongodb etc.
         options={sourceDefs}
         getOptionLabel={(option) => `${option.label} (v${option.dockerImageTag})`}
         renderOption={(props, option) => (
@@ -215,7 +215,7 @@ export const NewSourceForm: React.FC<NewSourceFormProps> = ({
       {sourceSpec && (
         <SourceConfigForm
           spec={sourceSpec}
-          initialValues={source?.connectionConfiguration}
+          initialValues={source?.connectionConfiguration} // empty object {} (creating new source) but values (editing a source).
           onChange={(values) => setValue('config', values)}
         />
       )}

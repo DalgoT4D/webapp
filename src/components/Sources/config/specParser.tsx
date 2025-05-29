@@ -7,7 +7,7 @@ export function parseAirbyteSpec(spec: AirbyteSpec): FieldGroup[] {
   allFields.sort((a, b) => (a.order || 0) - (b.order || 0));
 
   if (!spec.groups) {
-    // If no groups defined, put all fields in a default group
+    // If no groups defined, put all fields in a default group - from airbyte documentation.
     return [
       {
         id: 'default',
@@ -25,28 +25,32 @@ export function parseAirbyteSpec(spec: AirbyteSpec): FieldGroup[] {
 }
 
 function parseProperties(
-  properties: Record<string, AirbyteProperty>,
+  properties: Record<string, AirbyteProperty>, // this is the spec.properties, original specs that we get from backend.
   parentPath: string[] = [],
   required: string[] = []
 ): FormField[] {
   const fields: FormField[] = [];
 
   for (const [key, prop] of Object.entries(properties)) {
-    // Skip hidden fields
+    // Skip hidden fields : Airbye documentation **Hiding inputs in the UI**
     if (prop.airbyte_hidden) {
       continue;
     }
 
-    const path = [...parentPath, key];
+    const path = [...parentPath, key]; // Field 1: path = ["credentials", "client_id"]
+    // Controller name = "credentials.client_id"
 
     if (prop.oneOf) {
+      //eg: as in mongodb: properties.database_config.oneOf
       // Handle oneOf fields (usually dropdowns/radio buttons)
       fields.push(parseOneOfField(key, prop, path, required.includes(key)));
     } else if (prop.type === 'array' && prop.items) {
       // Handle array fields with complex items
       fields.push(parseArrayField(key, prop, path, required.includes(key)));
     } else if (prop.type === 'object' && prop.properties) {
-      // Recursively handle nested objects
+      // so oneOf is also type object. , but here were are checking that it should be oneOf and should have properties. type oneof is object but without properties.
+
+      // Recursively handle nested objects especially for s3 bucket schema.
       const nestedRequired = Array.isArray(prop.required) ? prop.required : [];
       fields.push(...parseProperties(prop.properties, path, nestedRequired));
     } else {
@@ -59,23 +63,29 @@ function parseProperties(
 }
 
 function parseOneOfField(
-  key: string,
-  prop: AirbyteProperty,
-  path: string[],
-  isRequired: boolean
+  key: string, // "ssl_mode"
+  prop: AirbyteProperty, //  {ssl_mode: {one_of: []}} basically the object taht ssl mode has.
+  path: string[], // path = [ "ssl_mode"] and
+  isRequired: boolean // false
 ): FormField {
   const subFields: FormField[] = [];
   const enumOptions: { value: any; title: string; description?: string }[] = [];
 
-  prop.oneOf?.forEach((option, index) => {
+  prop.oneOf?.forEach((option) => {
+    //option is individual element of the oneOf array.
     // Find the const field that identifies this option
-    const constField = Object.entries(option.properties).find(([_, p]) => p.const);
+    // loops throught the oneOf array of objects.
+    //each object has properties. So the object.entries will make the properties as [{key, value}, {key, value}]] and then it finds the const property.
+    // [[cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]].find(([key,prop]) => prop.const.) ** find returns the truthy value. hence it will return the whole array with key and prop. [cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]
+    const constField = Object.entries(option.properties).find(([_, p]) => p.const); //returns the first matching value.
 
-    if (constField) {
-      const [constKey, constProp] = constField;
+    console.log('constField', constField);
+
+    if (constField?.length) {
+      const [constKey, constProp] = constField; //[cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]
       const constValue = constProp.const;
 
-      // Add this option to the enum
+      // Add this option to the enum because the const values will form the options for the dropdown.
       enumOptions.push({
         value: constValue,
         title: option.title || constValue,
@@ -86,14 +96,18 @@ function parseOneOfField(
       const optionRequired = Array.isArray(option.required) ? option.required : [];
 
       Object.entries(option.properties).forEach(([propKey, propDef]) => {
+        // this goes through the properties of the values of the oneOf array. Each value === option.
+        // so for postgres mode will already be in the constField.
         // Skip the const field itself
+        console.log(propKey, 'propKey');
         if (propKey === constKey) return;
 
         const subFieldPath = [...path, propKey];
-
+        console.log(subFields, 'subfields');
         // Handle nested oneOf fields recursively
         let subField: FormField;
         if (propDef.oneOf) {
+          // This deep nested in for S3 bucket. Rest sources dont have very deep nested oneOf.
           subField = parseOneOfField(
             propKey,
             propDef,
@@ -165,6 +179,7 @@ function parseArrayField(
   let subFields: FormField[] = [];
 
   // If array items are objects with properties, parse them
+  // this is basically for s3 bucket schema. For postgres we have prop.items.type == string.
   if (prop.items?.type === 'object' && prop.items.properties) {
     const itemRequired = Array.isArray(prop.items.required) ? prop.items.required : [];
     subFields = parseProperties(prop.items.properties, [...path, '0'], itemRequired);
@@ -228,3 +243,9 @@ function parseBasicField(
     group: prop.group,
   };
 }
+
+// id - Generated unique identifier
+// path - Array representing field hierarchy, that we can join and use as a controller name.
+// parentValue -.
+// subFields -
+// enumOptions -

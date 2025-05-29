@@ -114,7 +114,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                       );
 
                       if (hasSubFields) {
-                        // For complex fields like header_definition, set just the const value for now
+                        // For complex fields with sub-fields, set just the const value for now
                         // The sub-fields will handle their own values
                         onChange(newValue);
                       } else {
@@ -233,7 +233,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
               );
             }
 
-            // For complex arrays (like S3 streams)
+            // For complex arrays like s3 bucket.
             const items = value || [];
 
             const addItem = () => {
