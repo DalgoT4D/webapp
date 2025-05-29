@@ -1,31 +1,70 @@
-name: Dalgo CD
+name: Dalgo CD - Staging
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  build_and_deploy:
     runs-on: ubuntu-latest
+    environment: staging
+
     steps:
-      - name: Deploy code to EC2 server
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Docker/Dockerfile
+          platforms: linux/amd64, linux/arm64
+          build-args: |
+            NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+          push: true
+          tags: |
+            ghcr.io/DalgoT4D/your-app:latest
+            ghcr.io/DalgoT4D/your-app:main-${{ github.sha }}
+
+      - name: Deploy to EC2 staging
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          command_timeout: 500s
           script: |
             set -e
-            source ~/.nvm/nvm.sh
+
+            echo "Navigating to app directory"
             cd /home/ddp/webapp
+
             current_branch=$(git rev-parse --abbrev-ref HEAD)
             if [ "$current_branch" != "main" ]; then
               echo "Error: You are not on the main branch. Current branch is $current_branch."
               exit 1
             fi
-            git pull
-            yarn install
-            yarn build
-            /home/ddp/.yarn/bin/pm2 restart ddp-webapp
+
+            echo "Pulling latest code"
+            git pull origin main
+
+            echo "Logging into GHCR"
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "Pulling latest Docker image"
+            docker pull ghcr.io/DalgoT4D/your-app:latest
+
+            echo "Running Docker Compose"
+            cd /home/ddp/webapp/Docker
+            docker compose -f docker-compose.yaml down
+            docker compose -f docker-compose.yaml up -d
