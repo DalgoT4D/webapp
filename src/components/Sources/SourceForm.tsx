@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Autocomplete, Box, Button, CircularProgress, Typography } from '@mui/material';
-import { useForm, FormProvider } from 'react-hook-form';
+import { Autocomplete, Box, Button } from '@mui/material';
+import { useForm } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import useWebSocket from 'react-use-websocket';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -9,10 +9,7 @@ import { generateWebsocketUrl } from '@/helpers/websocket';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import CustomDialog from '@/components/Dialog/CustomDialog';
 import Input from '@/components/UI/Input/Input';
-import { SourceConfigForm } from './SourceConfigForm';
-import { parseAirbyteSpec } from '@/helpers/connectorConfig/specParser';
-import { FormGroup } from '@/helpers/connectorConfig/FormGroup';
-import { AirbyteSpec } from '@/helpers/connectorConfig/types';
+import { ConfigForm } from '../../helpers/connectorConfig/ConfigForm';
 
 interface SourceFormProps {
   mutate: (...args: any) => any;
@@ -216,7 +213,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
       />
 
       {sourceSpec && (
-        <SourceConfigForm
+        <ConfigForm
           spec={sourceSpec}
           initialValues={source?.connectionConfiguration} // empty object {} (creating new source) but values (editing a source).
           onChange={(values) => setValue('config', values)}

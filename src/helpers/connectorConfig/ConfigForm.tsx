@@ -5,13 +5,13 @@ import { AirbyteSpec, FieldGroup } from '@/helpers/connectorConfig/types';
 import { FormGroup } from '@/helpers/connectorConfig/FormGroup';
 import { parseAirbyteSpec } from '@/helpers/connectorConfig/specParser';
 
-interface SourceConfigFormProps {
+interface ConfigFormProps {
   spec: AirbyteSpec;
   initialValues?: Record<string, any>;
   onChange?: (values: Record<string, any>) => void;
 }
 
-export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
+export const ConfigForm: React.FC<ConfigFormProps> = ({
   spec, // individual source spec taht was selected.
   initialValues = {}, //empty object while creating a new source and pre-filled values while editing a source.
   onChange, // Callback function to notify parent component of changes
