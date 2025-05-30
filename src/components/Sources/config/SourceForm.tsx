@@ -11,7 +11,7 @@ import CustomDialog from '@/components/Dialog/CustomDialog';
 import Input from '@/components/UI/Input/Input';
 import { SourceConfigForm } from './SourceConfigForm';
 
-interface NewSourceFormProps {
+interface SourceFormProps {
   mutate: (...args: any) => any;
   showForm: boolean;
   setShowForm: (...args: any) => any;
@@ -27,7 +27,7 @@ interface SourceFormState {
   config: Record<string, any>;
 }
 
-export const NewSourceForm: React.FC<NewSourceFormProps> = ({
+export const SourceForm: React.FC<SourceFormProps> = ({
   mutate,
   showForm,
   setShowForm,
