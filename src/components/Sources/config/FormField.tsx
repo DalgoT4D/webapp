@@ -51,7 +51,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
         {!isRequired && ' (optional)'}
       </InputLabel>
       {field.description && (
-        <Box sx={{ ml: 1 }}>
+        <Box sx={{ ml: 'auto' }}>
           <InfoTooltip title={field.description} />
         </Box>
       )}
