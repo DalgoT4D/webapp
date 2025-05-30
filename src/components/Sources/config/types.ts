@@ -69,6 +69,7 @@ export interface FormField {
   parentValue?: any;
   order: number;
   itemType?: string;
+  constKey?: string;
 }
 
 export interface FieldGroup {

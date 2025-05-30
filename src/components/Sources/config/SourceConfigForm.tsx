@@ -19,154 +19,8 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
   const [fieldGroups, setFieldGroups] = useState<FieldGroup[]>([]); // Holds the parsed field groups from the spec
   const [selectedValues, setSelectedValues] = useState<Record<string, any>>({});
 
-  // Simple function to extract const values from objects for oneOf fields
-  const extractConstValues = (values: Record<string, any>): Record<string, any> => {
-    const result = { ...values };
-
-    const processObject = (obj: any, prefix = ''): void => {
-      if (!obj || typeof obj !== 'object') return;
-
-      Object.keys(obj).forEach((key) => {
-        const value = obj[key];
-        const fullKey = prefix ? `${prefix}.${key}` : key;
-
-        if (Array.isArray(value)) {
-          // Handle arrays
-          result[fullKey] = value.map((item, index) => {
-            if (typeof item === 'object' && item !== null) {
-              const processedItem = { ...item };
-
-              // Process each item in the array
-              Object.keys(item).forEach((itemKey) => {
-                const itemValue = item[itemKey];
-
-                if (typeof itemValue === 'object' && itemValue !== null) {
-                  // Look for any const fields dynamically
-                  const constField = Object.entries(itemValue).find(
-                    ([_, prop]: [string, any]) =>
-                      typeof prop === 'object' && prop !== null && 'const' in prop
-                  );
-
-                  if (constField) {
-                    const [constKey, constProp] = constField;
-                    processedItem[itemKey] = (constProp as any).const;
-                  }
-
-                  // Flatten other properties to the item level
-                  Object.keys(itemValue).forEach((subKey) => {
-                    const nestedPath = `${fullKey}.${index}.${itemKey}.${subKey}`;
-                    result[nestedPath] = itemValue[subKey];
-                  });
-
-                  // Recursively process nested objects for deeply nested structures
-                  processObject(itemValue, `${fullKey}.${index}.${itemKey}`);
-                }
-              });
-
-              return processedItem;
-            }
-            return item;
-          });
-        } else if (typeof value === 'object' && value !== null) {
-          // For objects, look for const fields dynamically
-          const constField = Object.entries(value).find(
-            ([_, prop]: [string, any]) =>
-              typeof prop === 'object' && prop !== null && 'const' in prop
-          );
-
-          if (constField) {
-            const [constKey, constProp] = constField;
-            result[fullKey] = (constProp as any).const;
-          }
-
-          // Also flatten the object properties to the form level
-          Object.keys(value).forEach((subKey) => {
-            result[`${fullKey}.${subKey}`] = value[subKey];
-          });
-
-          // Recursively process nested objects
-          processObject(value, fullKey);
-        }
-      });
-    };
-
-    processObject(values);
-    return result;
-  };
-
-  // Transform form values back to proper object structure for backend
-  const transformToBackendFormat = (formValues: Record<string, any>): Record<string, any> => {
-    const result: Record<string, any> = {};
-
-    // Get all oneOf fields from spec to know which fields need transformation
-    const oneOfFields = fieldGroups.flatMap((group) =>
-      group.fields.filter((field) => field.type === 'object' && field.enum)
-    );
-
-    // Helper function to find the const key for a oneOf field
-    const findConstKey = (fieldPath: string[], constValue: string): string | null => {
-      // Find matching oneOf option in the original spec
-      let currentProp: any = spec.properties;
-
-      // Navigate to the correct property in the spec
-      for (const pathSegment of fieldPath) {
-        if (currentProp[pathSegment]) {
-          currentProp = currentProp[pathSegment];
-        } else {
-          return null;
-        }
-      }
-
-      // Look through oneOf options to find the one with this const value
-      if (currentProp.oneOf) {
-        for (const option of currentProp.oneOf) {
-          const constField = Object.entries(option.properties).find(
-            ([_, prop]: [string, any]) => prop.const === constValue
-          );
-          if (constField) {
-            return constField[0]; // Return the const key (e.g., "mode")
-          }
-        }
-      }
-
-      return null;
-    };
-
-    // First, copy all non-oneOf values
-    Object.keys(formValues).forEach((key) => {
-      const value = formValues[key];
-      if (value !== null && value !== undefined && value !== '') {
-        result[key] = value;
-      }
-    });
-
-    // Then transform oneOf fields
-    oneOfFields.forEach((field) => {
-      const fieldPath = field.path.join('.');
-      const formValue = formValues[fieldPath];
-
-      if (formValue) {
-        const constKey = findConstKey(field.path, formValue);
-        if (constKey) {
-          // Transform to proper object structure
-          result[fieldPath] = { [constKey]: formValue };
-
-          // Add any sub-field values to the object
-          Object.keys(formValues).forEach((key) => {
-            if (key.startsWith(`${fieldPath}.`) && key !== fieldPath) {
-              const subKey = key.substring(fieldPath.length + 1);
-              result[fieldPath][subKey] = formValues[key];
-            }
-          });
-        }
-      }
-    });
-
-    return result;
-  };
-
   const methods = useForm({
-    defaultValues: extractConstValues(initialValues),
+    defaultValues: initialValues, // Use values as-is from backend
   });
 
   // Parse spec into field groups
@@ -176,6 +30,14 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
     setFieldGroups(groups);
   }, [spec]);
 
+  // Set initial values when they change (for edit case)
+  useEffect(() => {
+    if (initialValues && Object.keys(initialValues).length > 0) {
+      // Reset form with new values
+      methods.reset(initialValues);
+    }
+  }, [initialValues, methods]);
+
   // Watch for changes in form values
   useEffect(() => {
     const subscription = methods.watch((value) => {
@@ -184,21 +46,27 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
         .flatMap((group) => group.fields)
         .filter((field) => field.type === 'object' && field.enum);
 
-      // Update selected values for oneOf fields
+      // Update selected values for oneOf fields - extract const values for display
       const newSelectedValues: any = {};
       oneOfFields.forEach((field) => {
         const fieldPath = field.path.join('.');
-        newSelectedValues[fieldPath] = value[fieldPath];
+        const fieldValue = value[fieldPath];
+
+        // Extract const value from object for display
+        if (fieldValue && typeof fieldValue === 'object') {
+          // Find the const value in the object
+          const constValue = Object.values(fieldValue).find((val) => field.enum?.includes(val));
+          newSelectedValues[fieldPath] = constValue || null;
+        } else {
+          newSelectedValues[fieldPath] = fieldValue;
+        }
       });
 
       setSelectedValues(newSelectedValues);
 
-      // Notify parent of changes - transform to backend format
+      // Notify parent of changes - send values as-is (backend format)
       if (onChange) {
-        const backendValues = transformToBackendFormat(value);
-        console.log('Form values:', value);
-        console.log('Backend values:', backendValues);
-        onChange(backendValues);
+        onChange(value);
       }
     });
 

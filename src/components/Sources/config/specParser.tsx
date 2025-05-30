@@ -70,6 +70,7 @@ function parseOneOfField(
 ): FormField {
   const subFields: FormField[] = [];
   const enumOptions: { value: any; title: string; description?: string }[] = [];
+  let constKey: string | undefined; // Store the const key for this oneOf field
 
   prop.oneOf?.forEach((option) => {
     //option is individual element of the oneOf array.
@@ -85,8 +86,13 @@ function parseOneOfField(
 
     if (constField) {
       //this is array containing key and values as [key, {}].
-      const [constKey, constProp] = constField; //[cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]
+      const [fieldConstKey, constProp] = constField; //[cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]
       const constValue = constProp.const;
+
+      // Store the const key (it should be the same for all options in a oneOf)
+      if (!constKey) {
+        constKey = fieldConstKey;
+      }
 
       // Add this option to the enum because the const values will form the options for the dropdown.
       enumOptions.push({
@@ -103,7 +109,7 @@ function parseOneOfField(
         // so for postgres mode will already be in the constField.
         // Skip the const field itself
         console.log(propKey, 'propKey');
-        if (propKey === constKey) return;
+        if (propKey === fieldConstKey) return;
 
         const subFieldPath = [...path, propKey]; //[ssl_mode.client_key]
         console.log(subFields, 'subfields');
@@ -168,6 +174,7 @@ function parseOneOfField(
     displayType: prop.display_type || 'dropdown', // we create this and it will be dropdown only.
     enum: enumOptions.map((option) => option.value), //
     enumOptions, // Store full option details for better rendering
+    constKey, // Store the const key for proper object creation
     subFields,
     order: prop.order || 0,
     group: prop.group,

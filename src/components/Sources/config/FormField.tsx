@@ -90,17 +90,15 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
           defaultValue={field.default}
           rules={{ required: field.required && `${field.title} is required` }}
           render={({ field: { value, onChange }, fieldState: { error } }) => {
-            // For oneOf fields, the value might be an object with the const value
-            // We need to extract the const value to match against our enum
-            let selectedValue = value;
+            // Extract const value for display
+            let selectedValue = null;
 
-            if (typeof value === 'object' && value !== null) {
-              // Try to find the const value in the object by checking each enum option
-              const constValue = field.enum?.find((enumVal) => {
-                // Check if this enum value exists as a property value in the object
-                return Object.values(value).includes(enumVal);
-              });
-              selectedValue = constValue || null;
+            if (value && typeof value === 'object') {
+              // Find the const value in the object by checking which enum value exists
+              selectedValue = Object.values(value).find((val) => field.enum?.includes(val)) || null;
+            } else if (typeof value === 'string' && field.enum?.includes(value)) {
+              // Handle case where value is already a string (for backwards compatibility)
+              selectedValue = value;
             }
 
             return (
@@ -109,25 +107,14 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                 <Autocomplete
                   value={selectedValue}
                   onChange={(_, newValue) => {
-                    // When a value is selected, we need to create the proper object structure
                     if (newValue) {
-                      // For simple oneOf fields, just set the const value
-                      // For complex oneOf fields with defaults, we might need to set more
-                      const optionDetails = field.enumOptions?.find(
-                        (opt) => opt.value === newValue
-                      );
-
-                      // Check if this field has defaults by looking at existing subFields
-                      const hasSubFields = field.subFields?.some(
-                        (sf) => sf.parentValue === newValue
-                      );
-
-                      if (hasSubFields) {
-                        // For complex fields with sub-fields, set just the const value for now
-                        // The sub-fields will handle their own values
-                        onChange(newValue);
+                      // Use the stored constKey from the field definition
+                      if (field.constKey) {
+                        // Create the proper object structure for backend
+                        const objectValue = { [field.constKey]: newValue };
+                        onChange(objectValue);
                       } else {
-                        // For simple const-only fields, just set the value
+                        // Fallback for backwards compatibility
                         onChange(newValue);
                       }
                     } else {
