@@ -1,10 +1,96 @@
 import { AirbyteProperty, AirbyteSpec, FieldGroup, FormField } from './types';
 
+/**
+ * Sorts form fields according to Airbyte documentation rules:
+ * 1. Fields with order property come first (sorted by order value)
+ * 2. Fields without order come last (required before optional, then alphabetical by field name)
+ */
+function sortFieldsByAirbyteRules(fields: FormField[]): FormField[] {
+  return fields.sort((a, b) => {
+    // 1. Fields with order property come first
+    const aHasOrder = a.order !== undefined;
+    const bHasOrder = b.order !== undefined;
+
+    if (aHasOrder && bHasOrder) {
+      // Both have order - sort by order value
+      return a.order! - b.order!;
+    }
+
+    if (aHasOrder && !bHasOrder) {
+      // A has order, B doesn't - A comes first
+      return -1;
+    }
+
+    if (!aHasOrder && bHasOrder) {
+      // B has order, A doesn't - B comes first
+      return 1;
+    }
+
+    // Neither has order - sort by required status, then alphabetically by field name
+    if (a.required && !b.required) {
+      // A is required, B is optional - A comes first
+      return -1;
+    }
+
+    if (!a.required && b.required) {
+      // B is required, A is optional - B comes first
+      return 1;
+    }
+
+    // Both have same required status - sort alphabetically by field name (last part of path)
+    const aFieldName = a.path[a.path.length - 1] || '';
+    const bFieldName = b.path[b.path.length - 1] || '';
+    return aFieldName.localeCompare(bFieldName);
+  });
+}
+
+/**
+ * Sorts oneOf subfields, grouping by parent value first, then applying Airbyte rules within each group
+ */
+function sortOneOfSubFields(subFields: FormField[]): FormField[] {
+  return subFields.sort((a, b) => {
+    // Group by parent value first to keep related fields together
+    if (a.parentValue !== b.parentValue) {
+      return 0; // Don't change order between different parent values
+    }
+
+    // Within the same parent value, apply standard Airbyte sorting rules
+    // Reuse the same logic but inline since we can't call the function recursively in sort
+    const aHasOrder = a.order !== undefined;
+    const bHasOrder = b.order !== undefined;
+
+    if (aHasOrder && bHasOrder) {
+      return a.order! - b.order!;
+    }
+
+    if (aHasOrder && !bHasOrder) {
+      return -1;
+    }
+
+    if (!aHasOrder && bHasOrder) {
+      return 1;
+    }
+
+    if (a.required && !b.required) {
+      return -1;
+    }
+
+    if (!a.required && b.required) {
+      return 1;
+    }
+
+    const aFieldName = a.path[a.path.length - 1] || '';
+    const bFieldName = b.path[b.path.length - 1] || '';
+    return aFieldName.localeCompare(bFieldName);
+  });
+}
+
 export function parseAirbyteSpec(spec: AirbyteSpec): FieldGroup[] {
   const allFields = parseProperties(spec.properties, [], spec.required || []); // on a parent level (not nested oneOfs)
   console.log(allFields, 'allFields');
-  // Sort fields by order
-  allFields.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  // Sort fields according to Airbyte documentation rules
+  sortFieldsByAirbyteRules(allFields);
 
   if (!spec.groups) {
     // If no groups defined, put all fields in a default group - from airbyte documentation.
@@ -143,24 +229,8 @@ function parseOneOfField(
     }
   });
 
-  // Sort sub-fields: first by order (if specified), then alphabetically by title
-  subFields.sort((a, b) => {
-    // Group by parent value first to keep related fields together
-    if (a.parentValue !== b.parentValue) {
-      return 0; // Don't change order between different parent values
-    }
-
-    // Within the same parent value, sort by order first
-    const orderA = a.order || 999;
-    const orderB = b.order || 999;
-
-    if (orderA !== orderB) {
-      return orderA - orderB;
-    }
-
-    // If same order (or both undefined), sort alphabetically by title
-    return (a.title || '').localeCompare(b.title || '');
-  });
+  // Sort sub-fields according to Airbyte documentation rules
+  sortOneOfSubFields(subFields);
 
   return {
     id: path.join('.'), // Use full path for unique ID
@@ -174,7 +244,7 @@ function parseOneOfField(
     constOptions, // Store full const option details for oneOf rendering
     constKey, // Store the const key for proper object creation
     subFields,
-    order: prop.order || 0,
+    order: prop.order, // Don't default to 0 - undefined means no order specified
     group: prop.group,
   };
 }
@@ -194,18 +264,8 @@ function parseArrayField(
     const itemRequired = Array.isArray(prop.items.required) ? prop.items.required : [];
     subFields = parseProperties(prop.items.properties, [...path, '0'], itemRequired);
 
-    // Sort sub-fields: first by order (if specified), then alphabetically by title
-    subFields.sort((a, b) => {
-      const orderA = a.order || 999;
-      const orderB = b.order || 999;
-
-      if (orderA !== orderB) {
-        return orderA - orderB;
-      }
-
-      // If same order (or both undefined), sort alphabetically by title
-      return (a.title || '').localeCompare(b.title || '');
-    });
+    // Sort sub-fields according to Airbyte documentation rules
+    sortFieldsByAirbyteRules(subFields);
   }
 
   return {
@@ -219,7 +279,7 @@ function parseArrayField(
     default: prop.default || [], //default value is usually is []here, but in string its ""
     itemType: prop.items?.type || 'string',
     subFields,
-    order: prop.order || 0,
+    order: prop.order, // Don't default to 0 - undefined means no order specified
     group: prop.group,
   };
 }
@@ -249,7 +309,7 @@ function parseBasicField(
     minimum: prop.minimum,
     maximum: prop.maximum,
     alwaysShow: prop.always_show,
-    order: prop.order || 0,
+    order: prop.order, // Don't default to 0 - undefined means no order specified
     group: prop.group,
   };
 }

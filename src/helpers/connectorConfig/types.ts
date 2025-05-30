@@ -67,7 +67,7 @@ export interface FormField {
   alwaysShow?: boolean;
   subFields?: FormField[];
   parentValue?: any;
-  order: number;
+  order?: number;
   itemType?: string;
   constKey?: string;
 }
