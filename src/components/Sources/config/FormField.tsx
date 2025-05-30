@@ -191,7 +191,8 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
           name={fieldPath}
           control={control}
           defaultValue={field.default || false}
-          render={({ field: { value, onChange } }) => (
+          rules={{ required: field.required && `${field.title} is required` }}
+          render={({ field: { value, onChange }, fieldState: { error } }) => (
             <Box>
               <FieldLabel />
               <FormControlLabel
@@ -199,6 +200,11 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                 label={value ? 'Enabled' : 'Disabled'}
                 sx={{ ml: 0 }}
               />
+              {error && (
+                <Typography color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
+                  {error.message}
+                </Typography>
+              )}
             </Box>
           )}
         />

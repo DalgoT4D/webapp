@@ -94,6 +94,77 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
     return result;
   };
 
+  // Transform form values back to proper object structure for backend
+  const transformToBackendFormat = (formValues: Record<string, any>): Record<string, any> => {
+    const result: Record<string, any> = {};
+
+    // Get all oneOf fields from spec to know which fields need transformation
+    const oneOfFields = fieldGroups.flatMap((group) =>
+      group.fields.filter((field) => field.type === 'object' && field.enum)
+    );
+
+    // Helper function to find the const key for a oneOf field
+    const findConstKey = (fieldPath: string[], constValue: string): string | null => {
+      // Find matching oneOf option in the original spec
+      let currentProp: any = spec.properties;
+
+      // Navigate to the correct property in the spec
+      for (const pathSegment of fieldPath) {
+        if (currentProp[pathSegment]) {
+          currentProp = currentProp[pathSegment];
+        } else {
+          return null;
+        }
+      }
+
+      // Look through oneOf options to find the one with this const value
+      if (currentProp.oneOf) {
+        for (const option of currentProp.oneOf) {
+          const constField = Object.entries(option.properties).find(
+            ([_, prop]: [string, any]) => prop.const === constValue
+          );
+          if (constField) {
+            return constField[0]; // Return the const key (e.g., "mode")
+          }
+        }
+      }
+
+      return null;
+    };
+
+    // First, copy all non-oneOf values
+    Object.keys(formValues).forEach((key) => {
+      const value = formValues[key];
+      if (value !== null && value !== undefined && value !== '') {
+        result[key] = value;
+      }
+    });
+
+    // Then transform oneOf fields
+    oneOfFields.forEach((field) => {
+      const fieldPath = field.path.join('.');
+      const formValue = formValues[fieldPath];
+
+      if (formValue) {
+        const constKey = findConstKey(field.path, formValue);
+        if (constKey) {
+          // Transform to proper object structure
+          result[fieldPath] = { [constKey]: formValue };
+
+          // Add any sub-field values to the object
+          Object.keys(formValues).forEach((key) => {
+            if (key.startsWith(`${fieldPath}.`) && key !== fieldPath) {
+              const subKey = key.substring(fieldPath.length + 1);
+              result[fieldPath][subKey] = formValues[key];
+            }
+          });
+        }
+      }
+    });
+
+    return result;
+  };
+
   const methods = useForm({
     defaultValues: extractConstValues(initialValues),
   });
@@ -122,9 +193,12 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
 
       setSelectedValues(newSelectedValues);
 
-      // Notify parent of changes
+      // Notify parent of changes - transform to backend format
       if (onChange) {
-        onChange(value);
+        const backendValues = transformToBackendFormat(value);
+        console.log('Form values:', value);
+        console.log('Backend values:', backendValues);
+        onChange(backendValues);
       }
     });
 
