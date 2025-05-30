@@ -156,16 +156,15 @@ function parseOneOfField(
   let constKey: string | undefined; // Store the const key for this oneOf field
 
   prop.oneOf?.forEach((option) => {
-    //option is individual element of the oneOf array.
-    // Find the const field that identifies this option
-    // loops throught the oneOf array of objects.
-    //each object has properties. So the object.entries will make the properties as [{key, value}, {key, value}]] and then it finds the const property.
-    // [[cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]].find(([key,prop]) => prop.const.) ** find returns the truthy value. hence it will return the whole array with key and prop. [cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]
+    // Find the const field that identifies this option.
+    // This loops through the oneOf array of objects.
+    // Each object has properties. Object.entries converts properties to [key, value] pairs,
+    // then finds the property with a 'const' field.
+    // Example: [["cluster_type", {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]]
     const constField: any[] | undefined = Object.entries(option.properties).find(
       ([_, p]) => p.const
     ); //returns the first matching value.
     //so const key is unique but const value is different for each option.
-    console.log('constField', constField);
 
     if (constField) {
       //this is array containing key and values as [key, {}].
@@ -191,11 +190,9 @@ function parseOneOfField(
         // this goes through the properties of the values of the oneOf array. Each value === option.
         // so for postgres mode will already be in the constField.
         // Skip the const field itself
-        console.log(propKey, 'propKey');
         if (propKey === fieldConstKey) return;
 
         const subFieldPath = [...path, propKey]; //[ssl_mode.client_key]
-        console.log(subFields, 'subfields');
         // Handle nested oneOf fields recursively
         let subField: FormField;
         if (propDef.oneOf) {
