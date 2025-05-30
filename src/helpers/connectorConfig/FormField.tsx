@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FormField as FormFieldType } from './types';
-import { Controller, useFormContext, ValidationRule } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import {
   Autocomplete,
   Box,
@@ -22,7 +22,7 @@ interface FormFieldProps {
   parentValue?: any;
 }
 
-export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
+export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propParentValue }) => {
   const { control } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -31,12 +31,35 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
     return null;
   }
 
-  // Only show field if it has no parent value or matches parent value
+  const fieldPath = field.path.join('.');
+
+  // For child fields (oneOf subfields), watch the parent field to get the current selected value
+  let parentValue = propParentValue;
+  if (field.parentValue !== undefined && !propParentValue) {
+    // Find the parent field path by removing the last segment
+    const parentFieldPath = field.path.slice(0, -1).join('.');
+    if (parentFieldPath) {
+      // Watch only the specific parent field to avoid unnecessary re-renders
+      const parentFieldValue = useWatch({
+        control,
+        name: parentFieldPath,
+      });
+
+      // Extract the const value from the parent object
+      if (parentFieldValue && typeof parentFieldValue === 'object') {
+        parentValue = Object.values(parentFieldValue).find(
+          (val) => typeof val === 'string' || typeof val === 'number'
+        );
+      } else {
+        parentValue = parentFieldValue;
+      }
+    }
+  }
+
+  // Only show field if it has no parent value requirement or matches parent value
   if (field.parentValue !== undefined && field.parentValue !== parentValue) {
     return null;
   }
-
-  const fieldPath = field.path.join('.');
 
   // Create the label content with consistent platform styling
   const labelText = field.title;
@@ -137,31 +160,17 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                   )}
                 />
                 {/* Render sub-fields if they exist and match the selected value */}
-                {selectedValue &&
-                  (() => {
-                    const matchingSubFields =
-                      field.subFields?.filter(
-                        (subField) => subField.parentValue === selectedValue
-                      ) || [];
-
-                    if (matchingSubFields.length === 0) {
-                      return null;
-                    }
-
-                    return (
-                      <ChildFieldsContainer
-                        title={`${field.enumOptions?.find((opt) => opt.value === selectedValue)?.title || selectedValue} Configuration`}
-                      >
-                        {matchingSubFields.map((subField) => (
-                          <FormField
-                            key={subField.id}
-                            field={subField}
-                            parentValue={selectedValue}
-                          />
-                        ))}
-                      </ChildFieldsContainer>
-                    );
-                  })()}
+                {selectedValue && field.subFields && (
+                  <ChildFieldsContainer
+                    title={`${field.enumOptions?.find((opt) => opt.value === selectedValue)?.title || selectedValue} Configuration`}
+                  >
+                    {field.subFields
+                      .filter((subField) => subField.parentValue === selectedValue)
+                      .map((subField) => (
+                        <FormField key={subField.id} field={subField} parentValue={selectedValue} />
+                      ))}
+                  </ChildFieldsContainer>
+                )}
               </>
             );
           }}
@@ -255,12 +264,6 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
               onChange(newItems);
             };
 
-            const updateItem = (index: number, itemData: Record<string, any>) => {
-              const newItems = [...items];
-              newItems[index] = { ...newItems[index], ...itemData };
-              onChange(newItems);
-            };
-
             return (
               <Box>
                 <FieldLabel>
@@ -277,7 +280,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
 
                 {items.map((item: any, index: number) => (
                   <ChildFieldsContainer
-                    key={index}
+                    key={`${fieldPath}[${index}]`}
                     title={
                       <Box
                         sx={{
@@ -305,7 +308,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                           index.toString(),
                           ...subField.path.slice(field.path.length + 1),
                         ],
-                        id: `${field.path.join('.')}.${index}.${subField.id.split('.').slice(-1)[0]}`,
+                        id: `${fieldPath}[${index}].${subField.path.slice(-1)[0]}`,
                       };
 
                       return (
@@ -356,7 +359,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
             ? ({
                 value: new RegExp(field.pattern),
                 message: field.patternDescriptor || 'Invalid format',
-              } as ValidationRule<RegExp>)
+              } as any)
             : undefined,
           min: field.minimum,
           max: field.maximum,

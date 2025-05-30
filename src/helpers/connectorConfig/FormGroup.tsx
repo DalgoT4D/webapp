@@ -5,10 +5,9 @@ import { FormField } from './FormField';
 
 interface FormGroupProps {
   group: FieldGroup;
-  selectedValues: Record<string, any>;
 }
 
-export const FormGroup: React.FC<FormGroupProps> = ({ group, selectedValues }) => {
+export const FormGroup: React.FC<FormGroupProps> = ({ group }) => {
   return (
     <Box sx={{ mb: 4 }}>
       {group.title && (
@@ -17,8 +16,7 @@ export const FormGroup: React.FC<FormGroupProps> = ({ group, selectedValues }) =
         </Typography>
       )}
       {group.fields.map((field) => {
-        const fieldPath = field.path.join('.');
-        return <FormField key={field.id} field={field} parentValue={selectedValues[fieldPath]} />;
+        return <FormField key={field.id} field={field} />;
       })}
     </Box>
   );

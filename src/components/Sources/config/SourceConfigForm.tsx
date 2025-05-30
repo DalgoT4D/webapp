@@ -17,7 +17,6 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
   onChange, // Callback function to notify parent component of changes
 }) => {
   const [fieldGroups, setFieldGroups] = useState<FieldGroup[]>([]); // Holds the parsed field groups from the spec
-  const [selectedValues, setSelectedValues] = useState<Record<string, any>>({});
 
   const methods = useForm({
     defaultValues: initialValues, // Use values as-is from backend
@@ -38,32 +37,9 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
     }
   }, [initialValues, methods]);
 
-  // Watch for changes in form values
+  // Watch for changes in form values - only notify parent, don't update local state
   useEffect(() => {
     const subscription = methods.watch((value) => {
-      // Find all object fields with enums (oneOf fields)
-      const oneOfFields = fieldGroups
-        .flatMap((group) => group.fields)
-        .filter((field) => field.type === 'object' && field.enum);
-
-      // Update selected values for oneOf fields - extract const values for display
-      const newSelectedValues: any = {};
-      oneOfFields.forEach((field) => {
-        const fieldPath = field.path.join('.');
-        const fieldValue = value[fieldPath];
-
-        // Extract const value from object for display
-        if (fieldValue && typeof fieldValue === 'object') {
-          // Find the const value in the object
-          const constValue = Object.values(fieldValue).find((val) => field.enum?.includes(val));
-          newSelectedValues[fieldPath] = constValue || null;
-        } else {
-          newSelectedValues[fieldPath] = fieldValue;
-        }
-      });
-
-      setSelectedValues(newSelectedValues);
-
       // Notify parent of changes - send values as-is (backend format)
       if (onChange) {
         onChange(value);
@@ -71,13 +47,13 @@ export const SourceConfigForm: React.FC<SourceConfigFormProps> = ({
     });
 
     return () => subscription.unsubscribe();
-  }, [methods, fieldGroups, onChange]);
+  }, [methods, onChange]);
 
   return (
     <FormProvider {...methods}>
       <Box>
         {fieldGroups.map((group) => (
-          <FormGroup key={group.id} group={group} selectedValues={selectedValues} />
+          <FormGroup key={group.id} group={group} />
         ))}
       </Box>
     </FormProvider>
