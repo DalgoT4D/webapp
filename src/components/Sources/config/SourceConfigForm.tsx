@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import { FormProvider, useForm } from 'react-hook-form';
-import { AirbyteSpec, FieldGroup } from './types';
-import { FormGroup } from './FormGroup';
-import { parseAirbyteSpec } from './specParser';
+import { AirbyteSpec, FieldGroup } from '@/helpers/connectorConfig/types';
+import { FormGroup } from '@/helpers/connectorConfig/FormGroup';
+import { parseAirbyteSpec } from '@/helpers/connectorConfig/specParser';
 
 interface SourceConfigFormProps {
   spec: AirbyteSpec;
