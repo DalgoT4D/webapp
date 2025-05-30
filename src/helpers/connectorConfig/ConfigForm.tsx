@@ -25,7 +25,6 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
   // Parse spec into field groups
   useEffect(() => {
     const groups = parseAirbyteSpec(spec); // get the groups from the spec. All fields that share the same group value will be grouped into the same card in the UI
-    console.log(groups, 'groups');
     setFieldGroups(groups);
   }, [spec]);
 

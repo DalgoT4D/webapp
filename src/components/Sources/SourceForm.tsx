@@ -11,6 +11,13 @@ import CustomDialog from '@/components/Dialog/CustomDialog';
 import Input from '@/components/UI/Input/Input';
 import { ConfigForm } from '../../helpers/connectorConfig/ConfigForm';
 
+interface SourceData {
+  sourceId: string;
+  name: string;
+  sourceDefinitionId: string;
+  connectionConfiguration: Record<string, any>;
+}
+
 interface SourceFormProps {
   mutate: (...args: any) => any;
   showForm: boolean;
@@ -38,7 +45,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
 }) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
-  const [source, setSource] = useState<any>(null); // Holds the current source data when editing.
+  const [source, setSource] = useState<SourceData | null>(null); /// Holds the current source data when editing.
   const [sourceSpec, setSourceSpec] = useState<any>(null); // Holds the source specification for the selected source when editing and creating too..
   const [logs, setLogs] = useState<string[]>([]);
 

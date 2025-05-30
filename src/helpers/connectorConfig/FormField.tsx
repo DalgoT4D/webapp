@@ -35,16 +35,18 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
 
   // For child fields (oneOf subfields), watch the parent field to get the current selected value
   let parentValue = propParentValue;
+
+  // Always call useWatch at the top level
+  const parentFieldPath = field.path.slice(0, -1).join('.');
+  const parentFieldValue = useWatch({
+    control,
+    name: parentFieldPath,
+    disabled: !parentFieldPath || field.parentValue === undefined || !!propParentValue,
+  });
+
   if (field.parentValue !== undefined && !propParentValue) {
     // Find the parent field path by removing the last segment
-    const parentFieldPath = field.path.slice(0, -1).join('.');
     if (parentFieldPath) {
-      // Watch only the specific parent field to avoid unnecessary re-renders
-      const parentFieldValue = useWatch({
-        control,
-        name: parentFieldPath,
-      });
-
       // Extract the const value from the parent object
       if (parentFieldValue && typeof parentFieldValue === 'object') {
         parentValue = Object.values(parentFieldValue).find(
