@@ -26,6 +26,13 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
   const { control } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
 
+  // Always call useWatch at the top level - hooks must be called unconditionally
+  const parentFieldPath = field.path.slice(0, -1).join('.');
+  const parentFieldValue = useWatch({
+    control,
+    name: parentFieldPath,
+  });
+
   // Don't render hidden fields
   if (field.hidden) {
     return null;
@@ -35,13 +42,6 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
 
   // For child fields (oneOf subfields), watch the parent field to get the current selected value
   let parentValue = propParentValue;
-
-  // Always call useWatch at the top level - hooks must be called unconditionally
-  const parentFieldPath = field.path.slice(0, -1).join('.');
-  const parentFieldValue = useWatch({
-    control,
-    name: parentFieldPath,
-  });
 
   if (field.parentValue !== undefined && !propParentValue) {
     // Find the parent field path by removing the last segment
