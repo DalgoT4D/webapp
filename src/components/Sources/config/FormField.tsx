@@ -75,6 +75,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
         position: 'relative',
       }}
     >
+      {title && <Box sx={{ mb: 2 }}>{title}</Box>}
       {children}
     </Box>
   );
