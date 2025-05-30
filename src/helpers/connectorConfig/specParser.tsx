@@ -69,7 +69,7 @@ function parseOneOfField(
   isRequired: boolean // false
 ): FormField {
   const subFields: FormField[] = [];
-  const enumOptions: { value: any; title: string; description?: string }[] = [];
+  const constOptions: { value: any; title: string; description?: string }[] = [];
   let constKey: string | undefined; // Store the const key for this oneOf field
 
   prop.oneOf?.forEach((option) => {
@@ -94,8 +94,8 @@ function parseOneOfField(
         constKey = fieldConstKey;
       }
 
-      // Add this option to the enum because the const values will form the options for the dropdown.
-      enumOptions.push({
+      // Add this option to constOptions because the const values will form the options for the dropdown.
+      constOptions.push({
         value: constValue,
         title: option.title || constValue,
         description: option.description,
@@ -143,7 +143,6 @@ function parseOneOfField(
     }
   });
 
-  console.log(enumOptions, 'enumOptions');
   // Sort sub-fields: first by order (if specified), then alphabetically by title
   subFields.sort((a, b) => {
     // Group by parent value first to keep related fields together
@@ -172,8 +171,7 @@ function parseOneOfField(
     required: isRequired,
     hidden: prop.airbyte_hidden, // Track hidden fields
     displayType: prop.display_type || 'dropdown', // we create this and it will be dropdown only.
-    enum: enumOptions.map((option) => option.value), //
-    enumOptions, // Store full option details for better rendering
+    constOptions, // Store full const option details for oneOf rendering
     constKey, // Store the const key for proper object creation
     subFields,
     order: prop.order || 0,

@@ -103,8 +103,8 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
     </Box>
   );
 
-  // Handle oneOf fields (dropdowns/radio buttons)
-  if (field.type === 'object' && field.enum) {
+  // Handle oneOf fields with const values (dropdowns that trigger sub-configurations)
+  if (field.type === 'object' && field.constOptions) {
     return (
       <Box sx={{ mb: 2 }}>
         <Controller
@@ -115,11 +115,12 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
           render={({ field: { value, onChange }, fieldState: { error } }) => {
             // Extract const value for display
             let selectedValue = null;
+            const constValues = field.constOptions?.map((opt) => opt.value) || [];
 
             if (value && typeof value === 'object') {
-              // Find the const value in the object by checking which enum value exists
-              selectedValue = Object.values(value).find((val) => field.enum?.includes(val)) || null;
-            } else if (typeof value === 'string' && field.enum?.includes(value)) {
+              // Find the const value in the object
+              selectedValue = Object.values(value).find((val) => constValues.includes(val)) || null;
+            } else if (typeof value === 'string' && constValues.includes(value)) {
               // Handle case where value is already a string (for backwards compatibility)
               selectedValue = value;
             }
@@ -144,10 +145,13 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
                       onChange(null);
                     }
                   }}
-                  options={field.enum || []}
+                  options={constValues}
                   getOptionLabel={(option) => {
-                    // Use the title from enumOptions if available, otherwise use the option value
-                    const optionDetails = field.enumOptions?.find((opt) => opt.value === option);
+                    // Use the title from constOptions if available, otherwise use the option value
+                    const optionDetails = field.constOptions?.find(
+                      (opt: { value: any; title: string; description?: string }) =>
+                        opt.value === option
+                    );
                     return optionDetails?.title || option;
                   }}
                   renderInput={(params) => (
@@ -174,7 +178,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
 
                     return (
                       <ChildFieldsContainer
-                        title={`${field.enumOptions?.find((opt) => opt.value === selectedValue)?.title || selectedValue} Configuration`}
+                        title={`${field.constOptions?.find((opt: { value: any; title: string; description?: string }) => opt.value === selectedValue)?.title || selectedValue} Configuration`}
                       >
                         {matchingSubFields.map((subField) => (
                           <FormField
@@ -189,6 +193,38 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
               </>
             );
           }}
+        />
+      </Box>
+    );
+  }
+
+  // Handle simple enum fields for string type (dropdown with no sub-configurations)
+  if (field.type === 'string' && field.enum) {
+    return (
+      <Box sx={{ mb: 2 }}>
+        <Controller
+          name={fieldPath}
+          control={control}
+          defaultValue={field.default || ''}
+          rules={{ required: field.required && `${field.title} is required` }}
+          render={({ field: { value, onChange }, fieldState: { error } }) => (
+            <Box>
+              <FieldLabel />
+              <Autocomplete
+                value={value || ''}
+                onChange={(_, newValue) => onChange(newValue || '')}
+                options={field.enum || []}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder={`Select ${field.title.toLowerCase()}`}
+                    error={!!error}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+            </Box>
+          )}
         />
       </Box>
     );

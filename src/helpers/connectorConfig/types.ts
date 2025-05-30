@@ -58,7 +58,7 @@ export interface FormField {
   patternDescriptor?: string;
   multiline?: boolean;
   enum?: any[];
-  enumOptions?: { value: any; title: string; description?: string }[];
+  constOptions?: { value: any; title: string; description?: string }[];
   format?: string;
   minimum?: number;
   maximum?: number;
