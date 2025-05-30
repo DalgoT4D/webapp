@@ -87,13 +87,10 @@ function sortOneOfSubFields(subFields: FormField[]): FormField[] {
 
 export function parseAirbyteSpec(spec: AirbyteSpec): FieldGroup[] {
   const allFields = parseProperties(spec.properties, [], spec.required || []); // on a parent level (not nested oneOfs)
-  console.log(allFields, 'allFields');
-
-  // Sort fields according to Airbyte documentation rules
-  sortFieldsByAirbyteRules(allFields);
 
   if (!spec.groups) {
     // If no groups defined, put all fields in a default group - from airbyte documentation.
+    sortFieldsByAirbyteRules(allFields);
     return [
       {
         id: 'default',
@@ -106,7 +103,7 @@ export function parseAirbyteSpec(spec: AirbyteSpec): FieldGroup[] {
   return spec.groups.map((group) => ({
     id: group.id,
     title: group.title,
-    fields: allFields.filter((field) => field.group === group.id),
+    fields: sortFieldsByAirbyteRules(allFields.filter((field) => field.group === group.id)),
   }));
 }
 
