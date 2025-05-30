@@ -1,8 +1,8 @@
 import { AirbyteProperty, AirbyteSpec, FieldGroup, FormField } from './types';
 
 export function parseAirbyteSpec(spec: AirbyteSpec): FieldGroup[] {
-  const allFields = parseProperties(spec.properties, [], spec.required || []);
-
+  const allFields = parseProperties(spec.properties, [], spec.required || []); // on a parent level (not nested oneOfs)
+  console.log(allFields, 'allFields');
   // Sort fields by order
   allFields.sort((a, b) => (a.order || 0) - (b.order || 0));
 
@@ -77,11 +77,14 @@ function parseOneOfField(
     // loops throught the oneOf array of objects.
     //each object has properties. So the object.entries will make the properties as [{key, value}, {key, value}]] and then it finds the const property.
     // [[cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]].find(([key,prop]) => prop.const.) ** find returns the truthy value. hence it will return the whole array with key and prop. [cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]
-    const constField = Object.entries(option.properties).find(([_, p]) => p.const); //returns the first matching value.
-
+    const constField: any[] | undefined = Object.entries(option.properties).find(
+      ([_, p]) => p.const
+    ); //returns the first matching value.
+    //so const key is unique but const value is different for each option.
     console.log('constField', constField);
 
-    if (constField?.length) {
+    if (constField) {
+      //this is array containing key and values as [key, {}].
       const [constKey, constProp] = constField; //[cluster_type, {type: "string", const: "SELF_MANAGED_REPLICA_SET"}]
       const constValue = constProp.const;
 
@@ -93,7 +96,7 @@ function parseOneOfField(
       });
 
       // Parse the option's other properties as sub-fields (excluding the const field)
-      const optionRequired = Array.isArray(option.required) ? option.required : [];
+      const optionRequired: string[] = Array.isArray(option.required) ? option.required : [];
 
       Object.entries(option.properties).forEach(([propKey, propDef]) => {
         // this goes through the properties of the values of the oneOf array. Each value === option.
@@ -102,7 +105,7 @@ function parseOneOfField(
         console.log(propKey, 'propKey');
         if (propKey === constKey) return;
 
-        const subFieldPath = [...path, propKey];
+        const subFieldPath = [...path, propKey]; //[ssl_mode.client_key]
         console.log(subFields, 'subfields');
         // Handle nested oneOf fields recursively
         let subField: FormField;
@@ -134,6 +137,7 @@ function parseOneOfField(
     }
   });
 
+  console.log(enumOptions, 'enumOptions');
   // Sort sub-fields: first by order (if specified), then alphabetically by title
   subFields.sort((a, b) => {
     // Group by parent value first to keep related fields together
@@ -161,8 +165,8 @@ function parseOneOfField(
     description: prop.description,
     required: isRequired,
     hidden: prop.airbyte_hidden, // Track hidden fields
-    displayType: prop.display_type || 'dropdown',
-    enum: enumOptions.map((option) => option.value), // Keep simple array for backward compatibility
+    displayType: prop.display_type || 'dropdown', // we create this and it will be dropdown only.
+    enum: enumOptions.map((option) => option.value), //
     enumOptions, // Store full option details for better rendering
     subFields,
     order: prop.order || 0,
@@ -176,6 +180,7 @@ function parseArrayField(
   path: string[],
   isRequired: boolean
 ): FormField {
+  // for s3 we calculate subfields too.
   let subFields: FormField[] = [];
 
   // If array items are objects with properties, parse them
@@ -199,14 +204,14 @@ function parseArrayField(
   }
 
   return {
-    id: path.join('.'),
+    id: path.join('.'), //we create
     type: 'array',
-    path,
+    path, //we create for form rendering.
     title: prop.title || key,
     description: prop.description,
-    required: isRequired,
+    required: isRequired, // we calculate this.
     hidden: prop.airbyte_hidden, // Track hidden fields
-    default: prop.default || [],
+    default: prop.default || [], //default value is usually is []here, but in string its ""
     itemType: prop.items?.type || 'string',
     subFields,
     order: prop.order || 0,
@@ -221,12 +226,12 @@ function parseBasicField(
   isRequired: boolean
 ): FormField {
   return {
-    id: path.join('.'), // Use full path for unique ID
+    id: path.join('.'), // Use full path for unique ID - we create.
     type: prop.type,
-    path,
+    path, // we create for form rendering.
     title: prop.title || key,
     description: prop.description,
-    required: isRequired,
+    required: isRequired, // we calculate this.
     secret: prop.airbyte_secret,
     hidden: prop.airbyte_hidden, // Track hidden fields
     default: prop.default,
