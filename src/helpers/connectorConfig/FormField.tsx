@@ -160,17 +160,32 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
                   )}
                 />
                 {/* Render sub-fields if they exist and match the selected value */}
-                {selectedValue && field.subFields && (
-                  <ChildFieldsContainer
-                    title={`${field.enumOptions?.find((opt) => opt.value === selectedValue)?.title || selectedValue} Configuration`}
-                  >
-                    {field.subFields
-                      .filter((subField) => subField.parentValue === selectedValue)
-                      .map((subField) => (
-                        <FormField key={subField.id} field={subField} parentValue={selectedValue} />
-                      ))}
-                  </ChildFieldsContainer>
-                )}
+                {selectedValue &&
+                  field.subFields &&
+                  (() => {
+                    const matchingSubFields = field.subFields.filter(
+                      (subField) => subField.parentValue === selectedValue
+                    );
+
+                    // Only render container if there are actual matching subfields
+                    if (matchingSubFields.length === 0) {
+                      return null;
+                    }
+
+                    return (
+                      <ChildFieldsContainer
+                        title={`${field.enumOptions?.find((opt) => opt.value === selectedValue)?.title || selectedValue} Configuration`}
+                      >
+                        {matchingSubFields.map((subField) => (
+                          <FormField
+                            key={subField.id}
+                            field={subField}
+                            parentValue={selectedValue}
+                          />
+                        ))}
+                      </ChildFieldsContainer>
+                    );
+                  })()}
               </>
             );
           }}
