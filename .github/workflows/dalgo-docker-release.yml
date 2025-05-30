@@ -61,7 +61,7 @@ jobs:
             NEXT_PUBLIC_AIRBYTE_URL=${{ secrets.NEXT_PUBLIC_AIRBYTE_URL }}
           push: true
           tags: |
-            ghcr.io/DalgoT4D/dalgo_frontend:${{ env.RELEASE_NUMBER }}
-            ghcr.io/DalgoT4D/dalgo_frontend:latest
-          cache-from: type=registry,ref=ghcr.io/dalgo/dalgo_frontend:latest
+            ghcr.io/DalgoT4D/webapp:${{ env.RELEASE_NUMBER }}
+            ghcr.io/DalgoT4D/webapp:latest
+          cache-from: type=registry,ref=ghcr.io/DalgoT4D/webapp:latest
           cache-to: type=inline
