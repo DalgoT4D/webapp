@@ -9,13 +9,13 @@ import {
   InputAdornment,
   Switch,
   TextField,
-  Tooltip,
+  InputLabel,
   Typography,
   Button,
 } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 
 interface FormFieldProps {
   field: FormFieldType;
@@ -38,19 +38,26 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
 
   const fieldPath = field.path.join('.');
 
-  // Create simple string label with optional text
-  const label = `${field.title}${field.required ? '*' : ' (optional)'}`;
+  // Create the label content with consistent platform styling
+  const labelText = field.title;
+  const isRequired = field.required;
 
-  const renderDescription = () => {
-    if (!field.description) return null;
-    return (
-      <Tooltip title={field.description}>
-        <IconButton size="small" sx={{ ml: 1 }}>
-          <HelpOutlineIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    );
-  };
+  // Component to render field label with description using platform styling
+  const FieldLabel: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+      <InputLabel>
+        {labelText}
+        {isRequired && '*'}
+        {!isRequired && ' (optional)'}
+      </InputLabel>
+      {field.description && (
+        <Box sx={{ ml: 1 }}>
+          <InfoTooltip title={field.description} />
+        </Box>
+      )}
+      {children}
+    </Box>
+  );
 
   // Component to wrap child fields in a nice visual container
   const ChildFieldsContainer: React.FC<{ children: React.ReactNode; title?: React.ReactNode }> = ({
@@ -97,6 +104,7 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
 
             return (
               <>
+                <FieldLabel />
                 <Autocomplete
                   value={selectedValue}
                   onChange={(_, newValue) => {
@@ -134,18 +142,9 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label={label}
+                      placeholder={`Select ${field.title.toLowerCase()}`}
                       error={!!error}
                       helperText={error?.message}
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {renderDescription()}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
                     />
                   )}
                 />
@@ -178,15 +177,14 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
           control={control}
           defaultValue={field.default || false}
           render={({ field: { value, onChange } }) => (
-            <FormControlLabel
-              control={<Switch checked={value} onChange={(e) => onChange(e.target.checked)} />}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  {label}
-                  {renderDescription()}
-                </Box>
-              }
-            />
+            <Box>
+              <FieldLabel />
+              <FormControlLabel
+                control={<Switch checked={value} onChange={(e) => onChange(e.target.checked)} />}
+                label={value ? 'Enabled' : 'Disabled'}
+                sx={{ ml: 0 }}
+              />
+            </Box>
           )}
         />
       </Box>
@@ -206,30 +204,24 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
             // For simple arrays (like string arrays)
             if (!field.subFields || field.subFields.length === 0) {
               return (
-                <Autocomplete
-                  multiple
-                  freeSolo
-                  value={value || []}
-                  onChange={(_, newValue) => onChange(newValue)}
-                  options={[]}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={label}
-                      error={!!error}
-                      helperText={error?.message}
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {renderDescription()}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
-                  )}
-                />
+                <Box>
+                  <FieldLabel />
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    value={value || []}
+                    onChange={(_, newValue) => onChange(newValue)}
+                    options={[]}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder={`Add ${field.title.toLowerCase()}`}
+                        error={!!error}
+                        helperText={error?.message}
+                      />
+                    )}
+                  />
+                </Box>
               );
             }
 
@@ -263,16 +255,14 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
 
             return (
               <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">{label}</Typography>
-                  {renderDescription()}
+                <FieldLabel>
                   <Button onClick={addItem} variant="outlined" size="small" sx={{ ml: 'auto' }}>
                     Add {field.title?.replace(/s$/, '') || 'Item'}
                   </Button>
-                </Box>
+                </FieldLabel>
 
                 {error && (
-                  <Typography color="error" variant="caption" sx={{ mb: 1 }}>
+                  <Typography color="error" variant="caption" sx={{ mb: 1, display: 'block' }}>
                     {error.message}
                   </Typography>
                 )}
@@ -364,39 +354,39 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue }) => {
           max: field.maximum,
         }}
         render={({ field: { value, onChange, ...rest }, fieldState: { error } }) => (
-          <TextField
-            {...rest}
-            fullWidth
-            label={label}
-            value={value}
-            onChange={(e) => {
-              const val = field.type === 'number' ? Number(e.target.value) : e.target.value;
-              onChange(val);
-            }}
-            type={
-              field.secret && !showPassword
-                ? 'password'
-                : field.type === 'number'
-                  ? 'number'
-                  : 'text'
-            }
-            error={!!error}
-            helperText={error?.message}
-            multiline={field.multiline}
-            rows={field.multiline ? 4 : 1}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  {field.secret && (
+          <Box>
+            <FieldLabel />
+            <TextField
+              {...rest}
+              fullWidth
+              value={value}
+              onChange={(e) => {
+                const val = field.type === 'number' ? Number(e.target.value) : e.target.value;
+                onChange(val);
+              }}
+              type={
+                field.secret && !showPassword
+                  ? 'password'
+                  : field.type === 'number'
+                    ? 'number'
+                    : 'text'
+              }
+              error={!!error}
+              helperText={error?.message}
+              multiline={field.multiline}
+              rows={field.multiline ? 4 : 1}
+              placeholder={`Enter ${field.title.toLowerCase()}`}
+              InputProps={{
+                endAdornment: field.secret && (
+                  <InputAdornment position="end">
                     <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                       {showPassword ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />}
                     </IconButton>
-                  )}
-                  {renderDescription()}
-                </InputAdornment>
-              ),
-            }}
-          />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
         )}
       />
     </Box>
