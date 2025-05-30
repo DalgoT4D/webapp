@@ -119,7 +119,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
         }
       })();
     }
-  }, [selectedSourceDef]);
+  }, [selectedSourceDef, session, source, setValue, globalContext]);
 
   // Handle WebSocket response
   useEffect(() => {
