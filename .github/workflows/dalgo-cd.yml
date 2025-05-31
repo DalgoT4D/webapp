@@ -2,7 +2,9 @@ name: Dalgo CD - Staging
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - github-actions-to-create-docker-image-and-push-to-ghcr
 
 jobs:
   build_and_deploy:
@@ -32,7 +34,7 @@ jobs:
           context: .
           file: ./Docker/Dockerfile
           platforms: linux/amd64, linux/arm64
-          build-args: | # build arguments for the docker image. (taking values from the github secrets - production environment)
+          build-args: | # build arguments for the docker image. (taking values from the github secrets - staging environment)
             BUILD_DATE=${{ env.BUILD_DATE }}
             NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
             NEXT_PUBLIC_USAGE_DASHBOARD_ID=${{ secrets.NEXT_PUBLIC_USAGE_DASHBOARD_ID }}
@@ -80,7 +82,7 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             echo "Pulling latest ghcr image"
-            docker pull ghcr.io/DalgoT4D/webapp:latest
+            docker pull ghcr.io/DalgoT4D/webapp:main-${{ github.sha }}
 
             echo "Running Docker Compose"
             cd /home/ddp/webapp/Docker
