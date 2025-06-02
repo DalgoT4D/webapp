@@ -79,7 +79,7 @@ jobs:
             git pull origin main
 
             echo "Logging into GHCR"
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             echo "Pulling latest ghcr image"
             docker pull ghcr.io/dalgot4d/webapp:main-${{ github.sha }}
