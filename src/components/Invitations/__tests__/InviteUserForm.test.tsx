@@ -114,4 +114,51 @@ describe('Invite user', () => {
 
     expect(inviteUserApiMock).toHaveBeenCalledTimes(1);
   });
+
+  it('calls setMutateInvitationsParent after a successful invitation', async () => {
+    const inviteUserApiMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce({ success: 1 }),
+    });
+
+    global.fetch = inviteUserApiMock;
+
+    const setMutateInvitationsParent = jest.fn();
+
+    const inviteForm = (
+      <SWRConfig
+        value={{
+          dedupingInterval: 0,
+          fetcher: (resource) => mockRoles(resource, {}).then((res: any) => res.json()),
+          provider: () => new Map(),
+        }}
+      >
+        <SessionProvider session={mockSession}>
+          <InviteUserForm
+            mutate={mutate}
+            showForm={true}
+            setShowForm={setShowForm}
+            setMutateInvitationsParent={setMutateInvitationsParent}
+          />
+        </SessionProvider>
+      </SWRConfig>
+    );
+
+    render(inviteForm);
+
+    const emailInput = screen.getByLabelText('Email*');
+    await user.type(emailInput, 'inviteuser@gmail.com');
+
+    const dropdown = screen.getByRole('combobox');
+    await user.click(dropdown);
+
+    const firstOption = screen.getAllByRole('option')[0];
+    await user.click(firstOption);
+
+    const savebutton = screen.getByTestId('savebutton');
+    await userEvent.click(savebutton);
+
+    expect(inviteUserApiMock).toHaveBeenCalledTimes(1);
+    expect(setMutateInvitationsParent).toHaveBeenCalledWith(true);
+  });
 });
