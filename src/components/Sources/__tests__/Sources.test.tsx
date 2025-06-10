@@ -214,8 +214,9 @@ describe('Sources', () => {
     );
   });
 
-  test.only('displays loading indicator while fetching data', async () => {
-    (useSWR as jest.Mock).mockReturnValueOnce({ data: null, isLoading: true, mutate: jest.fn() });
+  test('displays loading indicator while fetching data', async () => {
+    // Override the beforeEach mock for this specific test
+    (useSWR as jest.Mock).mockReturnValue({ data: null, isLoading: true, mutate: jest.fn() });
 
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
@@ -223,8 +224,6 @@ describe('Sources', () => {
       </GlobalContext.Provider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    });
+    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
   });
 });

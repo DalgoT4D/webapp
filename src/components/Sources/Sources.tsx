@@ -186,7 +186,7 @@ export const Sources = () => {
   }, [session]);
 
   if (isLoading) {
-    return <CircularProgress />;
+    return <CircularProgress data-testid="loading-indicator" />;
   }
 
   return (
