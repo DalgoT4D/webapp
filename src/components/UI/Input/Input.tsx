@@ -117,7 +117,8 @@ export const Input: React.FC<InputProps> = ({
               })
             : {}))}
         InputProps={{
-          inputProps: { step: 'any' },
+          inputProps: { step: 'any', ...rest.inputProps },
+          ...rest.InputProps,
         }}
         {...rest}
         id={id ? id : name}
