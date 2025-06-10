@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Autocomplete, Box, Button } from '@mui/material';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import useWebSocket from 'react-use-websocket';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -176,6 +176,12 @@ export const SourceForm: React.FC<SourceFormProps> = ({
   };
 
   const onSubmit = async (data: SourceFormState) => {
+    // Additional validation for sourceDef
+    if (!data.sourceDef) {
+      // This should be caught by react-hook-form validation, but let's be extra sure
+      return;
+    }
+
     setLoading(true);
     setLogs([]);
     sendJsonMessage({
@@ -197,24 +203,33 @@ export const SourceForm: React.FC<SourceFormProps> = ({
         variant="outlined"
       />
       {/* select the source type */}
-      <Autocomplete
-        disabled={!!sourceId}
-        value={selectedSourceDef}
-        onChange={(_, value) => setValue('sourceDef', value)} // select the source eg postgres, mongodb etc.
-        options={sourceDefs}
-        getOptionLabel={(option) => `${option.label} (v${option.dockerImageTag})`}
-        renderOption={(props, option) => (
-          <li {...props} key={option.id}>
-            {`${option.label} (v${option.dockerImageTag})`}
-          </li>
-        )}
-        renderInput={(params) => (
-          <Input
-            {...params}
-            name="sourceDef"
-            label="Select source type"
-            variant="outlined"
-            sx={{ mb: 2 }}
+      <Controller
+        name="sourceDef"
+        control={control}
+        rules={{ required: 'Source type is required' }}
+        render={({ field, fieldState }) => (
+          <Autocomplete
+            disabled={!!sourceId}
+            value={field.value}
+            onChange={(_, value) => field.onChange(value)}
+            options={sourceDefs}
+            getOptionLabel={(option) => `${option.label} (v${option.dockerImageTag})`}
+            renderOption={(props, option) => (
+              <li {...props} key={option.id}>
+                {`${option.label} (v${option.dockerImageTag})`}
+              </li>
+            )}
+            renderInput={(params) => (
+              <Input
+                {...params}
+                name="sourceDef"
+                label="Select source type*"
+                variant="outlined"
+                sx={{ mb: 2 }}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+              />
+            )}
           />
         )}
       />
