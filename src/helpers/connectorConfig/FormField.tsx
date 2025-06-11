@@ -33,13 +33,13 @@ export const FormField: React.FC<FormFieldProps> = ({
 
   // Always call useWatch at the top level - hooks must be called unconditionally
   const parentSegments = field.path.slice(0, -1);
-  // Only watch parent field if it exists
-  const parentFieldValue = parentSegments.length
-    ? useWatch({
-        control,
-        name: parentSegments.join('.'),
-      })
-    : undefined;
+  const parentFieldPath = parentSegments.length ? parentSegments.join('.') : '';
+
+  const parentFieldValue = useWatch({
+    control,
+    name: parentFieldPath,
+    disabled: !parentSegments.length, // avoids subscribing to the whole form
+  });
 
   // Don't render hidden fields
   if (field.hidden) {

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Autocomplete, Box, Button } from '@mui/material';
+import { Autocomplete, Box, Button, TextField } from '@mui/material';
 import { useForm, Controller, FormProvider } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
 import useWebSocket from 'react-use-websocket';
@@ -48,6 +48,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
   const [source, setSource] = useState<SourceData | null>(null); /// Holds the current source data when editing.
   const [sourceSpec, setSourceSpec] = useState<any>(null); // Holds the source specification for the selected source when editing and creating too..
   const [logs, setLogs] = useState<string[]>([]);
+  const [pendingFormData, setPendingFormData] = useState<SourceFormState | null>(null);
 
   // Helper function to recursively set form values
   const setNestedFormValues = (config: Record<string, any>) => {
@@ -72,6 +73,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
       sourceDef: null,
       config: {},
     },
+    mode: 'onChange', // Enable validation on change
   });
 
   const { handleSubmit, setValue, watch, reset, control } = methods;
@@ -138,6 +140,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
           if (!mounted) return;
 
           setSourceSpec(data);
+          console.log('Spec Data:', data.connectionSpecification); // Debug log
 
           // Set initial config values if editing
           if (source?.connectionConfiguration) {
@@ -145,8 +148,52 @@ export const SourceForm: React.FC<SourceFormProps> = ({
             setValue('config', {});
             setNestedFormValues(source.connectionConfiguration);
           } else {
-            // Reset config when switching source types in create mode
-            setValue('config', {});
+            // For new source, set default values from the spec
+            const defaultConfig: Record<string, any> = {};
+
+            // First pass: collect all default values
+            const collectDefaults = (properties: Record<string, any>) => {
+              Object.entries(properties).forEach(([key, value]) => {
+                if (value.type === 'object' && value.properties) {
+                  defaultConfig[key] = {};
+                  collectDefaults(value.properties);
+                } else if (value.default !== undefined) {
+                  defaultConfig[key] =
+                    value.type === 'integer' || value.type === 'number'
+                      ? Number(value.default)
+                      : value.default;
+                } else if (value.required) {
+                  // Set empty values for required fields
+                  switch (value.type) {
+                    case 'integer':
+                    case 'number':
+                      defaultConfig[key] = value.minimum || 0;
+                      break;
+                    case 'string':
+                      defaultConfig[key] = '';
+                      break;
+                    case 'object':
+                      defaultConfig[key] = {};
+                      break;
+                    case 'array':
+                      defaultConfig[key] = [];
+                      break;
+                  }
+                }
+              });
+            };
+
+            if (data.connectionSpecification?.properties) {
+              collectDefaults(data.connectionSpecification.properties);
+              console.log('Default Config:', defaultConfig); // Debug log
+
+              // Set the entire config object at once
+              setValue('config', defaultConfig, {
+                shouldValidate: true,
+                shouldDirty: true,
+                shouldTouch: true,
+              });
+            }
           }
         } catch (err: any) {
           console.error(err);
@@ -174,6 +221,8 @@ export const SourceForm: React.FC<SourceFormProps> = ({
       if (checkResponse.status !== 'success') {
         errorToast(checkResponse.message, [], globalContext);
         setLoading(false);
+        // Don't reset form on validation failure
+        setPendingFormData(null);
         return;
       }
 
@@ -183,6 +232,8 @@ export const SourceForm: React.FC<SourceFormProps> = ({
         setLogs(checkResponse.data.logs);
         errorToast('Something went wrong', [], globalContext);
         setLoading(false);
+        // Don't reset form on validation failure
+        setPendingFormData(null);
       }
     }
   }, [lastMessage]);
@@ -198,6 +249,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
     setSource(null);
     setSourceSpec(null);
     setLogs([]);
+    setPendingFormData(null);
   };
 
   // Add cleanup effect when sourceId changes
@@ -211,14 +263,17 @@ export const SourceForm: React.FC<SourceFormProps> = ({
       });
       setSource(null);
       setSourceSpec(null);
+      setPendingFormData(null); // Reset pending form data
     }
   }, [sourceId, reset]);
 
   const handleSaveSource = async () => {
+    if (!pendingFormData) return;
+
     const formData = {
-      name: watch('name'),
-      sourceDefId: selectedSourceDef?.id,
-      config: watch('config'),
+      name: pendingFormData.name,
+      sourceDefId: pendingFormData.sourceDef?.id,
+      config: pendingFormData.config,
     };
 
     try {
@@ -230,24 +285,25 @@ export const SourceForm: React.FC<SourceFormProps> = ({
         successToast('Source added', [], globalContext);
       }
       mutate();
-      handleClose();
+      handleClose(); // Only reset form on successful save
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
-    } finally {
       setLoading(false);
+      setPendingFormData(null); // Clear pending data but keep form state
     }
   };
 
   const onSubmit = async (data: SourceFormState) => {
+    console.log('Form Data on Submit:', data); // Debug log
     // Additional validation for sourceDef
     if (!data.sourceDef) {
-      // This should be caught by react-hook-form validation, but let's be extra sure
       return;
     }
 
     setLoading(true);
     setLogs([]);
+    setPendingFormData(data);
     sendJsonMessage({
       name: data.name,
       sourceDefId: data.sourceDef?.id,
@@ -285,9 +341,8 @@ export const SourceForm: React.FC<SourceFormProps> = ({
                 </li>
               )}
               renderInput={(params) => (
-                <Input
+                <TextField
                   {...params}
-                  name="sourceDef"
                   label="Select source type*"
                   variant="outlined"
                   sx={{ mb: 2 }}

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
-import { useFormContext } from 'react-hook-form';
 import { AirbyteSpec, FieldGroup } from '@/helpers/connectorConfig/types';
 import { FormGroup } from '@/helpers/connectorConfig/FormGroup';
 import { parseAirbyteSpec } from '@/helpers/connectorConfig/specParser';
