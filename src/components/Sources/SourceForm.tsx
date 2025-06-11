@@ -151,18 +151,26 @@ export const SourceForm: React.FC<SourceFormProps> = ({
             // For new source, set default values from the spec
             const collectDefaults = (
               properties: Record<string, any>,
-              target: Record<string, any>
+              target: Record<string, any>,
+              requiredFields: string[] = []
             ) => {
               Object.entries(properties).forEach(([key, value]) => {
+                const isRequired = requiredFields.includes(key);
+
                 if (value.type === 'object' && value.properties) {
                   target[key] = {};
-                  collectDefaults(value.properties, target[key]);
+                  // Pass down the required fields array from the nested object
+                  collectDefaults(
+                    value.properties,
+                    target[key],
+                    Array.isArray(value.required) ? value.required : []
+                  );
                 } else if (value.default !== undefined) {
                   target[key] =
                     value.type === 'integer' || value.type === 'number'
                       ? Number(value.default)
                       : value.default;
-                } else if (value.required) {
+                } else if (isRequired) {
                   // Set empty values for required fields
                   switch (value.type) {
                     case 'integer':
@@ -185,7 +193,14 @@ export const SourceForm: React.FC<SourceFormProps> = ({
 
             if (data.connectionSpecification?.properties) {
               const defaultConfig: Record<string, any> = {};
-              collectDefaults(data.connectionSpecification.properties, defaultConfig);
+              // Pass the top-level required fields array
+              collectDefaults(
+                data.connectionSpecification.properties,
+                defaultConfig,
+                Array.isArray(data.connectionSpecification.required)
+                  ? data.connectionSpecification.required
+                  : []
+              );
               console.log('Default Config:', defaultConfig); // Debug log
 
               // Set the entire config object at once
