@@ -16,12 +16,12 @@
     "format:write": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\" \"cypress/**/*.{js,jsx,ts,tsx}\" && git add ."
   },
   "dependencies": {
-    "@amplitude/analytics-browser": "^2.11.11",
+    "@amplitude/analytics-browser": "^2.15.0",
     "@dagrejs/dagre": "^1.1.4",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
-    "@mui/icons-material": "5.16.13",
-    "@mui/material": "^5.16.13",
+    "@mui/icons-material": "5.17.1",
+    "@mui/material": "^5.17.1",
     "@mui/x-date-pickers": "^6.20.1",
     "@sentry/nextjs": "8.55.0",
     "@superset-ui/embedded-sdk": "^0.1.2",
@@ -29,10 +29,10 @@
     "@types/d3": "^7.4.2",
     "@types/react-resizable": "^3.0.8",
     "ag-grid-react": "^31.2.1",
-    "cronstrue": "^2.56.0",
+    "cronstrue": "^2.59.0",
     "d3": "^7.8.5",
     "eslint": "8.57.1",
-    "eslint-config-next": "^14.2.24",
+    "eslint-config-next": "^14.2.28",
     "mock-socket": "^9.3.1",
     "moment": "^2.30.1",
     "next": "^14.2.25",
@@ -40,17 +40,17 @@
     "react": "^18.3.1",
     "react-arborist": "^3.4.3",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.54.2",
-    "react-joyride": "^2.9.0",
+    "react-hook-form": "^7.55.0",
+    "react-joyride": "^2.9.3",
     "react-markdown": "^9.1.0",
     "react-papaparse": "^4.4.0",
     "react-resizable": "^3.0.5",
-    "react-use-websocket": "^4.10.0",
+    "react-use-websocket": "^4.13.0",
     "reactflow": "^11.11.4",
     "remark-gfm": "^4.0.0",
     "sharp": "^0.34.1",
     "superset-ui": "^0.0.0-1",
-    "swr": "^2.3.0",
+    "swr": "^2.3.3",
     "typescript": "5.8.2",
     "use-resize-observer": "^9.1.0"
   },
@@ -78,6 +78,5 @@
   },
   "engines": {
     "node": ">=18.17.0"
-  },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  }
 }
