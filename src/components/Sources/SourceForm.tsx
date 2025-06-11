@@ -50,6 +50,23 @@ export const SourceForm: React.FC<SourceFormProps> = ({
   const [sourceSpec, setSourceSpec] = useState<any>(null); // Holds the source specification for the selected source when editing and creating too..
   const [logs, setLogs] = useState<string[]>([]);
 
+  // Helper function to recursively set form values
+  const setNestedFormValues = (config: Record<string, any>) => {
+    // First set all top-level fields
+    Object.entries(config).forEach(([key, value]) => {
+      if (typeof value !== 'object' || value === null) {
+        setValue(`config.${key}`, value);
+      }
+    });
+
+    // Then set object fields with their nested values
+    Object.entries(config).forEach(([key, value]) => {
+      if (typeof value === 'object' && value !== null) {
+        setValue(`config.${key}`, value);
+      }
+    });
+  };
+
   const methods = useForm<SourceFormState>({
     defaultValues: {
       name: '',
@@ -84,6 +101,12 @@ export const SourceForm: React.FC<SourceFormProps> = ({
       (async () => {
         try {
           const data = await httpGet(session, `airbyte/sources/${sourceId}`);
+          // Reset form before setting new values
+          reset({
+            name: '',
+            sourceDef: null,
+            config: {},
+          });
           setValue('name', data?.name);
           setSource(data);
 
@@ -103,6 +126,8 @@ export const SourceForm: React.FC<SourceFormProps> = ({
 
   // Load source specification when source type changes
   useEffect(() => {
+    let mounted = true;
+
     if (selectedSourceDef?.id) {
       (async () => {
         try {
@@ -110,18 +135,36 @@ export const SourceForm: React.FC<SourceFormProps> = ({
             session,
             `airbyte/source_definitions/${selectedSourceDef.id}/specifications`
           );
+
+          if (!mounted) return;
+
           setSourceSpec(data);
 
           // Set initial config values if editing
           if (source?.connectionConfiguration) {
-            setValue('config', source.connectionConfiguration);
+            // Reset config before setting new values
+            setValue('config', {});
+            setNestedFormValues(source.connectionConfiguration);
+          } else {
+            // Reset config when switching source types in create mode
+            setValue('config', {});
           }
         } catch (err: any) {
           console.error(err);
-          errorToast(err.message, [], globalContext);
+          if (mounted) {
+            errorToast(err.message, [], globalContext);
+          }
         }
       })();
+    } else {
+      // Clear source spec when no source type is selected
+      setSourceSpec(null);
+      setValue('config', {});
     }
+
+    return () => {
+      mounted = false;
+    };
   }, [selectedSourceDef, session, source, setValue, globalContext]);
 
   // Handle WebSocket response
@@ -146,12 +189,31 @@ export const SourceForm: React.FC<SourceFormProps> = ({
   }, [lastMessage]);
 
   const handleClose = () => {
-    reset();
+    // Reset all form fields to their initial state
+    reset({
+      name: '',
+      sourceDef: null,
+      config: {},
+    });
     setShowForm(false);
     setSource(null);
     setSourceSpec(null);
     setLogs([]);
   };
+
+  // Add cleanup effect when sourceId changes
+  useEffect(() => {
+    // Reset form when sourceId changes (including when it becomes undefined/null)
+    if (!sourceId) {
+      reset({
+        name: '',
+        sourceDef: null,
+        config: {},
+      });
+      setSource(null);
+      setSourceSpec(null);
+    }
+  }, [sourceId, reset]);
 
   const handleSaveSource = async () => {
     const formData = {

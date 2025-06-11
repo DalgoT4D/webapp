@@ -129,9 +129,22 @@ export const FormField: React.FC<FormFieldProps> = ({
             if (value && typeof value === 'object') {
               // Find the const value in the object
               selectedValue = Object.values(value).find((val) => constValues.includes(val)) || null;
+
+              // Ensure the object structure is maintained
+              if (selectedValue && field.constKey && !value[field.constKey]) {
+                // If we have a selected value but incorrect structure, fix it
+                const fixedValue = { [field.constKey]: selectedValue };
+                onChange(fixedValue);
+              }
             } else if (typeof value === 'string' && constValues.includes(value)) {
               // Handle case where value is already a string (for backwards compatibility)
               selectedValue = value;
+
+              // Convert to proper object structure if needed
+              if (field.constKey) {
+                const fixedValue = { [field.constKey]: value };
+                onChange(fixedValue);
+              }
             }
 
             return (
@@ -194,6 +207,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                             key={subField.id}
                             field={subField}
                             parentValue={selectedValue}
+                            fieldPathPrefix={fieldPathPrefix}
                           />
                         ))}
                       </ChildFieldsContainer>
