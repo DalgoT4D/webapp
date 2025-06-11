@@ -88,6 +88,7 @@ export type Connection = {
   resetConnDeploymentId: string | null;
   clearConnDeploymentId: string | null;
   queuedFlowRunWaitTime: QueuedRuntimeInfo | null;
+  blockId: string;
 };
 // type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
@@ -733,7 +734,7 @@ export const Connections = () => {
       <Actions
         key={`actions-${connection.connectionId}`}
         connection={connection}
-        idx={connection.connectionId}
+        idx={connection.blockId}
         permissions={permissions}
         syncConnection={syncConnection}
         syncingConnectionIds={syncingConnectionIds}
