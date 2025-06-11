@@ -20,9 +20,14 @@ import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 interface FormFieldProps {
   field: FormFieldType;
   parentValue?: any;
+  fieldPathPrefix?: string;
 }
 
-export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propParentValue }) => {
+export const FormField: React.FC<FormFieldProps> = ({
+  field,
+  parentValue: propParentValue,
+  fieldPathPrefix,
+}) => {
   const { control } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -38,7 +43,10 @@ export const FormField: React.FC<FormFieldProps> = ({ field, parentValue: propPa
     return null;
   }
 
-  const fieldPath = field.path.join('.');
+  // Prefix the field path if fieldPathPrefix is provided
+  const fieldPath = fieldPathPrefix
+    ? `${fieldPathPrefix}.${field.path.join('.')}`
+    : field.path.join('.');
 
   // For child fields (oneOf subfields), watch the parent field to get the current selected value
   let parentValue = propParentValue;
