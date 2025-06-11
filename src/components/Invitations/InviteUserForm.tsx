@@ -106,7 +106,7 @@ const InviteUserForm = ({ mutate, showForm, setShowForm }: InviteUserFormProps) 
         invited_email: data.invited_email,
         invited_role_uuid: data.invited_role_uuid,
       });
-      mutate();
+      mutate(true);
       handleClose();
       successToast('Invitation sent over email', [], globalContext);
     } catch (err: any) {
