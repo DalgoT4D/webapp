@@ -753,7 +753,7 @@ export const Connections = () => {
     setRowValues(tempRowValues);
   };
 
-  const onSearchValueChange = (value: string, data: Connection[]) => {
+  const onSearchValueChange = (data: Connection[]) => {
     if (!data) return;
     updateRows(data);
   };
@@ -766,12 +766,7 @@ export const Connections = () => {
         updatedData = await httpGet(session, 'airbyte/v1/connections');
         isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
         await delay(3000);
-
-        if (searchInputRef.current) {
-          onSearchValueChange(searchInputRef.current.value, updatedData);
-        } else {
-          updateRows(updatedData);
-        }
+        updateRows(updatedData);
       }
     } catch (error) {
       console.log(error);
@@ -884,7 +879,7 @@ export const Connections = () => {
             variant="outlined"
             size="small"
             inputRef={searchInputRef}
-            onChange={(e) => onSearchValueChange(e.target.value, data)}
+            onChange={() => onSearchValueChange(data)}
             sx={{ width: 300 }}
           />
           <Button
