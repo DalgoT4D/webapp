@@ -685,9 +685,20 @@ export const Connections = () => {
     handleCancelClearConnection();
   };
 
+  const sortingConnections = (data: any[]) => {
+    if (!data || data.length === 0) return [];
+    const sortedData = [...data].sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+    return sortedData;
+  };
+
   const updateRows = (data: any) => {
     if (data && data.length > 0) {
-      const tempRows = data.map((connection: any) => [
+      // Sort connections alphabetically by name (case-insensitive)
+      const sortedData = sortingConnections(data);
+
+      const tempRows = sortedData.map((connection: any) => [
         <Box key={`name-${connection.blockId}`} sx={{ display: 'flex', alignItems: 'center' }}>
           <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
           <Typography variant="body1" fontWeight={600}>
@@ -716,7 +727,7 @@ export const Connections = () => {
         />,
       ]);
 
-      const tempRowValues = data.map((connection: any) => [connection.name, null, null]);
+      const tempRowValues = sortedData.map((connection: any) => [connection.name, null, null]);
 
       setRows(tempRows);
       setRowValues(tempRowValues);
@@ -768,7 +779,10 @@ export const Connections = () => {
           conn.destination?.destinationName?.toLowerCase().includes(lower)
         );
       });
-      updateRows(filtered);
+      // Sort filtered results by name
+      const sortedFiltered = sortingConnections(filtered);
+
+      updateRows(sortedFiltered);
     }
   };
 
