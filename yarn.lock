@@ -1989,18 +1989,18 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
-"@superset-ui/embedded-sdk@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@superset-ui/embedded-sdk/-/embedded-sdk-0.1.2.tgz#2710dd1e0966bb8ace2672d061c0646a6ae8c5b1"
-  integrity sha512-S+KXiplLAF4Sjp/b5whvGnNHQJBoz3GxJbp3ymiPGvxBkLIxELakY6KZ5Qk0s8+Cl0KWKF6t/8Norn/UaS9oJQ==
+"@superset-ui/embedded-sdk@^0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@superset-ui/embedded-sdk/-/embedded-sdk-0.1.3.tgz#32279aff9ae5479a73f70ac1ec41b0b15c24381c"
+  integrity sha512-7NJMTx+rWzOzY0CHTFkh+iZjxsvz9ga8HJxpAN/LaY+uM6jBObbzo8KXah6qcX6no2wEfOQYdSazDPfWOrnHQw==
   dependencies:
-    "@superset-ui/switchboard" "^0.20.2"
+    "@superset-ui/switchboard" "^0.20.3"
     jwt-decode "^4.0.0"
 
-"@superset-ui/switchboard@^0.20.2":
-  version "0.20.2"
-  resolved "https://registry.yarnpkg.com/@superset-ui/switchboard/-/switchboard-0.20.2.tgz#cd97892229d75ce64ddeaea1ef96e030aeee4b40"
-  integrity sha512-ORnueRpcnAt/IJB8IFaB+M5uDnItLZRJexWj0TKFcN9TBZhE9bQ6J6ARyfOq6VRVlLcaYfrfBYukaZCg3Fh5Jw==
+"@superset-ui/switchboard@^0.20.3":
+  version "0.20.3"
+  resolved "https://registry.yarnpkg.com/@superset-ui/switchboard/-/switchboard-0.20.3.tgz#9037c64408dfb6b0291671fa0a136fb32b9511db"
+  integrity sha512-qEMXFwdRLfXug4gXXdBEGpFtBWZoxdZkCJLBVxj1IR8cQvSqjkWAQOzSSYYdcIeREWqi8iP+iK6apNV1ZQCKcA==
 
 "@swc/counter@^0.1.3":
   version "0.1.3"
