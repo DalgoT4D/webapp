@@ -529,7 +529,6 @@ export const Connections = () => {
   const permissions = globalContext?.Permissions.state || [];
   const [connectionId, setConnectionId] = useState<string>('');
   const [logsConnection, setLogsConnection] = useState<Connection>();
-  // const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
   const [clearConnDeploymentId, setClearConnDeploymentId] = useState<string | null>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<Array<string>>([]);
   const syncLogs = useConnSyncLogs();
@@ -543,9 +542,6 @@ export const Connections = () => {
   const open = Boolean(anchorEl);
   const handleClick = (connection: Connection, event: HTMLElement | null) => {
     setConnectionId(connection.connectionId);
-    // setResetDeploymentId(connection.resetConnDeploymentId);
-    console.log(connection);
-    console.log(connection.clearConnDeploymentId);
     setClearConnDeploymentId(connection.clearConnDeploymentId);
     setAnchorEl(event);
   };
@@ -693,48 +689,73 @@ export const Connections = () => {
     return sortedData;
   };
 
-  const updateRows = (data: any) => {
-    if (data && data.length > 0) {
-      // Sort connections alphabetically by name (case-insensitive)
-      const sortedData = sortingConnections(data);
+  const filterConnections = (connections: Connection[], searchTerm: string) => {
+    const lower = searchTerm.toLowerCase().trim();
+    if (!lower) return connections;
 
-      const tempRows = sortedData.map((connection: any) => [
-        <Box key={`name-${connection.blockId}`} sx={{ display: 'flex', alignItems: 'center' }}>
-          <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
-          <Typography variant="body1" fontWeight={600}>
-            {connection.name}
-          </Typography>
-        </Box>,
-        getSourceDest(connection),
-        <SyncStatus
-          key={`sync-status-${connection.blockId}`}
-          connection={connection}
-          syncingConnectionIds={syncingConnectionIds}
-          setShowLogsDialog={setShowLogsDialog}
-          setLogsConnection={setLogsConnection}
-          trackAmplitudeEvent={trackAmplitudeEvent}
-        />,
-        <Actions
-          key={`actions-${connection.blockId}`}
-          connection={connection}
-          idx={connection.blockId}
-          permissions={permissions}
-          syncConnection={syncConnection}
-          syncingConnectionIds={syncingConnectionIds}
-          setSyncingConnectionIds={setSyncingConnectionIds}
-          open={open}
-          handleClick={handleClick}
-        />,
-      ]);
+    return connections.filter(
+      (conn: Connection) =>
+        conn.name?.toLowerCase().includes(lower) ||
+        conn.source?.sourceName?.toLowerCase().includes(lower)
+    );
+  };
 
-      const tempRowValues = sortedData.map((connection: any) => [connection.name, null, null]);
-
-      setRows(tempRows);
-      setRowValues(tempRowValues);
-    } else {
+  const updateRows = (data: Connection[]) => {
+    if (!data?.length) {
       setRows([]);
       setRowValues([]);
+      return;
     }
+
+    // Sort connections alphabetically by name
+    const sortedData = sortingConnections(data);
+
+    // Filter based on current search term if any
+    const searchTerm = searchInputRef.current?.value || '';
+    const filteredData = filterConnections(sortedData, searchTerm);
+
+    const tempRows = filteredData.map((connection: Connection) => [
+      <Box key={`name-${connection.connectionId}`} sx={{ display: 'flex', alignItems: 'center' }}>
+        <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
+        <Typography variant="body1" fontWeight={600}>
+          {connection.name}
+        </Typography>
+      </Box>,
+      getSourceDest(connection),
+      <SyncStatus
+        key={`sync-status-${connection.connectionId}`}
+        connection={connection}
+        syncingConnectionIds={syncingConnectionIds}
+        setShowLogsDialog={setShowLogsDialog}
+        setLogsConnection={setLogsConnection}
+        trackAmplitudeEvent={trackAmplitudeEvent}
+      />,
+      <Actions
+        key={`actions-${connection.connectionId}`}
+        connection={connection}
+        idx={connection.connectionId}
+        permissions={permissions}
+        syncConnection={syncConnection}
+        syncingConnectionIds={syncingConnectionIds}
+        setSyncingConnectionIds={setSyncingConnectionIds}
+        open={open}
+        handleClick={handleClick}
+      />,
+    ]);
+
+    const tempRowValues = filteredData.map((connection: Connection) => [
+      connection.name,
+      null,
+      null,
+    ]);
+
+    setRows(tempRows);
+    setRowValues(tempRowValues);
+  };
+
+  const onSearchValueChange = (value: string, data: Connection[]) => {
+    if (!data) return;
+    updateRows(data);
   };
 
   const pollForConnectionsLockAndRefreshRows = async () => {
@@ -764,27 +785,6 @@ export const Connections = () => {
       pollForConnectionsLockAndRefreshRows();
     }
   }, [session, data]);
-
-  const onSearchValueChange = (value: string, data: any[]) => {
-    if (!data) return;
-
-    const lower = value.toLowerCase().trim();
-    if (lower === '') {
-      updateRows(data);
-    } else {
-      const filtered = data.filter((conn: any) => {
-        return (
-          conn.name?.toLowerCase().includes(lower) ||
-          conn.source?.sourceName?.toLowerCase().includes(lower) ||
-          conn.destination?.destinationName?.toLowerCase().includes(lower)
-        );
-      });
-      // Sort filtered results by name
-      const sortedFiltered = sortingConnections(filtered);
-
-      updateRows(sortedFiltered);
-    }
-  };
 
   const handleClickOpen = () => {
     setShowDialog(true);
