@@ -324,15 +324,31 @@ export const FormField: React.FC<FormFieldProps> = ({
 
             const addItem = () => {
               const newItem: Record<string, any> = {};
+
+              // Helper function to set nested value
+              const setNestedValue = (path: string[], value: any) => {
+                let current = newItem;
+                // Navigate to the parent object
+                for (let i = 0; i < path.length - 1; i++) {
+                  const part = path[i];
+                  if (!(part in current)) {
+                    current[part] = {};
+                  }
+                  current = current[part];
+                }
+                // Set the value at the final path
+                const lastPart = path[path.length - 1];
+                current[lastPart] = value;
+              };
+
               // Set default values for required fields
               field.subFields?.forEach((subField) => {
                 if (subField.required && subField.default !== undefined) {
                   const subPath = subField.path.slice(field.path.length + 1); // Remove the array path and index
-                  if (subPath.length === 1) {
-                    newItem[subPath[0]] = subField.default;
-                  }
+                  setNestedValue(subPath, subField.default);
                 }
               });
+
               onChange([...items, newItem]);
             };
 

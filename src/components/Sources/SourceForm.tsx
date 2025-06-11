@@ -149,16 +149,16 @@ export const SourceForm: React.FC<SourceFormProps> = ({
             setNestedFormValues(source.connectionConfiguration);
           } else {
             // For new source, set default values from the spec
-            const defaultConfig: Record<string, any> = {};
-
-            // First pass: collect all default values
-            const collectDefaults = (properties: Record<string, any>) => {
+            const collectDefaults = (
+              properties: Record<string, any>,
+              target: Record<string, any>
+            ) => {
               Object.entries(properties).forEach(([key, value]) => {
                 if (value.type === 'object' && value.properties) {
-                  defaultConfig[key] = {};
-                  collectDefaults(value.properties);
+                  target[key] = {};
+                  collectDefaults(value.properties, target[key]);
                 } else if (value.default !== undefined) {
-                  defaultConfig[key] =
+                  target[key] =
                     value.type === 'integer' || value.type === 'number'
                       ? Number(value.default)
                       : value.default;
@@ -167,16 +167,16 @@ export const SourceForm: React.FC<SourceFormProps> = ({
                   switch (value.type) {
                     case 'integer':
                     case 'number':
-                      defaultConfig[key] = value.minimum || 0;
+                      target[key] = value.minimum || 0;
                       break;
                     case 'string':
-                      defaultConfig[key] = '';
+                      target[key] = '';
                       break;
                     case 'object':
-                      defaultConfig[key] = {};
+                      target[key] = {};
                       break;
                     case 'array':
-                      defaultConfig[key] = [];
+                      target[key] = [];
                       break;
                   }
                 }
@@ -184,7 +184,8 @@ export const SourceForm: React.FC<SourceFormProps> = ({
             };
 
             if (data.connectionSpecification?.properties) {
-              collectDefaults(data.connectionSpecification.properties);
+              const defaultConfig: Record<string, any> = {};
+              collectDefaults(data.connectionSpecification.properties, defaultConfig);
               console.log('Default Config:', defaultConfig); // Debug log
 
               // Set the entire config object at once
@@ -277,20 +278,22 @@ export const SourceForm: React.FC<SourceFormProps> = ({
     };
 
     try {
+      setLoading(true);
       if (sourceId) {
-        await httpPut(session, `airbyte/sources/${source?.sourceId}`, formData);
+        await httpPut(session, `airbyte/sources/${sourceId}`, formData);
         successToast('Source updated', [], globalContext);
       } else {
         await httpPost(session, 'airbyte/sources/', formData);
-        successToast('Source added', [], globalContext);
+        successToast('Source created', [], globalContext);
       }
       mutate();
-      handleClose(); // Only reset form on successful save
+      setLoading(false);
+      handleClose();
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
+    } finally {
       setLoading(false);
-      setPendingFormData(null); // Clear pending data but keep form state
     }
   };
 
