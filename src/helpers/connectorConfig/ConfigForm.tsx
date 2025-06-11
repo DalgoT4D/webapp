@@ -11,7 +11,6 @@ interface ConfigFormProps {
 
 export const ConfigForm: React.FC<ConfigFormProps> = ({ spec }) => {
   const [fieldGroups, setFieldGroups] = useState<FieldGroup[]>([]);
-  const methods = useFormContext();
 
   // Parse spec into field groups
   useEffect(() => {

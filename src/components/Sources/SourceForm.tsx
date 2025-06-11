@@ -10,7 +10,6 @@ import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper'
 import CustomDialog from '@/components/Dialog/CustomDialog';
 import Input from '@/components/UI/Input/Input';
 import { ConfigForm } from '../../helpers/connectorConfig/ConfigForm';
-import { AirbyteProperty } from '@/helpers/connectorConfig/types';
 
 interface SourceData {
   sourceId: string;
