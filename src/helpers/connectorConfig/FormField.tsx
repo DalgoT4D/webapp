@@ -32,11 +32,14 @@ export const FormField: React.FC<FormFieldProps> = ({
   const [showPassword, setShowPassword] = useState(false);
 
   // Always call useWatch at the top level - hooks must be called unconditionally
-  const parentFieldPath = field.path.slice(0, -1).join('.');
-  const parentFieldValue = useWatch({
-    control,
-    name: parentFieldPath,
-  });
+  const parentSegments = field.path.slice(0, -1);
+  // Only watch parent field if it exists
+  const parentFieldValue = parentSegments.length
+    ? useWatch({
+        control,
+        name: parentSegments.join('.'),
+      })
+    : undefined;
 
   // Don't render hidden fields
   if (field.hidden) {
@@ -53,7 +56,7 @@ export const FormField: React.FC<FormFieldProps> = ({
 
   if (field.parentValue !== undefined && !propParentValue) {
     // Find the parent field path by removing the last segment
-    if (parentFieldPath) {
+    if (parentSegments.length) {
       // Extract the const value from the parent object
       if (parentFieldValue && typeof parentFieldValue === 'object') {
         parentValue = Object.values(parentFieldValue).find(
@@ -446,7 +449,12 @@ export const FormField: React.FC<FormFieldProps> = ({
               fullWidth
               value={value}
               onChange={(e) => {
-                const val = field.type === 'number' ? Number(e.target.value) : e.target.value;
+                let val: any = e.target.value;
+                if (field.type === 'number') {
+                  const input = e.target as HTMLInputElement;
+                  val = input.valueAsNumber;
+                  if (Number.isNaN(val)) val = undefined; // keep field empty
+                }
                 onChange(val);
               }}
               type={
