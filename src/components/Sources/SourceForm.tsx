@@ -333,13 +333,20 @@ export const SourceForm: React.FC<SourceFormProps> = ({
   const formContent = (
     <FormProvider {...methods}>
       <Box sx={{ pt: 2, pb: 4 }}>
-        <Input
+        <Controller
           name="name"
           control={control}
           rules={{ required: 'Name is required' }}
-          sx={{ width: '100%', mb: 2 }}
-          label="Name*"
-          variant="outlined"
+          render={({ field: { ref, ...rest }, fieldState: { error } }) => (
+            <Input
+              {...rest}
+              error={!!error}
+              helperText={error?.message}
+              sx={{ width: '100%', mb: 2 }}
+              label="Name*"
+              variant="outlined"
+            />
+          )}
         />
         {/* select the source type */}
         <Controller
