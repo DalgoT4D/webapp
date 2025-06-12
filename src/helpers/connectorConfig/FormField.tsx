@@ -445,7 +445,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       <Controller
         name={fieldPath}
         control={control}
-        defaultValue={field.default || ''}
+        defaultValue={field.default ?? ''}
         rules={{
           required: field.required && `${field.title} is required`,
           pattern: field.pattern
@@ -463,10 +463,10 @@ export const FormField: React.FC<FormFieldProps> = ({
             <TextField
               {...rest}
               fullWidth
-              value={value}
+              value={value ?? ''}
               onChange={(e) => {
                 let val: any = e.target.value;
-                if (field.type === 'number') {
+                if (field.type === 'number' || field.type === 'integer') {
                   const input = e.target as HTMLInputElement;
                   val = input.valueAsNumber;
                   if (Number.isNaN(val)) val = undefined; // keep field empty
@@ -476,7 +476,7 @@ export const FormField: React.FC<FormFieldProps> = ({
               type={
                 field.secret && !showPassword
                   ? 'password'
-                  : field.type === 'number'
+                  : field.type === 'number' || field.type === 'integer'
                     ? 'number'
                     : 'text'
               }
