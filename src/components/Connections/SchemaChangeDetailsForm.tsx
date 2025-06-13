@@ -404,9 +404,7 @@ const SchemaChangeDetailsForm = ({
             </>
           ) : failureMessage && failureMessage.length > 0 ? (
             <Typography variant="body1">{failureMessage}</Typography>
-          ) : (
-            ''
-          )}
+          ) : null}
         </Box>
       </>
     );
