@@ -88,6 +88,7 @@ export type Connection = {
   resetConnDeploymentId: string | null;
   clearConnDeploymentId: string | null;
   queuedFlowRunWaitTime: QueuedRuntimeInfo | null;
+  blockId: string;
 };
 // type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
@@ -529,7 +530,6 @@ export const Connections = () => {
   const permissions = globalContext?.Permissions.state || [];
   const [connectionId, setConnectionId] = useState<string>('');
   const [logsConnection, setLogsConnection] = useState<Connection>();
-  // const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
   const [clearConnDeploymentId, setClearConnDeploymentId] = useState<string | null>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<Array<string>>([]);
   const syncLogs = useConnSyncLogs();
@@ -543,14 +543,14 @@ export const Connections = () => {
   const open = Boolean(anchorEl);
   const handleClick = (connection: Connection, event: HTMLElement | null) => {
     setConnectionId(connection.connectionId);
-    // setResetDeploymentId(connection.resetConnDeploymentId);
-    console.log(connection);
-    console.log(connection.clearConnDeploymentId);
     setClearConnDeploymentId(connection.clearConnDeploymentId);
     setAnchorEl(event);
   };
-  const handleClose = () => {
-    setConnectionId('');
+  const handleClose = (isEditMode?: string) => {
+    if (isEditMode !== 'EDIT') {
+      setConnectionId('');
+      setClearConnDeploymentId('');
+    }
     setAnchorEl(null);
   };
   const [showDialog, setShowDialog] = useState(false);
@@ -682,45 +682,81 @@ export const Connections = () => {
     handleCancelClearConnection();
   };
 
-  const updateRows = (data: any) => {
-    if (data && data.length > 0) {
-      const tempRows = data.map((connection: any) => [
-        <Box key={`name-${connection.blockId}`} sx={{ display: 'flex', alignItems: 'center' }}>
-          <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
-          <Typography variant="body1" fontWeight={600}>
-            {connection.name}
-          </Typography>
-        </Box>,
-        getSourceDest(connection),
-        <SyncStatus
-          key={`sync-status-${connection.blockId}`}
-          connection={connection}
-          syncingConnectionIds={syncingConnectionIds}
-          setShowLogsDialog={setShowLogsDialog}
-          setLogsConnection={setLogsConnection}
-          trackAmplitudeEvent={trackAmplitudeEvent}
-        />,
-        <Actions
-          key={`actions-${connection.blockId}`}
-          connection={connection}
-          idx={connection.blockId}
-          permissions={permissions}
-          syncConnection={syncConnection}
-          syncingConnectionIds={syncingConnectionIds}
-          setSyncingConnectionIds={setSyncingConnectionIds}
-          open={open}
-          handleClick={handleClick}
-        />,
-      ]);
+  const sortingConnections = (data: any[]) => {
+    if (!data || data.length === 0) return [];
+    const sortedData = [...data].sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+    return sortedData;
+  };
 
-      const tempRowValues = data.map((connection: any) => [connection.name, null, null]);
+  const filterConnections = (connections: Connection[], searchTerm: string) => {
+    const lower = searchTerm.toLowerCase().trim();
+    if (!lower) return connections;
 
-      setRows(tempRows);
-      setRowValues(tempRowValues);
-    } else {
+    return connections.filter(
+      (conn: Connection) =>
+        conn.name?.toLowerCase().includes(lower) ||
+        conn.source?.sourceName?.toLowerCase().includes(lower)
+    );
+  };
+
+  const updateRows = (data: Connection[]) => {
+    if (!data?.length) {
       setRows([]);
       setRowValues([]);
+      return;
     }
+
+    // Sort connections alphabetically by name
+    const sortedData = sortingConnections(data);
+
+    // Filter based on current search term if any
+    const searchTerm = searchInputRef.current?.value || '';
+    const filteredData = filterConnections(sortedData, searchTerm);
+
+    const tempRows = filteredData.map((connection: Connection) => [
+      <Box key={`name-${connection.connectionId}`} sx={{ display: 'flex', alignItems: 'center' }}>
+        <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
+        <Typography variant="body1" fontWeight={600}>
+          {connection.name}
+        </Typography>
+      </Box>,
+      getSourceDest(connection),
+      <SyncStatus
+        key={`sync-status-${connection.connectionId}`}
+        connection={connection}
+        syncingConnectionIds={syncingConnectionIds}
+        setShowLogsDialog={setShowLogsDialog}
+        setLogsConnection={setLogsConnection}
+        trackAmplitudeEvent={trackAmplitudeEvent}
+      />,
+      <Actions
+        key={`actions-${connection.connectionId}`}
+        connection={connection}
+        idx={connection.blockId}
+        permissions={permissions}
+        syncConnection={syncConnection}
+        syncingConnectionIds={syncingConnectionIds}
+        setSyncingConnectionIds={setSyncingConnectionIds}
+        open={open}
+        handleClick={handleClick}
+      />,
+    ]);
+
+    const tempRowValues = filteredData.map((connection: Connection) => [
+      connection.name,
+      null,
+      null,
+    ]);
+
+    setRows(tempRows);
+    setRowValues(tempRowValues);
+  };
+
+  const onSearchValueChange = (data: Connection[]) => {
+    if (!data) return;
+    updateRows(data);
   };
 
   const pollForConnectionsLockAndRefreshRows = async () => {
@@ -731,12 +767,7 @@ export const Connections = () => {
         updatedData = await httpGet(session, 'airbyte/v1/connections');
         isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
         await delay(3000);
-
-        if (searchInputRef.current) {
-          onSearchValueChange(searchInputRef.current.value, updatedData);
-        } else {
-          updateRows(updatedData);
-        }
+        updateRows(updatedData);
       }
     } catch (error) {
       console.log(error);
@@ -751,30 +782,12 @@ export const Connections = () => {
     }
   }, [session, data]);
 
-  const onSearchValueChange = (value: string, data: any[]) => {
-    if (!data) return;
-
-    const lower = value.toLowerCase().trim();
-    if (lower === '') {
-      updateRows(data);
-    } else {
-      const filtered = data.filter((conn: any) => {
-        return (
-          conn.name?.toLowerCase().includes(lower) ||
-          conn.source?.sourceName?.toLowerCase().includes(lower) ||
-          conn.destination?.destinationName?.toLowerCase().includes(lower)
-        );
-      });
-      updateRows(filtered);
-    }
-  };
-
   const handleClickOpen = () => {
     setShowDialog(true);
   };
 
   const handleDeleteConnection = () => {
-    handleClose();
+    handleClose('EDIT');
     setShowConfirmDeleteDialog(true);
   };
 
@@ -787,12 +800,13 @@ export const Connections = () => {
   };
 
   const handleClearConnection = () => {
-    handleClose();
+    handleClose('EDIT');
     setShowConfirmResetDialog(true);
     trackAmplitudeEvent('[Reset-connection] Button Clicked');
   };
 
   const handleEditConnection = () => {
+    handleClose('EDIT');
     setShowDialog(true);
   };
 
@@ -858,7 +872,6 @@ export const Connections = () => {
         mutate={mutate}
         showForm={showDialog}
         setShowForm={setShowDialog}
-        closeActionMenu={handleClose}
       />
       <Box>
         <Box display="flex" justifyContent="space-between" mb={1}>
@@ -867,7 +880,7 @@ export const Connections = () => {
             variant="outlined"
             size="small"
             inputRef={searchInputRef}
-            onChange={(e) => onSearchValueChange(e.target.value, data)}
+            onChange={() => onSearchValueChange(data)}
             sx={{ width: 300 }}
           />
           <Button

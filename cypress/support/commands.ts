@@ -53,7 +53,7 @@ Cypress.Commands.add('login', (role) => {
     },
   };
   const currentRole = Role[role];
-  cy.visit('https://staging.dalgo.in/login');
+  cy.visit('https://staging.dalgo.org/login');
   cy.get('[data-testid="username"]').type(currentRole.email);
   cy.get('[data-testid="password"]').type(currentRole.password);
   cy.get('[data-testid="submitbutton"]').click();

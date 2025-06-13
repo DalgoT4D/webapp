@@ -46,7 +46,7 @@ export const Auth: React.FC<AuthProps> = ({ heading, subHeading, children }) => 
               {children}
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Typography variant="body1">
-                  <a href="https://dalgo.in/privacy-policy/" target="_blank">
+                  <a href="https://dalgo.org/privacy-policy/" target="_blank">
                     Privacy Policy
                   </a>
                 </Typography>
