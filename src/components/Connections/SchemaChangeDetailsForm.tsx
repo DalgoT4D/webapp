@@ -405,7 +405,7 @@ const SchemaChangeDetailsForm = ({
           ) : failureMessage && failureMessage.length > 0 ? (
             <Typography variant="body1">{failureMessage}</Typography>
           ) : (
-            <Typography variant="body1">No schema changes detected.</Typography>
+            ''
           )}
         </Box>
       </>
