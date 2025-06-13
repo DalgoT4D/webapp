@@ -28,7 +28,6 @@ interface CreateConnectionFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
   setConnectionId: (...args: any) => any;
-  closeActionMenu: (...args: any) => any;
 }
 
 type CursorFieldConfig = {
@@ -58,7 +57,6 @@ const CreateConnectionForm = ({
   mutate,
   showForm,
   setShowForm,
-  closeActionMenu,
 }: CreateConnectionFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -68,6 +66,8 @@ const CreateConnectionForm = ({
       sources: { label: '', id: '' },
       destinations: { label: '', id: '' },
       destinationSchema: globalContext?.CurrentOrg.state.is_demo ? demoAccDestSchema : 'staging',
+      syncCatalog: { streams: [] }, // send the catalog back as is so backend doesn't need to do another discover schema call
+      catalogId: '', // send the catalogId back as is to the backend
     },
   });
   const [sources, setSources] = useState<Array<string>>([]);
@@ -178,6 +178,8 @@ const CreateConnectionForm = ({
             id: data?.source.id,
           });
           setValue('destinationSchema', data?.destinationSchema);
+          setValue('syncCatalog', data?.syncCatalog);
+          setValue('catalogId', data?.catalogId);
           const streams = setupInitialStreamsState(data?.syncCatalog, connectionId);
           setSourceStreams(streams);
           setFilteredSourceStreams(streams);
@@ -243,11 +245,14 @@ const CreateConnectionForm = ({
 
     const { data, message, status } = lastJsonMessage;
     const source_schema_catalog = data?.result?.catalog;
+    const catalogId = data?.result?.catalogId;
 
     if (status == 'success' && source_schema_catalog) {
       const streams: SourceStream[] = setupInitialStreamsState(source_schema_catalog, connectionId);
       setSourceStreams(streams);
       setFilteredSourceStreams(streams);
+      setValue('syncCatalog', source_schema_catalog); // this will be sent back as is to backend so that backend doesn't need to do another discover schema call
+      setValue('catalogId', catalogId);
     } else if (status == 'error') {
       setSourceStreams([]);
       setFilteredSourceStreams([]);
@@ -259,7 +264,6 @@ const CreateConnectionForm = ({
   const handleClose = () => {
     reset();
     setConnectionId('');
-    closeActionMenu();
     setSourceStreams([]);
     setFilteredSourceStreams([]);
     setShowForm(false);
@@ -286,6 +290,8 @@ const CreateConnectionForm = ({
         };
       }),
       normalize,
+      syncCatalog: data.syncCatalog,
+      catalogId: data.catalogId,
     };
     if (data.destinationSchema) {
       payload.destinationSchema = data.destinationSchema;
@@ -307,8 +313,6 @@ const CreateConnectionForm = ({
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
-    } finally {
-      closeActionMenu();
     }
     setLoading(false);
   };

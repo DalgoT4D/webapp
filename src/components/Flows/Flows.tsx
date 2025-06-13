@@ -69,7 +69,22 @@ const flowStatus = (status: boolean) => (
   </Typography>
 );
 
+export const getFlowRunStartedBy = (flowRunStartTime: string | null, user: string) => {
+  let flowRunStartedBy = null;
+  // we started recording manual triggering of flow-runs on 2025-05-20
+  if (flowRunStartTime && flowRunStartTime >= '2025-05-20T00:00:00.0+00:00') {
+    flowRunStartedBy = user === 'System' ? 'System' : trimEmail(user);
+    return flowRunStartedBy;
+  }
+  return null;
+};
+
 const flowLastRun = (flow: FlowInterface) => {
+  const flowRunStartedBy = getFlowRunStartedBy(
+    flow.lastRun?.startTime || null,
+    flow.lastRun?.orguser || 'System'
+  );
+
   return (
     <>
       {flow.lock ? (
@@ -82,9 +97,19 @@ const flowLastRun = (flow: FlowInterface) => {
           </Typography>
         </Box>
       ) : flow.lastRun ? (
-        <Typography data-testid={'flowlastrun-' + flow.name} fontWeight={600} component="p">
-          {lastRunTime(flow.lastRun?.startTime || flow.lastRun?.expectedStartTime)}
-        </Typography>
+        <>
+          <Typography data-testid={'flowlastrun-' + flow.name} fontWeight={600} component="p">
+            {lastRunTime(flow.lastRun?.startTime || flow.lastRun?.expectedStartTime)}
+          </Typography>
+          {flowRunStartedBy && (
+            <Typography data-testid={'flowlastrun-by-' + flow.name} fontWeight={600} component="p">
+              By:{' '}
+              <strong style={{ color: flowRunStartedBy === 'System' ? '#333333' : '#DAA520' }}>
+                {flowRunStartedBy}
+              </strong>
+            </Typography>
+          )}
+        </>
       ) : (
         <Box
           data-testid={'flowlastrun-' + flow.name}
