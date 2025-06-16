@@ -283,13 +283,29 @@ export const SourceForm: React.FC<SourceFormProps> = ({
     }
   }, [sourceId, reset]);
 
+  // Helper function to clean config by removing empty start_date
+  const cleanConfig = (config: Record<string, any>): Record<string, any> => {
+    const cleaned = { ...config };
+
+    // Remove start_date if it's empty or null
+    if (
+      cleaned.start_date === '' ||
+      cleaned.start_date === null ||
+      cleaned.start_date === undefined
+    ) {
+      delete cleaned.start_date;
+    }
+
+    return cleaned;
+  };
+
   const handleSaveSource = async () => {
     if (!pendingFormData) return;
 
     const formData = {
       name: pendingFormData.name,
       sourceDefId: pendingFormData.sourceDef?.id,
-      config: pendingFormData.config,
+      config: cleanConfig(pendingFormData.config), // Clean the config before sending
     };
 
     try {
@@ -325,7 +341,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
     sendJsonMessage({
       name: data.name,
       sourceDefId: data.sourceDef?.id,
-      config: data.config,
+      config: cleanConfig(data.config), // Clean the config before sending
       sourceId: sourceId,
     });
   };
