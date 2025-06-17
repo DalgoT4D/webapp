@@ -34,8 +34,6 @@ jest.mock('@/helpers/connectorConfig/ConfigForm', () => ({
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { useFormContext } = require('react-hook-form');
     const { watch, setValue } = useFormContext();
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const React = require('react');
 
     const config = watch('config') || {};
 
