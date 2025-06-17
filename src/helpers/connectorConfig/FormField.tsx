@@ -228,7 +228,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                             key={subField.id}
                             field={subField}
                             parentValue={selectedValue}
-                            fieldPathPrefix={fieldPath}
+                            fieldPathPrefix={fieldPathPrefix}
                           />
                         ))}
                       </ChildFieldsContainer>
