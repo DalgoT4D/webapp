@@ -90,11 +90,19 @@ const flowLastRun = (flow: FlowInterface) => {
       {flow.lock ? (
         //logic is that if the lock is running or queued, then it was manually triggered for run and not just for locking it.
         flow.lock.status === 'running' || flow.lock.status === 'queued' ? (
-          <Box width={120}>
-            <Typography fontWeight={600}>
+          <Box
+            data-testid={'flowlastrun-' + flow.name}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              color: '#40B5AD',
+              gap: '3px',
+            }}
+          >
+            <Typography data-testid={'flowlastrun-by-' + flow.name} fontWeight={600} component="p">
               By: <strong>{trimEmail(flow.lock.lockedBy)}</strong>
             </Typography>
-            <Typography fontWeight={600} fontSize={15}>
+            <Typography fontWeight={600} component="p">
               {lastRunTime(flow.lock.lockedAt)}
             </Typography>
           </Box>
