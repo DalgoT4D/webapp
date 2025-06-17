@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { SourceForm } from '../SourceForm';
@@ -30,9 +30,11 @@ jest.mock('react-use-websocket', () => ({
 
 // Mock the ConfigForm component to avoid parsing issues
 jest.mock('@/helpers/connectorConfig/ConfigForm', () => ({
-  ConfigForm: ({ spec }: any) => {
+  ConfigForm: () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { useFormContext } = require('react-hook-form');
     const { watch, setValue } = useFormContext();
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const React = require('react');
 
     const config = watch('config') || {};

@@ -30,9 +30,11 @@ jest.mock('react-use-websocket', () => ({
 
 // Mock the ConfigForm component to avoid parsing issues
 jest.mock('@/helpers/connectorConfig/ConfigForm', () => ({
-  ConfigForm: ({ spec }: any) => {
+  ConfigForm: () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { useFormContext } = require('react-hook-form');
     const { watch, setValue, trigger } = useFormContext();
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const React = require('react');
 
     const config = watch('config') || {};
@@ -144,7 +146,7 @@ describe('Edit Source Form', () => {
 
   const user = userEvent.setup();
 
-  const renderEditSourceForm = (sourceId: string = 'fake-source-id') => {
+  const renderEditSourceForm = (sourceId = 'fake-source-id') => {
     const setShowFormMock = jest.fn();
     const setLoadingMock = jest.fn();
     return {
