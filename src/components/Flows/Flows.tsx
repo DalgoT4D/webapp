@@ -95,7 +95,7 @@ const flowLastRun = (flow: FlowInterface) => {
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              color: '#40B5AD',
+              color: '#DAA520',
               gap: '3px',
             }}
           >
