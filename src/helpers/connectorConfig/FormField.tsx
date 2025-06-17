@@ -28,7 +28,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   parentValue: propParentValue,
   fieldPathPrefix,
 }) => {
-  const { control, setValue, getValues } = useFormContext();
+  const { control } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
 
   // Always call useWatch at the top level - hooks must be called unconditionally
@@ -541,7 +541,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                                                   newValue || ''
                                                 )
                                               }
-                                              options={sf.enum || []}
+                                              options={sf.enum}
                                               renderInput={(params) => (
                                                 <TextField
                                                   {...params}
@@ -628,7 +628,7 @@ export const FormField: React.FC<FormFieldProps> = ({
                               onChange={(_, newValue) =>
                                 updateItem(index, fieldName, newValue || '')
                               }
-                              options={subField.enum || []}
+                              options={subField.enum}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
