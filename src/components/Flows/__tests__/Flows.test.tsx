@@ -35,7 +35,7 @@ jest.mock('@/helpers/http', () => ({
 }));
 
 // Import the mocked functions
-import { httpPost, httpDelete } from '@/helpers/http';
+import { httpPost } from '@/helpers/http';
 
 // Mock toast helpers
 jest.mock('@/components/ToastMessage/ToastHelper', () => ({
