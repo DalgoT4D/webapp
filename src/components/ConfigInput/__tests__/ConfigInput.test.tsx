@@ -318,7 +318,9 @@ describe('ConfigInput Component', () => {
 
       render(<ConfigInputTestWrapper specs={patternSpecs} />);
 
-      const emailInput = screen.getByLabelText(/Email/i);
+      // Get the actual input element by looking for the input inside the labeled element
+      const emailContainer = screen.getByLabelText(/Email/i);
+      const emailInput = emailContainer.querySelector('input') || emailContainer;
       expect(emailInput).toHaveAttribute('pattern', patternSpecs[0].pattern);
     });
   });
