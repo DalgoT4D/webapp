@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -40,6 +40,8 @@ const ArithmeticOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
+  const skipEffectRef = useRef(false);
+
   const { parentNode, nodeData } = useOpForm({
     props: {
       node,
@@ -83,6 +85,10 @@ const ArithmeticOpForm = ({
   const arithmeticOp = watch('arithmeticOp');
 
   useEffect(() => {
+    if (skipEffectRef.current) {
+      skipEffectRef.current = false;
+      return;
+    }
     replace([
       { type: 'col', col_val: '', const_val: 0 },
       { type: 'col', col_val: '', const_val: 0 },
@@ -171,6 +177,7 @@ const ArithmeticOpForm = ({
       setSrcColumns(source_columns);
 
       // pre-fill form
+      skipEffectRef.current = true;
       reset({
         arithmeticOp: ArithmeticOperations.find((op) => op.id === operator),
         output_column_name: output_column_name,
