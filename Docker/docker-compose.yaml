@@ -1,22 +1,16 @@
 services:
   app:
-    image: dalgo_frontend:0.1
+    image: image_name:tagname #replace with the correct tag
     restart: always
     environment:
-      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
-      - NEXT_PUBLIC_USAGE_DASHBOARD_ID=${NEXT_PUBLIC_USAGE_DASHBOARD_ID}
-      - NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN=${NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN}
-      - NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA=${NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA}
-      - CYPRESS_BASE_URL=${CYPRESS_BASE_URL}
-      - NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED=${NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED}
     ports:
       - '3000:3000'
     networks:
       - dalgo-network
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
 
 networks:
   dalgo-network:
