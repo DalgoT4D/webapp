@@ -559,7 +559,12 @@ export const Connections = () => {
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
+
+  const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`, null, {
+    refreshInterval: (data) => {
+      return data?.some((conn: any) => conn.lock) ? 3000 : 0;
+    },
+  });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -759,28 +764,10 @@ export const Connections = () => {
     updateRows(data);
   };
 
-  const pollForConnectionsLockAndRefreshRows = async () => {
-    try {
-      let updatedData = await httpGet(session, 'airbyte/v1/connections');
-      let isLocked: boolean = updatedData?.some((conn: any) => conn.lock);
-      while (isLocked) {
-        updatedData = await httpGet(session, 'airbyte/v1/connections');
-        isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
-        await delay(3000);
-        updateRows(updatedData);
-        // Update SWR cache so PendingActions gets fresh data too
-        mutate(updatedData, false);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   // when the connection list changes
   useEffect(() => {
     if (session) {
       updateRows(data);
-      pollForConnectionsLockAndRefreshRows();
     }
   }, [session, data]);
 
