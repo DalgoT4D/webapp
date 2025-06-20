@@ -6,6 +6,7 @@ import {
   Typography,
   Button,
   Box,
+  Tooltip,
 } from '@mui/material';
 import connectionIcon from '@/assets/icons/connection.svg';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -18,18 +19,40 @@ import SchemaChangeDetailsForm from './SchemaChangeDetailsForm';
 
 interface PendingActionsAccordionProps {
   refreshConnectionsList: (...args: any) => any;
+  connections: any[];
 }
 
-const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccordionProps) => {
+const PendingActionsAccordion = ({
+  refreshConnectionsList,
+  connections,
+}: PendingActionsAccordionProps) => {
   const [schemaChangeData, setSchemaChangeData] = useState<any[]>([]);
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
   const [connectionNameMap, setConnectionNameMap] = useState<Record<string, string>>({});
   const { data: session }: any = useSession();
-
+  console.log(connections, 'connections');
   const handleViewClick = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
     setOpenPopup(true);
+  };
+
+  // Helper function to check if a connection is currently running
+  const isConnectionRunning = (connectionId: string) => {
+    return connections.some((connection: any) => {
+      if (connection.connectionId !== connectionId) return false;
+
+      // Check if connection has an active lock (running, queued, or locked)
+      if (
+        connection.lock?.status === 'running' ||
+        connection.lock?.status === 'queued' ||
+        connection.lock?.status === 'locked'
+      ) {
+        return true;
+      }
+
+      return false;
+    });
   };
 
   const fetchData = async () => {
@@ -109,9 +132,24 @@ const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccor
                     </Typography>
                   </Box>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}></Typography>
-                  <Button variant="outlined" onClick={() => handleViewClick(connectionId)}>
-                    View
-                  </Button>
+                  <Tooltip
+                    title={
+                      isConnectionRunning(connectionId)
+                        ? 'Schema changes cannot be accepted while connection is syncing or schema change is being processed'
+                        : ''
+                    }
+                    placement="top"
+                  >
+                    <span>
+                      <Button
+                        variant="outlined"
+                        onClick={() => handleViewClick(connectionId)}
+                        disabled={isConnectionRunning(connectionId)}
+                      >
+                        View
+                      </Button>
+                    </span>
+                  </Tooltip>
                 </Box>
               );
             })}

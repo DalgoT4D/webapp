@@ -852,7 +852,7 @@ export const Connections = () => {
       {showLogsDialog && (
         <ConnectionSyncHistory setShowLogsDialog={setShowLogsDialog} connection={logsConnection} />
       )}
-      <PendingActionsAccordion refreshConnectionsList={mutate} />
+      <PendingActionsAccordion refreshConnectionsList={mutate} connections={data} />
       <ActionsMenu
         eleType="connection"
         anchorEl={anchorEl}
