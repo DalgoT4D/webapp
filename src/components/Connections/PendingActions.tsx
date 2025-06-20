@@ -16,11 +16,43 @@ import Image from 'next/image';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import SchemaChangeDetailsForm from './SchemaChangeDetailsForm';
+import { useSyncLock } from '@/customHooks/useSyncLock';
 
 interface PendingActionsAccordionProps {
   refreshConnectionsList: (...args: any) => any;
   connections: any[];
 }
+
+// Internal component for the View button
+const PendingActionButton = ({
+  connectionId,
+  connection,
+  onViewClick,
+}: {
+  connectionId: string;
+  connection: any;
+  onViewClick: (connectionId: string) => void;
+}) => {
+  const { tempSyncState } = useSyncLock(connection.lock);
+  const isDisabled = tempSyncState || !!connection.lock;
+
+  return (
+    <Tooltip
+      title={
+        isDisabled
+          ? 'Schema changes cannot be accepted while connection is syncing or schema change is being processed'
+          : ''
+      }
+      placement="top"
+    >
+      <span>
+        <Button variant="outlined" onClick={() => onViewClick(connectionId)} disabled={isDisabled}>
+          View
+        </Button>
+      </span>
+    </Tooltip>
+  );
+};
 
 const PendingActionsAccordion = ({
   refreshConnectionsList,
@@ -35,24 +67,6 @@ const PendingActionsAccordion = ({
   const handleViewClick = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
     setOpenPopup(true);
-  };
-
-  // Helper function to check if a connection is currently running
-  const isConnectionRunning = (connectionId: string) => {
-    return connections.some((connection: any) => {
-      if (connection.connectionId !== connectionId) return false;
-
-      // Check if connection has an active lock (running, queued, or locked)
-      if (
-        connection.lock?.status === 'running' ||
-        connection.lock?.status === 'queued' ||
-        connection.lock?.status === 'locked'
-      ) {
-        return true;
-      }
-
-      return false;
-    });
   };
 
   const fetchData = async () => {
@@ -99,6 +113,9 @@ const PendingActionsAccordion = ({
               const connectionId = schemaChange.connection_id;
               const connectionName = connectionNameMap[connectionId];
               const schemaChangeType = schemaChange.change_type;
+              const connection = connections.find(
+                (conn: any) => conn.connectionId === connectionId
+              );
 
               const labelStyles = {
                 color: schemaChangeType === 'breaking' ? 'white' : '#D35D5D',
@@ -132,24 +149,11 @@ const PendingActionsAccordion = ({
                     </Typography>
                   </Box>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}></Typography>
-                  <Tooltip
-                    title={
-                      isConnectionRunning(connectionId)
-                        ? 'Schema changes cannot be accepted while connection is syncing or schema change is being processed'
-                        : ''
-                    }
-                    placement="top"
-                  >
-                    <span>
-                      <Button
-                        variant="outlined"
-                        onClick={() => handleViewClick(connectionId)}
-                        disabled={isConnectionRunning(connectionId)}
-                      >
-                        View
-                      </Button>
-                    </span>
-                  </Tooltip>
+                  <PendingActionButton
+                    connectionId={connectionId}
+                    connection={connection}
+                    onViewClick={handleViewClick}
+                  />
                 </Box>
               );
             })}
