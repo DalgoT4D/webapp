@@ -562,7 +562,7 @@ export const Connections = () => {
 
   const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`, null, {
     refreshInterval: (data) => {
-      return data?.some((conn: any) => conn.lock) ? 3000 : 0;
+      return Array.isArray(data) && data.some((conn: any) => conn.lock) ? 3000 : 0;
     },
   });
 

@@ -63,7 +63,6 @@ const PendingActionsAccordion = ({
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
   const [connectionNameMap, setConnectionNameMap] = useState<Record<string, string>>({});
   const { data: session }: any = useSession();
-  console.log(connections, 'connections');
   const handleViewClick = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
     setOpenPopup(true);
@@ -150,7 +149,7 @@ const PendingActionsAccordion = ({
                   </Box>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}></Typography>
                   <PendingActionButton
-                    key={connectionId}
+                    key={`pending-action-button-${connectionId}`}
                     connectionId={connectionId}
                     connection={connection}
                     onViewClick={handleViewClick}
