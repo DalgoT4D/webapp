@@ -33,8 +33,8 @@ const PendingActionButton = ({
   connection: any;
   onViewClick: (connectionId: string) => void;
 }) => {
-  const { tempSyncState } = useSyncLock(connection.lock);
-  const isDisabled = tempSyncState || !!connection.lock;
+  const { tempSyncState } = useSyncLock(connection?.lock);
+  const isDisabled = tempSyncState || !!connection?.lock;
 
   return (
     <Tooltip
@@ -150,6 +150,7 @@ const PendingActionsAccordion = ({
                   </Box>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}></Typography>
                   <PendingActionButton
+                    key={connectionId}
                     connectionId={connectionId}
                     connection={connection}
                     onViewClick={handleViewClick}

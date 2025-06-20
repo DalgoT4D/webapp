@@ -768,6 +768,8 @@ export const Connections = () => {
         isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
         await delay(3000);
         updateRows(updatedData);
+        // Update SWR cache so PendingActions gets fresh data too
+        mutate(updatedData, false);
       }
     } catch (error) {
       console.log(error);
