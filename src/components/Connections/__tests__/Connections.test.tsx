@@ -265,12 +265,13 @@ describe('Connections Setup', () => {
     await userEvent.clear(searchInput);
     await userEvent.type(searchInput, 'test-conn-2');
 
-    const filteredRow = await screen.findByText('test-conn-2');
+    const table = screen.getByRole('table');
+    const filteredRow = within(table).getByText('test-conn-2');
     expect(filteredRow).toBeInTheDocument();
 
-    const rows = screen.getAllByRole('row');
+    const rows = within(table).getAllByRole('row');
     expect(rows.length).toBe(2);
-    expect(screen.queryByText('test-conn-1')).not.toBeInTheDocument();
-    expect(screen.queryByText('test-conn-3')).not.toBeInTheDocument();
+    expect(within(table).queryByText('test-conn-1')).not.toBeInTheDocument();
+    expect(within(table).queryByText('test-conn-3')).not.toBeInTheDocument();
   });
 });
