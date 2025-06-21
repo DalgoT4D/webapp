@@ -40,7 +40,7 @@ const PendingActionButton = ({
     <Tooltip
       title={
         isDisabled
-          ? 'Schema changes cannot be accepted while connection is syncing or schema change is being processed'
+          ? 'Schema changes cannot be accepted while a connection is syncing or while other changes are being processed'
           : ''
       }
       placement="top"
