@@ -9,8 +9,28 @@ import { StyledEngineProvider } from '@mui/material/styles';
 import { Main } from '@/components/Layouts/Main';
 import ContextProvider from '@/contexts/ContextProvider';
 import { TrackingProvider } from '@/contexts/TrackingContext';
+import { NewLayout } from '@/components/Layouts/NewLayout';
+import LayoutSwitchButton from '@/components/UI/LayoutSwitchButton';
+import React, { useEffect, useState } from 'react';
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+  const [isNewLayout, setIsNewLayout] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('use-new-layout');
+      setIsNewLayout(stored === 'true');
+    }
+  }, []);
+
+  const handleSwitch = () => {
+    const next = !isNewLayout;
+    setIsNewLayout(next);
+    localStorage.setItem('use-new-layout', next ? 'true' : 'false');
+  };
+
+  const Layout = isNewLayout ? NewLayout : Main;
+
   return (
     <ContextProvider value={1}>
       <main className={rajdhani.className}>
@@ -18,11 +38,12 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <SessionProvider session={session} refetchOnWindowFocus={false}>
-              <Main>
+              <Layout>
                 <TrackingProvider session={session}>
                   <Component {...pageProps} />
                 </TrackingProvider>
-              </Main>
+                <LayoutSwitchButton onSwitch={handleSwitch} isNewLayout={isNewLayout} />
+              </Layout>
             </SessionProvider>
           </ThemeProvider>
         </StyledEngineProvider>
