@@ -32,6 +32,14 @@ const MainDashboard = ({ children }: any) => {
   const router = useRouter();
   const [redirectTo, setRedirectTo] = useState<string | null>('');
   const globalContext = useContext(GlobalContext);
+  const [params, setParams] = useState<any>({});
+  console.log(params, 'params');
+  useEffect(() => {
+    // Make sure router is ready before accessing query
+    if (router.isReady) {
+      setParams(router.query);
+    }
+  }, [router.isReady, router.query]);
 
   const [openMenu, setOpenMenu] = useState<boolean>(true);
 
@@ -122,14 +130,19 @@ const MainDashboard = ({ children }: any) => {
       )}
       {redirectTo === 'dashboard' && (
         <>
-          <Header openMenu={openMenu} setOpenMenu={setOpenMenu} />
+          {/* <Header openMenu={openMenu} setOpenMenu={setOpenMenu} /> */}
           {router.pathname === '/changepassword' ? (
             children
+          ) : params.hide === 'true' ? (
+            <Box sx={{ display: 'flex', pt: 6 }}>{children}</Box>
           ) : (
-            <Box sx={{ display: 'flex', pt: 6 }}>
-              <SideDrawer openMenu={openMenu} setOpenMenu={setOpenMenu} />
-              {children}
-            </Box>
+            <>
+              <Header openMenu={openMenu} setOpenMenu={setOpenMenu} />
+              <Box sx={{ display: 'flex', pt: 6 }}>
+                <SideDrawer openMenu={openMenu} setOpenMenu={setOpenMenu} />
+                {children}
+              </Box>
+            </>
           )}
         </>
       )}
