@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { MainLayout } from "@/components/main-layout"
 import { DashboardContent } from "@/components/dashboard/dashboard-content"
 import { DashboardChat } from "@/components/dashboard/dashboard-chat"
@@ -10,6 +10,8 @@ import { ArrowLeft, MessageSquare, Share2, Download, MoreVertical } from "lucide
 import Link from "next/link"
 import type { DashboardType } from "./dashboard-view"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { apiGet } from "@/lib/api"
+import { embedDashboard, EmbedDashboardParams } from "@superset-ui/embedded-sdk"
 
 interface IndividualDashboardViewProps {
   dashboardId: string
@@ -24,83 +26,66 @@ function ErrorFallback({ error }: { error: Error }) {
   )
 }
 
-// Dashboard metadata mapping
-const dashboardMetadata: Record<string, { title: string; description: string; type: DashboardType }> = {
-  implementation: {
-    title: "Implementation Dashboard",
-    description: "Track program implementation metrics and field activities",
-    type: "implementation",
-  },
-  impact: {
-    title: "Impact Dashboard",
-    description: "Measure program outcomes and beneficiary impact",
-    type: "impact",
-  },
-  funder: {
-    title: "Funder Dashboard",
-    description: "Key metrics and outcomes for program funders",
-    type: "funder",
-  },
-  usage: {
-    title: "Usage Dashboard",
-    description: "Platform usage statistics and user engagement",
-    type: "usage",
-  },
-  "regional-performance": {
-    title: "Regional Performance",
-    description: "Geographic analysis of program performance across different regions",
-    type: "implementation",
-  },
-  "maternal-mortality": {
-    title: "Maternal Mortality Tracking",
-    description: "Specialized dashboard for tracking maternal mortality rates and risk factors",
-    type: "impact",
-  },
-  "supply-chain": {
-    title: "Supply Chain Management",
-    description: "Monitor inventory levels, supply distribution, and procurement needs",
-    type: "implementation",
-  },
-  "training-effectiveness": {
-    title: "Training Effectiveness",
-    description: "Evaluate training programs and their impact on field worker performance",
-    type: "usage",
-  },
-  "emergency-response": {
-    title: "Emergency Response",
-    description: "Real-time monitoring of emergency cases and response times",
-    type: "implementation",
-  },
-  "quality-assurance": {
-    title: "Quality Assurance",
-    description: "Monitor data quality, protocol compliance, and service standards",
-    type: "usage",
-  },
-  "partner-organizations": {
-    title: "Partner Organizations",
-    description: "Track performance and collaboration with partner organizations",
-    type: "funder",
-  },
-  "monthly-reports": {
-    title: "Monthly Reports",
-    description: "Comprehensive monthly reporting dashboard for all program metrics",
-    type: "funder",
-  },
-  "system-administration": {
-    title: "System Administration",
-    description: "System health, user management, and administrative controls",
-    type: "usage",
-  },
-  "seasonal-trends": {
-    title: "Seasonal Trends Analysis",
-    description: "Analyze seasonal patterns in health outcomes and program effectiveness",
-    type: "impact",
-  },
-}
+// Fetch dashboard info from backend
+type DashboardInfo = {
+  id: string;
+  title: string;
+  description: string;
+  type: DashboardType;
+};
 
 export function IndividualDashboardView({ dashboardId }: IndividualDashboardViewProps) {
   const [selectedElement, setSelectedElement] = useState<string | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [embedInfo, setEmbedInfo] = useState<null | { uuid: string; host: string; guest_token: string }>(null)
+  const [embedLoading, setEmbedLoading] = useState(false)
+  const [embedError, setEmbedError] = useState<string | null>(null)
+  const supersetContainerRef = useRef<HTMLDivElement>(null)
+  const [dashboard, setDashboard] = useState<DashboardInfo | null>(null)
+  const [dashboardLoading, setDashboardLoading] = useState(false)
+  const [dashboardError, setDashboardError] = useState<string | null>(null)
+
+  // Fetch Superset embed info when dashboardId changes
+  useEffect(() => {
+    let isMounted = true
+    setEmbedLoading(true)
+    setEmbedError(null)
+    setEmbedInfo(null)
+    apiGet(`/api/superset/dashboards/${dashboardId}/embed_info/`)
+      .then((data) => {
+        if (isMounted) setEmbedInfo(data)
+      })
+      .catch((err) => {
+        if (isMounted) setEmbedError(err.message || "Failed to load embed info")
+      })
+      .finally(() => {
+        if (isMounted) setEmbedLoading(false)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [dashboardId])
+
+  // Embed the Superset dashboard when embedInfo is available
+  useEffect(() => {
+    if (embedInfo && supersetContainerRef.current) {
+      // Clear previous embed if any
+      supersetContainerRef.current.innerHTML = ""
+      embedDashboard({
+        id: embedInfo.uuid,
+        supersetDomain: embedInfo.host,
+        mountPoint: supersetContainerRef.current,
+        fetchGuestToken: () => Promise.resolve(embedInfo.guest_token),
+        dashboardUiConfig: {
+              // dashboard UI config: hideTitle, hideTab, hideChartControls, filters.visible, filters.expanded (optional)
+              hideTitle: true,
+              filters: {
+                expanded: true,
+              },
+            },
+      } as EmbedDashboardParams)
+    }
+  }, [embedInfo])
 
   // Trigger resize event when chat opens/closes to help charts adapt
   useEffect(() => {
@@ -111,10 +96,36 @@ export function IndividualDashboardView({ dashboardId }: IndividualDashboardView
     return () => clearTimeout(timer)
   }, [isChatOpen])
 
-  // Get dashboard metadata
-  const dashboard = dashboardMetadata[dashboardId]
+  // Fetch dashboard info when dashboardId changes
+  useEffect(() => {
+    let isMounted = true;
+    setDashboardLoading(true);
+    setDashboardError(null);
+    setDashboard(null);
+    apiGet(`/api/superset/dashboards/${dashboardId}`)
+      .then((data) => {
+        if (isMounted) setDashboard(data);
+      })
+      .catch((err) => {
+        if (isMounted) setDashboardError(err.message || "Failed to load dashboard info");
+      })
+      .finally(() => {
+        if (isMounted) setDashboardLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [dashboardId]);
 
-  if (!dashboard) {
+  if (dashboardLoading) {
+    return (
+      <MainLayout>
+        <div className="p-6 text-center">Loading dashboard info...</div>
+      </MainLayout>
+    );
+  }
+
+  if (dashboardError || !dashboard) {
     return (
       <MainLayout>
         <div className="p-6">
@@ -128,11 +139,11 @@ export function IndividualDashboardView({ dashboardId }: IndividualDashboardView
           </div>
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold text-muted-foreground mb-2">Dashboard Not Found</h1>
-            <p className="text-muted-foreground">The requested dashboard could not be found.</p>
+            <p className="text-muted-foreground">{dashboardError || "The requested dashboard could not be found."}</p>
           </div>
         </div>
       </MainLayout>
-    )
+    );
   }
 
   // Handle element selection for targeted questions
@@ -199,6 +210,17 @@ export function IndividualDashboardView({ dashboardId }: IndividualDashboardView
 
         {/* Main content area with chat sidebar */}
         <div className="flex flex-1 overflow-hidden">
+          {/* Superset Embed */}
+          <div className="w-full flex flex-col items-center justify-center p-4">
+            {embedLoading && <div className="text-muted-foreground">Loading dashboard...</div>}
+            {embedError && <div className="text-red-600">{embedError}</div>}
+            <div className="embeddedsuperset w-full" style={{ maxWidth: "1600px" }}>
+              <div
+                ref={supersetContainerRef}
+                className="bg-white rounded-lg shadow border"
+              />
+            </div>
+          </div>
           {/* Dashboard Content */}
           <div className={`flex-1 overflow-auto transition-all duration-300 ${isChatOpen ? "md:w-2/3" : "w-full"}`}>
             <ErrorBoundary FallbackComponent={ErrorFallback}>

@@ -115,7 +115,7 @@ export function DashboardList() {
       <Link key={dashboard.id} href={`/dashboards/${dashboard.id}`}>
         <Card
           className={cn(
-            "cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02] min-h-[260px] h-full flex flex-col",
+            "cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.02]",
             dashboard.status === "draft" && "opacity-75",
             dashboard.status === "archived" && "opacity-50",
           )}
@@ -293,7 +293,7 @@ export function DashboardList() {
           </div>
         ) : (
           <div
-            className={cn(viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch" : "space-y-3")}
+            className={cn(viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-3")}
           >
             {filteredDashboards.map((dashboard) =>
               viewMode === "grid" ? renderDashboardCard(dashboard) : renderDashboardListItem(dashboard),
