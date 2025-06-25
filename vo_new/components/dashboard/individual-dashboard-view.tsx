@@ -214,7 +214,7 @@ export function IndividualDashboardView({ dashboardId }: IndividualDashboardView
           <div className="w-full flex flex-col items-center justify-center p-4 mt-50">
             {embedLoading && <div className="text-muted-foreground">Loading dashboard...</div>}
             {embedError && <div className="text-red-600">{embedError}</div>}
-            <div className="embeddedsuperset w-full" style={{ maxWidth: "1600px" }}>
+            <div className="embeddedsuperset w-full" style={{ maxWidth: "1600px" }} key={dashboardId}>
               <div
                 ref={supersetContainerRef}
                 className="bg-white rounded-lg shadow border"
