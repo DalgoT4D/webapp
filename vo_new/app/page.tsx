@@ -1,15 +1,35 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { MainLayout } from "@/components/main-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart3, FileText, Database, AlertTriangle, ArrowRight, Download, Image } from "lucide-react"
+import { BarChart3, FileText, Database, AlertTriangle, ArrowRight, Download, Image, GripVertical } from "lucide-react"
 import { AuthGuard } from "@/components/auth-guard"
 import ReactECharts from 'echarts-for-react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable'
+import {
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 // Quick access cards for different sections
 const quickAccessItems = [
@@ -43,11 +63,95 @@ const quickAccessItems = [
   },
 ]
 
+// Sortable Chart Component
+interface SortableChartProps {
+  id: string
+  chartOption: any
+  chartRef: React.RefObject<ReactECharts>
+  onDownload: () => void
+  title: string
+}
+
+function SortableChart({ id, chartOption, chartRef, onDownload, title }: SortableChartProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white rounded-lg border shadow-sm p-4 ${
+        isDragging ? 'opacity-50 z-50' : ''
+      }`}
+      {...attributes}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDownload}
+          >
+            <Image className="h-4 w-4 mr-2" />
+            Download PNG
+          </Button>
+          <div
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+            {...listeners}
+          >
+            <GripVertical className="h-4 w-4 text-gray-400" />
+          </div>
+        </div>
+      </div>
+      <div className="h-80">
+        <ReactECharts
+          ref={chartRef}
+          option={chartOption}
+          style={{ height: '100%', width: '100%' }}
+          opts={{ renderer: 'canvas' }}
+        />
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const router = useRouter()
   const chartsContainerRef = useRef<HTMLDivElement>(null)
   const chart1Ref = useRef<ReactECharts>(null)
   const chart2Ref = useRef<ReactECharts>(null)
+
+  // Drag and drop state
+  const [chartItems, setChartItems] = useState([
+    { id: 'chart1', title: 'Maternal Health Program Performance' },
+    { id: 'chart2', title: 'Health Outcome Trends' }
+  ])
+
+  // Auto-detected layout state based on drop positions
+  const [isVerticalLayout, setIsVerticalLayout] = useState(false)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before activating drag
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   // Auto-redirect to dashboards after 3 seconds (optional)
   // useEffect(() => {
@@ -144,6 +248,33 @@ export default function Home() {
     ]
   }
 
+  // Drag and drop handler with automatic layout detection
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over, delta } = event
+
+    if (over && active.id !== over.id) {
+      // Detect intended layout based on drag direction
+      const dragDistanceX = Math.abs(delta.x)
+      const dragDistanceY = Math.abs(delta.y)
+      
+      // If vertical movement is significantly more than horizontal, switch to vertical layout
+      // If horizontal movement is more, switch to horizontal layout
+      if (dragDistanceY > dragDistanceX * 1.5) {
+        setIsVerticalLayout(true)
+      } else if (dragDistanceX > dragDistanceY * 1.5) {
+        setIsVerticalLayout(false)
+      }
+      // If movement is roughly equal, keep current layout
+
+      setChartItems((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id)
+        const newIndex = items.findIndex((item) => item.id === over.id)
+        
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
+  }
+
   // Download functions
   const downloadChartAsPNG = async (chartRef: React.RefObject<ReactECharts>, filename: string) => {
     if (chartRef.current) {
@@ -161,37 +292,76 @@ export default function Home() {
     }
   }
 
+  // Helper function to get chart data based on current order
+  const getChartData = (chartId: string) => {
+    if (chartId === 'chart1') {
+      return {
+        option: barChartOption,
+        ref: chart1Ref,
+        filename: 'maternal-health-performance.png'
+      }
+    } else {
+      return {
+        option: lineChartOption,
+        ref: chart2Ref,
+        filename: 'health-outcome-trends.png'
+      }
+    }
+  }
+
     const downloadDashboardAsPDF = async () => {
     try {
-      // Get chart images directly from ECharts instances (avoids html2canvas issues)
-      const chart1Instance = chart1Ref.current?.getEchartsInstance()
-      const chart2Instance = chart2Ref.current?.getEchartsInstance()
+      // Get chart instances based on current order
+      const firstChart = getChartData(chartItems[0].id)
+      const secondChart = getChartData(chartItems[1].id)
       
-      if (!chart1Instance || !chart2Instance) {
+      const firstInstance = firstChart.ref.current?.getEchartsInstance()
+      const secondInstance = secondChart.ref.current?.getEchartsInstance()
+      
+      if (!firstInstance || !secondInstance) {
         alert('Charts are not ready. Please try again in a moment.')
         return
       }
 
-      // Get high-quality images from both charts
-      const chart1DataURL = chart1Instance.getDataURL({
+      // Get high-quality images from both charts in current order
+      const firstDataURL = firstInstance.getDataURL({
         type: 'png',
         pixelRatio: 2,
         backgroundColor: '#fff'
       })
       
-      const chart2DataURL = chart2Instance.getDataURL({
+      const secondDataURL = secondInstance.getDataURL({
         type: 'png',
         pixelRatio: 2,
         backgroundColor: '#fff'
       })
 
-      // Create PDF
-      const pdf = new jsPDF('l', 'mm', 'a4') // Landscape A4
-      const pageWidth = 297
-      const pageHeight = 210
+      // Create PDF with appropriate orientation
+      const pdf = new jsPDF(isVerticalLayout ? 'p' : 'l', 'mm', 'a4')
+      const pageWidth = isVerticalLayout ? 210 : 297
+      const pageHeight = isVerticalLayout ? 297 : 210
       const margin = 10
-      const chartWidth = (pageWidth - margin * 3) / 2 // Two charts side by side with margins
-      const chartHeight = 120
+
+      let chartWidth: number, chartHeight: number
+      let firstX: number, firstY: number, secondX: number, secondY: number
+
+      if (isVerticalLayout) {
+        // Vertical layout: charts stacked on top of each other
+        chartWidth = pageWidth - margin * 2
+        chartHeight = (pageHeight - 80) / 2 - margin // Split available height
+        firstX = margin
+        firstY = 50
+        secondX = margin
+        secondY = firstY + chartHeight + margin * 2
+      } else {
+        // Horizontal layout: charts side by side
+        chartWidth = (pageWidth - margin * 3) / 2
+        chartHeight = 120
+        firstX = margin
+        firstY = 40
+        secondX = margin * 2 + chartWidth
+        secondY = 40
+      }
 
       // Add title
       pdf.setFontSize(20)
@@ -201,16 +371,19 @@ export default function Home() {
       pdf.setFontSize(12)
       pdf.text('Generated on: ' + new Date().toLocaleDateString(), pageWidth / 2, 30, { align: 'center' })
 
-      // Add Chart 1
-      pdf.addImage(chart1DataURL, 'PNG', margin, 40, chartWidth, chartHeight)
-      
-      // Add Chart 2
-      pdf.addImage(chart2DataURL, 'PNG', margin * 2 + chartWidth, 40, chartWidth, chartHeight)
+      // Add charts in current order and layout
+      pdf.addImage(firstDataURL, 'PNG', firstX, firstY, chartWidth, chartHeight)
+      pdf.addImage(secondDataURL, 'PNG', secondX, secondY, chartWidth, chartHeight)
 
-      // Add chart titles
+      // Add chart titles in current order
       pdf.setFontSize(14)
-      pdf.text('Maternal Health Program Performance', margin + chartWidth / 2, 35, { align: 'center' })
-      pdf.text('Health Outcome Trends', margin * 2 + chartWidth + chartWidth / 2, 35, { align: 'center' })
+      if (isVerticalLayout) {
+        pdf.text(chartItems[0].title, pageWidth / 2, firstY - 5, { align: 'center' })
+        pdf.text(chartItems[1].title, pageWidth / 2, secondY - 5, { align: 'center' })
+      } else {
+        pdf.text(chartItems[0].title, firstX + chartWidth / 2, 35, { align: 'center' })
+        pdf.text(chartItems[1].title, secondX + chartWidth / 2, 35, { align: 'center' })
+      }
 
       // Add footer
       pdf.setFontSize(10)
@@ -240,60 +413,56 @@ export default function Home() {
               Monitor impact, track performance, and make data-driven decisions to improve healthcare outcomes.
             </p>
           </div>
-          {/* Charts Section */}
+          {/* Drag and Drop Charts Section */}
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Analytics Dashboard</h2>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => downloadChartAsPNG(chart1Ref, 'maternal-health-performance.png')}
-                >
-                  <Image className="h-4 w-4 mr-2" />
-                  Download Chart 1
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => downloadChartAsPNG(chart2Ref, 'health-outcome-trends.png')}
-                >
-                  <Image className="h-4 w-4 mr-2" />
-                  Download Chart 2
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  onClick={downloadDashboardAsPDF}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Dashboard PDF
-                </Button>
+              <div>
+                <h2 className="text-2xl font-semibold">Analytics Dashboard</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Drag charts horizontally for side-by-side layout, or vertically to stack them
+                </p>
               </div>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={downloadDashboardAsPDF}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
             </div>
             
-            <div 
-              ref={chartsContainerRef}
-              className="bg-white p-6 rounded-lg border shadow-sm"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="h-96">
-                  <ReactECharts
-                    ref={chart1Ref}
-                    option={barChartOption}
-                    style={{ height: '100%', width: '100%' }}
-                    opts={{ renderer: 'canvas' }}
-                  />
-                </div>
-                <div className="h-96">
-                  <ReactECharts
-                    ref={chart2Ref}
-                    option={lineChartOption}
-                    style={{ height: '100%', width: '100%' }}
-                    opts={{ renderer: 'canvas' }}
-                  />
-                </div>
-              </div>
+            <div ref={chartsContainerRef}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={chartItems.map(item => item.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className={`gap-6 transition-all duration-300 ${
+                    isVerticalLayout 
+                      ? 'flex flex-col max-w-4xl mx-auto' 
+                      : 'grid grid-cols-1 lg:grid-cols-2'
+                  }`}>
+                    {chartItems.map((item) => {
+                      const chartData = getChartData(item.id)
+                      return (
+                        <SortableChart
+                          key={item.id}
+                          id={item.id}
+                          title={item.title}
+                          chartOption={chartData.option}
+                          chartRef={chartData.ref}
+                          onDownload={() => downloadChartAsPNG(chartData.ref, chartData.filename)}
+                        />
+                      )
+                    })}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </div>
           </div>
 
