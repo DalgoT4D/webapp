@@ -211,7 +211,7 @@ export function IndividualDashboardView({ dashboardId }: IndividualDashboardView
         {/* Main content area with chat sidebar */}
         <div className="flex flex-1 overflow-hidden">
           {/* Superset Embed */}
-          <div className="w-full flex flex-col items-center justify-center p-4">
+          <div className="w-full flex flex-col items-center justify-center p-4 mt-50">
             {embedLoading && <div className="text-muted-foreground">Loading dashboard...</div>}
             {embedError && <div className="text-red-600">{embedError}</div>}
             <div className="embeddedsuperset w-full" style={{ maxWidth: "1600px" }}>
