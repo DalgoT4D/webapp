@@ -167,7 +167,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen">
         {/* Desktop Sidebar */}
         <Sidebar className="hidden md:flex" collapsible="icon">
-          <SidebarHeader className="border-b p-4 flex flex-col items-start gap-2">
+          <SidebarHeader className="border-b p-4 flex flex-col items-center gap-2">
             <Logo />
             <TooltipProvider>
               <Tooltip>
