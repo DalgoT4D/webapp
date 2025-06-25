@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack -p 3000",
     "dev:3001": "next dev --turbopack -p 3001",
     "build": "next build",
-    "start": "next start -p 3001",
+    "start": "next start -p 3000",
     "start:3001": "next start -p 3001",
     "lint": "next lint"
   },

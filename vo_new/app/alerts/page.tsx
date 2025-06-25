@@ -1,10 +1,13 @@
 import { AlertsView } from "@/components/alerts/alerts-view"
 import { MainLayout } from "@/components/main-layout"
+import { AuthGuard } from "@/components/auth-guard"
 
 export default function AlertsPage() {
   return (
-    <MainLayout>
-      <AlertsView />
-    </MainLayout>
+    <AuthGuard>
+      <MainLayout>
+        <AlertsView />
+      </MainLayout>
+    </AuthGuard>
   )
 }

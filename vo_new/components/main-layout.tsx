@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   BarChart3,
   FileText,
@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
+  Power,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,7 @@ import {
   SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Define the navigation items with their routes and icons
 const getNavItems = (currentPath: string) => [
@@ -147,20 +149,44 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const [navItems, setNavItems] = useState(getNavItems(pathname))
+  const router = useRouter();
 
   // Update nav items when pathname changes
   useEffect(() => {
     setNavItems(getNavItems(pathname))
   }, [pathname])
 
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("selectedOrg");
+    router.push("/login");
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen">
         {/* Desktop Sidebar */}
         <Sidebar className="hidden md:flex" collapsible="icon">
-          <SidebarHeader className="border-b p-4 flex items-center justify-between">
+          <SidebarHeader className="border-b p-4 flex flex-col items-start gap-2">
             <Logo />
-            <CustomSidebarTrigger />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleLogout}
+                    aria-label="Logout"
+                  >
+                    <Power className="h-5 w-5 text-red-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Logout</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <div className="w-full flex justify-end mt-2">
+              <CustomSidebarTrigger />
+            </div>
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>

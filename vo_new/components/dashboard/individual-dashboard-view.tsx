@@ -29,7 +29,7 @@ function ErrorFallback({ error }: { error: Error }) {
 // Fetch dashboard info from backend
 type DashboardInfo = {
   id: string;
-  title: string;
+  dashboard_title: string;
   description: string;
   type: DashboardType;
 };
@@ -204,7 +204,7 @@ export function IndividualDashboardView({ dashboardId }: IndividualDashboardView
 
         {/* Dashboard Title and Description */}
         <div className="p-4 border-b">
-          <h1 className="text-2xl font-bold tracking-tight">{dashboard.title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{dashboard.dashboard_title}</h1>
           <p className="text-muted-foreground">{dashboard.description}</p>
         </div>
 

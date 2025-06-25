@@ -1,19 +1,29 @@
 // Centralized API config and fetch utility
 
-const API_BASE_URL = "http://localhost:8002";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8002";
 
 // Placeholder for getting auth token (to be implemented)
 function getAuthToken() {
-  // e.g., return localStorage.getItem('authToken')
-  return "1352d703d1d5d07041e67f98909950cfadbbbf93";
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("authToken") || undefined;
+  }
+  return undefined;
+}
+
+function getSelectOrg() {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("selectedOrg") || undefined;
+  }
+  return undefined;
 }
 
 function getHeaders() {
   const token = getAuthToken();
+  const selectedOrgSlug = getSelectOrg();
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    "x-dalgo-org": "test_auto"
+    ...(selectedOrgSlug ? { "x-dalgo-org": selectedOrgSlug } : {}),
   };
 }
 
