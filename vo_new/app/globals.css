@@ -120,3 +120,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+.embeddedsuperset iframe {
+  height: 100vh;
+  width: 120%;
+  border: none;
+  -webkit-transform: scale(0.8, 0.8);
+  -webkit-transform-origin: 0 0;
+}

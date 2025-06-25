@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -29,181 +29,67 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { apiGet } from "@/lib/api"
 
 interface Dashboard {
   id: string
-  title: string
+  dashboard_title: string
   description: string
   category: string
   tags: string[]
   icon: React.ElementType
-  lastUpdated: string
+  changed_on_utc: string
   status: "active" | "draft" | "archived"
   type: string
 }
 
-const dashboards: Dashboard[] = [
-  {
-    id: "implementation",
-    title: "Implementation Dashboard",
-    description: "Track program implementation metrics, field activities, and operational performance",
-    category: "Operations",
-    tags: ["field-work", "visits", "protocols", "teams"],
-    icon: BarChart3,
-    lastUpdated: "Monday at 14:30",
-    status: "active",
-    type: "implementation",
-  },
-  {
-    id: "impact",
-    title: "Impact Dashboard",
-    description: "Measure program outcomes, beneficiary impact, and health improvements",
-    category: "Health Outcomes",
-    tags: ["health", "outcomes", "beneficiaries", "impact"],
-    icon: TrendingUp,
-    lastUpdated: "Monday at 15:30",
-    status: "active",
-    type: "impact",
-  },
-  {
-    id: "funder",
-    title: "Funder Dashboard",
-    description: "Key metrics and financial outcomes for program funders and stakeholders",
-    category: "Financial",
-    tags: ["budget", "roi", "sustainability", "funding"],
-    icon: DollarSign,
-    lastUpdated: "Monday at 13:30",
-    status: "active",
-    type: "funder",
-  },
-  {
-    id: "usage",
-    title: "Usage Dashboard",
-    description: "Platform usage statistics, user engagement, and system performance",
-    category: "Technology",
-    tags: ["platform", "users", "engagement", "performance"],
-    icon: Users,
-    lastUpdated: "Monday at 16:00",
-    status: "active",
-    type: "usage",
-  },
-  {
-    id: "regional-performance",
-    title: "Regional Performance",
-    description: "Geographic analysis of program performance across different regions",
-    category: "Geographic",
-    tags: ["regional", "geographic", "performance", "mapping"],
-    icon: Globe,
-    lastUpdated: "Monday at 12:30",
-    status: "active",
-    type: "implementation",
-  },
-  {
-    id: "maternal-mortality",
-    title: "Maternal Mortality Tracking",
-    description: "Specialized dashboard for tracking maternal mortality rates and risk factors",
-    category: "Health Outcomes",
-    tags: ["mortality", "risk", "maternal", "tracking"],
-    icon: Heart,
-    lastUpdated: "Monday at 10:30",
-    status: "active",
-    type: "impact",
-  },
-  {
-    id: "supply-chain",
-    title: "Supply Chain Management",
-    description: "Monitor inventory levels, supply distribution, and procurement needs",
-    category: "Operations",
-    tags: ["supplies", "inventory", "procurement", "logistics"],
-    icon: Activity,
-    lastUpdated: "Sunday at 18:00",
-    status: "active",
-    type: "implementation",
-  },
-  {
-    id: "training-effectiveness",
-    title: "Training Effectiveness",
-    description: "Evaluate training programs and their impact on field worker performance",
-    category: "Human Resources",
-    tags: ["training", "education", "performance", "skills"],
-    icon: Target,
-    lastUpdated: "Saturday at 16:00",
-    status: "active",
-    type: "usage",
-  },
-  {
-    id: "emergency-response",
-    title: "Emergency Response",
-    description: "Real-time monitoring of emergency cases and response times",
-    category: "Emergency",
-    tags: ["emergency", "response", "alerts", "critical"],
-    icon: Zap,
-    lastUpdated: "Monday at 11:30",
-    status: "active",
-    type: "implementation",
-  },
-  {
-    id: "quality-assurance",
-    title: "Quality Assurance",
-    description: "Monitor data quality, protocol compliance, and service standards",
-    category: "Quality",
-    tags: ["quality", "compliance", "standards", "audit"],
-    icon: Shield,
-    lastUpdated: "Monday at 08:30",
-    status: "active",
-    type: "usage",
-  },
-  {
-    id: "partner-organizations",
-    title: "Partner Organizations",
-    description: "Track performance and collaboration with partner organizations",
-    category: "Partnerships",
-    tags: ["partners", "collaboration", "organizations", "network"],
-    icon: Building,
-    lastUpdated: "Sunday at 20:00",
-    status: "active",
-    type: "funder",
-  },
-  {
-    id: "monthly-reports",
-    title: "Monthly Reports",
-    description: "Comprehensive monthly reporting dashboard for all program metrics",
-    category: "Reporting",
-    tags: ["reports", "monthly", "comprehensive", "metrics"],
-    icon: FileText,
-    lastUpdated: "Friday at 17:00",
-    status: "active",
-    type: "funder",
-  },
-  {
-    id: "system-administration",
-    title: "System Administration",
-    description: "System health, user management, and administrative controls",
-    category: "Administration",
-    tags: ["admin", "system", "users", "management"],
-    icon: Settings,
-    lastUpdated: "Monday at 04:30",
-    status: "active",
-    type: "usage",
-  },
-  {
-    id: "seasonal-trends",
-    title: "Seasonal Trends Analysis",
-    description: "Analyze seasonal patterns in health outcomes and program effectiveness",
-    category: "Analytics",
-    tags: ["seasonal", "trends", "patterns", "analysis"],
-    icon: Calendar,
-    lastUpdated: "Last Monday at 14:00",
-    status: "draft",
-    type: "impact",
-  },
-]
+// Icon mapping from string to Lucide React component
+const iconMap: Record<string, React.ElementType> = {
+  BarChart3,
+  TrendingUp,
+  DollarSign,
+  Users,
+  Activity,
+  Heart,
+  Target,
+  Zap,
+  Shield,
+  Globe,
+  Building,
+  Calendar,
+  FileText,
+  Settings,
+}
 
 export function DashboardList() {
+  const [dashboards, setDashboards] = useState<Dashboard[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+
+  useEffect(() => {
+    async function fetchDashboards() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await apiGet("/api/superset/dashboards/")
+        // Map API data to Dashboard type
+        const mapped = data.map((d: any) => ({
+          ...d,
+          icon: iconMap[d.icon] || BarChart3, // fallback icon
+        }))
+        setDashboards(mapped)
+      } catch (err: any) {
+        setError(err.message || "Unknown error")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchDashboards()
+  }, [])
 
   // Get unique categories
   const categories = Array.from(new Set(dashboards.map((d) => d.category))).sort()
@@ -212,9 +98,9 @@ export function DashboardList() {
   const filteredDashboards = dashboards.filter((dashboard) => {
     const matchesSearch =
       searchQuery === "" ||
-      dashboard.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dashboard.dashboard_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       dashboard.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      dashboard.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      dashboard.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
 
     const matchesCategory = categoryFilter === "all" || dashboard.category === categoryFilter
     const matchesStatus = statusFilter === "all" || dashboard.status === statusFilter
@@ -241,7 +127,7 @@ export function DashboardList() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-base">{dashboard.title}</CardTitle>
+                  <CardTitle className="text-base">{dashboard.dashboard_title}</CardTitle>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="outline" className="text-xs">
                       {dashboard.category}
@@ -260,7 +146,7 @@ export function DashboardList() {
           <CardContent className="pt-0">
             <CardDescription className="text-sm mb-3">{dashboard.description}</CardDescription>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Updated {dashboard.lastUpdated}</span>
+              <span>Updated {dashboard.changed_on_utc}</span>
               <div className="flex gap-1">
                 {dashboard.tags.slice(0, 2).map((tag) => (
                   <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0.5">
@@ -297,7 +183,7 @@ export function DashboardList() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-medium truncate">{dashboard.title}</h3>
+              <h3 className="font-medium truncate">{dashboard.dashboard_title}</h3>
               <Badge variant="outline" className="text-xs flex-shrink-0">
                 {dashboard.category}
               </Badge>
@@ -312,7 +198,7 @@ export function DashboardList() {
             </div>
             <p className="text-sm text-muted-foreground truncate mb-2">{dashboard.description}</p>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Updated {dashboard.lastUpdated}</span>
+              <span className="text-xs text-muted-foreground">Updated {dashboard.changed_on_utc}</span>
               <div className="flex gap-1">
                 {dashboard.tags.slice(0, 3).map((tag) => (
                   <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0.5">
@@ -390,13 +276,17 @@ export function DashboardList() {
         </div>
 
         <div className="text-sm text-muted-foreground">
-          {filteredDashboards.length} of {dashboards.length} dashboards
+          {loading ? "Loading..." : error ? `Error: ${error}` : `${filteredDashboards.length} of ${dashboards.length} dashboards`}
         </div>
       </div>
 
       {/* Dashboard List */}
       <div>
-        {filteredDashboards.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12 text-muted-foreground">Loading dashboards...</div>
+        ) : error ? (
+          <div className="text-center py-12 text-red-500">{error}</div>
+        ) : filteredDashboards.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-2">No dashboards found</div>
             <div className="text-sm text-muted-foreground">Try adjusting your search or filter criteria</div>
