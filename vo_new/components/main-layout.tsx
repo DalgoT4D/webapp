@@ -83,6 +83,18 @@ const getNavItems = (currentPath: string) => [
     icon: Settings,
     isActive: currentPath.startsWith("/ingest"),
   },
+  {
+    title: "Transform",
+    href: "/transform",
+    icon: Settings,
+    isActive: currentPath.startsWith("/transform"), 
+  },
+  {
+    title: "Orchestrate",
+    href: "/orchestrate",
+    icon: Settings,
+    isActive: currentPath.startsWith("/orchestrate"),
+  },
 ]
 
 // Custom sidebar trigger with directional chevrons

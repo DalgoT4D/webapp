@@ -1,7 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-    output: 'standalone'
+  output: 'standalone',
+  webpack: (config, { isServer }) => {
+    // Exclude vo_new directory from webpack compilation
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: ['**/vo_new/**', '**/node_modules/**']
+    };
+    return config;
+  }
 }
 
 module.exports = nextConfig

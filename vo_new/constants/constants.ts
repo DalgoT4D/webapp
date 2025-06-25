@@ -1,0 +1,1 @@
+export const embeddedAppUrl = process.env.NEXT_PUBLIC_EMBEDDED_WEBAPP_URL;
