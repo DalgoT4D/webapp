@@ -6,6 +6,8 @@ import { backendUrl } from '@/config/constant';
 export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, token }: any) {
+      console.log('session', session);
+      console.log('token', token);
       if (token.id) {
         session.user.token = token.id;
         session.user.email = token.email;
@@ -28,6 +30,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
   },
+  useSecureCookies: false,
   // Configure one or more authentication providers
   providers: [
     CredentialsProvider({
