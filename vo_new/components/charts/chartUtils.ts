@@ -65,7 +65,7 @@ export const CHART_TYPE_CONFIGS: Record<string, ChartTypeConfig> = {
     name: 'Scatter Plot',
     icon: '🔵',
     description: 'Show correlation between two numeric variables',
-    supportedLibraries: ['echarts', 'nivo', 'recharts'],
+    supportedLibraries: ['echarts', 'recharts'], // Nivo doesn't have direct scatter support
     dataRequirements: {
       minDataPoints: 2,
       xAxisType: 'value',
@@ -76,7 +76,7 @@ export const CHART_TYPE_CONFIGS: Record<string, ChartTypeConfig> = {
     name: 'Funnel Chart',
     icon: '📐',
     description: 'Show progressive reduction of data through stages',
-    supportedLibraries: ['echarts'],
+    supportedLibraries: ['echarts'], // Only ECharts supports funnel
     dataRequirements: {
       minDataPoints: 2,
       maxDataPoints: 8,
@@ -88,7 +88,7 @@ export const CHART_TYPE_CONFIGS: Record<string, ChartTypeConfig> = {
     name: 'Heatmap',
     icon: '🔥',
     description: 'Show data intensity across two dimensions',
-    supportedLibraries: ['echarts', 'nivo'],
+    supportedLibraries: ['echarts'], // Only ECharts currently implemented
     dataRequirements: {
       minDataPoints: 4,
       xAxisType: 'category',
@@ -99,7 +99,7 @@ export const CHART_TYPE_CONFIGS: Record<string, ChartTypeConfig> = {
     name: 'Radar Chart',
     icon: '🎯',
     description: 'Compare multiple metrics on a circular plot',
-    supportedLibraries: ['echarts', 'recharts'],
+    supportedLibraries: ['echarts', 'recharts'], // Nivo doesn't have radar in basic package
     dataRequirements: {
       minDataPoints: 3,
       maxDataPoints: 12,

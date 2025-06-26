@@ -608,6 +608,7 @@ export default function ChartForm({
                 chartDescription={generatedChart.chartDescription}
                 xAxisLabel={generatedChart.xAxis}
                 yAxisLabel={generatedChart.yAxis}
+                chartType={chartType}
               />
             )}
             
@@ -618,6 +619,7 @@ export default function ChartForm({
                 chartDescription={generatedChart.chartDescription}
                 xAxisLabel={generatedChart.xAxis}
                 yAxisLabel={generatedChart.yAxis}
+                chartType={chartType}
               />
             )}
             
