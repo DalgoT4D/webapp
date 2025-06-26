@@ -8,6 +8,7 @@ import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 
 // Import chart components
 import ChartForm from "@/components/charts/ChartForm";
+import SavedChartThumbnail from "@/components/charts/SavedChartThumbnail";
 
 interface CreatedChart {
   schema: string;
@@ -241,37 +242,49 @@ export default function ChartsPage() {
                   <div className="text-muted-foreground">No saved ECharts yet. Click "Create New Chart" to get started.</div>
                 )}
                 
-                <div className="grid gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {savedCharts
                     .filter(chart => chart.chart_type === 'echarts')
                     .map((chart) => (
                       <div 
                         key={chart.id} 
-                        className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 bg-white"
                         onClick={() => handleEditChart(chart)}
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-medium">{chart.title}</h4>
-                            <p className="text-sm text-muted-foreground">{chart.description}</p>
+                        {/* Thumbnail */}
+                        <div className="bg-gray-50 p-2">
+                          <SavedChartThumbnail chart={chart} width={280} height={160} />
+                        </div>
+                        
+                        {/* Chart Info */}
+                        <div className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium truncate">{chart.title}</h4>
+                              <p className="text-sm text-muted-foreground line-clamp-2">{chart.description}</p>
+                            </div>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              className="ml-2 flex-shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteChart(chart.id);
+                              }}
+                            >
+                              Delete
+                            </Button>
                           </div>
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteChart(chart.id);
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Schema: {chart.schema_name} | Table: {chart.table} | 
-                          X: {chart.config.xAxis} | Y: {chart.config.yAxis} | Library: {chart.chart_type} | Chart: {chart.config.chartType}
-                        </div>
-                        <div className="text-xs text-blue-600 mt-2">
-                          Click to view, edit, or delete this chart
+                          
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div>📊 {chart.config.chartType} chart</div>
+                            <div>🗂️ {chart.schema_name}.{chart.table}</div>
+                            <div>📈 {chart.config.xAxis} → {chart.config.yAxis}</div>
+                          </div>
+                          
+                          <div className="text-xs text-blue-600 mt-3 font-medium">
+                            Click to edit or view full chart
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -302,37 +315,49 @@ export default function ChartsPage() {
                   <div className="text-muted-foreground">No saved Nivo charts yet. Click "Create New Chart" to get started.</div>
                 )}
                 
-                <div className="grid gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {savedCharts
                     .filter(chart => chart.chart_type === 'nivo')
                     .map((chart) => (
                       <div 
                         key={chart.id} 
-                        className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 bg-white"
                         onClick={() => handleEditChart(chart)}
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-medium">{chart.title}</h4>
-                            <p className="text-sm text-muted-foreground">{chart.description}</p>
+                        {/* Thumbnail */}
+                        <div className="bg-gray-50 p-2">
+                          <SavedChartThumbnail chart={chart} width={280} height={160} />
+                        </div>
+                        
+                        {/* Chart Info */}
+                        <div className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium truncate">{chart.title}</h4>
+                              <p className="text-sm text-muted-foreground line-clamp-2">{chart.description}</p>
+                            </div>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              className="ml-2 flex-shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteChart(chart.id);
+                              }}
+                            >
+                              Delete
+                            </Button>
                           </div>
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteChart(chart.id);
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Schema: {chart.schema_name} | Table: {chart.table} | 
-                          X: {chart.config.xAxis} | Y: {chart.config.yAxis} | Library: {chart.chart_type} | Chart: {chart.config.chartType}
-                        </div>
-                        <div className="text-xs text-blue-600 mt-2">
-                          Click to view, edit, or delete this chart
+                          
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div>📊 {chart.config.chartType} chart</div>
+                            <div>🗂️ {chart.schema_name}.{chart.table}</div>
+                            <div>📈 {chart.config.xAxis} → {chart.config.yAxis}</div>
+                          </div>
+                          
+                          <div className="text-xs text-blue-600 mt-3 font-medium">
+                            Click to edit or view full chart
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -363,37 +388,49 @@ export default function ChartsPage() {
                   <div className="text-muted-foreground">No saved Recharts yet. Click "Create New Chart" to get started.</div>
                 )}
                 
-                <div className="grid gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {savedCharts
                     .filter(chart => chart.chart_type === 'recharts')
                     .map((chart) => (
                       <div 
                         key={chart.id} 
-                        className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 bg-white"
                         onClick={() => handleEditChart(chart)}
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-medium">{chart.title}</h4>
-                            <p className="text-sm text-muted-foreground">{chart.description}</p>
+                        {/* Thumbnail */}
+                        <div className="bg-gray-50 p-2">
+                          <SavedChartThumbnail chart={chart} width={280} height={160} />
+                        </div>
+                        
+                        {/* Chart Info */}
+                        <div className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium truncate">{chart.title}</h4>
+                              <p className="text-sm text-muted-foreground line-clamp-2">{chart.description}</p>
+                            </div>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              className="ml-2 flex-shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteChart(chart.id);
+                              }}
+                            >
+                              Delete
+                            </Button>
                           </div>
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteChart(chart.id);
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Schema: {chart.schema_name} | Table: {chart.table} | 
-                          X: {chart.config.xAxis} | Y: {chart.config.yAxis} | Library: {chart.chart_type} | Chart: {chart.config.chartType}
-                        </div>
-                        <div className="text-xs text-blue-600 mt-2">
-                          Click to view, edit, or delete this chart
+                          
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div>📊 {chart.config.chartType} chart</div>
+                            <div>🗂️ {chart.schema_name}.{chart.table}</div>
+                            <div>📈 {chart.config.xAxis} → {chart.config.yAxis}</div>
+                          </div>
+                          
+                          <div className="text-xs text-blue-600 mt-3 font-medium">
+                            Click to edit or view full chart
+                          </div>
                         </div>
                       </div>
                     ))}

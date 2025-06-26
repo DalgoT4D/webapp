@@ -27,6 +27,7 @@ The system now supports multiple chart types with automatic configuration:
 - **Responsive Design**: Charts adapt to different screen sizes
 - **Interactive Features**: Zoom, pan, tooltips, and data exploration
 - **Loading States**: Smooth loading and error states
+- **Chart Thumbnails**: Visual previews of saved charts for easy browsing
 
 ## Architecture
 
@@ -35,6 +36,7 @@ The system now supports multiple chart types with automatic configuration:
 - `EChartsComponent.tsx` - Main optimized ECharts component
 - `chartUtils.ts` - Utility functions and configurations
 - `ChartForm.tsx` - Enhanced form with dynamic chart type selection
+- `SavedChartThumbnail.tsx` - Generates thumbnails for saved charts
 
 ### Chart Configuration System
 
@@ -106,6 +108,18 @@ if (!validation.isValid) {
 // Get recommendations
 const recommendedType = getRecommendedChartType(data, 'echarts');
 const titleSuggestions = generateChartTitleSuggestions('Date', 'Revenue', 'line');
+```
+
+### Using Chart Thumbnails
+
+```tsx
+import SavedChartThumbnail from './SavedChartThumbnail';
+
+<SavedChartThumbnail
+  chart={savedChart}
+  width={280}
+  height={160}
+/>
 ```
 
 ## Extending the System
