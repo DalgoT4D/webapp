@@ -13,6 +13,15 @@ import EChartsComponent from "./EChartsComponent";
 import NivoComponent from "./NivoComponent";
 import RechartsComponent from "./RechartsComponent";
 
+// Import chart utilities
+import { 
+  getSupportedChartTypes, 
+  validateChartData, 
+  getRecommendedChartType,
+  generateChartTitleSuggestions,
+  CHART_TYPE_CONFIGS
+} from "./chartUtils";
+
 interface ChartFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -90,6 +99,7 @@ export default function ChartForm({
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [chartValidation, setChartValidation] = useState<{ isValid: boolean; errors: string[]; recommendations?: string[] } | null>(null);
 
   // Fetch schemas when dialog opens
   useEffect(() => {
@@ -244,6 +254,32 @@ export default function ChartForm({
         'y-axis': yAxisData.slice(0, minLength)
       };
       
+              // Validate chart data for the selected chart type
+        const validation = validateChartData(transformedData, chartType);
+        const recommendedType = getRecommendedChartType(transformedData, chartLibraryType as 'echarts' | 'nivo' | 'recharts');
+        const suggestions = generateChartTitleSuggestions(xAxis, yAxis, chartType);
+        
+        // Set validation state for UI display
+        setChartValidation({
+          isValid: validation.isValid,
+          errors: validation.errors,
+          recommendations: validation.isValid ? [] : [
+            `Recommended chart type: ${CHART_TYPE_CONFIGS[recommendedType]?.name || recommendedType}`,
+            ...suggestions.slice(0, 2).map(s => `Suggested title: "${s}"`)
+          ]
+        });
+        
+        if (!validation.isValid) {
+          console.warn('Chart validation failed:', validation.errors);
+          console.log('Recommended chart type:', recommendedType);
+          console.log('Title suggestions:', suggestions);
+          
+          // Use first title suggestion if chart name is basic
+          if (!chartName || chartName === `${yAxis} by ${xAxis}`) {
+            setChartName(suggestions[0]);
+          }
+        }
+      
       setChartData(transformedData);
       setGeneratedChart({
         schema: selectedSchema,
@@ -328,6 +364,7 @@ export default function ChartForm({
     setGenerateError(null);
     setSaveError(null);
     setGenerating(false);
+    setChartValidation(null);
   };
 
   function handleSubmit(e: React.FormEvent) {
@@ -460,13 +497,48 @@ export default function ChartForm({
                 <SelectValue placeholder="Select chart type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bar">Bar Chart</SelectItem>
-                <SelectItem value="line">Line Chart</SelectItem>
-                <SelectItem value="pie">Pie Chart</SelectItem>
-                <SelectItem value="area">Area Chart</SelectItem>
+                {getSupportedChartTypes(chartLibraryType as 'echarts' | 'nivo' | 'recharts').map((type) => {
+                  const config = CHART_TYPE_CONFIGS[type];
+                  return (
+                    <SelectItem key={type} value={type}>
+                      <div className="flex items-center gap-2">
+                        <span>{config.icon}</span>
+                        <div>
+                          <div>{config.name}</div>
+                          <div className="text-xs text-muted-foreground">{config.description}</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Chart Validation Messages */}
+          {chartValidation && !chartValidation.isValid && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div className="text-sm font-medium text-yellow-800 mb-1">⚠️ Chart Recommendations</div>
+              {chartValidation.errors.length > 0 && (
+                <div className="text-xs text-yellow-700 mb-2">
+                  Issues: {chartValidation.errors.join(', ')}
+                </div>
+              )}
+              {chartValidation.recommendations && (
+                <div className="text-xs text-yellow-700">
+                  {chartValidation.recommendations.map((rec, index) => (
+                    <div key={index}>• {rec}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {chartValidation && chartValidation.isValid && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="text-sm font-medium text-green-800">✅ Chart configuration looks good!</div>
+            </div>
+          )}
           
           <Button 
             type="submit" 
@@ -525,6 +597,7 @@ export default function ChartForm({
                 chartDescription={generatedChart.chartDescription}
                 xAxisLabel={generatedChart.xAxis}
                 yAxisLabel={generatedChart.yAxis}
+                chartType={chartType}
               />
             )}
             
