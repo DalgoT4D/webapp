@@ -100,6 +100,12 @@ export default function ChartForm({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [chartValidation, setChartValidation] = useState<{ isValid: boolean; errors: string[]; recommendations?: string[] } | null>(null);
+  
+  // Pagination states for ECharts
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const [currentLimit, setCurrentLimit] = useState(10);
+  const [totalRecords, setTotalRecords] = useState<number | null>(null);
+  const [hasMoreData, setHasMoreData] = useState(false);
 
   // Fetch schemas when dialog opens
   useEffect(() => {
@@ -218,11 +224,14 @@ export default function ChartForm({
   }
 
   // Function to generate chart data
-  const generateChartData = async () => {
+  const generateChartData = async (customOffset?: number) => {
     if (!selectedSchema || !selectedTable || !xAxis || !yAxis || !chartName) return;
     
     setGenerating(true);
     setGenerateError(null);
+    
+    // Use custom offset if provided, otherwise use current offset
+    const offsetToUse = customOffset !== undefined ? customOffset : currentOffset;
     
     try {
       const payload = {
@@ -231,8 +240,8 @@ export default function ChartForm({
         table_name: selectedTable,
         xaxis_col: xAxis,
         yaxis_col: yAxis,
-        offset: 0,
-        limit: 10
+        offset: offsetToUse,
+        limit: currentLimit
       };
       
       const responseData = await apiPost('/api/visualization/generate_chart/', payload);
@@ -254,7 +263,14 @@ export default function ChartForm({
         'y-axis': yAxisData.slice(0, minLength)
       };
       
-              // Validate chart data for the selected chart type
+      // Store pagination info for ECharts
+      if (chartLibraryType === 'echarts') {
+        setTotalRecords(responseData.total_records || null);
+        setHasMoreData((offsetToUse + currentLimit) < (responseData.total_records || 0));
+        setCurrentOffset(offsetToUse);
+      }
+      
+      // Validate chart data for the selected chart type
         const validation = validateChartData(transformedData, chartType);
         const recommendedType = getRecommendedChartType(transformedData, chartLibraryType as 'echarts' | 'nivo' | 'recharts');
         const suggestions = generateChartTitleSuggestions(xAxis, yAxis, chartType);
@@ -365,6 +381,11 @@ export default function ChartForm({
     setSaveError(null);
     setGenerating(false);
     setChartValidation(null);
+    // Reset pagination
+    setCurrentOffset(0);
+    setCurrentLimit(10);
+    setTotalRecords(null);
+    setHasMoreData(false);
   };
 
   function handleSubmit(e: React.FormEvent) {
@@ -515,6 +536,40 @@ export default function ChartForm({
             </Select>
           </div>
           
+          {/* Pagination Controls for ECharts */}
+          {chartLibraryType === 'echarts' && (
+            <div>
+              <label className="block mb-1 font-medium">Data Limit</label>
+              <Select 
+                value={currentLimit.toString()} 
+                onValueChange={(value) => {
+                  const newLimit = parseInt(value);
+                  setCurrentLimit(newLimit);
+                  setCurrentOffset(0); // Reset to first page when changing limit
+                  // If we have a generated chart, refresh it with new limit
+                  if (generatedChart) {
+                    generateChartData(0);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select number of records" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 records</SelectItem>
+                  <SelectItem value="25">25 records</SelectItem>
+                  <SelectItem value="50">50 records</SelectItem>
+                  <SelectItem value="100">100 records</SelectItem>
+                </SelectContent>
+              </Select>
+              {totalRecords && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Showing {currentOffset + 1}-{Math.min(currentOffset + currentLimit, totalRecords)} of {totalRecords} records
+                </div>
+              )}
+            </div>
+          )}
+          
           {/* Chart Validation Messages */}
           {chartValidation && !chartValidation.isValid && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
@@ -591,14 +646,49 @@ export default function ChartForm({
         {generatedChart && chartData && !generating && (
           <div className="space-y-4">
             {chartLibraryType === 'echarts' && (
-              <EChartsComponent
-                data={chartData}
-                chartName={generatedChart.chartName}
-                chartDescription={generatedChart.chartDescription}
-                xAxisLabel={generatedChart.xAxis}
-                yAxisLabel={generatedChart.yAxis}
-                chartType={chartType}
-              />
+              <>
+                <EChartsComponent
+                  data={chartData}
+                  chartName={generatedChart.chartName}
+                  chartDescription={generatedChart.chartDescription}
+                  xAxisLabel={generatedChart.xAxis}
+                  yAxisLabel={generatedChart.yAxis}
+                  chartType={chartType}
+                />
+                
+                {/* Pagination Controls for ECharts */}
+                {totalRecords && totalRecords > currentLimit && (
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div className="text-sm text-muted-foreground">
+                      Page {Math.floor(currentOffset / currentLimit) + 1} of {Math.ceil(totalRecords / currentLimit)}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const newOffset = Math.max(0, currentOffset - currentLimit);
+                          generateChartData(newOffset);
+                        }}
+                        disabled={currentOffset === 0 || generating}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const newOffset = currentOffset + currentLimit;
+                          generateChartData(newOffset);
+                        }}
+                        disabled={!hasMoreData || generating}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             
             {chartLibraryType === 'nivo' && (
