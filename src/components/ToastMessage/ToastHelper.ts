@@ -1,5 +1,4 @@
 import { errorToastDuration } from '@/config/constant';
-console.log(errorToastDuration, 'errortoastduration');
 export const successToast = (message = '', messages: Array<string> = [], context: any) => {
   context?.Toast?.dispatch({
     type: 'new',
