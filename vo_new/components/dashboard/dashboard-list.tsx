@@ -26,6 +26,7 @@ import {
   FileText,
   Settings,
   ArrowRight,
+  Plus,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -216,6 +217,20 @@ export function DashboardList() {
 
   return (
     <div className="space-y-6">
+      {/* Header with Create Dashboard Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboards</h1>
+          <p className="text-muted-foreground">Manage and view your analytics dashboards</p>
+        </div>
+        <Link href="/dashboards/create">
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Dashboard
+          </Button>
+        </Link>
+      </div>
+
       {/* Search and Filters */}
       <div className="space-y-4">
         <div className="relative">
