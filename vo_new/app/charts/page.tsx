@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MainLayout } from "@/components/main-layout";
-import { apiGet, apiPost, apiDelete } from "@/lib/api";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 
 // Import chart components
 import ChartForm from "@/components/charts/ChartForm";
@@ -125,7 +125,7 @@ export default function ChartsPage() {
       limit: 10
     };
     
-    return await apiPost(`/api/visualization/charts/${chartId}/update/`, payload);
+    return await apiPut(`/api/visualization/charts/${chartId}/`, payload);
   };
 
   // Function to delete a chart
