@@ -17,7 +17,7 @@ export const errorToast = (message = '', messages: Array<string> = [], context: 
     toastState: {
       open: true,
       severity: 'error',
-      seconds: 3,
+      seconds: 15,
       message: message,
       messages: messages,
     },
