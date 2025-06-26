@@ -206,281 +206,299 @@ export default function ChartsPage() {
     }
   };
 
-  return (
-    <MainLayout>
-      <div className="p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Charts</h1>
+  // Chart card component - simplified design
+  const ChartCard = ({ chart, onEdit, onDelete }: { chart: SavedChart; onEdit: () => void; onDelete: () => void }) => (
+    <div 
+      className="border rounded-lg bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      onClick={onEdit}
+    >
+      {/* Thumbnail */}
+      <div className="p-3 border-b">
+        <SavedChartThumbnail chart={chart} width={280} height={160} />
+      </div>
+      
+      {/* Chart Info */}
+      <div className="p-4">
+        <div className="flex justify-between items-start gap-3 mb-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium text-sm truncate">{chart.title}</h4>
+            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{chart.description}</p>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            🗑️
+          </Button>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
-            <TabsTrigger value="echarts">ECharts</TabsTrigger>
-            <TabsTrigger value="nivo">Nivo</TabsTrigger>
-            <TabsTrigger value="recharts">Recharts</TabsTrigger>
-          </TabsList>
+        {/* Metadata */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-primary/10 text-primary">
+              {chart.config.chartType}
+            </span>
+            <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-muted text-muted-foreground">
+              {chart.chart_type}
+            </span>
+          </div>
           
-          <TabsContent value="echarts" className="mt-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">ECharts</h2>
-                <Button onClick={() => setEchartsFormOpen(true)}>Create New Chart</Button>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <div>📊 {chart.schema_name}.{chart.table}</div>
+            <div>📈 {chart.config.xAxis} → {chart.config.yAxis}</div>
+          </div>
+        </div>
+        
+        <div className="mt-3 pt-3 border-t">
+          <div className="text-xs text-primary">
+            Click to edit or view full chart
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Empty state component - simplified
+  const EmptyState = ({ libraryName, icon }: { libraryName: string; icon: string }) => (
+    <div className="text-center py-12">
+      <div className="text-4xl mb-4 opacity-50">{icon}</div>
+      <h3 className="text-lg font-medium text-muted-foreground mb-2">No {libraryName} charts yet</h3>
+      <p className="text-sm text-muted-foreground max-w-md mx-auto">
+        Start creating charts with {libraryName}. Click "Create New Chart" to get started.
+      </p>
+    </div>
+  );
+
+  return (
+    <MainLayout>
+      <div className="flex flex-col h-screen">
+        <div className="p-6">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Charts</h1>
+            <p className="text-muted-foreground">Create beautiful, interactive charts with multiple libraries</p>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {/* Tab List */}
+            <div className="mb-6">
+              <TabsList className="grid w-full max-w-md grid-cols-3">
+                <TabsTrigger value="echarts" className="text-sm">⚡ ECharts</TabsTrigger>
+                <TabsTrigger value="nivo" className="text-sm">🎨 Nivo</TabsTrigger>
+                <TabsTrigger value="recharts" className="text-sm">📈 Recharts</TabsTrigger>
+              </TabsList>
+            </div>
+            
+            {/* ECharts Tab */}
+            <TabsContent value="echarts" className="space-y-6">
+              {/* Tab Header */}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
+                <div>
+                  <h2 className="text-xl font-semibold">ECharts</h2>
+                  <p className="text-sm text-muted-foreground">High-performance, interactive charts</p>
+                </div>
+                <Button onClick={() => setEchartsFormOpen(true)}>
+                  Create New Chart
+                </Button>
               </div>
-              
+                
               {/* Saved Charts Section */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">Saved ECharts</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Saved ECharts</h3>
+                  <span className="text-sm text-muted-foreground">
+                    {savedCharts.filter(chart => chart.chart_type === 'echarts').length} charts
+                  </span>
+                </div>
+                
                 {savedChartsLoading && (
-                  <div className="text-muted-foreground">Loading saved charts...</div>
+                  <div className="text-center py-8">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <div className="text-sm text-muted-foreground">Loading charts...</div>
+                  </div>
                 )}
                 
                 {savedChartsError && (
-                  <div className="text-red-500">{savedChartsError}</div>
+                  <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
+                    {savedChartsError}
+                  </div>
                 )}
                 
                 {savedCharts.filter(chart => chart.chart_type === 'echarts').length === 0 && !savedChartsLoading && (
-                  <div className="text-muted-foreground">No saved ECharts yet. Click "Create New Chart" to get started.</div>
+                  <EmptyState libraryName="ECharts" icon="⚡" />
                 )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {savedCharts
                     .filter(chart => chart.chart_type === 'echarts')
                     .map((chart) => (
-                      <div 
-                        key={chart.id} 
-                        className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 bg-white"
-                        onClick={() => handleEditChart(chart)}
-                      >
-                        {/* Thumbnail */}
-                        <div className="bg-gray-50 p-2">
-                          <SavedChartThumbnail chart={chart} width={280} height={160} />
-                        </div>
-                        
-                        {/* Chart Info */}
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium truncate">{chart.title}</h4>
-                              <p className="text-sm text-muted-foreground line-clamp-2">{chart.description}</p>
-                            </div>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              className="ml-2 flex-shrink-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteChart(chart.id);
-                              }}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                          
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <div>📊 {chart.config.chartType} chart</div>
-                            <div>🗂️ {chart.schema_name}.{chart.table}</div>
-                            <div>📈 {chart.config.xAxis} → {chart.config.yAxis}</div>
-                          </div>
-                          
-                          <div className="text-xs text-blue-600 mt-3 font-medium">
-                            Click to edit or view full chart
-                          </div>
-                        </div>
-                      </div>
+                      <ChartCard
+                        key={chart.id}
+                        chart={chart}
+                        onEdit={() => handleEditChart(chart)}
+                        onDelete={() => handleDeleteChart(chart.id)}
+                      />
                     ))}
                 </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
           
-          <TabsContent value="nivo" className="mt-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Nivo Charts</h2>
-                <Button onClick={() => setNivoFormOpen(true)}>Create New Chart</Button>
+            {/* Nivo Tab */}
+            <TabsContent value="nivo" className="space-y-6">
+              {/* Tab Header */}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
+                <div>
+                  <h2 className="text-xl font-semibold">Nivo Charts</h2>
+                  <p className="text-sm text-muted-foreground">Beautiful, responsive charts with modern design</p>
+                </div>
+                <Button onClick={() => setNivoFormOpen(true)}>
+                  Create New Chart
+                </Button>
               </div>
               
               {/* Saved Charts Section */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">Saved Nivo Charts</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Saved Nivo Charts</h3>
+                  <span className="text-sm text-muted-foreground">
+                    {savedCharts.filter(chart => chart.chart_type === 'nivo').length} charts
+                  </span>
+                </div>
+                
                 {savedChartsLoading && (
-                  <div className="text-muted-foreground">Loading saved charts...</div>
+                  <div className="text-center py-8">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <div className="text-sm text-muted-foreground">Loading charts...</div>
+                  </div>
                 )}
                 
                 {savedChartsError && (
-                  <div className="text-red-500">{savedChartsError}</div>
+                  <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
+                    {savedChartsError}
+                  </div>
                 )}
                 
                 {savedCharts.filter(chart => chart.chart_type === 'nivo').length === 0 && !savedChartsLoading && (
-                  <div className="text-muted-foreground">No saved Nivo charts yet. Click "Create New Chart" to get started.</div>
+                  <EmptyState libraryName="Nivo" icon="🎨" />
                 )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {savedCharts
                     .filter(chart => chart.chart_type === 'nivo')
                     .map((chart) => (
-                      <div 
-                        key={chart.id} 
-                        className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 bg-white"
-                        onClick={() => handleEditChart(chart)}
-                      >
-                        {/* Thumbnail */}
-                        <div className="bg-gray-50 p-2">
-                          <SavedChartThumbnail chart={chart} width={280} height={160} />
-                        </div>
-                        
-                        {/* Chart Info */}
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium truncate">{chart.title}</h4>
-                              <p className="text-sm text-muted-foreground line-clamp-2">{chart.description}</p>
-                            </div>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              className="ml-2 flex-shrink-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteChart(chart.id);
-                              }}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                          
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <div>📊 {chart.config.chartType} chart</div>
-                            <div>🗂️ {chart.schema_name}.{chart.table}</div>
-                            <div>📈 {chart.config.xAxis} → {chart.config.yAxis}</div>
-                          </div>
-                          
-                          <div className="text-xs text-blue-600 mt-3 font-medium">
-                            Click to edit or view full chart
-                          </div>
-                        </div>
-                      </div>
+                      <ChartCard
+                        key={chart.id}
+                        chart={chart}
+                        onEdit={() => handleEditChart(chart)}
+                        onDelete={() => handleDeleteChart(chart.id)}
+                      />
                     ))}
                 </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
           
-          <TabsContent value="recharts" className="mt-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Recharts</h2>
-                <Button onClick={() => setRechartsFormOpen(true)}>Create New Chart</Button>
+            {/* Recharts Tab */}
+            <TabsContent value="recharts" className="space-y-6">
+              {/* Tab Header */}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
+                <div>
+                  <h2 className="text-xl font-semibold">Recharts</h2>
+                  <p className="text-sm text-muted-foreground">Composable charting library built on React components</p>
+                </div>
+                <Button onClick={() => setRechartsFormOpen(true)}>
+                  Create New Chart
+                </Button>
               </div>
               
               {/* Saved Charts Section */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">Saved Recharts</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Saved Recharts</h3>
+                  <span className="text-sm text-muted-foreground">
+                    {savedCharts.filter(chart => chart.chart_type === 'recharts').length} charts
+                  </span>
+                </div>
+                
                 {savedChartsLoading && (
-                  <div className="text-muted-foreground">Loading saved charts...</div>
+                  <div className="text-center py-8">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <div className="text-sm text-muted-foreground">Loading charts...</div>
+                  </div>
                 )}
                 
                 {savedChartsError && (
-                  <div className="text-red-500">{savedChartsError}</div>
+                  <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
+                    {savedChartsError}
+                  </div>
                 )}
                 
                 {savedCharts.filter(chart => chart.chart_type === 'recharts').length === 0 && !savedChartsLoading && (
-                  <div className="text-muted-foreground">No saved Recharts yet. Click "Create New Chart" to get started.</div>
+                  <EmptyState libraryName="Recharts" icon="📈" />
                 )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {savedCharts
                     .filter(chart => chart.chart_type === 'recharts')
                     .map((chart) => (
-                      <div 
-                        key={chart.id} 
-                        className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200 bg-white"
-                        onClick={() => handleEditChart(chart)}
-                      >
-                        {/* Thumbnail */}
-                        <div className="bg-gray-50 p-2">
-                          <SavedChartThumbnail chart={chart} width={280} height={160} />
-                        </div>
-                        
-                        {/* Chart Info */}
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium truncate">{chart.title}</h4>
-                              <p className="text-sm text-muted-foreground line-clamp-2">{chart.description}</p>
-                            </div>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              className="ml-2 flex-shrink-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteChart(chart.id);
-                              }}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                          
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <div>📊 {chart.config.chartType} chart</div>
-                            <div>🗂️ {chart.schema_name}.{chart.table}</div>
-                            <div>📈 {chart.config.xAxis} → {chart.config.yAxis}</div>
-                          </div>
-                          
-                          <div className="text-xs text-blue-600 mt-3 font-medium">
-                            Click to edit or view full chart
-                          </div>
-                        </div>
-                      </div>
+                      <ChartCard
+                        key={chart.id}
+                        chart={chart}
+                        onEdit={() => handleEditChart(chart)}
+                        onDelete={() => handleDeleteChart(chart.id)}
+                      />
                     ))}
                 </div>
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
 
-        {/* Chart Forms */}
-        <ChartForm
-          open={echartsFormOpen}
-          onOpenChange={setEchartsFormOpen}
-          onSave={handleEchartsChartSave}
-          title="Create EChart"
-          chartLibraryType="echarts"
-        />
-        
-        <ChartForm
-          open={nivoFormOpen}
-          onOpenChange={setNivoFormOpen}
-          onSave={handleNivoChartSave}
-          title="Create Nivo Chart"
-          chartLibraryType="nivo"
-        />
-        
-        <ChartForm
-          open={rechartsFormOpen}
-          onOpenChange={setRechartsFormOpen}
-          onSave={handleRechartsChartSave}
-          title="Create Recharts Chart"
-          chartLibraryType="recharts"
-        />
+          {/* Chart Forms */}
+          <ChartForm
+            open={echartsFormOpen}
+            onOpenChange={setEchartsFormOpen}
+            onSave={handleEchartsChartSave}
+            title="Create EChart"
+            chartLibraryType="echarts"
+          />
+          
+          <ChartForm
+            open={nivoFormOpen}
+            onOpenChange={setNivoFormOpen}
+            onSave={handleNivoChartSave}
+            title="Create Nivo Chart"
+            chartLibraryType="nivo"
+          />
+          
+          <ChartForm
+            open={rechartsFormOpen}
+            onOpenChange={setRechartsFormOpen}
+            onSave={handleRechartsChartSave}
+            title="Create Recharts Chart"
+            chartLibraryType="recharts"
+          />
 
-        {/* Edit Chart Form */}
-        <ChartForm
-          open={editFormOpen}
-          onOpenChange={(open) => {
-            setEditFormOpen(open);
-            if (!open) {
-              setEditingChart(null);
-            }
-          }}
-          onSave={() => {}} // Not used in edit mode
-          onUpdate={handleUpdateChart}
-          onDelete={handleDeleteChart}
-          title={`${editingChart?.chart_type.charAt(0).toUpperCase() + editingChart?.chart_type.slice(1)} Chart` || 'Chart'}
-          chartLibraryType={editingChart?.chart_type || 'echarts'}
-          editChart={editingChart}
-        />
+          {/* Edit Chart Form */}
+          <ChartForm
+            open={editFormOpen}
+            onOpenChange={(open) => {
+              setEditFormOpen(open);
+              if (!open) {
+                setEditingChart(null);
+              }
+            }}
+            onSave={() => {}} // Not used in edit mode
+            onUpdate={handleUpdateChart}
+            onDelete={handleDeleteChart}
+            title={`${editingChart?.chart_type.charAt(0).toUpperCase() + editingChart?.chart_type.slice(1)} Chart` || 'Chart'}
+            chartLibraryType={editingChart?.chart_type || 'echarts'}
+            editChart={editingChart}
+          />
+        </div>
       </div>
     </MainLayout>
   );
