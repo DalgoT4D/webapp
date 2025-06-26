@@ -1,3 +1,5 @@
+import { errorToastDuration } from '@/config/constant';
+console.log(errorToastDuration, 'errortoastduration');
 export const successToast = (message = '', messages: Array<string> = [], context: any) => {
   context?.Toast?.dispatch({
     type: 'new',
@@ -17,7 +19,7 @@ export const errorToast = (message = '', messages: Array<string> = [], context: 
     toastState: {
       open: true,
       severity: 'error',
-      seconds: 15,
+      seconds: errorToastDuration,
       message: message,
       messages: messages,
     },
