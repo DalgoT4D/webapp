@@ -42,6 +42,10 @@ export default function ChartsPage() {
   const [nivoFormOpen, setNivoFormOpen] = useState(false);
   const [rechartsFormOpen, setRechartsFormOpen] = useState(false);
 
+  // Edit mode states
+  const [editingChart, setEditingChart] = useState<SavedChart | null>(null);
+  const [editFormOpen, setEditFormOpen] = useState(false);
+
   // Saved charts states
   const [savedCharts, setSavedCharts] = useState<SavedChart[]>([]);
   const [savedChartsLoading, setSavedChartsLoading] = useState(false);
@@ -104,6 +108,26 @@ export default function ChartsPage() {
     return response;
   };
 
+  // Function to update a chart
+  const updateChart = async (chartId: number, chartData: CreatedChart & { chartType: string; chartLibraryType: string }) => {
+    const payload = {
+      title: chartData.chartName,
+      description: chartData.chartDescription,
+      chart_type: chartData.chartLibraryType,
+      schema_name: chartData.schema,
+      table: chartData.table,
+      config: {
+        xAxis: chartData.xAxis,
+        yAxis: chartData.yAxis,
+        chartType: chartData.chartType
+      },
+      offset: 0,
+      limit: 10
+    };
+    
+    return await apiPost(`/api/visualization/charts/${chartId}/update/`, payload);
+  };
+
   // Function to delete a chart
   const deleteChart = async (chartId: number) => {
     await apiDelete(`/api/visualization/charts/${chartId}/`);
@@ -149,6 +173,22 @@ export default function ChartsPage() {
   const handleRechartsChartSave = async (chartData: CreatedChart & { chartType: string }) => {
     try {
       await saveChart({ ...chartData, chartLibraryType: 'recharts' });
+      await loadSavedCharts(); // Refresh the saved charts list
+    } catch (error) {
+      throw error; // Let the form handle the error display
+    }
+  };
+
+  // Handle editing charts
+  const handleEditChart = (chart: SavedChart) => {
+    setEditingChart(chart);
+    setEditFormOpen(true);
+  };
+
+  // Handle updating charts
+  const handleUpdateChart = async (chartId: number, chartData: CreatedChart & { chartType: string }) => {
+    try {
+      await updateChart(chartId, { ...chartData, chartLibraryType: editingChart?.chart_type || 'echarts' });
       await loadSavedCharts(); // Refresh the saved charts list
     } catch (error) {
       throw error; // Let the form handle the error display
@@ -205,7 +245,11 @@ export default function ChartsPage() {
                   {savedCharts
                     .filter(chart => chart.chart_type === 'echarts')
                     .map((chart) => (
-                      <div key={chart.id} className="border rounded-lg p-4">
+                      <div 
+                        key={chart.id} 
+                        className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleEditChart(chart)}
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <h4 className="font-medium">{chart.title}</h4>
@@ -214,7 +258,10 @@ export default function ChartsPage() {
                           <Button 
                             variant="destructive" 
                             size="sm"
-                            onClick={() => handleDeleteChart(chart.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteChart(chart.id);
+                            }}
                           >
                             Delete
                           </Button>
@@ -222,6 +269,9 @@ export default function ChartsPage() {
                         <div className="text-xs text-muted-foreground">
                           Schema: {chart.schema_name} | Table: {chart.table} | 
                           X: {chart.config.xAxis} | Y: {chart.config.yAxis} | Library: {chart.chart_type} | Chart: {chart.config.chartType}
+                        </div>
+                        <div className="text-xs text-blue-600 mt-2">
+                          Click to view, edit, or delete this chart
                         </div>
                       </div>
                     ))}
@@ -256,7 +306,11 @@ export default function ChartsPage() {
                   {savedCharts
                     .filter(chart => chart.chart_type === 'nivo')
                     .map((chart) => (
-                      <div key={chart.id} className="border rounded-lg p-4">
+                      <div 
+                        key={chart.id} 
+                        className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleEditChart(chart)}
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <h4 className="font-medium">{chart.title}</h4>
@@ -265,7 +319,10 @@ export default function ChartsPage() {
                           <Button 
                             variant="destructive" 
                             size="sm"
-                            onClick={() => handleDeleteChart(chart.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteChart(chart.id);
+                            }}
                           >
                             Delete
                           </Button>
@@ -273,6 +330,9 @@ export default function ChartsPage() {
                         <div className="text-xs text-muted-foreground">
                           Schema: {chart.schema_name} | Table: {chart.table} | 
                           X: {chart.config.xAxis} | Y: {chart.config.yAxis} | Library: {chart.chart_type} | Chart: {chart.config.chartType}
+                        </div>
+                        <div className="text-xs text-blue-600 mt-2">
+                          Click to view, edit, or delete this chart
                         </div>
                       </div>
                     ))}
@@ -307,7 +367,11 @@ export default function ChartsPage() {
                   {savedCharts
                     .filter(chart => chart.chart_type === 'recharts')
                     .map((chart) => (
-                      <div key={chart.id} className="border rounded-lg p-4">
+                      <div 
+                        key={chart.id} 
+                        className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleEditChart(chart)}
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <h4 className="font-medium">{chart.title}</h4>
@@ -316,7 +380,10 @@ export default function ChartsPage() {
                           <Button 
                             variant="destructive" 
                             size="sm"
-                            onClick={() => handleDeleteChart(chart.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteChart(chart.id);
+                            }}
                           >
                             Delete
                           </Button>
@@ -324,6 +391,9 @@ export default function ChartsPage() {
                         <div className="text-xs text-muted-foreground">
                           Schema: {chart.schema_name} | Table: {chart.table} | 
                           X: {chart.config.xAxis} | Y: {chart.config.yAxis} | Library: {chart.chart_type} | Chart: {chart.config.chartType}
+                        </div>
+                        <div className="text-xs text-blue-600 mt-2">
+                          Click to view, edit, or delete this chart
                         </div>
                       </div>
                     ))}
@@ -356,6 +426,23 @@ export default function ChartsPage() {
           onSave={handleRechartsChartSave}
           title="Create Recharts Chart"
           chartLibraryType="recharts"
+        />
+
+        {/* Edit Chart Form */}
+        <ChartForm
+          open={editFormOpen}
+          onOpenChange={(open) => {
+            setEditFormOpen(open);
+            if (!open) {
+              setEditingChart(null);
+            }
+          }}
+          onSave={() => {}} // Not used in edit mode
+          onUpdate={handleUpdateChart}
+          onDelete={handleDeleteChart}
+          title={`${editingChart?.chart_type.charAt(0).toUpperCase() + editingChart?.chart_type.slice(1)} Chart` || 'Chart'}
+          chartLibraryType={editingChart?.chart_type || 'echarts'}
+          editChart={editingChart}
         />
       </div>
     </MainLayout>

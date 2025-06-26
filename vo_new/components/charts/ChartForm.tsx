@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -25,11 +25,43 @@ interface ChartFormProps {
     chartDescription: string;
     chartType: string;
   }) => void;
+  onUpdate?: (chartId: number, chartData: {
+    schema: string;
+    table: string;
+    xAxis: string;
+    yAxis: string;
+    chartName: string;
+    chartDescription: string;
+    chartType: string;
+  }) => void;
+  onDelete?: (chartId: number) => void;
   title: string;
   chartLibraryType: string; // echarts, nivo, recharts
+  editChart?: {
+    id: number;
+    title: string;
+    description: string;
+    chart_type: string;
+    schema_name: string;
+    table: string;
+    config: {
+      xAxis: string;
+      yAxis: string;
+      chartType: string;
+    };
+  } | null;
 }
 
-export default function ChartForm({ open, onOpenChange, onSave, title, chartLibraryType }: ChartFormProps) {
+export default function ChartForm({ 
+  open, 
+  onOpenChange, 
+  onSave, 
+  onUpdate,
+  onDelete,
+  title, 
+  chartLibraryType,
+  editChart 
+}: ChartFormProps) {
   const [schemas, setSchemas] = useState<string[]>([]);
   const [schemasLoading, setSchemasLoading] = useState(false);
   const [schemasError, setSchemasError] = useState<string | null>(null);
@@ -71,28 +103,75 @@ export default function ChartForm({ open, onOpenChange, onSave, title, chartLibr
     }
   }, [open]);
 
+  // Initialize form with editChart data when in edit mode
+  useEffect(() => {
+    if (open && editChart) {
+      setSelectedSchema(editChart.schema_name);
+      setChartName(editChart.title);
+      setChartDescription(editChart.description);
+      setChartType(editChart.config.chartType);
+    } else if (open && !editChart) {
+      resetForm();
+    }
+  }, [open, editChart]);
+
+  // Set table and axis data after schema data loads for edit mode
+  useEffect(() => {
+    if (editChart && selectedSchema === editChart.schema_name && tables.length > 0) {
+      setSelectedTable(editChart.table);
+    }
+  }, [editChart, selectedSchema, tables]);
+
+  // Set axis data after columns load for edit mode
+  useEffect(() => {
+    if (editChart && selectedTable === editChart.table && columns.length > 0) {
+      setXAxis(editChart.config.xAxis);
+      setYAxis(editChart.config.yAxis);
+    }
+  }, [editChart, selectedTable, columns]);
+
+  // Auto-generate chart when all edit data is set
+  useEffect(() => {
+    if (editChart && selectedSchema === editChart.schema_name && 
+        selectedTable === editChart.table && 
+        xAxis === editChart.config.xAxis && 
+        yAxis === editChart.config.yAxis && 
+        chartName === editChart.title &&
+        !generating && !generatedChart) {
+      console.log('Auto-generating chart for edit mode');
+      generateChartData();
+    }
+  }, [editChart, selectedSchema, selectedTable, xAxis, yAxis, chartName, generating, generatedChart]);
+
   // Fetch tables when schema changes
   useEffect(() => {
     if (selectedSchema) {
       setTablesLoading(true);
       setTablesError(null);
       setTables([]);
-      setSelectedTable(null);
-      setColumns([]);
-      setXAxis(null);
-      setYAxis(null);
+      
+      // Only reset if not in edit mode
+      if (!editChart) {
+        setSelectedTable(null);
+        setColumns([]);
+        setXAxis(null);
+        setYAxis(null);
+      }
+      
       apiGet(`/api/warehouse/tables/${selectedSchema}`)
         .then((data) => setTables(data))
         .catch((err) => setTablesError(err.message))
         .finally(() => setTablesLoading(false));
     } else {
       setTables([]);
-      setSelectedTable(null);
-      setColumns([]);
-      setXAxis(null);
-      setYAxis(null);
+      if (!editChart) {
+        setSelectedTable(null);
+        setColumns([]);
+        setXAxis(null);
+        setYAxis(null);
+      }
     }
-  }, [selectedSchema]);
+  }, [selectedSchema, editChart]);
 
   // Fetch columns when schema and table change
   useEffect(() => {
@@ -100,18 +179,25 @@ export default function ChartForm({ open, onOpenChange, onSave, title, chartLibr
       setColumnsLoading(true);
       setColumnsError(null);
       setColumns([]);
-      setXAxis(null);
-      setYAxis(null);
+      
+      // Only reset if not in edit mode
+      if (!editChart) {
+        setXAxis(null);
+        setYAxis(null);
+      }
+      
       apiGet(`/api/warehouse/table_columns/${selectedSchema}/${selectedTable}`)
         .then((data) => setColumns(data))
         .catch((err) => setColumnsError(err.message))
         .finally(() => setColumnsLoading(false));
     } else {
       setColumns([]);
-      setXAxis(null);
-      setYAxis(null);
+      if (!editChart) {
+        setXAxis(null);
+        setYAxis(null);
+      }
     }
-  }, [selectedSchema, selectedTable]);
+  }, [selectedSchema, selectedTable, editChart]);
 
   function handleSchemaChange(value: string) {
     setSelectedSchema(value);
@@ -175,7 +261,7 @@ export default function ChartForm({ open, onOpenChange, onSave, title, chartLibr
     }
   };
 
-  // Function to save chart
+  // Function to save or update chart
   const handleSaveChart = async () => {
     if (!generatedChart) return;
     
@@ -183,16 +269,45 @@ export default function ChartForm({ open, onOpenChange, onSave, title, chartLibr
     setSaveError(null);
     
     try {
-      await onSave({
-        ...generatedChart,
-        chartType: chartType
-      });
+      if (editChart && onUpdate) {
+        // Update existing chart
+        await onUpdate(editChart.id, {
+          ...generatedChart,
+          chartType: chartType
+        });
+      } else {
+        // Create new chart
+        await onSave({
+          ...generatedChart,
+          chartType: chartType
+        });
+      }
       
       // Reset form and close
       resetForm();
       onOpenChange(false);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'Failed to save chart');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Function to delete chart
+  const handleDeleteChart = async () => {
+    if (!editChart || !onDelete) return;
+    
+    setSaving(true);
+    setSaveError(null);
+    
+    try {
+      await onDelete(editChart.id);
+      
+      // Reset form and close
+      resetForm();
+      onOpenChange(false);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Failed to delete chart');
     } finally {
       setSaving(false);
     }
@@ -212,6 +327,7 @@ export default function ChartForm({ open, onOpenChange, onSave, title, chartLibr
     setChartData(null);
     setGenerateError(null);
     setSaveError(null);
+    setGenerating(false);
   };
 
   function handleSubmit(e: React.FormEvent) {
@@ -228,7 +344,7 @@ export default function ChartForm({ open, onOpenChange, onSave, title, chartLibr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[1600px] max-w-none max-h-[90vh] overflow-y-auto" style={{ width: '1600px', maxWidth: 'none' }}>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{editChart ? `Edit ${title}` : title}</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
           {/* Form Section */}
@@ -385,8 +501,17 @@ export default function ChartForm({ open, onOpenChange, onSave, title, chartLibr
         {!generatedChart && !generating && !generateError && (
           <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg border-2 border-dashed">
             <div className="text-center text-muted-foreground">
-              <p>Fill out the form and click "Generate Chart"</p>
-              <p className="text-sm">to see preview here</p>
+              {editChart ? (
+                <>
+                  <p>Loading chart data...</p>
+                  <p className="text-sm">Please wait while we load your chart</p>
+                </>
+              ) : (
+                <>
+                  <p>Fill out the form and click "Generate Chart"</p>
+                  <p className="text-sm">to see preview here</p>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -429,8 +554,17 @@ export default function ChartForm({ open, onOpenChange, onSave, title, chartLibr
                 disabled={saving}
                 className="flex-1"
               >
-                {saving ? 'Saving...' : 'Save Chart'}
+                {saving ? (editChart ? 'Updating...' : 'Saving...') : (editChart ? 'Update Chart' : 'Save Chart')}
               </Button>
+              {editChart && onDelete && (
+                <Button 
+                  variant="destructive"
+                  onClick={handleDeleteChart}
+                  disabled={saving}
+                >
+                  {saving ? 'Deleting...' : 'Delete'}
+                </Button>
+              )}
               <Button 
                 variant="outline"
                 onClick={resetForm}
