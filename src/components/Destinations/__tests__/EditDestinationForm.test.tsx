@@ -4,7 +4,7 @@ import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import EditDestinationForm from '../DestinationForm';
-import useWebSocket from 'react-use-websocket';
+import { useWebSocketConnection as useWebSocket } from '@/customHooks/useWebsocketConnection';
 
 const pushMock = jest.fn();
 

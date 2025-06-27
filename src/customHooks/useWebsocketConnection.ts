@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react';
 import useWebSocket from 'react-use-websocket';
 
-export const useWebSocketConnection = (endpoint: string | null, maxRetries: number = 5) => {
+interface WebSocketConnectionOptions {
+  maxRetries?: number;
+  handleError?: (event: Event) => void;
+}
+
+export const useWebSocketConnection = (
+  endpoint: string | null,
+  options: WebSocketConnectionOptions = {}
+) => {
+  const { maxRetries = 5, handleError } = options;
   const [socketUrl, setSocketUrl] = useState<string | null>(endpoint);
 
   const { sendJsonMessage, lastMessage, getWebSocket } = useWebSocket(socketUrl, {
@@ -10,7 +19,11 @@ export const useWebSocketConnection = (endpoint: string | null, maxRetries: numb
     reconnectAttempts: maxRetries,
     reconnectInterval: (attemptNumber) => Math.min(1000 * Math.pow(2, attemptNumber), 30000), // Exponential backoff: 1s, 2s, 4s, 8s, 16s, max 30s
     onError(event) {
-      console.error('Socket error:', event);
+      if (handleError) {
+        handleError(event);
+      } else {
+        console.error('Socket error:', event);
+      }
     },
   });
 

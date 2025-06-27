@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Autocomplete, Box, Button, TextField } from '@mui/material';
 import { useForm, Controller, FormProvider } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
-import useWebSocket from 'react-use-websocket';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { generateWebsocketUrl } from '@/helpers/websocket';

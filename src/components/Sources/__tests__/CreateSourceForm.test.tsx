@@ -3,7 +3,7 @@ import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { SourceForm } from '../SourceForm';
 import userEvent from '@testing-library/user-event';
-import useWebSocket from 'react-use-websocket';
+import { useWebSocketConnection as useWebSocket } from '@/customHooks/useWebsocketConnection';
 import '@testing-library/jest-dom';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { ToastStateInterface } from '@/contexts/reducers/ToastReducer';
