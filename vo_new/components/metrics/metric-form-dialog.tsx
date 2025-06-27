@@ -34,6 +34,8 @@ import {
   DollarSign,
   ArrowUp,
 } from "lucide-react"
+import { Checkbox } from "../ui/checkbox"
+import { apiGet, apiPost } from "@/lib/api"
 
 // Mock data for tables and fields
 const mockTables = [
@@ -195,6 +197,19 @@ export function MetricFormDialog({ open, onOpenChange, metric, onSave }: MetricF
 
   const [selectedTable, setSelectedTable] = useState("")
   const [fields, setFields] = useState<any[]>([])
+  const [fieldsLoading, setFieldsLoading] = useState(false)
+  const [fieldsError, setFieldsError] = useState<string | null>(null)
+  const [selectedSchema, setSelectedSchema] = useState("")
+  const [selectedDimensions, setSelectedDimensions] = useState<string[]>([])
+  const [selectedTemporal, setSelectedTemporal] = useState("")
+  const [schemas, setSchemas] = useState<{ id: string; name: string }[]>([])
+  const [schemasLoading, setSchemasLoading] = useState(false)
+  const [schemasError, setSchemasError] = useState<string | null>(null)
+  const [tables, setTables] = useState<{ id: string; name: string; description?: string }[]>([])
+  const [tablesLoading, setTablesLoading] = useState(false)
+  const [tablesError, setTablesError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   // Initialize form data when editing an existing metric
   useEffect(() => {
@@ -226,6 +241,79 @@ export function MetricFormDialog({ open, onOpenChange, metric, onSave }: MetricF
     }
   }, [metric])
 
+  // Reset table/fields when schema changes
+  useEffect(() => {
+    setSelectedTable("")
+    setFields([])
+    handleDataSourceChange("table", "")
+    handleDataSourceChange("field", "")
+    setSelectedDimensions([])
+    setSelectedTemporal("")
+  }, [selectedSchema])
+
+  // Fetch schemas on open
+  useEffect(() => {
+    if (open) {
+      setSchemasLoading(true)
+      setSchemasError(null)
+      apiGet("/api/warehouse/schemas")
+        .then((data) => {
+          // If data is an array of strings, convert to {id, name}
+          if (Array.isArray(data) && typeof data[0] === "string") {
+            setSchemas(data.map((s: string) => ({ id: s, name: s })))
+          } else {
+            setSchemas(data)
+          }
+        })
+        .catch((err) => setSchemasError(err.message))
+        .finally(() => setSchemasLoading(false))
+    }
+  }, [open])
+
+  // Fetch tables when schema changes
+  useEffect(() => {
+    if (selectedSchema) {
+      setTablesLoading(true)
+      setTablesError(null)
+      setTables([])
+      apiGet(`/api/warehouse/tables/${selectedSchema}`)
+        .then((data) => {
+          // If data is an array of strings, convert to {id, name}
+          if (Array.isArray(data) && typeof data[0] === "string") {
+            setTables(data.map((t: string) => ({ id: t, name: t })))
+          } else {
+            setTables(data)
+          }
+        })
+        .catch((err) => setTablesError(err.message))
+        .finally(() => setTablesLoading(false))
+    } else {
+      setTables([])
+    }
+  }, [selectedSchema])
+
+  // Fetch columns when schema and table change
+  useEffect(() => {
+    if (selectedSchema && selectedTable) {
+      setFieldsLoading(true);
+      setFieldsError(null);
+      setFields([]);
+      apiGet(`/api/warehouse/table_columns/${selectedSchema}/${selectedTable}`)
+        .then((data) => {
+          // If data is an array of strings, convert to {id, name, type}
+          if (Array.isArray(data) && typeof data[0] === "string") {
+            setFields(data.map((c: string) => ({ id: c, name: c, type: "string" })));
+          } else {
+            setFields(data);
+          }
+        })
+        .catch((err) => setFieldsError(err.message))
+        .finally(() => setFieldsLoading(false));
+    } else {
+      setFields([]);
+    }
+  }, [selectedSchema, selectedTable]);
+
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
@@ -250,34 +338,44 @@ export function MetricFormDialog({ open, onOpenChange, metric, onSave }: MetricF
     handleDataSourceChange("field", "")
   }
 
-  const handleSave = () => {
-    // Create a new ID if creating a new metric
-    const metricData = {
-      ...formData,
-      id: formData.id || `metric-${Date.now()}`,
-      // Mock current value and trend for demo purposes
-      currentValue: metric?.currentValue || Math.floor(Math.random() * 100),
-      trend: formData.higherIsBetter ? Math.random() * 10 : Math.random() * -10,
-      // Set the icon component
-      icon: iconOptions.find((i) => i.id === formData.icon)?.icon || Heart,
-      // Mock time series data
-      timeSeriesData: metric?.timeSeriesData || {
-        week: Array(7)
-          .fill(0)
-          .map(() => Math.floor(Math.random() * 100)),
-        month: Array(5)
-          .fill(0)
-          .map(() => Math.floor(Math.random() * 100)),
-        quarter: Array(4)
-          .fill(0)
-          .map(() => Math.floor(Math.random() * 100)),
-        year: Array(5)
-          .fill(0)
-          .map(() => Math.floor(Math.random() * 100)),
-      },
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      // Prepare payload for API
+      const {
+        name,
+        description,
+        dataSource,
+        ...restFormData
+      } = formData;
+      const payload = {
+        name,
+        description,
+        schema_name: selectedSchema,
+        table: selectedTable,
+        temporal_column: selectedTemporal,
+        dimension_columns: selectedDimensions,
+        aggregation_function: dataSource.calculation,
+        aggregation_column: dataSource.field,
+        metadata: {
+          ...restFormData,
+          dataSource: undefined, // Remove dataSource from metadata
+          ...Object.keys(dataSource).reduce((acc, key) => {
+            if (!['calculation', 'field'].includes(key)) {
+              acc[key] = dataSource[key];
+            }
+            return acc;
+          }, {})
+        }
+      };
+      const createdMetric = await apiPost("/api/visualization/metrics/", payload);
+      onSave(createdMetric);
+    } catch (err: any) {
+      setSaveError(err.message || "Failed to create metric");
+    } finally {
+      setSaving(false);
     }
-
-    onSave(metricData)
   }
 
   const getSelectedIcon = () => {
@@ -378,82 +476,205 @@ export function MetricFormDialog({ open, onOpenChange, metric, onSave }: MetricF
 
           <TabsContent value="data" className="space-y-4">
             <div className="grid gap-4">
+              {/* Schema Picker */}
               <div className="grid gap-2">
-                <Label htmlFor="table">Data Table</Label>
-                <Select value={selectedTable} onValueChange={handleTableChange}>
-                  <SelectTrigger id="table">
-                    <SelectValue placeholder="Select data table" />
+                <Label htmlFor="schema">Schema</Label>
+                <Select value={selectedSchema} onValueChange={setSelectedSchema} disabled={schemasLoading}>
+                  <SelectTrigger id="schema">
+                    <SelectValue placeholder={schemasLoading ? "Loading schemas..." : "Select schema"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockTables.map((table) => (
-                      <SelectItem key={table.id} value={table.id}>
-                        {table.name}
-                      </SelectItem>
+                    {schemasError && <div className="px-3 py-2 text-red-500">{schemasError}</div>}
+                    {schemas.map((schema) => (
+                      <SelectItem key={schema.id} value={schema.id}>{schema.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Table Picker */}
+              <div className="grid gap-2">
+                <Label htmlFor="table">Data Table</Label>
+                <Select value={selectedTable} onValueChange={handleTableChange} disabled={!selectedSchema || tablesLoading}>
+                  <SelectTrigger id="table">
+                    <SelectValue placeholder={tablesLoading ? "Loading tables..." : "Select data table"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tablesError && <div className="px-3 py-2 text-red-500">{tablesError}</div>}
+                    {tables.map((table) => (
+                      <SelectItem key={table.id} value={table.id}>{table.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {selectedTable && (
                   <p className="text-xs text-muted-foreground">
-                    {mockTables.find((t) => t.id === selectedTable)?.description}
+                    {tables.find((t) => t.id === selectedTable)?.description}
                   </p>
                 )}
               </div>
-
-              {selectedTable && (
+              {/* Aggregation Function */}
+              <div className="grid gap-2">
+                <Label htmlFor="calculation">Aggregation Function</Label>
+                <Select
+                  value={formData.dataSource.calculation}
+                  onValueChange={(value) => handleDataSourceChange("calculation", value)}
+                >
+                  <SelectTrigger id="calculation">
+                    <SelectValue placeholder="Select aggregation function" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {calculationTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Aggregation Column (if not count) */}
+              {selectedTable && formData.dataSource.calculation !== "count" && (
                 <div className="grid gap-2">
-                  <Label htmlFor="field">Field</Label>
+                  <Label htmlFor="agg-col">Aggregation Column</Label>
                   <Select
                     value={formData.dataSource.field}
                     onValueChange={(value) => handleDataSourceChange("field", value)}
+                    disabled={fieldsLoading}
                   >
-                    <SelectTrigger id="field">
-                      <SelectValue placeholder="Select field" />
+                    <SelectTrigger id="agg-col">
+                      <SelectValue placeholder={fieldsLoading ? "Loading columns..." : "Select aggregation column"} />
                     </SelectTrigger>
                     <SelectContent>
+                      {fieldsError && <div className="px-3 py-2 text-red-500">{fieldsError}</div>}
                       {fields.map((field) => (
-                        <SelectItem key={field.id} value={field.id}>
-                          {field.name} ({field.type})
+                        <SelectItem key={field.name} value={field.name}>
+                          {field.name} <span className="text-xs text-muted-foreground">({field.data_type})</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               )}
-
-              <div className="grid gap-2">
-                <Label htmlFor="calculation">Calculation Type</Label>
-                <Select
-                  value={formData.dataSource.calculation}
-                  onValueChange={(value) => handleDataSourceChange("calculation", value)}
-                >
-                  <SelectTrigger id="calculation">
-                    <SelectValue placeholder="Select calculation type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {calculationTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formData.dataSource.calculation === "custom" && (
-                <div className="grid gap-2">
-                  <Label htmlFor="formula">Custom Formula</Label>
-                  <Textarea
-                    id="formula"
-                    placeholder="e.g., COUNT(CASE WHEN status = 'completed' THEN 1 END) / COUNT(*) * 100"
-                    value={formData.customFormula}
-                    onChange={(e) => handleInputChange("customFormula", e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Use SQL syntax to define your custom calculation formula.
-                  </p>
+              {/* Temporal Column and Available Time Grains */}
+              {selectedTable && (
+                <div className="grid gap-4">
+                  {/* Temporal Column */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="temporal-col">Temporal (Time) Column</Label>
+                    <Select
+                      value={selectedTemporal}
+                      onValueChange={setSelectedTemporal}
+                      disabled={fieldsLoading}
+                    >
+                      <SelectTrigger id="temporal-col">
+                        <SelectValue placeholder={fieldsLoading ? "Loading columns..." : "Select time column"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fieldsError && <div className="px-3 py-2 text-red-500">{fieldsError}</div>}
+                        {fields.filter((f) => f.data_type === "date" || f.data_type === "datetime" || f.data_type === "timestamp with time zone").map((field) => (
+                          <SelectItem key={field.name} value={field.name}>
+                            {field.name} <span className="text-xs text-muted-foreground">({field.data_type})</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {/* Available Time Grains */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="time-grain">Available Time Grains</Label>
+                    <Select
+                      value={formData.dataSource.aggregation}
+                      onValueChange={(value) => handleDataSourceChange("aggregation", value)}
+                      disabled={!selectedTemporal}
+                    >
+                      <SelectTrigger id="time-grain">
+                        <SelectValue placeholder="Select time grain" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="year">Year</SelectItem>
+                        <SelectItem value="quarter">Quarter</SelectItem>
+                        <SelectItem value="month">Month</SelectItem>
+                        <SelectItem value="week">Week</SelectItem>
+                        <SelectItem value="day">Day</SelectItem>
+                        <SelectItem value="hour">Hour</SelectItem>
+                        <SelectItem value="minute">Minute</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
-
+              {/* Dimensions Multi-select (Checkboxes) with Order */}
+              {selectedTable && (
+                <div className="grid gap-2">
+                  <Label htmlFor="dimensions">Dimensions</Label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {fieldsError && <div className="px-3 py-2 text-red-500">{fieldsError}</div>}
+                    {fields
+                      .filter((f) => f.name !== formData.dataSource.field)
+                      .map((field) => (
+                        <label key={field.name} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            name="dimension"
+                            value={field.name}
+                            checked={selectedDimensions.includes(field.name)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedDimensions([...selectedDimensions, field.name]);
+                              } else {
+                                setSelectedDimensions(selectedDimensions.filter((id) => id !== field.name));
+                              }
+                            }}
+                            disabled={fieldsLoading}
+                          />
+                          {field.name} <span className="text-xs text-muted-foreground">({field.data_type})</span>
+                        </label>
+                      ))}
+                  </div>
+                  {/* Selected Dimensions List with Order Controls */}
+                  {selectedDimensions.length > 0 && (
+                    <div className="border rounded p-2 bg-muted/20">
+                      <div className="font-medium mb-1 text-xs text-muted-foreground">Selected Dimensions (Order matters):</div>
+                      <ul className="space-y-1">
+                        {selectedDimensions.map((dim, idx) => {
+                          const field = fields.find(f => f.name === dim);
+                          return (
+                            <li key={dim} className="flex items-center gap-2 text-sm">
+                              <span>{field?.name} <span className="text-xs text-muted-foreground">({field?.data_type})</span></span>
+                              <button
+                                type="button"
+                                className="px-1 text-xs text-muted-foreground hover:text-primary"
+                                onClick={() => idx > 0 && setSelectedDimensions([
+                                  ...selectedDimensions.slice(0, idx - 1),
+                                  selectedDimensions[idx],
+                                  selectedDimensions[idx - 1],
+                                  ...selectedDimensions.slice(idx + 1)
+                                ])}
+                                disabled={idx === 0}
+                                title="Move up"
+                              >↑</button>
+                              <button
+                                type="button"
+                                className="px-1 text-xs text-muted-foreground hover:text-primary"
+                                onClick={() => idx < selectedDimensions.length - 1 && setSelectedDimensions([
+                                  ...selectedDimensions.slice(0, idx),
+                                  selectedDimensions[idx + 1],
+                                  selectedDimensions[idx],
+                                  ...selectedDimensions.slice(idx + 2)
+                                ])}
+                                disabled={idx === selectedDimensions.length - 1}
+                                title="Move down"
+                              >↓</button>
+                              <button
+                                type="button"
+                                className="px-1 text-xs text-red-500 hover:text-red-700"
+                                onClick={() => setSelectedDimensions(selectedDimensions.filter(id => id !== dim))}
+                                title="Remove"
+                              >✕</button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="grid gap-2">
                 <Label htmlFor="filter">Filter Condition (Optional)</Label>
                 <Textarea
@@ -462,25 +683,6 @@ export function MetricFormDialog({ open, onOpenChange, metric, onSave }: MetricF
                   value={formData.dataSource.filter}
                   onChange={(e) => handleDataSourceChange("filter", e.target.value)}
                 />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="aggregation">Aggregation Period</Label>
-                <Select
-                  value={formData.dataSource.aggregation}
-                  onValueChange={(value) => handleDataSourceChange("aggregation", value)}
-                >
-                  <SelectTrigger id="aggregation">
-                    <SelectValue placeholder="Select aggregation period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {aggregationPeriods.map((period) => (
-                      <SelectItem key={period.id} value={period.id}>
-                        {period.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </TabsContent>
@@ -590,11 +792,14 @@ export function MetricFormDialog({ open, onOpenChange, metric, onSave }: MetricF
         </Tabs>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>{metric ? "Update Metric" : "Create Metric"}</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Creating..." : metric ? "Update Metric" : "Create Metric"}
+          </Button>
         </DialogFooter>
+        {saveError && <div className="text-red-500 text-sm mt-2">{saveError}</div>}
       </DialogContent>
     </Dialog>
   )
