@@ -10,6 +10,7 @@ import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper'
 import CustomDialog from '@/components/Dialog/CustomDialog';
 import Input from '@/components/UI/Input/Input';
 import { ConfigForm } from '../../helpers/connectorConfig/ConfigForm';
+import { useWebSocketConnection } from '@/customHooks/useWebsocketConnection';
 
 interface SourceData {
   sourceId: string;
@@ -81,13 +82,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
   const selectedSourceDef = watch('sourceDef');
 
   // WebSocket setup for check connection.
-  const [socketUrl, setSocketUrl] = useState<string | null>(null);
-  const { sendJsonMessage, lastMessage } = useWebSocket(socketUrl, {
-    share: false,
-    onError(event) {
-      console.error('Socket error:', event);
-    },
-  });
+  const { sendJsonMessage, lastMessage, setSocketUrl } = useWebSocketConnection(null);
 
   useEffect(() => {
     if (session) {
