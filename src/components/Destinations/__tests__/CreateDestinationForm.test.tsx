@@ -4,7 +4,7 @@ import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import CreateDestinationForm from '../DestinationForm';
-import { useWebSocketConnection as useWebSocket } from '@/customHooks/useWebsocketConnection';
+import { useWebSocketConnection } from '@/customHooks/useWebsocketConnection';
 
 const pushMock = jest.fn();
 
@@ -16,9 +16,9 @@ jest.mock('next/router', () => ({
   },
 }));
 
-jest.mock('react-use-websocket', () => ({
-  __esModule: true,
-  default: jest.fn(),
+// Mock the custom hook correctly
+jest.mock('@/customHooks/useWebsocketConnection', () => ({
+  useWebSocketConnection: jest.fn(),
 }));
 
 describe('destination create form - fetch definitions success', () => {
@@ -42,10 +42,11 @@ describe('destination create form - fetch definitions success', () => {
       ]),
     });
 
-    (useWebSocket as jest.Mock).mockReturnValue({
+    (useWebSocketConnection as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
       lastMessage: lastMessageMock,
-      onError: jest.fn(),
+      disconnect: jest.fn(),
+      setSocketUrl: jest.fn(),
     });
   });
 
