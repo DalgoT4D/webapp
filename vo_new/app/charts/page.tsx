@@ -2,316 +2,504 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MainLayout } from "@/components/main-layout";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
+
+// Import chart components
+import ChartForm from "@/components/charts/ChartForm";
+import SavedChartThumbnail from "@/components/charts/SavedChartThumbnail";
+
+interface CreatedChart {
+  schema: string;
+  table: string;
+  xAxis: string;
+  yAxis: string;
+  chartName: string;
+  chartDescription: string;
+}
+
+interface SavedChart {
+  id: number;
+  title: string;
+  description: string;
+  chart_type: string;
+  schema_name: string;
+  table: string;
+  config: {
+    xAxis: string;
+    yAxis: string;
+    chartType: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
 
 export default function ChartsPage() {
-  const [open, setOpen] = useState(false);
-  const [schemas, setSchemas] = useState<string[]>([]);
-  const [schemasLoading, setSchemasLoading] = useState(false);
-  const [schemasError, setSchemasError] = useState<string | null>(null);
-  const [selectedSchema, setSelectedSchema] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("echarts");
+  
+  // Form states for each tab
+  const [echartsFormOpen, setEchartsFormOpen] = useState(false);
+  const [nivoFormOpen, setNivoFormOpen] = useState(false);
+  const [rechartsFormOpen, setRechartsFormOpen] = useState(false);
 
-  const [tables, setTables] = useState<string[]>([]);
-  const [tablesLoading, setTablesLoading] = useState(false);
-  const [tablesError, setTablesError] = useState<string | null>(null);
-  const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  // Edit mode states
+  const [editingChart, setEditingChart] = useState<SavedChart | null>(null);
+  const [editFormOpen, setEditFormOpen] = useState(false);
 
-  const [columns, setColumns] = useState<{ name: string; data_type: string }[]>([]);
-  const [columnsLoading, setColumnsLoading] = useState(false);
-  const [columnsError, setColumnsError] = useState<string | null>(null);
-  const [xAxis, setXAxis] = useState<string | null>(null);
-  const [yAxis, setYAxis] = useState<string | null>(null);
+  // Saved charts states
+  const [savedCharts, setSavedCharts] = useState<SavedChart[]>([]);
+  const [savedChartsLoading, setSavedChartsLoading] = useState(false);
+  const [savedChartsError, setSavedChartsError] = useState<string | null>(null);
 
-  const [chartName, setChartName] = useState("");
-  const [chartDescription, setChartDescription] = useState("");
-  const [search, setSearch] = useState("");
-  const [createdChart, setCreatedChart] = useState<any | null>(null);
+  // Function to generate chart data from backend
+  const generateChartData = async (chart: CreatedChart) => {
+    const payload = {
+      schema: chart.schema,
+      table: chart.table,
+      x_axis: chart.xAxis,
+      y_axis: chart.yAxis,
+      chart_name: chart.chartName,
+      chart_description: chart.chartDescription
+    };
+    
+    const responseData = await apiPost('/api/visualization/generate_chart/', payload);
+    
+    // Transform the backend response to the expected format
+    const xAxisData = responseData.data?.xaxis_data?.[chart.xAxis] || [];
+    const yAxisData = responseData.data?.yaxis_data?.[chart.yAxis] || [];
+    
+    // Validate that we have both x and y axis data
+    if (!xAxisData.length || !yAxisData.length) {
+      throw new Error(`No data found for selected columns. X-axis: ${xAxisData.length} items, Y-axis: ${yAxisData.length} items`);
+    }
+    
+    // Ensure both arrays have the same length
+    const minLength = Math.min(xAxisData.length, yAxisData.length);
+    
+    return {
+      'x-axis': xAxisData.slice(0, minLength),
+      'y-axis': yAxisData.slice(0, minLength)
+    };
+  };
 
-  const [tableData, setTableData] = useState<any[]>([]);
-  const [tableDataLoading, setTableDataLoading] = useState(false);
-  const [tableDataError, setTableDataError] = useState<string | null>(null);
+  // Function to save a chart
+  const saveChart = async (chart: CreatedChart & { chartType: string; chartLibraryType: string }) => {
+    const payload = {
+      title: chart.chartName,
+      description: chart.chartDescription,
+      chart_type: chart.chartLibraryType, // Use library type for filtering (echarts, nivo, recharts)
+      schema_name: chart.schema,
+      table: chart.table,
+      config: {
+        xAxis: chart.xAxis,
+        yAxis: chart.yAxis,
+        chartType: chart.chartType // Store actual chart type (bar, line, pie, area) in config
+      },
+      offset: 0,
+      limit: 10
+    };
+    
+    return await apiPost('/api/visualization/charts/', payload);
+  };
 
-  // Fetch schemas when dialog opens
+  // Function to fetch all saved charts
+  const fetchSavedCharts = async () => {
+    const response = await apiGet('/api/visualization/charts/');
+    return response;
+  };
+
+  // Function to update a chart
+  const updateChart = async (chartId: number, chartData: CreatedChart & { chartType: string; chartLibraryType: string }) => {
+    const payload = {
+      title: chartData.chartName,
+      description: chartData.chartDescription,
+      chart_type: chartData.chartLibraryType,
+      schema_name: chartData.schema,
+      table: chartData.table,
+      config: {
+        xAxis: chartData.xAxis,
+        yAxis: chartData.yAxis,
+        chartType: chartData.chartType
+      },
+      offset: 0,
+      limit: 10
+    };
+    
+    return await apiPut(`/api/visualization/charts/${chartId}/`, payload);
+  };
+
+  // Function to delete a chart
+  const deleteChart = async (chartId: number) => {
+    await apiDelete(`/api/visualization/charts/${chartId}/`);
+  };
+
+  // Load saved charts on component mount
   useEffect(() => {
-    if (open) {
-      setSchemasLoading(true);
-      setSchemasError(null);
-      apiGet("/api/warehouse/schemas")
-        .then((data) => setSchemas(data))
-        .catch((err) => setSchemasError(err.message))
-        .finally(() => setSchemasLoading(false));
+    loadSavedCharts();
+  }, []);
+
+  const loadSavedCharts = async () => {
+    setSavedChartsLoading(true);
+    setSavedChartsError(null);
+    try {
+      const charts = await fetchSavedCharts();
+      setSavedCharts(charts);
+    } catch (error) {
+      setSavedChartsError(error instanceof Error ? error.message : 'Failed to load saved charts');
+    } finally {
+      setSavedChartsLoading(false);
     }
-  }, [open]);
+  };
 
-  // Fetch tables when schema changes
-  useEffect(() => {
-    if (selectedSchema) {
-      setTablesLoading(true);
-      setTablesError(null);
-      setTables([]);
-      setSelectedTable(null);
-      setColumns([]);
-      setXAxis(null);
-      setYAxis(null);
-      setTableData([]);
-      apiGet(`/api/warehouse/tables/${selectedSchema}`)
-        .then((data) => setTables(data))
-        .catch((err) => setTablesError(err.message))
-        .finally(() => setTablesLoading(false));
-    } else {
-      setTables([]);
-      setSelectedTable(null);
-      setColumns([]);
-      setXAxis(null);
-      setYAxis(null);
-      setTableData([]);
+  // Handle chart save from forms
+  const handleEchartsChartSave = async (chartData: CreatedChart & { chartType: string }) => {
+    try {
+      await saveChart({ ...chartData, chartLibraryType: 'echarts' });
+      await loadSavedCharts(); // Refresh the saved charts list
+    } catch (error) {
+      throw error; // Let the form handle the error display
     }
-  }, [selectedSchema]);
+  };
 
-  // Fetch columns when schema and table change
-  useEffect(() => {
-    if (selectedSchema && selectedTable) {
-      setColumnsLoading(true);
-      setColumnsError(null);
-      setColumns([]);
-      setXAxis(null);
-      setYAxis(null);
-      setTableData([]);
-      apiGet(`/api/warehouse/table_columns/${selectedSchema}/${selectedTable}`)
-        .then((data) => setColumns(data))
-        .catch((err) => setColumnsError(err.message))
-        .finally(() => setColumnsLoading(false));
-    } else {
-      setColumns([]);
-      setXAxis(null);
-      setYAxis(null);
-      setTableData([]);
+  const handleNivoChartSave = async (chartData: CreatedChart & { chartType: string }) => {
+    try {
+      await saveChart({ ...chartData, chartLibraryType: 'nivo' });
+      await loadSavedCharts(); // Refresh the saved charts list
+    } catch (error) {
+      throw error; // Let the form handle the error display
     }
-  }, [selectedSchema, selectedTable]);
+  };
 
-  // Fetch table data when all inputs are set and chart is created
-  useEffect(() => {
-    if (createdChart) {
-      setTableDataLoading(true);
-      setTableDataError(null);
-      setTableData([]);
-      apiGet(`/api/warehouse/table_data/${createdChart.schema}/${createdChart.table}`)
-        .then((data) => setTableData(data))
-        .catch((err) => setTableDataError(err.message))
-        .finally(() => setTableDataLoading(false));
+  const handleRechartsChartSave = async (chartData: CreatedChart & { chartType: string }) => {
+    try {
+      await saveChart({ ...chartData, chartLibraryType: 'recharts' });
+      await loadSavedCharts(); // Refresh the saved charts list
+    } catch (error) {
+      throw error; // Let the form handle the error display
     }
-  }, [createdChart]);
+  };
 
-  function handleSchemaChange(value: string) {
-    setSelectedSchema(value);
-  }
+  // Handle editing charts
+  const handleEditChart = (chart: SavedChart) => {
+    setEditingChart(chart);
+    setEditFormOpen(true);
+  };
 
-  function handleTableChange(value: string) {
-    setSelectedTable(value);
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (selectedSchema && selectedTable && xAxis && yAxis && chartName) {
-      setCreatedChart({
-        schema: selectedSchema,
-        table: selectedTable,
-        xAxis,
-        yAxis,
-        chartName,
-        chartDescription,
-      });
-      setOpen(false);
-      // Reset form fields
-      setSelectedSchema(null);
-      setSelectedTable(null);
-      setXAxis(null);
-      setYAxis(null);
-      setChartName("");
-      setChartDescription("");
-      setSearch("");
+  // Handle updating charts
+  const handleUpdateChart = async (chartId: number, chartData: CreatedChart & { chartType: string }) => {
+    try {
+      await updateChart(chartId, { ...chartData, chartLibraryType: editingChart?.chart_type || 'echarts' });
+      await loadSavedCharts(); // Refresh the saved charts list
+    } catch (error) {
+      throw error; // Let the form handle the error display
     }
-  }
+  };
 
-  // Filtered tables for search
-  const filteredTables = tables.filter((table) =>
-    table.toLowerCase().includes(search.toLowerCase())
+  // Handle deleting charts
+  const handleDeleteChart = async (chartId: number) => {
+    try {
+      await deleteChart(chartId);
+      await loadSavedCharts(); // Refresh the saved charts list
+    } catch (error) {
+      console.error('Failed to delete chart:', error);
+    }
+  };
+
+  // Chart card component - simplified design
+  const ChartCard = ({ chart, onEdit, onDelete }: { chart: SavedChart; onEdit: () => void; onDelete: () => void }) => (
+    <div 
+      className="border rounded-lg bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      onClick={onEdit}
+    >
+      {/* Thumbnail */}
+      <div className="p-3 border-b">
+        <SavedChartThumbnail chart={chart} width={280} height={160} />
+      </div>
+      
+      {/* Chart Info */}
+      <div className="p-4">
+        <div className="flex justify-between items-start gap-3 mb-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium text-sm truncate">{chart.title}</h4>
+            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{chart.description}</p>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            🗑️
+          </Button>
+        </div>
+        
+        {/* Metadata */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-primary/10 text-primary">
+              {chart.config.chartType}
+            </span>
+            <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-muted text-muted-foreground">
+              {chart.chart_type}
+            </span>
+          </div>
+          
+          <div className="text-xs text-muted-foreground space-y-1">
+            <div>📊 {chart.schema_name}.{chart.table}</div>
+            <div>📈 {chart.config.xAxis} → {chart.config.yAxis}</div>
+          </div>
+        </div>
+        
+        <div className="mt-3 pt-3 border-t">
+          <div className="text-xs text-primary">
+            Click to edit or view full chart
+          </div>
+        </div>
+      </div>
+    </div>
   );
 
-  // Before mapping chartData, add a debug log
-  console.log('tableData sample:', tableData[0], 'xAxis:', xAxis, 'yAxis:', yAxis);
-  const chartData = (createdChart && createdChart.xAxis && createdChart.yAxis)
-    ? tableData.map((row) => ({
-        [createdChart.xAxis]: row?.[createdChart.xAxis],
-        [createdChart.yAxis]: row?.[createdChart.yAxis],
-      }))
-    : [];
+  // Empty state component - simplified
+  const EmptyState = ({ libraryName, icon }: { libraryName: string; icon: string }) => (
+    <div className="text-center py-12">
+      <div className="text-4xl mb-4 opacity-50">{icon}</div>
+      <h3 className="text-lg font-medium text-muted-foreground mb-2">No {libraryName} charts yet</h3>
+      <p className="text-sm text-muted-foreground max-w-md mx-auto">
+        Start creating charts with {libraryName}. Click "Create New Chart" to get started.
+      </p>
+    </div>
+  );
 
   return (
     <MainLayout>
-      <div className="p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Charts</h1>
-          <Button onClick={() => setOpen(true)}>Add Chart</Button>
-        </div>
-        {/* Chart rendering */}
-        {createdChart && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-1">{createdChart.chartName}</h2>
-            <div className="text-muted-foreground mb-4">{createdChart.chartDescription}</div>
-            {tableDataLoading ? (
-              <div className="text-muted-foreground">Loading chart data...</div>
-            ) : tableDataError ? (
-              <div className="text-red-500">{tableDataError}</div>
-            ) : (
-              <>
-                {!tableDataLoading && !tableDataError && chartData.every(obj => Object.keys(obj).length === 0) && (
-                  <div className="text-red-500 mb-4">No data found for the selected columns. Please check your column selection or table data.</div>
-                )}
-                <BarChartComponent
-                  data={chartData}
-                  xKey={createdChart.xAxis}
-                  yKey={createdChart.yAxis}
-                />
-              </>
-            )}
+      <div className="flex flex-col h-screen">
+        <div className="p-6">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Charts</h1>
+            <p className="text-muted-foreground">Create beautiful, interactive charts with multiple libraries</p>
           </div>
-        )}
-        {/* Placeholder for chart list if no chart created */}
-        {!createdChart && <div className="text-muted-foreground mb-8">No charts created yet.</div>}
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-md w-full">
-            <DialogHeader>
-              <DialogTitle>Add a Bar Chart</DialogTitle>
-            </DialogHeader>
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              {/* Schema Picker */}
-              <div>
-                <label className="block mb-1 font-medium">Pick a Schema</label>
-                <Select value={selectedSchema || undefined} onValueChange={handleSchemaChange} disabled={schemasLoading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={schemasLoading ? "Loading schemas..." : "Select a schema"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {schemasError && <div className="px-3 py-2 text-red-500">{schemasError}</div>}
-                    {schemas.map((schema) => (
-                      <SelectItem key={schema} value={schema}>
-                        {schema}
-                      </SelectItem>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {/* Tab List */}
+            <div className="mb-6">
+              <TabsList className="grid w-full max-w-md grid-cols-3">
+                <TabsTrigger value="echarts" className="text-sm">⚡ ECharts</TabsTrigger>
+                <TabsTrigger value="nivo" className="text-sm">🎨 Nivo</TabsTrigger>
+                <TabsTrigger value="recharts" className="text-sm">📈 Recharts</TabsTrigger>
+              </TabsList>
+            </div>
+            
+            {/* ECharts Tab */}
+            <TabsContent value="echarts" className="space-y-6">
+              {/* Tab Header */}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
+                <div>
+                  <h2 className="text-xl font-semibold">ECharts</h2>
+                  <p className="text-sm text-muted-foreground">High-performance, interactive charts</p>
+                </div>
+                <Button onClick={() => setEchartsFormOpen(true)}>
+                  Create New Chart
+                </Button>
+              </div>
+                
+              {/* Saved Charts Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Saved ECharts</h3>
+                  <span className="text-sm text-muted-foreground">
+                    {savedCharts.filter(chart => chart.chart_type === 'echarts').length} charts
+                  </span>
+                </div>
+                
+                {savedChartsLoading && (
+                  <div className="text-center py-8">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <div className="text-sm text-muted-foreground">Loading charts...</div>
+                  </div>
+                )}
+                
+                {savedChartsError && (
+                  <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
+                    {savedChartsError}
+                  </div>
+                )}
+                
+                {savedCharts.filter(chart => chart.chart_type === 'echarts').length === 0 && !savedChartsLoading && (
+                  <EmptyState libraryName="ECharts" icon="⚡" />
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {savedCharts
+                    .filter(chart => chart.chart_type === 'echarts')
+                    .map((chart) => (
+                      <ChartCard
+                        key={chart.id}
+                        chart={chart}
+                        onEdit={() => handleEditChart(chart)}
+                        onDelete={() => handleDeleteChart(chart.id)}
+                      />
                     ))}
-                  </SelectContent>
-                </Select>
+                </div>
               </div>
-              {/* Table Picker */}
-              <div>
-                <label className="block mb-1 font-medium">Pick a Table</label>
-                <Input
-                  placeholder="Search tables..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="mb-2"
-                  disabled={!selectedSchema || tablesLoading}
-                />
-                <Select value={selectedTable || undefined} onValueChange={handleTableChange} disabled={!selectedSchema || tablesLoading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={tablesLoading ? "Loading tables..." : "Select a table"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tablesError && <div className="px-3 py-2 text-red-500">{tablesError}</div>}
-                    {filteredTables.length === 0 && !tablesLoading && (
-                      <div className="px-3 py-2 text-muted-foreground">No tables found</div>
-                    )}
-                    {filteredTables.map((table) => (
-                      <SelectItem key={table} value={table}>
-                        {table}
-                      </SelectItem>
+            </TabsContent>
+          
+            {/* Nivo Tab */}
+            <TabsContent value="nivo" className="space-y-6">
+              {/* Tab Header */}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
+                <div>
+                  <h2 className="text-xl font-semibold">Nivo Charts</h2>
+                  <p className="text-sm text-muted-foreground">Beautiful, responsive charts with modern design</p>
+                </div>
+                <Button onClick={() => setNivoFormOpen(true)}>
+                  Create New Chart
+                </Button>
+              </div>
+              
+              {/* Saved Charts Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Saved Nivo Charts</h3>
+                  <span className="text-sm text-muted-foreground">
+                    {savedCharts.filter(chart => chart.chart_type === 'nivo').length} charts
+                  </span>
+                </div>
+                
+                {savedChartsLoading && (
+                  <div className="text-center py-8">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <div className="text-sm text-muted-foreground">Loading charts...</div>
+                  </div>
+                )}
+                
+                {savedChartsError && (
+                  <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
+                    {savedChartsError}
+                  </div>
+                )}
+                
+                {savedCharts.filter(chart => chart.chart_type === 'nivo').length === 0 && !savedChartsLoading && (
+                  <EmptyState libraryName="Nivo" icon="🎨" />
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {savedCharts
+                    .filter(chart => chart.chart_type === 'nivo')
+                    .map((chart) => (
+                      <ChartCard
+                        key={chart.id}
+                        chart={chart}
+                        onEdit={() => handleEditChart(chart)}
+                        onDelete={() => handleDeleteChart(chart.id)}
+                      />
                     ))}
-                  </SelectContent>
-                </Select>
+                </div>
               </div>
-              {/* X Axis Picker */}
-              <div>
-                <label className="block mb-1 font-medium">X Axis Column</label>
-                <Select value={xAxis || undefined} onValueChange={setXAxis} disabled={!selectedTable || columnsLoading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={columnsLoading ? "Loading columns..." : "Select x axis column"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {columnsError && <div className="px-3 py-2 text-red-500">{columnsError}</div>}
-                    {columns.map((col) => (
-                      <SelectItem key={col.name} value={col.name}>
-                        {col.name} <span className="text-xs text-muted-foreground">({col.data_type})</span>
-                      </SelectItem>
+            </TabsContent>
+          
+            {/* Recharts Tab */}
+            <TabsContent value="recharts" className="space-y-6">
+              {/* Tab Header */}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
+                <div>
+                  <h2 className="text-xl font-semibold">Recharts</h2>
+                  <p className="text-sm text-muted-foreground">Composable charting library built on React components</p>
+                </div>
+                <Button onClick={() => setRechartsFormOpen(true)}>
+                  Create New Chart
+                </Button>
+              </div>
+              
+              {/* Saved Charts Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Saved Recharts</h3>
+                  <span className="text-sm text-muted-foreground">
+                    {savedCharts.filter(chart => chart.chart_type === 'recharts').length} charts
+                  </span>
+                </div>
+                
+                {savedChartsLoading && (
+                  <div className="text-center py-8">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <div className="text-sm text-muted-foreground">Loading charts...</div>
+                  </div>
+                )}
+                
+                {savedChartsError && (
+                  <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
+                    {savedChartsError}
+                  </div>
+                )}
+                
+                {savedCharts.filter(chart => chart.chart_type === 'recharts').length === 0 && !savedChartsLoading && (
+                  <EmptyState libraryName="Recharts" icon="📈" />
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {savedCharts
+                    .filter(chart => chart.chart_type === 'recharts')
+                    .map((chart) => (
+                      <ChartCard
+                        key={chart.id}
+                        chart={chart}
+                        onEdit={() => handleEditChart(chart)}
+                        onDelete={() => handleDeleteChart(chart.id)}
+                      />
                     ))}
-                  </SelectContent>
-                </Select>
+                </div>
               </div>
-              {/* Y Axis Picker */}
-              <div>
-                <label className="block mb-1 font-medium">Y Axis Column</label>
-                <Select value={yAxis || undefined} onValueChange={setYAxis} disabled={!selectedTable || columnsLoading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={columnsLoading ? "Loading columns..." : "Select y axis column"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {columnsError && <div className="px-3 py-2 text-red-500">{columnsError}</div>}
-                    {columns.map((col) => (
-                      <SelectItem key={col.name} value={col.name}>
-                        {col.name} <span className="text-xs text-muted-foreground">({col.data_type})</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Chart Name */}
-              <div>
-                <label className="block mb-1 font-medium">Chart Name</label>
-                <Input
-                  placeholder="Enter chart name"
-                  value={chartName}
-                  onChange={(e) => setChartName(e.target.value)}
-                />
-              </div>
-              {/* Chart Description */}
-              <div>
-                <label className="block mb-1 font-medium">Chart Description</label>
-                <Textarea
-                  placeholder="Enter chart description"
-                  value={chartDescription}
-                  onChange={(e) => setChartDescription(e.target.value)}
-                />
-              </div>
-              <Button type="submit" className="w-full mt-2" disabled={!selectedSchema || !selectedTable || !xAxis || !yAxis || !chartName}>
-                Create Chart
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </TabsContent>
+          </Tabs>
+
+          {/* Chart Forms */}
+          <ChartForm
+            open={echartsFormOpen}
+            onOpenChange={setEchartsFormOpen}
+            onSave={handleEchartsChartSave}
+            title="Create EChart"
+            chartLibraryType="echarts"
+          />
+          
+          <ChartForm
+            open={nivoFormOpen}
+            onOpenChange={setNivoFormOpen}
+            onSave={handleNivoChartSave}
+            title="Create Nivo Chart"
+            chartLibraryType="nivo"
+          />
+          
+          <ChartForm
+            open={rechartsFormOpen}
+            onOpenChange={setRechartsFormOpen}
+            onSave={handleRechartsChartSave}
+            title="Create Recharts Chart"
+            chartLibraryType="recharts"
+          />
+
+          {/* Edit Chart Form */}
+          <ChartForm
+            open={editFormOpen}
+            onOpenChange={(open) => {
+              setEditFormOpen(open);
+              if (!open) {
+                setEditingChart(null);
+              }
+            }}
+            onSave={() => {}} // Not used in edit mode
+            onUpdate={handleUpdateChart}
+            onDelete={handleDeleteChart}
+            title={`${editingChart?.chart_type.charAt(0).toUpperCase() + editingChart?.chart_type.slice(1)} Chart` || 'Chart'}
+            chartLibraryType={editingChart?.chart_type || 'echarts'}
+            editChart={editingChart}
+          />
+        </div>
       </div>
     </MainLayout>
-  );
-}
-
-function BarChartComponent({ data, xKey, yKey }: { data: any[]; xKey: string; yKey: string }) {
-  return (
-    <div className="w-full overflow-x-auto">
-      <div className="min-w-[900px] h-96 bg-background rounded-lg border p-4">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={xKey} tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Bar dataKey={yKey} name={yKey} fill="#6366f1" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
   );
 } 

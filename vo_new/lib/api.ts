@@ -27,9 +27,8 @@ function getHeaders() {
   };
 }
 
-export async function apiFetch(path: string, options: RequestInit = {}) {
+async function apiFetch(path: string, options: RequestInit = {}) {
   const url = path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
-  const token = getAuthToken();
   const headers: HeadersInit = {
     ...(options.headers || {}),
     ...getHeaders(),
@@ -53,4 +52,18 @@ export function apiPost(path: string, body: any, options: RequestInit = {}) {
     method: 'POST',
     body: JSON.stringify(body),
   });
+}
+
+// Helper for PUT requests
+export function apiPut(path: string, body: any, options: RequestInit = {}) {
+  return apiFetch(path, {
+    ...options,
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+}
+
+// Helper for DELETE requests
+export function apiDelete(path: string, options: RequestInit = {}) {
+  return apiFetch(path, { ...options, method: 'DELETE' });
 } 
