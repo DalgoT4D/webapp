@@ -163,7 +163,7 @@ describe('Source Form Creation', () => {
     render(createSourceForm());
 
     await waitFor(() =>
-      expect(useWebSocket).toHaveBeenCalledWith(
+      expect(useWebSocketConnection).toHaveBeenCalledWith(
         expect.stringContaining('airbyte/source/check_connection'),
         expect.any(Object)
       )
