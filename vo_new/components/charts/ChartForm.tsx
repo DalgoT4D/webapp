@@ -684,7 +684,7 @@ export default function ChartForm({
               </form>
             </div>
             {/* Chart Preview Section */}
-            <div className="flex-[0_0_420px] min-w-[320px] max-w-none min-h-[400px] overflow-x-auto lg:border-l border-t lg:border-t-0 border-border pl-0 lg:pl-6 pt-6 lg:pt-0 flex flex-col bg-background p-4">
+            <div className="flex-auto w-auto min-h-[400px] overflow-x-auto lg:border-l border-t lg:border-t-0 border-border pl-0 lg:pl-6 pt-6 lg:pt-0 flex flex-col bg-background p-4">
               <h3 className="text-lg font-medium mb-4">Chart Preview</h3>
               {generating && (
                 <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg">
@@ -744,7 +744,7 @@ export default function ChartForm({
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full items-center justify-center">
+                  <div className="flex flex-col sm:flex-row gap-2 mt-8 w-full items-center justify-center">
                     <Button 
                       onClick={handleSaveChart}
                       disabled={saving}
