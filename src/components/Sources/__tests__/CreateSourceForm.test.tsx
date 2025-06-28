@@ -100,7 +100,7 @@ describe('Source Form Creation', () => {
     socketUrlEnpoint = 'wss://localhost/endpoint';
 
     // Mock the generateWebsocketUrl function
-    generateWebsocketUrlMock = require('@/helpers/websocket').generateWebsocketUrl as jest.Mock;
+    generateWebsocketUrlMock = generateWebsocketUrl as jest.Mock;
     generateWebsocketUrlMock.mockReturnValue(socketUrlEnpoint);
 
     (useWebSocketConnection as jest.Mock).mockReturnValue({
