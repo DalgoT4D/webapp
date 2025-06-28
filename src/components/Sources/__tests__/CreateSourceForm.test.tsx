@@ -12,6 +12,7 @@ import {
   initialCurrentOrgState,
 } from '@/contexts/reducers/CurrentOrgReducer';
 import { OrgUserStateInterface, initialOrgUsersState } from '@/contexts/reducers/OrgUsersReducer';
+import { generateWebsocketUrl } from '@/helpers/websocket';
 
 const pushMock = jest.fn();
 
@@ -80,19 +81,33 @@ jest.mock('@/helpers/connectorConfig/ConfigForm', () => ({
   },
 }));
 
+// Mock the generateWebsocketUrl function
+jest.mock('@/helpers/websocket', () => ({
+  generateWebsocketUrl: jest.fn(),
+}));
+
 describe('Source Form Creation', () => {
   let sendJsonMessageMock: jest.Mock;
   let lastMessageMock: any;
+  let setSocketUrlMock: jest.Mock;
+  let generateWebsocketUrlMock: jest.Mock;
+  let socketUrlEnpoint: string;
 
   beforeEach(() => {
     sendJsonMessageMock = jest.fn();
     lastMessageMock = null;
+    setSocketUrlMock = jest.fn();
+    socketUrlEnpoint = 'wss://localhost/endpoint';
+
+    // Mock the generateWebsocketUrl function
+    generateWebsocketUrlMock = require('@/helpers/websocket').generateWebsocketUrl as jest.Mock;
+    generateWebsocketUrlMock.mockReturnValue(socketUrlEnpoint);
 
     (useWebSocketConnection as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
       lastMessage: lastMessageMock,
       disconnect: jest.fn(),
-      setSocketUrl: jest.fn(),
+      setSocketUrl: setSocketUrlMock,
     });
   });
 
@@ -162,12 +177,18 @@ describe('Source Form Creation', () => {
   it('should initialize WebSocket and render the form', async () => {
     render(createSourceForm());
 
-    await waitFor(() =>
-      expect(useWebSocketConnection).toHaveBeenCalledWith(
-        expect.stringContaining('airbyte/source/check_connection'),
-        expect.any(Object)
-      )
-    );
+    // Wait for the setSocketUrl to be called with the proper endpoint
+    await waitFor(() => {
+      console.log('generateWebsocketUrl calls:', generateWebsocketUrlMock.mock.calls);
+      console.log('setSocketUrl calls:', setSocketUrlMock.mock.calls);
+
+      expect(generateWebsocketUrlMock).toHaveBeenCalledWith(
+        'airbyte/source/check_connection',
+        expect.objectContaining({ user: { email: 'a' } })
+      );
+
+      expect(setSocketUrlMock).toHaveBeenCalledWith(socketUrlEnpoint);
+    });
 
     const saveButton = screen.getByRole('button', { name: /save changes and test/i });
     expect(saveButton).toBeInTheDocument();
