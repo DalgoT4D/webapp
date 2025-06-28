@@ -4,7 +4,7 @@ import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import EditDestinationForm from '../DestinationForm';
-import useWebSocket from 'react-use-websocket';
+import { useWebSocketConnection } from '@/customHooks/useWebsocketConnection';
 
 const pushMock = jest.fn();
 
@@ -16,9 +16,9 @@ jest.mock('next/router', () => ({
   },
 }));
 
-jest.mock('react-use-websocket', () => ({
-  __esModule: true,
-  default: jest.fn(),
+// Mock the custom hook correctly
+jest.mock('@/customHooks/useWebsocketConnection', () => ({
+  useWebSocketConnection: jest.fn(),
 }));
 
 describe('destination edit form - fetch definitions + specs successfully', () => {
@@ -182,10 +182,11 @@ describe('destination edit form - fetch definitions + specs successfully', () =>
     sendJsonMessageMock = jest.fn();
     lastMessageMock = null;
 
-    (useWebSocket as jest.Mock).mockReturnValue({
+    (useWebSocketConnection as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
       lastMessage: lastMessageMock,
-      onError: jest.fn(),
+      disconnect: jest.fn(),
+      setSocketUrl: jest.fn(),
     });
   });
 
@@ -199,7 +200,7 @@ describe('destination edit form - fetch definitions + specs successfully', () =>
     });
 
     await waitFor(() =>
-      expect(useWebSocket).toHaveBeenCalledWith(
+      expect(useWebSocketConnection).toHaveBeenCalledWith(
         expect.stringContaining('airbyte/destination/check_connection'),
         expect.any(Object)
       )
@@ -400,10 +401,11 @@ describe('destination edit form - fetch definition (being edited does not match 
     sendJsonMessageMock = jest.fn();
     lastMessageMock = null;
 
-    (useWebSocket as jest.Mock).mockReturnValue({
+    (useWebSocketConnection as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
       lastMessage: lastMessageMock,
-      onError: jest.fn(),
+      disconnect: jest.fn(),
+      setSocketUrl: jest.fn(),
     });
   });
 
@@ -416,7 +418,7 @@ describe('destination edit form - fetch definition (being edited does not match 
       );
     });
     await waitFor(() =>
-      expect(useWebSocket).toHaveBeenCalledWith(
+      expect(useWebSocketConnection).toHaveBeenCalledWith(
         expect.stringContaining('airbyte/destination/check_connection'),
         expect.any(Object)
       )
@@ -602,10 +604,11 @@ describe('destination edit form - fetch definition failed', () => {
     sendJsonMessageMock = jest.fn();
     lastMessageMock = null;
 
-    (useWebSocket as jest.Mock).mockReturnValue({
+    (useWebSocketConnection as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
       lastMessage: lastMessageMock,
-      onError: jest.fn(),
+      disconnect: jest.fn(),
+      setSocketUrl: jest.fn(),
     });
   });
 
@@ -620,7 +623,7 @@ describe('destination edit form - fetch definition failed', () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
     await waitFor(() =>
-      expect(useWebSocket).toHaveBeenCalledWith(
+      expect(useWebSocketConnection).toHaveBeenCalledWith(
         expect.stringContaining('airbyte/destination/check_connection'),
         expect.any(Object)
       )
@@ -804,10 +807,11 @@ describe('destination edit form - connectivity', () => {
     sendJsonMessageMock = jest.fn();
     lastMessageMock = null;
 
-    (useWebSocket as jest.Mock).mockReturnValue({
+    (useWebSocketConnection as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
       lastMessage: lastMessageMock,
-      onError: jest.fn(),
+      disconnect: jest.fn(),
+      setSocketUrl: jest.fn(),
     });
   });
 
@@ -821,7 +825,7 @@ describe('destination edit form - connectivity', () => {
     });
 
     await waitFor(() =>
-      expect(useWebSocket).toHaveBeenCalledWith(
+      expect(useWebSocketConnection).toHaveBeenCalledWith(
         expect.stringContaining('airbyte/destination/check_connection'),
         expect.any(Object)
       )
@@ -847,10 +851,11 @@ describe('destination edit form - connectivity', () => {
       }),
     };
 
-    (useWebSocket as jest.Mock).mockReturnValue({
+    (useWebSocketConnection as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
       lastMessage: lastMessageMock,
-      onError: jest.fn(),
+      disconnect: jest.fn(),
+      setSocketUrl: jest.fn(),
     });
 
     // Click the save button to trigger submission
@@ -886,7 +891,7 @@ describe('destination edit form - connectivity', () => {
 
     // Verify WebSocket connection setup
     await waitFor(() =>
-      expect(useWebSocket).toHaveBeenCalledWith(
+      expect(useWebSocketConnection).toHaveBeenCalledWith(
         expect.stringContaining('airbyte/destination/check_connection'),
         expect.any(Object)
       )
@@ -903,10 +908,11 @@ describe('destination edit form - connectivity', () => {
       }),
     };
 
-    (useWebSocket as jest.Mock).mockReturnValue({
+    (useWebSocketConnection as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
       lastMessage: lastMessageMock,
-      onError: jest.fn(),
+      disconnect: jest.fn(),
+      setSocketUrl: jest.fn(),
     });
 
     // Click the save button to trigger the submission

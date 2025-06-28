@@ -12,7 +12,7 @@ import {
   Checkbox,
 } from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, set, useForm } from 'react-hook-form';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -20,7 +20,7 @@ import { useSession } from 'next-auth/react';
 import { demoAccDestSchema } from '@/config/constant';
 import Input from '../UI/Input/Input';
 import { generateWebsocketUrl } from '@/helpers/websocket';
-import useWebSocket from 'react-use-websocket';
+import { useWebSocketConnection } from '@/customHooks/useWebsocketConnection';
 
 interface CreateConnectionFormProps {
   connectionId: string;
@@ -214,9 +214,8 @@ const CreateConnectionForm = ({
 
   // source selection changes
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
-  const { sendJsonMessage, lastJsonMessage }: any = useWebSocket(socketUrl, {
-    share: false,
-    onError(event) {
+  const { sendJsonMessage, lastJsonMessage }: any = useWebSocketConnection(socketUrl, {
+    handleError: (event: Event) => {
       console.error('Socket error:', event);
       setLoading(false);
     },

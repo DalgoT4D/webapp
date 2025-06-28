@@ -9,8 +9,8 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import Input from '../UI/Input/Input';
 import ConnectorConfigInput from '@/helpers/ConnectorConfigInput';
 import { ConfigInput } from '../ConfigInput/ConfigInput';
-import useWebSocket from 'react-use-websocket';
 import { generateWebsocketUrl } from '@/helpers/websocket';
+import { useWebSocketConnection } from '@/customHooks/useWebsocketConnection';
 
 interface DestinationFormProps {
   showForm: boolean;
@@ -50,12 +50,7 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
   const [destinationDefSpecs, setDestinationDefSpecs] = useState<Array<any>>([]);
   const [destinationDefs, setDestinationDefs] = useState<Array<{ id: string; label: string }>>([]);
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
-  const { sendJsonMessage, lastMessage } = useWebSocket(socketUrl, {
-    share: false,
-    onError(event) {
-      console.error('Socket error:', event);
-    },
-  });
+  const { sendJsonMessage, lastMessage } = useWebSocketConnection(socketUrl);
 
   const globalContext = useContext(GlobalContext);
 

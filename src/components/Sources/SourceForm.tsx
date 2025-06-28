@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Autocomplete, Box, Button, TextField } from '@mui/material';
 import { useForm, Controller, FormProvider } from 'react-hook-form';
 import { useSession } from 'next-auth/react';
-import useWebSocket from 'react-use-websocket';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { generateWebsocketUrl } from '@/helpers/websocket';
@@ -10,6 +9,7 @@ import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper'
 import CustomDialog from '@/components/Dialog/CustomDialog';
 import Input from '@/components/UI/Input/Input';
 import { ConfigForm } from '../../helpers/connectorConfig/ConfigForm';
+import { useWebSocketConnection } from '@/customHooks/useWebsocketConnection';
 
 interface SourceData {
   sourceId: string;
@@ -81,13 +81,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
   const selectedSourceDef = watch('sourceDef');
 
   // WebSocket setup for check connection.
-  const [socketUrl, setSocketUrl] = useState<string | null>(null);
-  const { sendJsonMessage, lastMessage } = useWebSocket(socketUrl, {
-    share: false,
-    onError(event) {
-      console.error('Socket error:', event);
-    },
-  });
+  const { sendJsonMessage, lastMessage, setSocketUrl } = useWebSocketConnection(null);
 
   useEffect(() => {
     if (session) {
