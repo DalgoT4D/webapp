@@ -22,6 +22,9 @@ import {
   CHART_TYPE_CONFIGS
 } from "./chartUtils";
 
+import { MetricPicker } from "../metrics/MetricPicker";
+import { MetricFormDialog } from "../metrics/metric-form-dialog";
+
 interface ChartFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -106,6 +109,21 @@ export default function ChartForm({
   const [currentLimit, setCurrentLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState<number | null>(null);
   const [hasMoreData, setHasMoreData] = useState(false);
+
+  // Multi-step state
+  const [step, setStep] = useState(1);
+
+  // Metric selection/creation state
+  const [selectedMetric, setSelectedMetric] = useState<any>(null);
+  const [isMetricDialogOpen, setIsMetricDialogOpen] = useState(false);
+  const [isCreateMetric, setIsCreateMetric] = useState(false);
+
+  // Mock metrics for now (replace with real data source as needed)
+  const mockMetrics = [
+    { id: "1", name: "Maternal Mortality Rate", description: "Deaths per 100,000 live births" },
+    { id: "2", name: "Antenatal Care Coverage", description: "% of pregnant women receiving ANC" },
+    { id: "3", name: "Skilled Birth Attendance", description: "Births attended by skilled personnel" },
+  ];
 
   // Fetch schemas when dialog opens
   useEffect(() => {
@@ -398,354 +416,369 @@ export default function ChartForm({
     table.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Handler for selecting an existing metric
+  const handleSelectMetric = (metric: any) => {
+    setSelectedMetric(metric);
+    setStep(2);
+  };
+
+  // Handler for creating a new metric
+  const handleCreateMetric = () => {
+    setIsCreateMetric(true);
+    setIsMetricDialogOpen(true);
+  };
+
+  // Handler for saving a new metric
+  const handleSaveMetric = (metricData: any) => {
+    setSelectedMetric(metricData);
+    setIsMetricDialogOpen(false);
+    setIsCreateMetric(false);
+    setStep(2);
+  };
+
+  // Handler for going back to metric step
+  const handleBackToMetric = () => {
+    setStep(1);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[1600px] max-w-none max-h-[90vh] overflow-y-auto" style={{ width: '1600px', maxWidth: 'none' }}>
+      <DialogContent className="w-auto min-w-fit max-w-[98vw]">
         <DialogHeader>
-          <DialogTitle>{editChart ? `Edit ${title}` : title}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-          {/* Form Section */}
-          <div className="lg:col-span-3">
-            <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* Schema Picker */}
+        {/* Stepper UI */}
+        <div className="flex items-center mb-4">
+          <div className={`flex-1 text-center ${step === 1 ? 'font-bold' : 'text-muted-foreground'}`}>1. Metric</div>
+          <div className="w-8 border-t mx-2" />
+          <div className={`flex-1 text-center ${step === 2 ? 'font-bold' : 'text-muted-foreground'}`}>2. Chart Details</div>
+        </div>
+        {/* Step 1: Metric Selection/Creation */}
+        {step === 1 && (
           <div>
-            <label className="block mb-1 font-medium">Pick a Schema</label>
-            <Select value={selectedSchema || undefined} onValueChange={handleSchemaChange} disabled={schemasLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder={schemasLoading ? "Loading schemas..." : "Select a schema"} />
-              </SelectTrigger>
-              <SelectContent>
-                {schemasError && <div className="px-3 py-2 text-red-500">{schemasError}</div>}
-                {schemas.map((schema) => (
-                  <SelectItem key={schema} value={schema}>
-                    {schema}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Table Picker */}
-          <div>
-            <label className="block mb-1 font-medium">Pick a Table</label>
-            <Input
-              placeholder="Search tables..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="mb-2"
-              disabled={!selectedSchema || tablesLoading}
+            <MetricPicker
+              onSelect={handleSelectMetric}
+              onCreate={handleCreateMetric}
             />
-            <Select value={selectedTable || undefined} onValueChange={handleTableChange} disabled={!selectedSchema || tablesLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder={tablesLoading ? "Loading tables..." : "Select a table"} />
-              </SelectTrigger>
-              <SelectContent>
-                {tablesError && <div className="px-3 py-2 text-red-500">{tablesError}</div>}
-                {filteredTables.length === 0 && !tablesLoading && (
-                  <div className="px-3 py-2 text-muted-foreground">No tables found</div>
+            <MetricFormDialog open={isMetricDialogOpen} onOpenChange={setIsMetricDialogOpen} onSave={handleSaveMetric} />
+            <div className="mt-4 flex justify-center">
+              <Button variant="ghost" onClick={() => { setSelectedMetric(null); setStep(2); }}>
+                Skip metric selection and define chart from table
+              </Button>
+            </div>
+          </div>
+        )}
+        {/* Step 2: Chart Details (existing form) */}
+        {step === 2 && (
+          <div className="flex flex-col lg:flex-row gap-8 w-auto min-w-fit">
+            <div className="flex-1 min-w-[320px] max-w-none w-auto">
+              <Button variant="ghost" size="sm" onClick={handleBackToMetric} className="mb-2">← Back to Metric</Button>
+              {/* Show selected metric summary if present */}
+              {selectedMetric && (
+                <div className="mb-4 p-3 border rounded bg-muted/30">
+                  <div className="font-semibold text-base mb-1">Metric Selected:</div>
+                  <div className="font-medium">{selectedMetric.name}</div>
+                  {selectedMetric.description && <div className="text-xs text-muted-foreground mb-1">{selectedMetric.description}</div>}
+                  <div className="text-xs text-muted-foreground">
+                    <div>Table: <span className="font-mono">{selectedMetric.table || selectedMetric.table_name}</span></div>
+                    <div>Dimensions: <span className="font-mono">{(selectedMetric.dimension_columns || []).join(", ")}</span></div>
+                    <div>Aggregation: <span className="font-mono">{selectedMetric.aggregation_function}</span>{selectedMetric.aggregation_column ? ` on ${selectedMetric.aggregation_column}` : ""}</div>
+                    <div>Time Column: <span className="font-mono">{selectedMetric.temporal_column}</span></div>
+                    <div>Time Grain: <span className="font-mono">{selectedMetric.aggregation_period || selectedMetric.available_time_grain || selectedMetric.aggregation || "-"}</span></div>
+                  </div>
+                </div>
+              )}
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                {/* Only show schema, table, xaxis, yaxis if no metric is selected */}
+                {!selectedMetric && (
+                  <>
+                    {/* Schema Picker */}
+                    <div>
+                      <label className="block mb-1 font-medium">Pick a Schema</label>
+                      <Select value={selectedSchema || undefined} onValueChange={handleSchemaChange} disabled={schemasLoading}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={schemasLoading ? "Loading schemas..." : "Select a schema"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {schemasError && <div className="px-3 py-2 text-red-500">{schemasError}</div>}
+                          {schemas.map((schema) => (
+                            <SelectItem key={schema} value={schema}>
+                              {schema}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Table Picker */}
+                    <div>
+                      <label className="block mb-1 font-medium">Pick a Table</label>
+                      <Input
+                        placeholder="Search tables..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="mb-2"
+                        disabled={!selectedSchema || tablesLoading}
+                      />
+                      <Select value={selectedTable || undefined} onValueChange={handleTableChange} disabled={!selectedSchema || tablesLoading}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={tablesLoading ? "Loading tables..." : "Select a table"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tablesError && <div className="px-3 py-2 text-red-500">{tablesError}</div>}
+                          {filteredTables.length === 0 && !tablesLoading && (
+                            <div className="px-3 py-2 text-muted-foreground">No tables found</div>
+                          )}
+                          {filteredTables.map((table) => (
+                            <SelectItem key={table} value={table}>
+                              {table}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* X Axis Picker */}
+                    <div>
+                      <label className="block mb-1 font-medium">X Axis Column</label>
+                      <Select value={xAxis || undefined} onValueChange={setXAxis} disabled={!selectedTable || columnsLoading}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={columnsLoading ? "Loading columns..." : "Select x axis column"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {columnsError && <div className="px-3 py-2 text-red-500">{columnsError}</div>}
+                          {columns.map((col) => (
+                            <SelectItem key={col.name} value={col.name}>
+                              {col.name} <span className="text-xs text-muted-foreground">({col.data_type})</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Y Axis Picker */}
+                    <div>
+                      <label className="block mb-1 font-medium">Y Axis Column</label>
+                      <Select value={yAxis || undefined} onValueChange={setYAxis} disabled={!selectedTable || columnsLoading}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={columnsLoading ? "Loading columns..." : "Select y axis column"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {columnsError && <div className="px-3 py-2 text-red-500">{columnsError}</div>}
+                          {columns.map((col) => (
+                            <SelectItem key={col.name} value={col.name}>
+                              {col.name} <span className="text-xs text-muted-foreground">({col.data_type})</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
                 )}
-                {filteredTables.map((table) => (
-                  <SelectItem key={table} value={table}>
-                    {table}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* X Axis Picker */}
-          <div>
-            <label className="block mb-1 font-medium">X Axis Column</label>
-            <Select value={xAxis || undefined} onValueChange={setXAxis} disabled={!selectedTable || columnsLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder={columnsLoading ? "Loading columns..." : "Select x axis column"} />
-              </SelectTrigger>
-              <SelectContent>
-                {columnsError && <div className="px-3 py-2 text-red-500">{columnsError}</div>}
-                {columns.map((col) => (
-                  <SelectItem key={col.name} value={col.name}>
-                    {col.name} <span className="text-xs text-muted-foreground">({col.data_type})</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Y Axis Picker */}
-          <div>
-            <label className="block mb-1 font-medium">Y Axis Column</label>
-            <Select value={yAxis || undefined} onValueChange={setYAxis} disabled={!selectedTable || columnsLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder={columnsLoading ? "Loading columns..." : "Select y axis column"} />
-              </SelectTrigger>
-              <SelectContent>
-                {columnsError && <div className="px-3 py-2 text-red-500">{columnsError}</div>}
-                {columns.map((col) => (
-                  <SelectItem key={col.name} value={col.name}>
-                    {col.name} <span className="text-xs text-muted-foreground">({col.data_type})</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Chart Name */}
-          <div>
-            <label className="block mb-1 font-medium">Chart Name</label>
-            <Input
-              placeholder="Enter chart name"
-              value={chartName}
-              onChange={(e) => setChartName(e.target.value)}
-            />
-          </div>
-          
-          {/* Chart Description */}
-          <div>
-            <label className="block mb-1 font-medium">Chart Description</label>
-            <Textarea
-              placeholder="Enter chart description"
-              value={chartDescription}
-              onChange={(e) => setChartDescription(e.target.value)}
-            />
-          </div>
-          
-          {/* Chart Type */}
-          <div>
-            <label className="block mb-1 font-medium">Chart Type</label>
-            <Select value={chartType} onValueChange={setChartType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select chart type" />
-              </SelectTrigger>
-              <SelectContent>
-                {getSupportedChartTypes(chartLibraryType as 'echarts' | 'nivo' | 'recharts').map((type) => {
-                  const config = CHART_TYPE_CONFIGS[type];
-                  return (
-                    <SelectItem key={type} value={type}>
-                      <div className="flex items-center gap-2">
-                        <span>{config.icon}</span>
-                        <div>
-                          <div>{config.name}</div>
-                          <div className="text-xs text-muted-foreground">{config.description}</div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Pagination Controls for ECharts */}
-          {chartLibraryType === 'echarts' && (
-            <div>
-              <label className="block mb-1 font-medium">Data Limit</label>
-              <Select 
-                value={currentLimit.toString()} 
-                onValueChange={(value) => {
-                  const newLimit = parseInt(value);
-                  setCurrentLimit(newLimit);
-                  setCurrentOffset(0); // Reset to first page when changing limit
-                  // If we have a generated chart, refresh it with new limit
-                  if (generatedChart) {
-                    generateChartData(0);
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select number of records" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10 records</SelectItem>
-                  <SelectItem value="25">25 records</SelectItem>
-                  <SelectItem value="50">50 records</SelectItem>
-                  <SelectItem value="100">100 records</SelectItem>
-                </SelectContent>
-              </Select>
-              {totalRecords && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  Showing {currentOffset + 1}-{Math.min(currentOffset + currentLimit, totalRecords)} of {totalRecords} records
+                {/* Chart Name */}
+                <div>
+                  <label className="block mb-1 font-medium">Chart Name</label>
+                  <Input
+                    placeholder="Enter chart name"
+                    value={chartName}
+                    onChange={(e) => setChartName(e.target.value)}
+                  />
                 </div>
-              )}
-            </div>
-          )}
-          
-          {/* Chart Validation Messages */}
-          {chartValidation && !chartValidation.isValid && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <div className="text-sm font-medium text-yellow-800 mb-1">⚠️ Chart Recommendations</div>
-              {chartValidation.errors.length > 0 && (
-                <div className="text-xs text-yellow-700 mb-2">
-                  Issues: {chartValidation.errors.join(', ')}
+                {/* Chart Description */}
+                <div>
+                  <label className="block mb-1 font-medium">Chart Description</label>
+                  <Textarea
+                    placeholder="Enter chart description"
+                    value={chartDescription}
+                    onChange={(e) => setChartDescription(e.target.value)}
+                  />
                 </div>
-              )}
-              {chartValidation.recommendations && (
-                <div className="text-xs text-yellow-700">
-                  {chartValidation.recommendations.map((rec, index) => (
-                    <div key={index}>• {rec}</div>
-                  ))}
+                {/* Chart Type */}
+                <div>
+                  <label className="block mb-1 font-medium">Chart Type</label>
+                  <Select value={chartType} onValueChange={setChartType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select chart type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getSupportedChartTypes(chartLibraryType as 'echarts' | 'nivo' | 'recharts').map((type) => {
+                        const config = CHART_TYPE_CONFIGS[type];
+                        return (
+                          <SelectItem key={type} value={type}>
+                            <div className="flex items-center gap-2">
+                              <span>{config.icon}</span>
+                              <div>
+                                <div>{config.name}</div>
+                                <div className="text-xs text-muted-foreground">{config.description}</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
-            </div>
-          )}
-          
-          {chartValidation && chartValidation.isValid && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <div className="text-sm font-medium text-green-800">✅ Chart configuration looks good!</div>
-            </div>
-          )}
-          
-          <Button 
-            type="submit" 
-            className="w-full mt-2" 
-            disabled={!selectedSchema || !selectedTable || !xAxis || !yAxis || !chartName || generating}
-          >
-            {generating ? 'Generating...' : 'Generate Chart'}
-          </Button>
-          
-          {generateError && (
-            <div className="text-red-500 text-sm">{generateError}</div>
-          )}
-        </form>
-      </div>
-      
-      {/* Chart Preview Section */}
-      <div className="lg:col-span-7 lg:border-l lg:pl-6">
-        <h3 className="text-lg font-medium mb-4">Chart Preview</h3>
-        
-        {generating && (
-          <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg">
-            <div className="text-muted-foreground">Generating chart...</div>
-          </div>
-        )}
-        
-        {generateError && (
-          <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg">
-            <div className="text-red-500">Error generating chart</div>
-          </div>
-        )}
-        
-        {!generatedChart && !generating && !generateError && (
-          <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg border-2 border-dashed">
-            <div className="text-center text-muted-foreground">
-              {editChart ? (
-                <>
-                  <p>Loading chart data...</p>
-                  <p className="text-sm">Please wait while we load your chart</p>
-                </>
-              ) : (
-                <>
-                  <p>Fill out the form and click "Generate Chart"</p>
-                  <p className="text-sm">to see preview here</p>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-        
-        {generatedChart && chartData && !generating && (
-          <div className="space-y-4">
-            {chartLibraryType === 'echarts' && (
-              <>
-                <EChartsComponent
-                  data={chartData}
-                  chartName={generatedChart.chartName}
-                  chartDescription={generatedChart.chartDescription}
-                  xAxisLabel={generatedChart.xAxis}
-                  yAxisLabel={generatedChart.yAxis}
-                  chartType={chartType}
-                />
-                
                 {/* Pagination Controls for ECharts */}
-                {totalRecords && totalRecords > currentLimit && (
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div className="text-sm text-muted-foreground">
-                      Page {Math.floor(currentOffset / currentLimit) + 1} of {Math.ceil(totalRecords / currentLimit)}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const newOffset = Math.max(0, currentOffset - currentLimit);
-                          generateChartData(newOffset);
-                        }}
-                        disabled={currentOffset === 0 || generating}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const newOffset = currentOffset + currentLimit;
-                          generateChartData(newOffset);
-                        }}
-                        disabled={!hasMoreData || generating}
-                      >
-                        Next
-                      </Button>
-                    </div>
+                {chartLibraryType === 'echarts' && (
+                  <div>
+                    <label className="block mb-1 font-medium">Data Limit</label>
+                    <Select 
+                      value={currentLimit.toString()} 
+                      onValueChange={(value) => {
+                        const newLimit = parseInt(value);
+                        setCurrentLimit(newLimit);
+                        setCurrentOffset(0); // Reset to first page when changing limit
+                        // If we have a generated chart, refresh it with new limit
+                        if (generatedChart) {
+                          generateChartData(0);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select number of records" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10 records</SelectItem>
+                        <SelectItem value="25">25 records</SelectItem>
+                        <SelectItem value="50">50 records</SelectItem>
+                        <SelectItem value="100">100 records</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {totalRecords && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Showing {currentOffset + 1}-{Math.min(currentOffset + currentLimit, totalRecords)} of {totalRecords} records
+                      </div>
+                    )}
                   </div>
                 )}
-              </>
-            )}
-            
-            {chartLibraryType === 'nivo' && (
-              <NivoComponent
-                data={chartData}
-                chartName={generatedChart.chartName}
-                chartDescription={generatedChart.chartDescription}
-                xAxisLabel={generatedChart.xAxis}
-                yAxisLabel={generatedChart.yAxis}
-                chartType={chartType}
-              />
-            )}
-            
-            {chartLibraryType === 'recharts' && (
-              <RechartsComponent
-                data={chartData}
-                chartName={generatedChart.chartName}
-                chartDescription={generatedChart.chartDescription}
-                xAxisLabel={generatedChart.xAxis}
-                yAxisLabel={generatedChart.yAxis}
-                chartType={chartType}
-              />
-            )}
-            
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSaveChart}
-                disabled={saving}
-                className="flex-1"
-              >
-                {saving ? (editChart ? 'Updating...' : 'Saving...') : (editChart ? 'Update Chart' : 'Save Chart')}
-              </Button>
-              {editChart && onDelete && (
+                {/* Chart Validation Messages */}
+                {chartValidation && !chartValidation.isValid && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <div className="text-sm font-medium text-yellow-800 mb-1">⚠️ Chart Recommendations</div>
+                    {chartValidation.errors.length > 0 && (
+                      <div className="text-xs text-yellow-700 mb-2">
+                        Issues: {chartValidation.errors.join(', ')}
+                      </div>
+                    )}
+                    {chartValidation.recommendations && (
+                      <div className="text-xs text-yellow-700">
+                        {chartValidation.recommendations.map((rec, index) => (
+                          <div key={index}>• {rec}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {chartValidation && chartValidation.isValid && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="text-sm font-medium text-green-800">✅ Chart configuration looks good!</div>
+                  </div>
+                )}
                 <Button 
-                  variant="destructive"
-                  onClick={handleDeleteChart}
-                  disabled={saving}
+                  type="submit" 
+                  className="w-full mt-2" 
+                  disabled={!chartName || generating}
                 >
-                  {saving ? 'Deleting...' : 'Delete'}
+                  {generating ? 'Generating...' : 'Generate Chart'}
                 </Button>
-              )}
-              <Button 
-                variant="outline"
-                onClick={resetForm}
-                disabled={saving}
-              >
-                Reset
-              </Button>
+                {generateError && (
+                  <div className="text-red-500 text-sm">{generateError}</div>
+                )}
+              </form>
             </div>
-            
-            {saveError && (
-              <div className="text-red-500 text-sm">{saveError}</div>
-            )}
+            {/* Chart Preview Section */}
+            <div className="flex-auto w-auto min-h-[400px] overflow-x-auto lg:border-l border-t lg:border-t-0 border-border pl-0 lg:pl-6 pt-6 lg:pt-0 flex flex-col bg-background p-4">
+              <h3 className="text-lg font-medium mb-4">Chart Preview</h3>
+              {generating && (
+                <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg">
+                  <div className="text-muted-foreground">Generating chart...</div>
+                </div>
+              )}
+              {generateError && (
+                <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg">
+                  <div className="text-red-500">Error generating chart</div>
+                </div>
+              )}
+              {!generatedChart && !generating && !generateError && (
+                <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg border-2 border-dashed">
+                  <div className="text-center text-muted-foreground">
+                    <p>Fill out the form and click "Generate Chart"</p>
+                    <p className="text-sm">to see preview here</p>
+                  </div>
+                </div>
+              )}
+              {generatedChart && chartData && !generating && (
+                <div className="flex flex-col items-center justify-center">
+                  <div className="flex items-center justify-center w-full min-h-[240px] max-h-[320px]">
+                    {chartLibraryType === 'echarts' && (
+                      <div className="w-full h-auto flex items-center justify-center">
+                        <EChartsComponent
+                          data={chartData}
+                          chartName={generatedChart.chartName}
+                          chartDescription={generatedChart.chartDescription}
+                          xAxisLabel={generatedChart.xAxis}
+                          yAxisLabel={generatedChart.yAxis}
+                          chartType={chartType}
+                        />
+                      </div>
+                    )}
+                    {chartLibraryType === 'nivo' && (
+                      <div className="w-full h-auto flex items-center justify-center">
+                        <NivoComponent
+                          data={chartData}
+                          chartName={generatedChart.chartName}
+                          chartDescription={generatedChart.chartDescription}
+                          xAxisLabel={generatedChart.xAxis}
+                          yAxisLabel={generatedChart.yAxis}
+                          chartType={chartType}
+                        />
+                      </div>
+                    )}
+                    {chartLibraryType === 'recharts' && (
+                      <div className="w-full h-auto flex items-center justify-center">
+                        <RechartsComponent
+                          data={chartData}
+                          chartName={generatedChart.chartName}
+                          chartDescription={generatedChart.chartDescription}
+                          xAxisLabel={generatedChart.xAxis}
+                          yAxisLabel={generatedChart.yAxis}
+                          chartType={chartType}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-8 w-full items-center justify-center">
+                    <Button 
+                      onClick={handleSaveChart}
+                      disabled={saving}
+                      className="w-full sm:w-auto"
+                    >
+                      {saving ? (editChart ? 'Updating...' : 'Saving...') : (editChart ? 'Update Chart' : 'Save Chart')}
+                    </Button>
+                    {editChart && onDelete && (
+                      <Button 
+                        variant="destructive"
+                        onClick={handleDeleteChart}
+                        disabled={saving}
+                        className="w-full sm:w-auto"
+                      >
+                        {saving ? 'Deleting...' : 'Delete'}
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline"
+                      onClick={resetForm}
+                      disabled={saving}
+                      className="w-full sm:w-auto"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                  {saveError && (
+                    <div className="text-red-500 text-sm mt-2">{saveError}</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </div>
-    </div>
       </DialogContent>
     </Dialog>
   );
