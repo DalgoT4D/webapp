@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3, User, LogOut, ChevronDown, Bell, Menu } from "lucide-react";
+import { BarChart3, User, LogOut, ChevronDown, Bell, Menu, AlignJustify } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,9 +19,16 @@ import { useAuthStore } from "@/stores/authStore";
 interface HeaderProps {
   onMenuToggle?: () => void;
   hideMenu?: boolean;
+  onSidebarToggle?: () => void;
+  isSidebarCollapsed?: boolean;
 }
 
-export function Header({ onMenuToggle, hideMenu = false }: HeaderProps) {
+export function Header({ 
+  onMenuToggle, 
+  hideMenu = false, 
+  onSidebarToggle,
+  isSidebarCollapsed = false 
+}: HeaderProps) {
   const router = useRouter();
   const { 
     currentOrg, 
@@ -92,28 +99,44 @@ export function Header({ onMenuToggle, hideMenu = false }: HeaderProps) {
 
   return (
     <div className="flex h-16 items-center justify-between w-full">
-      {/* Left side - Mobile menu toggle and logo */}
+      {/* Left side - Logo, Sidebar toggle, and status */}
       <div className="flex items-center gap-4">
+        {/* Desktop Sidebar Toggle - Now with hamburger icon */}
+        {onSidebarToggle && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onSidebarToggle}
+            className="hidden md:flex h-9 w-9"
+            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <AlignJustify className="h-5 w-5" />
+          </Button>
+        )}
+
         {/* Mobile Menu Toggle */}
         {!hideMenu && onMenuToggle && (
-          <Button variant="ghost" size="icon" onClick={onMenuToggle} className="md:hidden">
+          <Button variant="ghost" size="icon" onClick={onMenuToggle} className="md:hidden h-9 w-9">
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle menu</span>
           </Button>
         )}
         
-        {/* Logo - Hidden on desktop since it's shown in sidebar */}
-        <div className="flex items-center gap-2 md:hidden">
-          <BarChart3 className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold">Dalgo</span>
+        {/* Dalgo Logo - Always visible */}
+        <div className="flex items-center gap-3">
+          <BarChart3 className="h-7 w-7 text-primary" />
+          <span className="text-xl font-bold text-foreground">Dalgo</span>
         </div>
 
-        {/* Desktop: Just the Dalgo text or empty space for org switching status */}
+        {/* Organization switching status */}
         <div className="hidden md:block">
           {isOrgSwitching && (
-            <span className="text-sm text-muted-foreground font-medium">
-              Switching organization...
-            </span>
+            <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
+              <div className="h-2 w-2 bg-primary rounded-full animate-pulse"></div>
+              <span className="text-sm text-primary font-medium">
+                Switching organization...
+              </span>
+            </div>
           )}
         </div>
       </div>
@@ -121,7 +144,7 @@ export function Header({ onMenuToggle, hideMenu = false }: HeaderProps) {
       {/* Right side actions */}
       <div className="flex items-center gap-3">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative h-9 w-9">
           <Bell className="h-5 w-5" />
           <span className="sr-only">Notifications</span>
           {/* Notification badge */}
@@ -134,8 +157,8 @@ export function Header({ onMenuToggle, hideMenu = false }: HeaderProps) {
         {currentOrg && availableOrgs.length > 1 && (
           <DropdownMenu open={isOrgMenuOpen} onOpenChange={setIsOrgMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 max-w-[200px]" disabled={isOrgSwitching}>
-                <span className="truncate">{currentOrg.name}</span>
+              <Button variant="outline" className="gap-2 max-w-[200px] h-9" disabled={isOrgSwitching}>
+                <span className="truncate font-medium">{currentOrg.name}</span>
                 <ChevronDown className="h-4 w-4 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
@@ -163,9 +186,11 @@ export function Header({ onMenuToggle, hideMenu = false }: HeaderProps) {
 
         {/* Current organization name (when only one org) */}
         {currentOrg && availableOrgs.length === 1 && (
-          <span className="text-sm font-medium text-muted-foreground max-w-[150px] truncate">
-            {currentOrg.name}
-          </span>
+          <div className="px-3 py-1 bg-muted/50 rounded-lg">
+            <span className="text-sm font-medium text-foreground max-w-[150px] truncate">
+              {currentOrg.name}
+            </span>
+          </div>
         )}
 
         {/* Profile Menu */}
@@ -173,7 +198,7 @@ export function Header({ onMenuToggle, hideMenu = false }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="text-sm">{getInitials(userEmail)}</AvatarFallback>
+                <AvatarFallback className="text-sm font-medium">{getInitials(userEmail)}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>

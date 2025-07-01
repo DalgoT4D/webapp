@@ -6,6 +6,12 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { 
   BarChart3, 
   Database, 
@@ -14,9 +20,7 @@ import {
   AlertTriangle, 
   ChevronDown,
   Home,
-  LayoutDashboard,
-  ChevronLeft,
-  ChevronRight
+  LayoutDashboard
 } from "lucide-react"
 import { Header } from "./header"
 import { useAuthStore } from "@/stores/authStore"
@@ -102,17 +106,21 @@ const getNavItems = (currentPath: string): NavItemType[] => [
   },
 ]
 
-// Logo component
-function Logo({ isCollapsed }: { isCollapsed: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      <BarChart3 className="h-6 w-6 text-primary flex-shrink-0" />
-      {!isCollapsed && <span className="text-xl font-bold">Dalgo</span>}
-    </div>
-  )
+// Flatten menu items for collapsed view
+const getFlattenedNavItems = (items: NavItemType[]): NavItemType[] => {
+  const flattened: NavItemType[] = []
+  
+  items.forEach(item => {
+    flattened.push(item)
+    if (item.children) {
+      flattened.push(...item.children)
+    }
+  })
+  
+  return flattened
 }
 
-// Profile component
+// Profile component for sidebar footer
 function Profile({ isCollapsed }: { isCollapsed: boolean }) {
   const { currentOrg, getCurrentOrgUser } = useAuthStore()
   const currentUser = getCurrentOrgUser()
@@ -120,23 +128,67 @@ function Profile({ isCollapsed }: { isCollapsed: boolean }) {
     ? currentUser.email.split("@")[0].split(".").map(part => part.charAt(0).toUpperCase()).join("").slice(0, 2)
     : "U";
 
+  if (isCollapsed) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center justify-center p-3 rounded-lg bg-muted/20">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-medium text-primary">{userInitials}</span>
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="ml-2">
+            <div className="text-sm">
+              <p className="font-medium">{currentOrg?.name || "Organization"}</p>
+              <p className="text-muted-foreground">{currentUser?.new_role_slug || "User"}</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20">
       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
         <span className="text-sm font-medium text-primary">{userInitials}</span>
       </div>
-      {!isCollapsed && (
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium truncate">{currentOrg?.name || "Organization"}</p>
-          <p className="text-xs text-muted-foreground truncate">{currentUser?.new_role_slug || "User"}</p>
-        </div>
-      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium truncate">{currentOrg?.name || "Organization"}</p>
+        <p className="text-xs text-muted-foreground truncate">{currentUser?.new_role_slug || "User"}</p>
+      </div>
     </div>
   )
 }
 
-// Desktop Navigation Item Component
-function NavItem({ item, isCollapsed }: { item: NavItemType; isCollapsed: boolean }) {
+// Collapsed navigation item component
+function CollapsedNavItem({ item }: { item: NavItemType }) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            href={item.href}
+            className={cn(
+              "flex items-center justify-center w-full p-3 rounded-lg hover:bg-accent/50 transition-colors group",
+              item.isActive && "bg-accent font-medium"
+            )}
+          >
+            <item.icon className="h-5 w-5 flex-shrink-0" />
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="ml-2">
+          <p className="font-medium">{item.title}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
+// Expanded navigation item component
+function ExpandedNavItem({ item }: { item: NavItemType }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const hasChildren = item.children && item.children.length > 0
 
@@ -153,39 +205,37 @@ function NavItem({ item, isCollapsed }: { item: NavItemType; isCollapsed: boolea
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className={cn(
-            "flex items-center justify-between w-full p-3 text-left rounded-lg hover:bg-accent transition-colors",
+            "flex items-center justify-between w-full p-3 text-left rounded-lg hover:bg-accent/50 transition-colors group",
             item.isActive && "bg-accent"
           )}
           title={item.title}
         >
           <div className="flex items-center gap-3">
             <item.icon className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span className="font-medium">{item.title}</span>}
+            <span className="font-medium">{item.title}</span>
           </div>
-          {!isCollapsed && (
-            <ChevronDown 
-              className={cn(
-                "h-4 w-4 transition-transform flex-shrink-0",
-                isExpanded && "rotate-180"
-              )} 
-            />
-          )}
+          <ChevronDown 
+            className={cn(
+              "h-4 w-4 transition-transform flex-shrink-0 text-muted-foreground group-hover:text-foreground",
+              isExpanded && "rotate-180"
+            )} 
+          />
         </button>
         
-        {isExpanded && !isCollapsed && (
+        {isExpanded && (
           <div className="ml-8 space-y-1">
             {item.children?.map((child, index) => (
               <Link
                 key={index}
                 href={child.href}
                 className={cn(
-                  "flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors",
-                  child.isActive && "bg-accent"
+                  "flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50 transition-colors text-sm",
+                  child.isActive && "bg-accent font-medium"
                 )}
                 title={child.title}
               >
                 <child.icon className="h-4 w-4 flex-shrink-0" />
-                <span className="text-sm">{child.title}</span>
+                <span>{child.title}</span>
               </Link>
             ))}
           </div>
@@ -198,13 +248,13 @@ function NavItem({ item, isCollapsed }: { item: NavItemType; isCollapsed: boolea
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors",
-        item.isActive && "bg-accent"
+        "flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors group",
+        item.isActive && "bg-accent font-medium"
       )}
       title={item.title}
     >
       <item.icon className="h-5 w-5 flex-shrink-0" />
-      {!isCollapsed && <span className="font-medium">{item.title}</span>}
+      <span className="font-medium">{item.title}</span>
     </Link>
   )
 }
@@ -279,6 +329,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const navItems = getNavItems(pathname)
+  const flattenedNavItems = getFlattenedNavItems(navItems)
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-background">
@@ -288,6 +339,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <Header 
             onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             hideMenu={false}
+            onSidebarToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            isSidebarCollapsed={isSidebarCollapsed}
           />
         </div>
       </header>
@@ -299,27 +352,19 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           "hidden md:flex flex-col border-r bg-background transition-all duration-300 flex-shrink-0",
           isSidebarCollapsed ? "w-16" : "w-64"
         )}>
-          {/* Sidebar Header */}
-          <div className="p-4 border-b flex items-center justify-between">
-            <Logo isCollapsed={isSidebarCollapsed} />
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="h-8 w-8"
-            >
-              {isSidebarCollapsed ? 
-                <ChevronRight className="h-4 w-4" /> : 
-                <ChevronLeft className="h-4 w-4" />
-              }
-            </Button>
-          </div>
-          
           {/* Sidebar Navigation */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {navItems.map((item, index) => (
-              <NavItem key={index} item={item} isCollapsed={isSidebarCollapsed} />
-            ))}
+            {isSidebarCollapsed ? (
+              // Collapsed: Show all items (including nested) as individual icons with tooltips
+              flattenedNavItems.map((item, index) => (
+                <CollapsedNavItem key={`${item.href}-${index}`} item={item} />
+              ))
+            ) : (
+              // Expanded: Show hierarchical structure
+              navItems.map((item, index) => (
+                <ExpandedNavItem key={index} item={item} />
+              ))
+            )}
           </div>
           
           {/* Sidebar Footer */}
@@ -333,7 +378,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <SheetContent side="left" className="p-0 w-72">
             <div className="flex flex-col h-full">
               <div className="p-4 border-b">
-                <Logo isCollapsed={false} />
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="h-6 w-6 text-primary" />
+                  <span className="text-xl font-bold">Dalgo</span>
+                </div>
               </div>
               
               <div className="flex-1 p-4 space-y-2 overflow-y-auto">
