@@ -1,40 +1,41 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import {
-  BarChart3,
-  FileText,
-  Home,
-  LayoutDashboard,
-  Settings,
-  Database,
-  Menu,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  AlertTriangle,
-  Power,
-  ChevronDown,
-} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  useSidebar,
+import { 
+  Sidebar, 
+  SidebarContent, 
+  SidebarFooter, 
+  SidebarHeader, 
+  SidebarMenu, 
+  SidebarMenuButton, 
+  SidebarMenuItem, 
+  SidebarProvider, 
+  SidebarTrigger,
+  useSidebar
 } from "@/components/ui/sidebar"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { 
+  BarChart3, 
+  Database, 
+  Settings, 
+  FileText, 
+  AlertTriangle, 
+  PanelLeftClose, 
+  PanelLeft,
+  ChevronDown,
+  Monitor,
+  Home,
+  LayoutDashboard,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react"
+import { Header } from "./header"
+import { useAuthStore } from "@/stores/authStore"
 
 // Define types for navigation items
 interface NavItemType {
@@ -146,17 +147,23 @@ function Logo() {
 // Profile component that adapts to sidebar state
 function Profile() {
   const { state } = useSidebar()
+  const { currentOrg, getCurrentOrgUser } = useAuthStore()
   const isCollapsed = state === "collapsed"
+  
+  const currentUser = getCurrentOrgUser()
+  const userInitials = currentUser?.email 
+    ? currentUser.email.split("@")[0].split(".").map(part => part.charAt(0).toUpperCase()).join("").slice(0, 2)
+    : "U";
 
   return (
     <div className="flex items-center gap-2">
       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-        <span className="text-sm font-medium text-primary">MH</span>
+        <span className="text-sm font-medium text-primary">{userInitials}</span>
       </div>
       {!isCollapsed && (
         <div>
-          <p className="text-sm font-medium">Maternal Health Org</p>
-          <p className="text-xs text-muted-foreground">Admin</p>
+          <p className="text-sm font-medium">{currentOrg?.name || "Organization"}</p>
+          <p className="text-xs text-muted-foreground">{currentUser?.new_role_slug || "User"}</p>
         </div>
       )}
     </div>
@@ -200,7 +207,7 @@ function NavItem({ item, level = 0 }: { item: NavItemType; level?: number }) {
               />
             </div>
           ) : (
-            <Link href={item.href}>
+            <Link href={item.href} className="flex items-center gap-2">
               <item.icon className="h-5 w-5" />
               <span>{item.title}</span>
             </Link>
@@ -209,9 +216,16 @@ function NavItem({ item, level = 0 }: { item: NavItemType; level?: number }) {
       </SidebarMenuItem>
       
       {hasChildren && isExpanded && !isCollapsed && (
-        <div className="ml-4 border-l pl-2">
-          {item.children.map((child) => (
-            <NavItem key={child.title} item={child} level={level + 1} />
+        <div className="pl-4 border-l ml-6 space-y-1">
+          {item.children?.map((child, index) => (
+            <SidebarMenuItem key={index}>
+              <SidebarMenuButton asChild isActive={child.isActive} tooltip={child.title}>
+                <Link href={child.href} className="flex items-center gap-2">
+                  <child.icon className="h-4 w-4" />
+                  <span>{child.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           ))}
         </div>
       )}
@@ -231,156 +245,129 @@ function MobileNavItem({ item, level = 0, onClose }: { item: NavItemType; level?
     }
   }, [item.children, hasChildren])
 
-  return (
-    <div>
-      {hasChildren ? (
+  if (hasChildren) {
+    return (
+      <div className="space-y-1">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className={cn(
-            "flex items-center justify-between w-full rounded-lg px-3 py-2 text-sm font-medium",
-            item.isActive
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+            "flex items-center justify-between w-full p-2 text-left rounded-md hover:bg-accent",
+            item.isActive && "bg-accent"
           )}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <item.icon className="h-5 w-5" />
-            {item.title}
+            <span>{item.title}</span>
           </div>
-          <ChevronDown 
-            className={cn(
-              "h-4 w-4 transition-transform",
-              isExpanded && "rotate-180"
-            )} 
-          />
+          <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
         </button>
-      ) : (
-        <Link
-          href={item.href}
-          onClick={onClose}
-          className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
-            item.isActive
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-          )}
-        >
-          <item.icon className="h-5 w-5" />
-          {item.title}
-        </Link>
+        {isExpanded && (
+          <div className="ml-6 space-y-1">
+            {item.children?.map((child, index) => (
+              <Link
+                key={index}
+                href={child.href}
+                onClick={onClose}
+                className={cn(
+                  "flex items-center gap-2 p-2 rounded-md hover:bg-accent",
+                  child.isActive && "bg-accent"
+                )}
+              >
+                <child.icon className="h-4 w-4" />
+                <span>{child.title}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      href={item.href}
+      onClick={onClose}
+      className={cn(
+        "flex items-center gap-2 p-2 rounded-md hover:bg-accent",
+        item.isActive && "bg-accent"
       )}
-      
-      {hasChildren && isExpanded && (
-        <div className="ml-4 mt-1 space-y-1">
-          {item.children.map((child) => (
-            <MobileNavItem key={child.title} item={child} level={level + 1} onClose={onClose} />
-          ))}
-        </div>
-      )}
-    </div>
+    >
+      <item.icon className="h-5 w-5" />
+      <span>{item.title}</span>
+    </Link>
   )
 }
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false)
   const pathname = usePathname()
-  const [navItems, setNavItems] = useState(getNavItems(pathname))
-  const router = useRouter();
-
-  // Update nav items when pathname changes
-  useEffect(() => {
-    setNavItems(getNavItems(pathname))
-  }, [pathname])
-
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("selectedOrg");
-    router.push("/login");
-  };
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const navItems = getNavItems(pathname)
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen">
-        {/* Desktop Sidebar */}
-        <Sidebar className="hidden md:flex" collapsible="icon">
-          <SidebarHeader className="border-b p-4 flex flex-col items-center gap-2">
-            <Logo />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleLogout}
-                    aria-label="Logout"
-                  >
-                    <Power className="h-5 w-5 text-red-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Logout</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <div className="w-full flex justify-end mt-2">
-              <CustomSidebarTrigger />
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarMenu>
-              {(navItems || []).map((item) => (
-                <NavItem key={item.title} item={item} />
-              ))}
-            </SidebarMenu>
-          </SidebarContent>
-          <SidebarFooter className="border-t p-4">
-            <Profile />
-          </SidebarFooter>
-        </Sidebar>
+    <TooltipProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex flex-col">
+          {/* Header */}
+          <Header 
+            onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            hideMenu={false}
+          />
 
-        {/* Mobile Sidebar */}
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden absolute top-4 left-4 z-10">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-64">
-            <div className="border-b p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                  <span className="text-xl font-bold">Dalgo</span>
+          <div className="flex flex-1">
+            {/* Desktop Sidebar */}
+            <Sidebar className="hidden md:flex">
+              <SidebarHeader className="p-4">
+                <div className="flex items-center justify-between">
+                  <Logo />
+                  <CustomSidebarTrigger />
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
-                  <X className="h-5 w-5" />
-                  <span className="sr-only">Close</span>
-                </Button>
-              </div>
-            </div>
-            <div className="py-4">
-              <nav className="grid gap-1 px-2">
-                {(navItems || []).map((item) => (
-                  <MobileNavItem key={item.title} item={item} onClose={() => setOpen(false)} />
-                ))}
-              </nav>
-            </div>
-            <div className="border-t p-4 mt-auto">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm font-medium text-primary">MH</span>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Maternal Health Org</p>
-                  <p className="text-xs text-muted-foreground">Admin</p>
-                </div>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+              </SidebarHeader>
+              
+              <SidebarContent className="px-4">
+                <SidebarMenu>
+                  {navItems.map((item, index) => (
+                    <NavItem key={index} item={item} />
+                  ))}
+                </SidebarMenu>
+              </SidebarContent>
+              
+              <SidebarFooter className="p-4">
+                <Profile />
+              </SidebarFooter>
+            </Sidebar>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto">{children}</main>
-      </div>
-    </SidebarProvider>
+            {/* Mobile Sidebar */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetContent side="left" className="p-0 w-72">
+                <div className="flex flex-col h-full">
+                  <div className="p-4 border-b">
+                    <Logo />
+                  </div>
+                  
+                  <div className="flex-1 p-4 space-y-1">
+                    {navItems.map((item, index) => (
+                      <MobileNavItem 
+                        key={index} 
+                        item={item} 
+                        onClose={() => setIsMobileMenuOpen(false)} 
+                      />
+                    ))}
+                  </div>
+                  
+                  <div className="p-4 border-t">
+                    <Profile />
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Main Content */}
+            <main className="flex-1 overflow-auto">
+              {children}
+            </main>
+          </div>
+        </div>
+      </SidebarProvider>
+    </TooltipProvider>
   )
 }

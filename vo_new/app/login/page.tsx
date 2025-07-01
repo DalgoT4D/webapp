@@ -8,28 +8,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { apiPost } from "@/lib/api";
-import { useAuthStore, type Org } from "@/stores/authStore";
+import { useAuthStore, type OrgUser } from "@/stores/authStore";
 
 interface LoginForm {
   username: string;
   password: string;
 }
 
-interface OrgForm {
-  selectedOrg: string;
-}
-
-interface OrgUser {
-  email: string;
-  org: Org;
-  active: boolean;
-  new_role_slug: string;
-  permissions: string[];
-}
-
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, token, setToken, setSelectedOrg, logout, initialize } = useAuthStore();
+  const { 
+    isAuthenticated, 
+    token, 
+    setToken, 
+    setOrgUsers, 
+    setSelectedOrg, 
+    logout, 
+    initialize,
+    selectedOrgSlug,
+    currentOrg
+  } = useAuthStore();
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -38,26 +36,44 @@ export default function LoginPage() {
 
   // Login form
   const {
-    register: registerLogin,
-    handleSubmit: handleLoginSubmit,
-    formState: { errors: loginErrors, isSubmitting: isLoggingIn },
-    setError: setLoginError,
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
   } = useForm<LoginForm>();
-
-  // Organization form  
-  const {
-    register: registerOrg,
-    handleSubmit: handleOrgSubmit,
-    formState: { errors: orgErrors, isSubmitting: isSelectingOrg },
-    setError: setOrgError,
-  } = useForm<OrgForm>();
 
   // Fetch organizations when we have a token
   const { data: orgUsers, error: orgError } = useSWR<OrgUser[]>(
     token ? "/api/currentuserv2" : null
   );
 
-  const orgs = orgUsers?.map(orgUser => orgUser.org) || [];
+  // Handle org data loading and auto-selection
+  useEffect(() => {
+    if (orgUsers && orgUsers.length > 0) {
+      setOrgUsers(orgUsers);
+      
+      // Auto-select organization
+      if (!selectedOrgSlug) {
+        // If no org is selected, select the first one
+        const firstOrg = orgUsers[0].org;
+        setSelectedOrg(firstOrg.slug);
+      } else {
+        // Verify the selected org still exists
+        const orgExists = orgUsers.some(ou => ou.org.slug === selectedOrgSlug);
+        if (!orgExists) {
+          const firstOrg = orgUsers[0].org;
+          setSelectedOrg(firstOrg.slug);
+        }
+      }
+    }
+  }, [orgUsers, selectedOrgSlug, setOrgUsers, setSelectedOrg]);
+
+  // Redirect to main app when authenticated and org is selected
+  useEffect(() => {
+    if (isAuthenticated && token && currentOrg) {
+      router.push("/");
+    }
+  }, [isAuthenticated, token, currentOrg, router]);
 
   // Handle login
   const onLogin = async (data: LoginForm) => {
@@ -70,71 +86,21 @@ export default function LoginPage() {
       if (response?.token) {
         setToken(response.token);
       } else {
-        setLoginError("root", { message: "Invalid response from server" });
+        setError("root", { message: "Invalid response from server" });
       }
     } catch (error: any) {
-      setLoginError("root", { message: error.message || "Login failed" });
+      setError("root", { message: error.message || "Login failed" });
     }
   };
 
-  // Handle organization selection
-  const onOrgSelect = async (data: OrgForm) => {
-    if (!data.selectedOrg) {
-      setOrgError("selectedOrg", { message: "Please select an organization" });
-      return;
-    }
-
-    setSelectedOrg(data.selectedOrg);
-    router.push("/");
-  };
-
-  // If authenticated and we have orgs, show org selection
-  if (isAuthenticated && token && orgs.length > 0) {
+  // Show loading while checking authentication and org selection
+  if (isAuthenticated && token && !currentOrg && !orgError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black relative">
-        <Button
-          onClick={logout}
-          variant="destructive"
-          className="absolute top-4 right-4"
-        >
-          Logout
-        </Button>
-
-        <form
-          onSubmit={handleOrgSubmit(onOrgSelect)}
-          className="w-full max-w-sm space-y-6 rounded-lg bg-white p-8 shadow-md dark:bg-zinc-900"
-        >
-          <h1 className="text-2xl font-bold mb-4 text-center">Select Organization</h1>
-
-          <div>
-            <Label htmlFor="selectedOrg">Organization</Label>
-            <select
-              id="selectedOrg"
-              {...registerOrg("selectedOrg", { required: "Please select an organization" })}
-              className="mt-1 w-full rounded-md border px-3 py-2"
-            >
-              <option value="">-- Select an organization --</option>
-              {orgs.map(org => (
-                <option key={org.slug} value={org.slug}>
-                  {org.name}
-                </option>
-              ))}
-            </select>
-            {orgErrors.selectedOrg && (
-              <p className="text-red-600 text-sm mt-1">{orgErrors.selectedOrg.message}</p>
-            )}
-          </div>
-
-          {orgError && (
-            <div className="text-red-600 text-sm">
-              {orgError.message || "Failed to load organizations"}
-            </div>
-          )}
-
-          <Button type="submit" className="w-full" disabled={isSelectingOrg}>
-            {isSelectingOrg ? "Loading..." : "Continue"}
-          </Button>
-        </form>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg font-medium">Setting up your workspace...</p>
+        </div>
       </div>
     );
   }
@@ -153,22 +119,26 @@ export default function LoginPage() {
       )}
 
       <form
-        onSubmit={handleLoginSubmit(onLogin)}
+        onSubmit={handleSubmit(onLogin)}
         className="w-full max-w-sm space-y-6 rounded-lg bg-white p-8 shadow-md dark:bg-zinc-900"
       >
-        <h1 className="text-2xl font-bold mb-4 text-center">Login</h1>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Welcome to Dalgo</h1>
+          <p className="text-gray-600 dark:text-gray-400">Sign in to your account</p>
+        </div>
 
         <div>
-          <Label htmlFor="username">Username</Label>
+          <Label htmlFor="username">Business Email</Label>
           <Input
             id="username"
             type="text"
             autoComplete="username"
-            {...registerLogin("username", { required: "Username is required" })}
+            placeholder="eg. user@domain.com"
+            {...register("username", { required: "Username is required" })}
             className="mt-1"
           />
-          {loginErrors.username && (
-            <p className="text-red-600 text-sm mt-1">{loginErrors.username.message}</p>
+          {errors.username && (
+            <p className="text-red-600 text-sm mt-1">{errors.username.message}</p>
           )}
         </div>
 
@@ -178,21 +148,41 @@ export default function LoginPage() {
             id="password"
             type="password"
             autoComplete="current-password"
-            {...registerLogin("password", { required: "Password is required" })}
+            placeholder="Enter your password"
+            {...register("password", { required: "Password is required" })}
             className="mt-1"
           />
-          {loginErrors.password && (
-            <p className="text-red-600 text-sm mt-1">{loginErrors.password.message}</p>
+          {errors.password && (
+            <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
           )}
         </div>
 
-        {loginErrors.root && (
-          <div className="text-red-600 text-sm">{loginErrors.root.message}</div>
+        {errors.root && (
+          <div className="text-red-600 text-sm text-center">{errors.root.message}</div>
         )}
 
-        <Button type="submit" className="w-full" disabled={isLoggingIn}>
-          {isLoggingIn ? "Logging in..." : "Login"}
+        {orgError && (
+          <div className="text-red-600 text-sm text-center">
+            Failed to load organizations. Please try again.
+          </div>
+        )}
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Signing in..." : "Sign In"}
         </Button>
+
+        <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+          <a href="/forgot-password" className="hover:underline">
+            Forgot password?
+          </a>
+        </div>
+
+        <div className="text-center text-sm">
+          Not a member?{" "}
+          <a href="/signup" className="text-primary hover:underline font-medium">
+            Sign Up
+          </a>
+        </div>
       </form>
     </div>
   );

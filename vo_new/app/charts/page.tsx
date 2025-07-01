@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MainLayout } from "@/components/main-layout";
+
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 
 // Import chart components
@@ -275,8 +275,7 @@ export default function ChartsPage() {
   );
 
   return (
-    <MainLayout>
-      <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen">
         <div className="p-6">
           {/* Header */}
           <div className="mb-6">
@@ -495,11 +494,10 @@ export default function ChartsPage() {
             onUpdate={handleUpdateChart}
             onDelete={handleDeleteChart}
             title={`${editingChart?.chart_type.charAt(0).toUpperCase() + editingChart?.chart_type.slice(1)} Chart` || 'Chart'}
-            chartLibraryType={editingChart?.chart_type || 'echarts'}
+            chartLibraryType={(editingChart?.chart_type as "echarts" | "nivo" | "recharts") || 'echarts'}
             editChart={editingChart}
           />
         </div>
       </div>
-    </MainLayout>
   );
 } 

@@ -2,11 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { MainLayout } from "@/components/main-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart3, FileText, Database, AlertTriangle, ArrowRight, Download, Image, GripVertical } from "lucide-react"
-import { AuthGuard } from "@/components/auth-guard"
 import ReactECharts from 'echarts-for-react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
@@ -400,9 +398,7 @@ export default function Home() {
   }
 
   return (
-    <AuthGuard>
-      <MainLayout>
-        <div className="flex-1 space-y-8 p-8">
+    <div className="flex-1 space-y-8 p-8">
           {/* Welcome Section */}
           <div className="space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">
@@ -564,8 +560,6 @@ export default function Home() {
               </Card>
             </div>
           </div>
-        </div>
-      </MainLayout>
-    </AuthGuard>
+    </div>
   )
 }
