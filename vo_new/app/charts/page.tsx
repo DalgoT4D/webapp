@@ -206,28 +206,35 @@ export default function ChartsPage() {
     }
   };
 
-  // Chart card component - simplified design
+  // Chart card component - responsive design
   const ChartCard = ({ chart, onEdit, onDelete }: { chart: SavedChart; onEdit: () => void; onDelete: () => void }) => (
     <div 
-      className="border rounded-lg bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="group border rounded-xl bg-card text-card-foreground shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
       onClick={onEdit}
     >
-      {/* Thumbnail */}
-      <div className="p-3 border-b">
-        <SavedChartThumbnail chart={chart} width={280} height={160} />
-      </div>
-      
-      {/* Chart Info */}
-      <div className="p-4">
-        <div className="flex justify-between items-start gap-3 mb-3">
-          <div className="flex-1 min-w-0">
-            <h4 className="font-medium text-sm truncate">{chart.title}</h4>
-            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{chart.description}</p>
-          </div>
+      {/* Thumbnail Container - Fixed Aspect Ratio */}
+      <div className="relative w-full aspect-[16/9] bg-muted/30 border-b">
+        <SavedChartThumbnail 
+          chart={chart} 
+          className="absolute inset-0 w-full h-full"
+        />
+        
+        {/* Hover Overlay */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200" />
+        
+        {/* Chart Type Badge */}
+        <div className="absolute top-3 left-3">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white/90 backdrop-blur-sm text-gray-700 border">
+            {chart.config.chartType}
+          </span>
+        </div>
+        
+        {/* Delete Button */}
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <Button 
-            variant="ghost" 
+            variant="secondary" 
             size="sm"
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+            className="h-8 w-8 p-0 bg-white/90 backdrop-blur-sm hover:bg-red-50 hover:text-red-600 shadow-sm"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
@@ -236,26 +243,49 @@ export default function ChartsPage() {
             🗑️
           </Button>
         </div>
+      </div>
+      
+      {/* Chart Info */}
+      <div className="p-4 space-y-3">
+        {/* Title and Description */}
+        <div>
+          <h4 className="font-semibold text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-200">
+            {chart.title}
+          </h4>
+          {chart.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+              {chart.description}
+            </p>
+          )}
+        </div>
         
         {/* Metadata */}
         <div className="space-y-2">
+          {/* Library Badge */}
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-primary/10 text-primary">
-              {chart.config.chartType}
-            </span>
-            <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-muted text-muted-foreground">
+            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-primary/10 text-primary">
               {chart.chart_type}
             </span>
           </div>
           
+          {/* Data Source Info */}
           <div className="text-xs text-muted-foreground space-y-1">
-            <div>📊 {chart.schema_name}.{chart.table}</div>
-            <div>📈 {chart.config.xAxis} → {chart.config.yAxis}</div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-blue-500">🗃️</span>
+              <span className="font-mono bg-muted/50 px-1.5 py-0.5 rounded text-xs">
+                {chart.schema_name}.{chart.table}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-green-500">📈</span>
+              <span>{chart.config.xAxis} → {chart.config.yAxis}</span>
+            </div>
           </div>
         </div>
         
-        <div className="mt-3 pt-3 border-t">
-          <div className="text-xs text-primary">
+        {/* Action Hint */}
+        <div className="pt-2 border-t border-border/50">
+          <div className="text-xs text-primary font-medium opacity-70 group-hover:opacity-100 transition-opacity duration-200">
             Click to edit or view full chart
           </div>
         </div>
@@ -334,7 +364,7 @@ export default function ChartsPage() {
                 <EmptyState libraryName="ECharts" icon="⚡" />
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {savedCharts
                   .filter(chart => chart.chart_type === 'echarts')
                   .map((chart) => (
@@ -378,7 +408,7 @@ export default function ChartsPage() {
                 <EmptyState libraryName="Nivo" icon="🎨" />
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {savedCharts
                   .filter(chart => chart.chart_type === 'nivo')
                   .map((chart) => (
@@ -422,7 +452,7 @@ export default function ChartsPage() {
                 <EmptyState libraryName="Recharts" icon="📈" />
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {savedCharts
                   .filter(chart => chart.chart_type === 'recharts')
                   .map((chart) => (

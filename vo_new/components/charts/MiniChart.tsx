@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 
 interface MiniChartProps {
@@ -9,11 +9,46 @@ interface MiniChartProps {
     'y-axis': any[];
   };
   chartType: string;
-  width: number;
-  height: number;
+  className?: string;
 }
 
-export default function MiniChart({ data, chartType, width, height }: MiniChartProps) {
+export default function MiniChart({ data, chartType, className = "w-full h-full" }: MiniChartProps) {
+  const chartRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 280, height: 160 });
+
+  // Update dimensions based on container size
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        if (width > 0 && height > 0) {
+          setDimensions({ width: Math.floor(width), height: Math.floor(height) });
+        }
+      }
+    };
+
+    // Initial measurement
+    updateDimensions();
+
+    // Set up resize observer for responsive updates
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  // Resize chart when dimensions change
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.getEchartsInstance()?.resize();
+    }
+  }, [dimensions]);
+
   const generateMiniOption = () => {
     const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
     
@@ -168,16 +203,19 @@ export default function MiniChart({ data, chartType, width, height }: MiniChartP
   const option = generateMiniOption();
 
   return (
-    <ReactECharts
-      option={option}
-      style={{ width: `${width}px`, height: `${height}px` }}
-      opts={{ 
-        renderer: 'canvas',
-        width: width,
-        height: height
-      }}
-      notMerge={true}
-      lazyUpdate={true}
-    />
+    <div ref={containerRef} className={className}>
+      <ReactECharts
+        ref={chartRef}
+        option={option}
+        style={{ width: '100%', height: '100%' }}
+        opts={{ 
+          renderer: 'canvas',
+          width: dimensions.width,
+          height: dimensions.height
+        }}
+        notMerge={true}
+        lazyUpdate={true}
+      />
+    </div>
   );
 } 

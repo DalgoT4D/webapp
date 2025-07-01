@@ -18,14 +18,12 @@ interface SavedChartThumbnailProps {
       chartType: string;
     };
   };
-  width?: number;
-  height?: number;
+  className?: string;
 }
 
 export default function SavedChartThumbnail({ 
-  chart, 
-  width = 200, 
-  height = 120 
+  chart,
+  className = "w-full h-full"
 }: SavedChartThumbnailProps) {
   const [chartData, setChartData] = useState<{ 'x-axis': any[]; 'y-axis': any[] } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,41 +102,32 @@ export default function SavedChartThumbnail({
 
   if (loading) {
     return (
-      <div 
-        className="flex items-center justify-center bg-gray-100 rounded border"
-        style={{ width: `${width}px`, height: `${height}px` }}
-      >
-        <div className="text-xs text-gray-500">Loading...</div>
+      <div className={`flex items-center justify-center bg-muted/50 rounded border ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mx-auto mb-1"></div>
+          <div className="text-xs text-muted-foreground">Loading...</div>
+        </div>
       </div>
     );
   }
 
   if (error || !chartData) {
     return (
-      <div 
-        className="flex items-center justify-center bg-gray-100 rounded border"
-        style={{ width: `${width}px`, height: `${height}px` }}
-      >
-        <div className="text-xs text-gray-500">No preview</div>
+      <div className={`flex items-center justify-center bg-muted/50 rounded border ${className}`}>
+        <div className="text-center text-muted-foreground">
+          <div className="text-lg mb-1">📊</div>
+          <div className="text-xs">No preview</div>
+        </div>
       </div>
     );
   }
 
-  const containerStyle = {
-    width: `${width}px`,
-    height: `${height}px`
-  };
-
   return (
-    <div 
-      className="bg-white rounded border shadow-sm overflow-hidden flex items-center justify-center" 
-      style={containerStyle}
-    >
+    <div className={`bg-background rounded border shadow-sm overflow-hidden ${className}`}>
       <MiniChart
         data={chartData}
         chartType={chart.config.chartType}
-        width={width}
-        height={height}
+        className="w-full h-full"
       />
     </div>
   );

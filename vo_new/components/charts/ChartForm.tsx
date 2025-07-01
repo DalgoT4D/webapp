@@ -298,136 +298,149 @@ export default function ChartForm({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[80vw] sm:max-w-[80vw] lg:w-[80vw] lg:max-w-[80vw] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent 
+        className="h-[90vh] overflow-hidden flex flex-col"
+        style={{ width: '80vw', maxWidth: '80vw' }}
+      >
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>{editChart ? `Edit ${title}` : title}</DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-          {/* Form Section */}
-          <div className="lg:col-span-3">
-            <form onSubmit={handleSubmit(handleGenerateChart)} className="space-y-4">
+        <div className="flex-1 grid grid-cols-1 xl:grid-cols-7 gap-6 overflow-hidden">
+          {/* Form Section - Chart Configuration Only */}
+          <div className="xl:col-span-2 overflow-y-auto pr-2">
+            <form onSubmit={handleSubmit(handleGenerateChart)} className="space-y-6">
               
-              {/* Schema Picker */}
-              <div>
-                <label className="block mb-1 font-medium">Pick a Schema</label>
-                <Select 
-                  value={watchedSchema} 
-                  onValueChange={(value) => setValue('schema', value)}
-                  disabled={schemasLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={schemasLoading ? "Loading schemas..." : "Select a schema"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {schemasError && <div className="px-3 py-2 text-red-500">{schemasError.message}</div>}
-                    {schemas?.map((schema) => (
-                      <SelectItem key={schema} value={schema}>
-                        {schema}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {/* Table Picker */}
-              <div>
-                <label className="block mb-1 font-medium">Pick a Table</label>
-                <Input
-                  placeholder="Search tables..."
-                  value={tableSearch}
-                  onChange={(e) => setTableSearch(e.target.value)}
-                  className="mb-2"
-                  disabled={!watchedSchema || tablesLoading}
-                />
-                <Select 
-                  value={watchedTable} 
-                  onValueChange={(value) => setValue('table', value)}
-                  disabled={!watchedSchema || tablesLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={tablesLoading ? "Loading tables..." : "Select a table"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tablesError && <div className="px-3 py-2 text-red-500">{tablesError.message}</div>}
-                    {filteredTables.length === 0 && !tablesLoading && (
-                      <div className="px-3 py-2 text-muted-foreground">No tables found</div>
-                    )}
-                    {filteredTables.map((table) => (
-                      <SelectItem key={table} value={table}>
-                        {table}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {/* Column Pickers */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Chart Configuration Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide border-b pb-2">Chart Configuration</h3>
+                
+                {/* Schema */}
                 <div>
-                  <label className="block mb-1 font-medium">X-Axis</label>
+                  <label className="block text-sm font-medium mb-2">Schema</label>
                   <Select 
-                    value={watchedXAxis} 
-                    onValueChange={(value) => setValue('xAxis', value)}
-                    disabled={!watchedTable || columnsLoading}
+                    value={watchedSchema} 
+                    onValueChange={(value) => setValue('schema', value)}
+                    disabled={schemasLoading}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder={columnsLoading ? "Loading..." : "X-Axis"} />
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={schemasLoading ? "Loading..." : "Select schema"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {columnsError && <div className="px-3 py-2 text-red-500">{columnsError.message}</div>}
-                      {columns?.map((column) => (
-                        <SelectItem key={column.name} value={column.name}>
-                          {column.name} ({column.data_type})
+                      {schemasError && <div className="px-3 py-2 text-red-500 text-sm">{schemasError.message}</div>}
+                      {schemas?.map((schema) => (
+                        <SelectItem key={schema} value={schema}>
+                          {schema}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 
+                {/* Table */}
                 <div>
-                  <label className="block mb-1 font-medium">Y-Axis</label>
+                  <label className="block text-sm font-medium mb-2">Table</label>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Search tables..."
+                      value={tableSearch}
+                      onChange={(e) => setTableSearch(e.target.value)}
+                      disabled={!watchedSchema || tablesLoading}
+                      className="h-9"
+                    />
+                    <Select 
+                      value={watchedTable} 
+                      onValueChange={(value) => setValue('table', value)}
+                      disabled={!watchedSchema || tablesLoading}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={tablesLoading ? "Loading..." : "Select table"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tablesError && <div className="px-3 py-2 text-red-500 text-sm">{tablesError.message}</div>}
+                        {filteredTables.length === 0 && !tablesLoading && (
+                          <div className="px-3 py-2 text-muted-foreground text-sm">No tables found</div>
+                        )}
+                        {filteredTables.map((table) => (
+                          <SelectItem key={table} value={table}>
+                            {table}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {/* X-Axis */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">X-Axis</label>
                   <Select 
-                    value={watchedYAxis} 
-                    onValueChange={(value) => setValue('yAxis', value)}
+                    value={watchedXAxis} 
+                    onValueChange={(value) => setValue('xAxis', value)}
                     disabled={!watchedTable || columnsLoading}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder={columnsLoading ? "Loading..." : "Y-Axis"} />
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose X-Axis"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {columnsError && <div className="px-3 py-2 text-red-500">{columnsError.message}</div>}
+                      {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
                       {columns?.map((column) => (
                         <SelectItem key={column.name} value={column.name}>
-                          {column.name} ({column.data_type})
+                          <div className="flex flex-col">
+                            <span className="font-medium">{column.name}</span>
+                            <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              
-              {/* Chart Type and Data Limit */}
-              <div className="grid grid-cols-2 gap-2">
+                
+                {/* Y-Axis */}
                 <div>
-                  <label className="block mb-1 font-medium">Chart Type</label>
+                  <label className="block text-sm font-medium mb-2">Y-Axis</label>
+                  <Select 
+                    value={watchedYAxis} 
+                    onValueChange={(value) => setValue('yAxis', value)}
+                    disabled={!watchedTable || columnsLoading}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose Y-Axis"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                      {columns?.map((column) => (
+                        <SelectItem key={column.name} value={column.name}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{column.name}</span>
+                            <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Chart Type */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Chart Type</label>
                   <Select 
                     value={watchedChartType} 
                     onValueChange={(value) => setValue('chartType', value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chart Type" />
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
                       {getSupportedChartTypes(chartLibraryType).map((type) => {
                         const config = CHART_TYPE_CONFIGS[type]
                         return (
                           <SelectItem key={type} value={type}>
-                            <div className="flex items-center gap-2">
-                              <span>{config.icon}</span>
-                              <div>
-                                <div>{config.name}</div>
-                                <div className="text-xs text-muted-foreground">{config.description}</div>
+                            <div className="flex items-center gap-3 py-1">
+                              <span className="text-lg">{config.icon}</span>
+                              <div className="flex flex-col">
+                                <div className="font-medium text-foreground">{config.name}</div>
+                                <div className="text-xs text-muted-foreground/80">{config.description}</div>
                               </div>
                             </div>
                           </SelectItem>
@@ -437,15 +450,16 @@ export default function ChartForm({
                   </Select>
                 </div>
                 
+                {/* Data Limit */}
                 {chartLibraryType === 'echarts' && (
                   <div>
-                    <label className="block mb-1 font-medium">Data Limit</label>
+                    <label className="block text-sm font-medium mb-2">Data Limit</label>
                     <Select 
                       value={watchedDataLimit} 
                       onValueChange={(value) => setValue('dataLimit', value)}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="10" />
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="10 records" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="5">5 records</SelectItem>
@@ -459,40 +473,25 @@ export default function ChartForm({
                 )}
               </div>
               
-              {/* Chart Details */}
-              <div>
-                <label className="block mb-1 font-medium">Chart Name</label>
-                <Input
-                  {...register('chartName', { required: 'Chart name is required' })}
-                  placeholder="Enter chart name"
-                />
-                {errors.chartName && (
-                  <span className="text-red-500 text-sm">{errors.chartName.message}</span>
-                )}
-              </div>
-              
-              <div>
-                <label className="block mb-1 font-medium">Chart Description</label>
-                <Textarea
-                  {...register('chartDescription')}
-                  placeholder="Enter chart description (optional)"
-                  className="min-h-[60px]"
-                />
-              </div>
-              
               {/* Validation Messages */}
               {chartValidation && !chartValidation.isValid && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <div className="text-sm font-medium text-yellow-800 mb-1">⚠️ Chart Recommendations</div>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-amber-800 font-medium text-sm mb-2">
+                    <span>⚠️</span>
+                    <span>Recommendations</span>
+                  </div>
                   {chartValidation.errors.length > 0 && (
-                    <div className="text-xs text-yellow-700 mb-2">
-                      Issues: {chartValidation.errors.join(', ')}
+                    <div className="text-sm text-amber-700 mb-2">
+                      <strong>Issues:</strong> {chartValidation.errors.join(', ')}
                     </div>
                   )}
                   {chartValidation.recommendations && (
-                    <div className="text-xs text-yellow-700">
+                    <div className="text-sm text-amber-700">
                       {chartValidation.recommendations.map((rec, index) => (
-                        <div key={index}>• {rec}</div>
+                        <div key={index} className="flex items-start gap-1">
+                          <span>•</span>
+                          <span>{rec}</span>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -500,123 +499,170 @@ export default function ChartForm({
               )}
               
               {chartValidation && chartValidation.isValid && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <div className="text-sm font-medium text-green-800">✅ Chart configuration looks good!</div>
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-emerald-800 font-medium text-sm">
+                    <span>✅</span>
+                    <span>Configuration looks great!</span>
+                  </div>
                 </div>
               )}
               
-              {/* Generate Button */}
+              {/* Action Button */}
               <Button 
                 type="button" 
-                onClick={() => window.location.reload()} // Force refresh for SWR
+                onClick={() => window.location.reload()}
                 className="w-full" 
                 disabled={!isValid || isChartDataLoading}
                 variant="outline"
               >
-                {isChartDataLoading ? 'Refreshing...' : 'Refresh Chart'}
+                {isChartDataLoading ? 'Refreshing Chart...' : 'Refresh Chart'}
               </Button>
               
-              {generateError && (
-                <div className="text-red-500 text-sm">{generateError.message}</div>
-              )}
-              
-              {chartDataError && (
-                <div className="text-red-500 text-sm">{chartDataError.message}</div>
+              {(generateError || chartDataError) && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="text-red-800 text-sm font-medium">Error</div>
+                  <div className="text-red-700 text-sm">{generateError?.message || chartDataError?.message}</div>
+                </div>
               )}
               
             </form>
           </div>
           
           {/* Chart Preview Section */}
-          <div className="lg:col-span-7 lg:border-l lg:pl-6">
-            <h3 className="text-lg font-medium mb-4">Chart Preview</h3>
+          <div className="xl:col-span-5 flex flex-col overflow-hidden">
+            <div className="flex-shrink-0 mb-4">
+              <h3 className="text-lg font-semibold">Chart Preview</h3>
+              <p className="text-sm text-muted-foreground">Live preview updates as you configure</p>
+            </div>
             
-            {isChartDataLoading && (
-              <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg">
-                <div className="text-muted-foreground">Generating chart...</div>
-              </div>
-            )}
-            
-            {(chartDataError || generateError) && (
-              <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg">
-                <div className="text-red-500">Error generating chart</div>
-              </div>
-            )}
-            
-            {!chartData && !isChartDataLoading && !chartDataError && !generateError && (
-              <div className="flex items-center justify-center h-64 bg-muted/50 rounded-lg border-2 border-dashed">
-                <div className="text-center text-muted-foreground">
-                  <p>Fill out the form to see chart preview</p>
-                  <p className="text-sm">Chart will generate automatically</p>
+            <div className="flex-1 overflow-hidden">
+              {isChartDataLoading && (
+                <div className="flex items-center justify-center h-full min-h-[400px] bg-muted/30 rounded-lg border border-dashed">
+                  <div className="text-center">
+                    <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <div className="text-muted-foreground font-medium text-lg">Generating chart...</div>
+                    <div className="text-sm text-muted-foreground mt-2">This may take a few moments</div>
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            {chartData && !isChartDataLoading && (
-              <div className="space-y-4">
-                {chartLibraryType === 'echarts' && (
-                  <EChartsComponent
-                    data={chartData}
-                    chartName={watchedChartName}
-                    chartDescription={watch('chartDescription')}
-                    xAxisLabel={watchedXAxis}
-                    yAxisLabel={watchedYAxis}
-                    chartType={watchedChartType}
-                  />
-                )}
-                
-                {chartLibraryType === 'nivo' && (
-                  <NivoComponent
-                    data={chartData}
-                    chartName={watchedChartName}
-                    chartDescription={watch('chartDescription')}
-                    xAxisLabel={watchedXAxis}
-                    yAxisLabel={watchedYAxis}
-                    chartType={watchedChartType}
-                  />
-                )}
-                
-                {chartLibraryType === 'recharts' && (
-                  <RechartsComponent
-                    data={chartData}
-                    chartName={watchedChartName}
-                    chartDescription={watch('chartDescription')}
-                    xAxisLabel={watchedXAxis}
-                    yAxisLabel={watchedYAxis}
-                    chartType={watchedChartType}
-                  />
-                )}
-                
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleSaveChart}
-                    disabled={isLoading}
-                    className="flex-1"
-                  >
-                    {isLoading ? (editChart ? 'Updating...' : 'Saving...') : (editChart ? 'Update Chart' : 'Save Chart')}
-                  </Button>
-                  {editChart && onDelete && (
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleDeleteChart}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Deleting...' : 'Delete'}
-                    </Button>
-                  )}
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      resetForm()
-                      onOpenChange(false)
-                    }}
-                    disabled={isLoading}
-                  >
-                    Cancel
-                  </Button>
+              )}
+              
+              {(chartDataError || generateError) && (
+                <div className="flex items-center justify-center h-full min-h-[400px] bg-red-50 rounded-lg border border-red-200">
+                  <div className="text-center text-red-600">
+                    <div className="text-4xl mb-4">⚠️</div>
+                    <div className="font-medium text-lg">Unable to generate chart</div>
+                    <div className="text-sm text-red-500 mt-2">Check your configuration and try again</div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+              
+              {!chartData && !isChartDataLoading && !chartDataError && !generateError && (
+                <div className="flex items-center justify-center h-full min-h-[400px] bg-muted/30 rounded-lg border-2 border-dashed">
+                  <div className="text-center text-muted-foreground">
+                    <div className="text-5xl mb-4">📊</div>
+                    <p className="font-medium mb-2 text-lg">Ready to create your chart</p>
+                    <p className="text-sm">Fill out the form to see a live preview</p>
+                  </div>
+                </div>
+              )}
+              
+              {chartData && !isChartDataLoading && (
+                <div className="h-full flex flex-col">
+                  <div className="flex-1 overflow-hidden min-h-[400px]">
+                    {chartLibraryType === 'echarts' && (
+                      <EChartsComponent
+                        data={chartData}
+                        chartName={watchedChartName}
+                        chartDescription={watch('chartDescription')}
+                        xAxisLabel={watchedXAxis}
+                        yAxisLabel={watchedYAxis}
+                        chartType={watchedChartType}
+                      />
+                    )}
+                    
+                    {chartLibraryType === 'nivo' && (
+                      <NivoComponent
+                        data={chartData}
+                        chartName={watchedChartName}
+                        chartDescription={watch('chartDescription')}
+                        xAxisLabel={watchedXAxis}
+                        yAxisLabel={watchedYAxis}
+                        chartType={watchedChartType}
+                      />
+                    )}
+                    
+                    {chartLibraryType === 'recharts' && (
+                      <RechartsComponent
+                        data={chartData}
+                        chartName={watchedChartName}
+                        chartDescription={watch('chartDescription')}
+                        xAxisLabel={watchedXAxis}
+                        yAxisLabel={watchedYAxis}
+                        chartType={watchedChartType}
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Chart Details for Saving */}
+                  <div className="flex-shrink-0 pt-6 border-t bg-background space-y-4">
+                    <h4 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide border-b pb-2">Save Chart</h4>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Chart Name</label>
+                        <Input
+                          {...register('chartName', { required: 'Chart name is required' })}
+                          placeholder="Enter a descriptive name"
+                          className="w-full"
+                        />
+                        {errors.chartName && (
+                          <span className="text-red-500 text-sm mt-1 block">{errors.chartName.message}</span>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Description (Optional)</label>
+                        <Textarea
+                          {...register('chartDescription')}
+                          placeholder="Add context about what this chart shows..."
+                          className="min-h-[40px] resize-none"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-3 pt-2">
+                      <Button 
+                        onClick={handleSaveChart}
+                        disabled={isLoading}
+                        className="flex-1"
+                      >
+                        {isLoading ? (editChart ? 'Updating...' : 'Saving...') : (editChart ? 'Update Chart' : 'Save Chart')}
+                      </Button>
+                      {editChart && onDelete && (
+                        <Button 
+                          variant="destructive" 
+                          onClick={handleDeleteChart}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? 'Deleting...' : 'Delete'}
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          resetForm()
+                          onOpenChange(false)
+                        }}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>
