@@ -276,184 +276,189 @@ export default function ChartsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Charts</h1>
-        <p className="text-muted-foreground">Create beautiful, interactive charts with multiple libraries</p>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        {/* Tab List */}
+      {/* Static Header */}
+      <div className="p-6 border-b">
         <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Charts</h1>
+          <p className="text-muted-foreground">Create beautiful, interactive charts with multiple libraries</p>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Tab List */}
           <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="echarts" className="text-sm">⚡ ECharts</TabsTrigger>
             <TabsTrigger value="nivo" className="text-sm">🎨 Nivo</TabsTrigger>
             <TabsTrigger value="recharts" className="text-sm">📈 Recharts</TabsTrigger>
           </TabsList>
-        </div>
+        </Tabs>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
+          {/* ECharts Tab */}
+          <TabsContent value="echarts" className="h-full m-0 p-6 space-y-6">
+            {/* Tab Header */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
+              <div>
+                <h2 className="text-xl font-semibold">ECharts</h2>
+                <p className="text-sm text-muted-foreground">High-performance, interactive charts</p>
+              </div>
+              <Button onClick={() => setEchartsFormOpen(true)}>
+                Create New Chart
+              </Button>
+            </div>
+              
+            {/* Saved Charts Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Saved ECharts</h3>
+                <span className="text-sm text-muted-foreground">
+                  {savedCharts.filter(chart => chart.chart_type === 'echarts').length} charts
+                </span>
+              </div>
+              
+              {savedChartsLoading && (
+                <div className="text-center py-8">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <div className="text-sm text-muted-foreground">Loading charts...</div>
+                </div>
+              )}
+              
+              {savedChartsError && (
+                <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
+                  {savedChartsError}
+                </div>
+              )}
+              
+              {savedCharts.filter(chart => chart.chart_type === 'echarts').length === 0 && !savedChartsLoading && (
+                <EmptyState libraryName="ECharts" icon="⚡" />
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {savedCharts
+                  .filter(chart => chart.chart_type === 'echarts')
+                  .map((chart) => (
+                    <ChartCard
+                      key={chart.id}
+                      chart={chart}
+                      onEdit={() => handleEditChart(chart)}
+                      onDelete={() => handleDeleteChart(chart.id)}
+                    />
+                  ))}
+              </div>
+            </div>
+          </TabsContent>
         
-        {/* ECharts Tab */}
-        <TabsContent value="echarts" className="space-y-6">
-          {/* Tab Header */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
-            <div>
-              <h2 className="text-xl font-semibold">ECharts</h2>
-              <p className="text-sm text-muted-foreground">High-performance, interactive charts</p>
-            </div>
-            <Button onClick={() => setEchartsFormOpen(true)}>
-              Create New Chart
-            </Button>
-          </div>
-            
-          {/* Saved Charts Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Saved ECharts</h3>
-              <span className="text-sm text-muted-foreground">
-                {savedCharts.filter(chart => chart.chart_type === 'echarts').length} charts
-              </span>
-            </div>
-            
-            {savedChartsLoading && (
-              <div className="text-center py-8">
-                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                <div className="text-sm text-muted-foreground">Loading charts...</div>
+          {/* Nivo Tab */}
+          <TabsContent value="nivo" className="h-full m-0 p-6 space-y-6">
+            {/* Tab Header */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
+              <div>
+                <h2 className="text-xl font-semibold">Nivo Charts</h2>
+                <p className="text-sm text-muted-foreground">Beautiful, responsive charts with modern design</p>
               </div>
-            )}
+              <Button onClick={() => setNivoFormOpen(true)}>
+                Create New Chart
+              </Button>
+            </div>
             
-            {savedChartsError && (
-              <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
-                {savedChartsError}
+            {/* Saved Charts Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Saved Nivo Charts</h3>
+                <span className="text-sm text-muted-foreground">
+                  {savedCharts.filter(chart => chart.chart_type === 'nivo').length} charts
+                </span>
               </div>
-            )}
-            
-            {savedCharts.filter(chart => chart.chart_type === 'echarts').length === 0 && !savedChartsLoading && (
-              <EmptyState libraryName="ECharts" icon="⚡" />
-            )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {savedCharts
-                .filter(chart => chart.chart_type === 'echarts')
-                .map((chart) => (
-                  <ChartCard
-                    key={chart.id}
-                    chart={chart}
-                    onEdit={() => handleEditChart(chart)}
-                    onDelete={() => handleDeleteChart(chart.id)}
-                  />
-                ))}
-            </div>
-          </div>
-        </TabsContent>
-      
-        {/* Nivo Tab */}
-        <TabsContent value="nivo" className="space-y-6">
-          {/* Tab Header */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
-            <div>
-              <h2 className="text-xl font-semibold">Nivo Charts</h2>
-              <p className="text-sm text-muted-foreground">Beautiful, responsive charts with modern design</p>
-            </div>
-            <Button onClick={() => setNivoFormOpen(true)}>
-              Create New Chart
-            </Button>
-          </div>
-          
-          {/* Saved Charts Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Saved Nivo Charts</h3>
-              <span className="text-sm text-muted-foreground">
-                {savedCharts.filter(chart => chart.chart_type === 'nivo').length} charts
-              </span>
-            </div>
-            
-            {savedChartsLoading && (
-              <div className="text-center py-8">
-                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                <div className="text-sm text-muted-foreground">Loading charts...</div>
+              
+              {savedChartsLoading && (
+                <div className="text-center py-8">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <div className="text-sm text-muted-foreground">Loading charts...</div>
+                </div>
+              )}
+              
+              {savedChartsError && (
+                <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
+                  {savedChartsError}
+                </div>
+              )}
+              
+              {savedCharts.filter(chart => chart.chart_type === 'nivo').length === 0 && !savedChartsLoading && (
+                <EmptyState libraryName="Nivo" icon="🎨" />
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {savedCharts
+                  .filter(chart => chart.chart_type === 'nivo')
+                  .map((chart) => (
+                    <ChartCard
+                      key={chart.id}
+                      chart={chart}
+                      onEdit={() => handleEditChart(chart)}
+                      onDelete={() => handleDeleteChart(chart.id)}
+                    />
+                  ))}
               </div>
-            )}
-            
-            {savedChartsError && (
-              <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
-                {savedChartsError}
+            </div>
+          </TabsContent>
+        
+          {/* Recharts Tab */}
+          <TabsContent value="recharts" className="h-full m-0 p-6 space-y-6">
+            {/* Tab Header */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
+              <div>
+                <h2 className="text-xl font-semibold">Recharts</h2>
+                <p className="text-sm text-muted-foreground">Composable charting library built on React components</p>
               </div>
-            )}
-            
-            {savedCharts.filter(chart => chart.chart_type === 'nivo').length === 0 && !savedChartsLoading && (
-              <EmptyState libraryName="Nivo" icon="��" />
-            )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {savedCharts
-                .filter(chart => chart.chart_type === 'nivo')
-                .map((chart) => (
-                  <ChartCard
-                    key={chart.id}
-                    chart={chart}
-                    onEdit={() => handleEditChart(chart)}
-                    onDelete={() => handleDeleteChart(chart.id)}
-                  />
-                ))}
-            </div>
-          </div>
-        </TabsContent>
-      
-        {/* Recharts Tab */}
-        <TabsContent value="recharts" className="space-y-6">
-          {/* Tab Header */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
-            <div>
-              <h2 className="text-xl font-semibold">Recharts</h2>
-              <p className="text-sm text-muted-foreground">Composable charting library built on React components</p>
-            </div>
-            <Button onClick={() => setRechartsFormOpen(true)}>
-              Create New Chart
-            </Button>
-          </div>
-          
-          {/* Saved Charts Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Saved Recharts</h3>
-              <span className="text-sm text-muted-foreground">
-                {savedCharts.filter(chart => chart.chart_type === 'recharts').length} charts
-              </span>
+              <Button onClick={() => setRechartsFormOpen(true)}>
+                Create New Chart
+              </Button>
             </div>
             
-            {savedChartsLoading && (
-              <div className="text-center py-8">
-                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                <div className="text-sm text-muted-foreground">Loading charts...</div>
+            {/* Saved Charts Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Saved Recharts</h3>
+                <span className="text-sm text-muted-foreground">
+                  {savedCharts.filter(chart => chart.chart_type === 'recharts').length} charts
+                </span>
               </div>
-            )}
-            
-            {savedChartsError && (
-              <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
-                {savedChartsError}
+              
+              {savedChartsLoading && (
+                <div className="text-center py-8">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <div className="text-sm text-muted-foreground">Loading charts...</div>
+                </div>
+              )}
+              
+              {savedChartsError && (
+                <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
+                  {savedChartsError}
+                </div>
+              )}
+              
+              {savedCharts.filter(chart => chart.chart_type === 'recharts').length === 0 && !savedChartsLoading && (
+                <EmptyState libraryName="Recharts" icon="📈" />
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {savedCharts
+                  .filter(chart => chart.chart_type === 'recharts')
+                  .map((chart) => (
+                    <ChartCard
+                      key={chart.id}
+                      chart={chart}
+                      onEdit={() => handleEditChart(chart)}
+                      onDelete={() => handleDeleteChart(chart.id)}
+                    />
+                  ))}
               </div>
-            )}
-            
-            {savedCharts.filter(chart => chart.chart_type === 'recharts').length === 0 && !savedChartsLoading && (
-              <EmptyState libraryName="Recharts" icon="📈" />
-            )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {savedCharts
-                .filter(chart => chart.chart_type === 'recharts')
-                .map((chart) => (
-                  <ChartCard
-                    key={chart.id}
-                    chart={chart}
-                    onEdit={() => handleEditChart(chart)}
-                    onDelete={() => handleDeleteChart(chart.id)}
-                  />
-                ))}
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Chart Forms */}
       <ChartForm

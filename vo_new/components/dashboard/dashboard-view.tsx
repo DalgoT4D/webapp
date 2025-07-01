@@ -18,12 +18,8 @@ function ErrorFallback({ error }: { error: Error }) {
 export function DashboardView() {
   return (
     <div className="flex flex-col h-full">
-      {/* Dashboard List - Regular page view */}
+      {/* Dashboard List */}
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Dashboards</h1>
-          <p className="text-muted-foreground">Monitor and analyze your maternal health program performance</p>
-        </div>
         <DashboardList />
       </ErrorBoundary>
     </div>

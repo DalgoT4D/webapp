@@ -192,111 +192,116 @@ export function MetricsView() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Metrics</h1>
-          <p className="text-muted-foreground">Key performance indicators for maternal health outcomes</p>
-        </div>
-
-        <div className="flex gap-3">
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={timeHorizon}
-            onValueChange={(value: "week" | "month" | "quarter" | "year") => setTimeHorizon(value)}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Time period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="week">Week</SelectItem>
-              <SelectItem value="month">Month</SelectItem>
-              <SelectItem value="quarter">Quarter</SelectItem>
-              <SelectItem value="year">Year</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button onClick={handleCreateMetric} className="flex items-center gap-1">
-            <Plus className="h-4 w-4" />
-            Create Metric
-          </Button>
-        </div>
-      </div>
-
-      {/* Category Filter Badges */}
-      <div className="flex flex-wrap gap-2">
-        {categories.map((category) => (
-          <Badge
-            key={category}
-            variant={selectedCategory === category ? "default" : "secondary"}
-            className="cursor-pointer"
-            onClick={() => setSelectedCategory(category)}
-          >
-            {category}
-          </Badge>
-        ))}
-      </div>
-
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMetrics.map((metric) => (
-          <MetricCard
-            key={metric.id}
-            metric={metric}
-            timeHorizon={timeHorizon}
-            onEdit={() => handleEditMetric(metric)}
-          />
-        ))}
-      </div>
-
-      {/* Summary Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Summary Statistics
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {filteredMetrics.filter((m) => m.trend > 0).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Improving Metrics</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{filteredMetrics.filter((m) => m.trend < 0).length}</div>
-              <div className="text-sm text-muted-foreground">Declining Metrics</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {filteredMetrics.filter((m) => m.currentValue >= m.target).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Targets Met</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
-                {filteredMetrics.filter((m) => m.currentValue < m.target).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Below Target</div>
-            </div>
+    <div className="flex flex-col h-full">
+      {/* Static Header */}
+      <div className="p-6 border-b">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Metrics</h1>
+            <p className="text-muted-foreground">Key performance indicators for maternal health outcomes</p>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="flex gap-3">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={timeHorizon}
+              onValueChange={(value: "week" | "month" | "quarter" | "year") => setTimeHorizon(value)}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Time period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">Week</SelectItem>
+                <SelectItem value="month">Month</SelectItem>
+                <SelectItem value="quarter">Quarter</SelectItem>
+                <SelectItem value="year">Year</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button onClick={handleCreateMetric} className="flex items-center gap-1">
+              <Plus className="h-4 w-4" />
+              Create Metric
+            </Button>
+          </div>
+        </div>
+
+        {/* Category Filter Badges */}
+        <div className="flex flex-wrap gap-2">
+          {categories.map((category) => (
+            <Badge
+              key={category}
+              variant={selectedCategory === category ? "default" : "secondary"}
+              className="cursor-pointer"
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-auto p-6 space-y-6">
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMetrics.map((metric) => (
+            <MetricCard
+              key={metric.id}
+              metric={metric}
+              timeHorizon={timeHorizon}
+              onEdit={() => handleEditMetric(metric)}
+            />
+          ))}
+        </div>
+
+        {/* Summary Stats */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Summary Statistics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {filteredMetrics.filter((m) => m.trend > 0).length}
+                </div>
+                <div className="text-sm text-muted-foreground">Improving Metrics</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{filteredMetrics.filter((m) => m.trend < 0).length}</div>
+                <div className="text-sm text-muted-foreground">Declining Metrics</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {filteredMetrics.filter((m) => m.currentValue >= m.target).length}
+                </div>
+                <div className="text-sm text-muted-foreground">Targets Met</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  {filteredMetrics.filter((m) => m.currentValue < m.target).length}
+                </div>
+                <div className="text-sm text-muted-foreground">Below Target</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Metric Form Dialog */}
       <MetricFormDialog
