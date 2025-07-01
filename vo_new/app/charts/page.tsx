@@ -278,9 +278,18 @@ export default function ChartsPage() {
     <div className="flex flex-col h-full">
       {/* Static Header */}
       <div className="p-6 border-b">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Charts</h1>
-          <p className="text-muted-foreground">Create beautiful, interactive charts with multiple libraries</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Charts</h1>
+            <p className="text-muted-foreground">Create beautiful, interactive charts with multiple libraries</p>
+          </div>
+          <Button onClick={() => {
+            if (activeTab === "echarts") setEchartsFormOpen(true);
+            else if (activeTab === "nivo") setNivoFormOpen(true);
+            else if (activeTab === "recharts") setRechartsFormOpen(true);
+          }}>
+            Create New Chart
+          </Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -298,16 +307,6 @@ export default function ChartsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
           {/* ECharts Tab */}
           <TabsContent value="echarts" className="h-full m-0 p-6 space-y-6">
-            {/* Tab Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
-              <div>
-                <h2 className="text-xl font-semibold">ECharts</h2>
-                <p className="text-sm text-muted-foreground">High-performance, interactive charts</p>
-              </div>
-              <Button onClick={() => setEchartsFormOpen(true)}>
-                Create New Chart
-              </Button>
-            </div>
               
             {/* Saved Charts Section */}
             <div className="space-y-4">
@@ -352,16 +351,6 @@ export default function ChartsPage() {
         
           {/* Nivo Tab */}
           <TabsContent value="nivo" className="h-full m-0 p-6 space-y-6">
-            {/* Tab Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
-              <div>
-                <h2 className="text-xl font-semibold">Nivo Charts</h2>
-                <p className="text-sm text-muted-foreground">Beautiful, responsive charts with modern design</p>
-              </div>
-              <Button onClick={() => setNivoFormOpen(true)}>
-                Create New Chart
-              </Button>
-            </div>
             
             {/* Saved Charts Section */}
             <div className="space-y-4">
@@ -406,16 +395,6 @@ export default function ChartsPage() {
         
           {/* Recharts Tab */}
           <TabsContent value="recharts" className="h-full m-0 p-6 space-y-6">
-            {/* Tab Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 p-4 border rounded-lg bg-card">
-              <div>
-                <h2 className="text-xl font-semibold">Recharts</h2>
-                <p className="text-sm text-muted-foreground">Composable charting library built on React components</p>
-              </div>
-              <Button onClick={() => setRechartsFormOpen(true)}>
-                Create New Chart
-              </Button>
-            </div>
             
             {/* Saved Charts Section */}
             <div className="space-y-4">
