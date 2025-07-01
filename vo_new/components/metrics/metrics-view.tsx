@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MetricCard } from "./metric-card"
 import { BarChart3, Users, Heart, Baby, Shield, Clock, Target, Plus } from "lucide-react"
 import { MetricFormDialog } from "./metric-form-dialog"
+import React from "react"
 
 // Mock metrics data for maternal health organization
 const metricsData = [
@@ -166,7 +167,11 @@ const metricsData = [
 
 const categories = ["All", "Health Outcomes", "Service Delivery", "Infrastructure", "Reproductive Health"]
 
-export function MetricsView() {
+interface MetricsViewProps {
+  onSelectMetric?: (metric: any) => void;
+}
+
+export function MetricsView({ onSelectMetric }: MetricsViewProps) {
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [timeHorizon, setTimeHorizon] = useState<"week" | "month" | "quarter" | "year">("month")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -253,12 +258,21 @@ export function MetricsView() {
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredMetrics.map((metric) => (
-          <MetricCard
-            key={metric.id}
-            metric={metric}
-            timeHorizon={timeHorizon}
-            onEdit={() => handleEditMetric(metric)}
-          />
+          <div key={metric.id} className="relative group">
+            <MetricCard
+              metric={metric}
+              timeHorizon={timeHorizon}
+              onEdit={() => handleEditMetric(metric)}
+            />
+            {onSelectMetric && (
+              <button
+                className="absolute top-2 right-2 z-10 bg-blue-600 text-white px-2 py-1 rounded shadow hover:bg-blue-700 transition"
+                onClick={() => onSelectMetric(metric)}
+              >
+                Select
+              </button>
+            )}
+          </div>
         ))}
       </div>
 
