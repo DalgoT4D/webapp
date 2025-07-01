@@ -119,30 +119,26 @@ export function IndividualDashboardView({ dashboardId }: IndividualDashboardView
 
   if (dashboardLoading) {
     return (
-      <MainLayout>
-        <div className="p-6 text-center">Loading dashboard info...</div>
-      </MainLayout>
+      <div className="p-6 text-center">Loading dashboard info...</div>
     );
   }
 
   if (dashboardError || !dashboard) {
     return (
-      <MainLayout>
-        <div className="p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboards">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboards
-              </Link>
-            </Button>
-          </div>
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-bold text-muted-foreground mb-2">Dashboard Not Found</h1>
-            <p className="text-muted-foreground">{dashboardError || "The requested dashboard could not be found."}</p>
-          </div>
+      <div className="p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboards">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboards
+            </Link>
+          </Button>
         </div>
-      </MainLayout>
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-muted-foreground mb-2">Dashboard Not Found</h1>
+          <p className="text-muted-foreground">{dashboardError || "The requested dashboard could not be found."}</p>
+        </div>
+      </div>
     );
   }
 
@@ -155,97 +151,95 @@ export function IndividualDashboardView({ dashboardId }: IndividualDashboardView
   }
 
   return (
-    <MainLayout>
-      <div className="flex flex-col h-screen">
-        {/* Dashboard Header with navigation and actions */}
-        <div className="flex items-center justify-between gap-4 p-4 border-b">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboards">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboards
-            </Link>
+    <div className="flex flex-col h-full">
+      {/* Dashboard Header with navigation and actions */}
+      <div className="flex items-center justify-between gap-4 p-4 border-b">
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboards">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboards
+          </Link>
+        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isChatOpen ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            className="relative"
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            {isChatOpen ? "Close Assistant" : "Ask Assistant"}
+            {!isChatOpen && (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+              </span>
+            )}
           </Button>
-          <div className="flex items-center gap-2">
-            <Button
-              variant={isChatOpen ? "default" : "outline"}
-              size="sm"
-              onClick={() => setIsChatOpen(!isChatOpen)}
-              className="relative"
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              {isChatOpen ? "Close Assistant" : "Ask Assistant"}
-              {!isChatOpen && (
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                </span>
-              )}
-            </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Dashboard Title and Description */}
+      <div className="p-4 border-b">
+        <h1 className="text-2xl font-bold tracking-tight">{dashboard.dashboard_title}</h1>
+        <p className="text-muted-foreground">{dashboard.description}</p>
+      </div>
+
+      {/* Main content area with chat sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Superset Embed */}
+        <div className="w-full flex flex-col items-center justify-center p-4 mt-50">
+          {embedLoading && <div className="text-muted-foreground">Loading dashboard...</div>}
+          {embedError && <div className="text-red-600">{embedError}</div>}
+          <div className="embeddedsuperset w-full" style={{ maxWidth: "1600px" }} key={dashboardId}>
+            <div
+              ref={supersetContainerRef}
+              className="bg-white rounded-lg shadow border"
+            />
           </div>
         </div>
-
-        {/* Dashboard Title and Description */}
-        <div className="p-4 border-b">
-          <h1 className="text-2xl font-bold tracking-tight">{dashboard.dashboard_title}</h1>
-          <p className="text-muted-foreground">{dashboard.description}</p>
+        {/* Dashboard Content */}
+        <div className={`flex-1 overflow-auto transition-all duration-300 ${isChatOpen ? "md:w-2/3" : "w-full"}`}>
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <DashboardContent
+              dashboardType={dashboard.type}
+              onElementSelect={handleElementSelect}
+              isChatOpen={isChatOpen}
+            />
+          </ErrorBoundary>
         </div>
 
-        {/* Main content area with chat sidebar */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Superset Embed */}
-          <div className="w-full flex flex-col items-center justify-center p-4 mt-50">
-            {embedLoading && <div className="text-muted-foreground">Loading dashboard...</div>}
-            {embedError && <div className="text-red-600">{embedError}</div>}
-            <div className="embeddedsuperset w-full" style={{ maxWidth: "1600px" }} key={dashboardId}>
-              <div
-                ref={supersetContainerRef}
-                className="bg-white rounded-lg shadow border"
-              />
-            </div>
-          </div>
-          {/* Dashboard Content */}
-          <div className={`flex-1 overflow-auto transition-all duration-300 ${isChatOpen ? "md:w-2/3" : "w-full"}`}>
+        {/* Chat Sidebar */}
+        {isChatOpen && (
+          <div className="w-full md:w-1/3 border-l border-border overflow-hidden flex flex-col">
             <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <DashboardContent
+              <DashboardChat
                 dashboardType={dashboard.type}
-                onElementSelect={handleElementSelect}
-                isChatOpen={isChatOpen}
+                selectedElement={selectedElement}
+                onClose={() => setIsChatOpen(false)}
               />
             </ErrorBoundary>
           </div>
-
-          {/* Chat Sidebar */}
-          {isChatOpen && (
-            <div className="w-full md:w-1/3 border-l border-border overflow-hidden flex flex-col">
-              <ErrorBoundary FallbackComponent={ErrorFallback}>
-                <DashboardChat
-                  dashboardType={dashboard.type}
-                  selectedElement={selectedElement}
-                  onClose={() => setIsChatOpen(false)}
-                />
-              </ErrorBoundary>
-            </div>
-          )}
-        </div>
+        )}
       </div>
-    </MainLayout>
+    </div>
   )
 }

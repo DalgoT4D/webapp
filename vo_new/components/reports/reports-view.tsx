@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { MainLayout } from "@/components/main-layout"
 import { ReportsList } from "./reports-list"
 import { CreateReportDialog } from "./create-report-dialog"
 import { ReportInstancesView } from "./report-instances-view"
@@ -84,36 +83,34 @@ export function ReportsView() {
   }
 
   return (
-    <MainLayout>
-      <div className="flex flex-col h-screen">
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
-          {view === "list" && (
-            <ReportsList
-              onReportSelect={handleReportSelect}
-              onCreateReport={handleCreateReport}
-              customReports={reports}
-            />
-          )}
+    <div className="flex flex-col h-full">
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        {view === "list" && (
+          <ReportsList
+            onReportSelect={handleReportSelect}
+            onCreateReport={handleCreateReport}
+            customReports={reports}
+          />
+        )}
 
-          {view === "instances" && selectedReport && (
-            <ReportInstancesView
-              report={selectedReport}
-              onInstanceSelect={handleInstanceSelect}
-              onBack={handleBackToList}
-            />
-          )}
+        {view === "instances" && selectedReport && (
+          <ReportInstancesView
+            report={selectedReport}
+            onInstanceSelect={handleInstanceSelect}
+            onBack={handleBackToList}
+          />
+        )}
 
-          {view === "instance" && selectedInstance && (
-            <ReportInstanceView instance={selectedInstance} onBack={handleBackToInstances} />
-          )}
-        </ErrorBoundary>
+        {view === "instance" && selectedInstance && (
+          <ReportInstanceView instance={selectedInstance} onBack={handleBackToInstances} />
+        )}
+      </ErrorBoundary>
 
-        <CreateReportDialog
-          open={createDialogOpen}
-          onOpenChange={setCreateDialogOpen}
-          onReportCreated={handleReportCreated}
-        />
-      </div>
-    </MainLayout>
+      <CreateReportDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onReportCreated={handleReportCreated}
+      />
+    </div>
   )
 }

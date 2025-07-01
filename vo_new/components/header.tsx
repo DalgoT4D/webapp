@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3, User, LogOut, ChevronDown, Bell } from "lucide-react";
+import { BarChart3, User, LogOut, ChevronDown, Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,8 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useAuthStore, type Org } from "@/stores/authStore";
-import useSWR from "swr";
+import { useAuthStore } from "@/stores/authStore";
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -88,110 +87,122 @@ export function Header({ onMenuToggle, hideMenu = false }: HeaderProps) {
     router.push("/login");
   };
 
-  const handleChangePassword = () => {
-    router.push("/settings");
-  };
-
   // Available organizations for switching
   const availableOrgs = orgUsers.map(ou => ou.org);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        {/* Logo and Menu Toggle */}
-        <div className="flex items-center gap-4">
-          {!hideMenu && onMenuToggle && (
-            <Button variant="ghost" size="icon" onClick={onMenuToggle}>
-              <BarChart3 className="h-5 w-5" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          )}
-          
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Dalgo</span>
-          </div>
+    <div className="flex h-16 items-center justify-between w-full">
+      {/* Left side - Mobile menu toggle and logo */}
+      <div className="flex items-center gap-4">
+        {/* Mobile Menu Toggle */}
+        {!hideMenu && onMenuToggle && (
+          <Button variant="ghost" size="icon" onClick={onMenuToggle} className="md:hidden">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
+        )}
+        
+        {/* Logo - Hidden on desktop since it's shown in sidebar */}
+        <div className="flex items-center gap-2 md:hidden">
+          <BarChart3 className="h-6 w-6 text-primary" />
+          <span className="text-xl font-bold">Dalgo</span>
         </div>
 
-        {/* Right side actions */}
-        <div className="ml-auto flex items-center gap-4">
-          {/* Notifications */}
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-            <span className="sr-only">Notifications</span>
-          </Button>
-
-          {/* Organization Selector */}
-          {currentOrg && availableOrgs.length > 1 && (
-            <DropdownMenu open={isOrgMenuOpen} onOpenChange={setIsOrgMenuOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2" disabled={isOrgSwitching}>
-                  <span className="max-w-[150px] truncate">{currentOrg.name}</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Switch Organization</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {availableOrgs
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((org) => (
-                    <DropdownMenuItem
-                      key={org.slug}
-                      onClick={() => handleOrgChange(org.slug)}
-                      className={currentOrg.slug === org.slug ? "bg-muted font-medium" : ""}
-                      disabled={isOrgSwitching}
-                    >
-                      <span className="truncate">{org.name}</span>
-                    </DropdownMenuItem>
-                  ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
-          {/* Current organization name (when only one org) */}
-          {currentOrg && availableOrgs.length === 1 && (
-            <span className="text-sm font-medium text-muted-foreground max-w-[150px] truncate">
-              {currentOrg.name}
+        {/* Desktop: Just the Dalgo text or empty space for org switching status */}
+        <div className="hidden md:block">
+          {isOrgSwitching && (
+            <span className="text-sm text-muted-foreground font-medium">
+              Switching organization...
             </span>
           )}
-
-          {/* Profile Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>{getInitials(userEmail)}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{userEmail}</p>
-                  {currentOrg && (
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {currentOrg.name}
-                    </p>
-                  )}
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => router.push("/settings")}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
-    </header>
+
+      {/* Right side actions */}
+      <div className="flex items-center gap-3">
+        {/* Notifications */}
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          <span className="sr-only">Notifications</span>
+          {/* Notification badge */}
+          <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full flex items-center justify-center">
+            <span className="text-xs text-white font-bold">•</span>
+          </span>
+        </Button>
+
+        {/* Organization Selector */}
+        {currentOrg && availableOrgs.length > 1 && (
+          <DropdownMenu open={isOrgMenuOpen} onOpenChange={setIsOrgMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2 max-w-[200px]" disabled={isOrgSwitching}>
+                <span className="truncate">{currentOrg.name}</span>
+                <ChevronDown className="h-4 w-4 flex-shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel>Switch Organization</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {availableOrgs
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((org) => (
+                  <DropdownMenuItem
+                    key={org.slug}
+                    onClick={() => handleOrgChange(org.slug)}
+                    className={currentOrg.slug === org.slug ? "bg-muted font-medium" : ""}
+                    disabled={isOrgSwitching}
+                  >
+                    <span className="truncate">{org.name}</span>
+                    {currentOrg.slug === org.slug && (
+                      <span className="ml-auto text-xs text-primary">Current</span>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {/* Current organization name (when only one org) */}
+        {currentOrg && availableOrgs.length === 1 && (
+          <span className="text-sm font-medium text-muted-foreground max-w-[150px] truncate">
+            {currentOrg.name}
+          </span>
+        )}
+
+        {/* Profile Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="text-sm">{getInitials(userEmail)}</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-64" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none truncate">{userEmail}</p>
+                {currentOrg && (
+                  <p className="text-xs leading-none text-muted-foreground truncate">
+                    {currentOrg.name} • {currentOrgUser?.new_role_slug || "User"}
+                  </p>
+                )}
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => router.push("/settings")}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   );
 } 

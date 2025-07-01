@@ -91,7 +91,7 @@ export default function DataPage() {
   }
 
   return (
-    <div className="flex-1 space-y-8 p-8">
+    <div className="space-y-8">
       <div className="space-y-4">
         <h1 className="text-3xl font-bold tracking-tight">Data Management</h1>
         <p className="text-muted-foreground">
