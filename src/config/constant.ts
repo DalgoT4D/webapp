@@ -38,3 +38,9 @@ export const demoProductWalkthrough = process.env.NEXT_PUBLIC_DEMO_WALKTHROUGH_E
 
 // alpha features
 export const enableLogSummaries = process.env.NEXT_PUBLIC_ENABLE_LOG_SUMMARIES;
+
+// Airbyte job statuses
+export const AIRBYTE_JOB_STATUS_FAILED = 'failed';
+export const AIRBYTE_JOB_STATUS_SUCCEEDED = 'succeeded';
+export const AIRBYTE_JOB_STATUS_CANCELED = 'cancelled';
+export const AIRBYTE_JOB_STATUS_RUNNING = 'running';
