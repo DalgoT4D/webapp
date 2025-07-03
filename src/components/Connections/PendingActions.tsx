@@ -6,6 +6,7 @@ import {
   Typography,
   Button,
   Box,
+  Tooltip,
 } from '@mui/material';
 import connectionIcon from '@/assets/icons/connection.svg';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -15,18 +16,53 @@ import Image from 'next/image';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import SchemaChangeDetailsForm from './SchemaChangeDetailsForm';
+import { useSyncLock } from '@/customHooks/useSyncLock';
 
 interface PendingActionsAccordionProps {
   refreshConnectionsList: (...args: any) => any;
+  connections: any[];
 }
 
-const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccordionProps) => {
+// Internal component for the View button
+const PendingActionButton = ({
+  connectionId,
+  connection,
+  onViewClick,
+}: {
+  connectionId: string;
+  connection: any;
+  onViewClick: (connectionId: string) => void;
+}) => {
+  const { tempSyncState } = useSyncLock(connection?.lock);
+  const isDisabled = tempSyncState || !!connection?.lock;
+
+  return (
+    <Tooltip
+      title={
+        isDisabled
+          ? 'Schema changes cannot be accepted while a connection is syncing or while other changes are being processed'
+          : ''
+      }
+      placement="top"
+    >
+      <span>
+        <Button variant="outlined" onClick={() => onViewClick(connectionId)} disabled={isDisabled}>
+          View
+        </Button>
+      </span>
+    </Tooltip>
+  );
+};
+
+const PendingActionsAccordion = ({
+  refreshConnectionsList,
+  connections,
+}: PendingActionsAccordionProps) => {
   const [schemaChangeData, setSchemaChangeData] = useState<any[]>([]);
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
   const [connectionNameMap, setConnectionNameMap] = useState<Record<string, string>>({});
   const { data: session }: any = useSession();
-
   const handleViewClick = (connectionId: string) => {
     setSelectedConnectionId(connectionId);
     setOpenPopup(true);
@@ -76,6 +112,9 @@ const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccor
               const connectionId = schemaChange.connection_id;
               const connectionName = connectionNameMap[connectionId];
               const schemaChangeType = schemaChange.change_type;
+              const connection = connections.find(
+                (conn: any) => conn.connectionId === connectionId
+              );
 
               const labelStyles = {
                 color: schemaChangeType === 'breaking' ? 'white' : '#D35D5D',
@@ -109,9 +148,12 @@ const PendingActionsAccordion = ({ refreshConnectionsList }: PendingActionsAccor
                     </Typography>
                   </Box>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}></Typography>
-                  <Button variant="outlined" onClick={() => handleViewClick(connectionId)}>
-                    View
-                  </Button>
+                  <PendingActionButton
+                    key={`pending-action-button-${connectionId}`}
+                    connectionId={connectionId}
+                    connection={connection}
+                    onViewClick={handleViewClick}
+                  />
                 </Box>
               );
             })}

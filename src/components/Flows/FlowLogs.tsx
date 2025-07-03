@@ -24,7 +24,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import DownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 import moment from 'moment';
-import { FlowInterface } from './Flows';
+import { FlowInterface, getFlowRunStartedBy } from './Flows';
 import { delay, formatDuration } from '@/utils/common';
 import { TopNavBar } from '../Connections/ConnectionSyncHistory';
 import { defaultLoadMoreLimit, flowRunLogsOffsetLimit } from '@/config/constant';
@@ -87,6 +87,7 @@ interface DeploymentObject {
   deployment_id: string;
   expectedStartTime: string;
   id: string;
+  orguser: string | null;
   runs: RunObject[];
   name: string;
   startTime: string;
@@ -266,7 +267,9 @@ const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }
         {action === 'detail' ? (
           <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
             <Box sx={{ wordBreak: 'break-word' }}>
-              {logs?.map((log: any, idx) => <Box key={idx}>- {log?.message || log}</Box>)}
+              {logs?.map((log: any, idx) => (
+                <Box key={idx}>- {log?.message || log}</Box>
+              ))}
             </Box>
             {flowRunOffset > 0 &&
               (logsLoaded ? (
@@ -284,6 +287,8 @@ const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }
 };
 
 const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
+  const flowRunStartedBy = getFlowRunStartedBy(logDetail.startTime, logDetail.orguser || 'System');
+
   return (
     <>
       <TableRow
@@ -304,6 +309,14 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
           }}
         >
           {moment(logDetail.startTime).format('MMMM D, YYYY')}
+          {flowRunStartedBy && (
+            <Typography fontWeight={600} component="p">
+              By:{' '}
+              <strong style={{ color: flowRunStartedBy === 'System' ? '#333333' : '#DAA520' }}>
+                {flowRunStartedBy}
+              </strong>
+            </Typography>
+          )}
         </TableCell>
 
         <TableCell

@@ -69,22 +69,88 @@ const flowStatus = (status: boolean) => (
   </Typography>
 );
 
+export const getFlowRunStartedBy = (flowRunStartTime: string | null, user: string) => {
+  let flowRunStartedBy = null;
+  // we started recording manual triggering of flow-runs on 2025-05-20
+  if (flowRunStartTime && flowRunStartTime >= '2025-05-20T00:00:00.0+00:00') {
+    flowRunStartedBy = user === 'System' ? 'System' : trimEmail(user);
+    return flowRunStartedBy;
+  }
+  return null;
+};
+
 const flowLastRun = (flow: FlowInterface) => {
+  const flowRunStartedBy = getFlowRunStartedBy(
+    flow.lastRun?.startTime || null,
+    flow.lastRun?.orguser || 'System'
+  );
+
   return (
     <>
       {flow.lock ? (
-        <Box width={120}>
-          <Typography variant="subtitle2" fontWeight={600}>
-            By: <strong>{trimEmail(flow.lock.lockedBy)}</strong>
-          </Typography>
-          <Typography variant="subtitle2" fontWeight={600} fontSize={10}>
-            {lastRunTime(flow.lock.lockedAt)}
-          </Typography>
-        </Box>
+        //logic is that if the lock is running or queued, then it was manually triggered for run and not just for locking it.
+        flow.lock.status === 'running' || flow.lock.status === 'queued' ? (
+          <Box
+            data-testid={'flowlastrun-' + flow.name}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              color: '#DAA520',
+              gap: '3px',
+            }}
+          >
+            <Typography data-testid={'flowlastrun-by-' + flow.name} fontWeight={600} component="p">
+              By: <strong>{trimEmail(flow.lock.lockedBy)}</strong>
+            </Typography>
+            <Typography fontWeight={600} component="p">
+              {lastRunTime(flow.lock.lockedAt)}
+            </Typography>
+          </Box>
+        ) : flow.lastRun ? (
+          <>
+            <Typography data-testid={'flowlastrun-' + flow.name} fontWeight={600} component="p">
+              {lastRunTime(flow.lastRun?.startTime || flow.lastRun?.expectedStartTime)}
+            </Typography>
+            {flowRunStartedBy && (
+              <Typography
+                data-testid={'flowlastrun-by-' + flow.name}
+                fontWeight={600}
+                component="p"
+              >
+                By:{' '}
+                <strong style={{ color: flowRunStartedBy === 'System' ? '#333333' : '#DAA520' }}>
+                  {flowRunStartedBy}
+                </strong>
+              </Typography>
+            )}
+          </>
+        ) : (
+          <Box
+            data-testid={'flowlastrun-' + flow.name}
+            sx={{
+              display: 'flex',
+              color: '#399D47',
+              gap: '3px',
+              alignItems: 'center',
+            }}
+          >
+            &mdash;
+          </Box>
+        )
       ) : flow.lastRun ? (
-        <Typography data-testid={'flowlastrun-' + flow.name} fontWeight={600} component="p">
-          {lastRunTime(flow.lastRun?.startTime || flow.lastRun?.expectedStartTime)}
-        </Typography>
+        <>
+          <Typography data-testid={'flowlastrun-' + flow.name} fontWeight={600} component="p">
+            {lastRunTime(flow.lastRun?.startTime || flow.lastRun?.expectedStartTime)}
+          </Typography>
+          {flowRunStartedBy && (
+            <Typography data-testid={'flowlastrun-by-' + flow.name} fontWeight={600} component="p">
+              By:{' '}
+              <strong style={{ color: flowRunStartedBy === 'System' ? '#333333' : '#DAA520' }}>
+                {flowRunStartedBy}
+              </strong>
+            </Typography>
+          )}
+        </>
       ) : (
         <Box
           data-testid={'flowlastrun-' + flow.name}

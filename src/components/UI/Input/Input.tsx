@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import { Box, TextField, InputLabel, TextFieldProps } from '@mui/material';
-import { UseFormRegister } from 'react-hook-form';
+import { UseFormRegister, Control, Controller } from 'react-hook-form';
 
 const StyledTextField = styled(TextField)(() => ({
   '& .MuiOutlinedInput-root': {
@@ -52,21 +52,25 @@ const StyledInputLabel = styled(InputLabel)(() => ({
 
 interface InputProps extends Omit<TextFieldProps, 'variant'> {
   register?: UseFormRegister<any>;
+  control?: Control<any>;
   name?: string;
   variant?: 'standard' | 'outlined' | 'filled';
   hookFormValidations?: any;
   fieldStyle?: 'normal' | 'transformation' | 'none';
+  rules?: any;
 }
 
 export const Input: React.FC<InputProps> = ({
   id,
   label,
   register,
+  control,
   name,
   sx,
   required = false,
   hookFormValidations = {},
   fieldStyle = 'normal',
+  rules,
   ...rest
 }) => {
   let InputBox, Label;
@@ -95,7 +99,8 @@ export const Input: React.FC<InputProps> = ({
   if (rest.type === 'number') {
     registerValues.valueAsNumber = true;
   }
-  return (
+
+  const renderInput = (field?: any) => (
     <Box sx={sx}>
       {label && (
         <Label htmlFor={name}>
@@ -103,23 +108,36 @@ export const Input: React.FC<InputProps> = ({
           {required && '*'}
         </Label>
       )}
-      {register && name ? (
-        <InputBox
-          {...register(name, {
-            ...registerValues,
-            ...hookFormValidations,
-          })}
-          InputProps={{
-            inputProps: { step: 'any' },
-          }}
-          {...rest}
-          id={id ? id : name}
-        />
-      ) : (
-        <InputBox {...rest} id={id ? id : name} />
-      )}
+      <InputBox
+        {...(field ||
+          (register && name
+            ? register(name, {
+                ...registerValues,
+                ...hookFormValidations,
+              })
+            : {}))}
+        InputProps={{
+          inputProps: { step: 'any', ...rest.inputProps },
+          ...rest.InputProps,
+        }}
+        {...rest}
+        id={id ? id : name}
+      />
     </Box>
   );
+
+  if (control && name) {
+    return (
+      <Controller
+        name={name}
+        control={control}
+        rules={rules}
+        render={({ field }) => renderInput(field)}
+      />
+    );
+  }
+
+  return renderInput();
 };
 
 export default Input;
