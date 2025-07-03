@@ -1,5 +1,5 @@
 import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
@@ -14,6 +14,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import { SRC_MODEL_NODE } from '../constant';
+import { TextField, FormControlLabel, Checkbox } from '@mui/material';
 
 const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const globalContext = useContext(GlobalContext);
@@ -124,6 +125,9 @@ const ProjectTree = ({
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
+  const searchTermRef = useRef('');
+  const [filterBy, setFilterBy] = useState<'schema' | 'table'>('table');
+  const [openByDefault, setOpenByDefault] = useState(false);
 
   const constructAndSetProjectTreeData = (dbtSourceModels: WarehouseTable[]) => {
     // group by schema and push dbtSourceModels under the children key
@@ -149,14 +153,34 @@ const ProjectTree = ({
       };
     });
 
-    setProjectTreeData([{ id: '0', schema: 'Data', children: treeData }]);
+    if (treeData.length == 0) setProjectTreeData([]);
+    else setProjectTreeData([{ id: '0', schema: 'Data', children: treeData }]);
+
+    if (filterBy === 'table' && searchTermRef.current.trim() !== '') {
+      setOpenByDefault(true);
+    } else {
+      setOpenByDefault(false);
+    }
+  };
+
+  const onSearchValueChange = (searchTerm: string) => {
+    searchTerm = searchTerm.trim();
+    const filteredData = dbtSourceModels.filter((dbtSourceModel) => {
+      if (filterBy === 'schema') {
+        return dbtSourceModel.schema.toLowerCase().includes(searchTerm.toLowerCase());
+      } else if (filterBy === 'table') {
+        return dbtSourceModel.input_name.toLowerCase().includes(searchTerm.toLowerCase());
+      }
+      return false;
+    });
+    constructAndSetProjectTreeData(filteredData);
   };
 
   useEffect(() => {
     if (dbtSourceModels) {
-      constructAndSetProjectTreeData(dbtSourceModels);
+      onSearchValueChange(searchTermRef.current);
     }
-  }, [dbtSourceModels]);
+  }, [dbtSourceModels, filterBy]);
 
   return (
     <Box
@@ -183,17 +207,48 @@ const ProjectTree = ({
         }}
         ref={ref}
       >
-        <Tree
-          childrenAccessor={(d: any) => d.children}
-          openByDefault={false}
-          data={projectTreeData}
-          height={height}
-          width={width}
-          rowHeight={30}
-          onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
-        >
-          {(props) => <Node {...props} handleSyncClick={handleSyncClick} isSyncing={isSyncing} />}
-        </Tree>
+        <Box sx={{ px: 2, py: 1 }}>
+          <TextField
+            label={`Search by ${filterBy}`}
+            onChange={(e) => {
+              searchTermRef.current = e.target.value;
+              onSearchValueChange(e.target.value);
+            }}
+            fullWidth
+            size="small"
+          />
+          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+            <FormControlLabel
+              control={
+                <Checkbox checked={filterBy === 'schema'} onChange={() => setFilterBy('schema')} />
+              }
+              label="Schema"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox checked={filterBy === 'table'} onChange={() => setFilterBy('table')} />
+              }
+              label="Table"
+            />
+          </Box>
+        </Box>
+        {projectTreeData.length > 0 ? (
+          <Tree
+            childrenAccessor={(d: any) => d.children}
+            openByDefault={openByDefault}
+            data={projectTreeData}
+            height={height}
+            width={width}
+            rowHeight={30}
+            onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
+          >
+            {(props) => <Node {...props} handleSyncClick={handleSyncClick} isSyncing={isSyncing} />}
+          </Tree>
+        ) : (
+          <Box sx={{ textAlign: 'center', mt: 4 }}>
+            <Typography>No results found.</Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   );

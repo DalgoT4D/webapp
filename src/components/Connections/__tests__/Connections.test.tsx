@@ -240,4 +240,38 @@ describe('Connections Setup', () => {
       })
     );
   });
+
+  it('should filter connections based on search input', async () => {
+    const mockFetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue(CONNECTIONS),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue([CONNECTIONS[1]]), // Only test-conn-2
+      });
+
+    (global as any).fetch = mockFetch;
+
+    await act(async () => {
+      render(connectionWithConfig);
+    });
+
+    const searchInput = screen.getByLabelText('Search Connections');
+    expect(searchInput).toBeInTheDocument();
+
+    await userEvent.clear(searchInput);
+    await userEvent.type(searchInput, 'test-conn-2');
+
+    const table = screen.getByRole('table');
+    const filteredRow = within(table).getByText('test-conn-2');
+    expect(filteredRow).toBeInTheDocument();
+
+    const rows = within(table).getAllByRole('row');
+    expect(rows.length).toBe(2);
+    expect(within(table).queryByText('test-conn-1')).not.toBeInTheDocument();
+    expect(within(table).queryByText('test-conn-3')).not.toBeInTheDocument();
+  });
 });

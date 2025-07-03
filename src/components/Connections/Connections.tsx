@@ -1,6 +1,6 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, useRef } from 'react';
 import useSWR from 'swr';
-import { CircularProgress, Box, Typography, Tooltip, SxProps } from '@mui/material';
+import { CircularProgress, Box, Typography, Tooltip, SxProps, TextField } from '@mui/material';
 import { List } from '../List/List';
 import Button from '@mui/material/Button';
 import SyncIcon from '@/assets/icons/sync.svg';
@@ -88,6 +88,7 @@ export type Connection = {
   resetConnDeploymentId: string | null;
   clearConnDeploymentId: string | null;
   queuedFlowRunWaitTime: QueuedRuntimeInfo | null;
+  blockId: string;
 };
 // type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
@@ -529,7 +530,6 @@ export const Connections = () => {
   const permissions = globalContext?.Permissions.state || [];
   const [connectionId, setConnectionId] = useState<string>('');
   const [logsConnection, setLogsConnection] = useState<Connection>();
-  // const [resetDeploymentId, setResetDeploymentId] = useState<string>('');
   const [clearConnDeploymentId, setClearConnDeploymentId] = useState<string | null>('');
   const [syncingConnectionIds, setSyncingConnectionIds] = useState<Array<string>>([]);
   const syncLogs = useConnSyncLogs();
@@ -543,9 +543,6 @@ export const Connections = () => {
   const open = Boolean(anchorEl);
   const handleClick = (connection: Connection, event: HTMLElement | null) => {
     setConnectionId(connection.connectionId);
-    // setResetDeploymentId(connection.resetConnDeploymentId);
-    console.log(connection);
-    console.log(connection.clearConnDeploymentId);
     setClearConnDeploymentId(connection.clearConnDeploymentId);
     setAnchorEl(event);
   };
@@ -562,7 +559,15 @@ export const Connections = () => {
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`);
+
+  const { data, isLoading, mutate } = useSWR(`airbyte/v1/connections`, null, {
+    refreshInterval: (data) => {
+      return Array.isArray(data) && data.some((conn: any) => conn.lock) ? 3000 : 0;
+    },
+  });
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const trackAmplitudeEvent = useTracking();
   const fetchFlowRunStatus = async (flow_run_id: string) => {
     try {
@@ -682,67 +687,87 @@ export const Connections = () => {
     handleCancelClearConnection();
   };
 
-  const updateRows = (data: any) => {
-    if (data && data.length > 0) {
-      const tempRows = data.map((connection: any) => [
-        <Box key={`name-${connection.blockId}`} sx={{ display: 'flex', alignItems: 'center' }}>
-          <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
-          <Typography variant="body1" fontWeight={600}>
-            {connection.name}
-          </Typography>
-        </Box>,
-        getSourceDest(connection),
-        <SyncStatus
-          key={`sync-status-${connection.blockId}`}
-          connection={connection}
-          syncingConnectionIds={syncingConnectionIds}
-          setShowLogsDialog={setShowLogsDialog}
-          setLogsConnection={setLogsConnection}
-          trackAmplitudeEvent={trackAmplitudeEvent}
-        />,
-        <Actions
-          key={`actions-${connection.blockId}`}
-          connection={connection}
-          idx={connection.blockId}
-          permissions={permissions}
-          syncConnection={syncConnection}
-          syncingConnectionIds={syncingConnectionIds}
-          setSyncingConnectionIds={setSyncingConnectionIds}
-          open={open}
-          handleClick={handleClick}
-        />,
-      ]);
-
-      const tempRowValues = data.map((connection: any) => [connection.name, null, null]);
-
-      setRows(tempRows);
-      setRowValues(tempRowValues);
-    } else {
-      setRows([]);
-      setRowValues([]);
-    }
+  const sortingConnections = (data: any[]) => {
+    if (!data || data.length === 0) return [];
+    const sortedData = [...data].sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+    return sortedData;
   };
 
-  const pollForConnectionsLockAndRefreshRows = async () => {
-    try {
-      let updatedData = await httpGet(session, 'airbyte/v1/connections');
-      let isLocked: boolean = updatedData?.some((conn: any) => conn.lock);
-      while (isLocked) {
-        updatedData = await httpGet(session, 'airbyte/v1/connections');
-        isLocked = updatedData?.some((conn: any) => (conn.lock ? true : false));
-        await delay(3000);
-        updateRows(updatedData);
-      }
-    } catch (error) {
-      console.log(error);
+  const filterConnections = (connections: Connection[], searchTerm: string) => {
+    const lower = searchTerm.toLowerCase().trim();
+    if (!lower) return connections;
+
+    return connections.filter(
+      (conn: Connection) =>
+        conn.name?.toLowerCase().includes(lower) ||
+        conn.source?.sourceName?.toLowerCase().includes(lower)
+    );
+  };
+
+  const updateRows = (data: Connection[]) => {
+    if (!data?.length) {
+      setRows([]);
+      setRowValues([]);
+      return;
     }
+
+    // Sort connections alphabetically by name
+    const sortedData = sortingConnections(data);
+
+    // Filter based on current search term if any
+    const searchTerm = searchInputRef.current?.value || '';
+    const filteredData = filterConnections(sortedData, searchTerm);
+
+    const tempRows = filteredData.map((connection: Connection) => [
+      <Box key={`name-${connection.connectionId}`} sx={{ display: 'flex', alignItems: 'center' }}>
+        <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
+        <Typography variant="body1" fontWeight={600}>
+          {connection.name}
+        </Typography>
+      </Box>,
+      getSourceDest(connection),
+      <SyncStatus
+        key={`sync-status-${connection.connectionId}`}
+        connection={connection}
+        syncingConnectionIds={syncingConnectionIds}
+        setShowLogsDialog={setShowLogsDialog}
+        setLogsConnection={setLogsConnection}
+        trackAmplitudeEvent={trackAmplitudeEvent}
+      />,
+      <Actions
+        key={`actions-${connection.connectionId}`}
+        connection={connection}
+        idx={connection.blockId}
+        permissions={permissions}
+        syncConnection={syncConnection}
+        syncingConnectionIds={syncingConnectionIds}
+        setSyncingConnectionIds={setSyncingConnectionIds}
+        open={open}
+        handleClick={handleClick}
+      />,
+    ]);
+
+    const tempRowValues = filteredData.map((connection: Connection) => [
+      connection.name,
+      null,
+      null,
+    ]);
+
+    setRows(tempRows);
+    setRowValues(tempRowValues);
+  };
+
+  const onSearchValueChange = (data: Connection[]) => {
+    if (!data) return;
+    updateRows(data);
   };
 
   // when the connection list changes
   useEffect(() => {
     if (session) {
       updateRows(data);
-      pollForConnectionsLockAndRefreshRows();
     }
   }, [session, data]);
 
@@ -816,7 +841,7 @@ export const Connections = () => {
       {showLogsDialog && (
         <ConnectionSyncHistory setShowLogsDialog={setShowLogsDialog} connection={logsConnection} />
       )}
-      <PendingActionsAccordion refreshConnectionsList={mutate} />
+      <PendingActionsAccordion refreshConnectionsList={mutate} connections={data} />
       <ActionsMenu
         eleType="connection"
         anchorEl={anchorEl}
@@ -837,15 +862,37 @@ export const Connections = () => {
         showForm={showDialog}
         setShowForm={setShowDialog}
       />
-      <List
-        hasCreatePermission={permissions.includes('can_create_connection')}
-        openDialog={handleClickOpen}
-        title="Connection"
-        headers={headers}
-        rows={rows}
-        rowValues={rowValues}
-        height={115}
-      />
+      <Box>
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <TextField
+            label="Search Connections"
+            variant="outlined"
+            size="small"
+            inputRef={searchInputRef}
+            onChange={() => onSearchValueChange(data)}
+            sx={{ width: 300 }}
+          />
+          <Button
+            data-testid="add-new-connection"
+            variant="contained"
+            onClick={handleClickOpen}
+            disabled={!permissions.includes('can_create_connection')}
+            className="connectionadd_walkthrough"
+          >
+            + New Connection
+          </Button>
+        </Box>
+        <List
+          onlyList
+          hasCreatePermission={permissions.includes('can_create_connection')}
+          openDialog={handleClickOpen}
+          title="Connection"
+          headers={headers}
+          rows={rows}
+          rowValues={rowValues}
+          height={115}
+        />
+      </Box>
       <ConfirmationDialog
         loading={deleteLoading}
         show={showConfirmDeleteDialog}
