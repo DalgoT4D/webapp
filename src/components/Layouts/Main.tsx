@@ -116,7 +116,7 @@ const MainDashboard = ({ children }: any) => {
               fontSize: '18px',
             }}
           >
-            <a href="mailto:support@dalgo.in">support@dalgo.in</a>
+            <a href="mailto:support@dalgo.org">support@dalgo.org</a>
           </Box>
         </>
       )}

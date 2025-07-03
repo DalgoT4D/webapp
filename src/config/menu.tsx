@@ -18,13 +18,14 @@ import {
   showSupersetAnalysisTab,
   showSupersetUsageTab,
 } from './constant';
+import { fetchTransformType } from '@/pages/pipeline/transform';
 export const drawerWidth = 250;
 
 const getColor = (selected: boolean) => (selected ? primaryColor : '');
 const org_slug = typeof window !== 'undefined' ? localStorage.getItem('org-slug') || '' : '';
 const isV2DataAnalysisTabVisible = orgSlugsWithAccessToV2DataAnalysisTab.includes(org_slug);
 
-export const getSideMenu = () => {
+export const getSideMenu = ({ transformType }: { transformType: string }) => {
   return [
     // This will be added at a later stage
     {
@@ -111,7 +112,7 @@ export const getSideMenu = () => {
       path: '/data-quality',
       icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
       className: 'data_quality_walkthrough',
-      hide: !showElementaryMenu,
+      hide: !showElementaryMenu || transformType === 'ui',
       minimize: false,
     },
     {

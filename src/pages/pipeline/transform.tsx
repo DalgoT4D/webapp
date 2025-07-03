@@ -13,11 +13,22 @@ import ConfirmationDialog from '@/components/Dialog/ConfirmationDialog';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 
-export type TransformType = 'github' | 'ui' | 'none' | null;
+export type TransformType = 'github' | 'ui' | 'none' | 'dbtcloud' | null;
 
 interface TransformTypeResponse {
   transform_type: TransformType;
 }
+
+export const fetchTransformType = async (session: any) => {
+  try {
+    const { transform_type } = await httpGet(session, 'dbt/dbt_transform/');
+
+    return { transform_type: transform_type as TransformType };
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 const Transform = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -40,22 +51,11 @@ const Transform = () => {
   };
 
   useEffect(() => {
-    const fetchTransformType = async () => {
-      try {
-        const { transform_type } = await httpGet(session, 'dbt/dbt_transform/');
-
-        return { transform_type: transform_type as TransformType };
-      } catch (error) {
-        console.error(error);
-        throw error;
-      }
-    };
-
     if (session) {
-      fetchTransformType()
+      fetchTransformType(session)
         .then((response: TransformTypeResponse) => {
           const transformType = response.transform_type;
-          if (transformType === 'ui' || transformType === 'github')
+          if (transformType === 'ui' || transformType === 'github' || transformType === 'dbtcloud')
             setSelectedTransform(transformType);
           else setSelectedTransform('none');
         })
@@ -228,7 +228,7 @@ const Transform = () => {
               </Grid>
             </Grid>
           </Box>
-        ) : selectedTransform && ['ui', 'github'].includes(selectedTransform) ? (
+        ) : selectedTransform && ['ui', 'github', 'dbtcloud'].includes(selectedTransform) ? (
           <DBTTransformType transformType={selectedTransform}></DBTTransformType>
         ) : (
           ''

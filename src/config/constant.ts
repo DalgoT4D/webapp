@@ -12,6 +12,7 @@ export const defaultLoadMoreLimit = parseInt(
 );
 export const orgSlugsWithAccessToV2DataAnalysisTab =
   process.env.NEXT_PUBLIC_SHOW_V2DATAANALYSIS_ORGS_SLUG?.split(',') || [];
+export const errorToastDuration = parseInt(process.env.NEXT_PUBLIC_ERROR_TOAST_DURATION || '15');
 export const dalgoWhitelistIps = process.env.NEXT_PUBLIC_DALGO_WHITELIST_IPS?.split(',') || [];
 
 export const flowRunLogsOffsetLimit = 200;
@@ -19,6 +20,8 @@ export const flowRunLogsOffsetLimit = 200;
 export const usageDashboardId = process.env.NEXT_PUBLIC_USAGE_DASHBOARD_ID;
 
 export const usageDashboardDomain = process.env.NEXT_PUBLIC_USAGE_DASHBOARD_DOMAIN;
+
+export const airbyteUrl = process.env.NEXT_PUBLIC_AIRBYTE_URL;
 
 // Master task slugs
 export const TASK_DBTRUN = 'dbt-run';
@@ -33,7 +36,7 @@ export const TASK_DBTCLOUD_JOB = 'dbt-cloud-job';
 export const demoAccDestSchema = process.env.NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEMA;
 
 // Product walkthrough for demo account
-export const demoProductWalkthrough = process.env.NEXT_PUBLIC_DEMO_WALKTRHOUGH_ENABLED || false;
+export const demoProductWalkthrough = process.env.NEXT_PUBLIC_DEMO_WALKTHROUGH_ENABLED || false;
 
 // alpha features
 export const enableLogSummaries = process.env.NEXT_PUBLIC_ENABLE_LOG_SUMMARIES;
