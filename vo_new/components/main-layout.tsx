@@ -23,6 +23,9 @@ import {
   Home,
   LayoutDashboard
 } from "lucide-react"
+import IngestIcon from "@/assets/icons/ingest"
+import TransformIcon from "@/assets/icons/transform"
+import OrchestrateIcon from "@/assets/icons/orchestrate"
 import { Header } from "./header"
 import { useAuthStore } from "@/stores/authStore"
 
@@ -121,19 +124,19 @@ const getNavItems = (currentPath: string): NavItemType[] => {
         {
           title: "Ingest",
           href: "/ingest",
-          icon: Settings,
+          icon: IngestIcon,
           isActive: currentPath.startsWith("/ingest"),
         },
         {
           title: "Transform",
           href: "/transform",
-          icon: Settings,
+          icon: TransformIcon,
           isActive: currentPath.startsWith("/transform"),
         },
         {
           title: "Orchestrate",
           href: "/orchestrate",
-          icon: Settings,
+          icon: OrchestrateIcon,
           isActive: currentPath.startsWith("/orchestrate"),
         },
       ],
@@ -226,7 +229,7 @@ function CollapsedNavItem({ item }: { item: NavItemType }) {
               item.isActive && "bg-accent font-medium"
             )}
           >
-            <item.icon className="h-5 w-5 flex-shrink-0" />
+            <item.icon className="h-6 w-6 flex-shrink-0" />
           </Link>
         </TooltipTrigger>
         <TooltipContent side="right" className="ml-2">
@@ -261,7 +264,7 @@ function ExpandedNavItem({ item }: { item: NavItemType }) {
           title={item.title}
         >
           <div className="flex items-center gap-3">
-            <item.icon className="h-5 w-5 flex-shrink-0" />
+            <item.icon className="h-6 w-6 flex-shrink-0" />
             <span className="font-medium">{item.title}</span>
           </div>
           <ChevronDown 
@@ -279,12 +282,12 @@ function ExpandedNavItem({ item }: { item: NavItemType }) {
                 key={index}
                 href={child.href}
                 className={cn(
-                  "flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50 transition-colors text-sm",
+                  "flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors text-sm",
                   child.isActive && "bg-accent font-medium"
                 )}
                 title={child.title}
               >
-                <child.icon className="h-4 w-4 flex-shrink-0" />
+                <child.icon className="h-6 w-6 flex-shrink-0" />
                 <span>{child.title}</span>
               </Link>
             ))}
@@ -303,7 +306,7 @@ function ExpandedNavItem({ item }: { item: NavItemType }) {
       )}
       title={item.title}
     >
-      <item.icon className="h-5 w-5 flex-shrink-0" />
+      <item.icon className="h-6 w-6 flex-shrink-0" />
       <span className="font-medium">{item.title}</span>
     </Link>
   )
@@ -332,7 +335,7 @@ function MobileNavItem({ item, onClose }: { item: NavItemType; onClose: () => vo
           )}
         >
           <div className="flex items-center gap-3">
-            <item.icon className="h-5 w-5" />
+            <item.icon className="h-6 w-6" />
             <span className="font-medium">{item.title}</span>
           </div>
           <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
@@ -345,11 +348,11 @@ function MobileNavItem({ item, onClose }: { item: NavItemType; onClose: () => vo
                 href={child.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors",
+                  "flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors",
                   child.isActive && "bg-accent"
                 )}
               >
-                <child.icon className="h-4 w-4" />
+                <child.icon className="h-6 w-6 flex-shrink-0" />
                 <span className="text-sm">{child.title}</span>
               </Link>
             ))}
@@ -368,7 +371,7 @@ function MobileNavItem({ item, onClose }: { item: NavItemType; onClose: () => vo
         item.isActive && "bg-accent"
       )}
     >
-      <item.icon className="h-5 w-5" />
+      <item.icon className="h-6 w-6 flex-shrink-0" />
       <span className="font-medium">{item.title}</span>
     </Link>
   )
