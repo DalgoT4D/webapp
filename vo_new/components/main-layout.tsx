@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { NEXT_PUBLIC_WEBAPP_ENVIRONMENT } from "@/constants/constants"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import {
   Tooltip,
@@ -34,77 +35,126 @@ interface NavItemType {
   children?: NavItemType[]
 }
 
-// Define the navigation items with their routes and icons
-const getNavItems = (currentPath: string): NavItemType[] => [
-  {
-    title: "Impact",
-    href: "/",
-    icon: Home,
-    isActive: currentPath === "/",
-  },
-  {
-    title: "Metrics",
-    href: "/metrics",
-    icon: BarChart3,
-    isActive: currentPath.startsWith("/metrics"),
-  },
-  {
-    title: "Charts",
-    href: "/charts",
-    icon: BarChart3,
-    isActive: currentPath.startsWith("/charts"),
-  },
-  {
-    title: "Dashboards",
-    href: "/dashboards",
-    icon: LayoutDashboard,
-    isActive: currentPath.startsWith("/dashboards"),
-  },
-  {
-    title: "Reports",
-    href: "/reports",
-    icon: FileText,
-    isActive: currentPath.startsWith("/reports"),
-  },
-  {
-    title: "Data",
-    href: "/data",
-    icon: Database,
-    isActive: currentPath.startsWith("/data"),
-    children: [
-      {
-        title: "Ingest",
-        href: "/ingest",
-        icon: Settings,
-        isActive: currentPath.startsWith("/ingest"),
-      },
-      {
-        title: "Transform",
-        href: "/transform",
-        icon: Settings,
-        isActive: currentPath.startsWith("/transform"),
-      },
-      {
-        title: "Orchestrate",
-        href: "/orchestrate",
-        icon: Settings,
-        isActive: currentPath.startsWith("/orchestrate"),
-      },
-    ],
-  },
-  {
-    title: "Alerts",
-    href: "/alerts",
-    icon: AlertTriangle,
-    isActive: currentPath.startsWith("/alerts"),
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
-    isActive: currentPath.startsWith("/settings"),
-  },
+// Menu items to hide in production environment
+const PRODUCTION_HIDDEN_ITEMS = [
+  // Add menu item titles to hide in production
+  "Metrics",
+  "Reports",
+  "Dashboards",
+  "Alerts",
+  "Settings",
 ]
+
+// Function to filter menu items for production environment
+const filterMenuItemsForProduction = (items: NavItemType[]): NavItemType[] => {
+  if (NEXT_PUBLIC_WEBAPP_ENVIRONMENT !== "production") {
+    return items // Show full menu for development and staging
+  }
+  
+  return items.filter(item => {
+    // Check if the main item should be hidden in production
+    if (PRODUCTION_HIDDEN_ITEMS.includes(item.title)) {
+      return false
+    }
+    
+    // If item has children, filter them too
+    if (item.children && item.children.length > 0) {
+      const filteredChildren = item.children.filter(child => 
+        !PRODUCTION_HIDDEN_ITEMS.includes(child.title)
+      )
+      
+      // If all children are hidden, hide the parent too
+      if (filteredChildren.length === 0) {
+        return false
+      }
+      
+      // Return item with filtered children
+      return {
+        ...item,
+        children: filteredChildren
+      }
+    }
+    
+    return true
+  })
+}
+
+// Define the navigation items with their routes and icons
+const getNavItems = (currentPath: string): NavItemType[] => {
+  const allNavItems: NavItemType[] = [
+    {
+      title: "Impact",
+      href: "/",
+      icon: Home,
+      isActive: currentPath === "/",
+    },
+    {
+      title: "Metrics",
+      href: "/metrics",
+      icon: BarChart3,
+      isActive: currentPath.startsWith("/metrics"),
+    },
+    {
+      title: "Charts",
+      href: "/charts",
+      icon: BarChart3,
+      isActive: currentPath.startsWith("/charts"),
+    },
+    {
+      title: "Dashboards",
+      href: "/dashboards",
+      icon: LayoutDashboard,
+      isActive: currentPath.startsWith("/dashboards"),
+    },
+    {
+      title: "Reports",
+      href: "/reports",
+      icon: FileText,
+      isActive: currentPath.startsWith("/reports"),
+    },
+    {
+      title: "Data",
+      href: "/data",
+      icon: Database,
+      isActive: currentPath.startsWith("/data"),
+      children: [
+        {
+          title: "Ingest",
+          href: "/ingest",
+          icon: Settings,
+          isActive: currentPath.startsWith("/ingest"),
+        },
+        {
+          title: "Transform",
+          href: "/transform",
+          icon: Settings,
+          isActive: currentPath.startsWith("/transform"),
+        },
+        {
+          title: "Orchestrate",
+          href: "/orchestrate",
+          icon: Settings,
+          isActive: currentPath.startsWith("/orchestrate"),
+        },
+      ],
+    },
+    {
+      title: "Alerts",
+      href: "/alerts",
+      icon: AlertTriangle,
+      isActive: currentPath.startsWith("/alerts"),
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: Settings,
+      isActive: currentPath.startsWith("/settings"),
+    },
+  ]
+
+  // Filter menu items for production environment
+  return filterMenuItemsForProduction(allNavItems)
+}
 
 // Flatten menu items for collapsed view
 const getFlattenedNavItems = (items: NavItemType[]): NavItemType[] => {
