@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
@@ -240,5 +240,24 @@ describe('Delete org user', () => {
 
     // mutate will also be called on this
     expect(deleteOrgUserApiMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ManageUsers - handleEdit', () => {
+  it('should set selectedUserRole, set editOrgRole, and close action menu when Edit is clicked', async () => {
+    await act(() => render(manageUsers));
+
+    const actionButton = screen.getByRole('button', { name: '' });
+    fireEvent.click(actionButton);
+
+    const editButton = await screen.findByText(/edit/i);
+    fireEvent.click(editButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
+    });
+
+    // Optionally verify that the Select input is rendered (role selection)
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 });
