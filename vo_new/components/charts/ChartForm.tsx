@@ -47,6 +47,8 @@ interface ChartFormData {
   chartDescription: string;
   chartType: string;
   dataLimit: string;
+  mode: 'raw' | 'aggregated';
+  aggregateFunc: string;
 }
 
 interface EditChart {
@@ -118,7 +120,9 @@ export default function ChartForm({
       chartName: '',
       chartDescription: '',
       chartType: 'bar',
-      dataLimit: '10'
+      dataLimit: '10',
+      mode: 'raw',
+      aggregateFunc: 'sum'
     },
     mode: 'onChange'
   })
@@ -131,6 +135,8 @@ export default function ChartForm({
   const watchedChartType = watch('chartType')
   const watchedDataLimit = watch('dataLimit')
   const watchedChartName = watch('chartName')
+  const watchedMode = watch('mode')
+  const watchedAggregateFunc = watch('aggregateFunc')
   
   // SWR hooks for data fetching
   const { data: schemas, isLoading: schemasLoading, error: schemasError } = useSchemas()
@@ -143,24 +149,35 @@ export default function ChartForm({
   const { trigger: updateChart, isMutating: isUpdating } = useChartUpdate()
   const { trigger: deleteChart, isMutating: isDeleting } = useChartDelete()
   
+
   // Chart data generation payload
   const chartPayload = useMemo((): GenerateChartPayload | null => {
-    //of if any of the above values are not set, return null
-    //but we want chart to be created when the values of x axis is changed not only y axis. 
-    if (!watchedSchema || !watchedTable ) {
-      return null
+    if (!watchedSchema || !watchedTable) return null;
+
+    if (watchedMode === 'raw') {
+      return {
+        chart_type: watchedChartType,
+        mode: 'raw',
+        schema_name: watchedSchema,
+        table_name: watchedTable,
+        xaxis_col: watchedXAxis,
+        yaxis_col: watchedYAxis,
+        offset: 0,
+        limit: parseInt(watchedDataLimit) || 10
+      };
     }
-    
+    // aggregated
+    if ( !watchedYAxis || !watchedAggregateFunc) return null;
     return {
       chart_type: watchedChartType,
+      mode: 'aggregated',
       schema_name: watchedSchema,
       table_name: watchedTable,
       xaxis_col: watchedXAxis,
-      yaxis_col: watchedYAxis ,
-      offset: 0,
-      limit: parseInt(watchedDataLimit) || 10
-    }
-  }, [watchedSchema, watchedTable, watchedXAxis, watchedYAxis, watchedChartType, watchedDataLimit, watchedChartName])
+      yaxis_col: watchedYAxis,
+      aggregate_func: watchedAggregateFunc
+    };
+  }, [watchedSchema, watchedTable, watchedMode, watchedXAxis, watchedYAxis, watchedAggregateFunc, watchedDataLimit, watchedChartType]);
   
   // Chart data with SWR caching
   const { data: chartData, error: chartDataError, isLoading: isChartDataLoading } = useChartData(
@@ -238,9 +255,11 @@ export default function ChartForm({
         schema_name: formData.schema,
         table: formData.table,
         config: {
+          chartType: formData.chartType,
+          mode: formData.mode,
           xAxis: formData.xAxis,
           yAxis: formData.yAxis,
-          chartType: formData.chartType
+          ...(formData.mode === 'aggregated' && { aggregate_func: formData.aggregateFunc })
         }
       }
       
@@ -295,6 +314,26 @@ export default function ChartForm({
       table.toLowerCase().includes(tableSearch.toLowerCase())
     )
   }, [tables, tableSearch])
+
+
+  const dynmaicXaxisLables =()=>{
+    const chartType = ["pie"];
+    if(chartType.includes(watchedChartType)){
+      return "Category"
+    }
+    return "X-Axis"
+  }
+
+  const dynamicYaxisLables =()=>{
+    const chartType = ["pie"];
+    if(watchedMode === "raw" && chartType.includes(watchedChartType)){
+      return "Value"
+    }else if(watchedMode == "raw"){
+      return "Y-Axis"
+    }else if(watchedMode == "aggregated"){
+      return "Aggregate Column"
+    }
+  }
   
   const isLoading = isSaving || isUpdating || isDeleting
   
@@ -402,18 +441,16 @@ export default function ChartForm({
                     </div>
                   </div>
                   
-                  {/* X-Axis or Category */}
+                  {/* X-Axis */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      {watchedChartType === 'pie' ? 'Category' : 'X-Axis'}
-                    </label>
-                    <Select 
-                      value={watchedXAxis} 
+                    <label className="block text-sm font-medium mb-2">{dynmaicXaxisLables()}</label>
+                    <Select
+                      value={watchedXAxis}
                       onValueChange={(value) => setValue('xAxis', value)}
                       disabled={!watchedTable || columnsLoading}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder={columnsLoading ? "Loading..." : (watchedChartType === 'pie' ? "Choose category" : "Choose X-Axis")} />
+                        <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose X-Axis"} />
                       </SelectTrigger>
                       <SelectContent>
                         {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
@@ -428,19 +465,34 @@ export default function ChartForm({
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  {/* Y-Axis or Value */}
+                  {/* Data Mode */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      {watchedChartType === 'pie' ? 'Value' : 'Y-Axis'}
-                    </label>
-                    <Select 
-                      value={watchedYAxis} 
+                    <label className="block text-sm font-medium mb-2">Data Mode</label>
+                    <Select
+                      value={watchedMode}
+                      onValueChange={(value) => setValue('mode', value as 'raw' | 'aggregated')}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="raw">Raw data</SelectItem>
+                        <SelectItem value="aggregated">Aggregated data</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* X/Y Axis fields always visible */}
+                  {/* Y-Axis or Aggregate Column */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2"> {dynamicYaxisLables()}</label>
+                    <Select
+                      value={watchedYAxis}
                       onValueChange={(value) => setValue('yAxis', value)}
                       disabled={!watchedTable || columnsLoading}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder={columnsLoading ? "Loading..." : (watchedChartType === 'pie' ? "Choose value" : "Choose Y-Axis")} />
+                        <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose Y-Axis"} />
                       </SelectTrigger>
                       <SelectContent>
                         {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
@@ -455,7 +507,28 @@ export default function ChartForm({
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
+                  {/* Aggregate Function (only for aggregated mode) */}
+                  {watchedMode === 'aggregated' && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Function</label>
+                      <Select
+                        value={watchedAggregateFunc}
+                        onValueChange={(value) => setValue('aggregateFunc', value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select function" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sum">Sum</SelectItem>
+                          <SelectItem value="avg">Average</SelectItem>
+                          <SelectItem value="min">Min</SelectItem>
+                          <SelectItem value="max">Max</SelectItem>
+                          <SelectItem value="count">Count</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   {/* Data Limit */}
                   {chartLibraryType === 'echarts' && (
@@ -513,17 +586,7 @@ export default function ChartForm({
                     </div>
                   </div>
                 )}
-                
-                {/* Action Button */}
-                <Button 
-                  type="button" 
-                  onClick={() => window.location.reload()}
-                  className="w-full" 
-                  disabled={!isValid || isChartDataLoading}
-                  variant="outline"
-                >
-                  {isChartDataLoading ? 'Refreshing Chart...' : 'Refresh Chart'}
-                </Button>
+
                 
                 {(generateError || chartDataError) && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3">

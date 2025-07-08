@@ -15,12 +15,16 @@ export interface ChartData {
 
 export interface GenerateChartPayload {
   chart_type: string
+  mode?: 'raw' | 'aggregated'
   schema_name: string
   table_name: string
-  xaxis_col: string
-  yaxis_col: string
+  xaxis_col?: string
+  yaxis_col?: string
   offset?: number
   limit?: number
+  dimensions?: string | string[]
+  aggregate_col?: string
+  aggregate_func?: string
 }
 
 export interface SaveChartPayload {
@@ -30,9 +34,13 @@ export interface SaveChartPayload {
   schema_name: string
   table: string
   config: {
-    xAxis: string
-    yAxis: string
     chartType: string
+    mode: 'raw' | 'aggregated'
+    xAxis?: string
+    yAxis?: string
+    dimensions?: string | string[]
+    aggregate_col?: string
+    aggregate_func?: string
   }
 }
 
@@ -44,9 +52,13 @@ export interface Chart {
   schema_name: string
   table: string
   config: {
-    xAxis: string
-    yAxis: string
     chartType: string
+    mode?: 'raw' | 'aggregated'
+    xAxis?: string
+    yAxis?: string
+    dimensions?: string | string[]
+    aggregate_col?: string
+    aggregate_func?: string
   }
 }
 
