@@ -402,16 +402,18 @@ export default function ChartForm({
                     </div>
                   </div>
                   
-                  {/* X-Axis */}
+                  {/* X-Axis or Category */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">X-Axis</label>
+                    <label className="block text-sm font-medium mb-2">
+                      {watchedChartType === 'pie' ? 'Category' : 'X-Axis'}
+                    </label>
                     <Select 
                       value={watchedXAxis} 
                       onValueChange={(value) => setValue('xAxis', value)}
                       disabled={!watchedTable || columnsLoading}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose X-Axis"} />
+                        <SelectValue placeholder={columnsLoading ? "Loading..." : (watchedChartType === 'pie' ? "Choose category" : "Choose X-Axis")} />
                       </SelectTrigger>
                       <SelectContent>
                         {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
@@ -427,16 +429,18 @@ export default function ChartForm({
                     </Select>
                   </div>
                   
-                  {/* Y-Axis */}
+                  {/* Y-Axis or Value */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Y-Axis</label>
+                    <label className="block text-sm font-medium mb-2">
+                      {watchedChartType === 'pie' ? 'Value' : 'Y-Axis'}
+                    </label>
                     <Select 
                       value={watchedYAxis} 
                       onValueChange={(value) => setValue('yAxis', value)}
                       disabled={!watchedTable || columnsLoading}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose Y-Axis"} />
+                        <SelectValue placeholder={columnsLoading ? "Loading..." : (watchedChartType === 'pie' ? "Choose value" : "Choose Y-Axis")} />
                       </SelectTrigger>
                       <SelectContent>
                         {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
