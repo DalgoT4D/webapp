@@ -245,6 +245,19 @@ describe('Delete org user', () => {
 
 describe('ManageUsers - handleEdit', () => {
   it('should display role dropdown and Save button when Edit is clicked', async () => {
+    const initalUsersFetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: jest.fn().mockResolvedValueOnce(users),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(roles),
+      });
+
+    (global as any).fetch = initalUsersFetch;
+
     await act(() => render(manageUsers));
 
     const actionButtons = screen.getAllByLabelText('user-action-menu-button');
