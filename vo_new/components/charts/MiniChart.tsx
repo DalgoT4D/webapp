@@ -1,7 +1,27 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
-import ReactECharts from 'echarts-for-react';
+import React, { useEffect, useRef } from 'react';
+import * as echarts from 'echarts/core';
+import { BarChart, LineChart, PieChart } from 'echarts/charts';
+import {
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent
+} from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+
+// Register necessary ECharts components
+echarts.use([
+  BarChart,
+  LineChart,
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  CanvasRenderer
+]);
 
 interface MiniChartProps {
   data: {
@@ -13,41 +33,41 @@ interface MiniChartProps {
 }
 
 export default function MiniChart({ data, chartType, className = "w-full h-full" }: MiniChartProps) {
-  const chartRef = useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 280, height: 160 });
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // Update dimensions based on container size
   useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        if (width > 0 && height > 0) {
-          setDimensions({ width: Math.floor(width), height: Math.floor(height) });
-        }
+    // Initialize chart
+    if (chartRef.current) {
+      chartInstance.current = echarts.init(chartRef.current);
+      
+      // Set chart option
+      const option = generateMiniOption();
+      chartInstance.current.setOption(option);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (chartInstance.current) {
+        chartInstance.current.dispose();
       }
     };
+  }, [data, chartType]);
 
-    // Initial measurement
-    updateDimensions();
-
-    // Set up resize observer for responsive updates
-    const resizeObserver = new ResizeObserver(updateDimensions);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (chartInstance.current) {
+        chartInstance.current.resize();
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
     return () => {
-      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Resize chart when dimensions change
-  useEffect(() => {
-    if (chartRef.current) {
-      chartRef.current.getEchartsInstance()?.resize();
-    }
-  }, [dimensions]);
 
   const generateMiniOption = () => {
     const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -111,7 +131,26 @@ export default function MiniChart({ data, chartType, className = "w-full h-full"
           }]
         };
 
-      case 'area':
+      case 'pie':
+        // Transform data for pie chart
+        const pieData = data['x-axis'].map((label, index) => ({
+          name: String(label),
+          value: Number(data['y-axis'][index]) || 0
+        }));
+        
+        return {
+          ...baseOption,
+          series: [{
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['50%', '50%'],
+            data: pieData,
+            label: { show: false },
+            emphasis: { scale: false }
+          }]
+        };
+
+      default:
         return {
           ...baseOption,
           xAxis: {
@@ -124,98 +163,15 @@ export default function MiniChart({ data, chartType, className = "w-full h-full"
             show: false
           },
           series: [{
-            type: 'line',
+            type: 'bar',
             data: data['y-axis'],
-            smooth: true,
-            symbol: 'none',
-            areaStyle: { color: colors[2] + '40' },
-            lineStyle: { color: colors[2], width: 2 }
+            itemStyle: { color: colors[0] }
           }]
         };
-
-      case 'pie':
-        const pieData = data['x-axis'].map((name, index) => ({
-          name: String(name),
-          value: data['y-axis'][index] || 0
-        }));
-        
-        return {
-          ...baseOption,
-          series: [{
-            type: 'pie',
-            data: pieData,
-            radius: ['25%', '75%'],
-            center: ['50%', '50%'],
-            label: { show: false },
-            labelLine: { show: false },
-            itemStyle: {
-              color: (params: any) => colors[params.dataIndex % colors.length]
-            }
-          }]
-        };
-
-      case 'scatter':
-        const scatterData = data['x-axis'].map((x, index) => [x, data['y-axis'][index]]);
-        
-        return {
-          ...baseOption,
-          xAxis: {
-            type: 'value',
-            show: false
-          },
-          yAxis: {
-            type: 'value',
-            show: false
-          },
-          series: [{
-            type: 'scatter',
-            data: scatterData,
-            symbolSize: 4,
-            itemStyle: { color: colors[3] }
-          }]
-        };
-
-      case 'funnel':
-        const funnelData = data['x-axis'].map((name, index) => ({
-          name: String(name),
-          value: data['y-axis'][index] || 0
-        })).sort((a, b) => b.value - a.value);
-        
-        return {
-          ...baseOption,
-          series: [{
-            type: 'funnel',
-            data: funnelData,
-            left: '10%',
-            width: '80%',
-            label: { show: false },
-            itemStyle: {
-              color: (params: any) => colors[params.dataIndex % colors.length]
-            }
-          }]
-        };
-
-      default:
-        return generateMiniOption();
     }
   };
 
-  const option = generateMiniOption();
-
   return (
-    <div ref={containerRef} className={className}>
-      <ReactECharts
-        ref={chartRef}
-        option={option}
-        style={{ width: '100%', height: '100%' }}
-        opts={{ 
-          renderer: 'canvas',
-          width: dimensions.width,
-          height: dimensions.height
-        }}
-        notMerge={true}
-        lazyUpdate={true}
-      />
-    </div>
+    <div ref={chartRef} className={className} />
   );
 } 

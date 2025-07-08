@@ -38,17 +38,6 @@ export const CHART_TYPE_CONFIGS: Record<string, ChartTypeConfig> = {
       yAxisType: 'value'
     }
   },
-  area: {
-    name: 'Area Chart',
-    icon: '📉',
-    description: 'Show volume or cumulative values over time',
-    supportedLibraries: ['echarts', 'nivo', 'recharts'],
-    dataRequirements: {
-      minDataPoints: 2,
-      xAxisType: 'any',
-      yAxisType: 'value'
-    }
-  },
   pie: {
     name: 'Pie Chart',
     icon: '🥧',
@@ -56,52 +45,6 @@ export const CHART_TYPE_CONFIGS: Record<string, ChartTypeConfig> = {
     supportedLibraries: ['echarts', 'nivo', 'recharts'],
     dataRequirements: {
       minDataPoints: 2,
-      maxDataPoints: 12,
-      xAxisType: 'category',
-      yAxisType: 'value'
-    }
-  },
-  scatter: {
-    name: 'Scatter Plot',
-    icon: '🔵',
-    description: 'Show correlation between two numeric variables',
-    supportedLibraries: ['echarts', 'recharts'], // Nivo doesn't have direct scatter support
-    dataRequirements: {
-      minDataPoints: 2,
-      xAxisType: 'value',
-      yAxisType: 'value'
-    }
-  },
-  funnel: {
-    name: 'Funnel Chart',
-    icon: '📐',
-    description: 'Show progressive reduction of data through stages',
-    supportedLibraries: ['echarts'], // Only ECharts supports funnel
-    dataRequirements: {
-      minDataPoints: 2,
-      maxDataPoints: 8,
-      xAxisType: 'category',
-      yAxisType: 'value'
-    }
-  },
-  heatmap: {
-    name: 'Heatmap',
-    icon: '🔥',
-    description: 'Show data intensity across two dimensions',
-    supportedLibraries: ['echarts'], // Only ECharts currently implemented
-    dataRequirements: {
-      minDataPoints: 4,
-      xAxisType: 'category',
-      yAxisType: 'category'
-    }
-  },
-  radar: {
-    name: 'Radar Chart',
-    icon: '🎯',
-    description: 'Compare multiple metrics on a circular plot',
-    supportedLibraries: ['echarts', 'recharts'], // Nivo doesn't have radar in basic package
-    dataRequirements: {
-      minDataPoints: 3,
       maxDataPoints: 12,
       xAxisType: 'category',
       yAxisType: 'value'
@@ -261,20 +204,6 @@ export const generateChartTitleSuggestions = (
         `Distribution of ${yAxisLabel}`,
         `${yAxisLabel} Breakdown`,
         `${xAxisLabel} Share Analysis`
-      );
-      break;
-    case 'area':
-      suggestions.push(
-        `${yAxisLabel} Volume Over ${xAxisLabel}`,
-        `Cumulative ${yAxisLabel}`,
-        `${yAxisLabel} Area Analysis`
-      );
-      break;
-    case 'scatter':
-      suggestions.push(
-        `${yAxisLabel} vs ${xAxisLabel}`,
-        `Correlation Analysis`,
-        `${yAxisLabel} Distribution`
       );
       break;
     default:

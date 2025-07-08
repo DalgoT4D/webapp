@@ -45,37 +45,9 @@ const CHART_CONFIGS: Record<string, ChartConfig> = {
     },
     showDataZoom: true
   },
-  area: {
-    defaultColor: '#f59e0b',
-    seriesType: 'line',
-    areaStyle: {},
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'cross' }
-    },
-    showDataZoom: true
-  },
   pie: {
     defaultColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'],
     seriesType: 'pie',
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
-    },
-    showDataZoom: false
-  },
-  scatter: {
-    defaultColor: '#ef4444',
-    seriesType: 'scatter',
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c}'
-    },
-    showDataZoom: true
-  },
-  funnel: {
-    defaultColor: '#8b5cf6',
-    seriesType: 'funnel',
     tooltip: {
       trigger: 'item',
       formatter: '{a} <br/>{b}: {c} ({d}%)'
@@ -90,19 +62,14 @@ const transformDataForChartType = (data: { 'x-axis': any[]; 'y-axis': any[] }, c
   
   switch (chartType) {
     case 'pie':
-    case 'funnel':
-      // For pie and funnel charts, transform to name-value pairs
+      // For pie charts, transform to name-value pairs
       return xData.map((name, index) => ({
         name: String(name),
         value: Number(yData[index]) || 0
       }));
     
-    case 'scatter':
-      // For scatter plots, return coordinate pairs
-      return xData.map((x, index) => [x, yData[index]]);
-    
     default:
-      // For line, bar, area charts, return y-axis data directly
+      // For line, bar charts, return y-axis data directly
       return yData;
   }
 };
@@ -124,7 +91,7 @@ const generateChartOption = (
     title: {
       text: chartName,
       subtext: chartDescription,
-      left: chartType === 'pie' || chartType === 'funnel' ? 'left' : 'center',
+      left: chartType === 'pie' ? 'left' : 'center',
       textStyle: {
         fontSize: 16,
         fontWeight: 'bold'
@@ -135,13 +102,13 @@ const generateChartOption = (
       }
     },
     tooltip: config.tooltip,
-    legend: chartType === 'pie' || chartType === 'funnel' ? {
+    legend: chartType === 'pie' ? {
       orient: 'vertical',
       left: 'right',
       top: 'middle',
       type: 'scroll'
     } : undefined,
-    grid: (chartType !== 'pie' && chartType !== 'funnel') ? {
+    grid: (chartType !== 'pie') ? {
       left: '10%',
       right: '10%',
       bottom: config.showDataZoom ? '20%' : '15%',
@@ -193,64 +160,7 @@ const generateChartOption = (
         }]
       };
 
-    case 'funnel':
-      return {
-        ...baseOption,
-        series: [{
-          name: yAxisLabel || 'Value',
-          type: 'funnel',
-          left: '10%',
-          width: '80%',
-          maxSize: '80%',
-          data: transformedData.sort((a: any, b: any) => b.value - a.value),
-          label: {
-            show: true,
-            position: 'inside',
-            formatter: '{b}: {c}'
-          },
-          emphasis: {
-            label: {
-              fontSize: 14
-            }
-          }
-        }]
-      };
-
-    case 'scatter':
-      return {
-        ...baseOption,
-        xAxis: {
-          type: 'value',
-          name: xAxisLabel,
-          nameLocation: 'middle',
-          nameGap: 30,
-          scale: true
-        },
-        yAxis: {
-          type: 'value',
-          name: yAxisLabel,
-          nameLocation: 'middle',
-          nameGap: 40,
-          scale: true
-        },
-        series: [{
-          name: yAxisLabel || 'Data',
-          type: 'scatter',
-          data: transformedData,
-          itemStyle: {
-            color: config.defaultColor
-          },
-          symbolSize: 8,
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
-            }
-          }
-        }]
-      };
-
-    default: // bar, line, area
+    default: // bar and line
       return {
         ...baseOption,
         xAxis: {
@@ -261,7 +171,7 @@ const generateChartOption = (
           nameGap: 30,
           axisLabel: {
             rotate: data['x-axis'].length > 10 ? 45 : 0,
-            interval: 'auto'
+            interval: data['x-axis'].length > 20 ? 'auto' : 0
           }
         },
         yAxis: {
@@ -274,21 +184,11 @@ const generateChartOption = (
           name: yAxisLabel || 'Value',
           type: config.seriesType,
           data: transformedData,
-          smooth: chartType === 'line' || chartType === 'area',
-          areaStyle: config.areaStyle,
+          ...(config.areaStyle ? { areaStyle: config.areaStyle } : {}),
           itemStyle: {
-            color: config.defaultColor
+            color: Array.isArray(config.defaultColor) ? undefined : config.defaultColor
           },
-          lineStyle: (chartType === 'line' || chartType === 'area') ? {
-            width: 2
-          } : undefined,
-          barWidth: chartType === 'bar' ? '60%' : undefined,
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
-            }
-          }
+          ...(Array.isArray(config.defaultColor) ? { color: config.defaultColor } : {})
         }]
       };
   }
@@ -303,51 +203,40 @@ export default function EChartsComponent({
   chartType = 'bar',
   customOptions = {}
 }: EChartsComponentProps) {
-  // Validate data before transforming
-  if (!data || !data['x-axis'] || !data['y-axis']) {
-    return (
-      <div className="w-full overflow-x-auto">
-        <div className="min-w-[900px] h-96 bg-background rounded-lg border p-4 flex items-center justify-center">
-          <div className="text-muted-foreground">No data available for chart</div>
-        </div>
-      </div>
+  // Generate chart options based on chart type
+  const options = React.useMemo(() => {
+    // If no data, return empty chart
+    if (!data || !data['x-axis'] || !data['y-axis']) {
+      return {
+        title: {
+          text: chartName,
+          subtext: 'No data available'
+        }
+      };
+    }
+
+    // Generate options based on chart type
+    const baseOptions = generateChartOption(
+      data,
+      chartType,
+      chartName,
+      chartDescription,
+      xAxisLabel,
+      yAxisLabel
     );
-  }
 
-  // Validate that we have data
-  if (data['x-axis'].length === 0 || data['y-axis'].length === 0) {
-    return (
-      <div className="w-full overflow-x-auto">
-        <div className="min-w-[900px] h-96 bg-background rounded-lg border p-4 flex items-center justify-center">
-          <div className="text-muted-foreground">No data points available</div>
-        </div>
-      </div>
-    );
-  }
-
-  // Generate chart option based on type
-  const option = generateChartOption(
-    data,
-    chartType,
-    chartName,
-    chartDescription,
-    xAxisLabel,
-    yAxisLabel
-  );
-
-  // Merge with custom options if provided
-  const finalOption = {
-    ...option,
-    ...customOptions
-  };
+    // Merge with custom options if provided
+    return { ...baseOptions, ...customOptions };
+  }, [data, chartType, chartName, chartDescription, xAxisLabel, yAxisLabel, customOptions]);
 
   // Dynamic height based on chart type and data size
   const getChartHeight = () => {
-    if (chartType === 'pie' || chartType === 'funnel') {
+    if (chartType === 'pie') {
       return '400px';
     }
     
-    const dataSize = data['x-axis'].length;
+    // Adjust height based on data points for other chart types
+    const dataSize = data?.['x-axis']?.length || 0;
     if (dataSize > 20) {
       return '500px';
     } else if (dataSize > 10) {
@@ -357,25 +246,12 @@ export default function EChartsComponent({
   };
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div 
-        className="min-w-[900px] bg-background rounded-lg border p-4" 
-        style={{ height: getChartHeight() }}
-      >
-        <ReactECharts 
-          option={finalOption} 
-          style={{ height: '100%', width: '100%' }}
-          opts={{ renderer: 'canvas' }}
-          notMerge={true}
-          lazyUpdate={true}
-        />
-      </div>
-      
-      {/* Chart type indicator */}
-      <div className="mt-2 text-sm text-muted-foreground">
-        Chart Type: {chartType.charAt(0).toUpperCase() + chartType.slice(1)} | 
-        Data Points: {data['x-axis'].length}
-      </div>
+    <div className="w-full h-full">
+      <ReactECharts
+        option={options}
+        style={{ height: getChartHeight(), width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+      />
     </div>
   );
 } 
