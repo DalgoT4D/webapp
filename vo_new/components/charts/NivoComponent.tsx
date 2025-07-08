@@ -113,6 +113,7 @@ export default function NivoComponent({
       case 'bar':
         return (
           <ResponsiveBar
+            // @ts-ignore
             data={transformedData}
             keys={['y']}
             indexBy="x"
@@ -148,6 +149,7 @@ export default function NivoComponent({
       case 'line':
         return (
           <ResponsiveLine
+            // @ts-ignore
             data={transformedData}
             margin={{ top: 50, right: 50, bottom: 70, left: 60 }}
             xScale={{ type: 'point' }}
@@ -155,6 +157,7 @@ export default function NivoComponent({
             axisBottom={{
               tickSize: 5,
               tickPadding: 5,
+              // @ts-ignore
               tickRotation: transformedData[0]?.data.length > 10 ? 45 : 0,
               legend: xAxisLabel,
               legendOffset: 50,
@@ -209,6 +212,7 @@ export default function NivoComponent({
       case 'pie':
         return (
           <ResponsivePie
+            // @ts-ignore
             data={transformedData}
             margin={{ top: 40, right: 80, bottom: 40, left: 80 }}
             innerRadius={0.5}

@@ -14,6 +14,8 @@ interface EChartsComponentProps {
   yAxisLabel?: string;
   chartType?: string; // Add chart type support
   customOptions?: any; // Allow custom ECharts options
+  // full ECharts option object from backend
+  optionFromServer?: any;
 }
 
 // Chart type configuration interface
@@ -201,8 +203,23 @@ export default function EChartsComponent({
   xAxisLabel = 'X Axis',
   yAxisLabel = 'Y Axis',
   chartType = 'bar',
-  customOptions = {}
+  customOptions = {},
+  optionFromServer
 }: EChartsComponentProps) {
+  // if backend provided full ECharts option, render it directly
+  if (optionFromServer) {
+    return (
+      <div className="w-full h-full">
+        {/* @ts-ignore */}
+        <ReactECharts
+          option={optionFromServer}
+          style={{ height: '100%', width: '100%' }}
+          opts={{ renderer: 'canvas' }}
+        />
+      </div>
+    )
+  }
+
   // Generate chart options based on chart type
   const options = React.useMemo(() => {
     // If no data, return empty chart
@@ -247,6 +264,7 @@ export default function EChartsComponent({
 
   return (
     <div className="w-full h-full">
+      {/* @ts-ignore */}
       <ReactECharts
         option={options}
         style={{ height: getChartHeight(), width: '100%' }}
