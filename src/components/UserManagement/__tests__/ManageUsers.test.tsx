@@ -244,11 +244,11 @@ describe('Delete org user', () => {
 });
 
 describe('ManageUsers - handleEdit', () => {
-  it('should set selectedUserRole, set editOrgRole, and close action menu when Edit is clicked', async () => {
+  it('should display role dropdown and Save button when Edit is clicked', async () => {
     await act(() => render(manageUsers));
 
-    const actionButton = screen.getByRole('button', { name: '' });
-    fireEvent.click(actionButton);
+    const actionButtons = screen.getAllByLabelText('user-action-menu-button');
+    fireEvent.click(actionButtons[0]); // Click first user's action menu
 
     const editButton = await screen.findByText(/edit/i);
     fireEvent.click(editButton);
