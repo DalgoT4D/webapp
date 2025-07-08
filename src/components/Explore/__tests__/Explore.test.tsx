@@ -52,7 +52,7 @@ it('calls router.push when TopNavBar close button is clicked', async () => {
     </SessionProvider>
   );
 
-  const closeButton = await screen.findByRole('button');
+  const closeButton = await screen.findByRole('button', { name: /close/i });
 
   fireEvent.click(closeButton);
 
