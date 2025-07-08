@@ -23,36 +23,36 @@ echarts.use([
   CanvasRenderer
 ]);
 
-interface MiniChartProps {
-  data: {
-    'x-axis': any[];
-    'y-axis': any[];
-  };
+export interface MiniChartProps {
+  config: any; // ECharts configuration object
   chartType: string;
   className?: string;
 }
 
-export default function MiniChart({ data, chartType, className = "w-full h-full" }: MiniChartProps) {
+export default function MiniChart({ config, chartType, className = "w-full h-full" }: MiniChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
   useEffect(() => {
     // Initialize chart
     if (chartRef.current) {
-      chartInstance.current = echarts.init(chartRef.current);
+      if (!chartInstance.current) {
+        chartInstance.current = echarts.init(chartRef.current);
+      }
       
       // Set chart option
       const option = generateMiniOption();
-      chartInstance.current.setOption(option);
+      chartInstance.current.setOption(option, true); // Use true to clear previous options
     }
 
     // Cleanup on unmount
     return () => {
       if (chartInstance.current) {
         chartInstance.current.dispose();
+        chartInstance.current = null;
       }
     };
-  }, [data, chartType]);
+  }, [config, chartType]);
 
   // Handle window resize
   useEffect(() => {
@@ -70,8 +70,8 @@ export default function MiniChart({ data, chartType, className = "w-full h-full"
   }, []);
 
   const generateMiniOption = () => {
-    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-    
+    if (!config) return {};
+
     const baseOption = {
       backgroundColor: 'transparent',
       animation: false,
@@ -87,88 +87,26 @@ export default function MiniChart({ data, chartType, className = "w-full h-full"
       title: { show: false }
     };
 
-    switch (chartType) {
-      case 'bar':
-        return {
-          ...baseOption,
-          xAxis: {
-            type: 'category',
-            data: data['x-axis'],
-            show: false
-          },
-          yAxis: {
-            type: 'value',
-            show: false
-          },
-          series: [{
-            type: 'bar',
-            data: data['y-axis'],
-            itemStyle: { color: colors[0] },
-            barWidth: '70%'
-          }]
-        };
-
-      case 'line':
-        return {
-          ...baseOption,
-          xAxis: {
-            type: 'category',
-            data: data['x-axis'],
-            show: false
-          },
-          yAxis: {
-            type: 'value',
-            show: false
-          },
-          series: [{
-            type: 'line',
-            data: data['y-axis'],
-            smooth: true,
-            symbol: 'circle',
-            symbolSize: 3,
-            lineStyle: { color: colors[1], width: 2 },
-            itemStyle: { color: colors[1] }
-          }]
-        };
-
-      case 'pie':
-        // Transform data for pie chart
-        const pieData = data['x-axis'].map((label, index) => ({
-          name: String(label),
-          value: Number(data['y-axis'][index]) || 0
-        }));
-        
-        return {
-          ...baseOption,
-          series: [{
-            type: 'pie',
-            radius: ['40%', '70%'],
-            center: ['50%', '50%'],
-            data: pieData,
-            label: { show: false },
-            emphasis: { scale: false }
-          }]
-        };
-
-      default:
-        return {
-          ...baseOption,
-          xAxis: {
-            type: 'category',
-            data: data['x-axis'],
-            show: false
-          },
-          yAxis: {
-            type: 'value',
-            show: false
-          },
-          series: [{
-            type: 'bar',
-            data: data['y-axis'],
-            itemStyle: { color: colors[0] }
-          }]
-        };
-    }
+    // Merge baseOption with the provided config
+    return {
+      ...baseOption,
+      ...config,
+      // Override specific options for thumbnail view
+      xAxis: {
+        ...config.xAxis,
+        show: false
+      },
+      yAxis: {
+        ...config.yAxis,
+        show: false
+      },
+      series: config.series.map((series: any) => ({
+        ...series,
+        // Customize series options for thumbnail
+        label: { show: false },
+        emphasis: { scale: false }
+      }))
+    };
   };
 
   return (

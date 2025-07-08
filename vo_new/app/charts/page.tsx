@@ -51,36 +51,36 @@ export default function ChartsPage() {
   const [savedChartsLoading, setSavedChartsLoading] = useState(false);
   const [savedChartsError, setSavedChartsError] = useState<string | null>(null);
 
-  // Function to generate chart data from backend
-  const generateChartData = async (chart: CreatedChart) => {
-    const payload = {
-      schema: chart.schema,
-      table: chart.table,
-      x_axis: chart.xAxis,
-      y_axis: chart.yAxis,
-      chart_name: chart.chartName,
-      chart_description: chart.chartDescription
-    };
+  // // Function to generate chart data from backend
+  // const generateChartData = async (chart: CreatedChart) => {
+  //   const payload = {
+  //     schema: chart.schema,
+  //     table: chart.table,
+  //     x_axis: chart.xAxis,
+  //     y_axis: chart.yAxis,
+  //     chart_name: chart.chartName,
+  //     chart_description: chart.chartDescription
+  //   };
     
-    const responseData = await apiPost('/api/visualization/generate_chart/', payload);
+  //   const responseData = await apiPost('/api/visualization/generate_chart/', payload);
     
-    // Transform the backend response to the expected format
-    const xAxisData = responseData.data?.xaxis_data?.[chart.xAxis] || [];
-    const yAxisData = responseData.data?.yaxis_data?.[chart.yAxis] || [];
+  //   // Transform the backend response to the expected format
+  //   const xAxisData = responseData.data?.xaxis_data?.[chart.xAxis] || [];
+  //   const yAxisData = responseData.data?.yaxis_data?.[chart.yAxis] || [];
     
-    // Validate that we have both x and y axis data
-    if (!xAxisData.length || !yAxisData.length) {
-      throw new Error(`No data found for selected columns. X-axis: ${xAxisData.length} items, Y-axis: ${yAxisData.length} items`);
-    }
+  //   // Validate that we have both x and y axis data
+  //   if (!xAxisData.length || !yAxisData.length) {
+  //     throw new Error(`No data found for selected columns. X-axis: ${xAxisData.length} items, Y-axis: ${yAxisData.length} items`);
+  //   }
     
-    // Ensure both arrays have the same length
-    const minLength = Math.min(xAxisData.length, yAxisData.length);
+  //   // Ensure both arrays have the same length
+  //   const minLength = Math.min(xAxisData.length, yAxisData.length);
     
-    return {
-      'x-axis': xAxisData.slice(0, minLength),
-      'y-axis': yAxisData.slice(0, minLength)
-    };
-  };
+  //   return {
+  //     'x-axis': xAxisData.slice(0, minLength),
+  //     'y-axis': yAxisData.slice(0, minLength)
+  //   };
+  // };
 
   // Function to save a chart
   const saveChart = async (chart: CreatedChart & { chartType: string; chartLibraryType: string }) => {

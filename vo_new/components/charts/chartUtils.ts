@@ -1,3 +1,5 @@
+import type { ChartData } from '@/hooks/api/useChart';
+
 // Chart utility functions and configurations for dynamic chart rendering
 
 export interface ChartTypeConfig {
@@ -63,64 +65,14 @@ export const COLOR_PALETTES = {
 };
 
 // Utility functions for chart data validation and transformation
-export const validateChartData = (
-  data: { 'x-axis': any[]; 'y-axis': any[] },
-  chartType: string
-): { isValid: boolean; errors: string[] } => {
-  const errors: string[] = [];
-  
-  if (!data || !data['x-axis'] || !data['y-axis']) {
-    errors.push('Missing chart data');
-    return { isValid: false, errors };
-  }
-
-  const xData = data['x-axis'];
-  const yData = data['y-axis'];
-  const config = CHART_TYPE_CONFIGS[chartType];
-
-  if (!config) {
-    errors.push(`Unsupported chart type: ${chartType}`);
-    return { isValid: false, errors };
-  }
-
-  // Check data length
-  if (xData.length !== yData.length) {
-    errors.push('X-axis and Y-axis data must have the same length');
-  }
-
-  if (xData.length < config.dataRequirements.minDataPoints) {
-    errors.push(`Minimum ${config.dataRequirements.minDataPoints} data points required for ${config.name}`);
-  }
-
-  if (config.dataRequirements.maxDataPoints && xData.length > config.dataRequirements.maxDataPoints) {
-    errors.push(`Maximum ${config.dataRequirements.maxDataPoints} data points allowed for ${config.name}`);
-  }
-
-  // Check data types for specific chart requirements
-  if (config.dataRequirements.yAxisType === 'value') {
-    const invalidYData = yData.some((val, index) => {
-      const num = Number(val);
-      if (isNaN(num)) {
-        errors.push(`Y-axis data point ${index + 1} (${val}) is not a valid number`);
-        return true;
-      }
-      return false;
-    });
-  }
-
-  if (config.dataRequirements.xAxisType === 'value') {
-    const invalidXData = xData.some((val, index) => {
-      const num = Number(val);
-      if (isNaN(num)) {
-        errors.push(`X-axis data point ${index + 1} (${val}) is not a valid number`);
-        return true;
-      }
-      return false;
-    });
-  }
-
-  return { isValid: errors.length === 0, errors };
-};
+export function validateChartData(data: ChartData, chartType: string) {
+  // For now, assume all chart_config data is valid
+  return {
+    isValid: true,
+    errors: [],
+    recommendations: []
+  };
+}
 
 // Get chart types supported by a specific library
 export const getSupportedChartTypes = (library: 'echarts' | 'nivo' | 'recharts'): string[] => {
@@ -130,48 +82,10 @@ export const getSupportedChartTypes = (library: 'echarts' | 'nivo' | 'recharts')
 };
 
 // Get recommended chart type based on data characteristics
-export const getRecommendedChartType = (
-  data: { 'x-axis': any[]; 'y-axis': any[] },
-  library: 'echarts' | 'nivo' | 'recharts' = 'echarts'
-): string => {
-  const xData = data['x-axis'];
-  const yData = data['y-axis'];
-  const dataLength = xData.length;
-  
-  // Check if Y data is numeric
-  const isYNumeric = yData.every(val => !isNaN(Number(val)));
-  
-  // Check if X data is numeric
-  const isXNumeric = xData.every(val => !isNaN(Number(val)));
-  
-  // Check if X data represents time/dates
-  const isXTime = xData.every(val => {
-    const date = new Date(val);
-    return !isNaN(date.getTime());
-  });
-
-  const supportedTypes = getSupportedChartTypes(library);
-
-  // Recommendation logic
-  if (dataLength <= 8 && isYNumeric && !isXNumeric && supportedTypes.includes('pie')) {
-    return 'pie';
-  }
-  
-  if (isXTime && isYNumeric && supportedTypes.includes('line')) {
-    return 'line';
-  }
-  
-  if (isXNumeric && isYNumeric && supportedTypes.includes('scatter')) {
-    return 'scatter';
-  }
-  
-  if (isYNumeric && !isXNumeric && supportedTypes.includes('bar')) {
-    return 'bar';
-  }
-  
-  // Default fallback
-  return supportedTypes.includes('bar') ? 'bar' : supportedTypes[0];
-};
+export function getRecommendedChartType(data: ChartData, chartLibraryType: string) {
+  // For now, return the current chart type from the config
+  return data.chart_config.series?.[0]?.type || 'bar';
+}
 
 // Generate chart title suggestions based on data and chart type
 export const generateChartTitleSuggestions = (

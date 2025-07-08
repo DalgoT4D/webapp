@@ -13,19 +13,20 @@ import {
   useSchemas, 
   useTables, 
   useColumns, 
-  useChartGeneration,
   useChartSave,
   useChartUpdate,
   useChartDelete,
   useChartData,
   type Column,
   type GenerateChartPayload,
-  type SaveChartPayload 
+  type SaveChartPayload,
+  type ChartData
 } from '@/hooks/api/useChart'
 
 // Chart Components
 import EChartsComponent from "./EChartsComponent";
-import NivoComponent from "./NivoComponent";
+// Temporarily remove Nivo until it's updated
+// import NivoComponent from "./NivoComponent";
 
 
 // Chart Utilities
@@ -144,7 +145,7 @@ export default function ChartForm({
   const { data: columns, isLoading: columnsLoading, error: columnsError } = useColumns(watchedSchema, watchedTable)
   
   // SWR mutations
-  const { trigger: generateChart, isMutating: isGenerating, error: generateError } = useChartGeneration()
+  // const { trigger: generateChart, isMutating: isGenerating, error: generateError } = useChartGeneration()
   const { trigger: saveChart, isMutating: isSaving } = useChartSave()
   const { trigger: updateChart, isMutating: isUpdating } = useChartUpdate()
   const { trigger: deleteChart, isMutating: isDeleting } = useChartDelete()
@@ -578,10 +579,10 @@ export default function ChartForm({
                 )}
 
                 
-                {(generateError || chartDataError) && (
+                {( chartDataError) && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                     <div className="text-red-800 text-sm font-medium">Error</div>
-                    <div className="text-red-700 text-sm">{generateError?.message || chartDataError?.message}</div>
+                    <div className="text-red-700 text-sm">{ chartDataError?.message}</div>
                   </div>
                 )}
               </form>
@@ -607,7 +608,7 @@ export default function ChartForm({
                     </div>
                   )}
                   
-                  {(chartDataError || generateError) && (
+                  {(chartDataError ) && (
                     <div className="flex items-center justify-center min-h-[400px] bg-red-50 rounded-lg border border-red-200">
                       <div className="text-center text-red-600">
                         <div className="text-4xl mb-4">⚠️</div>
@@ -617,7 +618,7 @@ export default function ChartForm({
                     </div>
                   )}
                   
-                  {!chartData && !isChartDataLoading && !chartDataError && !generateError && (
+                  {!chartData && !isChartDataLoading && !chartDataError  && (
                     <div className="flex items-center justify-center min-h-[400px] bg-muted/30 rounded-lg border-2 border-dashed">
                       <div className="text-center text-muted-foreground">
                         <div className="text-5xl mb-4">📊</div>
@@ -634,26 +635,18 @@ export default function ChartForm({
                         {chartLibraryType === 'echarts' && (
                           <EChartsComponent
                             data={chartData}
-                            chartName={watchedChartName}
-                            chartDescription={watch('chartDescription')}
-                            xAxisLabel={watchedXAxis}
-                            yAxisLabel={watchedYAxis}
-                            chartType={watchedChartType}
+                            customOptions={{}}
                           />
                         )}
                         
                         {chartLibraryType === 'nivo' && (
-                          <NivoComponent
-                            data={chartData}
-                            chartName={watchedChartName}
-                            chartDescription={watch('chartDescription')}
-                            xAxisLabel={watchedXAxis}
-                            yAxisLabel={watchedYAxis}
-                            chartType={watchedChartType}
-                          />
+                          <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-lg border-2 border-dashed">
+                            <div className="text-center text-muted-foreground">
+                              <p className="font-medium mb-2 text-lg">Nivo charts are being updated</p>
+                              <p className="text-sm">Please use ECharts for now</p>
+                            </div>
+                          </div>
                         )}
-                        
-                      
                       </div>
                       
                       {/* Chart Details for Saving */}
