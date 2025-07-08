@@ -41,7 +41,6 @@ export default function ChartsPage() {
   // Form states for each tab
   const [echartsFormOpen, setEchartsFormOpen] = useState(false);
   const [nivoFormOpen, setNivoFormOpen] = useState(false);
-  const [rechartsFormOpen, setRechartsFormOpen] = useState(false);
 
   // Edit mode states
   const [editingChart, setEditingChart] = useState<SavedChart | null>(null);
@@ -171,14 +170,6 @@ export default function ChartsPage() {
     }
   };
 
-  const handleRechartsChartSave = async (chartData: CreatedChart & { chartType: string }) => {
-    try {
-      await saveChart({ ...chartData, chartLibraryType: 'recharts' });
-      await loadSavedCharts(); // Refresh the saved charts list
-    } catch (error) {
-      throw error; // Let the form handle the error display
-    }
-  };
 
   // Handle editing charts
   const handleEditChart = (chart: SavedChart) => {
@@ -316,7 +307,6 @@ export default function ChartsPage() {
           <Button onClick={() => {
             if (activeTab === "echarts") setEchartsFormOpen(true);
             else if (activeTab === "nivo") setNivoFormOpen(true);
-            else if (activeTab === "recharts") setRechartsFormOpen(true);
           }}>
             Create New Chart
           </Button>
@@ -327,7 +317,6 @@ export default function ChartsPage() {
           <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="echarts" className="text-sm">⚡ ECharts</TabsTrigger>
             <TabsTrigger value="nivo" className="text-sm">🎨 Nivo</TabsTrigger>
-            <TabsTrigger value="recharts" className="text-sm">📈 Recharts</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -422,50 +411,7 @@ export default function ChartsPage() {
               </div>
             </div>
           </TabsContent>
-        
-          {/* Recharts Tab */}
-          <TabsContent value="recharts" className="h-full m-0 p-6 space-y-6">
-            
-            {/* Saved Charts Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Saved Recharts</h3>
-                <span className="text-sm text-muted-foreground">
-                  {savedCharts.filter(chart => chart.chart_type === 'recharts').length} charts
-                </span>
-              </div>
-              
-              {savedChartsLoading && (
-                <div className="text-center py-8">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <div className="text-sm text-muted-foreground">Loading charts...</div>
-                </div>
-              )}
-              
-              {savedChartsError && (
-                <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-lg text-sm">
-                  {savedChartsError}
-                </div>
-              )}
-              
-              {savedCharts.filter(chart => chart.chart_type === 'recharts').length === 0 && !savedChartsLoading && (
-                <EmptyState libraryName="Recharts" icon="📈" />
-              )}
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {savedCharts
-                  .filter(chart => chart.chart_type === 'recharts')
-                  .map((chart) => (
-                    <ChartCard
-                      key={chart.id}
-                      chart={chart}
-                      onEdit={() => handleEditChart(chart)}
-                      onDelete={() => handleDeleteChart(chart.id)}
-                    />
-                  ))}
-              </div>
-            </div>
-          </TabsContent>
+      
         </Tabs>
       </div>
 
@@ -485,15 +431,6 @@ export default function ChartsPage() {
         title="Create Nivo Chart"
         chartLibraryType="nivo"
       />
-      
-      <ChartForm
-        open={rechartsFormOpen}
-        onOpenChange={setRechartsFormOpen}
-        onSave={handleRechartsChartSave}
-        title="Create Recharts Chart"
-        chartLibraryType="recharts"
-      />
-
       {/* Edit Chart Form */}
       <ChartForm
         open={editFormOpen}

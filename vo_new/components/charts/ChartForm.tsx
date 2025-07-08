@@ -26,7 +26,7 @@ import {
 // Chart Components
 import EChartsComponent from "./EChartsComponent";
 import NivoComponent from "./NivoComponent";
-import RechartsComponent from "./RechartsComponent";
+
 
 // Chart Utilities
 import { 
@@ -231,17 +231,7 @@ export default function ChartForm({
     }
   }, [chartData, watchedChartType, chartLibraryType, watchedXAxis, watchedYAxis])
   
-  // Manual chart generation (for refresh button)
-  const handleGenerateChart = async (data: ChartFormData) => {
-    if (!chartPayload) return
-    
-    try {
-      await generateChart(chartPayload)
-    } catch (error) {
-      console.error('Chart generation failed:', error)
-    }
-  }
-  
+
   // Save chart function
   const handleSaveChart = async () => {
     if (!chartPayload || !chartData) return
@@ -349,7 +339,7 @@ export default function ChartForm({
             
             {/* Form Section - Chart Configuration */}
             <div className="lg:col-span-1 xl:col-span-2 space-y-6 lg:overflow-y-auto lg:pr-2">
-              <form onSubmit={handleSubmit(handleGenerateChart)} className="space-y-6">
+              <form className="space-y-6">
                 
                 {/* Chart Configuration Section */}
                 <div className="space-y-4">
@@ -663,16 +653,7 @@ export default function ChartForm({
                           />
                         )}
                         
-                        {chartLibraryType === 'recharts' && (
-                          <RechartsComponent
-                            data={chartData}
-                            chartName={watchedChartName}
-                            chartDescription={watch('chartDescription')}
-                            xAxisLabel={watchedXAxis}
-                            yAxisLabel={watchedYAxis}
-                            chartType={watchedChartType}
-                          />
-                        )}
+                      
                       </div>
                       
                       {/* Chart Details for Saving */}
