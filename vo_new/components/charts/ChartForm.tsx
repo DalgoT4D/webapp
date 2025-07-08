@@ -145,7 +145,9 @@ export default function ChartForm({
   
   // Chart data generation payload
   const chartPayload = useMemo((): GenerateChartPayload | null => {
-    if (!watchedSchema || !watchedTable || !watchedXAxis || !watchedYAxis || !watchedChartName) {
+    //of if any of the above values are not set, return null
+    //but we want chart to be created when the values of x axis is changed not only y axis. 
+    if (!watchedSchema || !watchedTable ) {
       return null
     }
     
@@ -154,7 +156,7 @@ export default function ChartForm({
       schema_name: watchedSchema,
       table_name: watchedTable,
       xaxis_col: watchedXAxis,
-      yaxis_col: watchedYAxis,
+      yaxis_col: watchedYAxis ,
       offset: 0,
       limit: parseInt(watchedDataLimit) || 10
     }
@@ -314,6 +316,36 @@ export default function ChartForm({
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide border-b pb-2">Chart Configuration</h3>
                   
+                      {/* Chart Type */}
+                      <div>
+                    <label className="block text-sm font-medium mb-2">Chart Type</label>
+                    <Select 
+                      value={watchedChartType} 
+                      onValueChange={(value) => setValue('chartType', value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getSupportedChartTypes(chartLibraryType).map((type) => {
+                          const config = CHART_TYPE_CONFIGS[type]
+                          return (
+                            <SelectItem key={type} value={type}>
+                              <div className="flex items-center gap-3 py-1">
+                                <span className="text-lg">{config.icon}</span>
+                                <div className="flex flex-col">
+                                  <div className="font-medium text-foreground">{config.name}</div>
+                                  <div className="text-xs text-muted-foreground/80">{config.description}</div>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+
                   {/* Schema */}
                   <div>
                     <label className="block text-sm font-medium mb-2">Schema</label>
@@ -420,35 +452,7 @@ export default function ChartForm({
                     </Select>
                   </div>
                   
-                  {/* Chart Type */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Chart Type</label>
-                    <Select 
-                      value={watchedChartType} 
-                      onValueChange={(value) => setValue('chartType', value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getSupportedChartTypes(chartLibraryType).map((type) => {
-                          const config = CHART_TYPE_CONFIGS[type]
-                          return (
-                            <SelectItem key={type} value={type}>
-                              <div className="flex items-center gap-3 py-1">
-                                <span className="text-lg">{config.icon}</span>
-                                <div className="flex flex-col">
-                                  <div className="font-medium text-foreground">{config.name}</div>
-                                  <div className="text-xs text-muted-foreground/80">{config.description}</div>
-                                </div>
-                              </div>
-                            </SelectItem>
-                          )
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
+
                   {/* Data Limit */}
                   {chartLibraryType === 'echarts' && (
                     <div>
