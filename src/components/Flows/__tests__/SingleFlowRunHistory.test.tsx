@@ -46,7 +46,7 @@ const renderComponent = (flowRun: any = null) => {
 describe('Flow Creation', () => {
   // ================================================================================
   it('renders the form', async () => {
-    const { httpGet } = require('@/helpers/http');
+    const { httpGet } = jest.requireMock('@/helpers/http');
     httpGet.mockResolvedValueOnce({
       logs: { logs: [{ message: 'log-0-0' }, { message: 'log-0-1' }] },
     });
@@ -67,7 +67,7 @@ describe('Flow Creation', () => {
   });
 
   it('calls errorToast when fetchLogs fails', async () => {
-    const { httpGet } = require('@/helpers/http');
+    const { httpGet } = jest.requireMock('@/helpers/http');
     httpGet.mockRejectedValueOnce(new Error('Failed to fetch logs'));
 
     await act(async () => {
@@ -80,7 +80,7 @@ describe('Flow Creation', () => {
   });
 
   it('calls errorToast when fetchLogSummaries fails', async () => {
-    const { httpGet } = require('@/helpers/http');
+    const { httpGet } = jest.requireMock('@/helpers/http');
     httpGet.mockRejectedValueOnce(new Error('Failed to fetch summaries'));
 
     await act(async () => {
