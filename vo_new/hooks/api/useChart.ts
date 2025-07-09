@@ -159,7 +159,7 @@ export function useChartData(
       if (!payload) throw new Error('No payload provided')
       
       try {
-        const response = await apiPost('/api/visualization/generate_chart/', payload)
+        const response = await apiPost('/api/visualization/charts/generate/', payload)
         
         if (!response.chart_config) {
           throw new Error('No chart configuration received from server')
