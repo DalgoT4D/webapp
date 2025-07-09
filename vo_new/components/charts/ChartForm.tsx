@@ -48,7 +48,7 @@ interface ChartFormData {
   chartDescription: string;
   chartType: string;
   dataLimit: string;
-  mode: 'raw' | 'aggregated';
+  computation_type: 'raw' | 'aggregated';
   aggregateFunc: string;
 }
 
@@ -122,7 +122,7 @@ export default function ChartForm({
       chartDescription: '',
       chartType: 'bar',
       dataLimit: '10',
-      mode: 'raw',
+      computation_type: 'raw',
       aggregateFunc: 'sum'
     },
     mode: 'onChange'
@@ -136,7 +136,7 @@ export default function ChartForm({
   const watchedChartType = watch('chartType')
   const watchedDataLimit = watch('dataLimit')
   const watchedChartName = watch('chartName')
-  const watchedMode = watch('mode')
+  const watchedMode = watch('computation_type')
   const watchedAggregateFunc = watch('aggregateFunc')
   
   // SWR hooks for data fetching
@@ -158,7 +158,7 @@ export default function ChartForm({
     if (watchedMode === 'raw') {
       return {
         chart_type: watchedChartType,
-        mode: 'raw',
+        computation_type: 'raw',
         schema_name: watchedSchema,
         table_name: watchedTable,
         xaxis_col: watchedXAxis,
@@ -171,7 +171,7 @@ export default function ChartForm({
     if ( !watchedYAxis || !watchedAggregateFunc) return null;
     return {
       chart_type: watchedChartType,
-      mode: 'aggregated',
+      computation_type: 'aggregated',
       schema_name: watchedSchema,
       table_name: watchedTable,
       xaxis_col: watchedXAxis,
@@ -247,10 +247,10 @@ export default function ChartForm({
         table: formData.table,
         config: {
           chartType: formData.chartType,
-          mode: formData.mode,
+          computation_type: formData.computation_type,
           xAxis: formData.xAxis,
           yAxis: formData.yAxis,
-          ...(formData.mode === 'aggregated' && { aggregate_func: formData.aggregateFunc })
+          ...(formData.computation_type === 'aggregated' && { aggregate_func: formData.aggregateFunc })
         }
       }
       
@@ -461,10 +461,10 @@ export default function ChartForm({
                     <label className="block text-sm font-medium mb-2">Data Mode</label>
                     <Select
                       value={watchedMode}
-                      onValueChange={(value) => setValue('mode', value as 'raw' | 'aggregated')}
+                      onValueChange={(value) => setValue('computation_type', value as 'raw' | 'aggregated')}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select mode" />
+                        <SelectValue placeholder="Select computation_type" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="raw">Raw data</SelectItem>
@@ -499,7 +499,7 @@ export default function ChartForm({
                     </Select>
                   </div>
 
-                  {/* Aggregate Function (only for aggregated mode) */}
+                  {/* Aggregate Function (only for aggregated computation_type) */}
                   {watchedMode === 'aggregated' && (
                     <div>
                       <label className="block text-sm font-medium mb-2">Function</label>

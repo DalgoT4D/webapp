@@ -44,7 +44,7 @@ export const TaskSequence = ({ field, options: initialOptions }: TaskSequencePro
     }
 
     const selectedOptions = [...field.value, value];
-
+    console.log(selectedOptions, 'selectedOptions');
     selectedOptions.sort((a, b) => a.order - b.order);
 
     field.onChange([...selectedOptions]);

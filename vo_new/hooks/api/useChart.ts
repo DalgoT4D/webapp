@@ -14,7 +14,7 @@ export interface ChartData {
 
 export interface GenerateChartPayload {
   chart_type: string
-  mode?: 'raw' | 'aggregated'
+  computation_type?: 'raw' | 'aggregated'
   schema_name: string
   table_name: string
   xaxis_col?: string
@@ -34,7 +34,7 @@ export interface SaveChartPayload {
   table: string
   config: {
     chartType: string
-    mode: 'raw' | 'aggregated'
+    computation_type: 'raw' | 'aggregated'
     xAxis?: string
     yAxis?: string
     dimensions?: string | string[]
