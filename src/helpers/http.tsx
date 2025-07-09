@@ -1,6 +1,13 @@
 import { backendUrl } from '@/config/constant';
 // import { useSession } from 'next-auth/react';
 import { getOrgHeaderValue } from '@/utils/common';
+import { signOut, useSession } from 'next-auth/react';
+
+// Helper function to handle 401 errors by clearing session and logging out
+function handleUnauthorizedError() {
+  localStorage.clear();
+  signOut({ callbackUrl: `${window.location.origin}` });
+}
 
 export async function httpGet(session: any, path: string, isJson = true) {
   const response = await fetch(`${backendUrl}/api/${path}`, {
@@ -15,6 +22,10 @@ export async function httpGet(session: any, path: string, isJson = true) {
     const message = isJson ? await response.json() : response;
     return message;
   } else {
+    if (response.status === 401) {
+      handleUnauthorizedError();
+      return;
+    }
     const error = await response.json();
     throw new Error(error?.detail ? error.detail : 'error', { cause: error });
   }
@@ -34,6 +45,10 @@ export async function httpPost(session: any, path: string, payload: object) {
     const message = await response.json();
     return message;
   } else {
+    if (response.status === 401) {
+      handleUnauthorizedError();
+      return;
+    }
     const error = await response.json();
     throw new Error(error?.detail ? error.detail : 'error', { cause: error });
   }
@@ -53,6 +68,10 @@ export async function httpPut(session: any, path: string, payload: object) {
     const message = await response.json();
     return message;
   } else {
+    if (response.status === 401) {
+      handleUnauthorizedError();
+      return;
+    }
     const error = await response.json();
     throw new Error(error?.detail ? error.detail : 'error', { cause: error });
   }
@@ -71,6 +90,10 @@ export async function httpDelete(session: any, path: string) {
     const message = await response.json();
     return message;
   } else {
+    if (response.status === 401) {
+      handleUnauthorizedError();
+      return;
+    }
     const error = await response.json();
     throw new Error(error?.detail ? error.detail : 'error', { cause: error });
   }
