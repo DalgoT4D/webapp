@@ -205,7 +205,7 @@ export default function ChartForm({
     }
     
     // For aggregated mode
-    if (!watchedAggregateFunc) return null;
+    // if (!watchedAggregateFunc) return null;
     
     // For count, we don't need aggregate_col
 
@@ -232,7 +232,8 @@ export default function ChartForm({
     watchedAggregateColAlias,
     watchedDimension,
     watchedDataLimit, 
-    watchedChartType
+    watchedChartType,
+    watchedMode
   ]);
   
   // Chart data with SWR caching

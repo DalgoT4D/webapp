@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import type { EChartsOption } from 'echarts';
 import EChartsReact from 'echarts-for-react';
 import type { ChartData } from '@/hooks/api/useChart';
@@ -14,12 +14,11 @@ export default function EChartsComponent({
   data,
   customOptions = {}
 }: EChartsComponentProps) {
-  
   // Merge backend config with any custom options
-  const options = React.useMemo(() => ({
+  const options = (() => ({
     ...data.chart_config,
     ...customOptions
-  }), [data.chart_config, customOptions]);
+  }))();
 
   return (
     <div style={{ width: '100%', height: '400px' }}>
@@ -28,6 +27,8 @@ export default function EChartsComponent({
         option={options}
         style={{ height: '100%', width: '100%' }}
         opts={{ renderer: 'svg' }}
+        notMerge={true}
+        lazyUpdate={false}
       />
     </div>
   );

@@ -175,8 +175,13 @@ export function useChartData(
     },
     {
       revalidateOnFocus: false,
-      dedupingInterval: 300000, // 5 minutes aggressive caching
+      dedupingInterval: 100, // Small deduping interval to prevent infinite loops
       shouldRetryOnError: false,
+      revalidateOnMount: true,
+      revalidateIfStale: true,
+      refreshInterval: 0,
+      refreshWhenHidden: false,
+      refreshWhenOffline: false
     }
   )
 } 
