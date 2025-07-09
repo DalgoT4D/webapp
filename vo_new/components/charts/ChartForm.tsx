@@ -23,6 +23,13 @@ import {
   type ChartData
 } from '@/hooks/api/useChart'
 
+// Extend GenerateChartPayload type locally
+interface ExtendedGenerateChartPayload extends Omit<GenerateChartPayload, 'computation_type'> {
+  computation_type: 'raw' | 'aggregated';
+  aggregate_col_alias?: string;
+  dimension_col?: string;
+}
+
 // Chart Components
 import EChartsComponent from "./EChartsComponent";
 // Temporarily remove Nivo until it's updated
@@ -50,6 +57,8 @@ interface ChartFormData {
   dataLimit: string;
   computation_type: 'raw' | 'aggregated';
   aggregateFunc: string;
+  aggregate_col_alias: string;
+  dimension_col: string;
 }
 
 interface EditChart {
@@ -123,7 +132,9 @@ export default function ChartForm({
       chartType: 'bar',
       dataLimit: '10',
       computation_type: 'raw',
-      aggregateFunc: 'sum'
+      aggregateFunc: 'count',
+      aggregate_col_alias: '',
+      dimension_col: ''
     },
     mode: 'onChange'
   })
@@ -138,6 +149,8 @@ export default function ChartForm({
   const watchedChartName = watch('chartName')
   const watchedMode = watch('computation_type')
   const watchedAggregateFunc = watch('aggregateFunc')
+  const watchedAggregateColAlias = watch('aggregate_col_alias')
+  const watchedDimension = watch('dimension_col')
   
   // SWR hooks for data fetching
   const { data: schemas, isLoading: schemasLoading, error: schemasError } = useSchemas()
@@ -152,7 +165,7 @@ export default function ChartForm({
   
 
   // Chart data generation payload
-  const chartPayload = useMemo((): GenerateChartPayload | null => {
+  const chartPayload = useMemo((): ExtendedGenerateChartPayload | null => {
     if (!watchedSchema || !watchedTable) return null;
 
     if (watchedMode === 'raw') {
@@ -167,20 +180,37 @@ export default function ChartForm({
         limit: parseInt(watchedDataLimit) || 10
       };
     }
-    // aggregated
-    if ( !watchedAggregateFunc) return null;
+    
+    // For aggregated mode
+    if (!watchedAggregateFunc) return null;
+    
+    // For count, we don't need aggregate_col
+
     return {
       chart_type: watchedChartType,
       computation_type: 'aggregated',
       schema_name: watchedSchema,
       table_name: watchedTable,
       xaxis: watchedXAxis,
-      aggregate_col: watchedYAxis,
+      dimension_col: watchedDimension,
       aggregate_func: watchedAggregateFunc,
+      aggregate_col: watchedAggregateFunc === 'count' ? '*' : watchedYAxis,
+      aggregate_col_alias: watchedAggregateColAlias,
       offset: 0,
       limit: parseInt(watchedDataLimit) || 10
     };
-  }, [watchedSchema, watchedTable, watchedMode, watchedXAxis, watchedYAxis, watchedAggregateFunc, watchedDataLimit, watchedChartType]);
+  }, [
+    watchedSchema, 
+    watchedTable, 
+    watchedMode, 
+    watchedXAxis, 
+    watchedYAxis, 
+    watchedAggregateFunc,
+    watchedAggregateColAlias,
+    watchedDimension,
+    watchedDataLimit, 
+    watchedChartType
+  ]);
   
   // Chart data with SWR caching
   const { data: chartData, error: chartDataError, isLoading: isChartDataLoading } = useChartData(
@@ -199,7 +229,9 @@ export default function ChartForm({
         chartName: editChart.title,
         chartDescription: editChart.description,
         chartType: editChart.config.chartType,
-        dataLimit: '10'
+        dataLimit: '10',
+        aggregate_col_alias: '',
+        dimension_col: ''
       })
     } else if (open && !editChart) {
       resetForm()
@@ -252,7 +284,12 @@ export default function ChartForm({
           computation_type: formData.computation_type,
           xAxis: formData.xAxis,
           yAxis: formData.yAxis,
-          ...(formData.computation_type === 'aggregated' && { aggregate_func: formData.aggregateFunc })
+          ...(formData.computation_type === 'aggregated' && {
+            aggregate_func: formData.aggregateFunc,
+            aggregate_col: formData.aggregateFunc === 'count' ? '*' : formData.yAxis,
+            aggregate_col_alias: formData.aggregate_col_alias,
+            dimension_col: formData.dimension_col
+          })
         }
       }
       
@@ -475,49 +512,115 @@ export default function ChartForm({
                     </Select>
                   </div>
 
-                  {/* X/Y Axis fields always visible */}
-                  {/* Y-Axis or Aggregate Column */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2"> {dynamicYaxisLables()}</label>
-                    <Select
-                      value={watchedYAxis}
-                      onValueChange={(value) => setValue('yAxis', value)}
-                      disabled={!watchedTable || columnsLoading}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose Y-Axis"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
-                        {columns?.map((column) => (
-                          <SelectItem key={column.name} value={column.name}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{column.name}</span>
-                              <span className="text-xs text-muted-foreground">{column.data_type}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   {/* Aggregate Function (only for aggregated computation_type) */}
                   {watchedMode === 'aggregated' && (
+                    <div className="space-y-4 bg-muted/30 border border-muted rounded-lg p-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Aggregate Function</label>
+                        <Select
+                          value={watchedAggregateFunc}
+                          onValueChange={(value) => setValue('aggregateFunc', value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select function" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sum">Sum</SelectItem>
+                            <SelectItem value="avg">Average</SelectItem>
+                            <SelectItem value="min">Min</SelectItem>
+                            <SelectItem value="max">Max</SelectItem>
+                            <SelectItem value="count">Count</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Aggregate Column (not shown for count) */}
+                      {watchedAggregateFunc !== 'count' && (
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Aggregate Column</label>
+                          <Select
+                            value={watchedYAxis}
+                            onValueChange={(value) => setValue('yAxis', value)}
+                            disabled={!watchedTable || columnsLoading}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose column"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                              {columns?.map((column) => (
+                                <SelectItem key={column.name} value={column.name}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{column.name}</span>
+                                    <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Aggregate Column Alias */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Aggregate Column Alias</label>
+                        <Input
+                          placeholder="Enter alias for aggregate column"
+                          value={watchedAggregateColAlias}
+                          onChange={(e) => setValue('aggregate_col_alias', e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+
+                      {/* Dimension Field */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Dimension</label>
+                        <Select
+                          value={watchedDimension}
+                          onValueChange={(value) => setValue('dimension_col', value)}
+                          disabled={!watchedTable || columnsLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose dimension"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                            {columns?.map((column) => (
+                              <SelectItem key={column.name} value={column.name}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{column.name}</span>
+                                  <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Y-Axis (only for raw data) */}
+                  {watchedMode === 'raw' && (
                     <div>
-                      <label className="block text-sm font-medium mb-2">Function</label>
+                      <label className="block text-sm font-medium mb-2">{dynamicYaxisLables()}</label>
                       <Select
-                        value={watchedAggregateFunc}
-                        onValueChange={(value) => setValue('aggregateFunc', value)}
+                        value={watchedYAxis}
+                        onValueChange={(value) => setValue('yAxis', value)}
+                        disabled={!watchedTable || columnsLoading}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select function" />
+                          <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose Y-Axis"} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="sum">Sum</SelectItem>
-                          <SelectItem value="avg">Average</SelectItem>
-                          <SelectItem value="min">Min</SelectItem>
-                          <SelectItem value="max">Max</SelectItem>
-                          <SelectItem value="count">Count</SelectItem>
+                          {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                          {columns?.map((column) => (
+                            <SelectItem key={column.name} value={column.name}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{column.name}</span>
+                                <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
