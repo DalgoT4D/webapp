@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import debounce from 'lodash/debounce';
 
 // SWR Hooks
 import { 
@@ -72,6 +73,11 @@ interface EditChart {
     xAxis: string;
     yAxis: string;
     chartType: string;
+    aggregate_col_alias?: string;
+    dimension_col?: string;
+    aggregate_func?: string;
+    aggregate_col?: string;
+    computation_type?: 'raw' | 'aggregated';
   };
 }
 
@@ -100,6 +106,23 @@ interface ChartFormProps {
   title: string;
   chartLibraryType: 'echarts' | 'nivo' | 'recharts';
   editChart?: EditChart | null;
+}
+
+// Debounce hook
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 }
 
 export default function ChartForm({ 
@@ -230,8 +253,8 @@ export default function ChartForm({
         chartDescription: editChart.description,
         chartType: editChart.config.chartType,
         dataLimit: '10',
-        aggregate_col_alias: '',
-        dimension_col: ''
+        aggregate_col_alias: editChart.config.aggregate_col_alias || `total_${editChart.config.dimension_col?.toLowerCase() || ''}`,
+        dimension_col: editChart.config.dimension_col || ''
       })
     } else if (open && !editChart) {
       resetForm()
@@ -367,6 +390,59 @@ export default function ChartForm({
   
   const isLoading = isSaving || isUpdating || isDeleting
   
+  // Local state for smooth typing
+  const [localAliasValue, setLocalAliasValue] = useState('');
+
+  // Update form value when local value changes (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setValue('aggregate_col_alias', localAliasValue);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [localAliasValue, setValue]);
+
+  // Set default alias when aggregate function or column changes
+  useEffect(() => {
+    if (watchedMode === 'aggregated' && watchedAggregateFunc && watchedAggregateFunc !== 'count' && watchedYAxis) {
+      const defaultAlias = `total_${watchedYAxis.toLowerCase()}`;
+      setValue('aggregate_col_alias', defaultAlias);
+      setLocalAliasValue(defaultAlias);
+    } else if (watchedMode === 'aggregated' && watchedAggregateFunc === 'count') {
+      setValue('aggregate_col_alias', '');
+      setLocalAliasValue('');
+    }
+  }, [watchedMode, watchedAggregateFunc, watchedYAxis, setValue]);
+
+  // Reset alias when switching computation modes
+  useEffect(() => {
+    if (watchedMode === 'raw') {
+      setValue('aggregate_col_alias', '');
+      setLocalAliasValue('');
+    }
+  }, [watchedMode, setValue]);
+
+  // Initialize alias when editing
+  useEffect(() => {
+    if (open && editChart) {
+      if (editChart.config.aggregate_col_alias) {
+        setValue('aggregate_col_alias', editChart.config.aggregate_col_alias);
+        setLocalAliasValue(editChart.config.aggregate_col_alias);
+      } else if (editChart.config.aggregate_func && editChart.config.aggregate_func !== 'count') {
+        const col = editChart.config.yAxis;
+        const defaultAlias = `total_${col?.toLowerCase() || ''}`;
+        setValue('aggregate_col_alias', defaultAlias);
+        setLocalAliasValue(defaultAlias);
+      } else {
+        setValue('aggregate_col_alias', '');
+        setLocalAliasValue('');
+      }
+    } else if (open && !editChart) {
+      setValue('aggregate_col_alias', '');
+      setLocalAliasValue('');
+    }
+  }, [open, editChart, setValue]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[95vh] flex flex-col !w-[85vw] !max-w-[85vw] sm:!max-w-[85vw] md:!max-w-[85vw] lg:!max-w-[85vw]">
@@ -566,8 +642,8 @@ export default function ChartForm({
                         <label className="block text-sm font-medium mb-2">Aggregate Column Alias</label>
                         <Input
                           placeholder="Enter alias for aggregate column"
-                          value={watchedAggregateColAlias}
-                          onChange={(e) => setValue('aggregate_col_alias', e.target.value)}
+                          value={localAliasValue}
+                          onChange={(e) => setLocalAliasValue(e.target.value)}
                           className="h-9"
                         />
                       </div>
