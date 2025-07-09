@@ -1,10 +1,9 @@
 import { backendUrl } from '@/config/constant';
-// import { useSession } from 'next-auth/react';
 import { getOrgHeaderValue } from '@/utils/common';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 
 // Helper function to handle 401 errors by clearing session and logging out
-async function handleUnauthorizedError() {
+function handleUnauthorizedError() {
   console.log('Unauthorized access detected. Logging out...');
   localStorage.clear();
   signOut({ callbackUrl: '/login' });
@@ -19,13 +18,12 @@ export async function httpGet(session: any, path: string, isJson = true) {
     },
   });
 
-  console.log('HTTP GET request:', response.status);
   if (response.ok) {
     const message = isJson ? await response.json() : response;
     return message;
   } else {
     if (response.status === 401) {
-      await handleUnauthorizedError();
+      handleUnauthorizedError();
       return;
     }
     const error = await response.json();
@@ -48,7 +46,7 @@ export async function httpPost(session: any, path: string, payload: object) {
     return message;
   } else {
     if (response.status === 401) {
-      await handleUnauthorizedError();
+      handleUnauthorizedError();
       return;
     }
     const error = await response.json();
