@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiPost } from "@/lib/api";
-import MiniChart from "./MiniChart";
+import MiniChart, { MiniChartProps } from "./MiniChart";
 
 interface SavedChartThumbnailProps {
   chart: {
@@ -25,7 +25,7 @@ export default function SavedChartThumbnail({
   chart,
   className = "w-full h-full"
 }: SavedChartThumbnailProps) {
-  const [chartData, setChartData] = useState<{ 'x-axis': any[]; 'y-axis': any[] } | null>(null);
+  const [chartData, setChartData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +41,7 @@ export default function SavedChartThumbnail({
 
         const payload = {
           chart_type: chart.config.chartType,
+          mode: 'raw',
           schema_name: chart.schema_name,
           table_name: chart.table,
           xaxis_col: chart.config.xAxis,
@@ -53,32 +54,12 @@ export default function SavedChartThumbnail({
         
         if (!isActive) return; // Component was unmounted
         
-        // Transform the backend response to the expected format
-        const xAxisData = responseData.data?.xaxis_data?.[chart.config.xAxis] || [];
-        const yAxisData = responseData.data?.yaxis_data?.[chart.config.yAxis] || [];
-        
-        if (xAxisData.length === 0 || yAxisData.length === 0) {
-          throw new Error('No data available');
+        if (!responseData.chart_config) {
+          throw new Error('No chart configuration received');
         }
         
-        // Ensure both arrays have the same length
-        const minLength = Math.min(xAxisData.length, yAxisData.length);
-        
-        const transformedData = {
-          'x-axis': xAxisData.slice(0, minLength),
-          'y-axis': yAxisData.slice(0, minLength)
-        };
-        
-        // Debug logging
-        console.log('Thumbnail data for chart:', chart.title, {
-          chartType: chart.config.chartType,
-          dataLength: transformedData['x-axis'].length,
-          xData: transformedData['x-axis'],
-          yData: transformedData['y-axis']
-        });
-        
         if (isActive) {
-          setChartData(transformedData);
+          setChartData(responseData.chart_config);
         }
       } catch (err) {
         if (isActive) {
@@ -125,7 +106,7 @@ export default function SavedChartThumbnail({
   return (
     <div className={`bg-background rounded border shadow-sm overflow-hidden ${className}`}>
       <MiniChart
-        data={chartData}
+        config={chartData}
         chartType={chart.config.chartType}
         className="w-full h-full"
       />

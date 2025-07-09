@@ -1,57 +1,77 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
-import ReactECharts from 'echarts-for-react';
+import React, { useEffect, useRef } from 'react';
+import * as echarts from 'echarts/core';
+import { BarChart, LineChart, PieChart } from 'echarts/charts';
+import {
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent
+} from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
 
-interface MiniChartProps {
-  data: {
-    'x-axis': any[];
-    'y-axis': any[];
-  };
+// Register necessary ECharts components
+echarts.use([
+  BarChart,
+  LineChart,
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  CanvasRenderer
+]);
+
+export interface MiniChartProps {
+  config: any; // ECharts configuration object
   chartType: string;
   className?: string;
 }
 
-export default function MiniChart({ data, chartType, className = "w-full h-full" }: MiniChartProps) {
-  const chartRef = useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 280, height: 160 });
+export default function MiniChart({ config, chartType, className = "w-full h-full" }: MiniChartProps) {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // Update dimensions based on container size
   useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        if (width > 0 && height > 0) {
-          setDimensions({ width: Math.floor(width), height: Math.floor(height) });
-        }
+    // Initialize chart
+    if (chartRef.current) {
+      if (!chartInstance.current) {
+        chartInstance.current = echarts.init(chartRef.current);
       }
-    };
-
-    // Initial measurement
-    updateDimensions();
-
-    // Set up resize observer for responsive updates
-    const resizeObserver = new ResizeObserver(updateDimensions);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
+      
+      // Set chart option
+      const option = generateMiniOption();
+      chartInstance.current.setOption(option, true); // Use true to clear previous options
     }
 
+    // Cleanup on unmount
     return () => {
-      resizeObserver.disconnect();
+      if (chartInstance.current) {
+        chartInstance.current.dispose();
+        chartInstance.current = null;
+      }
+    };
+  }, [config, chartType]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (chartInstance.current) {
+        chartInstance.current.resize();
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
-  // Resize chart when dimensions change
-  useEffect(() => {
-    if (chartRef.current) {
-      chartRef.current.getEchartsInstance()?.resize();
-    }
-  }, [dimensions]);
-
   const generateMiniOption = () => {
-    const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-    
+    if (!config) return {};
+
     const baseOption = {
       backgroundColor: 'transparent',
       animation: false,
@@ -67,155 +87,29 @@ export default function MiniChart({ data, chartType, className = "w-full h-full"
       title: { show: false }
     };
 
-    switch (chartType) {
-      case 'bar':
-        return {
-          ...baseOption,
-          xAxis: {
-            type: 'category',
-            data: data['x-axis'],
-            show: false
-          },
-          yAxis: {
-            type: 'value',
-            show: false
-          },
-          series: [{
-            type: 'bar',
-            data: data['y-axis'],
-            itemStyle: { color: colors[0] },
-            barWidth: '70%'
-          }]
-        };
-
-      case 'line':
-        return {
-          ...baseOption,
-          xAxis: {
-            type: 'category',
-            data: data['x-axis'],
-            show: false
-          },
-          yAxis: {
-            type: 'value',
-            show: false
-          },
-          series: [{
-            type: 'line',
-            data: data['y-axis'],
-            smooth: true,
-            symbol: 'circle',
-            symbolSize: 3,
-            lineStyle: { color: colors[1], width: 2 },
-            itemStyle: { color: colors[1] }
-          }]
-        };
-
-      case 'area':
-        return {
-          ...baseOption,
-          xAxis: {
-            type: 'category',
-            data: data['x-axis'],
-            show: false
-          },
-          yAxis: {
-            type: 'value',
-            show: false
-          },
-          series: [{
-            type: 'line',
-            data: data['y-axis'],
-            smooth: true,
-            symbol: 'none',
-            areaStyle: { color: colors[2] + '40' },
-            lineStyle: { color: colors[2], width: 2 }
-          }]
-        };
-
-      case 'pie':
-        const pieData = data['x-axis'].map((name, index) => ({
-          name: String(name),
-          value: data['y-axis'][index] || 0
-        }));
-        
-        return {
-          ...baseOption,
-          series: [{
-            type: 'pie',
-            data: pieData,
-            radius: ['25%', '75%'],
-            center: ['50%', '50%'],
-            label: { show: false },
-            labelLine: { show: false },
-            itemStyle: {
-              color: (params: any) => colors[params.dataIndex % colors.length]
-            }
-          }]
-        };
-
-      case 'scatter':
-        const scatterData = data['x-axis'].map((x, index) => [x, data['y-axis'][index]]);
-        
-        return {
-          ...baseOption,
-          xAxis: {
-            type: 'value',
-            show: false
-          },
-          yAxis: {
-            type: 'value',
-            show: false
-          },
-          series: [{
-            type: 'scatter',
-            data: scatterData,
-            symbolSize: 4,
-            itemStyle: { color: colors[3] }
-          }]
-        };
-
-      case 'funnel':
-        const funnelData = data['x-axis'].map((name, index) => ({
-          name: String(name),
-          value: data['y-axis'][index] || 0
-        })).sort((a, b) => b.value - a.value);
-        
-        return {
-          ...baseOption,
-          series: [{
-            type: 'funnel',
-            data: funnelData,
-            left: '10%',
-            width: '80%',
-            label: { show: false },
-            itemStyle: {
-              color: (params: any) => colors[params.dataIndex % colors.length]
-            }
-          }]
-        };
-
-      default:
-        return generateMiniOption();
-    }
+    // Merge baseOption with the provided config
+    return {
+      ...baseOption,
+      ...config,
+      // Override specific options for thumbnail view
+      xAxis: {
+        ...config.xAxis,
+        show: false
+      },
+      yAxis: {
+        ...config.yAxis,
+        show: false
+      },
+      series: config.series.map((series: any) => ({
+        ...series,
+        // Customize series options for thumbnail
+        label: { show: false },
+        emphasis: { scale: false }
+      }))
+    };
   };
 
-  const option = generateMiniOption();
-
   return (
-    <div ref={containerRef} className={className}>
-      <ReactECharts
-        ref={chartRef}
-        option={option}
-        style={{ width: '100%', height: '100%' }}
-        opts={{ 
-          renderer: 'canvas',
-          width: dimensions.width,
-          height: dimensions.height
-        }}
-        notMerge={true}
-        lazyUpdate={true}
-      />
-    </div>
+    <div ref={chartRef} className={className} />
   );
 } 

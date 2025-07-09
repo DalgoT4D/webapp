@@ -1,32 +1,41 @@
 "use client";
 
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import debounce from 'lodash/debounce';
 
 // SWR Hooks
 import { 
   useSchemas, 
   useTables, 
   useColumns, 
-  useChartGeneration,
   useChartSave,
   useChartUpdate,
   useChartDelete,
   useChartData,
   type Column,
   type GenerateChartPayload,
-  type SaveChartPayload 
+  type SaveChartPayload,
+  type ChartData
 } from '@/hooks/api/useChart'
+
+// Extend GenerateChartPayload type locally
+interface ExtendedGenerateChartPayload extends Omit<GenerateChartPayload, 'computation_type'> {
+  computation_type: 'raw' | 'aggregated';
+  aggregate_col_alias?: string;
+  dimension_col?: string;
+}
 
 // Chart Components
 import EChartsComponent from "./EChartsComponent";
-import NivoComponent from "./NivoComponent";
-import RechartsComponent from "./RechartsComponent";
+// Temporarily remove Nivo until it's updated
+// import NivoComponent from "./NivoComponent";
+
 
 // Chart Utilities
 import { 
@@ -47,6 +56,10 @@ interface ChartFormData {
   chartDescription: string;
   chartType: string;
   dataLimit: string;
+  computation_type: 'raw' | 'aggregated';
+  aggregateFunc: string;
+  aggregate_col_alias: string;
+  dimension_col: string;
 }
 
 interface EditChart {
@@ -60,6 +73,11 @@ interface EditChart {
     xAxis: string;
     yAxis: string;
     chartType: string;
+    aggregate_col_alias?: string;
+    dimension_col?: string;
+    aggregate_func?: string;
+    aggregate_col?: string;
+    computation_type?: 'raw' | 'aggregated';
   };
 }
 
@@ -90,6 +108,23 @@ interface ChartFormProps {
   editChart?: EditChart | null;
 }
 
+// Debounce hook
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function ChartForm({ 
   open, 
   onOpenChange, 
@@ -118,7 +153,11 @@ export default function ChartForm({
       chartName: '',
       chartDescription: '',
       chartType: 'bar',
-      dataLimit: '10'
+      dataLimit: '10',
+      computation_type: 'raw',
+      aggregateFunc: 'count',
+      aggregate_col_alias: '',
+      dimension_col: ''
     },
     mode: 'onChange'
   })
@@ -131,6 +170,10 @@ export default function ChartForm({
   const watchedChartType = watch('chartType')
   const watchedDataLimit = watch('dataLimit')
   const watchedChartName = watch('chartName')
+  const watchedMode = watch('computation_type')
+  const watchedAggregateFunc = watch('aggregateFunc')
+  const watchedAggregateColAlias = watch('aggregate_col_alias')
+  const watchedDimension = watch('dimension_col')
   
   // SWR hooks for data fetching
   const { data: schemas, isLoading: schemasLoading, error: schemasError } = useSchemas()
@@ -138,27 +181,60 @@ export default function ChartForm({
   const { data: columns, isLoading: columnsLoading, error: columnsError } = useColumns(watchedSchema, watchedTable)
   
   // SWR mutations
-  const { trigger: generateChart, isMutating: isGenerating, error: generateError } = useChartGeneration()
+  // const { trigger: generateChart, isMutating: isGenerating, error: generateError } = useChartGeneration()
   const { trigger: saveChart, isMutating: isSaving } = useChartSave()
   const { trigger: updateChart, isMutating: isUpdating } = useChartUpdate()
   const { trigger: deleteChart, isMutating: isDeleting } = useChartDelete()
   
+
   // Chart data generation payload
-  const chartPayload = useMemo((): GenerateChartPayload | null => {
-    if (!watchedSchema || !watchedTable || !watchedXAxis || !watchedYAxis || !watchedChartName) {
-      return null
+  const chartPayload = useMemo((): ExtendedGenerateChartPayload | null => {
+    if (!watchedSchema || !watchedTable) return null;
+
+    if (watchedMode === 'raw') {
+      return {
+        chart_type: watchedChartType,
+        computation_type: 'raw',
+        schema_name: watchedSchema,
+        table_name: watchedTable,
+        xaxis: watchedXAxis,
+        yaxis: watchedYAxis,
+        offset: 0,
+        limit: parseInt(watchedDataLimit) || 10
+      };
     }
     
+    // For aggregated mode
+    // if (!watchedAggregateFunc) return null;
+    
+    // For count, we don't need aggregate_col
+
     return {
       chart_type: watchedChartType,
+      computation_type: 'aggregated',
       schema_name: watchedSchema,
       table_name: watchedTable,
-      xaxis_col: watchedXAxis,
-      yaxis_col: watchedYAxis,
+      xaxis: watchedXAxis,
+      dimension_col: watchedDimension,
+      aggregate_func: watchedAggregateFunc,
+      aggregate_col: watchedAggregateFunc === 'count' ? '*' : watchedYAxis,
+      aggregate_col_alias: watchedAggregateColAlias,
       offset: 0,
       limit: parseInt(watchedDataLimit) || 10
-    }
-  }, [watchedSchema, watchedTable, watchedXAxis, watchedYAxis, watchedChartType, watchedDataLimit, watchedChartName])
+    };
+  }, [
+    watchedSchema, 
+    watchedTable, 
+    watchedMode, 
+    watchedXAxis, 
+    watchedYAxis, 
+    watchedAggregateFunc,
+    watchedAggregateColAlias,
+    watchedDimension,
+    watchedDataLimit, 
+    watchedChartType,
+    watchedMode
+  ]);
   
   // Chart data with SWR caching
   const { data: chartData, error: chartDataError, isLoading: isChartDataLoading } = useChartData(
@@ -177,7 +253,9 @@ export default function ChartForm({
         chartName: editChart.title,
         chartDescription: editChart.description,
         chartType: editChart.config.chartType,
-        dataLimit: '10'
+        dataLimit: '10',
+        aggregate_col_alias: editChart.config.aggregate_col_alias || `total_${editChart.config.dimension_col?.toLowerCase() || ''}`,
+        dimension_col: editChart.config.dimension_col || ''
       })
     } else if (open && !editChart) {
       resetForm()
@@ -212,17 +290,7 @@ export default function ChartForm({
     }
   }, [chartData, watchedChartType, chartLibraryType, watchedXAxis, watchedYAxis])
   
-  // Manual chart generation (for refresh button)
-  const handleGenerateChart = async (data: ChartFormData) => {
-    if (!chartPayload) return
-    
-    try {
-      await generateChart(chartPayload)
-    } catch (error) {
-      console.error('Chart generation failed:', error)
-    }
-  }
-  
+
   // Save chart function
   const handleSaveChart = async () => {
     if (!chartPayload || !chartData) return
@@ -236,9 +304,16 @@ export default function ChartForm({
         schema_name: formData.schema,
         table: formData.table,
         config: {
+          chartType: formData.chartType,
+          computation_type: formData.computation_type,
           xAxis: formData.xAxis,
           yAxis: formData.yAxis,
-          chartType: formData.chartType
+          ...(formData.computation_type === 'aggregated' && {
+            aggregate_func: formData.aggregateFunc,
+            aggregate_col: formData.aggregateFunc === 'count' ? '*' : formData.yAxis,
+            aggregate_col_alias: formData.aggregate_col_alias,
+            dimension_col: formData.dimension_col
+          })
         }
       }
       
@@ -285,17 +360,81 @@ export default function ChartForm({
     }
   }
   
-  // Filtered tables for search
-  const [tableSearch, setTableSearch] = React.useState('')
-  const filteredTables = useMemo(() => {
-    if (!tables) return []
-    return tables.filter(table => 
-      table.toLowerCase().includes(tableSearch.toLowerCase())
-    )
-  }, [tables, tableSearch])
+
+  const dynmaicXaxisLables =()=>{
+    const chartType = ["pie"];
+    if(chartType.includes(watchedChartType)){
+      return "Category"
+    }
+    return "X-Axis"
+  }
+
+  const dynamicYaxisLables =()=>{
+    const chartType = ["pie"];
+    if(watchedMode === "raw" && chartType.includes(watchedChartType)){
+      return "Value"
+    }else if(watchedMode == "raw"){
+      return "Y-Axis"
+    }else if(watchedMode == "aggregated"){
+      return "Aggregate Column"
+    }
+  }
   
   const isLoading = isSaving || isUpdating || isDeleting
   
+  // Local state for smooth typing
+  const [localAliasValue, setLocalAliasValue] = useState('');
+
+  // Update form value when local value changes (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setValue('aggregate_col_alias', localAliasValue);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [localAliasValue, setValue]);
+
+  // Set default alias when aggregate function or column changes
+  useEffect(() => {
+    if (watchedMode === 'aggregated' && watchedAggregateFunc && watchedAggregateFunc !== 'count' && watchedYAxis) {
+      const defaultAlias = `total_${watchedYAxis.toLowerCase()}`;
+      setValue('aggregate_col_alias', defaultAlias);
+      setLocalAliasValue(defaultAlias);
+    } else if (watchedMode === 'aggregated' && watchedAggregateFunc === 'count') {
+      setValue('aggregate_col_alias', '');
+      setLocalAliasValue('');
+    }
+  }, [watchedMode, watchedAggregateFunc, watchedYAxis, setValue]);
+
+  // Reset alias when switching computation modes
+  useEffect(() => {
+    if (watchedMode === 'raw') {
+      setValue('aggregate_col_alias', '');
+      setLocalAliasValue('');
+    }
+  }, [watchedMode, setValue]);
+
+  // Initialize alias when editing
+  useEffect(() => {
+    if (open && editChart) {
+      if (editChart.config.aggregate_col_alias) {
+        setValue('aggregate_col_alias', editChart.config.aggregate_col_alias);
+        setLocalAliasValue(editChart.config.aggregate_col_alias);
+      } else if (editChart.config.aggregate_func && editChart.config.aggregate_func !== 'count') {
+        const col = editChart.config.yAxis;
+        const defaultAlias = `total_${col?.toLowerCase() || ''}`;
+        setValue('aggregate_col_alias', defaultAlias);
+        setLocalAliasValue(defaultAlias);
+      } else {
+        setValue('aggregate_col_alias', '');
+        setLocalAliasValue('');
+      }
+    } else if (open && !editChart) {
+      setValue('aggregate_col_alias', '');
+      setLocalAliasValue('');
+    }
+  }, [open, editChart, setValue]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[95vh] flex flex-col !w-[85vw] !max-w-[85vw] sm:!max-w-[85vw] md:!max-w-[85vw] lg:!max-w-[85vw]">
@@ -308,120 +447,14 @@ export default function ChartForm({
             
             {/* Form Section - Chart Configuration */}
             <div className="lg:col-span-1 xl:col-span-2 space-y-6 lg:overflow-y-auto lg:pr-2">
-              <form onSubmit={handleSubmit(handleGenerateChart)} className="space-y-6">
+              <form className="space-y-6">
                 
                 {/* Chart Configuration Section */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide border-b pb-2">Chart Configuration</h3>
                   
-                  {/* Schema */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Schema</label>
-                    <Select 
-                      value={watchedSchema} 
-                      onValueChange={(value) => setValue('schema', value)}
-                      disabled={schemasLoading}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={schemasLoading ? "Loading..." : "Select schema"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {schemasError && <div className="px-3 py-2 text-red-500 text-sm">{schemasError.message}</div>}
-                        {schemas?.map((schema) => (
-                          <SelectItem key={schema} value={schema}>
-                            {schema}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Table */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Table</label>
-                    <div className="space-y-2">
-                      <Input
-                        placeholder="Search tables..."
-                        value={tableSearch}
-                        onChange={(e) => setTableSearch(e.target.value)}
-                        disabled={!watchedSchema || tablesLoading}
-                        className="h-9"
-                      />
-                      <Select 
-                        value={watchedTable} 
-                        onValueChange={(value) => setValue('table', value)}
-                        disabled={!watchedSchema || tablesLoading}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder={tablesLoading ? "Loading..." : "Select table"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {tablesError && <div className="px-3 py-2 text-red-500 text-sm">{tablesError.message}</div>}
-                          {filteredTables.length === 0 && !tablesLoading && (
-                            <div className="px-3 py-2 text-muted-foreground text-sm">No tables found</div>
-                          )}
-                          {filteredTables.map((table) => (
-                            <SelectItem key={table} value={table}>
-                              {table}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  {/* X-Axis */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">X-Axis</label>
-                    <Select 
-                      value={watchedXAxis} 
-                      onValueChange={(value) => setValue('xAxis', value)}
-                      disabled={!watchedTable || columnsLoading}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose X-Axis"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
-                        {columns?.map((column) => (
-                          <SelectItem key={column.name} value={column.name}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{column.name}</span>
-                              <span className="text-xs text-muted-foreground">{column.data_type}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Y-Axis */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Y-Axis</label>
-                    <Select 
-                      value={watchedYAxis} 
-                      onValueChange={(value) => setValue('yAxis', value)}
-                      disabled={!watchedTable || columnsLoading}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose Y-Axis"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
-                        {columns?.map((column) => (
-                          <SelectItem key={column.name} value={column.name}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{column.name}</span>
-                              <span className="text-xs text-muted-foreground">{column.data_type}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Chart Type */}
-                  <div>
+                      {/* Chart Type */}
+                      <div>
                     <label className="block text-sm font-medium mb-2">Chart Type</label>
                     <Select 
                       value={watchedChartType} 
@@ -449,6 +482,234 @@ export default function ChartForm({
                     </Select>
                   </div>
                   
+
+                  {/* Schema */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Schema</label>
+                    <Select 
+                      value={watchedSchema} 
+                      onValueChange={(value) => setValue('schema', value)}
+                      disabled={schemasLoading}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={schemasLoading ? "Loading..." : "Select schema"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {schemasError && <div className="px-3 py-2 text-red-500 text-sm">{schemasError.message}</div>}
+                        {schemas?.map((schema) => (
+                          <SelectItem key={schema} value={schema}>
+                            {schema}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Table */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Table</label>
+                    <div className="space-y-2">
+                      <Select 
+                        value={watchedTable} 
+                        onValueChange={(value) => setValue('table', value)}
+                        disabled={!watchedSchema || tablesLoading}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={tablesLoading ? "Loading..." : "Select table"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tablesError && <div className="px-3 py-2 text-red-500 text-sm">{tablesError.message}</div>}
+                          {tables?.length === 0 && !tablesLoading && (
+                            <div className="px-3 py-2 text-muted-foreground text-sm">No tables found</div>
+                          )}
+                          {tables?.map((table) => (
+                            <SelectItem key={table} value={table}>
+                              {table}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  {/* Data Mode */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Data Mode</label>
+                    <Select
+                      value={watchedMode}
+                      onValueChange={(value) => {
+                        // Reset data mode specific fields when switching modes
+                        if (value === 'raw') {
+                          setValue('computation_type', 'raw');
+                          setValue('xAxis', '');
+                          setValue('yAxis', '');
+                        } else {
+                          setValue('computation_type', 'aggregated');
+                          setValue('xAxis', '');
+                          setValue('aggregateFunc', '');
+                          setValue('yAxis', '');
+                          setValue('dimension_col', '');
+                          setValue('aggregate_col_alias', '');
+                          setLocalAliasValue('');
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select computation_type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="raw">Raw data</SelectItem>
+                        <SelectItem value="aggregated">Aggregated data</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Raw Data Fields */}
+                  {watchedMode === 'raw' && (
+                    <div className="space-y-4 bg-muted/30 border border-muted rounded-lg p-4">
+                      {/* X-Axis */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">X-Axis</label>
+                        <Select
+                          value={watchedXAxis}
+                          onValueChange={(value) => setValue('xAxis', value)}
+                          disabled={!watchedTable || columnsLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose X-Axis"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                            {columns?.map((column) => (
+                              <SelectItem key={column.name} value={column.name}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{column.name}</span>
+                                  <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Y-Axis */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Y-Axis</label>
+                        <Select
+                          value={watchedYAxis}
+                          onValueChange={(value) => setValue('yAxis', value)}
+                          disabled={!watchedTable || columnsLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose Y-Axis"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                            {columns?.map((column) => (
+                              <SelectItem key={column.name} value={column.name}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{column.name}</span>
+                                  <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Aggregated Data Fields */}
+                  {watchedMode === 'aggregated' && (
+                    <div className="space-y-4 bg-muted/30 border border-muted rounded-lg p-4">
+                      {/* X-Axis */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">X-Axis</label>
+                        <Select
+                          value={watchedXAxis}
+                          onValueChange={(value) => {
+                            setValue('xAxis', value);
+                            setValue('dimension_col', value); // Set dimension_col same as xAxis
+                          }}
+                          disabled={!watchedTable || columnsLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose X-Axis"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                            {columns?.map((column) => (
+                              <SelectItem key={column.name} value={column.name}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{column.name}</span>
+                                  <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Aggregate Function */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Aggregate Function</label>
+                        <Select
+                          value={watchedAggregateFunc}
+                          onValueChange={(value) => setValue('aggregateFunc', value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select function" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sum">Sum</SelectItem>
+                            <SelectItem value="avg">Average</SelectItem>
+                            <SelectItem value="min">Min</SelectItem>
+                            <SelectItem value="max">Max</SelectItem>
+                            <SelectItem value="count">Count</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Aggregate Column (not shown for count) */}
+                      {watchedAggregateFunc !== 'count' && (
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Aggregate Column</label>
+                          <Select
+                            value={watchedYAxis}
+                            onValueChange={(value) => setValue('yAxis', value)}
+                            disabled={!watchedTable || columnsLoading}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose column"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                              {columns?.map((column) => (
+                                <SelectItem key={column.name} value={column.name}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{column.name}</span>
+                                    <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Aggregate Column Alias */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Aggregate Column Alias</label>
+                        <Input
+                          placeholder="Enter alias for aggregate column"
+                          value={localAliasValue}
+                          onChange={(e) => setLocalAliasValue(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Data Limit */}
                   {chartLibraryType === 'echarts' && (
                     <div>
@@ -505,22 +766,12 @@ export default function ChartForm({
                     </div>
                   </div>
                 )}
+
                 
-                {/* Action Button */}
-                <Button 
-                  type="button" 
-                  onClick={() => window.location.reload()}
-                  className="w-full" 
-                  disabled={!isValid || isChartDataLoading}
-                  variant="outline"
-                >
-                  {isChartDataLoading ? 'Refreshing Chart...' : 'Refresh Chart'}
-                </Button>
-                
-                {(generateError || chartDataError) && (
+                {( chartDataError) && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                     <div className="text-red-800 text-sm font-medium">Error</div>
-                    <div className="text-red-700 text-sm">{generateError?.message || chartDataError?.message}</div>
+                    <div className="text-red-700 text-sm">{ chartDataError?.message}</div>
                   </div>
                 )}
               </form>
@@ -546,7 +797,7 @@ export default function ChartForm({
                     </div>
                   )}
                   
-                  {(chartDataError || generateError) && (
+                  {(chartDataError ) && (
                     <div className="flex items-center justify-center min-h-[400px] bg-red-50 rounded-lg border border-red-200">
                       <div className="text-center text-red-600">
                         <div className="text-4xl mb-4">⚠️</div>
@@ -556,7 +807,7 @@ export default function ChartForm({
                     </div>
                   )}
                   
-                  {!chartData && !isChartDataLoading && !chartDataError && !generateError && (
+                  {!chartData && !isChartDataLoading && !chartDataError  && (
                     <div className="flex items-center justify-center min-h-[400px] bg-muted/30 rounded-lg border-2 border-dashed">
                       <div className="text-center text-muted-foreground">
                         <div className="text-5xl mb-4">📊</div>
@@ -573,34 +824,17 @@ export default function ChartForm({
                         {chartLibraryType === 'echarts' && (
                           <EChartsComponent
                             data={chartData}
-                            chartName={watchedChartName}
-                            chartDescription={watch('chartDescription')}
-                            xAxisLabel={watchedXAxis}
-                            yAxisLabel={watchedYAxis}
-                            chartType={watchedChartType}
+                            customOptions={{}}
                           />
                         )}
                         
                         {chartLibraryType === 'nivo' && (
-                          <NivoComponent
-                            data={chartData}
-                            chartName={watchedChartName}
-                            chartDescription={watch('chartDescription')}
-                            xAxisLabel={watchedXAxis}
-                            yAxisLabel={watchedYAxis}
-                            chartType={watchedChartType}
-                          />
-                        )}
-                        
-                        {chartLibraryType === 'recharts' && (
-                          <RechartsComponent
-                            data={chartData}
-                            chartName={watchedChartName}
-                            chartDescription={watch('chartDescription')}
-                            xAxisLabel={watchedXAxis}
-                            yAxisLabel={watchedYAxis}
-                            chartType={watchedChartType}
-                          />
+                          <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-lg border-2 border-dashed">
+                            <div className="text-center text-muted-foreground">
+                              <p className="font-medium mb-2 text-lg">Nivo charts are being updated</p>
+                              <p className="text-sm">Please use ECharts for now</p>
+                            </div>
+                          </div>
                         )}
                       </div>
                       

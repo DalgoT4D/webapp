@@ -9,18 +9,21 @@ export interface Column {
 }
 
 export interface ChartData {
-  'x-axis': any[]
-  'y-axis': any[]
+  chart_config: any; // The ECharts configuration from backend
 }
 
 export interface GenerateChartPayload {
   chart_type: string
+  computation_type?: 'raw' | 'aggregated'
   schema_name: string
   table_name: string
-  xaxis_col: string
-  yaxis_col: string
+  xaxis?: string
+  yaxis?: string
   offset?: number
   limit?: number
+  dimensions?: string | string[]
+  aggregate_col?: string
+  aggregate_func?: string
 }
 
 export interface SaveChartPayload {
@@ -30,9 +33,13 @@ export interface SaveChartPayload {
   schema_name: string
   table: string
   config: {
-    xAxis: string
-    yAxis: string
     chartType: string
+    computation_type: 'raw' | 'aggregated'
+    xAxis?: string
+    yAxis?: string
+    dimensions?: string | string[]
+    aggregate_col?: string
+    aggregate_func?: string
   }
 }
 
@@ -44,9 +51,13 @@ export interface Chart {
   schema_name: string
   table: string
   config: {
-    xAxis: string
-    yAxis: string
     chartType: string
+    mode?: 'raw' | 'aggregated'
+    xAxis?: string
+    yAxis?: string
+    dimensions?: string | string[]
+    aggregate_col?: string
+    aggregate_func?: string
   }
 }
 
@@ -89,7 +100,8 @@ export function useChart(id: number | null) {
 }
 
 // Mutation hooks
-export function useChartGeneration() {
+// Commenting out as it's currently unused
+/*export function useChartGeneration() {
   return useSWRMutation(
     '/api/visualization/generate_chart/',
     async (url: string, { arg }: { arg: GenerateChartPayload }) => {
@@ -97,7 +109,7 @@ export function useChartGeneration() {
       return response
     }
   )
-}
+}*/
 
 export function useChartSave() {
   return useSWRMutation(
@@ -145,26 +157,31 @@ export function useChartData(
     cacheKey,
     async () => {
       if (!payload) throw new Error('No payload provided')
-      const response = await apiPost('/api/visualization/generate_chart/', payload)
       
-      // Transform response to expected format
-      const xAxisData = response.data?.xaxis_data?.[payload.xaxis_col] || []
-      const yAxisData = response.data?.yaxis_data?.[payload.yaxis_col] || []
-      
-      if (!xAxisData.length || !yAxisData.length) {
-        throw new Error('No data found for selected columns')
-      }
-      
-      const minLength = Math.min(xAxisData.length, yAxisData.length)
-      return {
-        'x-axis': xAxisData.slice(0, minLength),
-        'y-axis': yAxisData.slice(0, minLength)
+      try {
+        const response = await apiPost('/api/visualization/charts/generate/', payload)
+        
+        if (!response.chart_config) {
+          throw new Error('No chart configuration received from server')
+        }
+        
+        return {
+          chart_config: response.chart_config
+        }
+      } catch (error) {
+        console.error('Chart data fetch error:', error);
+        throw error;
       }
     },
     {
       revalidateOnFocus: false,
-      dedupingInterval: 300000, // 5 minutes aggressive caching
+      dedupingInterval: 100, // Small deduping interval to prevent infinite loops
       shouldRetryOnError: false,
+      revalidateOnMount: true,
+      revalidateIfStale: true,
+      refreshInterval: 0,
+      refreshWhenHidden: false,
+      refreshWhenOffline: false
     }
   )
 } 
