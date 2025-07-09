@@ -17,8 +17,8 @@ export interface GenerateChartPayload {
   computation_type?: 'raw' | 'aggregated'
   schema_name: string
   table_name: string
-  xaxis_col?: string
-  yaxis_col?: string
+  xaxis?: string
+  yaxis?: string
   offset?: number
   limit?: number
   dimensions?: string | string[]

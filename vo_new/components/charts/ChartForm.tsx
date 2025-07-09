@@ -161,8 +161,8 @@ export default function ChartForm({
         computation_type: 'raw',
         schema_name: watchedSchema,
         table_name: watchedTable,
-        xaxis_col: watchedXAxis,
-        yaxis_col: watchedYAxis,
+        xaxis: watchedXAxis,
+        yaxis: watchedYAxis,
         offset: 0,
         limit: parseInt(watchedDataLimit) || 10
       };
@@ -174,8 +174,8 @@ export default function ChartForm({
       computation_type: 'aggregated',
       schema_name: watchedSchema,
       table_name: watchedTable,
-      xaxis_col: watchedXAxis,
-      yaxis_col: watchedYAxis,
+      xaxis: watchedXAxis,
+      yaxis: watchedYAxis,
       aggregate_func: watchedAggregateFunc
     };
   }, [watchedSchema, watchedTable, watchedMode, watchedXAxis, watchedYAxis, watchedAggregateFunc, watchedDataLimit, watchedChartType]);
