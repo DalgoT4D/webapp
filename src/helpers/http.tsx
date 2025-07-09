@@ -48,7 +48,7 @@ export async function httpPost(session: any, path: string, payload: object) {
     return message;
   } else {
     if (response.status === 401) {
-      handleUnauthorizedError();
+      await handleUnauthorizedError();
       return;
     }
     const error = await response.json();
@@ -71,7 +71,7 @@ export async function httpPut(session: any, path: string, payload: object) {
     return message;
   } else {
     if (response.status === 401) {
-      handleUnauthorizedError();
+      await handleUnauthorizedError();
       return;
     }
     const error = await response.json();
@@ -93,7 +93,7 @@ export async function httpDelete(session: any, path: string) {
     return message;
   } else {
     if (response.status === 401) {
-      handleUnauthorizedError();
+      await handleUnauthorizedError();
       return;
     }
     const error = await response.json();
