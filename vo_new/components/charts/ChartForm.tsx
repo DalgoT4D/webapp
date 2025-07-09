@@ -175,8 +175,10 @@ export default function ChartForm({
       schema_name: watchedSchema,
       table_name: watchedTable,
       xaxis: watchedXAxis,
-      yaxis: watchedYAxis,
-      aggregate_func: watchedAggregateFunc
+      aggregate_col: watchedYAxis,
+      aggregate_func: watchedAggregateFunc,
+      offset: 0,
+      limit: parseInt(watchedDataLimit) || 10
     };
   }, [watchedSchema, watchedTable, watchedMode, watchedXAxis, watchedYAxis, watchedAggregateFunc, watchedDataLimit, watchedChartType]);
   
