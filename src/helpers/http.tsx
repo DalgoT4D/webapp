@@ -19,6 +19,7 @@ export async function httpGet(session: any, path: string, isJson = true) {
     },
   });
 
+  console.log('HTTP GET request:', response.status);
   if (response.ok) {
     const message = isJson ? await response.json() : response;
     return message;
