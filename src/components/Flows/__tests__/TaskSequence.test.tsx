@@ -1,6 +1,6 @@
 // TaskSequence.test.js
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 
 import { TaskSequence } from '../TaskSequence';
 import { TransformTask } from '../../DBT/DBTTarget';
@@ -72,5 +72,34 @@ describe('TaskSequence Component', () => {
     expect(mockField.onChange).toHaveBeenCalledWith(
       mockTasks.filter((task) => task.generated_by === 'system' && task.pipeline_default)
     );
+  });
+
+  it('shows drag icon only for user-generated tasks', () => {
+    render(<TaskSequence field={mockField} options={mockTasks} />);
+    const dragIcons = screen.getAllByTestId('dropicon');
+    expect(dragIcons.length).toBe(1); // Only task 2 is user-generated
+  });
+
+  it('renders all nodes from field.value into the tree', () => {
+    render(<TaskSequence field={mockField} options={mockTasks} />);
+    // Should render the command names or slugs
+    expect(screen.getByText('task 1')).toBeInTheDocument();
+    expect(screen.getByText('task 2')).toBeInTheDocument();
+  });
+
+  it('should call onChange when selecting an option from Autocomplete', async () => {
+    render(<TaskSequence field={mockField} options={mockTasks} />);
+
+    const Autocomplete = screen.getByTestId('tasksequence');
+    await waitFor(() => expect(Autocomplete).toBeInTheDocument());
+
+    const input = within(Autocomplete).getByRole('combobox');
+    Autocomplete.focus();
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    // Select the first option
+    await act(() => fireEvent.keyDown(input, { key: 'Enter' }));
+
+    expect(mockField.onChange).toHaveBeenCalled();
   });
 });
