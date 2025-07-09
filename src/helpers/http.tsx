@@ -7,7 +7,7 @@ import { signOut, useSession } from 'next-auth/react';
 function handleUnauthorizedError() {
   console.log('Unauthorized access detected. Logging out...');
   localStorage.clear();
-  signOut({ callbackUrl: `${window.location.origin}` });
+  signOut({ callbackUrl: '/login' });
 }
 
 export async function httpGet(session: any, path: string, isJson = true) {
