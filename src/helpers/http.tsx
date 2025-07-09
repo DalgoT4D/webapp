@@ -5,6 +5,7 @@ import { signOut, useSession } from 'next-auth/react';
 
 // Helper function to handle 401 errors by clearing session and logging out
 function handleUnauthorizedError() {
+  console.log('Unauthorized access detected. Logging out...');
   localStorage.clear();
   signOut({ callbackUrl: `${window.location.origin}` });
 }
