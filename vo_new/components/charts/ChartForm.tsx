@@ -168,7 +168,7 @@ export default function ChartForm({
       };
     }
     // aggregated
-    if ( !watchedYAxis || !watchedAggregateFunc) return null;
+    if ( !watchedAggregateFunc) return null;
     return {
       chart_type: watchedChartType,
       computation_type: 'aggregated',
