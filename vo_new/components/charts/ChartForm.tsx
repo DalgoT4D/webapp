@@ -359,15 +359,6 @@ export default function ChartForm({
     }
   }
   
-  // Filtered tables for search
-  const [tableSearch, setTableSearch] = React.useState('')
-  const filteredTables = useMemo(() => {
-    if (!tables) return []
-    return tables.filter(table => 
-      table.toLowerCase().includes(tableSearch.toLowerCase())
-    )
-  }, [tables, tableSearch])
-
 
   const dynmaicXaxisLables =()=>{
     const chartType = ["pie"];
@@ -517,13 +508,6 @@ export default function ChartForm({
                   <div>
                     <label className="block text-sm font-medium mb-2">Table</label>
                     <div className="space-y-2">
-                      <Input
-                        placeholder="Search tables..."
-                        value={tableSearch}
-                        onChange={(e) => setTableSearch(e.target.value)}
-                        disabled={!watchedSchema || tablesLoading}
-                        className="h-9"
-                      />
                       <Select 
                         value={watchedTable} 
                         onValueChange={(value) => setValue('table', value)}
@@ -534,10 +518,10 @@ export default function ChartForm({
                         </SelectTrigger>
                         <SelectContent>
                           {tablesError && <div className="px-3 py-2 text-red-500 text-sm">{tablesError.message}</div>}
-                          {filteredTables.length === 0 && !tablesLoading && (
+                          {tables?.length === 0 && !tablesLoading && (
                             <div className="px-3 py-2 text-muted-foreground text-sm">No tables found</div>
                           )}
-                          {filteredTables.map((table) => (
+                          {tables?.map((table) => (
                             <SelectItem key={table} value={table}>
                               {table}
                             </SelectItem>
@@ -547,36 +531,27 @@ export default function ChartForm({
                     </div>
                   </div>
                   
-                  {/* X-Axis */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{dynmaicXaxisLables()}</label>
-                    <Select
-                      value={watchedXAxis}
-                      onValueChange={(value) => setValue('xAxis', value)}
-                      disabled={!watchedTable || columnsLoading}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose X-Axis"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
-                        {columns?.map((column) => (
-                          <SelectItem key={column.name} value={column.name}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{column.name}</span>
-                              <span className="text-xs text-muted-foreground">{column.data_type}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                   {/* Data Mode */}
                   <div>
                     <label className="block text-sm font-medium mb-2">Data Mode</label>
                     <Select
                       value={watchedMode}
-                      onValueChange={(value) => setValue('computation_type', value as 'raw' | 'aggregated')}
+                      onValueChange={(value) => {
+                        // Reset data mode specific fields when switching modes
+                        if (value === 'raw') {
+                          setValue('computation_type', 'raw');
+                          setValue('xAxis', '');
+                          setValue('yAxis', '');
+                        } else {
+                          setValue('computation_type', 'aggregated');
+                          setValue('xAxis', '');
+                          setValue('aggregateFunc', '');
+                          setValue('yAxis', '');
+                          setValue('dimension_col', '');
+                          setValue('aggregate_col_alias', '');
+                          setLocalAliasValue('');
+                        }
+                      }}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select computation_type" />
@@ -588,9 +563,93 @@ export default function ChartForm({
                     </Select>
                   </div>
 
-                  {/* Aggregate Function (only for aggregated computation_type) */}
+                  {/* Raw Data Fields */}
+                  {watchedMode === 'raw' && (
+                    <div className="space-y-4 bg-muted/30 border border-muted rounded-lg p-4">
+                      {/* X-Axis */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">X-Axis</label>
+                        <Select
+                          value={watchedXAxis}
+                          onValueChange={(value) => setValue('xAxis', value)}
+                          disabled={!watchedTable || columnsLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose X-Axis"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                            {columns?.map((column) => (
+                              <SelectItem key={column.name} value={column.name}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{column.name}</span>
+                                  <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Y-Axis */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Y-Axis</label>
+                        <Select
+                          value={watchedYAxis}
+                          onValueChange={(value) => setValue('yAxis', value)}
+                          disabled={!watchedTable || columnsLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose Y-Axis"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                            {columns?.map((column) => (
+                              <SelectItem key={column.name} value={column.name}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{column.name}</span>
+                                  <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Aggregated Data Fields */}
                   {watchedMode === 'aggregated' && (
                     <div className="space-y-4 bg-muted/30 border border-muted rounded-lg p-4">
+                      {/* X-Axis */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">X-Axis</label>
+                        <Select
+                          value={watchedXAxis}
+                          onValueChange={(value) => {
+                            setValue('xAxis', value);
+                            setValue('dimension_col', value); // Set dimension_col same as xAxis
+                          }}
+                          disabled={!watchedTable || columnsLoading}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose X-Axis"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
+                            {columns?.map((column) => (
+                              <SelectItem key={column.name} value={column.name}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{column.name}</span>
+                                  <span className="text-xs text-muted-foreground">{column.data_type}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Aggregate Function */}
                       <div>
                         <label className="block text-sm font-medium mb-2">Aggregate Function</label>
                         <Select
@@ -647,58 +706,6 @@ export default function ChartForm({
                           className="h-9"
                         />
                       </div>
-
-                      {/* Dimension Field */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Dimension</label>
-                        <Select
-                          value={watchedDimension}
-                          onValueChange={(value) => setValue('dimension_col', value)}
-                          disabled={!watchedTable || columnsLoading}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose dimension"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
-                            {columns?.map((column) => (
-                              <SelectItem key={column.name} value={column.name}>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{column.name}</span>
-                                  <span className="text-xs text-muted-foreground">{column.data_type}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Y-Axis (only for raw data) */}
-                  {watchedMode === 'raw' && (
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{dynamicYaxisLables()}</label>
-                      <Select
-                        value={watchedYAxis}
-                        onValueChange={(value) => setValue('yAxis', value)}
-                        disabled={!watchedTable || columnsLoading}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder={columnsLoading ? "Loading..." : "Choose Y-Axis"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {columnsError && <div className="px-3 py-2 text-red-500 text-sm">{columnsError.message}</div>}
-                          {columns?.map((column) => (
-                            <SelectItem key={column.name} value={column.name}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{column.name}</span>
-                                <span className="text-xs text-muted-foreground">{column.data_type}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </div>
                   )}
 
