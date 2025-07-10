@@ -569,4 +569,40 @@ describe('Flow Creation', () => {
     expect(requestBody.connections[0].id).toBe('conn-1-id');
     // expect(requestBody.cron).toBe('0 1 * * 0');
   }, 10000);
+
+  it('renders edit mode correctly when flowId is provided', async () => {
+    const mockFlowData = {
+      name: 'Test Flow',
+      connections: [{ id: 'conn-1', name: 'Connection 1', seq: 1 }],
+      isScheduleActive: true,
+      cron: '0 9 * * 1,2,3',
+      transformTasks: [{ uuid: 'd3681350-ea4f-4afe-b664-4bb82070c703', seq: 1 }],
+    };
+
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce([{ name: 'conn-1', connectionId: 'conn-1-id' }]),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(mockFlowData),
+      });
+    (global as any).fetch = fetchMock;
+
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          flowId="test-flow-id"
+          updateCrudVal={jest.fn}
+          mutate={jest.fn}
+          setSelectedFlowId={jest.fn}
+          tasks={tasks}
+        />
+      </SessionProvider>
+    );
+    expect(screen.getByText('Update pipeline')).toBeInTheDocument();
+    expect(screen.getByTestId('activeSwitch')).toBeInTheDocument();
+  });
 });

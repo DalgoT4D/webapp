@@ -285,4 +285,22 @@ describe('FlowLogs Component', () => {
       expect(screen.queryByTestId('aisummary-run-2')).toBeDisabled();
     });
   });
+
+  test('shows log details when clicking Logs button', async () => {
+    const setShowLogsDialog = jest.fn();
+    render(
+      <GlobalContext.Provider value={{}}>
+        <FlowLogs setShowLogsDialog={setShowLogsDialog} flow={mockFlow} />
+      </GlobalContext.Provider>
+    );
+
+    await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+
+    const logsButton = screen.getByText(/Logs/i);
+    fireEvent.click(logsButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Log message 1/)).toBeInTheDocument();
+    });
+  });
 });
