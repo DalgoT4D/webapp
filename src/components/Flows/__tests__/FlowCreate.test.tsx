@@ -605,4 +605,127 @@ describe('Flow Creation', () => {
     expect(screen.getByText('Update pipeline')).toBeInTheDocument();
     expect(screen.getByTestId('activeSwitch')).toBeInTheDocument();
   });
+
+  it('toggles between simple and advanced task selection', async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce([]),
+    });
+    (global as any).fetch = fetchMock;
+
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          flowId=""
+          updateCrudVal={jest.fn}
+          mutate={jest.fn}
+          setSelectedFlowId={jest.fn}
+          tasks={tasks}
+        />
+      </SessionProvider>
+    );
+
+    // Initially simple mode is selected
+    expect(screen.getByText('Simple')).toHaveClass('Mui-selected');
+    expect(screen.getByText('Run all tasks')).toBeInTheDocument();
+
+    // Click advanced mode
+    const advancedButton = screen.getByText('Advanced');
+    await user.click(advancedButton);
+
+    await waitFor(() => {
+      expect(advancedButton).toHaveClass('Mui-selected');
+      expect(screen.queryByText('Run all tasks')).not.toBeInTheDocument();
+    });
+
+    // Click back to simple mode
+    const simpleButton = screen.getByText('Simple');
+    await user.click(simpleButton);
+
+    await waitFor(() => {
+      expect(simpleButton).toHaveClass('Mui-selected');
+      expect(screen.getByText('Run all tasks')).toBeInTheDocument();
+    });
+  });
+
+  it('handles manual schedule selection', async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce([]),
+    });
+    (global as any).fetch = fetchMock;
+
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          flowId=""
+          updateCrudVal={jest.fn}
+          mutate={jest.fn}
+          setSelectedFlowId={jest.fn}
+          tasks={tasks}
+        />
+      </SessionProvider>
+    );
+
+    const cronOption = screen.getByRole('combobox', {
+      name: 'Daily/Weekly',
+    }) as HTMLInputElement;
+    const cronautocomplete = screen.getByTestId('cronautocomplete');
+
+    await user.type(cronOption, 'manual');
+    fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(cronOption.value).toBe('manual');
+      expect(screen.queryByTestId('cronTimeOfDay')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('cronDaysOfWeek')).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows day of week selection only for weekly schedule', async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce([]),
+    });
+    (global as any).fetch = fetchMock;
+
+    render(
+      <SessionProvider session={mockSession}>
+        <FlowCreate
+          flowId=""
+          updateCrudVal={jest.fn}
+          mutate={jest.fn}
+          setSelectedFlowId={jest.fn}
+          tasks={tasks}
+        />
+      </SessionProvider>
+    );
+
+    const cronOption = screen.getByRole('combobox', {
+      name: 'Daily/Weekly',
+    }) as HTMLInputElement;
+    const cronautocomplete = screen.getByTestId('cronautocomplete');
+
+    // Select daily - should not show day of week
+    await user.type(cronOption, 'daily');
+    fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('cronDaysOfWeek')).not.toBeInTheDocument();
+      expect(screen.getByTestId('cronTimeOfDay')).toBeInTheDocument();
+    });
+
+    // Clear and select weekly - should show day of week
+    await user.clear(cronOption);
+    await user.type(cronOption, 'weekly');
+    fireEvent.keyDown(cronautocomplete, { key: 'ArrowDown' });
+    fireEvent.keyDown(cronautocomplete, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('cronDaysOfWeek')).toBeInTheDocument();
+      expect(screen.getByTestId('cronTimeOfDay')).toBeInTheDocument();
+    });
+  });
 });
