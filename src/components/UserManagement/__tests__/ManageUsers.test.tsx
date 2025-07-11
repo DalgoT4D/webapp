@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import '@testing-library/jest-dom';
@@ -240,5 +240,37 @@ describe('Delete org user', () => {
 
     // mutate will also be called on this
     expect(deleteOrgUserApiMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ManageUsers - handleEdit', () => {
+  it('should display role dropdown and Save button when Edit is clicked', async () => {
+    const initalUsersFetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: jest.fn().mockResolvedValueOnce(users),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(roles),
+      });
+
+    (global as any).fetch = initalUsersFetch;
+
+    await act(() => render(manageUsers));
+
+    const actionButtons = screen.getAllByLabelText('user-action-menu-button');
+    fireEvent.click(actionButtons[0]); // Click first user's action menu
+
+    const editButton = await screen.findByText(/edit/i);
+    fireEvent.click(editButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
+    });
+
+    // Optionally verify that the Select input is rendered (role selection)
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 });
