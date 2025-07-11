@@ -183,7 +183,7 @@ describe('Sources', () => {
       </GlobalContext.Provider>
     );
 
-    fireEvent.click(screen.getByText(/New Source/i));
+    fireEvent.click(screen.getByTestId('add-new-source'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     // Close the form dialog
@@ -225,5 +225,21 @@ describe('Sources', () => {
     );
 
     expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+  });
+
+  test('searches sources by name', async () => {
+    render(
+      <GlobalContext.Provider value={mockGlobalContext}>
+        <Sources />
+      </GlobalContext.Provider>
+    );
+    const searchInput = screen.getByRole('textbox', { name: /search sources/i });
+
+    // search for "Source 1"
+    fireEvent.change(searchInput, { target: { value: 'Source 1' } });
+
+    // Verify that only Source 1 is displayed
+    expect(screen.getByText('Source 1')).toBeInTheDocument();
+    expect(screen.queryByText('Source 2')).not.toBeInTheDocument();
   });
 });
