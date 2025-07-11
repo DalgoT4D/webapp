@@ -32,6 +32,14 @@ const MainDashboard = ({ children }: any) => {
   const router = useRouter();
   const [redirectTo, setRedirectTo] = useState<string | null>('');
   const globalContext = useContext(GlobalContext);
+  const [params, setParams] = useState<any>({});
+  console.log(params, 'params');
+  useEffect(() => {
+    // Make sure router is ready before accessing query
+    if (router.isReady) {
+      setParams(router.query);
+    }
+  }, [router.isReady, router.query]);
 
   const [openMenu, setOpenMenu] = useState<boolean>(true);
   const [params, setParams] = useState<any>({});
