@@ -267,7 +267,7 @@ const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }
         {action === 'detail' ? (
           <Alert icon={false} sx={{ background: '#000', color: '#fff' }}>
             <Box sx={{ wordBreak: 'break-word' }}>
-                {logs?.map((log: any, idx) => <Box key={idx}>- {log?.message || log}
+              {logs?.map((log: any, idx) => <Box key={idx}>- {log?.message || log} </Box>)}
             </Box>
             {flowRunOffset > 0 &&
               (logsLoaded ? (
