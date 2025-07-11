@@ -4,7 +4,7 @@ import { Session } from 'next-auth';
 import { SourceForm } from '../SourceForm';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import useWebSocket from 'react-use-websocket';
+import { useWebSocketConnection } from '@/customHooks/useWebsocketConnection';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { ToastStateInterface } from '@/contexts/reducers/ToastReducer';
 import {
@@ -23,9 +23,9 @@ jest.mock('next/router', () => ({
   },
 }));
 
-jest.mock('react-use-websocket', () => ({
-  __esModule: true,
-  default: jest.fn(),
+// Mock the custom hook correctly
+jest.mock('@/customHooks/useWebsocketConnection', () => ({
+  useWebSocketConnection: jest.fn(),
 }));
 
 // Mock the ConfigForm component to avoid parsing issues
@@ -103,10 +103,11 @@ describe('Edit Source Form', () => {
     sendJsonMessageMock = jest.fn();
     lastMessageMock = null;
 
-    (useWebSocket as jest.Mock).mockReturnValue({
+    (useWebSocketConnection as jest.Mock).mockReturnValue({
       sendJsonMessage: sendJsonMessageMock,
       lastMessage: lastMessageMock,
-      onError: jest.fn(),
+      disconnect: jest.fn(),
+      setSocketUrl: jest.fn(),
     });
   });
 
