@@ -470,4 +470,143 @@ describe('Create connection', () => {
     //check  how to show this test failed.
     //mockServer.close();
   });
+
+  it('handles edit mode - loads existing connection data', async () => {
+    const mockConnectionData = {
+      name: 'existing-connection',
+      source: { name: 'Source 1', id: 'source-1-id' },
+      destinationSchema: 'production',
+      syncCatalog: {
+        streams: [
+          {
+            stream: { name: 'stream-1', supportedSyncModes: ['full_refresh', 'incremental'] },
+            config: {
+              selected: true,
+              syncMode: 'incremental',
+              destinationSyncMode: 'append_dedup',
+              cursorField: ['updated_at'],
+              primaryKey: [['id']],
+            },
+          },
+        ],
+      },
+      catalogId: 'catalog-123',
+      normalize: true,
+    };
+
+    (global as any).fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: jest.fn().mockResolvedValueOnce(mockConnectionData),
+    });
+
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <CreateConnectionForm
+            mutate={() => {}}
+            showForm={true}
+            setShowForm={() => {}}
+            setBlockId={() => {}}
+            connectionId="connection-123"
+            setConnectionId={() => {}}
+            blockId=""
+          />
+        </SessionProvider>
+      );
+    });
+
+    await waitFor(() => {
+      const connectionName = screen.getByDisplayValue('existing-connection');
+      expect(connectionName).toBeInTheDocument();
+    });
+  });
+
+  it('handles form close and reset', async () => {
+    const mockSetShowForm = jest.fn();
+    const mockSetConnectionId = jest.fn();
+
+    render(
+      <SessionProvider session={mockSession}>
+        <CreateConnectionForm
+          mutate={() => {}}
+          showForm={true}
+          setShowForm={mockSetShowForm}
+          setBlockId={() => {}}
+          connectionId=""
+          setConnectionId={mockSetConnectionId}
+          blockId=""
+        />
+      </SessionProvider>
+    );
+
+    const cancelButton = screen.getByText('Cancel');
+    await userEvent.click(cancelButton);
+
+    expect(mockSetShowForm).toHaveBeenCalledWith(false);
+    expect(mockSetConnectionId).toHaveBeenCalledWith('');
+  });
+
+  it('handles connection update success', async () => {
+    const mockConnectionData = {
+      name: 'existing-connection',
+      source: { name: 'Source 1', id: 'source-1-id' },
+      destinationSchema: 'production',
+      syncCatalog: {
+        streams: [
+          {
+            stream: { name: 'stream-1', supportedSyncModes: ['full_refresh', 'incremental'] },
+            config: {
+              selected: true,
+              syncMode: 'full_refresh',
+              destinationSyncMode: 'overwrite',
+              cursorField: [],
+              primaryKey: [],
+            },
+          },
+        ],
+      },
+      catalogId: 'catalog-123',
+      normalize: false,
+    };
+
+    // Mock the GET request for existing connection
+    (global as any).fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(mockConnectionData),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({ success: true }),
+      });
+
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <CreateConnectionForm
+            mutate={() => {}}
+            showForm={true}
+            setShowForm={() => {}}
+            setBlockId={() => {}}
+            connectionId="connection-123"
+            setConnectionId={() => {}}
+            blockId=""
+          />
+        </SessionProvider>
+      );
+    });
+
+    await waitFor(() => {
+      const connectionName = screen.getByDisplayValue('existing-connection');
+      expect(connectionName).toBeInTheDocument();
+    });
+
+    // Submit the form to update
+    const connectButton = screen.getByText('Connect');
+    await userEvent.click(connectButton);
+
+    // Verify the PUT request was made
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
 });
