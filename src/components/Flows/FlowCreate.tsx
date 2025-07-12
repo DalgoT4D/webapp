@@ -257,15 +257,6 @@ const FlowCreate = ({
       }));
       if (isEditPage) {
         setLoading(true);
-        // hit the set schedule api if the value is updated
-        if (dirtyFields?.active) {
-          await httpPost(
-            session,
-            `prefect/flows/${flowId}/set_schedule/${data.active ? 'active' : 'inactive'}`,
-            {}
-          );
-        }
-
         // hit the update deplyment api if the cron is updated
         await httpPut(session, `prefect/v1/flows/${flowId}`, {
           cron: cronExpression,
@@ -276,6 +267,15 @@ const FlowCreate = ({
             seq: index + 1,
           })),
         });
+        // hit the set schedule api if the value is updated
+        if (dirtyFields?.active) {
+          await httpPost(
+            session,
+            `prefect/flows/${flowId}/set_schedule/${data.active ? 'active' : 'inactive'}`,
+            {}
+          );
+        }
+
         successToast(`Pipeline ${data.name} updated successfully`, [], toastContext);
         setSelectedFlowId('');
       } else {
