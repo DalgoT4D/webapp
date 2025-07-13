@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.15.0",
-    "@dagrejs/dagre": "^1.1.4",
+    "@dagrejs/dagre": "^1.1.5",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
     "@mui/icons-material": "5.17.1",
