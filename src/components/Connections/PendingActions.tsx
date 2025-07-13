@@ -112,7 +112,7 @@ const PendingActionsAccordion = ({
               const connectionId = schemaChange.connection_id;
               const connectionName = connectionNameMap[connectionId];
               const schemaChangeType = schemaChange.change_type;
-              const connection = connections.find(
+              const connection = connections?.find(
                 (conn: any) => conn.connectionId === connectionId
               );
 
