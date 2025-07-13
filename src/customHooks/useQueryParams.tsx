@@ -23,12 +23,35 @@ export const useQueryParams = ({
 
   const [value, setValue] = useState(currentTab);
 
+  // Helper function to preserve existing query parameters
+  const buildQueryString = (newTab: string) => {
+    const { tab, ...otherParams } = router.query;
+    const params = new URLSearchParams();
+
+    // Add the new tab parameter
+    params.set('tab', newTab);
+
+    // Preserve other existing query parameters
+    Object.entries(otherParams).forEach(([key, value]) => {
+      if (value !== undefined) {
+        if (Array.isArray(value)) {
+          value.forEach((v) => params.append(key, v));
+        } else {
+          params.set(key, value as string);
+        }
+      }
+    });
+
+    return params.toString();
+  };
+
   useEffect(() => {
     if (!router.isReady) return;
 
     if (!tab || !(tab in tabsObj)) {
       //check for the first render and also if user put wrong query params
-      router.replace(`${basePath}?tab=${defaultTab}`, undefined, { shallow: true });
+      const queryString = buildQueryString(defaultTab);
+      router.replace(`${basePath}?${queryString}`, undefined, { shallow: true });
     } else {
       setValue(currentTab);
     }
@@ -38,7 +61,8 @@ export const useQueryParams = ({
     const tabName = reverseTabsObj[newValue];
     if (tabName) {
       setValue(newValue);
-      router.push(`${basePath}?tab=${tabName}`, undefined, { shallow: true });
+      const queryString = buildQueryString(tabName);
+      router.push(`${basePath}?${queryString}`, undefined, { shallow: true });
     }
   };
   return { value, handleChange };
