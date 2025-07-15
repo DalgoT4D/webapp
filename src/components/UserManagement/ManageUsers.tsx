@@ -186,6 +186,7 @@ const ManageUsers = ({ setMutateInvitations }: ManageUsersInterface) => {
           ) : (
             orguser.email !== session?.user?.email && (
               <Button
+                aria-label="user-action-menu-button"
                 aria-controls={openActionMenu ? 'basic-menu' : undefined}
                 aria-haspopup="true"
                 aria-expanded={openActionMenu ? 'true' : undefined}

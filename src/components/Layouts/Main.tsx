@@ -34,6 +34,13 @@ const MainDashboard = ({ children }: any) => {
   const globalContext = useContext(GlobalContext);
 
   const [openMenu, setOpenMenu] = useState<boolean>(true);
+  const [params, setParams] = useState<any>({});
+  useEffect(() => {
+    // Make sure router is ready before accessing query
+    if (router.isReady) {
+      setParams(router.query);
+    }
+  }, [router.isReady, router.query]);
 
   useEffect(() => {
     (async () => {
@@ -122,14 +129,19 @@ const MainDashboard = ({ children }: any) => {
       )}
       {redirectTo === 'dashboard' && (
         <>
-          <Header openMenu={openMenu} setOpenMenu={setOpenMenu} />
+          {/* <Header openMenu={openMenu} setOpenMenu={setOpenMenu} /> */}
           {router.pathname === '/changepassword' ? (
             children
+          ) : params.hide === 'true' ? (
+            <Box sx={{ display: 'flex', pt: 6 }}>{children}</Box>
           ) : (
-            <Box sx={{ display: 'flex', pt: 6 }}>
-              <SideDrawer openMenu={openMenu} setOpenMenu={setOpenMenu} />
-              {children}
-            </Box>
+            <>
+              <Header openMenu={openMenu} setOpenMenu={setOpenMenu} />
+              <Box sx={{ display: 'flex', pt: 6 }}>
+                <SideDrawer openMenu={openMenu} setOpenMenu={setOpenMenu} />
+                {children}
+              </Box>
+            </>
           )}
         </>
       )}
