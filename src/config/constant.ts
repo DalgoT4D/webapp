@@ -10,6 +10,7 @@ export const showSupersetAnalysisTab =
 export const defaultLoadMoreLimit = parseInt(
   process.env.NEXT_PUBLIC_DEFAULT_LOAD_MORE_LIMIT || '3'
 );
+export const errorToastDuration = parseInt(process.env.NEXT_PUBLIC_ERROR_TOAST_DURATION || '15');
 export const dalgoWhitelistIps = process.env.NEXT_PUBLIC_DALGO_WHITELIST_IPS?.split(',') || [];
 
 export const flowRunLogsOffsetLimit = 200;
@@ -37,3 +38,9 @@ export const demoProductWalkthrough = process.env.NEXT_PUBLIC_DEMO_WALKTHROUGH_E
 
 // alpha features
 export const enableLogSummaries = process.env.NEXT_PUBLIC_ENABLE_LOG_SUMMARIES;
+
+// Airbyte job statuses
+export const AIRBYTE_JOB_STATUS_FAILED = 'failed';
+export const AIRBYTE_JOB_STATUS_SUCCEEDED = 'succeeded';
+export const AIRBYTE_JOB_STATUS_CANCELED = 'cancelled';
+export const AIRBYTE_JOB_STATUS_RUNNING = 'running';

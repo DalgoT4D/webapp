@@ -31,6 +31,7 @@ import PendingActionsAccordion from './PendingActions';
 import { useSyncLock } from '@/customHooks/useSyncLock';
 import { useTracking } from '@/contexts/TrackingContext';
 import { formatDuration } from '@/utils/common';
+import { AIRBYTE_JOB_STATUS_CANCELED, AIRBYTE_JOB_STATUS_SUCCEEDED } from '@/config/constant';
 
 type PrefectFlowRun = {
   id: string;
@@ -429,10 +430,10 @@ const SyncStatus = memo(
 
     // if lock is not there; check for last run
     if (jobStatus === null && connection.lastRun) {
-      if (connection.lastRun?.status === 'COMPLETED') {
+      if (connection.lastRun?.status === AIRBYTE_JOB_STATUS_SUCCEEDED) {
         jobStatus = 'success';
         jobStatusColor = '#399D47';
-      } else if (connection.lastRun.status === 'CANCELLED') {
+      } else if (connection.lastRun.status === AIRBYTE_JOB_STATUS_CANCELED) {
         jobStatus = 'cancelled';
         jobStatusColor = '#DAA520';
       } else {
