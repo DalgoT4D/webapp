@@ -1,6 +1,5 @@
 import { render, screen, act, waitFor } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
-import { Session } from 'next-auth';
 import { SingleFlowRunHistory } from '../SingleFlowRunHistory';
 import '@testing-library/jest-dom';
 import { errorToast } from '../../ToastMessage/ToastHelper';
