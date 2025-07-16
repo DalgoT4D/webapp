@@ -304,8 +304,6 @@ const Row = ({
         <TableCell
           sx={{
             fontWeight: 600,
-            borderTopLeftRadius: '10px',
-            borderBottomLeftRadius: '10px',
           }}
         >
           {connectionSyncJob.status !== AIRBYTE_JOB_STATUS_RUNNING
