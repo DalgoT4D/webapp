@@ -1,6 +1,6 @@
 import { useState, useContext, useMemo, useEffect } from 'react';
 import useSWR from 'swr';
-import { CircularProgress, Box, Button, Typography } from '@mui/material';
+import { CircularProgress, Box, Button, Typography, TextField } from '@mui/material';
 import { List } from '../List/List';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useSession } from 'next-auth/react';
@@ -52,6 +52,7 @@ export const Sources = () => {
   const [sourceToBeDeleted, setSourceToBeDeleted] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteSourceLoading, setDeleteSourceLoading] = useState(false);
+  const [searchText, setSearchText] = useState<string>('');
 
   const permissions = globalContext?.Permissions.state || [];
   const handleEditSource = () => {
@@ -69,19 +70,26 @@ export const Sources = () => {
     setAnchorEl(null);
   };
 
+  const filteredData = useMemo(() => {
+    if (!data) return [];
+    const lowerSearch = searchText.toLowerCase().trim();
+    if (!lowerSearch) return data;
+    return data.filter((source: any) => source.name.toLowerCase().includes(lowerSearch));
+  }, [searchText, data]);
+
   let rows = [];
   let rowValues = [];
 
   rowValues = useMemo(() => {
-    if (data && data.length >= 0) {
-      return data.map((source: any) => [source.name, source.sourceName]);
+    if (filteredData && filteredData.length >= 0) {
+      return filteredData.map((source: any) => [source.name, source.sourceName]);
     }
     return [];
-  }, [data, sourceDefs]);
+  }, [filteredData, sourceDefs]);
 
   rows = useMemo(() => {
-    if (data && data.length >= 0) {
-      return data.map((source: any, idx: number) => [
+    if (filteredData && filteredData.length >= 0) {
+      return filteredData.map((source: any, idx: number) => [
         <Box key={idx} sx={{ display: 'flex', alignItems: 'center' }}>
           <Image style={{ marginRight: 10 }} src={connectionIcon} alt="connection icon" />
           <Typography variant="body1" fontWeight={600}>
@@ -118,7 +126,7 @@ export const Sources = () => {
       ]);
     }
     return [];
-  }, [data, sourceDefs]);
+  }, [filteredData, sourceDefs]);
 
   const handleClickOpen = () => {
     setShowSourceDialog(true);
@@ -201,7 +209,6 @@ export const Sources = () => {
         handleEdit={handleEditSource}
         handleDelete={handleDeleteSource}
       />
-
       <SourceForm
         mutate={mutate}
         loading={loading}
@@ -211,7 +218,32 @@ export const Sources = () => {
         setShowForm={setShowSourceDialog}
         sourceId={sourceIdToEdit}
       />
+      <Box display="flex" justifyContent="space-between" mb={1}>
+        <TextField
+          aria-label="search-sources"
+          label="Search Sources"
+          variant="outlined"
+          size="small"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          sx={{ width: 300 }}
+        />
+        <Button
+          data-testid="add-new-source"
+          variant="contained"
+          onClick={() => {
+            setSourceIdToEdit('');
+            setSourceToBeDeleted(null);
+            handleClickOpen();
+          }}
+          disabled={!permissions.includes('can_create_source')}
+          className="sourceadd_walkthrough"
+        >
+          + New Source
+        </Button>
+      </Box>
       <List
+        onlyList={true}
         hasCreatePermission={permissions.includes('can_create_source')}
         openDialog={() => {
           setSourceIdToEdit('');

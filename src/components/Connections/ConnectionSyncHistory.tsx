@@ -25,7 +25,11 @@ import DownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 import moment from 'moment';
 import { delay, formatDuration } from '@/utils/common';
-import { defaultLoadMoreLimit } from '@/config/constant';
+import {
+  AIRBYTE_JOB_STATUS_FAILED,
+  AIRBYTE_JOB_STATUS_RUNNING,
+  defaultLoadMoreLimit,
+} from '@/config/constant';
 import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import InsightsIcon from '@mui/icons-material/Insights';
@@ -89,16 +93,15 @@ enum ConnectionJobType {
 
 interface ConnectionSyncJobObject {
   job_type: ConnectionJobType;
-  attempt_no: number;
-  bytesEmitted: string;
-  date: string;
+  last_attempt_no: number;
+  bytes_committed: string;
+  created_at: string;
   job_id: number;
   logs: string[];
-  recordsCommitted: number;
-  recordsEmitted: number;
+  records_committed: number;
   status: string;
-  totalTimeInSeconds: number;
-  resetConfig: any | null;
+  duration_seconds: number;
+  reset_config: any | null;
 }
 
 const LogsColumn = ({
@@ -196,7 +199,7 @@ const Row = ({
     try {
       const response = await httpGet(
         session,
-        `airbyte/v1/connections/${connectionId}/logsummary?job_id=${connectionSyncJob.job_id}&attempt_number=${connectionSyncJob.attempt_no}`
+        `airbyte/v1/connections/${connectionId}/logsummary?job_id=${connectionSyncJob.job_id}&attempt_number=${connectionSyncJob.last_attempt_no}`
       );
 
       await delay(3000);
@@ -212,7 +215,7 @@ const Row = ({
     try {
       const response = await httpGet(
         session,
-        `airbyte/v1/logs?job_id=${connectionSyncJob.job_id}&attempt_number=${connectionSyncJob.attempt_no}`
+        `airbyte/v1/logs?job_id=${connectionSyncJob.job_id}&attempt_number=${connectionSyncJob.last_attempt_no}`
       );
 
       setDetailedLogs(response);
@@ -233,10 +236,10 @@ const Row = ({
 
       const logs = await httpGet(
         session,
-        `airbyte/v1/logs?job_id=${connectionSyncJob.job_id}&attempt_number=${connectionSyncJob.attempt_no}`
+        `airbyte/v1/logs?job_id=${connectionSyncJob.job_id}&attempt_number=${connectionSyncJob.last_attempt_no}`
       );
 
-      if (currentJobStatus === 'running') {
+      if (currentJobStatus === AIRBYTE_JOB_STATUS_RUNNING) {
         setDetailedLogs(logs);
         await delay(3000);
         await pollForDetailedSyncLogs();
@@ -257,7 +260,7 @@ const Row = ({
       trackAmplitudeEvent('[ai-summary] Button clicked');
     } else if (action === 'detail' && detailedLogs.length < 1) {
       getDetailedLogs();
-      if (connectionSyncJob.status === 'running') {
+      if (connectionSyncJob.status === AIRBYTE_JOB_STATUS_RUNNING) {
         pollForDetailedSyncLogs();
       }
     }
@@ -271,7 +274,10 @@ const Row = ({
           position: 'relative',
           p: 2,
 
-          background: connectionSyncJob.status === 'failed' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
+          background:
+            connectionSyncJob.status === AIRBYTE_JOB_STATUS_FAILED
+              ? 'rgba(211, 47, 47, 0.2)'
+              : 'unset',
         }}
       >
         <TableCell
@@ -282,12 +288,14 @@ const Row = ({
           }}
         >
           {connectionSyncJob.job_type === ConnectionJobType.sync ? 'Sync' : 'Reset/Clear'}
-          {connectionSyncJob.status === 'running' ? ' running' : ''}
+          {connectionSyncJob.status === AIRBYTE_JOB_STATUS_RUNNING
+            ? ` ${AIRBYTE_JOB_STATUS_RUNNING}`
+            : ''}
           <br />
-          {connectionSyncJob?.resetConfig && (
+          {connectionSyncJob?.reset_config && (
             <>
               streams:{' '}
-              {connectionSyncJob.resetConfig?.streamsToReset
+              {connectionSyncJob.reset_config?.streamsToReset
                 .map((stream: any) => stream.name)
                 .join(', ')}
             </>
@@ -296,25 +304,23 @@ const Row = ({
         <TableCell
           sx={{
             fontWeight: 600,
-            borderTopLeftRadius: '10px',
-            borderBottomLeftRadius: '10px',
           }}
         >
-          {connectionSyncJob.status !== 'running'
-            ? moment(connectionSyncJob.date).format('MMMM D, YYYY')
+          {connectionSyncJob.status !== AIRBYTE_JOB_STATUS_RUNNING
+            ? moment(connectionSyncJob.created_at).format('MMMM D, YYYY')
             : ''}
         </TableCell>
 
         <TableCell sx={{ fontWeight: 500 }}>
-          {connectionSyncJob.recordsEmitted.toLocaleString()}
+          {connectionSyncJob.records_committed.toLocaleString()}
         </TableCell>
-        <TableCell sx={{ fontWeight: 500 }}>{connectionSyncJob.bytesEmitted}</TableCell>
+        <TableCell sx={{ fontWeight: 500 }}>{connectionSyncJob.bytes_committed}</TableCell>
         <TableCell
           sx={{
             fontWeight: 500,
           }}
         >
-          {formatDuration(connectionSyncJob.totalTimeInSeconds)}
+          {formatDuration(connectionSyncJob.duration_seconds)}
         </TableCell>
         <TableCell
           sx={{
@@ -342,7 +348,7 @@ const Row = ({
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
-            {allowLogsSummary && connectionSyncJob.status === 'failed' && (
+            {allowLogsSummary && connectionSyncJob.status === AIRBYTE_JOB_STATUS_FAILED && (
               <ToggleButton
                 value="summary"
                 aria-label="right"
