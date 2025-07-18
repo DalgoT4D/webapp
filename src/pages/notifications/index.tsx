@@ -8,7 +8,7 @@ import useSWR from 'swr';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useQueryParams } from '@/customHooks/useQueryParams';
 import { httpPut } from '@/helpers/http';
-import { errorToast } from '@/components/ToastMessage/ToastHelper';
+import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import { useSession } from 'next-auth/react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 interface TabPanelProps {
@@ -67,6 +67,7 @@ const NotificationManagement = () => {
   const handleMarkAllAsRead = async () => {
     try {
       await httpPut(session, `notifications/mark_all_as_read`, {});
+      successToast('All notifications marked as read', [], globalContext);
     } catch (err: any) {
       console.error(err);
       errorToast(err.message, [], globalContext);
