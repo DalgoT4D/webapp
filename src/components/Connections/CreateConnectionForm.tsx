@@ -194,7 +194,6 @@ const CreateConnectionForm = ({
         setLoading(true);
         try {
           const data: any = await httpGet(session, `airbyte/v1/connections/${connectionId}`);
-          console.log('Fetched connection data:', data);
           setValue('name', data?.name);
           setValue('sources', {
             label: data?.source.name,
@@ -314,7 +313,6 @@ const CreateConnectionForm = ({
   // create/update a connection
   const onSubmit = async (data: any) => {
     // remove the cursorFieldConfig key before posting
-    console.log('Submitting connection data:', data);
     const payload: any = {
       name: data.name,
       sourceId: data.sources.id,
@@ -337,26 +335,26 @@ const CreateConnectionForm = ({
     if (data.destinationSchema) {
       payload.destinationSchema = data.destinationSchema;
     }
-    console.log('Payload to be sent:', payload);
-    // try {
-    //   if (connectionId) {
-    //     setLoading(true);
-    //     await httpPut(session, `airbyte/v1/connections/${connectionId}/update`, payload);
-    //     successToast('Connection updated', [], globalContext);
-    //     setLoading(false);
-    //   } else {
-    //     setLoading(true);
-    //     await httpPost(session, 'airbyte/v1/connections/', payload);
-    //     successToast('Connection created', [], globalContext);
-    //     setLoading(false);
-    //   }
-    //   mutate();
-    //   handleClose();
-    // } catch (err: any) {
-    //   console.error(err);
-    //   errorToast(err.message, [], globalContext);
-    // }
-    // setLoading(false);
+
+    try {
+      if (connectionId) {
+        setLoading(true);
+        await httpPut(session, `airbyte/v1/connections/${connectionId}/update`, payload);
+        successToast('Connection updated', [], globalContext);
+        setLoading(false);
+      } else {
+        setLoading(true);
+        await httpPost(session, 'airbyte/v1/connections/', payload);
+        successToast('Connection created', [], globalContext);
+        setLoading(false);
+      }
+      mutate();
+      handleClose();
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    }
+    setLoading(false);
   };
 
   const updateThisStreamTo_ = (stream: SourceStream, newStream: SourceStream) => {
@@ -734,6 +732,7 @@ const CreateConnectionForm = ({
                               <IconButton
                                 size="small"
                                 onClick={() => setOpenRow((prev) => (prev === idx ? null : idx))}
+                                disabled={!stream.selected}
                               >
                                 {openRow === idx ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                               </IconButton>
