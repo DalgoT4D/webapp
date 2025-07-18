@@ -72,6 +72,7 @@ const NotificationManagement = () => {
       console.error(err);
       errorToast(err.message, [], globalContext);
     } finally {
+      setCheckedRows([]);
       mutate();
       setMutateAllRows(true);
     }
