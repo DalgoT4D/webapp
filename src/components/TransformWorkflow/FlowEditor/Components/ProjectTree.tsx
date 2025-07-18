@@ -83,6 +83,7 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
           (!isSyncing ? (
             <Tooltip title="Sync Sources">
               <ReplayIcon
+                data-testid="sync-button"
                 sx={{
                   ml: 'auto',
                   cursor: 'pointer',
@@ -220,15 +221,23 @@ const ProjectTree = ({
           <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
             <FormControlLabel
               control={
-                <Checkbox checked={filterBy === 'schema'} onChange={() => setFilterBy('schema')} />
+                <Checkbox
+                  aria-label="filter by schema"
+                  checked={filterBy === 'schema'}
+                  onChange={() => setFilterBy('schema')}
+                />
               }
-              label="Schema"
+              label="schema"
             />
             <FormControlLabel
               control={
-                <Checkbox checked={filterBy === 'table'} onChange={() => setFilterBy('table')} />
+                <Checkbox
+                  aria-label="filter by table"
+                  checked={filterBy === 'table'}
+                  onChange={() => setFilterBy('table')}
+                />
               }
-              label="Table"
+              label="table"
             />
           </Box>
         </Box>
