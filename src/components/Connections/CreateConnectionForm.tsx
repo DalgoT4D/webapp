@@ -744,6 +744,12 @@ const CreateConnectionForm = ({
                                 size="small"
                                 onClick={() => setOpenRow((prev) => (prev === idx ? null : idx))}
                                 disabled={!stream.selected}
+                                aria-label={
+                                  openRow === idx
+                                    ? 'Collapse column details'
+                                    : 'Expand column details'
+                                }
+                                aria-expanded={openRow === idx}
                               >
                                 {openRow === idx ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                               </IconButton>
