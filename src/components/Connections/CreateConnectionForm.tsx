@@ -629,7 +629,7 @@ const CreateConnectionForm = ({
                     .map((stream, idx: number) => {
                       const ifIncremental = stream.syncMode === 'incremental' ? true : false;
                       return (
-                        <>
+                        <React.Fragment key={stream.name}>
                           <TableRow key={stream.name}>
                             <TableCell
                               key="name"
@@ -816,7 +816,7 @@ const CreateConnectionForm = ({
                               </TableCell>
                             </TableRow>
                           )}
-                        </>
+                        </React.Fragment>
                       );
                     })}
                 </TableBody>
