@@ -174,12 +174,23 @@ const CreateConnectionForm = ({
       const properties = el.stream.jsonSchema?.properties || {};
       const columns = Object.entries(properties).map(([key, value]) => {
         const type = (value as { type?: any })?.type;
+
+        let isSelected = true;
+
+        if (action === 'edit' && el.config.fieldSelectionEnabled) {
+          // If fieldSelectionEnabled is true, only columns in selectedFields are selected
+          isSelected =
+            el.config.selectedFields?.some(
+              (field: any) => field.fieldPath && field.fieldPath[0] === key
+            ) || false;
+        }
         return {
           name: key,
-          data_type: Array.isArray(type) ? type[1] : (type ?? 'unknown'), // fallback if type is missing
-          selected: true, // assuming all columns are selected by default
+          data_type: Array.isArray(type) ? type[1] : (type ?? 'unknown'),
+          selected: isSelected,
         };
       });
+
       stream.columns = columns;
 
       return stream;
