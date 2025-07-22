@@ -380,7 +380,7 @@ const CreateConnectionForm = ({
     setSourceStreams(newstreams);
   };
 
-  const selectStream = (checked: boolean, stream: SourceStream) => {
+  const selectStream = (checked: boolean, stream: SourceStream, idx: number) => {
     const destinationMode =
       !checked && stream.destinationSyncMode !== 'overwrite'
         ? 'overwrite'
@@ -392,6 +392,11 @@ const CreateConnectionForm = ({
         : !checked && stream.syncMode === 'incremental'
           ? 'full_refresh'
           : stream.syncMode;
+
+    if (!checked && openRow === idx) {
+      setOpenRow(null);
+    }
+
     updateThisStreamTo_(stream, {
       ...stream,
       selected: checked,
@@ -423,11 +428,23 @@ const CreateConnectionForm = ({
   };
 
   const updateCursorField = (value: string, stream: SourceStream) => {
-    updateThisStreamTo_(stream, { ...stream, cursorField: value });
+    const updatedColumns = stream.columns.map((col) => {
+      if (col.name === value) {
+        return { ...col, selected: true };
+      }
+      return col;
+    });
+    updateThisStreamTo_(stream, { ...stream, cursorField: value, columns: updatedColumns });
   };
 
   const updatePrimaryKey = (value: string, stream: SourceStream) => {
-    updateThisStreamTo_(stream, { ...stream, primaryKey: value });
+    const updatedColumns = stream.columns.map((col) => {
+      if (value.includes(col.name)) {
+        return { ...col, selected: true };
+      }
+      return col;
+    });
+    updateThisStreamTo_(stream, { ...stream, primaryKey: value, columns: updatedColumns });
   };
 
   const handleSyncAllStreams = (checked: boolean) => {
@@ -642,7 +659,9 @@ const CreateConnectionForm = ({
                               <Switch
                                 data-testid={`stream-sync-${idx}`}
                                 checked={stream.selected}
-                                onChange={(event) => selectStream(event.target.checked, stream)}
+                                onChange={(event) =>
+                                  selectStream(event.target.checked, stream, idx)
+                                }
                               />
                             </TableCell>
                             <TableCell key="inc" align="center">
