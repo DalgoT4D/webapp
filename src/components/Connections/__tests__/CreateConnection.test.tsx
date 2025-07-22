@@ -610,3 +610,210 @@ describe('Create connection', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('Stream Column Selection', () => {
+  const mockSession: Session = {
+    expires: 'false',
+    user: { email: 'a' },
+  };
+
+  const SOURCES = [
+    {
+      name: 'Source With Columns',
+      sourceId: 'source-with-cols-id',
+    },
+  ];
+
+  const STREAMS_WITH_COLUMNS = [
+    {
+      stream: {
+        name: 'users',
+        supportedSyncModes: ['full_refresh', 'incremental'],
+        jsonSchema: {
+          properties: {
+            id: { type: 'integer' },
+            name: { type: 'string' },
+            email: { type: 'string' },
+            updated_at: { type: ['null', 'string'], format: 'date-time' },
+          },
+        },
+        defaultCursorField: ['updated_at'],
+        sourceDefinedPrimaryKey: [],
+      },
+      config: {
+        selected: false,
+        syncMode: 'full_refresh',
+        destinationSyncMode: 'overwrite',
+        primaryKey: [],
+        cursorField: ['updated_at'],
+      },
+    },
+  ];
+
+  let mockServer: Server;
+
+  // This helper function robustly finds a table cell, resolving ambiguity
+  const findColumnCell = async (name: string) => {
+    // Wait for all elements with the text to appear, then filter for the table cell
+    const allElements = await screen.findAllByText(name);
+    const cell = allElements.find((el) => el.tagName.toLowerCase() === 'td');
+    if (!cell) {
+      throw new Error(`Could not find a table cell ('td') with text: ${name}`);
+    }
+    return cell;
+  };
+
+  beforeEach(async () => {
+    // Setup mock WebSocket server
+    mockServer = new Server('wss://mock-websocket-url-columns');
+    const mockGenerateWebsocketUrl = generateWebsocketUrl as jest.Mock;
+    mockGenerateWebsocketUrl.mockReturnValue('wss://mock-websocket-url-columns');
+
+    mockServer.on('connection', (socket) => {
+      socket.on('message', (message) => {
+        const parsedMessage = JSON.parse(message as string);
+        if (parsedMessage.sourceId) {
+          socket.send(
+            JSON.stringify({
+              status: 'success',
+              data: {
+                result: {
+                  catalog: { streams: STREAMS_WITH_COLUMNS },
+                  catalogId: 'catalog-for-cols-123',
+                },
+              },
+            })
+          );
+        }
+      });
+    });
+
+    // Mock fetch for sources
+    (global as any).fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(SOURCES),
+    });
+
+    // Render the component
+    await act(async () => {
+      render(
+        <SessionProvider session={mockSession}>
+          <SWRConfig
+            value={{ dedupingInterval: 0, fetcher: (url) => fetch(url).then((res) => res.json()) }}
+          >
+            <CreateConnectionForm
+              mutate={() => {}}
+              showForm={true}
+              setShowForm={() => {}}
+              connectionId=""
+              setConnectionId={() => {}}
+            />
+          </SWRConfig>
+        </SessionProvider>
+      );
+    });
+
+    // Select the source to load streams
+    const sourceAutocomplete = await screen.findByTestId('sourceList');
+    const sourceInput = within(sourceAutocomplete).getByRole('combobox');
+    await userEvent.type(sourceInput, 'Source With Columns');
+    const sourceOption = await screen.findByRole('option', { name: 'Source With Columns' });
+    await userEvent.click(sourceOption);
+  });
+
+  afterEach(() => {
+    if (mockServer) {
+      mockServer.stop();
+    }
+  });
+
+  it('should expand to show column details and allow toggling column sync', async () => {
+    const user = userEvent.setup();
+    // 1. Wait for the stream row to be ready, then select it
+    const streamSyncSwitch = (await screen.findByTestId('stream-sync-0')).querySelector('input');
+    await user.click(streamSyncSwitch!);
+
+    // 2. Expand the column details section
+    const expandButton = screen.getByRole('button', { name: /Expand column details/i });
+    await user.click(expandButton);
+
+    // 3. Verify column table is visible and toggle a column
+    const emailCell = await findColumnCell('email');
+    const emailRow = emailCell.closest('tr');
+    const emailSyncSwitch = within(emailRow!).getByRole('checkbox') as HTMLInputElement;
+
+    expect(emailSyncSwitch).toBeChecked();
+    await user.click(emailSyncSwitch);
+    expect(emailSyncSwitch).not.toBeChecked();
+  });
+
+  it('should disable sync switch for primary key and cursor fields', async () => {
+    const user = userEvent.setup();
+
+    // 1. Wait for stream to render, then select it and set to incremental
+    const streamSyncSwitch = (await screen.findByTestId('stream-sync-0')).querySelector('input');
+    await user.click(streamSyncSwitch!);
+    const incrementalSwitch = screen.getByTestId('stream-incremental-0').querySelector('input');
+    await user.click(incrementalSwitch!);
+
+    // 2. Set destination mode to append_dedup
+    const destModeSelect = screen.getByTestId('stream-destmode-0');
+    await user.click(within(destModeSelect).getByRole('combobox'));
+    await user.click(await screen.findByRole('option', { name: /Append \/ Dedup/i }));
+
+    // 3. Set a primary key ('id')
+    const primaryKeySelect = screen.getByTestId('stream-primarykey-0');
+    await user.click(within(primaryKeySelect).getByRole('combobox'));
+    await user.click(await screen.findByRole('option', { name: 'id' }));
+    await user.keyboard('{escape}'); // Close dropdown
+
+    // 4. Expand the column details
+    await user.click(screen.getByRole('button', { name: /Expand column details/i }));
+
+    // 5. Assert switches are disabled
+    const cursorCell = await findColumnCell('updated_at');
+    const cursorRow = cursorCell.closest('tr');
+    expect(within(cursorRow!).getByRole('checkbox')).toBeDisabled();
+    expect(within(cursorRow!).getByRole('checkbox')).toBeChecked();
+
+    const pkCell = await findColumnCell('id');
+    const pkRow = pkCell.closest('tr');
+    expect(within(pkRow!).getByRole('checkbox')).toBeDisabled();
+    expect(within(pkRow!).getByRole('checkbox')).toBeChecked();
+
+    const nameCell = await findColumnCell('name');
+    const nameRow = nameCell.closest('tr');
+    expect(within(nameRow!).getByRole('checkbox')).not.toBeDisabled();
+  });
+
+  it('should automatically select a column when it is set as a primary key', async () => {
+    const user = userEvent.setup();
+
+    // 1. Wait for stream to render, then select and expand it
+    const streamSyncSwitch = (await screen.findByTestId('stream-sync-0')).querySelector('input');
+    await user.click(streamSyncSwitch!);
+    await user.click(screen.getByRole('button', { name: /Expand column details/i }));
+
+    // 2. Deselect the 'id' column initially
+    const idCell = await findColumnCell('id');
+    const idRow = idCell.closest('tr');
+    const idSyncSwitch = within(idRow!).getByRole('checkbox') as HTMLInputElement;
+    await user.click(idSyncSwitch);
+    expect(idSyncSwitch).not.toBeChecked();
+
+    // 3. Set sync and destination modes
+    await user.click(screen.getByTestId('stream-incremental-0').querySelector('input')!);
+    await user.click(within(screen.getByTestId('stream-destmode-0')).getByRole('combobox'));
+    await user.click(await screen.findByRole('option', { name: /Append \/ Dedup/i }));
+
+    // 4. Select 'id' as the primary key
+    await user.click(within(screen.getByTestId('stream-primarykey-0')).getByRole('combobox'));
+    await user.click(await screen.findByRole('option', { name: 'id' }));
+
+    // 5. Verify the 'id' column's sync switch is now checked and disabled
+    await waitFor(() => {
+      expect(idSyncSwitch).toBeChecked();
+      expect(idSyncSwitch).toBeDisabled();
+    });
+  });
+});
