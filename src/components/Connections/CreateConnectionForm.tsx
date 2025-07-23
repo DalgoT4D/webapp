@@ -57,7 +57,7 @@ interface SourceStream {
   cursorFieldConfig: CursorFieldConfig; // this will not be posted to backend
   cursorField: string;
   primaryKeyConfig: PrimayKeyConfig;
-  primaryKey: string;
+  primaryKey: string[];
   columns: Column[];
 }
 
@@ -417,6 +417,11 @@ const CreateConnectionForm = ({
           ? 'overwrite'
           : stream.destinationSyncMode;
 
+    if (!checked) {
+      stream.cursorField = '';
+      stream.primaryKey = [];
+    }
+
     updateThisStreamTo_(stream, {
       ...stream,
       syncMode: checked ? 'incremental' : 'full_refresh',
@@ -424,6 +429,9 @@ const CreateConnectionForm = ({
     });
   };
   const setDestinationSyncMode = (value: string, stream: SourceStream) => {
+    if (value != 'append_dedup') {
+      stream.primaryKey = [];
+    }
     updateThisStreamTo_(stream, { ...stream, destinationSyncMode: value });
   };
 
@@ -437,7 +445,7 @@ const CreateConnectionForm = ({
     updateThisStreamTo_(stream, { ...stream, cursorField: value, columns: updatedColumns });
   };
 
-  const updatePrimaryKey = (value: string, stream: SourceStream) => {
+  const updatePrimaryKey = (value: string[], stream: SourceStream) => {
     const updatedColumns = stream.columns.map((col) => {
       if (value.includes(col.name)) {
         return { ...col, selected: true };
@@ -739,7 +747,7 @@ const CreateConnectionForm = ({
                                 value={stream.primaryKey}
                                 onChange={(event) => {
                                   if (!stream.primaryKeyConfig.sourceDefinedPrimaryKey) {
-                                    updatePrimaryKey(event.target.value, stream);
+                                    updatePrimaryKey(event.target.value as string[], stream);
                                   }
                                 }}
                                 renderValue={(selected: any) => selected.join(', ')}
