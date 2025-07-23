@@ -564,7 +564,7 @@ const CreateConnectionForm = ({
             variant="outlined"
             register={register}
             name="destinationSchema"
-            disabled={readonly || globalContext?.CurrentOrg.state.is_demo ? true : false}
+            disabled={readonly || globalContext?.CurrentOrg.state.is_demo}
           ></Input>
 
           <Box sx={{ m: 2 }} />
