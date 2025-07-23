@@ -31,6 +31,7 @@ interface CreateConnectionFormProps {
   showForm: boolean;
   setShowForm: (...args: any) => any;
   setConnectionId: (...args: any) => any;
+  readonly?: boolean;
 }
 
 type CursorFieldConfig = {
@@ -67,6 +68,7 @@ const CreateConnectionForm = ({
   mutate,
   showForm,
   setShowForm,
+  readonly = false, // by default
 }: CreateConnectionFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -550,6 +552,7 @@ const CreateConnectionForm = ({
             register={register}
             required
             name="name"
+            disabled={readonly}
           ></Input>
 
           <Box sx={{ m: 2 }} />
@@ -561,7 +564,7 @@ const CreateConnectionForm = ({
             variant="outlined"
             register={register}
             name="destinationSchema"
-            disabled={globalContext?.CurrentOrg.state.is_demo ? true : false}
+            disabled={readonly || globalContext?.CurrentOrg.state.is_demo ? true : false}
           ></Input>
 
           <Box sx={{ m: 2 }} />
@@ -573,6 +576,7 @@ const CreateConnectionForm = ({
             render={({ field }: any) => (
               <Autocomplete
                 readOnly={connectionId ? true : false}
+                disabled={readonly}
                 data-testid="sourceList"
                 options={sources}
                 value={field.value}
@@ -627,6 +631,7 @@ const CreateConnectionForm = ({
                     <TableCell key="selectall" align="center">
                       <Box>
                         <Switch
+                          disabled={readonly}
                           data-testid={`sync-all-streams`}
                           checked={selectAllStreams}
                           onChange={(event) => handleSyncAllStreams(event.target.checked)}
@@ -638,7 +643,7 @@ const CreateConnectionForm = ({
                         <Switch
                           data-testid={`incremental-all-streams`}
                           checked={incrementalAllStreams}
-                          disabled={isAnyCursorAbsent}
+                          disabled={isAnyCursorAbsent || readonly}
                           onChange={(event) => handleIncrementalAllStreams(event.target.checked)}
                         />
                       </Box>
@@ -665,6 +670,7 @@ const CreateConnectionForm = ({
                             </TableCell>
                             <TableCell key="sel" align="center">
                               <Switch
+                                disabled={readonly}
                                 data-testid={`stream-sync-${idx}`}
                                 checked={stream.selected}
                                 onChange={(event) =>
@@ -675,7 +681,9 @@ const CreateConnectionForm = ({
                             <TableCell key="inc" align="center">
                               <Switch
                                 data-testid={`stream-incremental-${idx}`}
-                                disabled={!stream.supportsIncremental || !stream.selected}
+                                disabled={
+                                  !stream.supportsIncremental || !stream.selected || readonly
+                                }
                                 checked={
                                   stream.supportsIncremental && ifIncremental && stream.selected
                                 }
@@ -687,7 +695,7 @@ const CreateConnectionForm = ({
                             <TableCell key="destination" align="center">
                               <Select
                                 data-testid={`stream-destmode-${idx}`}
-                                disabled={!stream.selected}
+                                disabled={!stream.selected || readonly}
                                 value={stream.destinationSyncMode}
                                 onChange={(event) => {
                                   setDestinationSyncMode(event.target.value, stream);
@@ -706,7 +714,8 @@ const CreateConnectionForm = ({
                                 disabled={
                                   !stream.selected ||
                                   !stream.supportsIncremental ||
-                                  stream.syncMode !== 'incremental'
+                                  stream.syncMode !== 'incremental' ||
+                                  readonly
                                 }
                                 value={stream.cursorField}
                                 onChange={(event) => {
@@ -735,7 +744,8 @@ const CreateConnectionForm = ({
                                   !stream.selected ||
                                   !stream.supportsIncremental ||
                                   stream.syncMode !== 'incremental' ||
-                                  stream.destinationSyncMode !== 'append_dedup'
+                                  stream.destinationSyncMode !== 'append_dedup' ||
+                                  readonly
                                 }
                                 required={ifIncremental}
                                 onInvalid={(e: any) =>
@@ -758,7 +768,10 @@ const CreateConnectionForm = ({
                                       <MenuItem key={option} value={option}>
                                         <Checkbox
                                           checked={stream.primaryKey.indexOf(option) > -1}
-                                          disabled={stream.primaryKeyConfig.sourceDefinedPrimaryKey}
+                                          disabled={
+                                            stream.primaryKeyConfig.sourceDefinedPrimaryKey ||
+                                            readonly
+                                          }
                                         />
                                         {option}
                                       </MenuItem>
@@ -814,7 +827,8 @@ const CreateConnectionForm = ({
                                             ? stream.primaryKey.includes(col.name)
                                             : stream.primaryKey === col.name;
                                           const isCursorField = stream.cursorField === col.name;
-                                          const isDisabled = isPrimaryKey || isCursorField;
+                                          const isDisabled =
+                                            isPrimaryKey || isCursorField || readonly;
 
                                           return (
                                             <TableRow key={col.name || colIdx}>
@@ -882,14 +896,16 @@ const CreateConnectionForm = ({
         handleSubmit={handleSubmit(onSubmit)}
         formContent={FormContent}
         formActions={
-          <>
-            <Button variant="contained" type="submit" disabled={!someStreamSelected}>
-              Connect
-            </Button>
-            <Button color="secondary" variant="outlined" onClick={handleClose}>
-              Cancel
-            </Button>
-          </>
+          !readonly && (
+            <>
+              <Button variant="contained" type="submit" disabled={!someStreamSelected}>
+                Connect
+              </Button>
+              <Button color="secondary" variant="outlined" onClick={handleClose}>
+                Cancel
+              </Button>
+            </>
+          )
         }
         loading={loading}
       ></CustomDialog>

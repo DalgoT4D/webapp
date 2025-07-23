@@ -4,6 +4,7 @@ import EditIcon from '@/assets/icons/edit.svg';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteIcon from '@/assets/icons/delete.svg';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 interface MenuProps {
   anchorEl: null | HTMLElement;
@@ -22,10 +23,12 @@ interface MenuProps {
   handleDelete?: () => void;
   handleClearConnection?: () => void;
   handleResendInvitation?: () => void;
+  handleView?: () => void;
   hasEditPermission?: boolean;
   hasDeletePermission?: boolean;
   hasResendPermission?: boolean;
   hasResetPermission?: boolean;
+  isSyncRunning?: boolean;
 }
 
 export const ActionsMenu: React.FC<MenuProps> = ({
@@ -38,10 +41,12 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   handleDelete,
   handleClearConnection,
   handleResendInvitation,
+  handleView,
   hasEditPermission = true,
   hasDeletePermission = true,
   hasResendPermission = true,
   hasResetPermission = true,
+  isSyncRunning = false,
 }) => (
   <Menu
     id="basic-menu"
@@ -63,7 +68,19 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       'aria-labelledby': 'basic-button',
     }}
   >
-    {handleEdit && (
+    {isSyncRunning && handleView && (
+      <>
+        <MenuItem sx={{ my: 0 }} onClick={() => handleView()}>
+          <ListItemIcon style={{ minWidth: 28 }}>
+            <VisibilityIcon sx={{ width: 16 }} />
+          </ListItemIcon>
+          View
+        </MenuItem>
+        <Divider style={{ margin: 0 }} />
+      </>
+    )}
+
+    {!isSyncRunning && handleEdit && (
       <MenuItem sx={{ my: 0 }} onClick={() => handleEdit()} disabled={!hasEditPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <Image src={EditIcon} alt="edit icon" />
@@ -72,7 +89,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </MenuItem>
     )}
     <Divider style={{ margin: 0 }} />
-    {handleRefresh && (
+    {!isSyncRunning && handleRefresh && (
       <MenuItem sx={{ my: 0 }} onClick={() => handleRefresh()} disabled={!hasEditPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <RefreshIcon sx={{ width: 14 }} />
@@ -84,7 +101,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       <MenuItem
         sx={{ my: 0 }}
         onClick={() => handleResendInvitation()}
-        disabled={!hasResendPermission}
+        disabled={!hasResendPermission || !isSyncRunning}
       >
         <ListItemIcon style={{ minWidth: 28 }}>
           <Image src={EditIcon} alt="edit icon" />
@@ -93,7 +110,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </MenuItem>
     )}
 
-    {handleDelete && (
+    {!isSyncRunning && handleDelete && (
       <Box key="fake-key">
         <Divider style={{ margin: 0 }} />
         <MenuItem
@@ -109,7 +126,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </Box>
     )}
     <Divider style={{ margin: 0 }} />
-    {eleType === 'connection' && handleClearConnection && (
+    {!isSyncRunning && eleType === 'connection' && handleClearConnection && (
       <MenuItem onClick={() => handleClearConnection()} disabled={!hasResetPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <RestartAltIcon sx={{ width: 16 }} />
