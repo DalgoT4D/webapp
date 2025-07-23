@@ -10,6 +10,8 @@ import {
   MenuItem,
   TextField,
   Checkbox,
+  IconButton,
+  Collapse,
 } from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
@@ -21,6 +23,7 @@ import { demoAccDestSchema } from '@/config/constant';
 import Input from '../UI/Input/Input';
 import { generateWebsocketUrl } from '@/helpers/websocket';
 import useWebSocket from 'react-use-websocket';
+import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 
 interface CreateConnectionFormProps {
   connectionId: string;
@@ -39,6 +42,12 @@ type PrimayKeyConfig = {
   primaryKeyOptions: string[];
 };
 
+type Column = {
+  name: string;
+  data_type: any;
+  selected: boolean;
+};
+
 interface SourceStream {
   name: string;
   supportsIncremental: boolean;
@@ -48,7 +57,8 @@ interface SourceStream {
   cursorFieldConfig: CursorFieldConfig; // this will not be posted to backend
   cursorField: string;
   primaryKeyConfig: PrimayKeyConfig;
-  primaryKey: string;
+  primaryKey: string[];
+  columns: Column[];
 }
 
 const CreateConnectionForm = ({
@@ -87,7 +97,7 @@ const CreateConnectionForm = ({
   const searchInputRef: any = useRef();
   const inputRef: any = useRef(null);
   const shouldFocusInput: any = useRef(null);
-
+  const [openRow, setOpenRow] = useState<number | null>(null);
   const { data: sourcesData } = useSWR(`airbyte/sources`);
 
   const watchSourceSelection = watch('sources');
@@ -96,7 +106,7 @@ const CreateConnectionForm = ({
     const action = connectionId ? 'edit' : 'create';
 
     const streams = catalog?.streams.map((el: any) => {
-      const stream = {
+      const stream: any = {
         name: el.stream.name,
         supportsIncremental: el.stream.supportedSyncModes.indexOf('incremental') > -1,
         selected: action === 'edit' ? el.config.selected : false,
@@ -112,6 +122,7 @@ const CreateConnectionForm = ({
           primaryKeyOptions: [],
         },
         primaryKey: [], // eg.[[id]], [[id], [airbyte_raw]]etc. this can be multiple hence we have to make it an array. This can be a composite primary key.
+        columns: [],
       };
 
       const cursorFieldObj = stream.cursorFieldConfig;
@@ -159,6 +170,28 @@ const CreateConnectionForm = ({
           stream.primaryKey = el.config.primaryKey.length > 0 ? el.config.primaryKey.flat() : [];
         }
       }
+
+      const properties = el.stream.jsonSchema?.properties || {};
+      const columns = Object.entries(properties).map(([key, value]) => {
+        const type = (value as { type?: any })?.type;
+
+        let isSelected = true;
+
+        if (action === 'edit' && el.config.fieldSelectionEnabled) {
+          // If fieldSelectionEnabled is true, only columns in selectedFields are selected
+          isSelected =
+            el.config.selectedFields?.some(
+              (field: any) => field.fieldPath && field.fieldPath[0] === key
+            ) || false;
+        }
+        return {
+          name: key,
+          data_type: Array.isArray(type) ? type[1] : (type ?? 'unknown'),
+          selected: isSelected,
+        };
+      });
+
+      stream.columns = columns;
 
       return stream;
     });
@@ -272,6 +305,22 @@ const CreateConnectionForm = ({
     searchInputRef.current = '';
   };
 
+  const updateColumnSelection = (streamName: string, columnName: string, selected: boolean) => {
+    const updatedStreams = sourceStreams.map((stream) => {
+      if (stream.name === streamName) {
+        const updatedColumns = stream.columns.map((col) => {
+          if (col.name === columnName) {
+            return { ...col, selected };
+          }
+          return col;
+        });
+        return { ...stream, columns: updatedColumns };
+      }
+      return stream;
+    });
+    setSourceStreams(updatedStreams);
+  };
+
   // create/update a connection
   const onSubmit = async (data: any) => {
     // remove the cursorFieldConfig key before posting
@@ -287,6 +336,7 @@ const CreateConnectionForm = ({
           destinationSyncMode: stream.destinationSyncMode, // append | overwrite | append_dedup
           cursorField: stream.cursorField,
           primaryKey: stream.primaryKey,
+          columns: stream.columns,
         };
       }),
       normalize,
@@ -296,6 +346,7 @@ const CreateConnectionForm = ({
     if (data.destinationSchema) {
       payload.destinationSchema = data.destinationSchema;
     }
+
     try {
       if (connectionId) {
         setLoading(true);
@@ -329,7 +380,7 @@ const CreateConnectionForm = ({
     setSourceStreams(newstreams);
   };
 
-  const selectStream = (checked: boolean, stream: SourceStream) => {
+  const selectStream = (checked: boolean, stream: SourceStream, idx: number) => {
     const destinationMode =
       !checked && stream.destinationSyncMode !== 'overwrite'
         ? 'overwrite'
@@ -341,6 +392,11 @@ const CreateConnectionForm = ({
         : !checked && stream.syncMode === 'incremental'
           ? 'full_refresh'
           : stream.syncMode;
+
+    if (!checked && openRow === idx) {
+      setOpenRow(null);
+    }
+
     updateThisStreamTo_(stream, {
       ...stream,
       selected: checked,
@@ -361,6 +417,11 @@ const CreateConnectionForm = ({
           ? 'overwrite'
           : stream.destinationSyncMode;
 
+    if (!checked) {
+      stream.cursorField = '';
+      stream.primaryKey = [];
+    }
+
     updateThisStreamTo_(stream, {
       ...stream,
       syncMode: checked ? 'incremental' : 'full_refresh',
@@ -368,15 +429,30 @@ const CreateConnectionForm = ({
     });
   };
   const setDestinationSyncMode = (value: string, stream: SourceStream) => {
+    if (value != 'append_dedup') {
+      stream.primaryKey = [];
+    }
     updateThisStreamTo_(stream, { ...stream, destinationSyncMode: value });
   };
 
   const updateCursorField = (value: string, stream: SourceStream) => {
-    updateThisStreamTo_(stream, { ...stream, cursorField: value });
+    const updatedColumns = stream.columns.map((col) => {
+      if (col.name === value) {
+        return { ...col, selected: true };
+      }
+      return col;
+    });
+    updateThisStreamTo_(stream, { ...stream, cursorField: value, columns: updatedColumns });
   };
 
-  const updatePrimaryKey = (value: string, stream: SourceStream) => {
-    updateThisStreamTo_(stream, { ...stream, primaryKey: value });
+  const updatePrimaryKey = (value: string[], stream: SourceStream) => {
+    const updatedColumns = stream.columns.map((col) => {
+      if (value.includes(col.name)) {
+        return { ...col, selected: true };
+      }
+      return col;
+    });
+    updateThisStreamTo_(stream, { ...stream, primaryKey: value, columns: updatedColumns });
   };
 
   const handleSyncAllStreams = (checked: boolean) => {
@@ -578,116 +654,202 @@ const CreateConnectionForm = ({
                     .map((stream, idx: number) => {
                       const ifIncremental = stream.syncMode === 'incremental' ? true : false;
                       return (
-                        <TableRow key={stream.name}>
-                          <TableCell
-                            key="name"
-                            align="center"
-                            sx={stream.selected ? { color: 'green', fontWeight: 700 } : {}}
-                          >
-                            {stream.name}
-                          </TableCell>
-                          <TableCell key="sel" align="center">
-                            <Switch
-                              data-testid={`stream-sync-${idx}`}
-                              checked={stream.selected}
-                              onChange={(event) => selectStream(event.target.checked, stream)}
-                            />
-                          </TableCell>
-                          <TableCell key="inc" align="center">
-                            <Switch
-                              data-testid={`stream-incremental-${idx}`}
-                              disabled={!stream.supportsIncremental || !stream.selected}
-                              checked={
-                                stream.supportsIncremental && ifIncremental && stream.selected
-                              }
-                              onChange={(event) => {
-                                setStreamIncr(event.target.checked, stream);
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell key="destination" align="center">
-                            <Select
-                              data-testid={`stream-destmode-${idx}`}
-                              disabled={!stream.selected}
-                              value={stream.destinationSyncMode}
-                              onChange={(event) => {
-                                setDestinationSyncMode(event.target.value, stream);
-                              }}
+                        <React.Fragment key={stream.name}>
+                          <TableRow key={stream.name}>
+                            <TableCell
+                              key="name"
+                              align="center"
+                              sx={stream.selected ? { color: 'green', fontWeight: 700 } : {}}
                             >
-                              <MenuItem value="append">Append</MenuItem>
-                              <MenuItem disabled={ifIncremental} value="overwrite">
-                                Overwrite
-                              </MenuItem>
-                              <MenuItem value="append_dedup">Append / Dedup</MenuItem>
-                            </Select>
-                          </TableCell>
-                          <TableCell key="cursorfield" align="center">
-                            <Select
-                              data-testid={`stream-cursorfield-${idx}`}
-                              disabled={
-                                !stream.selected ||
-                                !stream.supportsIncremental ||
-                                stream.syncMode !== 'incremental'
-                              }
-                              value={stream.cursorField}
-                              onChange={(event) => {
-                                updateCursorField(event.target.value, stream);
-                              }}
-                              required={ifIncremental}
-                              onInvalid={(e: any) =>
-                                e.target.setCustomValidity(
-                                  'Cursor field is required for incremental streams'
-                                )
-                              }
-                            >
-                              {stream.cursorFieldConfig?.cursorFieldOptions.map(
-                                (option: string) => (
-                                  <MenuItem key={option} value={option}>
-                                    {option}
-                                  </MenuItem>
-                                )
-                              )}
-                            </Select>
-                          </TableCell>
-                          <TableCell key="primarykey" align="center">
-                            <Select
-                              data-testid={`stream-primarykey-${idx}`}
-                              disabled={
-                                !stream.selected ||
-                                !stream.supportsIncremental ||
-                                stream.syncMode !== 'incremental' ||
-                                stream.destinationSyncMode !== 'append_dedup'
-                              }
-                              required={ifIncremental}
-                              onInvalid={(e: any) =>
-                                e.target.setCustomValidity(
-                                  'Primary Key is required for incremental streams'
-                                )
-                              }
-                              multiple
-                              value={stream.primaryKey}
-                              onChange={(event) => {
-                                if (!stream.primaryKeyConfig.sourceDefinedPrimaryKey) {
-                                  updatePrimaryKey(event.target.value, stream);
+                              {stream.name}
+                            </TableCell>
+                            <TableCell key="sel" align="center">
+                              <Switch
+                                data-testid={`stream-sync-${idx}`}
+                                checked={stream.selected}
+                                onChange={(event) =>
+                                  selectStream(event.target.checked, stream, idx)
                                 }
-                              }}
-                              renderValue={(selected: any) => selected.join(', ')}
-                            >
-                              {stream.primaryKeyConfig?.primaryKeyOptions?.length > 0 &&
-                                stream.primaryKeyConfig.primaryKeyOptions.map(
-                                  (option: string, index: number) => (
+                              />
+                            </TableCell>
+                            <TableCell key="inc" align="center">
+                              <Switch
+                                data-testid={`stream-incremental-${idx}`}
+                                disabled={!stream.supportsIncremental || !stream.selected}
+                                checked={
+                                  stream.supportsIncremental && ifIncremental && stream.selected
+                                }
+                                onChange={(event) => {
+                                  setStreamIncr(event.target.checked, stream);
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell key="destination" align="center">
+                              <Select
+                                data-testid={`stream-destmode-${idx}`}
+                                disabled={!stream.selected}
+                                value={stream.destinationSyncMode}
+                                onChange={(event) => {
+                                  setDestinationSyncMode(event.target.value, stream);
+                                }}
+                              >
+                                <MenuItem value="append">Append</MenuItem>
+                                <MenuItem disabled={ifIncremental} value="overwrite">
+                                  Overwrite
+                                </MenuItem>
+                                <MenuItem value="append_dedup">Append / Dedup</MenuItem>
+                              </Select>
+                            </TableCell>
+                            <TableCell key="cursorfield" align="center">
+                              <Select
+                                data-testid={`stream-cursorfield-${idx}`}
+                                disabled={
+                                  !stream.selected ||
+                                  !stream.supportsIncremental ||
+                                  stream.syncMode !== 'incremental'
+                                }
+                                value={stream.cursorField}
+                                onChange={(event) => {
+                                  updateCursorField(event.target.value, stream);
+                                }}
+                                required={ifIncremental}
+                                onInvalid={(e: any) =>
+                                  e.target.setCustomValidity(
+                                    'Cursor field is required for incremental streams'
+                                  )
+                                }
+                              >
+                                {stream.cursorFieldConfig?.cursorFieldOptions.map(
+                                  (option: string) => (
                                     <MenuItem key={option} value={option}>
-                                      <Checkbox
-                                        checked={stream.primaryKey.indexOf(option) > -1}
-                                        disabled={stream.primaryKeyConfig.sourceDefinedPrimaryKey}
-                                      />
                                       {option}
                                     </MenuItem>
                                   )
                                 )}
-                            </Select>
-                          </TableCell>
-                        </TableRow>
+                              </Select>
+                            </TableCell>
+                            <TableCell key="primarykey" align="center">
+                              <Select
+                                data-testid={`stream-primarykey-${idx}`}
+                                disabled={
+                                  !stream.selected ||
+                                  !stream.supportsIncremental ||
+                                  stream.syncMode !== 'incremental' ||
+                                  stream.destinationSyncMode !== 'append_dedup'
+                                }
+                                required={ifIncremental}
+                                onInvalid={(e: any) =>
+                                  e.target.setCustomValidity(
+                                    'Primary Key is required for incremental streams'
+                                  )
+                                }
+                                multiple
+                                value={stream.primaryKey}
+                                onChange={(event) => {
+                                  if (!stream.primaryKeyConfig.sourceDefinedPrimaryKey) {
+                                    updatePrimaryKey(event.target.value as string[], stream);
+                                  }
+                                }}
+                                renderValue={(selected: any) => selected.join(', ')}
+                              >
+                                {stream.primaryKeyConfig?.primaryKeyOptions?.length > 0 &&
+                                  stream.primaryKeyConfig.primaryKeyOptions.map(
+                                    (option: string, index: number) => (
+                                      <MenuItem key={option} value={option}>
+                                        <Checkbox
+                                          checked={stream.primaryKey.indexOf(option) > -1}
+                                          disabled={stream.primaryKeyConfig.sourceDefinedPrimaryKey}
+                                        />
+                                        {option}
+                                      </MenuItem>
+                                    )
+                                  )}
+                              </Select>
+                            </TableCell>
+                            <TableCell key="column-selector" align="center">
+                              <IconButton
+                                size="small"
+                                onClick={() => setOpenRow((prev) => (prev === idx ? null : idx))}
+                                disabled={!stream.selected}
+                                aria-label={
+                                  openRow === idx
+                                    ? 'Collapse column details'
+                                    : 'Expand column details'
+                                }
+                                aria-expanded={openRow === idx}
+                              >
+                                {openRow === idx ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                          {openRow === idx && (
+                            <TableRow>
+                              <TableCell colSpan={8} style={{ paddingBottom: 0, paddingTop: 0 }}>
+                                <Collapse in={true} timeout="auto" unmountOnExit>
+                                  <Box
+                                    sx={{ margin: 1, border: '1px solid #eee', borderRadius: 2 }}
+                                  >
+                                    <Table size="small">
+                                      <TableHead>
+                                        <TableRow>
+                                          <TableCell>
+                                            <strong>Sync</strong>
+                                          </TableCell>
+                                          <TableCell>
+                                            <strong>Column name</strong>
+                                          </TableCell>
+                                          <TableCell align="right">
+                                            <strong>Data type</strong>
+                                          </TableCell>
+                                        </TableRow>
+                                      </TableHead>
+                                      <TableBody>
+                                        {stream.columns.map((col, colIdx) => {
+                                          const typeArray = col.data_type;
+                                          const type = Array.isArray(typeArray)
+                                            ? typeArray.find((t) => t !== 'null')
+                                            : typeArray;
+
+                                          const isPrimaryKey = Array.isArray(stream.primaryKey)
+                                            ? stream.primaryKey.includes(col.name)
+                                            : stream.primaryKey === col.name;
+                                          const isCursorField = stream.cursorField === col.name;
+                                          const isDisabled = isPrimaryKey || isCursorField;
+
+                                          return (
+                                            <TableRow key={col.name || colIdx}>
+                                              <TableCell>
+                                                <Switch
+                                                  checked={col.selected}
+                                                  disabled={isDisabled}
+                                                  onChange={(event) =>
+                                                    updateColumnSelection(
+                                                      stream.name,
+                                                      col.name,
+                                                      event.target.checked
+                                                    )
+                                                  }
+                                                />
+                                              </TableCell>
+                                              <TableCell>{col.name}</TableCell>
+                                              <TableCell align="right">
+                                                {type === 'string' && <> String</>}
+                                                {type === 'integer' && <> Integer</>}
+                                                {type === 'boolean' && <> Boolean</>}
+                                                {!['string', 'integer', 'boolean'].includes(type) &&
+                                                  type}
+                                              </TableCell>
+                                            </TableRow>
+                                          );
+                                        })}
+                                      </TableBody>
+                                    </Table>
+                                  </Box>
+                                </Collapse>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                 </TableBody>
@@ -705,6 +867,7 @@ const CreateConnectionForm = ({
     selectAllStreams,
     incrementalAllStreams,
     isAnyCursorAbsent,
+    openRow,
   ]);
 
   return (
