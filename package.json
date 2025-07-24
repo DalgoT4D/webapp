@@ -19,7 +19,7 @@
     "@amplitude/analytics-browser": "^2.17.6",
     "@dagrejs/dagre": "^1.1.4",
     "@emotion/react": "^11.13.5",
-    "@emotion/styled": "^11.13.5",
+    "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "5.17.1",
     "@mui/material": "^5.17.1",
     "@mui/x-date-pickers": "^6.20.1",
