@@ -379,7 +379,7 @@ const Actions = memo(
           key={'menu-' + idx}
           color="info"
           sx={{ p: 0, minWidth: 32 }}
-          // disabled={tempSyncState || lock ? true : false}
+          disabled={tempSyncState && !lock}
         >
           <MoreHorizIcon />
         </Button>
@@ -866,7 +866,7 @@ export const Connections = () => {
         hasResetPermission={permissions.includes('can_reset_connection')}
         hasDeletePermission={permissions.includes('can_delete_connection')}
         hasEditPermission={permissions.includes('can_edit_connection')}
-        isSyncRunning={currentConnectionSyncState}
+        viewMode={currentConnectionSyncState}
       />
       <CreateConnectionForm
         setConnectionId={setConnectionId}

@@ -28,7 +28,7 @@ interface MenuProps {
   hasDeletePermission?: boolean;
   hasResendPermission?: boolean;
   hasResetPermission?: boolean;
-  isSyncRunning?: boolean;
+  viewMode?: boolean;
 }
 
 export const ActionsMenu: React.FC<MenuProps> = ({
@@ -46,7 +46,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   hasDeletePermission = true,
   hasResendPermission = true,
   hasResetPermission = true,
-  isSyncRunning = false,
+  viewMode = false,
 }) => (
   <Menu
     id="basic-menu"
@@ -68,7 +68,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       'aria-labelledby': 'basic-button',
     }}
   >
-    {isSyncRunning && handleView && (
+    {viewMode && handleView && (
       <>
         <MenuItem sx={{ my: 0 }} onClick={() => handleView()}>
           <ListItemIcon style={{ minWidth: 28 }}>
@@ -80,7 +80,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </>
     )}
 
-    {!isSyncRunning && handleEdit && (
+    {!viewMode && handleEdit && (
       <MenuItem sx={{ my: 0 }} onClick={() => handleEdit()} disabled={!hasEditPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <Image src={EditIcon} alt="edit icon" />
@@ -89,7 +89,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </MenuItem>
     )}
     <Divider style={{ margin: 0 }} />
-    {!isSyncRunning && handleRefresh && (
+    {!viewMode && handleRefresh && (
       <MenuItem sx={{ my: 0 }} onClick={() => handleRefresh()} disabled={!hasEditPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <RefreshIcon sx={{ width: 14 }} />
@@ -101,7 +101,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       <MenuItem
         sx={{ my: 0 }}
         onClick={() => handleResendInvitation()}
-        disabled={!hasResendPermission || !isSyncRunning}
+        disabled={!hasResendPermission || !viewMode}
       >
         <ListItemIcon style={{ minWidth: 28 }}>
           <Image src={EditIcon} alt="edit icon" />
@@ -110,7 +110,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </MenuItem>
     )}
 
-    {!isSyncRunning && handleDelete && (
+    {!viewMode && handleDelete && (
       <Box key="fake-key">
         <Divider style={{ margin: 0 }} />
         <MenuItem
@@ -126,7 +126,7 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </Box>
     )}
     <Divider style={{ margin: 0 }} />
-    {!isSyncRunning && eleType === 'connection' && handleClearConnection && (
+    {!viewMode && eleType === 'connection' && handleClearConnection && (
       <MenuItem onClick={() => handleClearConnection()} disabled={!hasResetPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <RestartAltIcon sx={{ width: 16 }} />
