@@ -1,6 +1,13 @@
 import styles from '@/styles/Home.module.css';
 import CheckIcon from '@/assets/icons/check.svg';
-import { Box, CircularProgress, Paper, Typography } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  Paper,
+  Typography,
+  Checkbox,
+  FormControlLabel,
+} from '@mui/material';
 import Pattern from '@/assets/images/pattern.png';
 import { PageHead } from '@/components/PageHead';
 import moment from 'moment';
@@ -26,11 +33,14 @@ type FlowRun = {
   expectedStartTime: string;
 };
 
-const BarChart = ({ runs, selectFlowRun }: any) => {
+const BarChart = ({ runs, selectFlowRun, scaleToRuntime = true }: any) => {
   const svgRef = useRef(null);
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
+
+    // Clear previous chart content
+    svg.selectAll('*').remove();
 
     const data = runs
       .map((run: any) => {
@@ -140,8 +150,20 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
       })
       .transition() // Apply transition animation
       .duration(1000) // Set the duration for the animation in milliseconds
-      .attr('y', (d: any) => height - (d.totalRunTime / normalizedMaxRuntime) * height)
-      .attr('height', (d: any) => (d.totalRunTime / normalizedMaxRuntime) * height) // Move the bars to their final y position
+      .attr('y', (d: any) => {
+        if (scaleToRuntime) {
+          return height - (d.totalRunTime / normalizedMaxRuntime) * height;
+        } else {
+          return 0; // All bars start from top when not scaled
+        }
+      })
+      .attr('height', (d: any) => {
+        if (scaleToRuntime) {
+          return (d.totalRunTime / normalizedMaxRuntime) * height;
+        } else {
+          return height; // All bars have full height when not scaled
+        }
+      })
       .style('position', 'relative');
 
     svg
@@ -152,7 +174,7 @@ const BarChart = ({ runs, selectFlowRun }: any) => {
       .attr('y2', height + 8)
       .attr('stroke', '#758397')
       .attr('stroke-width', 1);
-  }, []);
+  }, [scaleToRuntime]);
 
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -167,6 +189,7 @@ export default function Home() {
   const [flowRuns, setFlowRuns] = useState<Array<any>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFlowRun, setSelectedFlowRun] = useState<FlowRun | null>(null);
+  const [scaleToRuntimeByFlow, setScaleToRuntimeByFlow] = useState<Record<string, boolean>>({});
   const globalContext = useContext(GlobalContext);
 
   const fetchFlowRuns = async (showLoadingIndicator: boolean) => {
@@ -215,6 +238,17 @@ export default function Home() {
     setSelectedFlowRun(null);
     await delay(1000);
     setSelectedFlowRun(flowRun);
+  };
+
+  const getScaleToRuntime = (flowName: string): boolean => {
+    return scaleToRuntimeByFlow[flowName] ?? true; // Default to true if not set
+  };
+
+  const setScaleToRuntimeForFlow = (flowName: string, value: boolean) => {
+    setScaleToRuntimeByFlow((prev) => ({
+      ...prev,
+      [flowName]: value,
+    }));
   };
 
   return (
@@ -345,10 +379,29 @@ export default function Home() {
                             {run.runs.length} successful runs
                           </Typography>
                         </Box>
-                        <BarChart runs={run.runs} selectFlowRun={selectFlowRun} />
-                        <Typography variant="subtitle2" fontWeight={600}>
-                          Last {run.runs.length} runs
-                        </Typography>
+                        <BarChart
+                          runs={run.runs}
+                          selectFlowRun={selectFlowRun}
+                          scaleToRuntime={getScaleToRuntime(run.name)}
+                        />
+                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                          <Typography variant="subtitle2" fontWeight={600}>
+                            Last {run.runs.length} runs
+                          </Typography>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={getScaleToRuntime(run.name)}
+                                onChange={(e) =>
+                                  setScaleToRuntimeForFlow(run.name, e.target.checked)
+                                }
+                                size="small"
+                              />
+                            }
+                            label="Scale height to runtimes"
+                            sx={{ fontSize: '0.875rem' }}
+                          />
+                        </Box>
                       </>
                     ) : (
                       'No runs found for this pipeline'
