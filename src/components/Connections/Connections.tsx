@@ -379,7 +379,7 @@ const Actions = memo(
           key={'menu-' + idx}
           color="info"
           sx={{ p: 0, minWidth: 32 }}
-          disabled={tempSyncState || lock ? true : false}
+          disabled={tempSyncState && !lock}
         >
           <MoreHorizIcon />
         </Button>
@@ -542,10 +542,15 @@ export const Connections = () => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const [currentConnectionSyncState, setCurrentConnectionSyncState] = useState(false);
+
   const handleClick = (connection: Connection, event: HTMLElement | null) => {
     setConnectionId(connection.connectionId);
     setClearConnDeploymentId(connection.clearConnDeploymentId);
     setAnchorEl(event);
+    const isSyncRunning =
+      !!connection.lock || syncingConnectionIds.includes(connection.connectionId);
+    setCurrentConnectionSyncState(isSyncRunning);
   };
   const handleClose = (isEditMode?: string) => {
     if (isEditMode !== 'EDIT') {
@@ -800,6 +805,11 @@ export const Connections = () => {
     setShowDialog(true);
   };
 
+  const handleViewConnection = () => {
+    handleClose('EDIT');
+    setShowDialog(true);
+  };
+
   const RefreshConnection = async () => {
     handleClose();
     setIsRefreshing(true); // Set loading state to true
@@ -852,9 +862,11 @@ export const Connections = () => {
         handleRefresh={RefreshConnection}
         handleDelete={handleDeleteConnection}
         handleClearConnection={handleClearConnection}
+        handleView={handleViewConnection}
         hasResetPermission={permissions.includes('can_reset_connection')}
         hasDeletePermission={permissions.includes('can_delete_connection')}
         hasEditPermission={permissions.includes('can_edit_connection')}
+        viewMode={currentConnectionSyncState}
       />
       <CreateConnectionForm
         setConnectionId={setConnectionId}
@@ -862,6 +874,7 @@ export const Connections = () => {
         mutate={mutate}
         showForm={showDialog}
         setShowForm={setShowDialog}
+        readonly={currentConnectionSyncState}
       />
       <Box>
         <Box display="flex" justifyContent="space-between" mb={1}>
