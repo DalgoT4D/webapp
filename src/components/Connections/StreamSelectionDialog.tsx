@@ -64,7 +64,7 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
         }));
         setStreams(availableStreams);
       }
-      setConnectionName(response.name || 'Unknown Connection');
+      setConnectionName(response?.name || 'Unknown Connection');
     } catch (error) {
       console.error('Error fetching streams:', error);
       errorToast('Failed to fetch streams. Please try again later.', [], globalContext);
@@ -183,7 +183,7 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
               ))}
             </List>
 
-            {streams.length === 0 && !loading && (
+            {streams.length === 0 && (
               <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 3 }}>
                 No streams found in this connection.
               </Typography>
