@@ -18,6 +18,9 @@ import {
 } from '@mui/material';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
+import { errorToast } from '../ToastMessage/ToastHelper';
+import { useContext } from 'react';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface StreamData {
   streamName: string;
@@ -27,7 +30,7 @@ interface StreamData {
 interface StreamSelectionDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (selectedStreams: Array<object>, selectAll: boolean) => void;
+  onConfirm: (selectedStreams: Array<{ streamName: string }>, selectAll: boolean) => void;
   connectionId: string;
 }
 
@@ -38,16 +41,17 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
   connectionId,
 }) => {
   const { data: session }: any = useSession();
+  const globalContext = useContext(GlobalContext);
   const [streams, setStreams] = useState<StreamData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [connectionName, setConnectionName] = useState('');
 
   useEffect(() => {
-    if (open && connectionId) {
+    if (open && connectionId && session) {
       fetchStreams();
     }
-  }, [open, connectionId]);
+  }, [open, connectionId, session]);
 
   const fetchStreams = async () => {
     setLoading(true);
@@ -63,6 +67,7 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
       setConnectionName(response.name || 'Unknown Connection');
     } catch (error) {
       console.error('Error fetching streams:', error);
+      errorToast('Failed to fetch streams. Please try again later.', [], globalContext);
     } finally {
       setLoading(false);
     }
