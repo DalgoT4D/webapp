@@ -311,7 +311,7 @@ export default function Home() {
           {flowRuns &&
             flowRuns.map((run: any) => {
               return (
-                <React.Fragment key={run.name}>
+                <React.Fragment key={run.deploymentName}>
                   <Typography
                     variant="body1"
                     sx={{ mt: 4, fontWeight: 700, pb: 1, color: '#092540BF' }}
@@ -382,7 +382,7 @@ export default function Home() {
                         <BarChart
                           runs={run.runs}
                           selectFlowRun={selectFlowRun}
-                          scaleToRuntime={getScaleToRuntime(run.name)}
+                          scaleToRuntime={getScaleToRuntime(run.deploymentName)}
                         />
                         <Box display="flex" justifyContent="space-between" alignItems="center">
                           <Typography variant="subtitle2" fontWeight={600}>
@@ -391,9 +391,9 @@ export default function Home() {
                           <FormControlLabel
                             control={
                               <Checkbox
-                                checked={getScaleToRuntime(run.name)}
+                                checked={getScaleToRuntime(run.deploymentName)}
                                 onChange={(e) =>
-                                  setScaleToRuntimeForFlow(run.name, e.target.checked)
+                                  setScaleToRuntimeForFlow(run.deploymentName, e.target.checked)
                                 }
                                 size="small"
                               />
