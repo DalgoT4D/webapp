@@ -30,7 +30,7 @@ interface StreamData {
 interface StreamSelectionDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (selectedStreams: Array<{ streamName: string }>, selectAll: boolean) => void;
+  onConfirm: (selectedStreams: Array<string>, selectAll: boolean) => void;
   connectionId: string;
 }
 
@@ -98,7 +98,7 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
   const handleConfirm = () => {
     const selectedStreamNames = streams
       .filter((stream) => stream.selected)
-      .map((stream) => ({ streamName: stream.streamName }));
+      .map((stream) => stream.streamName);
 
     console.log('Selected Streams:', selectedStreamNames);
 
