@@ -277,7 +277,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
         <Controller
           name="duration"
           control={control}
-          rules={{ required: 'Duration is required' }}
+          rules={{ required: 'Billing Frequency is required' }}
           render={({ field }) => (
             <Autocomplete
               options={durationOptions}
@@ -290,7 +290,7 @@ export const CreateOrgForm = ({ closeSideMenu, showForm, setShowForm }: CreateOr
                   error={!!errors.duration}
                   helperText={errors.duration?.message}
                   sx={{ mb: 2, width: '100%' }}
-                  label="Select Duration"
+                  label="Select Billing Frequency"
                   variant="outlined"
                 />
               )}
