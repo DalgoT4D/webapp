@@ -289,7 +289,7 @@ export const Elementary = () => {
           `Please update the version of "elementary-data/elementary" in your packages.yml to ${response.exists.elementary_package.needs_upgrade} and click the button when done`
         );
       }
-      if (Object.keys(response.missing).length === 0) {
+      if (Object.keys(response?.missing).length === 0) {
         // Wait for all API calls including polling to complete before setting loading to false
         // git pull
 
