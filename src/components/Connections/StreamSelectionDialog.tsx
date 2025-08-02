@@ -132,8 +132,8 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
         ) : (
           <>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Select the streams you want to clear. This will remove all data for the selected
-              streams in the destination.
+              All the active streams in the connection are shown below. Please select the streams to
+              clear. Clearing will remove the data from destination for selected streams.
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
