@@ -58,10 +58,12 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
     try {
       const response = await httpGet(session, `airbyte/v1/connections/${connectionId}`);
       if (response?.syncCatalog?.streams) {
-        const availableStreams = response.syncCatalog.streams.map((stream: any) => ({
-          streamName: stream.stream.name,
-          selected: false, // Default to false for all streams
-        }));
+        const availableStreams = response.syncCatalog.streams
+          .filter((stream: any) => stream?.config?.selected)
+          .map((stream: any) => ({
+            streamName: stream.stream.name,
+            selected: false, // Default to false for all streams
+          }));
         setStreams(availableStreams);
       }
       setConnectionName(response?.name || 'Unknown Connection');
