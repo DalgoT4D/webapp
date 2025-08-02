@@ -827,24 +827,20 @@ export const Connections = () => {
           `prefect/v1/flows/${clearConnDeploymentId}/flow_run/`,
           {}
         );
-        if (message.success) {
-          successToast('Clear connection initiated successfully', [], globalContext);
-          mutate();
-        }
+        successToast('Clear connection initiated successfully', [], globalContext);
+        mutate();
       } else {
         const payload = {
           connectionId,
           streams: selectedStreamsForClear,
         };
-        const response = await httpPost(
+        await httpPost(
           session,
           `prefect/v1/flows/${clearConnDeploymentId}/clear_streams/`,
           payload
         );
-        if (response.success) {
-          successToast('Selected streams cleared successfully', [], globalContext);
-          mutate();
-        }
+        successToast('Selected streams cleared successfully', [], globalContext);
+        mutate();
       }
     } catch (err: any) {
       console.error(err);
