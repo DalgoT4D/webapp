@@ -839,7 +839,7 @@ export const Connections = () => {
           `prefect/v1/flows/${clearConnDeploymentId}/clear_streams/`,
           payload
         );
-        successToast('Selected streams cleared successfully', [], globalContext);
+        successToast('Selected streams initiated for clear successfully', [], globalContext);
         mutate();
       }
     } catch (err: any) {
