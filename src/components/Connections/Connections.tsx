@@ -822,11 +822,7 @@ export const Connections = () => {
       setClearStreamsLoading(true);
 
       if (clearAllStreams) {
-        const message = await httpPost(
-          session,
-          `prefect/v1/flows/${clearConnDeploymentId}/flow_run/`,
-          {}
-        );
+        await httpPost(session, `prefect/v1/flows/${clearConnDeploymentId}/flow_run/`, {});
         successToast('Clear connection initiated successfully', [], globalContext);
         mutate();
       } else {

@@ -1,4 +1,4 @@
-import { render, screen, within, act, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, within, act, fireEvent } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { SWRConfig } from 'swr';
 import '@testing-library/jest-dom';
