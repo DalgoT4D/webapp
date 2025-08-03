@@ -18,6 +18,7 @@ import { useContext } from 'react';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import connectionIcon from '@/assets/icons/connection.svg';
 import CreateConnectionForm from './CreateConnectionForm';
+import { StreamSelectionDialog } from './StreamSelectionDialog';
 import ConfirmationDialog from '../Dialog/ConfirmationDialog';
 import Image from 'next/image';
 import styles from '@/styles/Common.module.css';
@@ -538,11 +539,16 @@ export const Connections = () => {
   const [expandSyncLogs, setExpandSyncLogs] = useState<boolean>(false);
   const [showLogsDialog, setShowLogsDialog] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
-  const [resetLoading, setResetLoading] = useState<boolean>(false);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const [currentConnectionSyncState, setCurrentConnectionSyncState] = useState(false);
+
+  const [showStreamSelectionDialog, setShowStreamSelectionDialog] = useState(false);
+  const [showConfirmClearStreamsDialog, setShowConfirmClearStreamsDialog] = useState(false);
+  const [selectedStreamsForClear, setSelectedStreamsForClear] = useState<any[]>([]);
+  const [clearStreamsLoading, setClearStreamsLoading] = useState(false);
+  const [clearAllStreams, setClearAllStreams] = useState(false);
 
   const handleClick = (connection: Connection, event: HTMLElement | null) => {
     setConnectionId(connection.connectionId);
@@ -561,7 +567,7 @@ export const Connections = () => {
   };
   const [showDialog, setShowDialog] = useState(false);
   const [showConfirmDeleteDialog, setShowConfirmDeleteDialog] = useState<boolean>(false);
-  const [showConfirmResetDialog, setShowConfirmResetDialog] = useState<boolean>(false);
+
   const [rows, setRows] = useState<Array<any>>([]);
   const [rowValues, setRowValues] = useState<Array<Array<any>>>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -668,31 +674,6 @@ export const Connections = () => {
     handleCancelDeleteConnection();
   };
 
-  const clearConnection = (deploymentId: string | null) => {
-    console.log('here inside', deploymentId);
-    (async () => {
-      try {
-        if (!deploymentId) {
-          errorToast('Deployment not created', [], globalContext);
-          return;
-        }
-
-        setResetLoading(true);
-        const message = await httpPost(session, `prefect/v1/flows/${deploymentId}/flow_run/`, {});
-        if (message.success) {
-          successToast('Clear connection initiated successfully', [], globalContext);
-          mutate();
-        }
-      } catch (err: any) {
-        console.error(err);
-        errorToast(err.message, [], globalContext);
-      } finally {
-        setResetLoading(true);
-      }
-    })();
-    handleCancelClearConnection();
-  };
-
   const sortingConnections = (data: any[]) => {
     if (!data || data.length === 0) return [];
     const sortedData = [...data].sort((a, b) =>
@@ -790,16 +771,6 @@ export const Connections = () => {
     setShowConfirmDeleteDialog(false);
   };
 
-  const handleCancelClearConnection = () => {
-    setShowConfirmResetDialog(false);
-  };
-
-  const handleClearConnection = () => {
-    handleClose('EDIT');
-    setShowConfirmResetDialog(true);
-    trackAmplitudeEvent('[Reset-connection] Button Clicked');
-  };
-
   const handleEditConnection = () => {
     handleClose('EDIT');
     setShowDialog(true);
@@ -842,6 +813,69 @@ export const Connections = () => {
     }
   };
 
+  const clearSelectedStreams = async (clearConnDeploymentId: string) => {
+    try {
+      if (!clearConnDeploymentId) {
+        errorToast('Deployment not created', [], globalContext);
+        return;
+      }
+      setClearStreamsLoading(true);
+
+      if (clearAllStreams) {
+        await httpPost(session, `prefect/v1/flows/${clearConnDeploymentId}/flow_run/`, {});
+        successToast('Clear connection initiated successfully', [], globalContext);
+        mutate();
+      } else {
+        const payload = {
+          connectionId,
+          streams: selectedStreamsForClear,
+        };
+        await httpPost(
+          session,
+          `prefect/v1/flows/${clearConnDeploymentId}/clear_streams/`,
+          payload
+        );
+        successToast('Selected streams initiated for clear successfully', [], globalContext);
+        mutate();
+      }
+    } catch (err: any) {
+      console.error(err);
+      errorToast(err.message, [], globalContext);
+    } finally {
+      setClearStreamsLoading(false);
+      setShowConfirmClearStreamsDialog(false);
+      setSelectedStreamsForClear([]);
+    }
+  };
+
+  const handleClearStreams = () => {
+    const connection = data?.find((conn: Connection) => conn.connectionId === connectionId);
+    if (connection) {
+      setClearConnDeploymentId(connection.clearConnDeploymentId);
+      setShowStreamSelectionDialog(true);
+    }
+    handleClose('EDIT');
+    trackAmplitudeEvent('[Reset-connection] Button Clicked');
+  };
+
+  const handleStreamSelectionConfirm = (selectedStreams: any[], selectAll: boolean) => {
+    setSelectedStreamsForClear(selectedStreams);
+    setClearAllStreams(selectAll);
+    setShowStreamSelectionDialog(false);
+    setShowConfirmClearStreamsDialog(true);
+  };
+
+  const handleConfirmClearStreams = () => {
+    if (clearConnDeploymentId) {
+      clearSelectedStreams(clearConnDeploymentId);
+    }
+  };
+
+  const handleCancelClearStreams = () => {
+    setShowConfirmClearStreamsDialog(false);
+    setSelectedStreamsForClear([]);
+  };
+
   // show load progress indicator
   if (isLoading || isRefreshing) {
     return <CircularProgress />;
@@ -861,8 +895,8 @@ export const Connections = () => {
         handleEdit={handleEditConnection}
         handleRefresh={RefreshConnection}
         handleDelete={handleDeleteConnection}
-        handleClearConnection={handleClearConnection}
         handleView={handleViewConnection}
+        handleClearStreams={handleClearStreams}
         hasResetPermission={permissions.includes('can_reset_connection')}
         hasDeletePermission={permissions.includes('can_delete_connection')}
         hasEditPermission={permissions.includes('can_edit_connection')}
@@ -914,12 +948,18 @@ export const Connections = () => {
         handleConfirm={() => deleteConnection(connectionId)}
         message="This will delete the connection permanently and all the flows built on top of this."
       />
+      <StreamSelectionDialog
+        open={showStreamSelectionDialog}
+        onClose={() => setShowStreamSelectionDialog(false)}
+        onConfirm={handleStreamSelectionConfirm}
+        connectionId={connectionId}
+      />
       <ConfirmationDialog
-        loading={resetLoading}
-        show={showConfirmResetDialog}
-        handleClose={() => handleCancelClearConnection()}
-        handleConfirm={() => clearConnection(clearConnDeploymentId)}
-        message="Clearing the connection will remove all data at the warehouse in the connection's destination table."
+        loading={clearStreamsLoading}
+        show={showConfirmClearStreamsDialog}
+        handleClose={handleCancelClearStreams}
+        handleConfirm={handleConfirmClearStreams}
+        message={`This will clear data for ${selectedStreamsForClear.length} selected stream(s) from the destination. This action cannot be undone.`}
       />
       <LogCard logs={syncLogs} expand={expandSyncLogs} setExpand={setExpandSyncLogs} />
     </>
