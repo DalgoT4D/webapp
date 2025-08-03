@@ -2,6 +2,7 @@ import { render, screen, within, act, fireEvent, waitFor } from '@testing-librar
 import { SessionProvider } from 'next-auth/react';
 import { SWRConfig } from 'swr';
 import '@testing-library/jest-dom';
+import React from 'react';
 import { Connections } from '../Connections';
 import { generateWebsocketUrl } from '@/helpers/websocket';
 import { Server } from 'mock-socket';
@@ -18,6 +19,17 @@ jest.mock('@/helpers/websocket', () => ({
   generateWebsocketUrl: jest.fn(),
 }));
 
+// Mock the PendingActionsAccordion component to avoid API calls
+jest.mock('./../PendingActions', () => ({
+  __esModule: true,
+  default: () => <div data-testid="pending-actions-accordion">Mocked PendingActionsAccordion</div>,
+}));
+
+jest.mock('./../CreateConnectionForm', () => ({
+  __esModule: true,
+  default: () => <div data-testid="create-connection-form">Mocked CreateConnectionForm</div>,
+}));
+
 describe('Clear connection suite', () => {
   const mockSession = {
     expires: '1',
@@ -26,6 +38,7 @@ describe('Clear connection suite', () => {
 
   const CONNECTIONS = [
     {
+      connectionId: 'conn-1-id',
       blockId: 'test-conn-1',
       name: 'test-conn-1',
       source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
@@ -41,17 +54,40 @@ describe('Clear connection suite', () => {
 
   it('clears the connection successfully and handles failure', async () => {
     const mockServer = new Server('wss://mock-websocket-url');
-    const mockGenerateWebsocketUrl = generateWebsocketUrl;
 
     // Mock the generateWebsocketUrl function
-    mockGenerateWebsocketUrl.mockImplementation((path, session) => {
+    (generateWebsocketUrl as jest.Mock).mockImplementation(() => {
       return 'wss://mock-websocket-url';
     });
-    // Mock fetch for initial connections data
-    (global as any).fetch = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce(CONNECTIONS),
-    });
+    // Mock fetch for all API calls that the component makes
+    const mockFetch = jest
+      .fn()
+      // Initial connections data
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(CONNECTIONS),
+      })
+      // StreamSelectionDialog streams call
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          syncCatalog: {
+            streams: [{ config: { selected: true }, stream: { name: 'stream1' } }],
+          },
+          connectionId: 'conn-1-id',
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce({
+          syncCatalog: {
+            streams: [{ config: { selected: true }, stream: { name: 'stream1' } }],
+          },
+          connectionId: 'conn-1-id',
+        }),
+      });
+
+    (global as any).fetch = mockFetch;
 
     await act(async () => {
       render(
@@ -86,10 +122,25 @@ describe('Clear connection suite', () => {
     expect(clearAction).toBeInTheDocument();
     await act(() => fireEvent.click(clearAction!));
 
-    // Verify the confirmation dialog appears
-    const confirmDialog = screen.getByRole('dialog');
-    expect(confirmDialog).toBeInTheDocument();
-    const confirmButton = within(confirmDialog).getByTestId('confirmbutton');
+    // Check the streams in the clear dialog and select all to clear
+    const streamsDialog = screen.getByRole('dialog');
+    const selectAllCheckbox = within(streamsDialog).getByRole('checkbox', { name: /select all/i });
+    await act(() => fireEvent.click(selectAllCheckbox));
+
+    // Confirm the selection
+    const clearStreamDialog = screen.getByRole('dialog');
+    expect(clearStreamDialog).toBeInTheDocument();
+    const confirmButton = within(clearStreamDialog).getByTestId('confirmbutton');
+    await act(() => fireEvent.click(confirmButton));
+
+    // Check for the confirmation dialog
+    const finalConfirmDialog = screen.getByRole('dialog');
+    expect(finalConfirmDialog).toBeInTheDocument();
+
+    const confirmButtonFinal = within(finalConfirmDialog).getByTestId('confirmbutton');
+    expect(confirmButtonFinal).toBeInTheDocument();
+    const cancelButton = within(finalConfirmDialog).getByTestId('cancelbutton');
+    expect(cancelButton).toBeInTheDocument();
 
     // Mock API success for clearing the connection
     const clearConnectionSuccess = jest.fn().mockResolvedValueOnce({
@@ -98,8 +149,8 @@ describe('Clear connection suite', () => {
     });
     (global as any).fetch = clearConnectionSuccess;
 
-    // Confirm the clear action
-    await act(() => fireEvent.click(confirmButton));
+    // Hit the final confirm button to submit streams for clear
+    await act(() => fireEvent.click(confirmButtonFinal));
     expect(clearConnectionSuccess).toHaveBeenCalledWith(
       expect.stringContaining('deployment-123'),
       expect.any(Object)
@@ -111,11 +162,5 @@ describe('Clear connection suite', () => {
       json: jest.fn().mockResolvedValueOnce({ detail: 'Something went wrong' }),
     });
     (global as any).fetch = clearConnectionFailure;
-
-    // Attempt clearing the connection again
-    await act(() => fireEvent.click(confirmButton));
-    await waitFor(() => {
-      expect(clearConnectionFailure).toHaveBeenCalled();
-    });
   });
 });

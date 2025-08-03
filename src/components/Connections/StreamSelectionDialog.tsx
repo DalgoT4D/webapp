@@ -195,13 +195,19 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
       </DialogContent>
 
       <DialogActions>
-        <Button color="secondary" variant="outlined" onClick={handleClose}>
+        <Button
+          color="secondary"
+          variant="outlined"
+          onClick={handleClose}
+          data-testid="cancelbutton"
+        >
           Cancel
         </Button>
         <Button
           onClick={handleConfirm}
           variant="contained"
           disabled={selectedCount === 0 || loading}
+          data-testid="confirmbutton"
         >
           Clear Selected Streams ({selectedCount})
         </Button>
