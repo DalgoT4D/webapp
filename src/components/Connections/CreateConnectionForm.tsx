@@ -420,8 +420,21 @@ const CreateConnectionForm = ({
           : stream.destinationSyncMode;
 
     if (!checked) {
-      stream.cursorField = '';
-      stream.primaryKey = [];
+      if (stream.cursorFieldConfig.sourceDefinedCursor) {
+        // Reset to only the source-defined cursor fields
+        stream.cursorField = [...stream.cursorFieldConfig.cursorFieldOptions][0] || '';
+      } else {
+        // Clear the cursor field since none are source-defined
+        stream.cursorField = '';
+      }
+
+      if (stream.primaryKeyConfig.sourceDefinedPrimaryKey) {
+        // Reset to only the source-defined primary keys
+        stream.primaryKey = [...stream.primaryKeyConfig.primaryKeyOptions];
+      } else {
+        // Clear all primary keys since none are source-defined
+        stream.primaryKey = [];
+      }
     }
 
     updateThisStreamTo_(stream, {
