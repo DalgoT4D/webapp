@@ -21,9 +21,9 @@ interface MenuProps {
   handleEdit?: () => void;
   handleRefresh?: () => void;
   handleDelete?: () => void;
-  handleClearConnection?: () => void;
   handleResendInvitation?: () => void;
   handleView?: () => void;
+  handleClearStreams?: () => void;
   hasEditPermission?: boolean;
   hasDeletePermission?: boolean;
   hasResendPermission?: boolean;
@@ -39,9 +39,9 @@ export const ActionsMenu: React.FC<MenuProps> = ({
   handleEdit,
   handleRefresh,
   handleDelete,
-  handleClearConnection,
   handleResendInvitation,
   handleView,
+  handleClearStreams,
   hasEditPermission = true,
   hasDeletePermission = true,
   hasResendPermission = true,
@@ -126,12 +126,12 @@ export const ActionsMenu: React.FC<MenuProps> = ({
       </Box>
     )}
     <Divider style={{ margin: 0 }} />
-    {!viewMode && eleType === 'connection' && handleClearConnection && (
-      <MenuItem onClick={() => handleClearConnection()} disabled={!hasResetPermission}>
+    {!viewMode && eleType === 'connection' && handleClearStreams && (
+      <MenuItem onClick={() => handleClearStreams()} disabled={!hasResetPermission}>
         <ListItemIcon style={{ minWidth: 28 }}>
           <RestartAltIcon sx={{ width: 16 }} />
         </ListItemIcon>
-        Clear
+        Clear Streams
       </MenuItem>
     )}
   </Menu>
