@@ -256,7 +256,13 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
       <Controller
         name="name"
         control={control}
-        rules={{ required: 'Destination type is required' }}
+        rules={{
+          required: 'Destination type is required',
+          maxLength: {
+            value: 25,
+            message: 'Warehouse name cannot exceed 25 characters',
+          },
+        }}
         render={({ field: { ref, ...rest }, fieldState }) => (
           <Input
             {...rest}
@@ -266,6 +272,7 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
             label="Name*"
             variant="outlined"
             data-testid="dest-name"
+            inputProps={{ maxLength: 25 }}
           ></Input>
         )}
       />
