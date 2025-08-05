@@ -14,6 +14,9 @@ import {
   Checkbox,
   Paper,
   IconButton,
+  Select,
+  MenuItem,
+  FormControl,
 } from '@mui/material';
 import { ErrorOutline, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 const Long_Notification_Length = 130;
@@ -25,6 +28,15 @@ interface Notification {
   read_status: boolean;
   timestamp: string;
 }
+
+const categoryOptions = [
+  { label: 'All Categories', value: '' },
+  { label: 'Incident', value: 'incident' },
+  { label: 'Schema Change', value: 'schema_change' },
+  { label: 'Job Failure', value: 'job_failure' },
+  { label: 'Late Run', value: 'late_run' },
+  { label: 'dbt Test Failure', value: 'dbt_test_failure' },
+];
 
 const ManageNotifications = ({
   tabWord,
@@ -44,9 +56,12 @@ const ManageNotifications = ({
 
   const message_status = tabWord === 'read' ? 1 : tabWord === 'unread' ? 0 : '';
   const readQuery = tabWord === 'all' ? '' : `&read_status=${message_status}`;
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+
+  const categoryQuery = selectedCategory ? `&category=${selectedCategory}` : '';
 
   const { data, isLoading, mutate } = useSWR(
-    `notifications/v1?limit=${pageSize}&page=${currentPageIndex + 1}${readQuery}`
+    `notifications/v1?limit=${pageSize}&page=${currentPageIndex + 1}${readQuery}${categoryQuery}`
   );
 
   useEffect(() => {
@@ -115,6 +130,42 @@ const ManageNotifications = ({
           Select all <strong>|</strong> Showing {showingNotificationCount} of{' '}
           {data?.total_notifications || 0} notifications
         </Typography>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography sx={{ fontSize: '14px', color: '#0F2440CC' }}>Filter by Category:</Typography>
+
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <Select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPageIndex(0); // Reset to first page on filter change
+              }}
+              displayEmpty
+              sx={{
+                fontSize: '14px',
+                backgroundColor: '#fff',
+                color: '#0F2440CC',
+                borderRadius: '4px',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#ccc',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#999',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#1976d2',
+                },
+              }}
+            >
+              {categoryOptions.map((option) => (
+                <MenuItem key={option.value || 'all'} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
       </Box>
       <TableContainer
         component={Paper}
