@@ -48,104 +48,6 @@ type HeaderProps = {
   hideMenu: boolean;
 };
 
-const mockUrgentData = {
-  res: [
-    {
-      id: 'urgent-1',
-      message:
-        'System maintenance scheduled for tonight at 11 PM EST. Services may be temporarily unavailable.',
-    },
-    {
-      id: 'urgent-2',
-      message:
-        'Database connection issues detected. Our team is working to resolve this immediately.',
-    },
-    {
-      id: 'urgent-3',
-      message:
-        'New security update available. Please refresh your browser to get the latest version.',
-    },
-  ],
-};
-
-const UrgentNotificationBanner = ({
-  notifications,
-  onDismiss,
-}: {
-  notifications: any[];
-  onDismiss: (id: string) => void;
-}) => {
-  return (
-    <Slide direction="down" in={notifications.length > 0} mountOnEnter unmountOnExit>
-      <Box
-        sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1300,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        }}
-      >
-        {notifications.map((notification, index) => (
-          <Collapse key={notification.id} in={true}>
-            <Box
-              sx={{
-                backgroundColor: '#FFF2F0',
-                borderBottom: '1px solid #FFCCC7',
-                padding: '12px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                minHeight: '48px',
-                animation: index === 0 ? 'slideInDown 0.3s ease-out' : 'none',
-                '@keyframes slideInDown': {
-                  from: {
-                    transform: 'translateY(-100%)',
-                    opacity: 0,
-                  },
-                  to: {
-                    transform: 'translateY(0)',
-                    opacity: 1,
-                  },
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                <ErrorOutline sx={{ fontSize: '18px', mr: 1, color: '#CF1322' }} />
-                <Typography
-                  sx={{
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    color: '#A8071A',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {notification.message}
-                </Typography>
-              </Box>
-              <IconButton
-                onClick={() => onDismiss(notification.id)}
-                sx={{
-                  padding: '4px',
-                  color: '#A8071A',
-                  ml: 2,
-                  '&:hover': {
-                    backgroundColor: 'rgba(0,0,0,0.04)',
-                  },
-                }}
-                size="small"
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </Box>
-          </Collapse>
-        ))}
-      </Box>
-    </Slide>
-  );
-};
-
 export const Header = ({
   openMenu = false,
   setOpenMenu = () => {},
@@ -261,8 +163,6 @@ export const Header = ({
 
   return (
     <>
-      <UrgentNotificationBanner notifications={mockUrgentData} onDismiss={handleDismissUrgent} />
-
       <Paper className={styles.Header}>
         <Box sx={{ display: 'flex', alignItems: 'center', ml: 1.8 }}>
           {!hideMenu && pathname !== '/changepassword' && (
