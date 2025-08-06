@@ -1,4 +1,4 @@
-import { Box, Menu, MenuItem, Paper, Typography, IconButton } from '@mui/material';
+import { Box, Menu, MenuItem, Paper, Typography, IconButton, Collapse, Slide } from '@mui/material';
 
 import styles from './Header.module.css';
 import ProfileIcon from '@/assets/icons/profile.svg';
@@ -10,12 +10,15 @@ import { useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import CreateOrgForm from '../Org/CreateOrgForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import CloseIcon from '@mui/icons-material/Close';
+import { httpPost } from '@/helpers/http';
 
 // assets
 import HamburgerIcon from '../../assets/icons/hamburger.svg';
 import useSWR from 'swr';
 import Unread_Notifications from '@/assets/icons/notifications_unread';
 import Notifications from '@/assets/icons/notifications';
+import { ErrorOutline } from '@mui/icons-material';
 
 type Org = {
   name: string;
@@ -45,6 +48,104 @@ type HeaderProps = {
   hideMenu: boolean;
 };
 
+const mockUrgentData = {
+  res: [
+    {
+      id: 'urgent-1',
+      message:
+        'System maintenance scheduled for tonight at 11 PM EST. Services may be temporarily unavailable.',
+    },
+    {
+      id: 'urgent-2',
+      message:
+        'Database connection issues detected. Our team is working to resolve this immediately.',
+    },
+    {
+      id: 'urgent-3',
+      message:
+        'New security update available. Please refresh your browser to get the latest version.',
+    },
+  ],
+};
+
+const UrgentNotificationBanner = ({
+  notifications,
+  onDismiss,
+}: {
+  notifications: any[];
+  onDismiss: (id: string) => void;
+}) => {
+  return (
+    <Slide direction="down" in={notifications.length > 0} mountOnEnter unmountOnExit>
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1300,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        }}
+      >
+        {notifications.map((notification, index) => (
+          <Collapse key={notification.id} in={true}>
+            <Box
+              sx={{
+                backgroundColor: '#FFF2F0',
+                borderBottom: '1px solid #FFCCC7',
+                padding: '12px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                minHeight: '48px',
+                animation: index === 0 ? 'slideInDown 0.3s ease-out' : 'none',
+                '@keyframes slideInDown': {
+                  from: {
+                    transform: 'translateY(-100%)',
+                    opacity: 0,
+                  },
+                  to: {
+                    transform: 'translateY(0)',
+                    opacity: 1,
+                  },
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                <ErrorOutline sx={{ fontSize: '18px', mr: 1, color: '#CF1322' }} />
+                <Typography
+                  sx={{
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: '#A8071A',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {notification.message}
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={() => onDismiss(notification.id)}
+                sx={{
+                  padding: '4px',
+                  color: '#A8071A',
+                  ml: 2,
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.04)',
+                  },
+                }}
+                size="small"
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          </Collapse>
+        ))}
+      </Box>
+    </Slide>
+  );
+};
+
 export const Header = ({
   openMenu = false,
   setOpenMenu = () => {},
@@ -53,6 +154,8 @@ export const Header = ({
   const { data: unread_count } = useSWR(`notifications/unread_count`, {
     refreshInterval: 20000,
   });
+  const { data: urgentNotifications, mutate: mutateUrgent } = useSWR(`notifications/urgent`);
+
   const handleSignout = () => {
     // Hit backend api to invalidate the token
     localStorage.clear();
@@ -78,6 +181,17 @@ export const Header = ({
   };
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleDismissUrgent = async (notificationId: string) => {
+    try {
+      await httpPost(session, 'notifications/urgent/dismiss', {
+        notification_id: notificationId,
+      });
+      mutateUrgent(); // Refresh the list after dismissing
+    } catch (err) {
+      console.error('Failed to dismiss urgent notification:', err);
+    }
   };
 
   useEffect(() => {
@@ -146,161 +260,203 @@ export const Header = ({
   };
 
   return (
-    <Paper className={styles.Header}>
-      <Box sx={{ display: 'flex', alignItems: 'center', ml: 1.8 }}>
-        {!hideMenu && pathname !== '/changepassword' && (
-          <IconButton
-            onClick={() => setOpenMenu(!openMenu)}
-            sx={{
-              borderRadius: '50%',
-              lineHeight: 0,
-              transition: (theme) =>
-                theme.transitions.create('transform', {
-                  duration: theme.transitions.duration.shorter,
+    <>
+      <UrgentNotificationBanner notifications={mockUrgentData} onDismiss={handleDismissUrgent} />
+
+      <Paper className={styles.Header}>
+        <Box sx={{ display: 'flex', alignItems: 'center', ml: 1.8 }}>
+          {!hideMenu && pathname !== '/changepassword' && (
+            <IconButton
+              onClick={() => setOpenMenu(!openMenu)}
+              sx={{
+                borderRadius: '50%',
+                lineHeight: 0,
+                transition: (theme) =>
+                  theme.transitions.create('transform', {
+                    duration: theme.transitions.duration.shorter,
+                  }),
+                ...(!openMenu && {
+                  transform: 'rotate(180deg)',
                 }),
-              ...(!openMenu && {
-                transform: 'rotate(180deg)',
-              }),
-            }}
-          >
-            <Image src={HamburgerIcon} alt="Hamburger-icon" />
-          </IconButton>
-        )}
-        <Box
-          sx={{
-            ml: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Image src={Logo} alt="dalgo logo" />
-        </Box>
-      </Box>
-      <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto', gap: '20px' }}>
-        <IconButton
-          onClick={handleViewAll}
-          sx={{
-            borderRadius: '50%',
-          }}
-        >
-          {unread_count?.res > 0 ? <Unread_Notifications /> : <Notifications />}
-        </IconButton>
-        <Typography variant="h6">{selectedOrg?.label}</Typography>
-        <Image
-          style={{ marginRight: 24, cursor: 'pointer' }}
-          src={ProfileIcon}
-          alt="profile icon"
-          onClick={(event) => handleClick(event.currentTarget)}
-        />
-      </Box>
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={open}
-        sx={{
-          marginTop: 4,
-          marginLeft: -2,
-          paddingRight: 2,
-          py: 0,
-        }}
-        onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        PaperProps={{
-          className: styles.Paper,
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        MenuListProps={{
-          sx: { p: 0 },
-          'aria-labelledby': 'basic-button',
-        }}
-      >
-        <Box sx={{ my: 0, py: 1, px: 2 }} onClick={handleClose}>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 600,
-              borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
-            }}
-          >
-            {session?.user?.email || 'no user'}
-          </Typography>
-        </Box>
-        {session?.user?.can_create_orgs && (
+              }}
+            >
+              <Image src={HamburgerIcon} alt="Hamburger-icon" />
+            </IconButton>
+          )}
           <Box
             sx={{
-              my: 0,
-              py: 1,
-              px: 2,
-              ':hover': { cursor: 'pointer' },
+              ml: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
-            onClick={handleCreateOrgClick}
           >
-            {permissions.includes('can_create_org') && (
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: 600,
-                  borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
-                }}
-                data-testid="createneworg"
-              >
-                Create new org
-              </Typography>
-            )}
-          </Box>
-        )}
-        <Box
-          sx={{
-            overflow: 'scroll',
-            maxHeight: '60vh',
-          }}
-        >
-          <Box>
-            {orgs
-              .sort((org1, org2) => org1['label'].localeCompare(org2['label']))
-              .map((org: AutoCompleteOption, idx: number) => (
-                <MenuItem
-                  key={idx}
-                  value={org.id}
-                  onClick={() => setSelectedOrg(org)}
-                  selected={selectedOrg?.id === org.id}
-                  sx={selectedOrg?.id === org.id ? { fontWeight: 600 } : {}}
-                >
-                  {org.label}
-                </MenuItem>
-              ))}
+            <Image src={Logo} alt="dalgo logo" />
           </Box>
         </Box>
-        <MenuItem
+        <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto', gap: '20px' }}>
+          <IconButton
+            onClick={handleViewAll}
+            sx={{
+              borderRadius: '50%',
+            }}
+          >
+            {unread_count?.res > 0 ? <Unread_Notifications /> : <Notifications />}
+          </IconButton>
+          <Typography variant="h6">{selectedOrg?.label}</Typography>
+          <Image
+            style={{ marginRight: 24, cursor: 'pointer' }}
+            src={ProfileIcon}
+            alt="profile icon"
+            onClick={(event) => handleClick(event.currentTarget)}
+          />
+        </Box>
+        <Menu
+          id="basic-menu"
+          anchorEl={anchorEl}
+          open={open}
           sx={{
-            borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
+            marginTop: 4,
+            marginLeft: -2,
+            paddingRight: 2,
+            py: 0,
           }}
-          onClick={() => handleChangePassword()}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          PaperProps={{
+            className: styles.Paper,
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          MenuListProps={{
+            sx: { p: 0 },
+            'aria-labelledby': 'basic-button',
+          }}
         >
-          Change Password
-        </MenuItem>
-        <MenuItem
+          <Box sx={{ my: 0, py: 1, px: 2 }} onClick={handleClose}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
+              }}
+            >
+              {session?.user?.email || 'no user'}
+            </Typography>
+          </Box>
+          {session?.user?.can_create_orgs && (
+            <Box
+              sx={{
+                my: 0,
+                py: 1,
+                px: 2,
+                ':hover': { cursor: 'pointer' },
+              }}
+              onClick={handleCreateOrgClick}
+            >
+              {permissions.includes('can_create_org') && (
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 600,
+                    borderBottom: '0.5px solid rgba(15, 36, 64, 0.5)',
+                  }}
+                  data-testid="createneworg"
+                >
+                  Create new org
+                </Typography>
+              )}
+            </Box>
+          )}
+          <Box
+            sx={{
+              overflow: 'scroll',
+              maxHeight: '60vh',
+            }}
+          >
+            <Box>
+              {orgs
+                .sort((org1, org2) => org1['label'].localeCompare(org2['label']))
+                .map((org: AutoCompleteOption, idx: number) => (
+                  <MenuItem
+                    key={idx}
+                    value={org.id}
+                    onClick={() => setSelectedOrg(org)}
+                    selected={selectedOrg?.id === org.id}
+                    sx={selectedOrg?.id === org.id ? { fontWeight: 600 } : {}}
+                  >
+                    {org.label}
+                  </MenuItem>
+                ))}
+            </Box>
+          </Box>
+          <MenuItem
+            sx={{
+              borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
+            }}
+            onClick={() => handleChangePassword()}
+          >
+            Change Password
+          </MenuItem>
+          <MenuItem
+            sx={{
+              borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
+            }}
+            onClick={() => handleSignout()}
+          >
+            <Image style={{ marginRight: 8 }} src={LogoutIcon} alt="logout icon" />
+            Logout
+          </MenuItem>
+        </Menu>
+        <CreateOrgForm
+          closeSideMenu={handleClose}
+          showForm={showOrgCreateForm}
+          setShowForm={setShowOrgCreateForm}
+        />
+      </Paper>
+
+      {urgentNotifications?.res?.length > 0 && (
+        <Box
           sx={{
-            borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
+            backgroundColor: '#FFFAE6',
+            color: '#7A4F01',
+            borderBottom: '1px solid #FFE58F',
+            padding: '10px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            position: 'relative',
+            zIndex: 10,
           }}
-          onClick={() => handleSignout()}
         >
-          <Image style={{ marginRight: 8 }} src={LogoutIcon} alt="logout icon" />
-          Logout
-        </MenuItem>
-      </Menu>
-      <CreateOrgForm
-        closeSideMenu={handleClose}
-        showForm={showOrgCreateForm}
-        setShowForm={setShowOrgCreateForm}
-      />
-    </Paper>
+          {urgentNotifications?.res.map((msg: any) => (
+            <Box
+              key={msg.id}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Typography sx={{ fontSize: '14px', fontWeight: 500 }}>
+                {msg.message}
+                <ErrorOutline sx={{ color: 'red' }} />
+              </Typography>
+              <IconButton
+                onClick={() => handleDismissUrgent(msg.id)}
+                sx={{ padding: '4px', color: '#7A4F01' }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ))}
+        </Box>
+      )}
+    </>
   );
 };

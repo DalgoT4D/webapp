@@ -27,6 +27,7 @@ interface Notification {
   message: string;
   read_status: boolean;
   timestamp: string;
+  category: string;
 }
 
 const categoryOptions = [
@@ -242,6 +243,9 @@ const ManageNotifications = ({
                           {expandedRow === notification.id
                             ? notification.message
                             : truncateText(notification.message, Long_Notification_Length)}
+                        </Typography>
+                        <Typography sx={{ fontWeight: 500, fontSize: '12px', color: '#0F2440AA' }}>
+                          Category: {notification.category || 'N/A'}
                         </Typography>
                         <Typography sx={{ fontWeight: 600, fontSize: '12px' }}>
                           {moment(new Date(notification.timestamp)).fromNow()}
