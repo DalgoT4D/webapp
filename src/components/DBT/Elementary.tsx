@@ -276,10 +276,6 @@ export const Elementary = () => {
   const handleCheckDbtFiles = async (firstTimeSetup: boolean) => {
     setLoading(true);
     try {
-      const gitPullResponse: { success: boolean } = await httpPost(session, 'dbt/git_pull/', {});
-      if (!gitPullResponse.success) {
-        errorToast('Something went wrong running git-pull', [], globalContext);
-      }
       // first will be git pull, which pulls the latest changes and then the dbt files are checked.
       const checkDbtFilesResponse: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
       setElementaryStatus(checkDbtFilesResponse);
