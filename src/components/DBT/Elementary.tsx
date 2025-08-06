@@ -205,7 +205,7 @@ export const Elementary = () => {
       const response = await httpGet(session, `dbt/elementary-setup-status`);
 
       if (response.status == 'set-up') {
-        handleCheckDbtFiles();
+        handleCheckDbtFiles(false);
         fetchElementaryToken();
         checkForLock();
       } else if (response.status == 'not-set-up') {
@@ -273,23 +273,25 @@ export const Elementary = () => {
     }
   };
 
-  const handleCheckDbtFiles = async () => {
+  const handleCheckDbtFiles = async (firstTimeSetup: boolean) => {
     setLoading(true);
     try {
-      const response_git_pull: any = await httpPost(session, 'dbt/git_pull/', {});
-      if (!response_git_pull.success) errorToast('Something went wrong', [], globalContext);
+      const gitPullResponse: { success: boolean } = await httpPost(session, 'dbt/git_pull/', {});
+      if (!gitPullResponse.success) {
+        errorToast('Something went wrong running git-pull', [], globalContext);
+      }
       // first will be git pull, which pulls the latest changes and then the dbt files are checked.
-      const response: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
-      // response.exists.elementary_package.needs_upgrade = '0.20.0';
-      setElementaryStatus(response);
+      const checkDbtFilesResponse: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
+      setElementaryStatus(checkDbtFilesResponse);
+      const needsUpgrade = checkDbtFilesResponse?.exists?.elementary_package?.needs_upgrade;
 
       // Check for upgrade requirement and set message
-      if (response?.exists?.elementary_package?.needs_upgrade) {
+      if (needsUpgrade) {
         setUpgradeMessage(
-          `Please update the version of "elementary-data/elementary" in your packages.yml to ${response.exists.elementary_package.needs_upgrade} and click the button when done`
+          `Please update the version of "elementary-data/elementary" in your packages.yml to ${needsUpgrade} and click the button when done`
         );
       }
-      if (Object.keys(response?.missing).length === 0) {
+      if (firstTimeSetup && Object.keys(checkDbtFilesResponse?.missing).length === 0) {
         // Wait for all API calls including polling to complete before setting loading to false
         // git pull
 
@@ -308,9 +310,9 @@ export const Elementary = () => {
   const gitPullAndMigrateElementaryTrackingTables = async () => {
     setUpgradeInProgress(true);
     try {
-      const response_git_pull: any = await httpPost(session, 'dbt/git_pull/', {});
-      if (!response_git_pull.success) {
-        errorToast('Something went wrong', [], globalContext);
+      const gitPullResponse: any = await httpPost(session, 'dbt/git_pull/', {});
+      if (!gitPullResponse.success) {
+        errorToast('Something went wrong running git-pull', [], globalContext);
         return;
       }
 
@@ -426,7 +428,7 @@ export const Elementary = () => {
                   You currently dont have elementary setup. Please click the button below to setup
                   elementary.
                 </Typography>
-                <Button onClick={handleCheckDbtFiles} variant="contained">
+                <Button onClick={() => handleCheckDbtFiles(true)} variant="contained">
                   Setup Elementary
                 </Button>
               </>
