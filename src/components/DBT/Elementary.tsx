@@ -291,7 +291,11 @@ export const Elementary = () => {
           `Please update the version of "elementary-data/elementary" in your packages.yml to ${needsUpgrade} and click the button when done`
         );
       }
-      if (firstTimeSetup && Object.keys(checkDbtFilesResponse?.missing).length === 0) {
+      if (
+        firstTimeSetup &&
+        checkDbtFilesResponse?.missing &&
+        Object.keys(checkDbtFilesResponse?.missing).length === 0
+      ) {
         // Wait for all API calls including polling to complete before setting loading to false
         // git pull
 
