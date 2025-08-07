@@ -315,12 +315,22 @@ export const Elementary = () => {
         errorToast('Something went wrong running git-pull', [], globalContext);
         return;
       }
+      const checkDbtFilesResponse: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
+      setElementaryStatus(checkDbtFilesResponse);
+      const needsUpgrade = checkDbtFilesResponse?.exists?.elementary_package?.needs_upgrade;
 
-      // and then call
-      await createElementaryTrackingTables();
-      // once this is done we show
-      // "upgrade successfull, please regenerate the report at your convenience"
-      setUpgradeMessage('Upgrade successful, please regenerate the report at your convenience');
+      // Check for upgrade requirement and set message
+      if (needsUpgrade) {
+        setUpgradeMessage(
+          `Please update the version of "elementary-data/elementary" in your packages.yml to ${needsUpgrade} and click the button when done`
+        );
+      } else {
+        // and then call
+        await createElementaryTrackingTables();
+        // once this is done we show
+        // "upgrade successfull, please regenerate the report at your convenience"
+        setUpgradeMessage('Upgrade successful, please regenerate the report at your convenience');
+      }
     } catch (err: any) {
       errorToast(err.message, [], globalContext);
     } finally {
