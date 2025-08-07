@@ -420,8 +420,15 @@ const CreateConnectionForm = ({
           : stream.destinationSyncMode;
 
     if (!checked) {
-      stream.cursorField = '';
-      stream.primaryKey = [];
+      if (!stream.cursorFieldConfig.sourceDefinedCursor) {
+        // Reset to empty cursor field if not source-defined
+        stream.cursorField = '';
+      }
+
+      if (!stream.primaryKeyConfig.sourceDefinedPrimaryKey) {
+        // Reset primary key to empty array if not source-defined
+        stream.primaryKey = [];
+      }
     }
 
     updateThisStreamTo_(stream, {
