@@ -230,7 +230,7 @@ const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }
               Logs
               <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
             </ToggleButton>
-            {run.state_type === 'FAILED' && (
+            {(run.state_type === 'FAILED' || run.state_name === 'DBT_TEST_FAILED') && (
               <ToggleButton value="summary" aria-label="right" data-testid={`aisummary-${run.id}`}>
                 AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
@@ -294,8 +294,12 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
         sx={{
           position: 'relative',
           p: 2,
-
-          background: logDetail.status === 'FAILED' ? 'rgba(211, 47, 47, 0.2)' : 'unset',
+          background:
+            logDetail.status === 'FAILED'
+              ? 'rgba(211, 47, 47, 0.2)'
+              : logDetail.state_name === 'DBT_TEST_FAILED'
+                ? 'rgba(218, 134, 45, 0.2)'
+                : 'unset',
         }}
       >
         <TableCell
