@@ -92,6 +92,15 @@ enum ConnectionJobType {
   reset_connection = 'reset_connection',
 }
 
+type StreamStat = {
+  streamName: string;
+  recordsEmitted: number;
+  recordsCommitted: number;
+  bytesEmitted: number;
+  bytesCommitted: number;
+  wasResumed: boolean;
+  wasBackfilled: boolean;
+};
 interface ConnectionSyncJobObject {
   job_type: ConnectionJobType;
   last_attempt_no: number;
@@ -103,15 +112,7 @@ interface ConnectionSyncJobObject {
   status: string;
   duration_seconds: number;
   reset_config: any | null;
-  stream_stats: Array<{
-    streamName: string;
-    recordsEmitted: number;
-    recordsCommitted: number;
-    bytesEmitted: number;
-    bytesCommitted: number;
-    wasResumed: boolean;
-    wasBackfilled: boolean;
-  }>;
+  stream_stats: StreamStat[];
 }
 
 const LogsColumn = ({
@@ -167,7 +168,7 @@ const LogsColumn = ({
   );
 };
 
-const StreamStatsTable = ({ streamStats }: { streamStats: any[] }) => {
+const StreamStatsTable = ({ streamStats }: { streamStats: StreamStat[] }) => {
   return (
     <Box sx={{ p: 2, display: 'flex', width: '100%' }}>
       <Table
