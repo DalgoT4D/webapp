@@ -169,21 +169,30 @@ const LogsColumn = ({
 
 const StreamStatsTable = ({ streamStats }: { streamStats: any[] }) => {
   return (
-    <Box sx={{ p: 2, display: 'flex' }}>
-      <Table size="small" sx={{ width: 'auto', maxWidth: '600px' }}>
+    <Box sx={{ p: 2, display: 'flex', width: '100%' }}>
+      <Table
+        size="small"
+        sx={{
+          width: '100%',
+          border: '1px solid #ccc',
+          borderCollapse: 'collapse',
+          '& td, & th': {
+            border: '1px solid #ccc',
+            textAlign: 'center',
+          },
+        }}
+      >
         <TableHead>
           <TableRow>
-            <TableCell sx={{ fontWeight: 700, color: '#00897B', pr: 1 }}>Stream Name</TableCell>
-            <TableCell sx={{ fontWeight: 700, color: '#00897B', pl: 1 }}>
-              Records Committed
-            </TableCell>
+            <TableCell sx={{ fontWeight: 700, color: '#00897B' }}>Stream Name</TableCell>
+            <TableCell sx={{ fontWeight: 700, color: '#00897B' }}>Records Committed</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {streamStats.map((stream, index) => (
             <TableRow key={index}>
-              <TableCell sx={{ fontWeight: 500, pr: 5 }}>{stream.streamName}</TableCell>
-              <TableCell sx={{ fontWeight: 500, pl: 1 }}>
+              <TableCell sx={{ fontWeight: 500 }}>{stream.streamName}</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>
                 {stream.recordsCommitted.toLocaleString()}
               </TableCell>
             </TableRow>
