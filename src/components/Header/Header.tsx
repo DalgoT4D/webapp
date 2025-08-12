@@ -10,7 +10,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import CreateOrgForm from '../Org/CreateOrgForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { httpPost } from '@/helpers/http';
+import { httpPut } from '@/helpers/http';
 
 // assets
 import HamburgerIcon from '../../assets/icons/hamburger.svg';
@@ -85,12 +85,13 @@ export const Header = ({
     setAnchorEl(null);
   };
 
-  const handleDismissUrgent = async (notificationId: string) => {
+  const handleReadUrgent = async (notificationId: string) => {
     try {
-      await httpPost(session, 'notifications/urgent/dismiss', {
-        notification_id: notificationId,
+      await httpPut(session, `notifications/v1`, {
+        notification_ids: [notificationId],
+        read_status: true,
       });
-      mutateUrgent(); // Refresh the list after dismissing
+      mutateUrgent(); // Refresh the list after read
     } catch (err) {
       console.error('Failed to dismiss urgent notification:', err);
     }
@@ -369,7 +370,7 @@ export const Header = ({
               </Box>
 
               <IconButton
-                onClick={() => handleDismissUrgent(msg.id)}
+                onClick={() => handleReadUrgent(msg.id)}
                 sx={{ padding: '4px', color: '#B71C1C' }}
               >
                 <CloseIcon fontSize="small" />
