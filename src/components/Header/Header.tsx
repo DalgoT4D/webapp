@@ -327,7 +327,7 @@ export const Header = ({
             left: '50%',
             transform: 'translateX(-50%)',
             backgroundColor: '#ffffff',
-            border: '1px solid #B2DFDB',
+            border: '1px solid #FFCDD2',
             borderRadius: '8px',
             boxShadow: '0px 2px 8px rgba(0,0,0,0.15)',
             zIndex: 1300,
@@ -346,21 +346,21 @@ export const Header = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                backgroundColor: '#E0F2F1', // soft teal
-                border: '1px solid #B2DFDB', // light teal border
+                backgroundColor: '#FFEBEE',
+                border: '1px solid #FFCDD2',
                 borderRadius: '6px',
                 padding: '8px 12px',
                 gap: '8px',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                <ErrorOutline sx={{ color: '#004D40', mt: '2px' }} />
+                <ErrorOutline sx={{ color: '#B71C1C', mt: '2px' }} />
                 <Typography
                   sx={{
                     fontSize: '14px',
                     fontWeight: 500,
                     wordBreak: 'break-word',
-                    color: '#004D40', // dark teal text
+                    color: '#B71C1C', // dark teal text
                     flex: 1,
                   }}
                 >
@@ -370,7 +370,7 @@ export const Header = ({
 
               <IconButton
                 onClick={() => handleDismissUrgent(msg.id)}
-                sx={{ padding: '4px', color: '#004D40' }}
+                sx={{ padding: '4px', color: '#B71C1C' }}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
