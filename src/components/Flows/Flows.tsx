@@ -191,7 +191,7 @@ const Actions = memo(
       }
     };
     return (
-      <Box key={idx} sx={{ width: '200px' }}>
+      <Box key={idx} sx={{ width: '215px' }}>
         <Button
           variant="contained"
           color="info"
@@ -200,14 +200,14 @@ const Actions = memo(
             fontWeight: 600,
             marginRight: '5px',
           }}
-          disabled={tempSyncState || !!lock || !permissions.includes('can_view_pipeline')}
+          disabled={!permissions.includes('can_view_pipeline')}
           onClick={() => {
             setShowLogsDialog(true);
             setFlowLogs(flow);
             trackAmplitudeEvent('[last logs-flows] Button clicked');
           }}
         >
-          last logs
+          View History
         </Button>
         <>
           <Button
@@ -419,7 +419,7 @@ export const Flows = ({ flows, updateCrudVal, mutate, setSelectedFlowId }: Flows
           sx={{ display: 'flex', alignItems: 'center', alignContent: 'center' }}
         >
           <Image style={{ marginRight: 10 }} src={FlowIcon} alt="flow icon" />
-          <Typography variant="h6" fontWeight={700} width={200}>
+          <Typography variant="h6" fontWeight={700} width={250}>
             {`${flow.name}`}
           </Typography>
         </Box>,

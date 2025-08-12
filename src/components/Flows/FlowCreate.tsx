@@ -345,6 +345,7 @@ const FlowCreate = ({
                     render={({ field: { value, onChange } }) => (
                       <Stack direction={'row'} alignItems="center" gap={'10%'}>
                         <Switch
+                          data-testid="activeSwitch"
                           checked={value}
                           value={value}
                           onChange={(event, value) => {

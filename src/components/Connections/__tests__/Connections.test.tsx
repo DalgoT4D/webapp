@@ -10,6 +10,7 @@ import userEvent from '@testing-library/user-event';
 import { Dialog } from '@mui/material';
 import { lastRunTime } from '@/utils/common';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { AIRBYTE_JOB_STATUS_SUCCEEDED } from '@/config/constant';
 // const user = userEvent.setup();
 
 const pushMock = jest.fn();
@@ -61,7 +62,7 @@ describe('Connections Setup', () => {
       name: 'test-conn-1',
       source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
       destination: { name: 'postgres-1', destinationName: 'postgres' },
-      lastRun: { startTime: '1686937507', status: 'COMPLETED' },
+      lastRun: { startTime: '1686937507', status: AIRBYTE_JOB_STATUS_SUCCEEDED },
     },
     {
       name: 'test-conn-2',
@@ -74,7 +75,10 @@ describe('Connections Setup', () => {
       connectionId: 'test-conn-3',
       source: { name: 'MySurveyCTO', sourceName: 'surveyCTO' },
       destination: { name: 'postgres-1', destinationName: 'postgres' },
-      lastRun: { startTime: '025-02-27T01:22:08.639639+00:00', status: 'COMPLETED' },
+      lastRun: {
+        startTime: '025-02-27T01:22:08.639639+00:00',
+        status: AIRBYTE_JOB_STATUS_SUCCEEDED,
+      },
       lock: {
         status: 'queued',
         flowRunId: 'test-flow-run-id',
@@ -179,7 +183,9 @@ describe('Connections Setup', () => {
       } else {
         expect(connCells[2].textContent).toBe(
           lastRunTime(CONNECTIONS[i]['lastRun']['startTime']) +
-            (CONNECTIONS[i]['lastRun']['status'] === 'COMPLETED' ? 'success' : 'failed') +
+            (CONNECTIONS[i]['lastRun']['status'] === AIRBYTE_JOB_STATUS_SUCCEEDED
+              ? 'success'
+              : 'failed') +
             'View history'
         );
       }
