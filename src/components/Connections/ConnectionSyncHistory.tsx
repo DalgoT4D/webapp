@@ -429,19 +429,42 @@ const Row = ({
         </TableCell>
       </TableRow>
       <TableRow>
-        <TableCell colSpan={5} style={{ paddingBottom: 0, paddingTop: 0 }}>
-          <LogsColumn
-            logsLoading={detailedLogsLoading}
-            summarizedLogsLoading={summarizedLogsLoading}
-            logs={detailedLogs}
-            summarizedLogs={summarizedLogs}
-            action={action}
-          />
-          {showStreamStats &&
-            connectionSyncJob.stream_stats &&
-            connectionSyncJob.stream_stats.length > 0 && (
-              <StreamStatsTable streamStats={connectionSyncJob.stream_stats} />
-            )}
+        <TableCell colSpan={8} style={{ paddingBottom: 0, paddingTop: 0 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection:
+                action && showStreamStats && connectionSyncJob.stream_stats?.length > 0
+                  ? 'row'
+                  : 'column',
+              gap: action && showStreamStats && connectionSyncJob.stream_stats?.length > 0 ? 1 : 0,
+              width: '100%',
+            }}
+          >
+            <Box
+              sx={{
+                flex:
+                  action && showStreamStats && connectionSyncJob.stream_stats?.length > 0
+                    ? '7'
+                    : '1',
+              }}
+            >
+              <LogsColumn
+                logsLoading={detailedLogsLoading}
+                summarizedLogsLoading={summarizedLogsLoading}
+                logs={detailedLogs}
+                summarizedLogs={summarizedLogs}
+                action={action}
+              />
+            </Box>
+            {showStreamStats &&
+              connectionSyncJob.stream_stats &&
+              connectionSyncJob.stream_stats.length > 0 && (
+                <Box sx={{ flex: '3' }}>
+                  <StreamStatsTable streamStats={connectionSyncJob.stream_stats} />
+                </Box>
+              )}
+          </Box>
         </TableCell>
       </TableRow>
     </>
