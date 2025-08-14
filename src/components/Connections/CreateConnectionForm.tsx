@@ -438,9 +438,6 @@ const CreateConnectionForm = ({
     });
   };
   const setDestinationSyncMode = (value: string, stream: SourceStream) => {
-    if (value != 'append_dedup') {
-      stream.primaryKey = [];
-    }
     updateThisStreamTo_(stream, { ...stream, destinationSyncMode: value });
   };
 
