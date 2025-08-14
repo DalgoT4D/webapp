@@ -420,8 +420,15 @@ const CreateConnectionForm = ({
           : stream.destinationSyncMode;
 
     if (!checked) {
-      stream.cursorField = '';
-      stream.primaryKey = [];
+      if (!stream.cursorFieldConfig.sourceDefinedCursor) {
+        // Reset to empty cursor field if not source-defined
+        stream.cursorField = '';
+      }
+
+      if (!stream.primaryKeyConfig.sourceDefinedPrimaryKey) {
+        // Reset primary key to empty array if not source-defined
+        stream.primaryKey = [];
+      }
     }
 
     updateThisStreamTo_(stream, {
@@ -431,9 +438,6 @@ const CreateConnectionForm = ({
     });
   };
   const setDestinationSyncMode = (value: string, stream: SourceStream) => {
-    if (value != 'append_dedup') {
-      stream.primaryKey = [];
-    }
     updateThisStreamTo_(stream, { ...stream, destinationSyncMode: value });
   };
 
