@@ -136,8 +136,7 @@ describe('ManageNotifications Component - extended coverage', () => {
         id: 2,
         urgent: false,
         author: 'User',
-        message:
-          'This is a normal message with a long text to test truncation.',
+        message: 'This is a normal message with a long text to test truncation.',
         read_status: true,
         timestamp: new Date().toISOString(),
       },
@@ -215,8 +214,7 @@ describe('ManageNotifications Component - extended coverage', () => {
     // Look for "urgent" label, badge, or aria marker near the urgent item
     const row = screen.getByTestId('1-checkbox').closest('[role="row"], li, tr, div');
     const hasUrgent =
-      (row && within(row).queryByText(/urgent/i)) ||
-      screen.queryAllByText(/urgent/i).length > 0;
+      (row && within(row).queryByText(/urgent/i)) || screen.queryAllByText(/urgent/i).length > 0;
     expect(hasUrgent).toBeTruthy();
   });
 
@@ -226,15 +224,11 @@ describe('ManageNotifications Component - extended coverage', () => {
     // We verify both messages render, and optionally probe for status tags.
     expect(screen.getByText('Urgent message 1')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'This is a normal message with a long text to test truncation.'
-      )
+      screen.getByText('This is a normal message with a long text to test truncation.')
     ).toBeInTheDocument();
 
-    const unreadMarker =
-      screen.queryByText(/unread/i) || screen.queryByTestId('status-unread-1');
-    const readMarker =
-      screen.queryByText(/read/i) || screen.queryByTestId('status-read-2');
+    const unreadMarker = screen.queryByText(/unread/i) || screen.queryByTestId('status-unread-1');
+    const readMarker = screen.queryByText(/read/i) || screen.queryByTestId('status-read-2');
     expect(unreadMarker || readMarker).toBeTruthy();
   });
 
@@ -279,12 +273,7 @@ describe('ManageNotifications Component - extended coverage', () => {
     fireEvent.click(selectAll);
     expect(props.setCheckedRows).toHaveBeenLastCalledWith([1, 2]);
 
-    rerender(
-      <ManageNotifications
-        {...props}
-        checkedRows={[1, 2]}
-      />
-    );
+    rerender(<ManageNotifications {...props} checkedRows={[1, 2]} />);
     fireEvent.click(selectAll);
     expect(props.setCheckedRows).toHaveBeenLastCalledWith([]);
   });
@@ -319,9 +308,7 @@ describe('ManageNotifications Component - extended coverage', () => {
 
     render(<ManageNotifications {...defaultProps} />);
     // Should show empty state or not crash
-    const empty =
-      screen.queryByText(/no notifications/i) ||
-      screen.queryByTestId('empty-state');
+    const empty = screen.queryByText(/no notifications/i) || screen.queryByTestId('empty-state');
     expect(empty).toBeTruthy();
   });
 
@@ -336,9 +323,7 @@ describe('ManageNotifications Component - extended coverage', () => {
       fireEvent.click(expandBtn);
       // After expand, ensure full message is visible
       expect(
-        screen.getByText(
-          'This is a normal message with a long text to test truncation.'
-        )
+        screen.getByText('This is a normal message with a long text to test truncation.')
       ).toBeInTheDocument();
 
       const collapseBtn =
@@ -349,17 +334,13 @@ describe('ManageNotifications Component - extended coverage', () => {
         // After collapse, we still see the message in truncated form, but difficult to assert exact truncation.
         // At minimum, message still present.
         expect(
-          screen.getByText(
-            'This is a normal message with a long text to test truncation.'
-          )
+          screen.getByText('This is a normal message with a long text to test truncation.')
         ).toBeInTheDocument();
       }
     } else {
       // If no expand control exists, ensure message is present
       expect(
-        screen.getByText(
-          'This is a normal message with a long text to test truncation.'
-        )
+        screen.getByText('This is a normal message with a long text to test truncation.')
       ).toBeInTheDocument();
     }
   });

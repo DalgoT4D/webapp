@@ -193,7 +193,10 @@ describe('Header Component - additional scenarios', () => {
     unread_count: { state: 4, dispatch: jest.fn() },
   };
 
-  const renderWithCtx = (ctxOverrides: Partial<typeof baseGlobalContextMock> = {}, headerProps: Partial<React.ComponentProps<typeof Header>> = {}) => {
+  const renderWithCtx = (
+    ctxOverrides: Partial<typeof baseGlobalContextMock> = {},
+    headerProps: Partial<React.ComponentProps<typeof Header>> = {}
+  ) => {
     const ctx = {
       ...baseGlobalContextMock,
       ...ctxOverrides,
@@ -302,9 +305,7 @@ describe('Header Component - additional scenarios', () => {
   test('switching to the currently selected org does not dispatch a change (if guarded)', () => {
     // Assumption: CurrentOrg dispatch is called only when selecting a different org
     const currentOrgDispatch = jest.fn();
-    renderWithCtx(
-      { CurrentOrg: { dispatch: currentOrgDispatch } }
-    );
+    renderWithCtx({ CurrentOrg: { dispatch: currentOrgDispatch } });
 
     const profileIcon = screen.getByAltText('profile icon');
     fireEvent.click(profileIcon);
@@ -349,7 +350,7 @@ describe('Header Component - additional scenarios', () => {
     fireEvent.click(screen.getByText('Logout'));
 
     await waitFor(() => {
-      expect((signOut as jest.Mock)).toHaveBeenCalled();
+      expect(signOut as jest.Mock).toHaveBeenCalled();
     });
 
     // Unauthenticated case (should not have logout)
@@ -362,7 +363,7 @@ describe('Header Component - additional scenarios', () => {
     renderWithCtx();
 
     expect(screen.queryByText('Logout')).toBeNull();
-    expect((signOut as jest.Mock)).not.toHaveBeenCalled();
+    expect(signOut as jest.Mock).not.toHaveBeenCalled();
   });
 
   test('clicking hamburger toggles menu open via setOpenMenu(true)', () => {
