@@ -13,10 +13,20 @@ jest.mock('@/helpers/http');
 jest.mock('@/components/ToastMessage/ToastHelper');
 
 describe('PreferencesForm Component with Permissions', () => {
-  const mockPreferences = {
+  const mockUserPreferences = {
+    res: {
+      enable_email_notifications: true,
+      subscribe_incident_notifications: false,
+      subscribe_schema_change_notifications: false,
+      subscribe_job_failure_notifications: false,
+      subscribe_late_runs_notifications: false,
+      subscribe_dbt_test_failure_notifications: false,
+    },
+  };
+
+  const mockOrgPreferences = {
     res: {
       enable_discord_notifications: true,
-      enable_email_notifications: true,
       discord_webhook: 'https://discord.com/webhook/test',
     },
   };
@@ -41,7 +51,16 @@ describe('PreferencesForm Component with Permissions', () => {
   };
 
   beforeEach(() => {
-    (useSWR as jest.Mock).mockReturnValue({ data: mockPreferences, mutate: mockMutate });
+    // Mock useSWR to return different data based on the key
+    (useSWR as jest.Mock).mockImplementation((key) => {
+      if (key === 'userpreferences/') {
+        return { data: mockUserPreferences, mutate: mockMutate };
+      }
+      if (key === 'orgpreferences/') {
+        return { data: mockOrgPreferences, mutate: mockMutate };
+      }
+      return { data: null, mutate: mockMutate };
+    });
     (useSession as jest.Mock).mockReturnValue({ data: mockSession });
     jest.clearAllMocks();
   });
@@ -103,6 +122,11 @@ describe('PreferencesForm Component with Permissions', () => {
     await waitFor(() => {
       expect(httpPut).toHaveBeenCalledWith(mockSession, 'userpreferences/', {
         enable_email_notifications: true,
+        subscribe_incident_notifications: false,
+        subscribe_schema_change_notifications: false,
+        subscribe_job_failure_notifications: false,
+        subscribe_late_runs_notifications: false,
+        subscribe_dbt_test_failure_notifications: false,
       });
 
       expect(httpPut).toHaveBeenCalledWith(
@@ -138,6 +162,11 @@ describe('PreferencesForm Component with Permissions', () => {
     await waitFor(() => {
       expect(httpPut).toHaveBeenCalledWith(mockSession, 'userpreferences/', {
         enable_email_notifications: true,
+        subscribe_incident_notifications: false,
+        subscribe_schema_change_notifications: false,
+        subscribe_job_failure_notifications: false,
+        subscribe_late_runs_notifications: false,
+        subscribe_dbt_test_failure_notifications: false,
       });
 
       // Ensure org preferences API call is not made
@@ -187,10 +216,20 @@ describe('PreferencesForm Component with Permissions', () => {
 });
 
 describe('PreferencesForm additional scenarios', () => {
-  const basePreferences = {
+  const baseUserPreferences = {
+    res: {
+      enable_email_notifications: true,
+      subscribe_incident_notifications: false,
+      subscribe_schema_change_notifications: false,
+      subscribe_job_failure_notifications: false,
+      subscribe_late_runs_notifications: false,
+      subscribe_dbt_test_failure_notifications: false,
+    },
+  };
+
+  const baseOrgPreferences = {
     res: {
       enable_discord_notifications: true,
-      enable_email_notifications: true,
       discord_webhook: 'https://discord.com/webhook/test',
     },
   };
@@ -216,7 +255,15 @@ describe('PreferencesForm additional scenarios', () => {
   };
 
   beforeEach(() => {
-    (useSWR as jest.Mock).mockReturnValue({ data: basePreferences, mutate: mockMutate });
+    (useSWR as jest.Mock).mockImplementation((key) => {
+      if (key === 'userpreferences/') {
+        return { data: baseUserPreferences, mutate: mockMutate };
+      }
+      if (key === 'orgpreferences/') {
+        return { data: baseOrgPreferences, mutate: mockMutate };
+      }
+      return { data: null, mutate: mockMutate };
+    });
     (useSession as jest.Mock).mockReturnValue({ data: mockSession });
     jest.clearAllMocks();
   });
@@ -243,9 +290,14 @@ describe('PreferencesForm additional scenarios', () => {
       // Email notification turned off in payload
       expect(httpPut).toHaveBeenCalledWith(mockSession, 'userpreferences/', {
         enable_email_notifications: false,
+        subscribe_incident_notifications: false,
+        subscribe_schema_change_notifications: false,
+        subscribe_job_failure_notifications: false,
+        subscribe_late_runs_notifications: false,
+        subscribe_dbt_test_failure_notifications: false,
       });
 
-      // Org preferences still include original webhook and discord state (unchanged in this test)
+      // Org preferences still include original webhook and discord state
       expect(httpPut).toHaveBeenCalledWith(
         mockSession,
         'orgpreferences/enable-discord-notifications',
@@ -282,15 +334,21 @@ describe('PreferencesForm additional scenarios', () => {
       // Email call still made
       expect(httpPut).toHaveBeenCalledWith(mockSession, 'userpreferences/', {
         enable_email_notifications: true,
+        subscribe_incident_notifications: false,
+        subscribe_schema_change_notifications: false,
+        subscribe_job_failure_notifications: false,
+        subscribe_late_runs_notifications: false,
+        subscribe_dbt_test_failure_notifications: false,
       });
 
-      // Org preferences reflect discord disabled; webhook may be ignored or blank
+      // Org preferences reflect discord disabled with empty webhook
       expect(httpPut).toHaveBeenCalledWith(
         mockSession,
         'orgpreferences/enable-discord-notifications',
-        expect.objectContaining({
+        {
           enable_discord_notifications: false,
-        })
+          discord_webhook: '',
+        }
       );
 
       expect(successToast).toHaveBeenCalled();
@@ -345,24 +403,32 @@ describe('PreferencesForm additional scenarios', () => {
 
   test('handles undefined SWR data gracefully (no crash, fields present when data loads)', async () => {
     // Start with no data
-    (useSWR as jest.Mock).mockReturnValueOnce({ data: undefined, mutate: mockMutate });
+    (useSWR as jest.Mock).mockImplementation((key) => {
+      return { data: undefined, mutate: mockMutate };
+    });
 
-    render(
+    const { rerender } = render(
       <GlobalContext.Provider value={ctxWithPerms}>
         <PreferencesForm showForm={true} setShowForm={setShowForm} />
       </GlobalContext.Provider>
     );
 
-    // While data is undefined, component should render without crashing.
-    // Depending on implementation, fields might be absent or show defaults.
-    // We assert component does not crash and eventually renders expected fields when data appears.
+    // Component should render without crashing
     expect(screen.getByTestId('savebutton')).toBeInTheDocument();
 
-    // Simulate data arrival by re-rendering with data (common SWR pattern in tests)
-    (useSWR as jest.Mock).mockReturnValue({ data: basePreferences, mutate: mockMutate });
+    // Simulate data arrival
+    (useSWR as jest.Mock).mockImplementation((key) => {
+      if (key === 'userpreferences/') {
+        return { data: baseUserPreferences, mutate: mockMutate };
+      }
+      if (key === 'orgpreferences/') {
+        return { data: baseOrgPreferences, mutate: mockMutate };
+      }
+      return { data: null, mutate: mockMutate };
+    });
 
-    // Re-render
-    render(
+    // Re-render with data
+    rerender(
       <GlobalContext.Provider value={ctxWithPerms}>
         <PreferencesForm showForm={true} setShowForm={setShowForm} />
       </GlobalContext.Provider>
@@ -386,9 +452,13 @@ describe('PreferencesForm additional scenarios', () => {
     fireEvent.click(screen.getByTestId('savebutton'));
 
     await waitFor(() => {
-      // Depending on implementation, session might be required; this asserts the call shape remains consistent.
       expect(httpPut).toHaveBeenCalledWith(undefined, 'userpreferences/', {
         enable_email_notifications: true,
+        subscribe_incident_notifications: false,
+        subscribe_schema_change_notifications: false,
+        subscribe_job_failure_notifications: false,
+        subscribe_late_runs_notifications: false,
+        subscribe_dbt_test_failure_notifications: false,
       });
     });
   });
@@ -410,6 +480,11 @@ describe('PreferencesForm additional scenarios', () => {
     await waitFor(() => {
       expect(httpPut).toHaveBeenNthCalledWith(1, mockSession, 'userpreferences/', {
         enable_email_notifications: true,
+        subscribe_incident_notifications: false,
+        subscribe_schema_change_notifications: false,
+        subscribe_job_failure_notifications: false,
+        subscribe_late_runs_notifications: false,
+        subscribe_dbt_test_failure_notifications: false,
       });
 
       expect(httpPut).toHaveBeenNthCalledWith(
@@ -458,7 +533,6 @@ describe('PreferencesForm additional scenarios', () => {
 
     await waitFor(() => {
       expect(successToast).toHaveBeenCalled();
-      // Depending on implementation, mutate might be called once or multiple times.
       expect(mockMutate).toHaveBeenCalled();
     });
   });
@@ -474,9 +548,8 @@ describe('PreferencesForm additional scenarios', () => {
     fireEvent.click(discordSwitch); // disable discord
     expect(discordSwitch).not.toBeChecked();
 
-    const webhookInput = screen.getByLabelText('Discord Webhook*') as HTMLInputElement;
-    fireEvent.change(webhookInput, { target: { value: '' } });
-    expect(webhookInput).toHaveValue('');
+    // When discord is disabled, webhook input is hidden, so we can't clear it
+    // The component handles this by sending empty webhook when discord is disabled
 
     (httpPut as jest.Mock).mockResolvedValue({});
 
@@ -486,9 +559,10 @@ describe('PreferencesForm additional scenarios', () => {
       expect(httpPut).toHaveBeenCalledWith(
         mockSession,
         'orgpreferences/enable-discord-notifications',
-        expect.objectContaining({
+        {
           enable_discord_notifications: false,
-        })
+          discord_webhook: '', // Empty webhook when discord is disabled
+        }
       );
       expect(successToast).toHaveBeenCalled();
       expect(setShowForm).toHaveBeenCalledWith(false);
