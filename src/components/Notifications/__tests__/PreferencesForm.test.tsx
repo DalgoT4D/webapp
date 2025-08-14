@@ -1,3 +1,4 @@
+import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PreferencesForm from '../PreferencesForm';
 import useSWR from 'swr';
@@ -182,5 +183,315 @@ describe('PreferencesForm Component with Permissions', () => {
     fireEvent.click(cancelButton);
 
     expect(setShowForm).toHaveBeenCalledWith(false);
+  });
+});
+
+describe('PreferencesForm additional scenarios', () => {
+  const basePreferences = {
+    res: {
+      enable_discord_notifications: true,
+      enable_email_notifications: true,
+      discord_webhook: 'https://discord.com/webhook/test',
+    },
+  };
+
+  const mockSession = {
+    expires: '1',
+    user: { email: 'a@example.com' },
+  };
+
+  const mockMutate = jest.fn();
+  const setShowForm = jest.fn();
+
+  const ctxWithPerms = {
+    Permissions: {
+      state: ['can_edit_org_notification_settings'],
+    },
+  };
+
+  const ctxNoPerms = {
+    Permissions: {
+      state: [],
+    },
+  };
+
+  beforeEach(() => {
+    (useSWR as jest.Mock).mockReturnValue({ data: basePreferences, mutate: mockMutate });
+    (useSession as jest.Mock).mockReturnValue({ data: mockSession });
+    jest.clearAllMocks();
+  });
+
+  test('toggling email notifications updates payload accordingly', async () => {
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    const emailSwitch = screen.getByLabelText('Enable Email Notifications');
+    expect(emailSwitch).toBeChecked();
+
+    // Toggle off
+    fireEvent.click(emailSwitch);
+    expect(emailSwitch).not.toBeChecked();
+
+    (httpPut as jest.Mock).mockResolvedValue({});
+
+    fireEvent.click(screen.getByTestId('savebutton'));
+
+    await waitFor(() => {
+      // Email notification turned off in payload
+      expect(httpPut).toHaveBeenCalledWith(mockSession, 'userpreferences/', {
+        enable_email_notifications: false,
+      });
+
+      // Org preferences still include original webhook and discord state (unchanged in this test)
+      expect(httpPut).toHaveBeenCalledWith(
+        mockSession,
+        'orgpreferences/enable-discord-notifications',
+        {
+          enable_discord_notifications: true,
+          discord_webhook: 'https://discord.com/webhook/test',
+        }
+      );
+
+      expect(successToast).toHaveBeenCalled();
+      expect(setShowForm).toHaveBeenCalledWith(false);
+    });
+  });
+
+  test('toggling discord notifications off excludes webhook dependency and updates payload', async () => {
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    const discordSwitch = screen.getByLabelText('Enable Discord Notifications');
+    expect(discordSwitch).toBeChecked();
+
+    // Turn discord notifications off
+    fireEvent.click(discordSwitch);
+    expect(discordSwitch).not.toBeChecked();
+
+    (httpPut as jest.Mock).mockResolvedValue({});
+
+    fireEvent.click(screen.getByTestId('savebutton'));
+
+    await waitFor(() => {
+      // Email call still made
+      expect(httpPut).toHaveBeenCalledWith(mockSession, 'userpreferences/', {
+        enable_email_notifications: true,
+      });
+
+      // Org preferences reflect discord disabled; webhook may be ignored or blank
+      expect(httpPut).toHaveBeenCalledWith(
+        mockSession,
+        'orgpreferences/enable-discord-notifications',
+        expect.objectContaining({
+          enable_discord_notifications: false,
+        })
+      );
+
+      expect(successToast).toHaveBeenCalled();
+      expect(setShowForm).toHaveBeenCalledWith(false);
+    });
+  });
+
+  test('editing webhook value propagates to payload when user has permissions', async () => {
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    const webhookInput = screen.getByLabelText('Discord Webhook*') as HTMLInputElement;
+    expect(webhookInput).toHaveValue('https://discord.com/webhook/test');
+
+    fireEvent.change(webhookInput, { target: { value: 'https://discord.com/webhook/new' } });
+    expect(webhookInput).toHaveValue('https://discord.com/webhook/new');
+
+    (httpPut as jest.Mock).mockResolvedValue({});
+
+    fireEvent.click(screen.getByTestId('savebutton'));
+
+    await waitFor(() => {
+      expect(httpPut).toHaveBeenCalledWith(
+        mockSession,
+        'orgpreferences/enable-discord-notifications',
+        {
+          enable_discord_notifications: true,
+          discord_webhook: 'https://discord.com/webhook/new',
+        }
+      );
+      expect(successToast).toHaveBeenCalled();
+      expect(setShowForm).toHaveBeenCalledWith(false);
+    });
+  });
+
+  test('webhook input remains disabled for users without permissions even when toggled', () => {
+    render(
+      <GlobalContext.Provider value={ctxNoPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    const webhookInput = screen.getByLabelText('Discord Webhook*');
+    expect(webhookInput).toBeDisabled();
+
+    const discordSwitch = screen.getByLabelText('Enable Discord Notifications');
+    expect(discordSwitch).toBeDisabled();
+  });
+
+  test('handles undefined SWR data gracefully (no crash, fields present when data loads)', async () => {
+    // Start with no data
+    (useSWR as jest.Mock).mockReturnValueOnce({ data: undefined, mutate: mockMutate });
+
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    // While data is undefined, component should render without crashing.
+    // Depending on implementation, fields might be absent or show defaults.
+    // We assert component does not crash and eventually renders expected fields when data appears.
+    expect(screen.getByTestId('savebutton')).toBeInTheDocument();
+
+    // Simulate data arrival by re-rendering with data (common SWR pattern in tests)
+    (useSWR as jest.Mock).mockReturnValue({ data: basePreferences, mutate: mockMutate });
+
+    // Re-render
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    // Verify fields after data present
+    expect(screen.getByLabelText('Enable Email Notifications')).toBeInTheDocument();
+    expect(screen.getByLabelText('Enable Discord Notifications')).toBeInTheDocument();
+  });
+
+  test('missing session data does not cause crashes and still attempts user preferences with undefined session', async () => {
+    (useSession as jest.Mock).mockReturnValue({ data: undefined });
+    (httpPut as jest.Mock).mockResolvedValue({});
+
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    fireEvent.click(screen.getByTestId('savebutton'));
+
+    await waitFor(() => {
+      // Depending on implementation, session might be required; this asserts the call shape remains consistent.
+      expect(httpPut).toHaveBeenCalledWith(undefined, 'userpreferences/', {
+        enable_email_notifications: true,
+      });
+    });
+  });
+
+  test('when user preferences update succeeds but org preferences fails, shows error toast and does not close form', async () => {
+    // Setup httpPut to resolve first call (user) and reject second (org)
+    (httpPut as jest.Mock)
+      .mockResolvedValueOnce({}) // userpreferences
+      .mockRejectedValueOnce(new Error('Org update failed')); // orgpreferences
+
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    fireEvent.click(screen.getByTestId('savebutton'));
+
+    await waitFor(() => {
+      expect(httpPut).toHaveBeenNthCalledWith(1, mockSession, 'userpreferences/', {
+        enable_email_notifications: true,
+      });
+
+      expect(httpPut).toHaveBeenNthCalledWith(
+        2,
+        mockSession,
+        'orgpreferences/enable-discord-notifications',
+        {
+          enable_discord_notifications: true,
+          discord_webhook: 'https://discord.com/webhook/test',
+        }
+      );
+
+      expect(errorToast).toHaveBeenCalledWith('Org update failed', [], expect.any(Object));
+      expect(setShowForm).not.toHaveBeenCalledWith(false);
+    });
+  });
+
+  test('cancel after editing does not submit and keeps API untouched', () => {
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    const emailSwitch = screen.getByLabelText('Enable Email Notifications');
+    fireEvent.click(emailSwitch);
+    expect(emailSwitch).not.toBeChecked();
+
+    fireEvent.click(screen.getByTestId('cancelbutton'));
+
+    // No API calls made
+    expect(httpPut).not.toHaveBeenCalled();
+    // Form closed
+    expect(setShowForm).toHaveBeenCalledWith(false);
+  });
+
+  test('mutate is called after successful submission to refresh SWR cache', async () => {
+    (httpPut as jest.Mock).mockResolvedValue({});
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    fireEvent.click(screen.getByTestId('savebutton'));
+
+    await waitFor(() => {
+      expect(successToast).toHaveBeenCalled();
+      // Depending on implementation, mutate might be called once or multiple times.
+      expect(mockMutate).toHaveBeenCalled();
+    });
+  });
+
+  test('webhook can be cleared when discord notifications are disabled; payload should not require webhook', async () => {
+    render(
+      <GlobalContext.Provider value={ctxWithPerms}>
+        <PreferencesForm showForm={true} setShowForm={setShowForm} />
+      </GlobalContext.Provider>
+    );
+
+    const discordSwitch = screen.getByLabelText('Enable Discord Notifications');
+    fireEvent.click(discordSwitch); // disable discord
+    expect(discordSwitch).not.toBeChecked();
+
+    const webhookInput = screen.getByLabelText('Discord Webhook*') as HTMLInputElement;
+    fireEvent.change(webhookInput, { target: { value: '' } });
+    expect(webhookInput).toHaveValue('');
+
+    (httpPut as jest.Mock).mockResolvedValue({});
+
+    fireEvent.click(screen.getByTestId('savebutton'));
+
+    await waitFor(() => {
+      expect(httpPut).toHaveBeenCalledWith(
+        mockSession,
+        'orgpreferences/enable-discord-notifications',
+        expect.objectContaining({
+          enable_discord_notifications: false,
+        })
+      );
+      expect(successToast).toHaveBeenCalled();
+      expect(setShowForm).toHaveBeenCalledWith(false);
+    });
   });
 });
