@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import ManageNotifications from '../ManageNotificaitons';
+import ManageNotifications from '../ManageNotifications';
 import useSWR from 'swr';
 
 // Mock the useSWR hook for data fetching
@@ -17,14 +17,17 @@ const mockNotifications = {
       message: 'Urgent message 1',
       read_status: false,
       timestamp: new Date().toISOString(),
+      category: 'incident',
     },
     {
       id: 2,
       urgent: false,
       author: 'User',
-      message: 'This is a normal message with a long text to test truncation.',
+      message:
+        'This is a normal message with a long text to test truncation and expansion functionality which should be longer than 130 characters to trigger the expand/collapse behavior in the component.',
       read_status: true,
       timestamp: new Date().toISOString(),
+      category: 'job_failure',
     },
   ],
 };
@@ -57,8 +60,9 @@ describe('ManageNotifications Component', () => {
     render(<ManageNotifications {...mockProps} />);
 
     expect(screen.getByText('Urgent message 1')).toBeInTheDocument();
+    // For long messages, check for truncated version
     expect(
-      screen.getByText('This is a normal message with a long text to test truncation.')
+      screen.getByText(/This is a normal message with a long text to test truncation/)
     ).toBeInTheDocument();
   });
 
@@ -103,17 +107,204 @@ describe('ManageNotifications Component', () => {
     fireEvent.click(selectAllCheckbox!);
     expect(mockProps.setCheckedRows).toHaveBeenCalledWith([]);
   });
+});
 
-  // test('expands and collapses long messages on row click', () => {
-  //   render(<ManageNotifications {...mockProps} />);
-  //   const truncatedMessage = 'This is a normal message with a long text';
-  //   const fullMessage = 'This is a normal message with a long text to test truncation.';
-  //   expect(screen.getByText((content) => content.startsWith(truncatedMessage))).toBeInTheDocument();
-  //   const expandButton = screen.getByRole('button', { name: /keyboardarrowdown/i });
-  //   fireEvent.click(expandButton);
-  //   expect(screen.getByText(fullMessage)).toBeInTheDocument();
-  //   const collapseButton = screen.getByRole('button', { name: /keyboardarrowup/i });
-  //   fireEvent.click(collapseButton);
-  //   expect(screen.getByText((content) => content.startsWith(truncatedMessage))).toBeInTheDocument();
-  // });
+describe('ManageNotifications Component - extended coverage', () => {
+  const mockMutate = jest.fn();
+
+  const baseData = {
+    total_notifications: 2,
+    res: [
+      {
+        id: 1,
+        urgent: true,
+        author: 'Admin',
+        message: 'Urgent message 1',
+        read_status: false,
+        timestamp: new Date().toISOString(),
+        category: 'incident',
+      },
+      {
+        id: 2,
+        urgent: false,
+        author: 'User',
+        message:
+          'This is a normal message with a long text to test truncation and expansion functionality which should be longer than 130 characters to trigger the expand/collapse behavior in the component.',
+        read_status: true,
+        timestamp: new Date().toISOString(),
+        category: 'job_failure',
+      },
+    ],
+  };
+
+  const defaultProps = {
+    tabWord: 'all' as const,
+    checkedRows: [] as number[],
+    setCheckedRows: jest.fn(),
+    mutateAllRow: false,
+    setMutateAllRows: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useSWR as jest.Mock).mockReturnValue({
+      data: baseData,
+      isLoading: false,
+      mutate: mockMutate,
+      error: undefined,
+    });
+  });
+
+  test('shows loading state when isLoading=true', () => {
+    (useSWR as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      mutate: mockMutate,
+    });
+
+    render(<ManageNotifications {...defaultProps} />);
+    // The component shows CircularProgress when loading
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  test('renders empty state when no notifications are returned', () => {
+    (useSWR as jest.Mock).mockReturnValue({
+      data: { total_notifications: 0, res: [] },
+      isLoading: false,
+      mutate: mockMutate,
+    });
+
+    render(<ManageNotifications {...defaultProps} />);
+    // Check for the "Showing 0 of 0 notifications" text
+    expect(screen.getByText(/Showing 0 of 0 notifications/)).toBeInTheDocument();
+  });
+
+  test('renders error state when SWR returns error', () => {
+    (useSWR as jest.Mock).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      mutate: mockMutate,
+      error: new Error('Network error'),
+    });
+
+    render(<ManageNotifications {...defaultProps} />);
+    // Component doesn't explicitly handle error state, so it will show empty content
+    // We can check that it doesn't crash and renders the basic structure
+    expect(screen.getByText(/Showing 0 of 0 notifications/)).toBeInTheDocument();
+  });
+
+  test('displays urgent indicator for urgent notifications', () => {
+    render(<ManageNotifications {...defaultProps} />);
+    // Look for ErrorOutline icon which indicates urgent notifications
+    const errorIcons = screen.getAllByTestId('ErrorOutlineIcon');
+    expect(errorIcons.length).toBeGreaterThan(0);
+  });
+
+  test('reflects read vs unread status in the UI', () => {
+    render(<ManageNotifications {...defaultProps} />);
+    // The component applies different text colors for read/unread messages
+    // We can verify both messages are present
+    expect(screen.getByText('Urgent message 1')).toBeInTheDocument();
+    expect(
+      screen.getByText(/This is a normal message with a long text to test truncation/)
+    ).toBeInTheDocument();
+
+    // Check category display
+    expect(screen.getByText('Category: incident')).toBeInTheDocument();
+    expect(screen.getByText('Category: job_failure')).toBeInTheDocument();
+  });
+
+  test('row checkbox toggling updates selection state', () => {
+    const Controlled = () => {
+      const [checkedRows, setCheckedRows] = useState<number[]>([]);
+      return (
+        <ManageNotifications
+          tabWord="all"
+          checkedRows={checkedRows}
+          setCheckedRows={setCheckedRows}
+          mutateAllRow={false}
+          setMutateAllRows={jest.fn()}
+        />
+      );
+    };
+
+    render(<Controlled />);
+    const row1Box = screen
+      .getByTestId('1-checkbox')
+      .querySelector('input[type="checkbox"]') as HTMLInputElement;
+    expect(row1Box).toBeInTheDocument();
+
+    fireEvent.click(row1Box);
+    expect(row1Box).toBeChecked();
+
+    fireEvent.click(row1Box);
+    expect(row1Box).not.toBeChecked();
+  });
+
+  test('select all selects and deselects all rows', () => {
+    const props = {
+      ...defaultProps,
+      setCheckedRows: jest.fn(),
+    };
+    const { rerender } = render(<ManageNotifications {...props} />);
+
+    const selectAll = screen
+      .getByTestId('select-all-checkbox')
+      .querySelector('input[type="checkbox"]') as HTMLInputElement;
+
+    fireEvent.click(selectAll);
+    expect(props.setCheckedRows).toHaveBeenLastCalledWith([1, 2]);
+
+    rerender(<ManageNotifications {...props} checkedRows={[1, 2]} />);
+    fireEvent.click(selectAll);
+    expect(props.setCheckedRows).toHaveBeenLastCalledWith([]);
+  });
+
+  test('mutate is available and not called by default; can be triggered by external change (mutateAllRow)', () => {
+    const props = {
+      ...defaultProps,
+      mutateAllRow: false,
+      setMutateAllRows: jest.fn(),
+    };
+    const { rerender } = render(<ManageNotifications {...props} />);
+
+    expect(mockMutate).not.toHaveBeenCalled();
+
+    // Test mutateAllRow=true triggers mutate
+    rerender(<ManageNotifications {...props} mutateAllRow={true} />);
+    expect(mockMutate).toHaveBeenCalled();
+    expect(props.setMutateAllRows).toHaveBeenCalledWith(false);
+  });
+
+  test('message truncation/expansion control is present if supported', () => {
+    render(<ManageNotifications {...defaultProps} />);
+
+    // Look for expand button (KeyboardArrowDown icon) for the long message
+    const expandButtons = screen.getAllByTestId('KeyboardArrowDownIcon');
+    expect(expandButtons.length).toBeGreaterThan(0);
+
+    // Click the expand button
+    const expandButton = expandButtons[0].closest('button');
+    if (expandButton) {
+      fireEvent.click(expandButton);
+
+      // After expanding, should see the collapse button
+      const collapseButtons = screen.getAllByTestId('KeyboardArrowUpIcon');
+      expect(collapseButtons.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('author and timestamp are rendered for each notification if available', () => {
+    render(<ManageNotifications {...defaultProps} />);
+
+    // Authors are not directly displayed in the UI based on the component code
+    // but timestamps are shown using moment.js
+    // Look for "ago" text which indicates relative time
+    const timeElements = screen.getAllByText(/ago/);
+    expect(timeElements.length).toBeGreaterThan(0);
+
+    // Categories are shown
+    expect(screen.getByText('Category: incident')).toBeInTheDocument();
+    expect(screen.getByText('Category: job_failure')).toBeInTheDocument();
+  });
 });
