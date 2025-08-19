@@ -2,7 +2,7 @@ import styles from '@/styles/Home.module.css';
 import React, { useContext, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
 import { Box, Button, Tab, Tabs, Tooltip, Typography } from '@mui/material';
-import ManageNotifications from '@/components/Notifications/ManageNotificaitons';
+import ManageNotifications from '@/components/Notifications/ManageNotifications';
 import PreferencesForm from '@/components/Notifications/PreferencesForm';
 import useSWR from 'swr';
 import SettingsIcon from '@mui/icons-material/Settings';

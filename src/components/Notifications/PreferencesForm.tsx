@@ -19,6 +19,9 @@ type PreferencesFormInput = {
   enable_email_notifications: boolean;
   enable_discord_notifications: boolean;
   discord_webhook: string;
+  subscribe_schema_change_notifications: boolean;
+  subscribe_job_failure_notifications: boolean;
+  subscribe_dbt_test_failure_notifications: boolean;
 };
 
 const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
@@ -41,6 +44,18 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
   useEffect(() => {
     if (preferences && showForm) {
       setValue('enable_email_notifications', preferences.res.enable_email_notifications || false);
+      setValue(
+        'subscribe_schema_change_notifications',
+        preferences.res.subscribe_schema_change_notifications || false
+      );
+      setValue(
+        'subscribe_job_failure_notifications',
+        preferences.res.subscribe_job_failure_notifications || false
+      );
+      setValue(
+        'subscribe_dbt_test_failure_notifications',
+        preferences.res.subscribe_dbt_test_failure_notifications || false
+      );
     }
     if (orgPreferences && showForm) {
       setValue(
@@ -114,6 +129,42 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
             name="discord_webhook"
           />
         )}
+        <Box sx={{ mt: 4 }}>
+          <Box sx={{ fontWeight: 600, mb: 1, fontSize: '1rem' }}>Category Subscriptions</Box>
+
+          <Controller
+            name="subscribe_schema_change_notifications"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={<Switch {...field} checked={field.value} />}
+                label="Schema Change Notifications"
+              />
+            )}
+          />
+
+          <Controller
+            name="subscribe_job_failure_notifications"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={<Switch {...field} checked={field.value} />}
+                label="Job Failure Notifications"
+              />
+            )}
+          />
+
+          <Controller
+            name="subscribe_dbt_test_failure_notifications"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={<Switch {...field} checked={field.value} />}
+                label="dbt Test Failure Notifications"
+              />
+            )}
+          />
+        </Box>
       </Box>
     </>
   );
@@ -125,6 +176,9 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
       // Update user preferences (email notifications)
       await httpPut(session, 'userpreferences/', {
         enable_email_notifications: values.enable_email_notifications,
+        subscribe_schema_change_notifications: values.subscribe_schema_change_notifications,
+        subscribe_job_failure_notifications: values.subscribe_job_failure_notifications,
+        subscribe_dbt_test_failure_notifications: values.subscribe_dbt_test_failure_notifications,
       });
 
       // Update org preferences (Discord settings) only if the user has permission
