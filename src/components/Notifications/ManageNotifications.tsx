@@ -35,8 +35,8 @@ const categoryOptions = [
   { label: 'Incident', value: 'incident' },
   { label: 'Schema Change', value: 'schema_change' },
   { label: 'Job Failure', value: 'job_failure' },
-  { label: 'Late Run', value: 'late_run' },
-  { label: 'dbt Test Failure', value: 'dbt_test_failure' },
+  { label: 'DBT Test Failure', value: 'dbt_test_failure' },
+  { label: 'Maintenance', value: 'maintenance' },
 ];
 
 const ManageNotifications = ({

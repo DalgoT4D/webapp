@@ -19,10 +19,8 @@ type PreferencesFormInput = {
   enable_email_notifications: boolean;
   enable_discord_notifications: boolean;
   discord_webhook: string;
-  subscribe_incident_notifications: boolean;
   subscribe_schema_change_notifications: boolean;
   subscribe_job_failure_notifications: boolean;
-  subscribe_late_runs_notifications: boolean;
   subscribe_dbt_test_failure_notifications: boolean;
 };
 
@@ -47,20 +45,12 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
     if (preferences && showForm) {
       setValue('enable_email_notifications', preferences.res.enable_email_notifications || false);
       setValue(
-        'subscribe_incident_notifications',
-        preferences.res.subscribe_incident_notifications || false
-      );
-      setValue(
         'subscribe_schema_change_notifications',
         preferences.res.subscribe_schema_change_notifications || false
       );
       setValue(
         'subscribe_job_failure_notifications',
         preferences.res.subscribe_job_failure_notifications || false
-      );
-      setValue(
-        'subscribe_late_runs_notifications',
-        preferences.res.subscribe_late_runs_notifications || false
       );
       setValue(
         'subscribe_dbt_test_failure_notifications',
@@ -143,17 +133,6 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
           <Box sx={{ fontWeight: 600, mb: 1, fontSize: '1rem' }}>Category Subscriptions</Box>
 
           <Controller
-            name="subscribe_incident_notifications"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={<Switch {...field} checked={field.value} />}
-                label="Incident Notifications"
-              />
-            )}
-          />
-
-          <Controller
             name="subscribe_schema_change_notifications"
             control={control}
             render={({ field }) => (
@@ -171,17 +150,6 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
               <FormControlLabel
                 control={<Switch {...field} checked={field.value} />}
                 label="Job Failure Notifications"
-              />
-            )}
-          />
-
-          <Controller
-            name="subscribe_late_runs_notifications"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={<Switch {...field} checked={field.value} />}
-                label="Late Runs Notifications"
               />
             )}
           />
@@ -208,10 +176,8 @@ const PreferencesForm = ({ showForm, setShowForm }: PreferencesFormProps) => {
       // Update user preferences (email notifications)
       await httpPut(session, 'userpreferences/', {
         enable_email_notifications: values.enable_email_notifications,
-        subscribe_incident_notifications: values.subscribe_incident_notifications,
         subscribe_schema_change_notifications: values.subscribe_schema_change_notifications,
         subscribe_job_failure_notifications: values.subscribe_job_failure_notifications,
-        subscribe_late_runs_notifications: values.subscribe_late_runs_notifications,
         subscribe_dbt_test_failure_notifications: values.subscribe_dbt_test_failure_notifications,
       });
 
