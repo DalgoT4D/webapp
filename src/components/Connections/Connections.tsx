@@ -715,7 +715,7 @@ export const Connections = () => {
           <Typography variant="body1" fontWeight={600}>
             {connection.name}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, maxWidth: '300px' }}>
             {connection.description}
           </Typography>
         </Box>
