@@ -60,7 +60,7 @@ export const getSideMenu = ({ transformType }: { transformType: string }) => {
       path: '/pipeline',
       icon: (selected: boolean) => <PipelineIcon fill={getColor(selected)} />,
       className: 'pipeline_walkthrough',
-      permission: 'can_view_dashboard',
+      permission: 'can_view_pipeline_overview',
     },
 
     {
