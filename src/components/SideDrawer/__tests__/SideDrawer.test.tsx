@@ -23,7 +23,7 @@ jest.mock('next/router', () => ({
 }));
 
 const mockGlobalContextValue: any = {
-  Permissions: { state: ['permission1', 'can_view_dashboard'] },
+  Permissions: { state: ['permission1', 'can_view_pipeline_overview'] },
   CurrentOrg: { state: { is_demo: true } },
   UnsavedChanges: { state: false },
 };
