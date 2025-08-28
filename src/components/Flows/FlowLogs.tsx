@@ -294,12 +294,11 @@ const Row = ({ logDetail }: { logDetail: DeploymentObject }) => {
         sx={{
           position: 'relative',
           p: 2,
-          background:
-            logDetail.status === 'FAILED'
-              ? 'rgba(211, 47, 47, 0.2)'
-              : logDetail.state_name === 'DBT_TEST_FAILED'
-                ? 'rgba(218, 134, 45, 0.2)'
-                : 'unset',
+          background: ['FAILED', 'CRASHED'].includes(logDetail.status)
+            ? 'rgba(211, 47, 47, 0.2)'
+            : logDetail.state_name === 'DBT_TEST_FAILED'
+              ? 'rgba(218, 134, 45, 0.2)'
+              : 'unset',
         }}
       >
         <TableCell
