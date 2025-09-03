@@ -141,6 +141,13 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const permissions = globalContext?.Permissions.state || [];
   // handle drawer expand and collapse
 
+  const [hideSideDrawer, setHideSideDrawer] = useState(false);
+  useEffect(() => {
+    if (window.self !== window.top) {
+      setHideSideDrawer(true);
+    }
+  }, []);
+
   const handleCollpaseArrowClick = (idx: number) => {
     const newOpen = [...open];
     newOpen[idx] = !newOpen[idx];
@@ -283,119 +290,121 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
     </List>
   );
   return (
-    <Drawer
-      PaperProps={{
-        sx: { border: 'none' },
-      }}
-      sx={{
-        '& .MuiDrawer-paper': {
-          display: 'flex',
-          justifyContent: 'space-between',
-          paddingTop: 7,
-        },
-      }}
-      open={openMenu}
-      variant="permanent"
-    >
-      {loading ? <CircularProgress /> : getList}
-      {openMenu && (
-        <Box
-          sx={{
-            position: 'relative',
-            bottom: 0,
-            paddingBottom: 4,
-            width: drawerWidth,
-          }}
-        >
-          <Link href="https://dalgot4d.github.io/dalgo_docs/" target="_blank">
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Typography data-testid="documentation" sx={{ paddingRight: 1 }}>
-                Documentation
-              </Typography>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="16"
-                viewBox="0 0 24 24"
-                width="16"
-                fill="currentColor"
+    !hideSideDrawer && (
+      <Drawer
+        PaperProps={{
+          sx: { border: 'none' },
+        }}
+        sx={{
+          '& .MuiDrawer-paper': {
+            display: 'flex',
+            justifyContent: 'space-between',
+            paddingTop: 7,
+          },
+        }}
+        open={openMenu}
+        variant="permanent"
+      >
+        {loading ? <CircularProgress /> : getList}
+        {openMenu && (
+          <Box
+            sx={{
+              position: 'relative',
+              bottom: 0,
+              paddingBottom: 4,
+              width: drawerWidth,
+            }}
+          >
+            <Link href="https://dalgot4d.github.io/dalgo_docs/" target="_blank">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                <path d="M0 0h24v24H0z" fill="none" />
-                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
-              </svg>
-            </Box>
-          </Link>
-          <Link href="https://dalgo.org/privacy-policy/" target="_blank">
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginTop: 1,
-              }}
-            >
-              <Typography data-testid="privacypolicy" sx={{ paddingRight: 1 }}>
-                Privacy Policy
-              </Typography>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                height="16"
-                viewBox="0 0 24 24"
-                width="16"
-                fill="currentColor"
+                <Typography data-testid="documentation" sx={{ paddingRight: 1 }}>
+                  Documentation
+                </Typography>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  fill="currentColor"
+                >
+                  <path d="M0 0h24v24H0z" fill="none" />
+                  <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+                </svg>
+              </Box>
+            </Link>
+            <Link href="https://dalgo.org/privacy-policy/" target="_blank">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: 1,
+                }}
               >
-                <path d="M0 0h24v24H0z" fill="none" />
-                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
-              </svg>
-            </Box>
-          </Link>
-        </Box>
-      )}
-      {globalContext?.CurrentOrg.state.is_demo && demoProductWalkthrough && (
-        <ProductWalk
-          run={runWalkThrough}
-          setRun={setRunWalkThrough}
-          steps={[
-            {
-              target: '.ingest_walkthrough',
-              body: 'Start by clicking here',
-            },
-            {
-              target: '.warehouse_walkthrough',
-              body: 'Your Postgres Warehouse is already set up here',
-            },
-            {
-              target: '.sources_walkthrough',
-              body: 'You will not be able to add new sources here. You will be able to choose from the available sources only',
-            },
-            {
-              target: '.connections_walkthrough',
-              body: 'Click the add button to create a new Connection',
-            },
-            {
-              target: '.transform_walkthrough',
-              body: 'Proceed to the transform page where we have set up your transformations that will help you build your dashboards',
-            },
-            {
-              target: '.orchestrate_walkthrough',
-              body: 'Proceed to the orchestrate page to setup your pipelines',
-            },
-            {
-              target: '.pipelineadd_walkthrough',
-              body: 'Click here to add a new pipeline',
-            },
-            {
-              target: '.analysis_walkthrough',
-              body: 'Click here to view your dashboard(s) and create new ones',
-            },
-          ]}
-        />
-      )}
-    </Drawer>
+                <Typography data-testid="privacypolicy" sx={{ paddingRight: 1 }}>
+                  Privacy Policy
+                </Typography>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  fill="currentColor"
+                >
+                  <path d="M0 0h24v24H0z" fill="none" />
+                  <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+                </svg>
+              </Box>
+            </Link>
+          </Box>
+        )}
+        {globalContext?.CurrentOrg.state.is_demo && demoProductWalkthrough && (
+          <ProductWalk
+            run={runWalkThrough}
+            setRun={setRunWalkThrough}
+            steps={[
+              {
+                target: '.ingest_walkthrough',
+                body: 'Start by clicking here',
+              },
+              {
+                target: '.warehouse_walkthrough',
+                body: 'Your Postgres Warehouse is already set up here',
+              },
+              {
+                target: '.sources_walkthrough',
+                body: 'You will not be able to add new sources here. You will be able to choose from the available sources only',
+              },
+              {
+                target: '.connections_walkthrough',
+                body: 'Click the add button to create a new Connection',
+              },
+              {
+                target: '.transform_walkthrough',
+                body: 'Proceed to the transform page where we have set up your transformations that will help you build your dashboards',
+              },
+              {
+                target: '.orchestrate_walkthrough',
+                body: 'Proceed to the orchestrate page to setup your pipelines',
+              },
+              {
+                target: '.pipelineadd_walkthrough',
+                body: 'Click here to add a new pipeline',
+              },
+              {
+                target: '.analysis_walkthrough',
+                body: 'Click here to view your dashboard(s) and create new ones',
+              },
+            ]}
+          />
+        )}
+      </Drawer>
+    )
   );
 };
