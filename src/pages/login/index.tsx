@@ -21,6 +21,7 @@ import Input from '@/components/UI/Input/Input';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { PageHead } from '@/components/PageHead';
+import { getEmbeddedAuth, isEmbedded } from '@/middleware/embeddedAuth';
 
 export const Login = () => {
   const {
@@ -49,7 +50,15 @@ export const Login = () => {
       callbackUrl: '/',
     });
     if (res.ok) {
-      router.push('/pipeline');
+      // Check if we're in embedded mode and redirect accordingly
+      const embeddedAuth = getEmbeddedAuth();
+      if (embeddedAuth && embeddedAuth.isEmbedded) {
+        // In embedded mode, redirect to ingest page
+        router.push('/pipeline/ingest?tab=connections');
+      } else {
+        // Normal mode, redirect to pipeline overview
+        router.push('/pipeline');
+      }
       successToast('User logged in successfully', [], context);
     } else {
       errorToast(res.error, [], context);
@@ -57,8 +66,17 @@ export const Login = () => {
     setWaitForLogin(false);
   };
 
+  // Simple redirect if already logged in
   if (session?.user?.token) {
-    router.push('/');
+    // Check if we're in embedded mode and redirect accordingly
+    const embeddedAuth = getEmbeddedAuth();
+    if (embeddedAuth && embeddedAuth.isEmbedded) {
+      // In embedded mode, redirect to ingest page
+      router.push('/pipeline/ingest?tab=connections');
+    } else {
+      // Normal mode, redirect to home
+      router.push('/');
+    }
   }
 
   return (
