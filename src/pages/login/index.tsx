@@ -13,7 +13,7 @@ import { useForm } from 'react-hook-form';
 
 import styles from '@/styles/Login.module.css';
 import { useRouter } from 'next/router';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
@@ -41,6 +41,40 @@ export const Login = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [waitForLogin, setWaitForLogin] = useState(false);
 
+  // Capture embedded state from URL, referrer, or iframe detection on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const embedded = urlParams.get('embedded');
+    const hide = urlParams.get('hide');
+
+    // Check if we have embedded params in URL
+    if (embedded === 'true') {
+      sessionStorage.setItem('isEmbedded', 'true');
+      if (hide) {
+        sessionStorage.setItem('embeddedHide', hide);
+      }
+      console.log('Login page: Stored embedded state from URL', { embedded, hide });
+    } else {
+      // Check if we're in an iframe
+      const isInIframe = window !== window.parent;
+      if (isInIframe) {
+        sessionStorage.setItem('isEmbedded', 'true');
+        sessionStorage.setItem('embeddedHide', 'true'); // Default to hiding sidebar in iframe
+        console.log('Login page: Detected iframe, setting embedded state');
+      } else {
+        // Check if we came from an embedded page (referrer contains embedded=true)
+        const referrer = document.referrer;
+        if (referrer && referrer.includes('embedded=true')) {
+          sessionStorage.setItem('isEmbedded', 'true');
+          if (referrer.includes('hide=true')) {
+            sessionStorage.setItem('embeddedHide', 'true');
+          }
+          console.log('Login page: Detected embedded state from referrer', referrer);
+        }
+      }
+    }
+  }, []);
+
   const onSubmit = async (reqData: any) => {
     setWaitForLogin(true);
     const res: any = await signIn('credentials', {
@@ -52,9 +86,16 @@ export const Login = () => {
     if (res.ok) {
       // Check if we're in embedded mode and redirect accordingly
       const embeddedAuth = getEmbeddedAuth();
-      if (embeddedAuth && embeddedAuth.isEmbedded) {
-        // In embedded mode, redirect to ingest page
-        router.push('/pipeline/ingest?tab=connections');
+      const isEmbeddedSession = sessionStorage.getItem('isEmbedded') === 'true';
+      const hideParam = sessionStorage.getItem('embeddedHide');
+
+      if ((embeddedAuth && embeddedAuth.isEmbedded) || isEmbeddedSession) {
+        // In embedded mode, redirect to ingest page with hide parameter if it was set
+        const redirectUrl =
+          hideParam === 'true'
+            ? '/pipeline/ingest?tab=connections&hide=true'
+            : '/pipeline/ingest?tab=connections';
+        router.push(redirectUrl);
       } else {
         // Normal mode, redirect to pipeline overview
         router.push('/pipeline');
@@ -70,9 +111,16 @@ export const Login = () => {
   if (session?.user?.token) {
     // Check if we're in embedded mode and redirect accordingly
     const embeddedAuth = getEmbeddedAuth();
-    if (embeddedAuth && embeddedAuth.isEmbedded) {
-      // In embedded mode, redirect to ingest page
-      router.push('/pipeline/ingest?tab=connections');
+    const isEmbeddedSession = sessionStorage.getItem('isEmbedded') === 'true';
+    const hideParam = sessionStorage.getItem('embeddedHide');
+
+    if ((embeddedAuth && embeddedAuth.isEmbedded) || isEmbeddedSession) {
+      // In embedded mode, redirect to ingest page with hide parameter if it was set
+      const redirectUrl =
+        hideParam === 'true'
+          ? '/pipeline/ingest?tab=connections&hide=true'
+          : '/pipeline/ingest?tab=connections';
+      router.push(redirectUrl);
     } else {
       // Normal mode, redirect to home
       router.push('/');
