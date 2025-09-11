@@ -55,7 +55,7 @@ describe('GenericSqlOpForm', () => {
 
   it('renders the form', () => {
     render(<GenericSqlOpForm {...defaultProps} />);
-    expect(screen.getByText('SELECT*')).toBeInTheDocument();
+    expect(screen.getByText('SELECT')).toBeInTheDocument();
     expect(screen.getByText('FROM Test Input Model')).toBeInTheDocument();
   });
 

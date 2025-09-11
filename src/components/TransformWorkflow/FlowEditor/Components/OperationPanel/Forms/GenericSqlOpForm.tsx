@@ -131,7 +131,7 @@ const GenericSqlOpForm = ({
       <form onSubmit={handleSubmit(handleSave)}>
         <Box sx={{ padding: '32px 16px 0px 16px' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <FormLabel sx={{ mr: 1, color: 'black' }}>SELECT*</FormLabel>
+            <FormLabel sx={{ mr: 1, color: 'black' }}>SELECT</FormLabel>
             <Box sx={{ display: 'inline-block' }}>
               <InfoTooltip title={'Output if all values in a row are null'} />
             </Box>
