@@ -33,7 +33,7 @@ export const Explore = () => {
 
   const fetchSourcesModels = () => {
     setLoading(true);
-    httpGet(session, 'warehouse/sync_tables')
+    httpGet(session, 'warehouse/sync_tables?fresh=1')
       .then((response: WarehouseTable[]) => {
         response.sort((a, b) => {
           //Comparing schemas
