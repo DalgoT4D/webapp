@@ -135,7 +135,6 @@ export const DBTSetup = ({
   const createWorkspace = async (data: DBTCreateWorkspaceParams) => {
     const payload = {
       gitrepoUrl: data.gitrepoUrl,
-      dbtVersion: '1.4.5',
       profile: {
         name: 'dbt',
         target_configs_schema: data.schema,
