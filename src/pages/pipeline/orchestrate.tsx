@@ -116,6 +116,16 @@ export default function Orchestrate() {
             tasks={tasks}
           />
         )}
+        {crudVal === 'read' && (
+          <FlowCreate
+            setSelectedFlowId={setSelectedFlowId}
+            flowId={selectedFlowId}
+            updateCrudVal={updateCrudVal}
+            mutate={mutate}
+            tasks={tasks}
+            readonly={true}
+          />
+        )}
       </main>
     </>
   );
