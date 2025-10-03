@@ -34,8 +34,8 @@ import { errorToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import InsightsIcon from '@mui/icons-material/Insights';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import useSWR from 'swr';
 import { useTracking } from '@/contexts/TrackingContext';
+import { useFeatureFlags, FeatureFlagKeys } from '@/customHooks/useFeatureFlags';
 
 const fetchAirbyteSyncs = async (connectionId: string, session: any, offset = 0) => {
   try {
@@ -381,7 +381,7 @@ export const ConnectionSyncHistory: React.FC<ConnectionSyncHistoryProps> = ({
   connection,
 }) => {
   const { data: session }: any = useSession();
-  const { data: flags } = useSWR('organizations/flags');
+  const { isFeatureFlagEnabled } = useFeatureFlags();
   const [connectionSyncJobs, setConnectionSyncJobs] = useState<ConnectionSyncJobObject[]>([]);
   const [offset, setOffset] = useState(defaultLoadMoreLimit);
   const [totalSyncs, setTotalSyncs] = useState(0);
@@ -470,7 +470,7 @@ export const ConnectionSyncHistory: React.FC<ConnectionSyncHistoryProps> = ({
             <TableBody>
               {connectionSyncJobs.map((connectionSyncJob) => (
                 <Row
-                  allowLogsSummary={!!flags?.allowLogsSummary}
+                  allowLogsSummary={isFeatureFlagEnabled(FeatureFlagKeys.LOG_SUMMARIZATION)}
                   key={connectionSyncJob.job_id}
                   connectionSyncJob={connectionSyncJob}
                   connectionId={connection?.connectionId ? connection.connectionId : ''}
