@@ -18,6 +18,7 @@ import MuiDrawer from '@mui/material/Drawer';
 import { styled, Theme, CSSObject } from '@mui/material/styles';
 
 import { drawerWidth, getSideMenu } from '@/config/menu';
+import { useFeatureFlags } from '@/customHooks/useFeatureFlags';
 
 // assets
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
@@ -127,8 +128,9 @@ export const SideDrawer = ({ openMenu, setOpenMenu }: any) => {
   const router = useRouter();
   const globalContext = useContext(GlobalContext);
   const { data: session } = useSession();
+  const { isFeatureFlagEnabled } = useFeatureFlags();
   const [transformType, setTransformType] = useState<any>('');
-  const sideMenu: MenuOption[] = getSideMenu({ transformType });
+  const sideMenu: MenuOption[] = getSideMenu({ transformType, isFeatureFlagEnabled });
   const { state } = globalContext?.UnsavedChanges ?? {};
   const [open, setOpen] = useState(
     new Array(sideMenu.filter((item) => !item.parent).length).fill(false)

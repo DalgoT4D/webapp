@@ -12,14 +12,18 @@ import Settings from '@/assets/icons/settings';
 import User from '@/assets/icons/manage_accounts';
 import AiSettings from '@/assets/icons/aisettings';
 import { fetchTransformType } from '@/pages/pipeline/transform';
-import { FeatureFlagKeys, useFeatureFlags } from '@/customHooks/useFeatureFlags';
+import { FeatureFlagKeys } from '@/customHooks/useFeatureFlags';
 export const drawerWidth = 250;
 
 const getColor = (selected: boolean) => (selected ? primaryColor : '');
 
-export const getSideMenu = ({ transformType }: { transformType: string }) => {
-  const { isFeatureFlagEnabled } = useFeatureFlags();
-
+export const getSideMenu = ({
+  transformType,
+  isFeatureFlagEnabled,
+}: {
+  transformType: string;
+  isFeatureFlagEnabled: (flag: FeatureFlagKeys) => boolean;
+}) => {
   return [
     // This will be added at a later stage
     {
