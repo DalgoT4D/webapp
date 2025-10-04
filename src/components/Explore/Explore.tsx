@@ -15,6 +15,7 @@ import { NodeApi } from 'react-arborist';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { FeatureFlagKeys, useFeatureFlags } from '@/customHooks/useFeatureFlags';
 
 export const Explore = () => {
   const { data: session } = useSession();
@@ -28,6 +29,8 @@ export const Explore = () => {
 
   const [height, setheight] = useState(500);
   const [sourceModels, setSourcesModels] = useState<WarehouseTable[]>([]);
+
+  const { isFeatureFlagEnabled } = useFeatureFlags();
 
   const { setPreviewAction } = usePreviewAction();
 
@@ -142,7 +145,9 @@ export const Explore = () => {
                 >
                   <Tab label="Preview" value="preview" />
 
-                  <Tab label="Data statistics" value="statistics" />
+                  {isFeatureFlagEnabled(FeatureFlagKeys.DATA_STATISTICS) && (
+                    <Tab label="Data statistics" value="statistics" />
+                  )}
                 </Tabs>
               </Box>
               <Box>

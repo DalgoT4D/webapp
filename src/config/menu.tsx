@@ -11,18 +11,19 @@ import { primaryColor } from './theme';
 import Settings from '@/assets/icons/settings';
 import User from '@/assets/icons/manage_accounts';
 import AiSettings from '@/assets/icons/aisettings';
-import {
-  showDataAnalysisTab,
-  showElementaryMenu,
-  showSupersetAnalysisTab,
-  showSupersetUsageTab,
-} from './constant';
 import { fetchTransformType } from '@/pages/pipeline/transform';
+import { FeatureFlagKeys } from '@/customHooks/useFeatureFlags';
 export const drawerWidth = 250;
 
 const getColor = (selected: boolean) => (selected ? primaryColor : '');
 
-export const getSideMenu = ({ transformType }: { transformType: string }) => {
+export const getSideMenu = ({
+  transformType,
+  isFeatureFlagEnabled,
+}: {
+  transformType: string;
+  isFeatureFlagEnabled: (flag: FeatureFlagKeys) => boolean;
+}) => {
   return [
     // This will be added at a later stage
     {
@@ -32,7 +33,7 @@ export const getSideMenu = ({ transformType }: { transformType: string }) => {
       icon: (selected: boolean) => <AnalysisIcon fill={getColor(selected)} />,
       className: 'analysis_walkthrough',
       minimize: false,
-      hide: !showSupersetAnalysisTab,
+      hide: !isFeatureFlagEnabled(FeatureFlagKeys.EMBED_SUPERSET),
     },
     {
       index: 0.1,
@@ -42,7 +43,7 @@ export const getSideMenu = ({ transformType }: { transformType: string }) => {
       parent: 0,
       className: 'usage_walkthrough',
       minimize: false,
-      hide: !showSupersetUsageTab,
+      hide: !isFeatureFlagEnabled(FeatureFlagKeys.USAGE_DASHBOARD),
     },
     {
       index: 0.2,
@@ -52,7 +53,7 @@ export const getSideMenu = ({ transformType }: { transformType: string }) => {
       parent: 0,
       className: 'data_analysis',
       minimize: false,
-      hide: !showDataAnalysisTab,
+      hide: !isFeatureFlagEnabled(FeatureFlagKeys.AI_DATA_ANALYSIS),
     },
     {
       index: 1,
@@ -99,7 +100,7 @@ export const getSideMenu = ({ transformType }: { transformType: string }) => {
       path: '/data-quality',
       icon: (selected: boolean) => <DataQualityIcon fill={getColor(selected)} />,
       className: 'data_quality_walkthrough',
-      hide: !showElementaryMenu || transformType === 'ui',
+      hide: !isFeatureFlagEnabled(FeatureFlagKeys.DATA_QUALITY) || transformType === 'ui',
       minimize: false,
     },
     {

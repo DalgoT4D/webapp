@@ -12,6 +12,28 @@ jest.mock('next-auth/react', () => ({
 
 jest.mock('swr');
 
+// Mock useFeatureFlags hook to enable LOG_SUMMARIZATION flag
+jest.mock('@/customHooks/useFeatureFlags', () => ({
+  useFeatureFlags: () => ({
+    isFeatureFlagEnabled: (flag: string) => {
+      // Enable LOG_SUMMARIZATION flag for tests
+      if (flag === 'LOG_SUMMARIZATION') return true;
+      return false;
+    },
+    flags: { LOG_SUMMARIZATION: true },
+    isLoading: false,
+    error: null,
+  }),
+  FeatureFlagKeys: {
+    LOG_SUMMARIZATION: 'LOG_SUMMARIZATION',
+    EMBED_SUPERSET: 'EMBED_SUPERSET',
+    USAGE_DASHBOARD: 'USAGE_DASHBOARD',
+    DATA_QUALITY: 'DATA_QUALITY',
+    AI_DATA_ANALYSIS: 'AI_DATA_ANALYSIS',
+    DATA_STATISTICS: 'DATA_STATISTICS',
+  },
+}));
+
 // Mock GlobalContext
 const mockGlobalContext = {
   state: {},
@@ -92,10 +114,6 @@ const sampleTotalSyncs = 20;
 describe('ConnectionLogs Component', () => {
   beforeEach(() => {
     mockedHttpGet.mockResolvedValue({ history: sampleLogs, totalSyncs: sampleTotalSyncs });
-    useSWR.mockReturnValue({
-      data: { allowLogsSummary: true },
-      error: null,
-    });
   });
 
   afterEach(() => {

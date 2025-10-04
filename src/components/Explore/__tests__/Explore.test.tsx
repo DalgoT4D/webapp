@@ -13,6 +13,28 @@ jest.mock('next/router', () => ({
   },
 }));
 
+// Mock useFeatureFlags hook to enable DATA_STATISTICS flag
+jest.mock('@/customHooks/useFeatureFlags', () => ({
+  useFeatureFlags: () => ({
+    isFeatureFlagEnabled: (flag: string) => {
+      // Enable DATA_STATISTICS flag for tests
+      if (flag === 'DATA_STATISTICS') return true;
+      return false;
+    },
+    flags: { DATA_STATISTICS: true },
+    isLoading: false,
+    error: null,
+  }),
+  FeatureFlagKeys: {
+    LOG_SUMMARIZATION: 'LOG_SUMMARIZATION',
+    EMBED_SUPERSET: 'EMBED_SUPERSET',
+    USAGE_DASHBOARD: 'USAGE_DASHBOARD',
+    DATA_QUALITY: 'DATA_QUALITY',
+    AI_DATA_ANALYSIS: 'AI_DATA_ANALYSIS',
+    DATA_STATISTICS: 'DATA_STATISTICS',
+  },
+}));
+
 window.ResizeObserver =
   window.ResizeObserver ||
   jest.fn().mockImplementation(() => ({

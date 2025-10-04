@@ -17,7 +17,29 @@ jest.mock('@/pages/pipeline/transform', () => ({
   fetchTransformType: jest.fn().mockImplementation(() => mockFetchTransformType()),
 }));
 
-const sideMenu = getSideMenu({ transformType: 'ui' });
+// Mock useFeatureFlags hook
+jest.mock('@/customHooks/useFeatureFlags', () => ({
+  useFeatureFlags: () => ({
+    isFeatureFlagEnabled: jest.fn().mockReturnValue(false),
+    flags: {},
+    isLoading: false,
+    error: null,
+  }),
+  FeatureFlagKeys: {
+    LOG_SUMMARIZATION: 'LOG_SUMMARIZATION',
+    EMBED_SUPERSET: 'EMBED_SUPERSET',
+    USAGE_DASHBOARD: 'USAGE_DASHBOARD',
+    DATA_QUALITY: 'DATA_QUALITY',
+    AI_DATA_ANALYSIS: 'AI_DATA_ANALYSIS',
+    DATA_STATISTICS: 'DATA_STATISTICS',
+  },
+}));
+
+const mockIsFeatureFlagEnabled = jest.fn().mockReturnValue(false);
+const sideMenu = getSideMenu({
+  transformType: 'ui',
+  isFeatureFlagEnabled: mockIsFeatureFlagEnabled,
+});
 jest.mock('next/router', () => ({
   useRouter: jest.fn(),
 }));
