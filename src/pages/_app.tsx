@@ -9,7 +9,6 @@ import { StyledEngineProvider } from '@mui/material/styles';
 import { Main } from '@/components/Layouts/Main';
 import ContextProvider from '@/contexts/ContextProvider';
 import { TrackingProvider } from '@/contexts/TrackingContext';
-import EmbeddedAuthInit from '@/components/EmbeddedAuthInit';
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
@@ -19,7 +18,6 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <SessionProvider session={session} refetchOnWindowFocus={false}>
-              <EmbeddedAuthInit />
               <Main>
                 <TrackingProvider session={session}>
                   <Component {...pageProps} />

@@ -9,6 +9,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import Auth from '@/components/Layouts/Auth';
 import { httpPost } from '../../helpers/http';
 import { PageHead } from '@/components/PageHead';
+import { useSignOut } from '@/hooks/useSignOut';
 
 export const VerifyEmail = () => {
   const { handleSubmit } = useForm();
@@ -18,12 +19,14 @@ export const VerifyEmail = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
+  const { handleSignOut } = useSignOut();
+
   const onSubmit = async () => {
     try {
       await httpPost(session, 'users/verify_email/', {
         token: token,
       });
-      signOut({ callbackUrl: '/login' });
+      handleSignOut();
     } catch (error: any) {
       errorToast(error.cause.detail, [], toastContext);
     }

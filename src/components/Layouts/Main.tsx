@@ -7,7 +7,7 @@ import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { getEmbeddedAuth } from '@/middleware/embeddedAuth';
+import { useEmbeddedAuth } from '@/hooks/useEmbeddedAuth';
 
 type Org = {
   name: string;
@@ -38,20 +38,22 @@ const MainDashboard = ({ children }: any) => {
   const [params, setParams] = useState<any>({});
   const [isEmbeddedWithHide, setIsEmbeddedWithHide] = useState<boolean>(false);
 
-  useEffect(() => {
-    // Make sure router is ready before accessing query
-    if (router.isReady) {
-      setParams(router.query);
-    }
-  }, [router.isReady, router.query]);
+  // useEffect(() => {
+  //   // Make sure router is ready before accessing query
+  //   if (router.isReady) {
+  //     setParams(router.query);
+  //   }
+  // }, [router.isReady, router.query]);
 
-  useEffect(() => {
-    // Check if we're in embedded mode with hide=true
-    const embeddedAuth = getEmbeddedAuth();
-    if (embeddedAuth && embeddedAuth.hide === 'true') {
-      setIsEmbeddedWithHide(true);
-    }
-  }, []);
+  // useEffect(() => {
+  //   // Check if we're in embedded mode with hide=true
+  //   const embeddedAuth = getEmbeddedAuth();
+  //   if (embeddedAuth && embeddedAuth.hide === 'true') {
+  //     setIsEmbeddedWithHide(true);
+  //   }
+  // }, []);
+
+  const { embedWithHideHeader } = useEmbeddedAuth();
 
   useEffect(() => {
     (async () => {
@@ -140,11 +142,10 @@ const MainDashboard = ({ children }: any) => {
       )}
       {redirectTo === 'dashboard' && (
         <>
-          {/* <Header openMenu={openMenu} setOpenMenu={setOpenMenu} /> */}
           {router.pathname === '/changepassword' ? (
             children
-          ) : params.hide === 'true' || isEmbeddedWithHide ? (
-            <Box sx={{ display: 'flex', pt: 6 }}>{children}</Box>
+          ) : embedWithHideHeader ? (
+            <Box sx={{ display: 'flex' }}>{children}</Box>
           ) : (
             <>
               <Header openMenu={openMenu} setOpenMenu={setOpenMenu} />

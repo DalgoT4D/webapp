@@ -10,17 +10,14 @@ import Auth from '@/components/Layouts/Auth';
 import { httpGet } from '../../helpers/http';
 import Image from 'next/image';
 import { PageHead } from '@/components/PageHead';
+import { useSignOut } from '@/hooks/useSignOut';
 
 export const VerifyEmailResend = () => {
   const { handleSubmit } = useForm();
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
 
-  const handleSignout = () => {
-    // Hit backend api to invalidate the token
-    localStorage.clear();
-    signOut({ callbackUrl: '/login' });
-  };
+  const { handleSignOut } = useSignOut();
 
   const onSubmit = async () => {
     try {
@@ -58,7 +55,7 @@ export const VerifyEmailResend = () => {
             ':hover': { cursor: 'pointer' },
             display: 'flex',
           }}
-          onClick={() => handleSignout()}
+          onClick={() => handleSignOut()}
         >
           <Image src={LogoutIcon} alt="logout icon" />
           <Link sx={{ textDecoration: 'underline' }}>Logout</Link>

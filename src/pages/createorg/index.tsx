@@ -12,6 +12,7 @@ import Input from '@/components/UI/Input/Input';
 import { httpPost } from '@/helpers/http';
 import Image from 'next/image';
 import { PageHead } from '@/components/PageHead';
+import { useSignOut } from '@/hooks/useSignOut';
 
 export const CreateOrgPage = () => {
   const {
@@ -27,12 +28,7 @@ export const CreateOrgPage = () => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
   const [waitForOrgCreation, setWaitForOrgCreation] = useState(false);
-
-  const handleSignout = () => {
-    // Hit backend api to invalidate the token
-    localStorage.clear();
-    signOut({ callbackUrl: '/login' });
-  };
+  const { handleSignOut } = useSignOut();
 
   const onSubmit = async (data: any) => {
     setWaitForOrgCreation(true);
@@ -88,7 +84,7 @@ export const CreateOrgPage = () => {
               ':hover': { cursor: 'pointer' },
               display: 'flex',
             }}
-            onClick={() => handleSignout()}
+            onClick={() => handleSignOut()}
           >
             <Image src={LogoutIcon} alt="logout icon" />
             <Link sx={{ textDecoration: 'underline' }}>Logout</Link>

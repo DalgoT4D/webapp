@@ -16,6 +16,7 @@ import HamburgerIcon from '../../assets/icons/hamburger.svg';
 import useSWR from 'swr';
 import Unread_Notifications from '@/assets/icons/notifications_unread';
 import Notifications from '@/assets/icons/notifications';
+import { useSignOut } from '@/hooks/useSignOut';
 
 type Org = {
   name: string;
@@ -53,11 +54,7 @@ export const Header = ({
   const { data: unread_count } = useSWR(`notifications/unread_count`, {
     refreshInterval: 20000,
   });
-  const handleSignout = () => {
-    // Hit backend api to invalidate the token
-    localStorage.clear();
-    signOut({ callbackUrl: `${window.location.origin}` });
-  };
+  const { handleSignOut } = useSignOut();
   const { data: session }: any = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -290,7 +287,7 @@ export const Header = ({
           sx={{
             borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
           }}
-          onClick={() => handleSignout()}
+          onClick={() => handleSignOut()}
         >
           <Image style={{ marginRight: 8 }} src={LogoutIcon} alt="logout icon" />
           Logout

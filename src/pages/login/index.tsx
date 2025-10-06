@@ -21,7 +21,8 @@ import Input from '@/components/UI/Input/Input';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { PageHead } from '@/components/PageHead';
-import { getEmbeddedAuth, isEmbedded } from '@/middleware/embeddedAuth';
+import { useEmbeddedAuth } from '@/hooks/useEmbeddedAuth';
+// import { getEmbeddedAuth, isEmbedded } from '@/middleware/embeddedAuth';
 
 export const Login = () => {
   const {
@@ -40,6 +41,7 @@ export const Login = () => {
   const context = useContext(GlobalContext);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [waitForLogin, setWaitForLogin] = useState(false);
+  const { isIframed } = useEmbeddedAuth();
 
   // Capture embedded state from URL, referrer, or iframe detection on mount
   useEffect(() => {
@@ -85,16 +87,13 @@ export const Login = () => {
     });
     if (res.ok) {
       // Check if we're in embedded mode and redirect accordingly
-      const embeddedAuth = getEmbeddedAuth();
-      const isEmbeddedSession = sessionStorage.getItem('isEmbedded') === 'true';
-      const hideParam = sessionStorage.getItem('embeddedHide');
+      // const { isIframed } = useEmbeddedAuth();
 
-      if ((embeddedAuth && embeddedAuth.isEmbedded) || isEmbeddedSession) {
+      if (isIframed) {
         // In embedded mode, redirect to ingest page with hide parameter if it was set
-        const redirectUrl =
-          hideParam === 'true'
-            ? '/pipeline/ingest?tab=connections&hide=true'
-            : '/pipeline/ingest?tab=connections';
+        const redirectUrl = isIframed
+          ? '/pipeline/ingest?tab=connections&embedHideHeader=true&embedApp=true'
+          : '/pipeline/ingest?tab=connections';
         router.push(redirectUrl);
       } else {
         // Normal mode, redirect to pipeline overview
@@ -109,17 +108,12 @@ export const Login = () => {
 
   // Simple redirect if already logged in
   if (session?.user?.token) {
-    // Check if we're in embedded mode and redirect accordingly
-    const embeddedAuth = getEmbeddedAuth();
-    const isEmbeddedSession = sessionStorage.getItem('isEmbedded') === 'true';
-    const hideParam = sessionStorage.getItem('embeddedHide');
-
-    if ((embeddedAuth && embeddedAuth.isEmbedded) || isEmbeddedSession) {
+    // Check if we're in iframe mode
+    if (isIframed) {
       // In embedded mode, redirect to ingest page with hide parameter if it was set
-      const redirectUrl =
-        hideParam === 'true'
-          ? '/pipeline/ingest?tab=connections&hide=true'
-          : '/pipeline/ingest?tab=connections';
+      const redirectUrl = isIframed
+        ? '/pipeline/ingest?tab=connections&embedHideHeader=true&embedApp=true'
+        : '/pipeline/ingest?tab=connections';
       router.push(redirectUrl);
     } else {
       // Normal mode, redirect to home
