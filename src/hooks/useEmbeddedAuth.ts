@@ -52,6 +52,7 @@ export function useEmbeddedAuth(): EmbeddedAuthReturn {
 
   if (embedTokenQueryParam) {
     sessionStorage.setItem('embedToken', embedTokenQueryParam);
+    localStorage.setItem('token', embedTokenQueryParam);
   }
 
   if (embedOrgQueryParam) {

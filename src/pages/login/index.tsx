@@ -8,7 +8,7 @@ import {
   CircularProgress,
   FormHelperText,
 } from '@mui/material';
-import { signIn, useSession } from 'next-auth/react';
+import { getSession, signIn, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 
 import styles from '@/styles/Login.module.css';
@@ -41,41 +41,85 @@ export const Login = () => {
   const context = useContext(GlobalContext);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [waitForLogin, setWaitForLogin] = useState(false);
-  const { isIframed } = useEmbeddedAuth();
+  const [autoSigningIn, setAutoSigningIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { isIframed, embedToken } = useEmbeddedAuth();
 
-  // Capture embedded state from URL, referrer, or iframe detection on mount
+  // Ensure component is mounted before checking embed token
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const embedded = urlParams.get('embedded');
-    const hide = urlParams.get('hide');
+    setMounted(true);
+  }, []);
 
-    // Check if we have embedded params in URL
-    if (embedded === 'true') {
-      sessionStorage.setItem('isEmbedded', 'true');
-      if (hide) {
-        sessionStorage.setItem('embeddedHide', hide);
-      }
-      console.log('Login page: Stored embedded state from URL', { embedded, hide });
-    } else {
-      // Check if we're in an iframe
-      const isInIframe = window !== window.parent;
-      if (isInIframe) {
-        sessionStorage.setItem('isEmbedded', 'true');
-        sessionStorage.setItem('embeddedHide', 'true'); // Default to hiding sidebar in iframe
-        console.log('Login page: Detected iframe, setting embedded state');
-      } else {
-        // Check if we came from an embedded page (referrer contains embedded=true)
-        const referrer = document.referrer;
-        if (referrer && referrer.includes('embedded=true')) {
-          sessionStorage.setItem('isEmbedded', 'true');
-          if (referrer.includes('hide=true')) {
-            sessionStorage.setItem('embeddedHide', 'true');
+  // Auto-signin with embedded token if available (only after mounting)
+  useEffect(() => {
+    const autoSignInWithToken = async () => {
+      if (mounted && embedToken && !session?.user?.token && !autoSigningIn) {
+        setAutoSigningIn(true);
+        try {
+          // Use NextAuth signIn with the embed-token provider
+          const res = await signIn('embed-token', {
+            token: embedToken,
+            redirect: false, // Prevent automatic redirect
+          });
+
+          console.log('Auto sign-in response:', res);
+
+          if (res?.ok) {
+            // Refresh session to ensure it's properly set
+            await getSession();
+
+            const redirectUrl =
+              '/pipeline/ingest?tab=connections&embedHideHeader=true&embedApp=true';
+            router.push(redirectUrl);
+            return;
           }
-          console.log('Login page: Detected embedded state from referrer', referrer);
+
+          // If auto sign-in fails, continue to show login form
+          console.log('Auto sign-in with embed token failed');
+        } catch (error) {
+          console.error('Auto sign-in error:', error);
+        } finally {
+          setAutoSigningIn(false);
         }
       }
-    }
-  }, []);
+    };
+
+    autoSignInWithToken();
+  }, [mounted, embedToken]); // Removed session dependency to prevent loop
+
+  // Capture embedded state from URL, referrer, or iframe detection on mount
+  // useEffect(() => {
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const embedded = urlParams.get('embedded');
+  //   const hide = urlParams.get('hide');
+
+  //   // Check if we have embedded params in URL
+  //   if (embedded === 'true') {
+  //     sessionStorage.setItem('isEmbedded', 'true');
+  //     if (hide) {
+  //       sessionStorage.setItem('embeddedHide', hide);
+  //     }
+  //     console.log('Login page: Stored embedded state from URL', { embedded, hide });
+  //   } else {
+  //     // Check if we're in an iframe
+  //     const isInIframe = window !== window.parent;
+  //     if (isInIframe) {
+  //       sessionStorage.setItem('isEmbedded', 'true');
+  //       sessionStorage.setItem('embeddedHide', 'true'); // Default to hiding sidebar in iframe
+  //       console.log('Login page: Detected iframe, setting embedded state');
+  //     } else {
+  //       // Check if we came from an embedded page (referrer contains embedded=true)
+  //       const referrer = document.referrer;
+  //       if (referrer && referrer.includes('embedded=true')) {
+  //         sessionStorage.setItem('isEmbedded', 'true');
+  //         if (referrer.includes('hide=true')) {
+  //           sessionStorage.setItem('embeddedHide', 'true');
+  //         }
+  //         console.log('Login page: Detected embedded state from referrer', referrer);
+  //       }
+  //     }
+  //   }
+  // }, []);
 
   const onSubmit = async (reqData: any) => {
     setWaitForLogin(true);
@@ -119,6 +163,20 @@ export const Login = () => {
       // Normal mode, redirect to home
       router.push('/');
     }
+  }
+
+  // Show loading state when auto-signing in with embed token (only after mounting)
+  if (mounted && (autoSigningIn || (embedToken && !session?.user?.token))) {
+    return (
+      <>
+        <PageHead title="Dalgo | Signing In" />
+        <Auth heading="Signing you in..." subHeading="">
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        </Auth>
+      </>
+    );
   }
 
   return (
