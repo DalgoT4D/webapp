@@ -56,13 +56,16 @@ export const Login = () => {
       if (mounted && embedToken && !session?.user?.token && !autoSigningIn) {
         setAutoSigningIn(true);
         try {
+          // Get the org from URL parameters that parent passed
+          const urlParams = new URLSearchParams(window.location.search);
+          const embedOrg = urlParams.get('embedOrg');
+
           // Use NextAuth signIn with the embed-token provider
           const res = await signIn('embed-token', {
             token: embedToken,
+            orgSlug: embedOrg, // Pass the org slug from parent
             redirect: false, // Prevent automatic redirect
           });
-
-          console.log('Auto sign-in response:', res);
 
           if (res?.ok) {
             // Refresh session to ensure it's properly set
@@ -86,40 +89,6 @@ export const Login = () => {
 
     autoSignInWithToken();
   }, [mounted, embedToken]); // Removed session dependency to prevent loop
-
-  // Capture embedded state from URL, referrer, or iframe detection on mount
-  // useEffect(() => {
-  //   const urlParams = new URLSearchParams(window.location.search);
-  //   const embedded = urlParams.get('embedded');
-  //   const hide = urlParams.get('hide');
-
-  //   // Check if we have embedded params in URL
-  //   if (embedded === 'true') {
-  //     sessionStorage.setItem('isEmbedded', 'true');
-  //     if (hide) {
-  //       sessionStorage.setItem('embeddedHide', hide);
-  //     }
-  //     console.log('Login page: Stored embedded state from URL', { embedded, hide });
-  //   } else {
-  //     // Check if we're in an iframe
-  //     const isInIframe = window !== window.parent;
-  //     if (isInIframe) {
-  //       sessionStorage.setItem('isEmbedded', 'true');
-  //       sessionStorage.setItem('embeddedHide', 'true'); // Default to hiding sidebar in iframe
-  //       console.log('Login page: Detected iframe, setting embedded state');
-  //     } else {
-  //       // Check if we came from an embedded page (referrer contains embedded=true)
-  //       const referrer = document.referrer;
-  //       if (referrer && referrer.includes('embedded=true')) {
-  //         sessionStorage.setItem('isEmbedded', 'true');
-  //         if (referrer.includes('hide=true')) {
-  //           sessionStorage.setItem('embeddedHide', 'true');
-  //         }
-  //         console.log('Login page: Detected embedded state from referrer', referrer);
-  //       }
-  //     }
-  //   }
-  // }, []);
 
   const onSubmit = async (reqData: any) => {
     setWaitForLogin(true);

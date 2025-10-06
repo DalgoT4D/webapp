@@ -17,6 +17,7 @@ import useSWR from 'swr';
 import Unread_Notifications from '@/assets/icons/notifications_unread';
 import Notifications from '@/assets/icons/notifications';
 import { useSignOut } from '@/hooks/useSignOut';
+import { useEmbeddedAuth } from '@/hooks/useEmbeddedAuth';
 
 type Org = {
   name: string;
@@ -65,6 +66,7 @@ export const Header = ({
   const [showOrgCreateForm, setShowOrgCreateForm] = useState<boolean>(false);
   const [selectedOrg, setSelectedOrg] = useState<AutoCompleteOption | null | undefined>(null);
   const globalContext = useContext(GlobalContext);
+  useEmbeddedAuth();
   const permissions = globalContext?.Permissions.state || [];
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
