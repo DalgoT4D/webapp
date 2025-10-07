@@ -1,30 +1,32 @@
 import { backendUrl } from '@/config/constant';
 import { getOrgHeaderValue } from '@/utils/common';
 import { signOut } from 'next-auth/react';
-import { useEmbeddedAuth } from '@/hooks/useEmbeddedAuth';
-import { useSignOut } from '@/hooks/useSignOut';
 
 // Helper function to handle 401 errors by clearing session and logging out
 function handleUnauthorizedError() {
-  // Check if we're in embedded mode
-  const { isEmbedded } = useEmbeddedAuth();
-  const { handleSignOut } = useSignOut();
+  // Check if we're in embedded mode by checking sessionStorage directly
+  const storedEmbedToken =
+    typeof window !== 'undefined' ? sessionStorage.getItem('embedToken') : null;
+  const storedEmbedApp = typeof window !== 'undefined' ? sessionStorage.getItem('embedApp') : null;
+  const isEmbedded = !!(storedEmbedToken || storedEmbedApp);
 
   if (isEmbedded) {
     // In embedded mode, don't redirect - just clear the auth
-    sessionStorage.clear();
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear();
+    }
     console.log('Embedded auth failed');
     return;
   }
 
   console.log('Unauthorized access detected. Logging out...');
-  handleSignOut();
+  signOut({ callbackUrl: '/login', redirect: true });
 }
 
 // Helper to get auth token, preferring embedded token when available
 function getAuthToken(session: any): string | undefined {
-  // Check for embedded auth first
-  const { embedToken } = useEmbeddedAuth();
+  // Check for embedded auth first in sessionStorage
+  const embedToken = typeof window !== 'undefined' ? sessionStorage.getItem('embedToken') : null;
   if (embedToken) {
     return embedToken;
   }
@@ -34,12 +36,15 @@ function getAuthToken(session: any): string | undefined {
 
 // Helper to get org header, preferring embedded org when available
 function getOrgHeader(method: string, path: string): string {
-  // Check for embedded auth first
-  const { embedOrg, isEmbedded } = useEmbeddedAuth();
+  // Check for embedded auth first in sessionStorage
+  const embedOrg = typeof window !== 'undefined' ? sessionStorage.getItem('embedOrg') : null;
+  const storedEmbedToken =
+    typeof window !== 'undefined' ? sessionStorage.getItem('embedToken') : null;
+  const storedEmbedApp = typeof window !== 'undefined' ? sessionStorage.getItem('embedApp') : null;
+  const isEmbedded = !!(storedEmbedToken || storedEmbedApp);
 
   // If we're in embedded mode and have an org, use it
   if (embedOrg && isEmbedded) {
-    // Return the embedded org, or empty string if not set
     return embedOrg;
   }
 
