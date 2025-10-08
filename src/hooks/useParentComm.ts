@@ -130,10 +130,10 @@ export function useParentCommunication() {
   const handleLogout = useCallback(async () => {
     console.log('[Child] Received logout signal from parent');
 
-    // Clear storage
-    sessionStorage.removeItem('parentToken');
-    sessionStorage.removeItem('parentOrgSlug');
-    sessionStorage.removeItem('currentOrgSlug');
+    // Clear all session storage (including any other embedded auth data)
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear();
+    }
 
     // Reset state
     setState({
@@ -144,10 +144,12 @@ export function useParentCommunication() {
       isReady: false,
     });
 
-    // Sign out from NextAuth
-    // Don't redirect since we're in an iframe
+    // Sign out from NextAuth without redirect (since we're in iframe)
     await signOut({ redirect: false });
-  }, []);
+
+    // Redirect to login page to show proper state
+    router.push('/login');
+  }, [router]);
 
   // Send ready message to parent
   const sendReadyMessage = useCallback(() => {
