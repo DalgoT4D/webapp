@@ -21,8 +21,7 @@ import Input from '@/components/UI/Input/Input';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { PageHead } from '@/components/PageHead';
-import { useEmbeddedAuth } from '@/hooks/useEmbeddedAuth';
-// import { getEmbeddedAuth, isEmbedded } from '@/middleware/embeddedAuth';
+import { useParentCommunication } from '@/hooks/useParentComm';
 
 export const Login = () => {
   const {
@@ -37,58 +36,28 @@ export const Login = () => {
     },
   });
   const router = useRouter();
-  const { data: session }: any = useSession();
+  const { data: session, status }: any = useSession();
   const context = useContext(GlobalContext);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [waitForLogin, setWaitForLogin] = useState(false);
   const [autoSigningIn, setAutoSigningIn] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { isIframed, embedToken } = useEmbeddedAuth();
+  const { isEmbedded, parentToken } = useParentCommunication();
 
   // Ensure component is mounted before checking embed token
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Auto-signin with embedded token if available (only after mounting)
+  // Handle redirection when embedded and authenticated
   useEffect(() => {
-    const autoSignInWithToken = async () => {
-      if (mounted && embedToken && !session?.user?.token && !autoSigningIn) {
-        setAutoSigningIn(true);
-        try {
-          // Get the org from URL parameters that parent passed
-          const urlParams = new URLSearchParams(window.location.search);
-          const embedOrg = urlParams.get('embedOrg');
-
-          // Use NextAuth signIn with the embed-token provider
-          const res = await signIn('embed-token', {
-            token: embedToken,
-            orgSlug: embedOrg, // Pass the org slug from parent
-            redirect: false, // Prevent automatic redirect
-          });
-
-          if (res?.ok) {
-            // Refresh session to ensure it's properly set
-            await getSession();
-
-            const redirectUrl =
-              '/pipeline/ingest?tab=connections&embedHideHeader=true&embedApp=true';
-            router.push(redirectUrl);
-            return;
-          }
-
-          // If auto sign-in fails, continue to show login form
-          console.log('Auto sign-in with embed token failed');
-        } catch (error) {
-          console.error('Auto sign-in error:', error);
-        } finally {
-          setAutoSigningIn(false);
-        }
-      }
-    };
-
-    autoSignInWithToken();
-  }, [mounted, embedToken]); // Removed session dependency to prevent loop
+    // If embedded and authenticated via parent token, redirect to default page
+    if (isEmbedded && session?.user?.token && status !== 'loading') {
+      console.log('[Child Login] Embedded and authenticated, redirecting...');
+      const redirectUrl = '/pipeline/ingest?tab=connections';
+      router.push(redirectUrl);
+    }
+  }, [isEmbedded, session?.user?.token, status, router]);
 
   const onSubmit = async (reqData: any) => {
     setWaitForLogin(true);
@@ -100,14 +69,9 @@ export const Login = () => {
     });
     if (res.ok) {
       // Check if we're in embedded mode and redirect accordingly
-      // const { isIframed } = useEmbeddedAuth();
-
-      if (isIframed) {
-        // In embedded mode, redirect to ingest page with hide parameter if it was set
-        const redirectUrl = isIframed
-          ? '/pipeline/ingest?tab=connections&embedHideHeader=true&embedApp=true'
-          : '/pipeline/ingest?tab=connections';
-        router.push(redirectUrl);
+      if (isEmbedded) {
+        // In embedded mode, redirect to ingest page
+        router.push('/pipeline/ingest?tab=connections');
       } else {
         // Normal mode, redirect to pipeline overview
         router.push('/pipeline');
@@ -121,21 +85,18 @@ export const Login = () => {
 
   // Simple redirect if already logged in
   if (session?.user?.token) {
-    // Check if we're in iframe mode
-    if (isIframed) {
-      // In embedded mode, redirect to ingest page with hide parameter if it was set
-      const redirectUrl = isIframed
-        ? '/pipeline/ingest?tab=connections&embedHideHeader=true&embedApp=true'
-        : '/pipeline/ingest?tab=connections';
-      router.push(redirectUrl);
+    if (isEmbedded) {
+      // In embedded mode, redirect to ingest page
+      router.push('/pipeline/ingest?tab=connections');
     } else {
       // Normal mode, redirect to home
       router.push('/');
     }
+    return null;
   }
 
-  // Show loading state when auto-signing in with embed token (only after mounting)
-  if (mounted && (autoSigningIn || (embedToken && !session?.user?.token))) {
+  // Show loading state when embedded and waiting for parent auth or auto-signing in
+  if (mounted && (autoSigningIn || (isEmbedded && !session?.user?.token))) {
     return (
       <>
         <PageHead title="Dalgo | Signing In" />

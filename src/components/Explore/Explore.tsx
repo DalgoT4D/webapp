@@ -17,7 +17,7 @@ import { successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { FeatureFlagKeys, useFeatureFlags } from '@/customHooks/useFeatureFlags';
 import { Close } from '@mui/icons-material';
-import { useEmbeddedAuth } from '@/hooks/useEmbeddedAuth';
+import { useParentCommunication } from '@/hooks/useParentComm';
 
 export const Explore = () => {
   const { data: session } = useSession();
@@ -36,7 +36,7 @@ export const Explore = () => {
 
   const { setPreviewAction } = usePreviewAction();
 
-  const { isEmbedded } = useEmbeddedAuth();
+  const { isEmbedded } = useParentCommunication();
 
   const fetchSourcesModels = () => {
     setLoading(true);

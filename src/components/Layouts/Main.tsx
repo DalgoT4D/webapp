@@ -7,7 +7,7 @@ import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { useEmbeddedAuth } from '@/hooks/useEmbeddedAuth';
+import { useParentCommunication } from '@/hooks/useParentComm';
 
 type Org = {
   name: string;
@@ -53,7 +53,7 @@ const MainDashboard = ({ children }: any) => {
   //   }
   // }, []);
 
-  const { embedWithHideHeader } = useEmbeddedAuth();
+  const { hideHeader } = useParentCommunication();
 
   useEffect(() => {
     (async () => {
@@ -144,7 +144,7 @@ const MainDashboard = ({ children }: any) => {
         <>
           {router.pathname === '/changepassword' ? (
             children
-          ) : embedWithHideHeader ? (
+          ) : hideHeader ? (
             <Box sx={{ display: 'flex' }}>{children}</Box>
           ) : (
             <>
