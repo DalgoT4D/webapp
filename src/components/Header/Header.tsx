@@ -17,7 +17,7 @@ import useSWR from 'swr';
 import Unread_Notifications from '@/assets/icons/notifications_unread';
 import Notifications from '@/assets/icons/notifications';
 import { useSignOut } from '@/hooks/useSignOut';
-import { useEmbeddedAuth } from '@/hooks/useEmbeddedAuth';
+import { useParentCommunication } from '@/hooks/useParentComm';
 
 type Org = {
   name: string;
@@ -66,7 +66,7 @@ export const Header = ({
   const [showOrgCreateForm, setShowOrgCreateForm] = useState<boolean>(false);
   const [selectedOrg, setSelectedOrg] = useState<AutoCompleteOption | null | undefined>(null);
   const globalContext = useContext(GlobalContext);
-  useEmbeddedAuth();
+  const { parentOrgSlug } = useParentCommunication();
   const permissions = globalContext?.Permissions.state || [];
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
@@ -136,6 +136,18 @@ export const Header = ({
       }
     }
   }, [selectedOrg]);
+
+  // Handle parent org changes when embedded
+  useEffect(() => {
+    if (parentOrgSlug && orgusers && orgusers.length > 0) {
+      const parentOrg = orgusers.find((ou) => ou.org.slug === parentOrgSlug);
+      if (parentOrg) {
+        const newSelectedOrg = { id: parentOrg.org.slug, label: parentOrg.org.name };
+        setSelectedOrg(newSelectedOrg);
+        console.log('[Child Header] Syncing with parent org:', parentOrgSlug);
+      }
+    }
+  }, [parentOrgSlug, orgusers]);
 
   const handleCreateOrgClick = () => {
     setShowOrgCreateForm(true);
