@@ -54,7 +54,7 @@ export const Login = () => {
     // If embedded and authenticated via parent token, redirect to default page
     if (isEmbedded && session?.user?.token && status !== 'loading') {
       console.log('[Child Login] Embedded and authenticated, redirecting...');
-      const redirectUrl = '/pipeline/ingest?tab=connections';
+      const redirectUrl = '/pipeline';
       router.push(redirectUrl);
     }
   }, [isEmbedded, session?.user?.token, status, router]);
@@ -70,8 +70,8 @@ export const Login = () => {
     if (res.ok) {
       // Check if we're in embedded mode and redirect accordingly
       if (isEmbedded) {
-        // In embedded mode, redirect to ingest page
-        router.push('/pipeline/ingest?tab=connections');
+        // In embedded mode, redirect to pipeline overview
+        router.push('/pipeline');
       } else {
         // Normal mode, redirect to pipeline overview
         router.push('/pipeline');
@@ -86,8 +86,8 @@ export const Login = () => {
   // Simple redirect if already logged in
   if (session?.user?.token) {
     if (isEmbedded) {
-      // In embedded mode, redirect to ingest page
-      router.push('/pipeline/ingest?tab=connections');
+      // In embedded mode, redirect to pipeline overview
+      router.push('/pipeline');
     } else {
       // Normal mode, redirect to home
       router.push('/');
