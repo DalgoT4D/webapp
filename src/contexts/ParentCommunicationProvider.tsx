@@ -145,19 +145,9 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
   const handleLogout = useCallback(async () => {
     console.log('[ParentComm Provider] Received logout signal from parent');
 
-    // Clear only the embed-specific keys from both storages to prevent sign-out loop
+    // Clear all session storage (including any other embedded auth data)
     if (typeof window !== 'undefined') {
-      // Clear from sessionStorage
-      sessionStorage.removeItem('parentToken');
-      sessionStorage.removeItem('parentOrgSlug');
-      sessionStorage.removeItem('embed-token');
-      sessionStorage.removeItem('embed-auth');
-
-      // Clear from localStorage if any embed keys exist there
-      localStorage.removeItem('embed-token');
-      localStorage.removeItem('embed-auth');
-      localStorage.removeItem('parentToken');
-      localStorage.removeItem('parentOrgSlug');
+      sessionStorage.clear();
     }
 
     // Reset state
