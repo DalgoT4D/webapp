@@ -13,6 +13,19 @@ jest.mock('next/router', () => ({
   },
 }));
 
+// Mock the useParentCommunication hook
+jest.mock('../../../contexts/ParentCommunicationProvider', () => ({
+  useParentCommunication: () => ({
+    isEmbedded: false,
+    parentToken: null,
+    parentOrgSlug: null,
+    hideHeader: false,
+    isReady: false,
+    isEmbeddingBlocked: false,
+  }),
+  ParentCommunicationProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock useFeatureFlags hook to enable DATA_STATISTICS flag
 jest.mock('@/customHooks/useFeatureFlags', () => ({
   useFeatureFlags: () => ({
