@@ -1,7 +1,35 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-    output: 'standalone'
+  output: 'standalone',
+  
+  // Security headers to control iframe embedding
+  async headers() {
+    // Parse allowed parent origins from environment
+    const allowedOrigins = process.env.NEXT_PUBLIC_ALLOWED_PARENT_ORIGINS || '';
+    const origins = allowedOrigins.split(',').map(origin => origin.trim()).filter(Boolean);
+    
+    // Create frame-ancestors directive for CSP
+    const frameAncestors = origins.length > 0 
+      ? `frame-ancestors ${origins.join(' ')};`
+      : "frame-ancestors 'none';"; // Block all if no allowed origins
+    
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: origins.length > 0 ? 'SAMEORIGIN' : 'DENY', // Allow same origin if origins configured
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: frameAncestors,
+          },
+        ],
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig

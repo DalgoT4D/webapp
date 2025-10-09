@@ -35,6 +35,7 @@ interface ParentCommState {
   parentOrgSlug: string | null;
   hideHeader: boolean;
   isReady: boolean;
+  isEmbeddingBlocked: boolean; // Track if embedding is blocked due to security
 }
 
 const ParentCommunicationContext = createContext<ParentCommState | null>(null);
@@ -44,25 +45,74 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
   const { data: session } = useSession();
   const sessionUser = session?.user as ExtendedUser;
 
+  // Parse allowed parent origins from environment
+  const getAllowedParentOrigins = useCallback((): string[] => {
+    const allowedOriginsEnv = process.env.NEXT_PUBLIC_ALLOWED_PARENT_ORIGINS;
+    if (!allowedOriginsEnv) {
+      console.warn('[ParentComm] No NEXT_PUBLIC_ALLOWED_PARENT_ORIGINS configured');
+      return [];
+    }
+
+    return allowedOriginsEnv
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+  }, []);
+
   const [state, setState] = useState<ParentCommState>({
     isEmbedded: false,
     parentToken: null,
     parentOrgSlug: null,
     hideHeader: false,
     isReady: false,
+    isEmbeddingBlocked: false,
   });
 
-  // Check if we're in an iframe
+  // Check if we're in an iframe and validate the parent origin
   const checkIfEmbedded = useCallback(() => {
     if (typeof window === 'undefined') return false;
 
     try {
-      return window.self !== window.top;
+      const isEmbedded = window.self !== window.top;
+
+      if (isEmbedded) {
+        // Validate parent origin if we're embedded
+        const allowedOrigins = getAllowedParentOrigins();
+
+        if (allowedOrigins.length === 0) {
+          console.error(
+            '[ParentComm] SECURITY: App is embedded but no allowed parent origins configured'
+          );
+          setState((prev) => ({ ...prev, isEmbeddingBlocked: true }));
+          return false; // Block embedding if no origins allowed
+        }
+
+        try {
+          const parentOrigin = document.referrer ? new URL(document.referrer).origin : null;
+
+          if (parentOrigin && !allowedOrigins.includes(parentOrigin)) {
+            console.error(
+              '[ParentComm] SECURITY: App embedded by untrusted origin:',
+              parentOrigin,
+              'Allowed origins:',
+              allowedOrigins
+            );
+            setState((prev) => ({ ...prev, isEmbeddingBlocked: true }));
+            return false;
+          }
+
+          console.log('[ParentComm] Embedded by trusted origin:', parentOrigin);
+        } catch (error) {
+          console.warn('[ParentComm] Could not determine parent origin:', error);
+        }
+      }
+
+      return isEmbedded;
     } catch (e) {
       // Cross-origin iframe will throw an error
       return true;
     }
-  }, []);
+  }, [getAllowedParentOrigins]);
 
   // Handle organization switch
   const handleOrgSwitch = useCallback((orgSlug: string) => {
@@ -157,6 +207,7 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
       parentOrgSlug: null,
       hideHeader: true,
       isReady: false,
+      isEmbeddingBlocked: false,
     });
 
     // Sign out from NextAuth and wait for it to complete
@@ -166,21 +217,37 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
     router.push('/login');
   }, [router]);
 
-  // Send ready message to parent
+  // Send ready message to parent with secure origin validation
   const sendReadyMessage = useCallback(() => {
     if (state.isEmbedded && window.parent) {
-      console.log('[ParentComm Provider] Sending READY message to parent');
-      window.parent.postMessage(
-        {
-          type: 'READY',
-          source: 'webapp',
-        },
-        '*'
-      ); // Use '*' for now, can be restricted to parent origin
+      const allowedOrigins = getAllowedParentOrigins();
+
+      if (allowedOrigins.length === 0) {
+        console.warn(
+          '[ParentComm] Cannot send READY message - no allowed parent origins configured'
+        );
+        return;
+      }
+
+      console.log('[ParentComm Provider] Sending READY message to parent origins:', allowedOrigins);
+
+      const message = {
+        type: 'READY',
+        source: 'webapp',
+      };
+
+      // Send to each allowed parent origin instead of '*'
+      allowedOrigins.forEach((origin) => {
+        try {
+          window.parent.postMessage(message, origin);
+        } catch (error) {
+          console.error('[ParentComm] Failed to send READY message to origin:', origin, error);
+        }
+      });
 
       setState((prev) => ({ ...prev, isReady: true }));
     }
-  }, [state.isEmbedded]);
+  }, [state.isEmbedded, getAllowedParentOrigins]);
 
   // Initialize communication - THIS RUNS ONLY ONCE
   useEffect(() => {
@@ -201,12 +268,38 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
 
     // Handle messages from parent - SINGLE LISTENER
     const handleMessage = async (event: MessageEvent<IframeMessage>) => {
-      // Ignore messages not from parent app
-      if (event.data?.source !== 'webapp_v2') {
+      const allowedOrigins = getAllowedParentOrigins();
+
+      // CRITICAL SECURITY CHECK: Validate origin against allowlist
+      if (!allowedOrigins.includes(event.origin)) {
+        console.warn(
+          '[ParentComm] SECURITY: Blocked message from untrusted origin:',
+          event.origin,
+          'Allowed origins:',
+          allowedOrigins
+        );
         return;
       }
 
-      console.log('[ParentComm Provider] Received message from parent:', event.data.type);
+      // Validate message structure
+      if (!event.data || typeof event.data !== 'object') {
+        console.warn('[ParentComm] Invalid message data received');
+        return;
+      }
+
+      // Validate message source after origin check
+      if (event.data?.source !== 'webapp_v2') {
+        console.warn(
+          '[ParentComm] Message not from expected webapp_v2 source:',
+          event.data?.source
+        );
+        return;
+      }
+
+      console.log(
+        '[ParentComm Provider] Processing secure message from trusted parent:',
+        event.data.type
+      );
 
       switch (event.data.type) {
         case 'AUTH_UPDATE':
@@ -241,7 +334,14 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
       window.removeEventListener('message', handleMessage);
       clearTimeout(readyTimer);
     };
-  }, [checkIfEmbedded, handleAuthUpdate, handleOrgSwitch, handleLogout, sendReadyMessage]);
+  }, [
+    checkIfEmbedded,
+    handleAuthUpdate,
+    handleOrgSwitch,
+    handleLogout,
+    sendReadyMessage,
+    getAllowedParentOrigins,
+  ]);
 
   // Re-send ready message if needed
   useEffect(() => {
@@ -250,6 +350,35 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
       return () => clearTimeout(timer);
     }
   }, [state.isEmbedded, state.isReady, sendReadyMessage]);
+
+  // Show security warning if embedding is blocked
+  if (state.isEmbeddingBlocked) {
+    return (
+      <ParentCommunicationContext.Provider value={state}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100vh',
+            padding: '20px',
+            textAlign: 'center',
+            backgroundColor: '#f5f5f5',
+            fontFamily: 'Arial, sans-serif',
+          }}
+        >
+          <h1 style={{ color: '#d32f2f', marginBottom: '16px' }}>🔒 Embedding Blocked</h1>
+          <p style={{ color: '#666', marginBottom: '8px' }}>
+            This application cannot be embedded by this website for security reasons.
+          </p>
+          <p style={{ color: '#666', fontSize: '14px' }}>
+            Please access the application directly or contact your administrator.
+          </p>
+        </div>
+      </ParentCommunicationContext.Provider>
+    );
+  }
 
   return (
     <ParentCommunicationContext.Provider value={state}>
