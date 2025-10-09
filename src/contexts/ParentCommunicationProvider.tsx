@@ -145,9 +145,19 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
   const handleLogout = useCallback(async () => {
     console.log('[ParentComm Provider] Received logout signal from parent');
 
-    // Clear all session storage (including any other embedded auth data)
+    // Clear only the embed-specific keys from both storages to prevent sign-out loop
     if (typeof window !== 'undefined') {
-      sessionStorage.clear();
+      // Clear from sessionStorage
+      sessionStorage.removeItem('parentToken');
+      sessionStorage.removeItem('parentOrgSlug');
+      sessionStorage.removeItem('embed-token');
+      sessionStorage.removeItem('embed-auth');
+
+      // Clear from localStorage if any embed keys exist there
+      localStorage.removeItem('embed-token');
+      localStorage.removeItem('embed-auth');
+      localStorage.removeItem('parentToken');
+      localStorage.removeItem('parentOrgSlug');
     }
 
     // Reset state
@@ -159,7 +169,7 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
       isReady: false,
     });
 
-    // Sign out from NextAuth without redirect (since we're in iframe)
+    // Sign out from NextAuth and wait for it to complete
     await signOut({ redirect: false });
 
     // Redirect to login page to show proper state
