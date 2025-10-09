@@ -182,11 +182,6 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
           return;
         }
       }
-
-      // Handle org switch through the existing mechanism
-      if (orgSlug !== sessionStorage.getItem('parentOrgSlug')) {
-        handleOrgSwitch(orgSlug);
-      }
     },
     [sessionUser, handleOrgSwitch]
   );
