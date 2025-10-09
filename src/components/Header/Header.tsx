@@ -17,7 +17,7 @@ import useSWR from 'swr';
 import Unread_Notifications from '@/assets/icons/notifications_unread';
 import Notifications from '@/assets/icons/notifications';
 import { useSignOut } from '@/hooks/useSignOut';
-import { useParentCommunication } from '@/hooks/useParentComm';
+import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
 type Org = {
   name: string;

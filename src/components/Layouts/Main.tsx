@@ -7,7 +7,7 @@ import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { useParentCommunication } from '@/hooks/useParentComm';
+import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
 type Org = {
   name: string;

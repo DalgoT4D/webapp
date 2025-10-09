@@ -1,4 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react';
 import { signIn, signOut, useSession, getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 
@@ -30,12 +37,13 @@ interface ParentCommState {
   isReady: boolean;
 }
 
-export function useParentCommunication() {
-  const router = useRouter();
-  const { data: session, status } = useSession();
+const ParentCommunicationContext = createContext<ParentCommState | null>(null);
 
-  // Type assertion for session with our extended user type
+export function ParentCommunicationProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const { data: session } = useSession();
   const sessionUser = session?.user as ExtendedUser;
+
   const [state, setState] = useState<ParentCommState>({
     isEmbedded: false,
     parentToken: null,
@@ -46,6 +54,8 @@ export function useParentCommunication() {
 
   // Check if we're in an iframe
   const checkIfEmbedded = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+
     try {
       return window.self !== window.top;
     } catch (e) {
@@ -56,7 +66,7 @@ export function useParentCommunication() {
 
   // Handle organization switch
   const handleOrgSwitch = useCallback((orgSlug: string) => {
-    console.log('[Child] Switching to organization:', orgSlug);
+    console.log('[ParentComm Provider] Switching to organization:', orgSlug);
 
     // Update sessionStorage for parent communication
     sessionStorage.setItem('parentOrgSlug', orgSlug);
@@ -77,11 +87,11 @@ export function useParentCommunication() {
       const { token, orgSlug } = payload;
 
       if (!token || !orgSlug) {
-        console.warn('[Child] Received incomplete auth update');
+        console.warn('[ParentComm Provider] Received incomplete auth update');
         return;
       }
 
-      console.log('[Child] Handling auth update with org:', orgSlug);
+      console.log('[ParentComm Provider] Handling auth update with org:', orgSlug);
 
       // Store in sessionStorage for HTTP helpers
       sessionStorage.setItem('parentToken', token);
@@ -96,7 +106,9 @@ export function useParentCommunication() {
 
       // If not already authenticated with this token, sign in using embed-token provider
       if (!sessionUser?.token || sessionUser.token !== token) {
-        console.log('[Child] Signing in with parent token using embed-token provider');
+        console.log(
+          '[ParentComm Provider] Signing in with parent token using embed-token provider'
+        );
 
         try {
           const result = await signIn('embed-token', {
@@ -105,15 +117,18 @@ export function useParentCommunication() {
           });
 
           if (result?.ok) {
-            console.log('[Child] Successfully authenticated with parent token');
+            console.log('[ParentComm Provider] Successfully authenticated with parent token');
             // Refresh session to get updated user data
             await getSession();
           } else {
-            console.error('[Child] Failed to authenticate with parent token:', result?.error);
+            console.error(
+              '[ParentComm Provider] Failed to authenticate with parent token:',
+              result?.error
+            );
             return;
           }
         } catch (error) {
-          console.error('[Child] Error during token authentication:', error);
+          console.error('[ParentComm Provider] Error during token authentication:', error);
           return;
         }
       }
@@ -128,7 +143,7 @@ export function useParentCommunication() {
 
   // Handle logout from parent
   const handleLogout = useCallback(async () => {
-    console.log('[Child] Received logout signal from parent');
+    console.log('[ParentComm Provider] Received logout signal from parent');
 
     // Clear all session storage (including any other embedded auth data)
     if (typeof window !== 'undefined') {
@@ -154,7 +169,7 @@ export function useParentCommunication() {
   // Send ready message to parent
   const sendReadyMessage = useCallback(() => {
     if (state.isEmbedded && window.parent) {
-      console.log('[Child] Sending READY message to parent');
+      console.log('[ParentComm Provider] Sending READY message to parent');
       window.parent.postMessage(
         {
           type: 'READY',
@@ -167,7 +182,7 @@ export function useParentCommunication() {
     }
   }, [state.isEmbedded]);
 
-  // Initialize communication
+  // Initialize communication - THIS RUNS ONLY ONCE
   useEffect(() => {
     const isEmbedded = checkIfEmbedded();
 
@@ -178,20 +193,20 @@ export function useParentCommunication() {
     }));
 
     if (!isEmbedded) {
-      console.log('[Child] Not embedded, skipping parent communication');
+      console.log('[ParentComm Provider] Not embedded, skipping parent communication');
       return;
     }
 
-    console.log('[Child] Running in iframe, setting up parent communication');
+    console.log('[ParentComm Provider] Running in iframe, setting up parent communication');
 
-    // Handle messages from parent
+    // Handle messages from parent - SINGLE LISTENER
     const handleMessage = async (event: MessageEvent<IframeMessage>) => {
       // Ignore messages not from parent app
       if (event.data?.source !== 'webapp_v2') {
         return;
       }
 
-      console.log('[Child] Received message from parent:', event.data.type);
+      console.log('[ParentComm Provider] Received message from parent:', event.data.type);
 
       switch (event.data.type) {
         case 'AUTH_UPDATE':
@@ -207,7 +222,7 @@ export function useParentCommunication() {
           break;
 
         case 'LOGOUT':
-          handleLogout();
+          await handleLogout();
           break;
 
         case 'AUTH_REQUEST':
@@ -236,5 +251,18 @@ export function useParentCommunication() {
     }
   }, [state.isEmbedded, state.isReady, sendReadyMessage]);
 
-  return state;
+  return (
+    <ParentCommunicationContext.Provider value={state}>
+      {children}
+    </ParentCommunicationContext.Provider>
+  );
+}
+
+// Simple hook that only returns state - no side effects
+export function useParentCommunication(): ParentCommState {
+  const context = useContext(ParentCommunicationContext);
+  if (!context) {
+    throw new Error('useParentCommunication must be used within a ParentCommunicationProvider');
+  }
+  return context;
 }

@@ -21,7 +21,7 @@ import Input from '@/components/UI/Input/Input';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { PageHead } from '@/components/PageHead';
-import { useParentCommunication } from '@/hooks/useParentComm';
+import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
 export const Login = () => {
   const {

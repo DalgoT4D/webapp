@@ -17,7 +17,7 @@ import { successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { FeatureFlagKeys, useFeatureFlags } from '@/customHooks/useFeatureFlags';
 import { Close } from '@mui/icons-material';
-import { useParentCommunication } from '@/hooks/useParentComm';
+import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
 export const Explore = () => {
   const { data: session } = useSession();
