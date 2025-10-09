@@ -1,54 +1,68 @@
 import { backendUrl } from '@/config/constant';
 import { getOrgHeaderValue } from '@/utils/common';
 import { signOut } from 'next-auth/react';
-import { getEmbeddedAuth } from '@/middleware/embeddedAuth';
 
-// Helper function to handle 401 errors by clearing session and logging out
-function handleUnauthorizedError() {
-  // Check if we're in embedded mode
-  const embeddedAuth = getEmbeddedAuth();
+// Helper to check if we're running in iframe
+function isEmbedded(): boolean {
+  if (typeof window === 'undefined') return false;
 
-  if (embeddedAuth) {
-    // In embedded mode, don't redirect - just clear the auth
-    sessionStorage.clear();
-    console.log('Embedded auth failed');
-    return;
+  try {
+    return window.self !== window.top;
+  } catch (e) {
+    // Cross-origin iframe will throw an error
+    return true;
   }
-
-  console.log('Unauthorized access detected. Logging out...');
-  localStorage.clear();
-  signOut({ callbackUrl: '/login' });
 }
 
-// Helper to get auth token, preferring embedded token when available
+// Helper to get auth token
 function getAuthToken(session: any): string | undefined {
-  // Check for embedded auth first
-  const embeddedAuth = getEmbeddedAuth();
-  if (embeddedAuth?.token) {
-    return embeddedAuth.token;
+  // If we're embedded, check for parent-provided token
+  if (isEmbedded() && typeof window !== 'undefined') {
+    const parentToken = sessionStorage.getItem('parentToken');
+    if (parentToken) {
+      console.log('[Child HTTP] Using parent-provided token');
+      return parentToken;
+    }
   }
 
-  // Check window object for embedded session
-  if (typeof window !== 'undefined' && (window as any).__embeddedSession?.user?.token) {
-    return (window as any).__embeddedSession.user.token;
-  }
-
+  // Otherwise use NextAuth session token
   return session?.user?.token;
 }
 
-// Helper to get org header, preferring embedded org when available
+// Helper to get org header
 function getOrgHeader(method: string, path: string): string {
-  // Check for embedded auth first
-  const embeddedAuth = getEmbeddedAuth();
-
-  // If we're in embedded mode and have an org, use it
-  if (embeddedAuth && embeddedAuth.isEmbedded) {
-    // Return the embedded org, or empty string if not set
-    return embeddedAuth.org || '';
+  // If we're embedded, check for parent-provided org
+  if (isEmbedded() && typeof window !== 'undefined') {
+    const parentOrgSlug = sessionStorage.getItem('parentOrgSlug');
+    if (parentOrgSlug) {
+      console.log('[Child HTTP] Using parent-provided org:', parentOrgSlug);
+      return parentOrgSlug;
+    }
   }
 
-  // Otherwise use the normal org header logic
+  // Otherwise use normal org header logic
   return getOrgHeaderValue(method, path);
+}
+
+// Handle unauthorized errors
+function handleUnauthorizedError() {
+  const embedded = isEmbedded();
+
+  if (embedded) {
+    // In embedded mode, clear parent auth and wait for new auth from parent
+    console.log('[Child HTTP] Embedded auth failed, clearing parent tokens');
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('parentToken');
+      sessionStorage.removeItem('parentOrgSlug');
+      sessionStorage.removeItem('currentOrgSlug');
+    }
+    // Don't redirect, parent will handle re-auth
+    return;
+  }
+
+  // In standalone mode, redirect to login
+  console.log('[Child HTTP] Unauthorized access detected. Logging out...');
+  signOut({ callbackUrl: '/login', redirect: true });
 }
 
 export async function httpGet(session: any, path: string, isJson = true) {
@@ -111,7 +125,7 @@ export async function httpPut(session: any, path: string, payload: object) {
     return message;
   } else {
     if (response.status === 401) {
-      await handleUnauthorizedError();
+      handleUnauthorizedError();
       return;
     }
     const error = await response.json();
@@ -133,7 +147,7 @@ export async function httpDelete(session: any, path: string) {
     return message;
   } else {
     if (response.status === 401) {
-      await handleUnauthorizedError();
+      handleUnauthorizedError();
       return;
     }
     const error = await response.json();

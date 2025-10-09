@@ -70,6 +70,38 @@ export const authOptions: NextAuthOptions = {
         }
       },
     }),
+    CredentialsProvider({
+      id: 'embed-token',
+      name: 'Embed Token',
+      credentials: {
+        token: { label: 'Token', type: 'text' },
+      },
+      async authorize(credentials, req) {
+        if (!credentials?.token) return null;
+
+        // Use your existing API to fetch current user details
+        const res = await fetch(`${backendUrl}/api/login_token/`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${credentials.token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (res.ok) {
+          const user = await res.json();
+          // Return user object that will be stored in the session
+          // Make sure this matches the structure your app expects
+          return user;
+        } else {
+          const errorRes = await res.json();
+          const error: any = new Error(errorRes?.detail || 'Please check your credentials');
+          error.status = res.status;
+          console.error('Token validation failed:', error);
+          throw error;
+        }
+      },
+    }),
   ],
   session: {
     strategy: 'jwt',

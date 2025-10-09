@@ -10,6 +10,19 @@ jest.mock('next/router', () => ({
   },
 }));
 
+// Mock the useParentCommunication hook
+jest.mock('../../../contexts/ParentCommunicationProvider', () => ({
+  useParentCommunication: () => ({
+    isEmbedded: false,
+    parentToken: null,
+    parentOrgSlug: null,
+    hideHeader: false,
+    isReady: false,
+    isEmbeddingBlocked: false,
+  }),
+  ParentCommunicationProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // mock Header and SideDrawer
 jest.mock('../../SideDrawer/SideDrawer', () => {
   const MockSideDrawer = () => {

@@ -12,6 +12,19 @@ jest.mock('next/navigation', () => ({
   usePathname: jest.fn(),
 }));
 
+// Mock the useParentCommunication hook
+jest.mock('../../contexts/ParentCommunicationProvider', () => ({
+  useParentCommunication: () => ({
+    isEmbedded: false,
+    parentToken: null,
+    parentOrgSlug: null,
+    hideHeader: false,
+    isReady: false,
+    isEmbeddingBlocked: false,
+  }),
+  ParentCommunicationProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 const mockUseSession = useSession as jest.Mock;
 const mockUseRouter = useRouter as jest.Mock;
 const mockUsePathname = usePathname as jest.Mock;

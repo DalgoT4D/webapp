@@ -3,7 +3,7 @@ import { WarehouseTable } from '@/components/TransformWorkflow/FlowEditor/Compon
 import { StatisticsPane } from '@/components/TransformWorkflow/FlowEditor/Components/LowerSectionTabs/StatisticsPane';
 
 import { httpGet } from '@/helpers/http';
-import { Box, Dialog, Divider, Tab, Tabs } from '@mui/material';
+import { Box, Dialog, Divider, IconButton, Tab, Tabs } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
@@ -16,6 +16,8 @@ import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { FeatureFlagKeys, useFeatureFlags } from '@/customHooks/useFeatureFlags';
+import { Close } from '@mui/icons-material';
+import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
 export const Explore = () => {
   const { data: session } = useSession();
@@ -33,6 +35,8 @@ export const Explore = () => {
   const { isFeatureFlagEnabled } = useFeatureFlags();
 
   const { setPreviewAction } = usePreviewAction();
+
+  const { isEmbedded } = useParentCommunication();
 
   const fetchSourcesModels = () => {
     setLoading(true);
@@ -90,12 +94,14 @@ export const Explore = () => {
     <>
       <PageHead title="Dalgo | Explore" />
       <Dialog fullScreen open={dialogueOpen} TransitionComponent={Transition}>
-        <TopNavBar
-          handleClose={() => {
-            setDialogueOpen(false);
-            router.push('/pipeline/ingest');
-          }}
-        />
+        {!isEmbedded && (
+          <TopNavBar
+            handleClose={() => {
+              setDialogueOpen(false);
+              router.push('/pipeline/ingest');
+            }}
+          />
+        )}
 
         <Box
           sx={{
@@ -149,6 +155,7 @@ export const Explore = () => {
                     <Tab label="Data statistics" value="statistics" />
                   )}
                 </Tabs>
+                <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}></Box>
               </Box>
               <Box>
                 {selectedTab === 'preview' && <PreviewPane height={height} />}

@@ -3,6 +3,19 @@ import { Login } from '../pages/login/index';
 import { SessionProvider } from 'next-auth/react';
 import * as nextRouter from 'next/router';
 
+// Mock the useParentCommunication hook
+jest.mock('../contexts/ParentCommunicationProvider', () => ({
+  useParentCommunication: () => ({
+    isEmbedded: false,
+    parentToken: null,
+    parentOrgSlug: null,
+    hideHeader: false,
+    isReady: false,
+    isEmbeddingBlocked: false,
+  }),
+  ParentCommunicationProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 describe('tests for login form', () => {
   const mockSession: Session = {
     expires: '1',

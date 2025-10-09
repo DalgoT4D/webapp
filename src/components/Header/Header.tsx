@@ -16,6 +16,8 @@ import HamburgerIcon from '../../assets/icons/hamburger.svg';
 import useSWR from 'swr';
 import Unread_Notifications from '@/assets/icons/notifications_unread';
 import Notifications from '@/assets/icons/notifications';
+import { useSignOut } from '@/hooks/useSignOut';
+import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
 type Org = {
   name: string;
@@ -53,11 +55,7 @@ export const Header = ({
   const { data: unread_count } = useSWR(`notifications/unread_count`, {
     refreshInterval: 20000,
   });
-  const handleSignout = () => {
-    // Hit backend api to invalidate the token
-    localStorage.clear();
-    signOut({ callbackUrl: `${window.location.origin}` });
-  };
+  const { handleSignOut } = useSignOut();
   const { data: session }: any = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -68,6 +66,7 @@ export const Header = ({
   const [showOrgCreateForm, setShowOrgCreateForm] = useState<boolean>(false);
   const [selectedOrg, setSelectedOrg] = useState<AutoCompleteOption | null | undefined>(null);
   const globalContext = useContext(GlobalContext);
+  const { parentOrgSlug } = useParentCommunication();
   const permissions = globalContext?.Permissions.state || [];
   const open = Boolean(anchorEl);
   const handleClick = (event: HTMLElement | null) => {
@@ -137,6 +136,18 @@ export const Header = ({
       }
     }
   }, [selectedOrg]);
+
+  // Handle parent org changes when embedded
+  useEffect(() => {
+    if (parentOrgSlug && orgusers && orgusers.length > 0) {
+      const parentOrg = orgusers.find((ou) => ou.org.slug === parentOrgSlug);
+      if (parentOrg) {
+        const newSelectedOrg = { id: parentOrg.org.slug, label: parentOrg.org.name };
+        setSelectedOrg(newSelectedOrg);
+        console.log('[Child Header] Syncing with parent org:', parentOrgSlug);
+      }
+    }
+  }, [parentOrgSlug, orgusers]);
 
   const handleCreateOrgClick = () => {
     setShowOrgCreateForm(true);
@@ -290,7 +301,7 @@ export const Header = ({
           sx={{
             borderTop: '0.5px solid rgba(15, 36, 64, 0.5)',
           }}
-          onClick={() => handleSignout()}
+          onClick={() => handleSignOut()}
         >
           <Image style={{ marginRight: 8 }} src={LogoutIcon} alt="logout icon" />
           Logout

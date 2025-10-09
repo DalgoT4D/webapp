@@ -8,7 +8,7 @@ import {
   CircularProgress,
   FormHelperText,
 } from '@mui/material';
-import { signIn, useSession } from 'next-auth/react';
+import { getSession, signIn, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 
 import styles from '@/styles/Login.module.css';
@@ -21,7 +21,7 @@ import Input from '@/components/UI/Input/Input';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { PageHead } from '@/components/PageHead';
-import { getEmbeddedAuth, isEmbedded } from '@/middleware/embeddedAuth';
+import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
 export const Login = () => {
   const {
@@ -36,44 +36,28 @@ export const Login = () => {
     },
   });
   const router = useRouter();
-  const { data: session }: any = useSession();
+  const { data: session, status }: any = useSession();
   const context = useContext(GlobalContext);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [waitForLogin, setWaitForLogin] = useState(false);
+  const [autoSigningIn, setAutoSigningIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { isEmbedded, parentToken } = useParentCommunication();
 
-  // Capture embedded state from URL, referrer, or iframe detection on mount
+  // Ensure component is mounted before checking embed token
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const embedded = urlParams.get('embedded');
-    const hide = urlParams.get('hide');
-
-    // Check if we have embedded params in URL
-    if (embedded === 'true') {
-      sessionStorage.setItem('isEmbedded', 'true');
-      if (hide) {
-        sessionStorage.setItem('embeddedHide', hide);
-      }
-      console.log('Login page: Stored embedded state from URL', { embedded, hide });
-    } else {
-      // Check if we're in an iframe
-      const isInIframe = window !== window.parent;
-      if (isInIframe) {
-        sessionStorage.setItem('isEmbedded', 'true');
-        sessionStorage.setItem('embeddedHide', 'true'); // Default to hiding sidebar in iframe
-        console.log('Login page: Detected iframe, setting embedded state');
-      } else {
-        // Check if we came from an embedded page (referrer contains embedded=true)
-        const referrer = document.referrer;
-        if (referrer && referrer.includes('embedded=true')) {
-          sessionStorage.setItem('isEmbedded', 'true');
-          if (referrer.includes('hide=true')) {
-            sessionStorage.setItem('embeddedHide', 'true');
-          }
-          console.log('Login page: Detected embedded state from referrer', referrer);
-        }
-      }
-    }
+    setMounted(true);
   }, []);
+
+  // Handle redirection when embedded and authenticated
+  useEffect(() => {
+    // If embedded and authenticated via parent token, redirect to default page
+    if (isEmbedded && session?.user?.token && status !== 'loading') {
+      console.log('[Child Login] Embedded and authenticated, redirecting...');
+      const redirectUrl = '/pipeline';
+      router.push(redirectUrl);
+    }
+  }, [isEmbedded, session?.user?.token, status, router]);
 
   const onSubmit = async (reqData: any) => {
     setWaitForLogin(true);
@@ -85,17 +69,9 @@ export const Login = () => {
     });
     if (res.ok) {
       // Check if we're in embedded mode and redirect accordingly
-      const embeddedAuth = getEmbeddedAuth();
-      const isEmbeddedSession = sessionStorage.getItem('isEmbedded') === 'true';
-      const hideParam = sessionStorage.getItem('embeddedHide');
-
-      if ((embeddedAuth && embeddedAuth.isEmbedded) || isEmbeddedSession) {
-        // In embedded mode, redirect to ingest page with hide parameter if it was set
-        const redirectUrl =
-          hideParam === 'true'
-            ? '/pipeline/ingest?tab=connections&hide=true'
-            : '/pipeline/ingest?tab=connections';
-        router.push(redirectUrl);
+      if (isEmbedded) {
+        // In embedded mode, redirect to pipeline overview
+        router.push('/pipeline');
       } else {
         // Normal mode, redirect to pipeline overview
         router.push('/pipeline');
@@ -109,22 +85,28 @@ export const Login = () => {
 
   // Simple redirect if already logged in
   if (session?.user?.token) {
-    // Check if we're in embedded mode and redirect accordingly
-    const embeddedAuth = getEmbeddedAuth();
-    const isEmbeddedSession = sessionStorage.getItem('isEmbedded') === 'true';
-    const hideParam = sessionStorage.getItem('embeddedHide');
-
-    if ((embeddedAuth && embeddedAuth.isEmbedded) || isEmbeddedSession) {
-      // In embedded mode, redirect to ingest page with hide parameter if it was set
-      const redirectUrl =
-        hideParam === 'true'
-          ? '/pipeline/ingest?tab=connections&hide=true'
-          : '/pipeline/ingest?tab=connections';
-      router.push(redirectUrl);
+    if (isEmbedded) {
+      // In embedded mode, redirect to pipeline overview
+      router.push('/pipeline');
     } else {
       // Normal mode, redirect to home
       router.push('/');
     }
+    return null;
+  }
+
+  // Show loading state when embedded and waiting for parent auth or auto-signing in
+  if (mounted && (autoSigningIn || (isEmbedded && !session?.user?.token))) {
+    return (
+      <>
+        <PageHead title="Dalgo | Signing In" />
+        <Auth heading="Signing you in..." subHeading="">
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        </Auth>
+      </>
+    );
   }
 
   return (
