@@ -163,6 +163,7 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
         try {
           const result = await signIn('embed-token', {
             token,
+            orgSlug,
             redirect: false, // Don't redirect automatically
           });
 
