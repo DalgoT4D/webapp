@@ -144,6 +144,8 @@ export const Header = ({
       if (parentOrg) {
         const newSelectedOrg = { id: parentOrg.org.slug, label: parentOrg.org.name };
         setSelectedOrg(newSelectedOrg);
+        // Immediately set localStorage to ensure x-dalgo-org header works
+        localStorage.setItem('org-slug', parentOrgSlug);
         console.log('[Child Header] Syncing with parent org:', parentOrgSlug);
       }
     }

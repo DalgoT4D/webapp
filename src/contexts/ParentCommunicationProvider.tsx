@@ -118,9 +118,6 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
   const handleOrgSwitch = useCallback((orgSlug: string) => {
     console.log('[ParentComm Provider] Switching to organization:', orgSlug);
 
-    // Update sessionStorage for parent communication
-    sessionStorage.setItem('parentOrgSlug', orgSlug);
-
     // Update state
     setState((prev) => ({
       ...prev,
@@ -143,11 +140,7 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
 
       console.log('[ParentComm Provider] Handling auth update with org:', orgSlug);
 
-      // Store in sessionStorage for HTTP helpers
-      sessionStorage.setItem('parentToken', token);
-      sessionStorage.setItem('parentOrgSlug', orgSlug);
-
-      // Update state
+      // Update state (no longer using sessionStorage)
       setState((prev) => ({
         ...prev,
         parentToken: token,
@@ -170,7 +163,7 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
           if (result?.ok) {
             console.log('[ParentComm Provider] Successfully authenticated with parent token');
             // Refresh session to get updated user data
-            await getSession();
+            localStorage.setItem('org-slug', orgSlug);
           } else {
             console.error(
               '[ParentComm Provider] Failed to authenticate with parent token:',
@@ -191,10 +184,7 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
   const handleLogout = useCallback(async () => {
     console.log('[ParentComm Provider] Received logout signal from parent');
 
-    // Clear all session storage (including any other embedded auth data)
-    if (typeof window !== 'undefined') {
-      sessionStorage.clear();
-    }
+    // NextAuth signOut will handle session cleanup
 
     // Reset state
     setState({

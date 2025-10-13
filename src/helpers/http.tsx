@@ -16,31 +16,14 @@ function isEmbedded(): boolean {
 
 // Helper to get auth token
 function getAuthToken(session: any): string | undefined {
-  // If we're embedded, check for parent-provided token
-  if (isEmbedded() && typeof window !== 'undefined') {
-    const parentToken = sessionStorage.getItem('parentToken');
-    if (parentToken) {
-      console.log('[Child HTTP] Using parent-provided token');
-      return parentToken;
-    }
-  }
-
-  // Otherwise use NextAuth session token
+  // Use NextAuth session token for both embedded and standalone modes
   return session?.user?.token;
 }
 
 // Helper to get org header
 function getOrgHeader(method: string, path: string): string {
-  // If we're embedded, check for parent-provided org
-  if (isEmbedded() && typeof window !== 'undefined') {
-    const parentOrgSlug = sessionStorage.getItem('parentOrgSlug');
-    if (parentOrgSlug) {
-      console.log('[Child HTTP] Using parent-provided org:', parentOrgSlug);
-      return parentOrgSlug;
-    }
-  }
-
-  // Otherwise use normal org header logic
+  // Use normal org header logic for both embedded and standalone modes
+  // The embed-token authentication should handle org context through proper auth flow
   return getOrgHeaderValue(method, path);
 }
 
@@ -49,13 +32,8 @@ function handleUnauthorizedError() {
   const embedded = isEmbedded();
 
   if (embedded) {
-    // In embedded mode, clear parent auth and wait for new auth from parent
-    console.log('[Child HTTP] Embedded auth failed, clearing parent tokens');
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('parentToken');
-      sessionStorage.removeItem('parentOrgSlug');
-      sessionStorage.removeItem('currentOrgSlug');
-    }
+    // In embedded mode, let NextAuth and parent handle re-auth
+    console.log('[Child HTTP] Embedded auth failed, letting parent handle re-auth');
     // Don't redirect, parent will handle re-auth
     return;
   }
