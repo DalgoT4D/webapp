@@ -185,6 +185,8 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
     console.log('[ParentComm Provider] Received logout signal from parent');
 
     // NextAuth signOut will handle session cleanup
+    // Sign out from NextAuth and wait for it to complete
+    await signOut({ redirect: false });
 
     // Reset state
     setState({
@@ -195,9 +197,6 @@ export function ParentCommunicationProvider({ children }: { children: ReactNode 
       isReady: false,
       isEmbeddingBlocked: false,
     });
-
-    // Sign out from NextAuth and wait for it to complete
-    await signOut({ redirect: false });
 
     // Redirect to login page to show proper state
     router.push('/login');
