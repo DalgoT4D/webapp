@@ -8,6 +8,7 @@ export interface OrgUserStateInterface {
   role_slug: string;
   org: CurrentOrgStateInterface;
   wtype: string;
+  permissions: { slug: string; name: string }[];
 }
 
 interface Action {
