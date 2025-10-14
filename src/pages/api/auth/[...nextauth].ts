@@ -75,17 +75,25 @@ export const authOptions: NextAuthOptions = {
       name: 'Embed Token',
       credentials: {
         token: { label: 'Token', type: 'text' },
+        orgSlug: { label: 'Organization', type: 'text' },
       },
       async authorize(credentials, req) {
         if (!credentials?.token) return null;
 
         // Use your existing API to fetch current user details
+        const headers: Record<string, string> = {
+          Authorization: `Bearer ${credentials.token}`,
+          'Content-Type': 'application/json',
+        };
+
+        // Add organization header if available
+        if (credentials.orgSlug) {
+          headers['x-dalgo-org'] = credentials.orgSlug;
+        }
+
         const res = await fetch(`${backendUrl}/api/login_token/`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${credentials.token}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
         });
 
         if (res.ok) {

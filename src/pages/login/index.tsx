@@ -68,14 +68,11 @@ export const Login = () => {
       callbackUrl: '/',
     });
     if (res.ok) {
+      // Refresh the session to get the latest data
+      await getSession();
+
       // Check if we're in embedded mode and redirect accordingly
-      if (isEmbedded) {
-        // In embedded mode, redirect to pipeline overview
-        router.push('/pipeline');
-      } else {
-        // Normal mode, redirect to pipeline overview
-        router.push('/pipeline');
-      }
+      router.push('/pipeline');
       successToast('User logged in successfully', [], context);
     } else {
       errorToast(res.error, [], context);
