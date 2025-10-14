@@ -1,11 +1,11 @@
 import { useSession } from 'next-auth/react';
-import { SWRConfig } from 'swr';
+import { SWRConfig, mutate } from 'swr';
 import { SideDrawer } from '../SideDrawer/SideDrawer';
 import { Header } from '../Header/Header';
 import { Box, Typography } from '@mui/material';
 import { httpGet } from '@/helpers/http';
 import { useRouter } from 'next/router';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
@@ -53,7 +53,8 @@ const MainDashboard = ({ children }: any) => {
   //   }
   // }, []);
 
-  const { hideHeader } = useParentCommunication();
+  const { hideHeader, parentOrgSlug } = useParentCommunication();
+  const previousOrgSlugRef = useRef<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -110,6 +111,61 @@ const MainDashboard = ({ children }: any) => {
       }
     })();
   }, [session]);
+
+  // Handle parent org changes in embedded mode
+  useEffect(() => {
+    if (parentOrgSlug) {
+      const currentOrgSlug = localStorage.getItem('org-slug');
+
+      // Check if org has actually changed
+      if (parentOrgSlug !== currentOrgSlug && parentOrgSlug !== previousOrgSlugRef.current) {
+        console.log(
+          '[Main Dashboard] Parent org changed from',
+          currentOrgSlug,
+          'to',
+          parentOrgSlug
+        );
+
+        // Update localStorage with new org
+        localStorage.setItem('org-slug', parentOrgSlug);
+
+        // Store the new org slug to prevent duplicate invalidations
+        previousOrgSlugRef.current = parentOrgSlug;
+
+        // Invalidate ALL SWR caches to force refetch with new org context
+        // This is the key fix - it ensures all components refetch their data
+        console.log('[Main Dashboard] Invalidating all SWR caches for org switch');
+        mutate(
+          () => true, // Invalidate everything
+          undefined, // No new data
+          { revalidate: true } // Force revalidation
+        );
+
+        // Also update the global context with the new org if we have the data
+        const orgusers = globalContext?.OrgUsers?.state;
+        if (orgusers && orgusers.length > 0) {
+          const newOrgUser = orgusers.find((ou: OrgUser) => ou.org.slug === parentOrgSlug);
+          if (newOrgUser) {
+            // Update current org in global state
+            globalContext?.CurrentOrg?.dispatch({
+              type: 'new',
+              orgState: { ...newOrgUser.org, wtype: newOrgUser.wtype },
+            });
+
+            // Update permissions in global state
+            const permissions =
+              newOrgUser.permissions?.map((permission: any) => permission.slug) || [];
+            globalContext?.Permissions?.dispatch({
+              type: 'add',
+              permissionState: permissions,
+            });
+
+            console.log('[Main Dashboard] Updated global context for org:', parentOrgSlug);
+          }
+        }
+      }
+    }
+  }, [parentOrgSlug, globalContext]);
 
   return (
     <SWRConfig
