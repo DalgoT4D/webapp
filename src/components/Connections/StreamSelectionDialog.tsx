@@ -24,13 +24,17 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface StreamData {
   streamName: string;
+  streamNamespace?: string;
   selected: boolean;
 }
 
 interface StreamSelectionDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (selectedStreams: Array<string>, selectAll: boolean) => void;
+  onConfirm: (
+    selectedStreams: Array<{ streamName: string; streamNamespace?: string }>,
+    selectAll: boolean
+  ) => void;
   connectionId: string;
 }
 
@@ -62,6 +66,7 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
           .filter((stream: any) => stream?.config?.selected)
           .map((stream: any) => ({
             streamName: stream.stream.name,
+            streamNamespace: stream.stream.namespace,
             selected: false, // Default to false for all streams
           }));
         setStreams(availableStreams);
@@ -98,14 +103,17 @@ export const StreamSelectionDialog: React.FC<StreamSelectionDialogProps> = ({
   };
 
   const handleConfirm = () => {
-    const selectedStreamNames = streams
+    const selectedStreams = streams
       .filter((stream) => stream.selected)
-      .map((stream) => stream.streamName);
+      .map((stream) => ({
+        streamName: stream.streamName,
+        streamNamespace: stream.streamNamespace,
+      }));
 
-    console.log('Selected Streams:', selectedStreamNames);
+    console.log('Selected Streams:', selectedStreams);
 
-    if (selectedStreamNames.length === streams.length) onConfirm(selectedStreamNames, true);
-    else onConfirm(selectedStreamNames, false);
+    if (selectedStreams.length === streams.length) onConfirm(selectedStreams, true);
+    else onConfirm(selectedStreams, false);
   };
 
   const handleClose = () => {
