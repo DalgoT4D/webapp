@@ -546,7 +546,9 @@ export const Connections = () => {
 
   const [showStreamSelectionDialog, setShowStreamSelectionDialog] = useState(false);
   const [showConfirmClearStreamsDialog, setShowConfirmClearStreamsDialog] = useState(false);
-  const [selectedStreamsForClear, setSelectedStreamsForClear] = useState<any[]>([]);
+  const [selectedStreamsForClear, setSelectedStreamsForClear] = useState<
+    Array<{ streamName: string; streamNamespace?: string }>
+  >([]);
   const [clearStreamsLoading, setClearStreamsLoading] = useState(false);
   const [clearAllStreams, setClearAllStreams] = useState(false);
 
@@ -858,7 +860,10 @@ export const Connections = () => {
     trackAmplitudeEvent('[Reset-connection] Button Clicked');
   };
 
-  const handleStreamSelectionConfirm = (selectedStreams: any[], selectAll: boolean) => {
+  const handleStreamSelectionConfirm = (
+    selectedStreams: Array<{ streamName: string; streamNamespace?: string }>,
+    selectAll: boolean
+  ) => {
     setSelectedStreamsForClear(selectedStreams);
     setClearAllStreams(selectAll);
     setShowStreamSelectionDialog(false);
