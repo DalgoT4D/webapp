@@ -80,6 +80,8 @@ interface RunObject {
   start_time: string;
   state_name: string;
   state_type: string;
+  total_run_time: number;
+  estimated_run_time: number;
   parameters: any | null;
 }
 
@@ -212,9 +214,11 @@ const LogsContainer = ({ run, flowRunId }: { run: RunObject; flowRunId: string }
             mr: 4,
           }}
         >
-          {formatDuration(
-            moment.duration(moment(run.end_time).diff(moment(run.start_time))).asSeconds()
-          )}
+          {run.total_run_time
+            ? formatDuration(run.total_run_time)
+            : formatDuration(
+                moment.duration(moment(run.end_time).diff(moment(run.start_time))).asSeconds()
+              )}
         </Box>
         <Box sx={{ width: '40%', textAlign: 'right' }}>
           <ToggleButtonGroup
