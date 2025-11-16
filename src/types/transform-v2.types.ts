@@ -3,9 +3,14 @@
  * New unified architecture using CanvasNode and CanvasEdge
  */
 
-import { Node } from 'reactflow';
+import { Edge, Node, NodeProps } from 'reactflow';
 
 // Canvas Node Types
+export enum CanvasNodeTypeEnum {
+  Source = 'source',
+  Model = 'model',
+  Operation = 'operation',
+}
 export type CanvasNodeType = 'source' | 'model' | 'operation';
 
 // Input payload for multi-input operations
@@ -48,18 +53,27 @@ export interface DbtModelResponse {
   source_name: string;
 }
 
+export interface OperationConfigBaseResponseJson {
+  type: string;
+  source_columns: string[];
+}
+
+export interface OperationConfigResponseJson extends OperationConfigBaseResponseJson {
+  [key: string]: any;
+}
+
 // Canvas Node (unified node type in v2)
 export interface CanvasNodeDataResponse {
   uuid: string;
   name: string;
   output_columns: string[]; // Backend returns 'output_columns' not 'output_cols'
-  node_type: CanvasNodeType;
+  node_type: CanvasNodeTypeEnum;
 
   // For SOURCE/MODEL nodes
   dbtmodel: DbtModelResponse | null;
 
   // For OPERATION nodes
-  operation_config: any;
+  operation_config: OperationConfigResponseJson;
 }
 
 // Canvas Edge
@@ -99,7 +113,7 @@ export interface CanvasNodeRenderData extends CanvasNodeDataResponse {
 
 export interface CanvasNodeRender {
   id: string;
-  type: CanvasNodeType;
+  type: CanvasNodeTypeEnum;
   data: CanvasNodeRenderData;
   position: any;
 }
@@ -110,3 +124,5 @@ export type DbtProjectGraphApiResponse = {
 };
 
 export type GenericNode = Node<CanvasNodeRenderData>;
+export type GenericNodeProps = NodeProps<CanvasNodeRenderData>;
+export type GenericEdge = Edge<CanvasEdgeDataResponse>;

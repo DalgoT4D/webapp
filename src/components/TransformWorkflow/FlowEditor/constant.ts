@@ -37,7 +37,7 @@ export const UNPIVOT_OP = 'unpivot';
 export const GENERIC_COL_OP = 'generic';
 export const GENERIC_SQL_OP = 'rawsql';
 
-export const operationIconMapping = {
+export const operationIconMapping: Record<string, string> = {
   [RENAME_COLUMNS_OP]: renameIcon,
   [FLATTEN_OP]: flattenJsonIcon,
   [FLATTEN_JSON_OP]: flattenJsonIcon,

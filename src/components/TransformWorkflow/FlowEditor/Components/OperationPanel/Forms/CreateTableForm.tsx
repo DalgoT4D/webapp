@@ -14,7 +14,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 
 const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   const { data: session } = useSession();
-  const { canvasNode } = useCanvasNode() as { canvasNode: OperationNodeType };
+  const { canvasNode } = useCanvasNode();
   const { setCanvasAction } = useCanvasAction();
   const globalContext = useContext(GlobalContext);
   const { control, register, handleSubmit, reset, formState } = useForm({
@@ -27,8 +27,7 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   });
 
   const handleCreateTableAndRun = async (data: any) => {
-    if (canvasNode?.type === OPERATION_NODE) {
-      const nodeData = canvasNode?.data as OperationNodeData;
+    if (canvasNode?.type === 'operation') {
       try {
         await httpPost(
           session,

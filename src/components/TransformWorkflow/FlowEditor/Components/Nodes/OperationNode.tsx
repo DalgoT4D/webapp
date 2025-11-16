@@ -9,9 +9,9 @@ import { useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Image from 'next/image';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
-import { GenericNode } from '@/types/transform-v2.types';
+import { GenericNode, GenericNodeProps } from '@/types/transform-v2.types';
 
-export function OperationNode(node: GenericNode) {
+export function OperationNode(node: GenericNodeProps) {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const edges = useEdges();
@@ -108,7 +108,7 @@ export function OperationNode(node: GenericNode) {
             }}
           >
             <Image
-              src={operationIconMapping[node.data.operation_config.type]}
+              src={operationIconMapping[node.data.operation_config?.type]}
               alt="operation icon"
             ></Image>
             {isDeletable && (

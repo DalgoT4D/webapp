@@ -1,6 +1,7 @@
 import { DbtSourceModel, UIOperationType } from './Canvas';
 import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
 import { getNextNodePosition } from '@/utils/editor';
+import { CanvasNodeRender, CanvasNodeRenderData, GenericNode } from '@/types/transform-v2.types';
 
 export const generateDummySrcModelNode = (node: any, model: DbtSourceModel, height = 200) => {
   const { x: xnew, y: ynew } = getNextNodePosition([
@@ -30,20 +31,19 @@ export const generateDummyOperationlNode = (node: any, op: UIOperationType, heig
   const { x: xnew, y: ynew } = getNextNodePosition([
     { position: { x: node?.xPos, y: node?.yPos }, height: height },
   ]);
-  const dummyTargetNodeData: any = {
+
+  const dummyTargetNodeData: GenericNode = {
     id: nodeId,
+    type: 'operation',
     selected: true,
-    type: OPERATION_NODE,
     data: {
-      id: nodeId,
-      type: OPERATION_NODE,
-      output_cols: [],
-      target_model_id: '',
-      target_model_name: '',
-      target_model_schema: '',
-      config: { type: op.slug },
+      name: op.label,
+      uuid: nodeId,
+      node_type: 'operation',
+      output_columns: [],
+      operation_config: { type: op.slug },
       isDummy: true,
-      parentNode: node, //added to check parent node.
+      dbtmodel: null,
     },
     position: {
       x: xnew,

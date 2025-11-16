@@ -46,6 +46,8 @@ import {
   CanvasNodeRender,
   DbtProjectGraphApiResponse,
   CanvasNodeType,
+  CanvasNodeTypeEnum,
+  CanvasNodeRenderData,
 } from '@/types/transform-v2.types';
 
 type CanvasProps = {
@@ -124,9 +126,9 @@ export interface UIOperationType {
 }
 
 const nodeTypes: NodeTypes = {
-  [`model`]: DbtSourceModelNode,
-  [`source`]: DbtSourceModelNode,
-  [`operation`]: OperationNode,
+  [CanvasNodeTypeEnum.Model]: DbtSourceModelNode,
+  [CanvasNodeTypeEnum.Source]: DbtSourceModelNode,
+  [CanvasNodeTypeEnum.Operation]: OperationNode,
 };
 
 const WorkflowValues: any = {
@@ -165,8 +167,9 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
 
   const disableToAndFromNodeRunOptions =
     !canvasNode ||
-    canvasNode?.data.type != SRC_MODEL_NODE ||
-    canvasNode?.data.input_type != 'model';
+    ![CanvasNodeTypeEnum.Source.toString(), CanvasNodeTypeEnum.Model.toString()].includes(
+      canvasNode?.type
+    );
 
   useEffect(() => {
     if (!finalLockCanvas) {
@@ -294,7 +297,7 @@ const Canvas = ({
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { canvasNode } = useCanvasNode();
   const { previewAction, setPreviewAction } = usePreviewAction();
-  const previewNodeRef = useRef<DbtSourceModel | null>();
+  const previewNodeRef = useRef<CanvasNodeRenderData | null>();
   const globalContext = useContext(GlobalContext);
   const EdgeStyle: EdgeStyleProps = {
     markerEnd: {

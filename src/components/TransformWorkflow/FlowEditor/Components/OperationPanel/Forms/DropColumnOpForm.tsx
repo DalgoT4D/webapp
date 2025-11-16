@@ -13,20 +13,18 @@ import {
   useTheme,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
-import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
-import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { useOpForm } from '@/customHooks/useOpForm';
-
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
+import {
+  CanvasNodeDataResponse,
+  CanvasNodeTypeEnum,
+  CreateOperationNodePayload,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 interface DropDataConfig {
   columns: string[];
@@ -45,7 +43,6 @@ const DropColumnOp = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [valid, setValid] = useState(true);
-  // const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [search, setSearch] = useState('');
   const { parentNode, nodeData } = useOpForm({
@@ -88,34 +85,15 @@ const DropColumnOp = ({
   };
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-        );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
-        setValue(
-          'config',
-          data.map((col: ColumnData) => ({
-            col_name: col.name,
-            drop_col: false,
-          }))
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (node?.type === OPERATION_NODE) {
+    if (node) {
+      setSrcColumns(node.data.output_columns);
       setValue(
         'config',
-        nodeData.output_cols.map((col: string) => ({
+        node.data.output_columns.map((col: string) => ({
           col_name: col,
           drop_col: false,
         }))
       );
-      setSrcColumns(nodeData.output_cols);
     }
   };
 
@@ -131,27 +109,31 @@ const DropColumnOp = ({
         setValid(false);
         return;
       }
-      const postData = {
-        op_type: operation.slug,
-        source_columns: srcColumns,
-        other_inputs: [],
-        config: { columns: selectedColumns },
-        input_node_uuid:
-          finalNode?.type === SRC_MODEL_NODE
-            ? finalNode?.id
-            : finalNode?.data.target_model_id || '',
-      };
 
       // api call
       setLoading(true);
-      let operationNode: any;
+      let operationNode: CanvasNodeDataResponse;
       if (finalAction === 'create') {
+        const postData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: { columns: selectedColumns },
+          input_node_uuid: finalNode?.id,
+        };
         operationNode = await httpPost(
           session,
           `transform/v2/dbt_project/operations/nodes/`,
           postData
         );
+        continueOperationChain(operationNode);
       } else if (finalAction === 'edit') {
+        const postData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: { columns: selectedColumns },
+        };
         // For v2 edit, transform other_inputs if they exist
         if (inputModels.length > 0) {
           postData.other_inputs = inputModels.map((model: any, index: number) => ({
@@ -165,9 +147,8 @@ const DropColumnOp = ({
           `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
           postData
         );
+        continueOperationChain(operationNode);
       }
-
-      continueOperationChain(operationNode);
     } catch (error) {
       console.log(error);
     } finally {
@@ -178,11 +159,11 @@ const DropColumnOp = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponeData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/v2/dbt_project/operations/nodes/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
+      const { operation_config: opConfig, input_models } = nodeResponeData;
       setInputModels(input_models);
 
       // form data; will differ based on operations in progress
@@ -315,7 +296,7 @@ const DropColumnOp = ({
                 return [
                   <Controller
                     name={`config.${colIndex}.drop_col`}
-                    key={`${node?.data.id}config.${colIndex}.key`}
+                    key={`${node?.id}config.${colIndex}.key`}
                     control={control}
                     render={({ field }) => (
                       <Box
@@ -328,7 +309,7 @@ const DropColumnOp = ({
                         }}
                       >
                         <FormControlLabel
-                          key={`${node?.data.id}${colIndex}.form`}
+                          key={`${node?.id}${colIndex}.form`}
                           control={
                             <Checkbox
                               {...field}
@@ -340,7 +321,7 @@ const DropColumnOp = ({
                               sx={{
                                 transform: 'scale(0.8)',
                               }}
-                              key={`${node?.data.id}chekboxInput`}
+                              key={`${node?.id}chekboxInput`}
                             />
                           }
                           label={column.col_name}

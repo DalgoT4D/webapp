@@ -20,7 +20,7 @@ import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasConte
 import { trimString } from '@/utils/common';
 import styled from '@emotion/styled';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { GenericNode } from '@/types/transform-v2.types';
+import { GenericNode, GenericNodeProps } from '@/types/transform-v2.types';
 
 export interface ColumnData {
   name: string;
@@ -81,7 +81,7 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
   );
 };
 
-export function DbtSourceModelNode(nodeProps: GenericNode) {
+export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
   const { data: session } = useSession();
   const { setPreviewAction } = usePreviewAction();
   const { canvasAction, setCanvasAction } = useCanvasAction();
