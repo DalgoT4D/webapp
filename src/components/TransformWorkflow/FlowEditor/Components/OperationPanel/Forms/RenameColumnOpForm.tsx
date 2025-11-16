@@ -99,8 +99,10 @@ const RenameColumnOp = ({
         source_columns: srcColumns,
         other_inputs: [],
         config: { columns: {} },
-        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
-        target_model_uuid: finalNode?.data.target_model_id || '',
+        input_node_uuid:
+          finalNode?.type === SRC_MODEL_NODE
+            ? finalNode?.id
+            : finalNode?.data.target_model_id || '',
       };
       data.config.forEach((item: any) => {
         if (item.old && item.new) postData.config.columns[item.old] = item.new;
@@ -110,14 +112,18 @@ const RenameColumnOp = ({
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          postData
+        );
       } else if (finalAction === 'edit') {
         // need this input to be sent for the first step in chain
         postData.input_uuid =
           inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${finalNode?.id}/`,
+          `transform/v2/dbt_project/operations/nodes/operations/${finalNode?.id}/`,
           postData
         );
       }
@@ -136,7 +142,7 @@ const RenameColumnOp = ({
       setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/operations/nodes/operations/${node?.id}/`
       );
       const { config: opConfig, input_models } = config;
       setInputModels(input_models);

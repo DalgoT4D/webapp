@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
+import { Handle, Position, useNodeId, useEdges, Edge, NodeProps } from 'reactflow';
 import { SrcModelNodeType } from '../Canvas';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
@@ -20,6 +20,7 @@ import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasConte
 import { trimString } from '@/utils/common';
 import styled from '@emotion/styled';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import { GenericNode } from '@/types/transform-v2.types';
 
 export interface ColumnData {
   name: string;
@@ -80,7 +81,7 @@ const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
   );
 };
 
-export function DbtSourceModelNode(node: SrcModelNodeType) {
+export function DbtSourceModelNode(nodeProps: GenericNode) {
   const { data: session } = useSession();
   const { setPreviewAction } = usePreviewAction();
   const { canvasAction, setCanvasAction } = useCanvasAction();
@@ -105,10 +106,10 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
       type: 'delete-node',
       data: {
         nodeId: nodeId,
-        nodeType: node.type,
+        nodeType: nodeProps.type,
         shouldRefreshGraph:
           edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0 ? false : true,
-        isDummy: node.data?.isDummy,
+        isDummy: nodeProps.data.isDummy,
       },
     });
   };
@@ -120,12 +121,12 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
         data: 'create',
       });
     }
-    setCanvasNode(node);
-    setPreviewAction({ type: 'preview', data: node.data });
+    setCanvasNode(nodeProps);
+    setPreviewAction({ type: 'preview', data: nodeProps.data });
   };
 
   useMemo(() => {
-    const cacheKey = `${node.data.schema}/${node.data.input_name}-${nodeId}`;
+    const cacheKey = `${nodeProps.data.dbtmodel?.schema}/${nodeProps.data.dbtmodel?.name}-${nodeId}`;
 
     if (cacheRef.current[cacheKey]) {
       setColumns(cacheRef.current[cacheKey]);
@@ -134,7 +135,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
         try {
           const data: ColumnData[] = await httpGet(
             session,
-            `warehouse/table_columns/${node.data.schema}/${node.data.input_name}`
+            `warehouse/table_columns/${nodeProps.data.dbtmodel?.schema}/${nodeProps.data.dbtmodel?.name}`
           );
           cacheRef.current[cacheKey] = data;
           setColumns(data);
@@ -151,12 +152,14 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
     }
   }, [canvasAction]);
 
+  console.log('Rendering DbtSourceModelNode:', nodeId, nodeProps);
+
   return (
     <Box
       onClick={handleSelectNode}
       sx={{
         display: 'flex',
-        border: node.selected || node.data?.isDummy ? '2px solid black' : '0px',
+        border: nodeProps.selected || nodeProps.data.isDummy ? '2px solid black' : '0px',
         borderRadius: '5px',
         borderStyle: 'dotted',
       }}
@@ -185,7 +188,7 @@ export function DbtSourceModelNode(node: SrcModelNodeType) {
         >
           <Box>
             <Typography variant="subtitle2" fontWeight={700} color="white">
-              {trimString(node.data.input_name, 25)}
+              {trimString(nodeProps.data.name || '', 25)}
             </Typography>
           </Box>
           <Box sx={{ marginLeft: 'auto' }}>

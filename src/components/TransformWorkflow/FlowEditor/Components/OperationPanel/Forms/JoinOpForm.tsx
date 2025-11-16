@@ -193,11 +193,11 @@ const JoinOpForm = ({
     try {
       const postData: any = {
         op_type: operation.slug,
-        input_uuid: data.table1.tab.id,
+        input_node_uuid: data.table1.tab.id,
         source_columns: nodeSrcColumns,
         other_inputs: [
           {
-            uuid: data.table2.tab.id,
+            input_node_uuid: data.table2.tab.id,
             columns: table2Columns,
             seq: data.join_type === 'right' ? 0 : 2,
           },
@@ -210,20 +210,21 @@ const JoinOpForm = ({
             compare_with: '=',
           },
         },
-        target_model_uuid: finalNode?.data.target_model_id || '',
       };
       // api call
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          postData
+        );
       } else if (finalAction === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        // For v2 edit, other_inputs are already in correct format
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${finalNode?.id}/`,
+          `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
           postData
         );
       }
@@ -242,7 +243,7 @@ const JoinOpForm = ({
       setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/operations/nodes/${node?.id}/`
       );
       const { config: opConfig, input_models } = config;
       setInputModels(input_models);

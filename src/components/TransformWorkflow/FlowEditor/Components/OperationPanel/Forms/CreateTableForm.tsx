@@ -30,11 +30,15 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
     if (canvasNode?.type === OPERATION_NODE) {
       const nodeData = canvasNode?.data as OperationNodeData;
       try {
-        await httpPost(session, `transform/dbt_project/model/${nodeData?.target_model_id}/save/`, {
-          name: data.output_name,
-          display_name: data.output_name,
-          dest_schema: data.dest_schema,
-        });
+        await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/${canvasNode.id}/terminate/`,
+          {
+            name: data.output_name,
+            display_name: data.output_name,
+            dest_schema: data.dest_schema,
+          }
+        );
         reset();
         setCanvasAction({ type: 'run-workflow', data: null });
         if (clearAndClosePanel) {

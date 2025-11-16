@@ -113,22 +113,33 @@ const AggregationOpForm = ({
             output_column_name: item.output_column_name,
           })),
         },
-        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
-        target_model_uuid: finalNode?.data.target_model_id || '',
+        input_node_uuid:
+          finalNode?.type === SRC_MODEL_NODE
+            ? finalNode?.id
+            : finalNode?.data.target_model_id || '',
       };
 
       setLoading(true);
       // api call
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          postData
+        );
       } else if (finalAction === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        // For v2 edit, transform other_inputs if they exist
+        if (inputModels.length > 0) {
+          postData.other_inputs = inputModels.map((model: any, index: number) => ({
+            input_node_uuid: model.uuid,
+            columns: model.columns || [],
+            seq: index + 1,
+          }));
+        }
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${finalNode?.id}/`,
+          `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
           postData
         );
       }

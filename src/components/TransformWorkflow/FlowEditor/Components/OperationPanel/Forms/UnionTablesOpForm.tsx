@@ -185,7 +185,7 @@ const UnionTablesOpForm = ({
         srcColumns = await fetchWareohuseTableColumns(srcModel.schema, srcModel.input_name);
       }
       return {
-        uuid: table.id,
+        input_node_uuid: table.id,
         columns: srcColumns,
         seq: index,
       };
@@ -194,25 +194,26 @@ const UnionTablesOpForm = ({
     try {
       const postData: any = {
         op_type: operation.slug,
-        input_uuid: data.tables[0].id,
+        input_node_uuid: data.tables[0].id,
         source_columns: nodeSrcColumns,
         other_inputs: await Promise.all(otherInputPromises),
         config: {},
-        target_model_uuid: nodeData?.target_model_id || '',
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          postData
+        );
       } else if (action === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        // For v2 edit, other_inputs are already in correct format
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
+          `transform/v2/dbt_project/operations/nodes/${node?.id}/`,
           postData
         );
       }
@@ -231,7 +232,7 @@ const UnionTablesOpForm = ({
       setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/operations/nodes/${node?.id}/`
       );
       const { config: opConfig, input_models } = config;
       setInputModels(input_models);

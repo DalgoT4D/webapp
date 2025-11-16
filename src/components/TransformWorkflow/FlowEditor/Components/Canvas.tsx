@@ -30,7 +30,7 @@ import 'reactflow/dist/style.css';
 import { OperationNode } from './Nodes/OperationNode';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
-import { httpDelete, httpGet } from '@/helpers/http';
+import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
@@ -40,6 +40,13 @@ import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { getNextNodePosition } from '@/utils/editor';
 import { KeyboardArrowDown } from '@mui/icons-material';
 import { useTracking } from '@/contexts/TrackingContext';
+import {
+  CanvasEdgeDataResponse,
+  CanvasNodeDataResponse,
+  CanvasNodeRender,
+  DbtProjectGraphApiResponse,
+  CanvasNodeType,
+} from '@/types/transform-v2.types';
 
 type CanvasProps = {
   redrawGraph: boolean;
@@ -92,24 +99,17 @@ export interface DbtSourceModel extends WarehouseTable {
 // export interface OperationNodeType extends NodeProps {
 //   data: OperationNodeData;
 // }
-export type OperationNodeType = NodeProps<OperationNodeData>;
+export type OperationNodeType = NodeProps<CanvasNodeRender>;
 
 // export interface SrcModelNodeType extends NodeProps {
 //   data: DbtSourceModel;
 // }
-export type SrcModelNodeType = NodeProps<DbtSourceModel>;
-
-type CustomNode = OperationNodeType | SrcModelNodeType;
+export type SrcModelNodeType = NodeProps<CanvasNodeRender>;
 
 type EdgeData = {
   id: string;
   source: string;
   target: string;
-};
-
-type DbtProjectGraphApiResponse = {
-  nodes: Array<DbtSourceModel | OperationNodeData>;
-  edges: EdgeData[];
 };
 
 type EdgeStyleProps = {
@@ -124,8 +124,9 @@ export interface UIOperationType {
 }
 
 const nodeTypes: NodeTypes = {
-  [`${SRC_MODEL_NODE}`]: DbtSourceModelNode,
-  [`${OPERATION_NODE}`]: OperationNode,
+  [`model`]: DbtSourceModelNode,
+  [`source`]: DbtSourceModelNode,
+  [`operation`]: OperationNode,
 };
 
 const WorkflowValues: any = {
@@ -247,7 +248,7 @@ const getLayoutedElements = ({
   edges,
   options,
 }: {
-  nodes: CustomNode[];
+  nodes: CanvasNodeRender[];
   edges: Edge[];
   options: { direction: string };
 }) => {
@@ -263,13 +264,13 @@ const getLayoutedElements = ({
   });
 
   edges.forEach((edge: Edge) => g.setEdge(edge.source, edge.target));
-  nodes.forEach((node: CustomNode) => g.setNode(node.id, {}));
+  nodes.forEach((node: CanvasNodeRender) => g.setNode(node.id, {}));
 
   // build the layout
   Dagre.layout(g);
 
   return {
-    nodes: nodes.map((node: CustomNode) => {
+    nodes: nodes.map((node: CanvasNodeRender) => {
       const { x, y } = g.node(node.id);
 
       return { ...node, position: { x, y } };
@@ -310,16 +311,15 @@ const Canvas = ({
     try {
       const response: DbtProjectGraphApiResponse = await httpGet(
         session,
-        'transform/dbt_project/graph/'
+        'transform/v2/dbt_project/graph/'
       );
-      const nodes: Array<DbtSourceModel | OperationNodeData | any> = response.nodes.map(
-        (nn: DbtSourceModel | OperationNodeData) => ({
-          id: nn.id,
-          type: nn.type,
-          data: nn,
-        })
-      );
-      const edges: Edge[] = response.edges.map((edgeData: EdgeData) => ({
+      const nodes: CanvasNodeRender[] = response.nodes.map((nn: CanvasNodeDataResponse) => ({
+        id: nn.uuid,
+        type: nn.node_type,
+        data: { ...nn, isDummy: false },
+        position: { x: 0, y: 0 }, // we will update it below after layouting
+      }));
+      const edges: Edge[] = response.edges.map((edgeData: CanvasEdgeDataResponse) => ({
         ...edgeData,
         ...EdgeStyle,
       }));
@@ -386,25 +386,13 @@ const Canvas = ({
     console.log('deleting a node with id ', nodeId);
     // remove the node from preview if its there
     if (!isDummy) {
-      // remove node from canvas
-      if (type === SRC_MODEL_NODE) {
-        // hit the backend api to remove the node in a try catch
-        try {
-          await httpDelete(session, `transform/dbt_project/model/${nodeId}/`);
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setTempLockCanvas(false);
-        }
-      } else if (type === OPERATION_NODE) {
-        // hit the backend api to remove the node in a try catch
-        try {
-          await httpDelete(session, `transform/dbt_project/model/operations/${nodeId}/`);
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setTempLockCanvas(false);
-        }
+      // remove node from canvas - unified delete endpoint in v2
+      try {
+        await httpDelete(session, `transform/v2/dbt_project/nodes/${nodeId}/`);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setTempLockCanvas(false);
       }
     }
 
@@ -428,7 +416,7 @@ const Canvas = ({
     console.log('delete source node');
     try {
       if (type === SRC_MODEL_NODE && !isDummy)
-        await httpDelete(session, `transform/dbt_project/source/${nodeId}/`);
+        await httpDelete(session, `transform/v2/dbt_project/nodes/${nodeId}/`);
     } catch (error) {
       console.log(error);
     } finally {
@@ -438,21 +426,38 @@ const Canvas = ({
     if (shouldRefreshGraph) setRedrawGraph(!redrawGraph);
   };
 
-  const addSrcModelNodeToCanvas = (dbtSourceModel: DbtSourceModel | null | undefined) => {
+  const addSrcModelNodeToCanvas = async (dbtSourceModel: DbtSourceModel | null | undefined) => {
     if (dbtSourceModel) {
-      const position = getNextNodePosition(nodes);
-      const newNode = {
-        id: dbtSourceModel.id,
-        type: SRC_MODEL_NODE,
-        data: dbtSourceModel,
-        position,
-      };
-      // handleNodesChange([{ type: 'add', item: newNode }]);
-      addNodes([newNode]);
-      setCenter(position.x, position.y, {
-        zoom: getZoom(),
-        duration: 500,
-      });
+      try {
+        setTempLockCanvas(true);
+
+        // Call v2 API to create CanvasNode in backend
+        const canvasNode: CanvasNodeDataResponse = await httpPost(
+          session,
+          `transform/v2/dbt_project/models/${dbtSourceModel.id}/nodes/`,
+          {} // Empty payload as the endpoint uses the dbtmodel_uuid from URL
+        );
+
+        // Add node to canvas using the response from backend
+        const position = getNextNodePosition(nodes);
+        const newNode: CanvasNodeRender = {
+          id: canvasNode.uuid,
+          type: canvasNode.node_type,
+          data: { ...canvasNode, isDummy: false },
+          position,
+        };
+
+        addNodes([newNode]);
+        setCenter(position.x, position.y, {
+          zoom: getZoom(),
+          duration: 500,
+        });
+      } catch (error) {
+        console.error('Failed to add source model to canvas:', error);
+        // Optionally show error toast
+      } finally {
+        setTempLockCanvas(false);
+      }
     }
   };
 

@@ -162,7 +162,10 @@ const ProjectTree = ({
       return {
         id: String(idx + 1),
         schema: schema,
-        children: leafNodesBySchema[schema],
+        children: leafNodesBySchema[schema].map((item: WarehouseTable, j) => ({
+          ...item,
+          id: String(item.id),
+        })),
       };
     });
 

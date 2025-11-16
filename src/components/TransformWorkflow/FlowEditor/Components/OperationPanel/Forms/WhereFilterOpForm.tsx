@@ -134,22 +134,33 @@ const WhereFilterOpForm = ({
           ],
           sql_snippet: data.sql_snippet,
         },
-        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
-        target_model_uuid: finalNode?.data.target_model_id || '',
+        input_node_uuid:
+          finalNode?.type === SRC_MODEL_NODE
+            ? finalNode?.id
+            : finalNode?.data.target_model_id || '',
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          postData
+        );
       } else if (finalAction === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        // For v2 edit, transform other_inputs if they exist
+        if (inputModels.length > 0) {
+          postData.other_inputs = inputModels.map((model: any, index: number) => ({
+            input_node_uuid: model.uuid,
+            columns: model.columns || [],
+            seq: index + 1,
+          }));
+        }
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${finalNode?.id}/`,
+          `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
           postData
         );
       }
@@ -168,7 +179,7 @@ const WhereFilterOpForm = ({
       setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/operations/nodes/${node?.id}/`
       );
       const { config: opConfig, input_models } = config;
       setInputModels(input_models);
