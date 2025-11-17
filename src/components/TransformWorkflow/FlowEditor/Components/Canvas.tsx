@@ -96,6 +96,7 @@ export interface DbtSourceModel extends WarehouseTable {
   source_name: string;
   input_type: 'model' | 'source';
   isDummy?: boolean;
+  output_cols: string[];
 }
 
 // export interface OperationNodeType extends NodeProps {

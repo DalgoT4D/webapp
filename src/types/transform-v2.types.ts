@@ -14,8 +14,8 @@ export enum CanvasNodeTypeEnum {
 export type CanvasNodeType = 'source' | 'model' | 'operation';
 
 // Input payload for multi-input operations
-export interface ModelSrcNodeInputPayload {
-  input_node_uuid: string; // Changed from 'uuid' in v1
+export interface ModelSrcOtherInputPayload {
+  input_model_uuid: string; // Changed from 'uuid' in v1
   columns: string[];
   seq: number;
 }
@@ -26,7 +26,7 @@ export interface CreateOperationNodePayload {
   config: any;
   input_node_uuid: string; // Required - the input canvas node
   source_columns: string[];
-  other_inputs: ModelSrcNodeInputPayload[]; // For multi-input operations like join/union
+  other_inputs: ModelSrcOtherInputPayload[]; // For multi-input operations like join/union
 }
 
 // Edit operation node payload
@@ -34,7 +34,7 @@ export interface EditOperationNodePayload {
   op_type: string;
   config: any;
   source_columns: string[];
-  other_inputs: ModelSrcNodeInputPayload[];
+  other_inputs: ModelSrcOtherInputPayload[];
 }
 
 // Terminate chain and create model payload
@@ -51,11 +51,13 @@ export interface DbtModelResponse {
   sql_path: string;
   type: 'source' | 'model';
   source_name: string;
+  output_cols: string[];
+  uuid: string;
 }
 
-export interface OperationConfigBaseResponseJson {
+interface OperationConfigBaseResponseJson {
   type: string;
-  source_columns: string[];
+  config: any;
 }
 
 export interface OperationConfigResponseJson extends OperationConfigBaseResponseJson {
@@ -74,6 +76,13 @@ export interface CanvasNodeDataResponse {
 
   // For OPERATION nodes
   operation_config: OperationConfigResponseJson;
+
+  // other_inputs; in case of multi-input operations
+  input_nodes?: CanvasNodeDataResponse[];
+
+  is_last_in_chain: boolean;
+
+  seq?: number; // sequence number; to be used in case of multi-input operations
 }
 
 // Canvas Edge

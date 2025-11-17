@@ -74,7 +74,7 @@ const UnionTablesOpForm = ({
     }
   };
 
-  const fetchWareohuseTableColumns = async (schema: string, input_name: string) => {
+  const fetchWarehouseTableColumns = async (schema: string, input_name: string) => {
     try {
       const data: ColumnData[] = await httpGet(
         session,
@@ -90,7 +90,7 @@ const UnionTablesOpForm = ({
   const fetchAndSetSourceColumns = async () => {
     if (node?.type === SRC_MODEL_NODE) {
       try {
-        const data: Array<string> = await fetchWareohuseTableColumns(
+        const data: Array<string> = await fetchWarehouseTableColumns(
           nodeData?.schema,
           nodeData?.input_name
         );
@@ -182,7 +182,7 @@ const UnionTablesOpForm = ({
       let srcColumns: string[] = [];
 
       if (srcModel) {
-        srcColumns = await fetchWareohuseTableColumns(srcModel.schema, srcModel.input_name);
+        srcColumns = await fetchWarehouseTableColumns(srcModel.schema, srcModel.input_name);
       }
       return {
         input_node_uuid: table.id,

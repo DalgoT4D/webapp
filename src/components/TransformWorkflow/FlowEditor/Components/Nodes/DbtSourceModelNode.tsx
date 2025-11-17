@@ -152,8 +152,6 @@ export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
     }
   }, [canvasAction]);
 
-  console.log('Rendering DbtSourceModelNode:', nodeId, nodeProps);
-
   return (
     <Box
       onClick={handleSelectNode}

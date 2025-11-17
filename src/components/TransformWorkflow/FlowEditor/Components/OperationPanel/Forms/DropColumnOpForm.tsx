@@ -45,16 +45,6 @@ const DropColumnOp = ({
   const [valid, setValid] = useState(true);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [search, setSearch] = useState('');
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
   const theme = useTheme();
 
   type FormColumnData = {
@@ -102,7 +92,7 @@ const DropColumnOp = ({
       .filter((column) => column.drop_col)
       .map((column) => column.col_name);
 
-    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalNode = node; //change  //this checks for edit case too.
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
       if (selectedColumns.length < 1) {
@@ -119,7 +109,7 @@ const DropColumnOp = ({
           source_columns: srcColumns,
           other_inputs: [],
           config: { columns: selectedColumns },
-          input_node_uuid: finalNode?.id,
+          input_node_uuid: finalNode?.id || '',
         };
         operationNode = await httpPost(
           session,
@@ -137,7 +127,7 @@ const DropColumnOp = ({
         // For v2 edit, transform other_inputs if they exist
         if (inputModels.length > 0) {
           postData.other_inputs = inputModels.map((model: any, index: number) => ({
-            input_node_uuid: model.uuid,
+            input_model_uuid: model.uuid,
             columns: model.columns || [],
             seq: index + 1,
           }));
@@ -163,11 +153,11 @@ const DropColumnOp = ({
         session,
         `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { operation_config: opConfig, input_models } = nodeResponeData;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponeData;
+      setInputModels(input_nodes || []);
 
       // form data; will differ based on operations in progress
-      const { source_columns, columns }: DropDataConfig = opConfig;
+      const { source_columns, columns }: DropDataConfig = operation_config.config;
       setSrcColumns(source_columns);
 
       // pre-fill form

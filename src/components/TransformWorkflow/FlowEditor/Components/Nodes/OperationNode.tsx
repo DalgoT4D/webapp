@@ -9,7 +9,7 @@ import { useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Image from 'next/image';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
-import { GenericNode, GenericNodeProps } from '@/types/transform-v2.types';
+import { CanvasNodeTypeEnum, GenericNode, GenericNodeProps } from '@/types/transform-v2.types';
 
 export function OperationNode(node: GenericNodeProps) {
   const globalContext = useContext(GlobalContext);
@@ -60,7 +60,7 @@ export function OperationNode(node: GenericNodeProps) {
     // This event is triggered via the ProjectTree component
     if (
       canvasAction.type === 'update-canvas-node' &&
-      canvasAction.data?.type === OPERATION_NODE &&
+      canvasAction.data?.type === CanvasNodeTypeEnum.Operation.toString() &&
       canvasAction.data?.id === node.id
     ) {
       setCanvasNode(node);
