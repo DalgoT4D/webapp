@@ -1,8 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, FormHelperText, FormLabel, Grid, SxProps, Typography } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -10,7 +8,12 @@ import Input from '@/components/UI/Input/Input';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
-import { useOpForm } from '@/customHooks/useOpForm';
+import {
+  CanvasNodeDataResponse,
+  CanvasNodeTypeEnum,
+  CreateOperationNodePayload,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 const renameGridStyles: {
   container: SxProps;
@@ -50,17 +53,6 @@ const CoalesceOpForm = ({
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
 
   const { control, handleSubmit, reset, getValues, formState } = useForm({
     defaultValues: {
@@ -84,66 +76,68 @@ const CoalesceOpForm = ({
   const { columns } = getValues();
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-        );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
-      } catch (error) {
-        console.log(error);
+    if (node) {
+      if (
+        [CanvasNodeTypeEnum.Model.toString(), CanvasNodeTypeEnum.Source.toString()].includes(
+          node.type
+        )
+      ) {
+        try {
+          if (node.data.dbtmodel) {
+            const data: ColumnData[] = await httpGet(
+              session,
+              `warehouse/table_columns/${node.data.dbtmodel.schema}/${node.data.dbtmodel.name}`
+            );
+            setSrcColumns(data.map((col: ColumnData) => col.name));
+          }
+        } catch (error) {
+          console.log(error);
+        }
       }
-    }
 
-    if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols);
+      if (node.type === CanvasNodeTypeEnum.Operation.toString()) {
+        setSrcColumns(node.data.output_columns);
+      }
     }
   };
 
   const handleSave = async (data: any) => {
-    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      const coalesceColumns = data.columns.map((col: any) => col.col).filter((col: string) => col);
-
-      const postData: any = {
-        op_type: operation.slug,
-        source_columns: srcColumns,
-        other_inputs: [],
-        config: {
-          columns: coalesceColumns,
-          default_value: data.default_value,
-          output_column_name: data.output_column_name,
-        },
-        input_node_uuid:
-          finalNode?.type === SRC_MODEL_NODE
-            ? finalNode?.id
-            : finalNode?.data.target_model_id || '',
+      let opConfig: any = {
+        columns: data.columns.map((col: any) => col.col).filter((col: string) => col),
+        default_value: data.default_value,
+        output_column_name: data.output_column_name,
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+          input_node_uuid: finalNode?.id || '',
+        };
         operationNode = await httpPost(
           session,
           `transform/v2/dbt_project/operations/nodes/`,
-          postData
+          payloadData
         );
       } else if (finalAction === 'edit') {
-        // For v2 edit, transform other_inputs if they exist
-        if (inputModels.length > 0) {
-          postData.other_inputs = inputModels.map((model: any, index: number) => ({
-            input_node_uuid: model.uuid,
-            columns: model.columns || [],
-            seq: index + 1,
-          }));
-        }
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+        };
         operationNode = await httpPut(
           session,
           `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
-          postData
+          payloadData
         );
       }
 
@@ -159,16 +153,15 @@ const CoalesceOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponseData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/v2/dbt_project/operations/nodes/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponseData;
 
       // form data; will differ based on operations in progress
       const { source_columns, columns, output_column_name, default_value }: CoalesceDataConfig =
-        opConfig;
+        operation_config.config;
       setSrcColumns(source_columns);
 
       // pre-fill form
