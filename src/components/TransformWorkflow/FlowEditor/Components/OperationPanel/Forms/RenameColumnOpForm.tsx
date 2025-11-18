@@ -34,7 +34,6 @@ const RenameColumnOp = ({
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
 
   const { control, handleSubmit, reset, getValues, formState, watch } = useForm({
@@ -129,7 +128,6 @@ const RenameColumnOp = ({
         `transform/v2/dbt_project/nodes/${node?.id}/`
       );
       const { operation_config, input_nodes } = nodeResponeData;
-      setInputModels(input_nodes || []);
 
       // form data; will differ based on operations in progress
       const { columns, source_columns }: RenameDataConfig = operation_config.config;

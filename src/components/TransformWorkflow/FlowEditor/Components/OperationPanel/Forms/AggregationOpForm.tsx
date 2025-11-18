@@ -12,6 +12,12 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { useOpForm } from '@/customHooks/useOpForm';
+import {
+  CanvasNodeDataResponse,
+  CreateOperationNodePayload,
+  DbtModelResponse,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 export interface AggregateOn {
   column: string;
@@ -44,17 +50,6 @@ const AggregationOpForm = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
 
   type FormProps = {
     aggregate_on: {
@@ -82,65 +77,51 @@ const AggregationOpForm = ({
   });
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-        );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols);
+    if (node) {
+      setSrcColumns(node.data.output_columns);
     }
   };
 
   const handleSave = async (data: FormProps) => {
-    const finalNode = node?.data.isDummy ? parentNode : node;
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      const postData: any = {
-        op_type: operation.slug,
-        source_columns: srcColumns,
-        config: {
-          aggregate_on: data.aggregate_on.map((item) => ({
-            operation: item.operation?.id,
-            column: item.column,
-            output_column_name: item.output_column_name,
-          })),
-        },
-        input_node_uuid:
-          finalNode?.type === SRC_MODEL_NODE
-            ? finalNode?.id
-            : finalNode?.data.target_model_id || '',
+      let opConfig: any = {
+        aggregate_on: data.aggregate_on.map((item) => ({
+          operation: item.operation?.id,
+          column: item.column,
+          output_column_name: item.output_column_name,
+        })),
       };
 
       setLoading(true);
       // api call
       let operationNode: any;
       if (finalAction === 'create') {
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          config: opConfig,
+          input_node_uuid: finalNode?.id || '',
+          other_inputs: [],
+        };
         operationNode = await httpPost(
           session,
           `transform/v2/dbt_project/operations/nodes/`,
-          postData
+          payloadData
         );
       } else if (finalAction === 'edit') {
-        // For v2 edit, transform other_inputs if they exist
-        if (inputModels.length > 0) {
-          postData.other_inputs = inputModels.map((model: any, index: number) => ({
-            input_node_uuid: model.uuid,
-            columns: model.columns || [],
-            seq: index + 1,
-          }));
-        }
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          config: opConfig,
+          other_inputs: [],
+        };
+
         operationNode = await httpPut(
           session,
           `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
-          postData
+          payloadData
         );
       }
 
@@ -157,15 +138,14 @@ const AggregationOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponeData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponeData;
 
       // form data; will differ based on operations in progress
-      const { source_columns, aggregate_on }: AggregateDataConfig = opConfig;
+      const { source_columns, aggregate_on }: AggregateDataConfig = operation_config.config;
       setSrcColumns(source_columns);
 
       // pre-fill form

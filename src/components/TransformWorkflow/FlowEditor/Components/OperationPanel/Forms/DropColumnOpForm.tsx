@@ -42,7 +42,6 @@ const DropColumnOp = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [valid, setValid] = useState(true);
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [search, setSearch] = useState('');
   const theme = useTheme();
 
@@ -99,6 +98,8 @@ const DropColumnOp = ({
         return;
       }
 
+      let opConfig: any = { columns: selectedColumns };
+
       // api call
       setLoading(true);
       let operationNode: any;
@@ -107,7 +108,7 @@ const DropColumnOp = ({
           op_type: operation.slug,
           source_columns: srcColumns,
           other_inputs: [],
-          config: { columns: selectedColumns },
+          config: opConfig,
           input_node_uuid: finalNode?.id || '',
         };
         operationNode = await httpPost(
@@ -120,16 +121,9 @@ const DropColumnOp = ({
           op_type: operation.slug,
           source_columns: srcColumns,
           other_inputs: [],
-          config: { columns: selectedColumns },
+          config: opConfig,
         };
-        // For v2 edit, transform other_inputs if they exist
-        if (inputModels.length > 0) {
-          postData.other_inputs = inputModels.map((model: any, index: number) => ({
-            input_model_uuid: model.uuid,
-            columns: model.columns || [],
-            seq: index + 1,
-          }));
-        }
+
         operationNode = await httpPut(
           session,
           `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
@@ -152,7 +146,6 @@ const DropColumnOp = ({
         `transform/v2/dbt_project/nodes/${node?.id}/`
       );
       const { operation_config, input_nodes } = nodeResponeData;
-      setInputModels(input_nodes || []);
 
       // form data; will differ based on operations in progress
       const { source_columns, columns }: DropDataConfig = operation_config.config;

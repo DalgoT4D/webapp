@@ -44,7 +44,6 @@ const JoinOpForm = ({
   const { data: session } = useSession();
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const [table2Columns, setTable2Columns] = useState<string[]>([]);
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
   const { deleteElements, addEdges, addNodes, getEdges, getNodes } = useReactFlow();
@@ -221,7 +220,6 @@ const JoinOpForm = ({
         `transform/v2/dbt_project/nodes/${node?.id}/`
       );
       const { operation_config, input_nodes } = nodeResponseData;
-      // setInputModels(other_inputs || []);
 
       // form data; will differ based on operations in progress
       const { source_columns, join_on, join_type }: JoinDataConfig = operation_config.config;
