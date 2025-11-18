@@ -1,8 +1,6 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
@@ -12,7 +10,12 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
-import { useOpForm } from '@/customHooks/useOpForm';
+import {
+  CanvasNodeDataResponse,
+  CanvasNodeTypeEnum,
+  CreateOperationNodePayload,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 interface CastDataConfig {
   source_columns: string[];
@@ -30,19 +33,9 @@ const CastColumnOp = ({
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [dataTypes, setDataTypes] = useState<string[]>([]);
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [configData, setConfigData] = useState<any>([]);
   const globalContext = useContext(GlobalContext);
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
+
   type FormData = {
     config: { name: string; data_type: string | null }[];
   };
@@ -68,24 +61,33 @@ const CastColumnOp = ({
   };
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      try {
-        const columnData: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-        );
+    console.log('Fetching source columns for node:', node);
+    if (node) {
+      if (
+        [CanvasNodeTypeEnum.Model.toString(), CanvasNodeTypeEnum.Source.toString()].includes(
+          node.type || ''
+        )
+      ) {
+        try {
+          if (node.data.dbtmodel) {
+            const columnData: ColumnData[] = await httpGet(
+              session,
+              `warehouse/table_columns/${node.data.dbtmodel.schema}/${node.data.dbtmodel.name}`
+            );
 
-        setValue('config', columnData);
-      } catch (error) {
-        console.log(error);
+            setValue('config', columnData);
+          }
+        } catch (error) {
+          console.log(error);
+        }
       }
-    }
 
-    if (node?.type === OPERATION_NODE) {
-      setValue(
-        'config',
-        nodeData.output_cols.map((column: any) => ({ name: column }))
-      );
+      if (node.type === CanvasNodeTypeEnum.Operation.toString()) {
+        setValue(
+          'config',
+          node.data.output_columns.map((column: string) => ({ name: column, data_type: null }))
+        );
+      }
     }
   };
 
@@ -94,25 +96,15 @@ const CastColumnOp = ({
     // clicking operational nodes (saved in db) has action == edit.
     //clicking source node (table) has action == create.
 
-    const finalNode = node?.data.isDummy ? parentNode : node;
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const sourceColumnsNames = config.map((column) => column.name);
-
-      const postData: any = {
-        op_type: operation.slug,
-        source_columns: sourceColumnsNames,
-        other_inputs: [],
-        config: { columns: [] },
-        input_node_uuid:
-          finalNode?.type === SRC_MODEL_NODE
-            ? finalNode?.id
-            : finalNode?.data.target_model_id || '',
-      };
+      let opConfig: any = { columns: [] };
 
       formData.config.forEach((data: any) => {
         if (data.name && data.data_type) {
-          postData.config.columns.push({
+          opConfig.columns.push({
             columnname: data.name,
             columntype: data.data_type,
           });
@@ -120,7 +112,7 @@ const CastColumnOp = ({
       });
 
       // validations
-      if (Object.keys(postData.config.columns).length === 0) {
+      if (Object.keys(opConfig.columns).length === 0) {
         console.log('Please add columns to cast');
         errorToast('Please add columns to cast', [], globalContext);
         return;
@@ -130,24 +122,29 @@ const CastColumnOp = ({
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: sourceColumnsNames,
+          other_inputs: [],
+          config: opConfig,
+          input_node_uuid: finalNode?.id || '',
+        };
         operationNode = await httpPost(
           session,
           `transform/v2/dbt_project/operations/nodes/`,
-          postData
+          payloadData
         );
       } else if (finalAction === 'edit') {
-        // For v2 edit, transform other_inputs if they exist
-        if (inputModels.length > 0) {
-          postData.other_inputs = inputModels.map((model: any, index: number) => ({
-            input_node_uuid: model.uuid,
-            columns: model.columns || [],
-            seq: index + 1,
-          }));
-        }
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: sourceColumnsNames,
+          other_inputs: [],
+          config: opConfig,
+        };
         operationNode = await httpPut(
           session,
           `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
-          postData
+          payloadData
         );
       }
 
@@ -165,16 +162,14 @@ const CastColumnOp = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
-        //this here fetches the columns data.
+      const nodeResponseData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/v2/dbt_project/operations/nodes/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponseData;
 
       // form data; will differ based on operations in progress
-      const { columns }: CastDataConfig = opConfig;
+      const { columns }: CastDataConfig = operation_config.config;
 
       // pre-fill form
       reset({
