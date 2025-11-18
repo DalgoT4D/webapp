@@ -20,8 +20,8 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   const { control, register, handleSubmit, reset, formState } = useForm({
     defaultValues: canvasNode?.data.is_last_in_chain
       ? {
-          output_name: canvasNode?.data.target_model_name || '',
-          dest_schema: canvasNode?.data.target_model_schema || '',
+          output_name: canvasNode?.data?.dbtmodel?.name || '',
+          dest_schema: canvasNode?.data?.dbtmodel?.schema || '',
         }
       : { output_name: '', dest_schema: '' },
   });
