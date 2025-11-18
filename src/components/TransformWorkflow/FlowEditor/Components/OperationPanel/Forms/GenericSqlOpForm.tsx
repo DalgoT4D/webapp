@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, FormLabel } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { Controller, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
-import { useOpForm } from '@/customHooks/useOpForm';
+import {
+  CanvasNodeDataResponse,
+  CreateOperationNodePayload,
+  DbtModelResponse,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 interface GenericDataConfig {
   columns: string[];
@@ -29,60 +32,57 @@ const GenericSqlOpForm = ({
   setLoading,
 }: OperationFormProps) => {
   const { data: session } = useSession();
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
+  const [inputModels, setInputModels] = useState<DbtModelResponse[]>([]);
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       sql_statement_1: '',
       sql_statement_2: '',
     },
   });
+
   let inputName = '';
-  if (node?.type === SRC_MODEL_NODE) {
-    inputName = nodeData.input_name;
-  } else if (node?.type === OPERATION_NODE && nodeData.config.input_models.length > 0) {
-    inputName = nodeData.config.input_models[0].name;
+  if (inputModels.length > 0) {
+    inputName = inputModels[0].name;
   } else {
-    inputName = 'undefined';
+    inputName = 'chained';
   }
 
   const handleSave = async (data: any) => {
-    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      const postData: any = {
-        op_type: operation.slug,
-        other_inputs: [],
-        config: {
-          sql_statement_1: data.sql_statement_1,
-          sql_statement_2: data.sql_statement_2,
-        },
-        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
-        target_model_uuid: finalNode?.data.target_model_id || '',
+      let opConfig: any = {
+        sql_statement_1: data.sql_statement_1,
+        sql_statement_2: data.sql_statement_2,
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          other_inputs: [],
+          config: opConfig,
+          input_node_uuid: finalNode?.id || '',
+          source_columns: [],
+        };
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          payloadData
+        );
       } else if (finalAction === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          other_inputs: [],
+          config: opConfig,
+          source_columns: [],
+        };
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${finalNode?.id}/`,
-          postData
+          `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
+          payloadData
         );
       }
 
@@ -98,14 +98,18 @@ const GenericSqlOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponseData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponseData;
+      setInputModels(
+        input_nodes
+          ?.map((input) => input.dbtmodel)
+          .filter((model): model is DbtModelResponse => model !== undefined) || []
+      );
 
-      const { sql_statement_2, sql_statement_1 }: GenericDataConfig = opConfig;
+      const { sql_statement_2, sql_statement_1 }: GenericDataConfig = operation_config.config;
 
       // pre-fill form
       reset({
