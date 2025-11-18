@@ -13,6 +13,11 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { useOpForm } from '@/customHooks/useOpForm';
+import {
+  CanvasNodeDataResponse,
+  CreateOperationNodePayload,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 interface RenameDataConfig {
   columns: { [key: string]: string };
@@ -31,16 +36,6 @@ const RenameColumnOp = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const globalContext = useContext(GlobalContext);
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
 
   const { control, handleSubmit, reset, getValues, formState, watch } = useForm({
     defaultValues: {
@@ -72,59 +67,48 @@ const RenameColumnOp = ({
   }, [fields]);
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      //change
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-        );
-        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols);
+    if (node) {
+      setSrcColumns(node.data.output_columns);
     }
   };
 
   const handleSave = async (data: any) => {
-    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      const postData: any = {
-        op_type: operation.slug,
-        source_columns: srcColumns,
-        other_inputs: [],
-        config: { columns: {} },
-        input_node_uuid:
-          finalNode?.type === SRC_MODEL_NODE
-            ? finalNode?.id
-            : finalNode?.data.target_model_id || '',
-      };
-      data.config.forEach((item: any) => {
-        if (item.old && item.new) postData.config.columns[item.old] = item.new;
+      let opConfig: any = { columns: {} };
+
+      config.forEach((item: any) => {
+        if (item.old && item.new) opConfig.columns[item.old] = item.new;
       });
 
       // api call
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+          input_node_uuid: finalNode?.id || '',
+        };
         operationNode = await httpPost(
           session,
           `transform/v2/dbt_project/operations/nodes/`,
-          postData
+          payloadData
         );
       } else if (finalAction === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+        };
         operationNode = await httpPut(
           session,
-          `transform/v2/dbt_project/operations/nodes/operations/${finalNode?.id}/`,
-          postData
+          `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
+          payloadData
         );
       }
       continueOperationChain(operationNode);
@@ -140,15 +124,15 @@ const RenameColumnOp = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponeData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/v2/dbt_project/operations/nodes/operations/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponeData;
+      setInputModels(input_nodes || []);
 
       // form data; will differ based on operations in progress
-      const { columns, source_columns }: RenameDataConfig = opConfig;
+      const { columns, source_columns }: RenameDataConfig = operation_config.config;
       setSrcColumns(source_columns);
 
       // pre-fill form

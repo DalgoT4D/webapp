@@ -18,7 +18,6 @@ import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
-import { useOpForm } from '@/customHooks/useOpForm';
 import {
   CanvasNodeDataResponse,
   CanvasNodeTypeEnum,
@@ -92,7 +91,7 @@ const DropColumnOp = ({
       .filter((column) => column.drop_col)
       .map((column) => column.col_name);
 
-    const finalNode = node; //change  //this checks for edit case too.
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
       if (selectedColumns.length < 1) {
@@ -102,7 +101,7 @@ const DropColumnOp = ({
 
       // api call
       setLoading(true);
-      let operationNode: CanvasNodeDataResponse;
+      let operationNode: any;
       if (finalAction === 'create') {
         const postData: CreateOperationNodePayload = {
           op_type: operation.slug,
@@ -116,7 +115,6 @@ const DropColumnOp = ({
           `transform/v2/dbt_project/operations/nodes/`,
           postData
         );
-        continueOperationChain(operationNode);
       } else if (finalAction === 'edit') {
         const postData: EditOperationNodePayload = {
           op_type: operation.slug,
@@ -137,8 +135,8 @@ const DropColumnOp = ({
           `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
           postData
         );
-        continueOperationChain(operationNode);
       }
+      continueOperationChain(operationNode);
     } catch (error) {
       console.log(error);
     } finally {
