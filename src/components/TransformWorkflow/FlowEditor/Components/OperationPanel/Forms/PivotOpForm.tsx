@@ -13,6 +13,7 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 import { useOpForm } from '@/customHooks/useOpForm';
+import { CreateOperationNodePayload, EditOperationNodePayload } from '@/types/transform-v2.types';
 
 interface PivotDataConfig {
   source_columns: string[];
@@ -90,6 +91,16 @@ const PivotOpForm = ({
   });
 
   const fetchAndSetSourceColumns = async () => {
+    if (node) {
+      setSrcColumns(node.data.output_columns.sort((a: string, b: string) => a.localeCompare(b)));
+      setValue(
+        'source_columns',
+        node.data.output_columns
+          .sort((a: string, b: string) => a.localeCompare(b))
+          .map((col: string) => ({ col: col, is_checked: false }))
+      );
+    }
+
     if (node?.type === SRC_MODEL_NODE) {
       //change
       try {
@@ -108,49 +119,77 @@ const PivotOpForm = ({
       }
     }
 
-    if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols);
-      setValue(
-        'source_columns',
-        nodeData.output_cols
-          .sort((a: string, b: string) => a.localeCompare(b))
-          .map((col: string) => ({ col: col, is_checked: false }))
-      );
-    }
+    // if (node?.type === OPERATION_NODE) {
+    //   setSrcColumns(nodeData.output_cols);
+    //   setValue(
+    //     'source_columns',
+    //     nodeData.output_cols
+    //       .sort((a: string, b: string) => a.localeCompare(b))
+    //       .map((col: string) => ({ col: col, is_checked: false }))
+    //   );
+    // }
   };
 
   const handleSave = async (data: FormProps) => {
-    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      const postData: any = {
-        op_type: operation.slug,
-        source_columns: data.source_columns
-          .filter((src_col) => src_col.is_checked && src_col.col !== pivotColumn)
-          .map((src_col) => src_col.col),
-        config: {
-          pivot_column_name: data.pivot_column_name,
-          pivot_column_values: data.pivot_column_values
-            .filter((item) => item.col)
-            .map((item) => item.col),
-        },
-        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
-        target_model_uuid: finalNode?.data.target_model_id || '',
+      let sourceColumns = data.source_columns
+        .filter((src_col) => src_col.is_checked)
+        .map((src_col) => src_col.col);
+
+      let opConfig: any = {
+        pivot_column_name: data.pivot_column_name,
+        pivot_column_values: data.pivot_column_values
+          .filter((item) => item.col)
+          .map((item) => item.col),
       };
+
+      // const postData: any = {
+      //   op_type: operation.slug,
+      //   source_columns: data.source_columns
+      //     .filter((src_col) => src_col.is_checked && src_col.col !== pivotColumn)
+      //     .map((src_col) => src_col.col),
+      //   config: {
+      //     pivot_column_name: data.pivot_column_name,
+      //     pivot_column_values: data.pivot_column_values
+      //       .filter((item) => item.col)
+      //       .map((item) => item.col),
+      //   },
+      //   input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
+      // };
 
       setLoading(true);
       // api call
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: sourceColumns,
+          other_inputs: [],
+          config: opConfig,
+          input_node_uuid: finalNode?.id || '',
+        };
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          payloadData
+        );
       } else if (finalAction === 'edit') {
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: sourceColumns,
+          other_inputs: [],
+          config: opConfig,
+        };
         // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        // payloadData.input_uuid =
+        //   inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${finalNode?.id}/`,
-          postData
+          `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
+          payloadData
         );
       }
 
