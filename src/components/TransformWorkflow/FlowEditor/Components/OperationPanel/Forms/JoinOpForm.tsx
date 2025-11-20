@@ -176,7 +176,7 @@ const JoinOpForm = ({
       if (finalAction === 'create') {
         const payloadData: CreateOperationNodePayload = {
           op_type: operation.slug,
-          input_node_uuid: data.table1.tab.id,
+          input_node_uuid: finalNode?.id || '',
           source_columns: nodeSrcColumns,
           other_inputs: other_inputs,
           config: opConfig,
