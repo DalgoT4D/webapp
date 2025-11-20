@@ -22,7 +22,11 @@ import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import { LogicalOperators } from './CaseWhenOpForm';
 import { parseStringForNull } from '@/utils/common';
 import { useOpForm } from '@/customHooks/useOpForm';
-import { CreateOperationNodePayload, EditOperationNodePayload } from '@/types/transform-v2.types';
+import {
+  CanvasNodeDataResponse,
+  CreateOperationNodePayload,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 interface GenericOperand {
   value: string;
@@ -160,14 +164,15 @@ const WhereFilterOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponseData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
+      const { operation_config, input_nodes } = nodeResponseData;
 
       // form data; will differ based on operations in progress
-      const { source_columns, clauses, sql_snippet, where_type }: WherefilterDataConfig = opConfig;
+      const { source_columns, clauses, sql_snippet, where_type }: WherefilterDataConfig =
+        operation_config.config;
       setSrcColumns(source_columns);
 
       let clauseFields = {};
