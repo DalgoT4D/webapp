@@ -22,6 +22,7 @@ import InfoTooltip from '@/components/UI/Tooltip/Tooltip';
 import { LogicalOperators } from './CaseWhenOpForm';
 import { parseStringForNull } from '@/utils/common';
 import { useOpForm } from '@/customHooks/useOpForm';
+import { CreateOperationNodePayload, EditOperationNodePayload } from '@/types/transform-v2.types';
 
 interface GenericOperand {
   value: string;
@@ -90,78 +91,60 @@ const WhereFilterOpForm = ({
   const advanceFilter = watch('advanceFilter');
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      //change
-
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-        );
-        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols);
+    if (node) {
+      setSrcColumns(node.data.output_columns);
     }
   };
 
   const handleSave = async (data: FormProps) => {
-    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      const postData: any = {
-        op_type: operation.slug,
-        source_columns: srcColumns,
-        other_inputs: [],
-        config: {
-          where_type: data.advanceFilter === 'yes' ? 'sql' : 'and',
-          clauses: [
-            {
-              column: data.filterCol,
-              operator: data.logicalOp.id,
-              operand: {
-                value:
-                  data.operand.type === 'col'
-                    ? data.operand.col_val
-                    : parseStringForNull(data.operand.const_val),
-                is_col: data.operand.type === 'col',
-              },
+      let opConfig: any = {
+        where_type: data.advanceFilter === 'yes' ? 'sql' : 'and',
+        clauses: [
+          {
+            column: data.filterCol,
+            operator: data.logicalOp.id,
+            operand: {
+              value:
+                data.operand.type === 'col'
+                  ? data.operand.col_val
+                  : parseStringForNull(data.operand.const_val),
+              is_col: data.operand.type === 'col',
             },
-          ],
-          sql_snippet: data.sql_snippet,
-        },
-        input_node_uuid:
-          finalNode?.type === SRC_MODEL_NODE
-            ? finalNode?.id
-            : finalNode?.data.target_model_id || '',
+          },
+        ],
+        sql_snippet: data.sql_snippet,
       };
 
       // api call
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+          input_node_uuid: finalNode?.id || '',
+        };
         operationNode = await httpPost(
           session,
           `transform/v2/dbt_project/operations/nodes/`,
-          postData
+          payloadData
         );
       } else if (finalAction === 'edit') {
-        // For v2 edit, transform other_inputs if they exist
-        if (inputModels.length > 0) {
-          postData.other_inputs = inputModels.map((model: any, index: number) => ({
-            input_node_uuid: model.uuid,
-            columns: model.columns || [],
-            seq: index + 1,
-          }));
-        }
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+        };
         operationNode = await httpPut(
           session,
           `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
-          postData
+          payloadData
         );
       }
 
@@ -179,10 +162,9 @@ const WhereFilterOpForm = ({
       setLoading(true);
       const { config }: OperationNodeData = await httpGet(
         session,
-        `transform/v2/dbt_project/operations/nodes/${node?.id}/`
+        `transform/dbt_project/model/operations/${node?.id}/`
       );
       const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
 
       // form data; will differ based on operations in progress
       const { source_columns, clauses, sql_snippet, where_type }: WherefilterDataConfig = opConfig;
