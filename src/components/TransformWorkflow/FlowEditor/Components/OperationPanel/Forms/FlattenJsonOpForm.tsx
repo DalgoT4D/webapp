@@ -125,7 +125,7 @@ const FlattenJsonOpForm = ({
     const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      let opConfig: any = {
+      const opConfig: any = {
         json_column: formData.json_column,
         source_schema: node?.data?.dbtmodel?.schema,
         json_columns_to_copy: jsonColumns,

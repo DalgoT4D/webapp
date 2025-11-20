@@ -98,7 +98,7 @@ const DropColumnOp = ({
         return;
       }
 
-      let opConfig: any = { columns: selectedColumns };
+      const opConfig: any = { columns: selectedColumns };
 
       // api call
       setLoading(true);

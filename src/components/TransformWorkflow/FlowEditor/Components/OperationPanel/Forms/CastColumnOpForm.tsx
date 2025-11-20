@@ -100,7 +100,7 @@ const CastColumnOp = ({
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const sourceColumnsNames = config.map((column) => column.name);
-      let opConfig: any = { columns: [] };
+      const opConfig: any = { columns: [] };
 
       formData.config.forEach((data: any) => {
         if (data.name && data.data_type) {

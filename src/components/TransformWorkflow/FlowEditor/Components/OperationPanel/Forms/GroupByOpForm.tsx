@@ -117,7 +117,7 @@ const GroupByOpForm = ({
         .filter((col: any) => (col.col ? true : false))
         .map((col: any) => col.col);
 
-      let opConfig: any = {
+      const opConfig: any = {
         aggregate_on: data.aggregate_on
           .filter((item: any) => item.metric && item.aggregate_func.id && item.output_column_name)
           .map((item: any) => ({

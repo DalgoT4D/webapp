@@ -51,7 +51,7 @@ const GenericSqlOpForm = ({
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      let opConfig: any = {
+      const opConfig: any = {
         sql_statement_1: data.sql_statement_1,
         sql_statement_2: data.sql_statement_2,
       };

@@ -71,7 +71,7 @@ const RenameColumnOp = ({
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      let opConfig: any = { columns: {} };
+      const opConfig: any = { columns: {} };
 
       config.forEach((item: any) => {
         if (item.old && item.new) opConfig.columns[item.old] = item.new;

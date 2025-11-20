@@ -86,7 +86,7 @@ const UnpivotOpForm = ({
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      let opConfig: any = {
+      const opConfig: any = {
         unpivot_columns: data.unpivot_columns
           .filter((col) => col.is_unpivot_checked)
           .map((col) => col.col),

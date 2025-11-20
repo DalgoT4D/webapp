@@ -102,11 +102,11 @@ const PivotOpForm = ({
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      let groupbyColumns = data.groupby_columns
+      const groupbyColumns = data.groupby_columns
         .filter((src_col) => src_col.is_checked)
         .map((src_col) => src_col.col);
 
-      let opConfig: any = {
+      const opConfig: any = {
         pivot_column_name: data.pivot_column_name,
         pivot_column_values: data.pivot_column_values
           .filter((item) => item.col)

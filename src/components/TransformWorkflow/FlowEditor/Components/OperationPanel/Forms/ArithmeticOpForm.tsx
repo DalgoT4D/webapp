@@ -96,7 +96,7 @@ const ArithmeticOpForm = ({
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      let opConfig: any = {
+      const opConfig: any = {
         operator: data.arithmeticOp?.id,
         operands: data.operands.map(
           (op: { type: string; col_val: string; const_val: number | undefined }) => ({

@@ -278,7 +278,7 @@ const CaseWhenOpForm = ({
       const finalAction = node?.data.isDummy ? 'create' : action; //change
       const finalNode = node;
 
-      let opConfig: any = {
+      const opConfig: any = {
         case_type: data.advanceFilter === 'yes' ? 'advance' : 'simple',
         when_clauses: data.clauses.map((clause: clauseType) => {
           return {

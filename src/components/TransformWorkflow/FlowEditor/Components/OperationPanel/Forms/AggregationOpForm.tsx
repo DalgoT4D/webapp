@@ -86,7 +86,7 @@ const AggregationOpForm = ({
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      let opConfig: any = {
+      const opConfig: any = {
         aggregate_on: data.aggregate_on.map((item) => ({
           operation: item.operation?.id,
           column: item.column,

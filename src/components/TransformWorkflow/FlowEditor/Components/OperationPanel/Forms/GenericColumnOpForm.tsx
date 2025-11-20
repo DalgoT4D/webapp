@@ -89,7 +89,7 @@ const GenericColumnOpForm = ({
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      let opConfig: any = {
+      const opConfig: any = {
         computed_columns: data.computed_columns.map((item) => ({
           function_name: item.function_name,
           operands: item.operands.map(

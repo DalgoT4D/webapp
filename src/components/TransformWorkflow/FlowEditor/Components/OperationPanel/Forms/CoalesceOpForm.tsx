@@ -105,7 +105,7 @@ const CoalesceOpForm = ({
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      let opConfig: any = {
+      const opConfig: any = {
         columns: data.columns.map((col: any) => col.col).filter((col: string) => col),
         default_value: data.default_value,
         output_column_name: data.output_column_name,

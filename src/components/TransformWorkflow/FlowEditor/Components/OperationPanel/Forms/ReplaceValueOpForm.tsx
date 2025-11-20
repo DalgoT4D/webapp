@@ -78,7 +78,7 @@ const ReplaceValueOpForm = ({
     try {
       const output_column_name = data.column_name;
 
-      let opConfig: any = {
+      const opConfig: any = {
         columns: [
           {
             col_name: output_column_name,

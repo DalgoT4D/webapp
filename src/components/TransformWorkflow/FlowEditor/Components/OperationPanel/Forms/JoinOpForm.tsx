@@ -167,7 +167,7 @@ const JoinOpForm = ({
     const finalNode = node?.data.isDummy ? parentNode : node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      let opConfig: any = {
+      const opConfig: any = {
         join_type: data.join_type === 'right' ? 'left' : data.join_type,
         join_on: {
           key1: data.table1.key,

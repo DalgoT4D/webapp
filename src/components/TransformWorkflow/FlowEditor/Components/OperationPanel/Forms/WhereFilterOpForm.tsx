@@ -89,7 +89,7 @@ const WhereFilterOpForm = ({
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      let opConfig: any = {
+      const opConfig: any = {
         where_type: data.advanceFilter === 'yes' ? 'sql' : 'and',
         clauses: [
           {
