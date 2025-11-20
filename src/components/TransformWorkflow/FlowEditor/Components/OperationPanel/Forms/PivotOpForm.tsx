@@ -13,12 +13,17 @@ import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 import { useOpForm } from '@/customHooks/useOpForm';
-import { CreateOperationNodePayload, EditOperationNodePayload } from '@/types/transform-v2.types';
+import {
+  CanvasNodeDataResponse,
+  CreateOperationNodePayload,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 interface PivotDataConfig {
-  source_columns: string[];
+  groupby_columns: string[];
   pivot_column_name: string;
   pivot_column_values: string[];
+  source_columns: string[];
 }
 
 const PivotOpForm = ({
@@ -50,7 +55,7 @@ const PivotOpForm = ({
     pivot_column_values: {
       col: string;
     }[];
-    source_columns: { col: string; is_checked: boolean }[];
+    groupby_columns: { col: string; is_checked: boolean }[];
   };
 
   const { control, register, handleSubmit, reset, watch, formState, setValue } = useForm<FormProps>(
@@ -62,7 +67,7 @@ const PivotOpForm = ({
             col: '',
           },
         ],
-        source_columns: [],
+        groupby_columns: [],
       },
     }
   );
@@ -87,54 +92,31 @@ const PivotOpForm = ({
     update,
   } = useFieldArray({
     control,
-    name: 'source_columns',
+    name: 'groupby_columns',
   });
 
   const fetchAndSetSourceColumns = async () => {
     if (node) {
       setSrcColumns(node.data.output_columns.sort((a: string, b: string) => a.localeCompare(b)));
       setValue(
-        'source_columns',
+        'groupby_columns',
+        node.data.output_columns
+          .sort((a: string, b: string) => a.localeCompare(b))
+          .map((col: string) => ({ col: col, is_checked: false }))
+      );
+      setColFieldData(
         node.data.output_columns
           .sort((a: string, b: string) => a.localeCompare(b))
           .map((col: string) => ({ col: col, is_checked: false }))
       );
     }
-
-    if (node?.type === SRC_MODEL_NODE) {
-      //change
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-        );
-        setSrcColumns(data.map((col: ColumnData) => col.name));
-        const col_fields = data
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((col: ColumnData) => ({ col: col.name, is_checked: false }));
-        setValue('source_columns', col_fields);
-        setColFieldData(col_fields);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    // if (node?.type === OPERATION_NODE) {
-    //   setSrcColumns(nodeData.output_cols);
-    //   setValue(
-    //     'source_columns',
-    //     nodeData.output_cols
-    //       .sort((a: string, b: string) => a.localeCompare(b))
-    //       .map((col: string) => ({ col: col, is_checked: false }))
-    //   );
-    // }
   };
 
   const handleSave = async (data: FormProps) => {
     const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
-      let sourceColumns = data.source_columns
+      let groupbyColumns = data.groupby_columns
         .filter((src_col) => src_col.is_checked)
         .map((src_col) => src_col.col);
 
@@ -143,21 +125,8 @@ const PivotOpForm = ({
         pivot_column_values: data.pivot_column_values
           .filter((item) => item.col)
           .map((item) => item.col),
+        groupby_columns: groupbyColumns,
       };
-
-      // const postData: any = {
-      //   op_type: operation.slug,
-      //   source_columns: data.source_columns
-      //     .filter((src_col) => src_col.is_checked && src_col.col !== pivotColumn)
-      //     .map((src_col) => src_col.col),
-      //   config: {
-      //     pivot_column_name: data.pivot_column_name,
-      //     pivot_column_values: data.pivot_column_values
-      //       .filter((item) => item.col)
-      //       .map((item) => item.col),
-      //   },
-      //   input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
-      // };
 
       setLoading(true);
       // api call
@@ -165,7 +134,7 @@ const PivotOpForm = ({
       if (finalAction === 'create') {
         const payloadData: CreateOperationNodePayload = {
           op_type: operation.slug,
-          source_columns: sourceColumns,
+          source_columns: srcColumns,
           other_inputs: [],
           config: opConfig,
           input_node_uuid: finalNode?.id || '',
@@ -178,13 +147,10 @@ const PivotOpForm = ({
       } else if (finalAction === 'edit') {
         const payloadData: EditOperationNodePayload = {
           op_type: operation.slug,
-          source_columns: sourceColumns,
+          source_columns: srcColumns,
           other_inputs: [],
           config: opConfig,
         };
-        // need this input to be sent for the first step in chain
-        // payloadData.input_uuid =
-        //   inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
 
         operationNode = await httpPut(
           session,
@@ -206,24 +172,24 @@ const PivotOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config, prev_source_columns }: OperationNodeData = await httpGet(
+      const nodeResponseData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponseData;
 
       // form data; will differ based on operations in progress
-      const { source_columns, pivot_column_name, pivot_column_values }: PivotDataConfig = opConfig;
-      let orginalSrcColumns: string[] = [];
-      if (prev_source_columns) {
-        orginalSrcColumns = prev_source_columns.sort((a, b) => a.localeCompare(b));
-      }
-      setSrcColumns(orginalSrcColumns);
+      const {
+        groupby_columns,
+        pivot_column_name,
+        pivot_column_values,
+        source_columns,
+      }: PivotDataConfig = operation_config.config;
+      setSrcColumns(source_columns.sort((a: string, b: string) => a.localeCompare(b)));
 
-      const groupbySourceColumns = orginalSrcColumns.map((col) => ({
+      const groupbySourceColumns = source_columns.map((col) => ({
         col: col,
-        is_checked: source_columns.includes(col),
+        is_checked: groupby_columns.includes(col),
       }));
 
       // pre-fill form
@@ -234,7 +200,7 @@ const PivotOpForm = ({
             col: col,
           }))
           .concat([{ col: '' }]),
-        source_columns: groupbySourceColumns,
+        groupby_columns: groupbySourceColumns,
       });
       setColFieldData(groupbySourceColumns);
     } catch (error) {
