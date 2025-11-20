@@ -229,14 +229,14 @@ const JoinOpForm = ({
         const lengthInputModels: number = input_nodes.length;
 
         if (lengthInputModels === 1) {
-          jointype = input_nodes[0].seq === 0 && jointype == 'left' ? 'right' : jointype;
+          jointype = input_nodes[0].seq === 0 && jointype === 'left' ? 'right' : jointype;
           setTable2Columns(input_nodes[0].dbtmodel?.output_cols || []);
         }
 
         reset({
           table1: {
             tab:
-              input_nodes.length == 2
+              input_nodes.length === 2
                 ? { id: input_nodes[0].dbtmodel?.uuid, label: input_nodes[0].dbtmodel?.name }
                 : { id: '', label: 'Chained Model' },
             key: join_on.key1,
