@@ -9,11 +9,9 @@ import { Box, Button, FormControlLabel, FormHelperText, Radio, RadioGroup } from
 import Input from '@/components/UI/Input/Input';
 import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBox';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
-import { useOpForm } from '@/customHooks/useOpForm';
 import {
   CanvasNodeDataResponse,
   CreateOperationNodePayload,
-  DbtModelResponse,
   EditOperationNodePayload,
 } from '@/types/transform-v2.types';
 

@@ -1,18 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Edge, useReactFlow } from 'reactflow';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
-import Canvas, { DbtSourceModel, OperationNodeData } from '../../Canvas';
 import { generateDummySrcModelNode } from '../../dummynodes';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { OperationFormProps } from '../../OperationConfigLayout';
 
 import { useSession } from 'next-auth/react';
 import { Controller, useForm } from 'react-hook-form';
-import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Box, Button } from '@mui/material';
 
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
-import { useOpForm } from '@/customHooks/useOpForm';
 import {
   CanvasNodeDataResponse,
   CanvasNodeTypeEnum,
@@ -49,16 +45,7 @@ const JoinOpForm = ({
   const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
   const { deleteElements, addEdges, addNodes, getEdges, getNodes } = useReactFlow();
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
+
   type FormProps = {
     table1: {
       tab: { id: string; label: string };
@@ -99,7 +86,7 @@ const JoinOpForm = ({
   };
 
   const fetchAndSetSourceColumns = async () => {
-    setNodeSrcColumns(nodeData?.output_columns || []);
+    setNodeSrcColumns(node?.data.output_columns || []);
   };
 
   const clearAndAddDummyModelNode = (model: DbtModelResponse | undefined | null) => {
@@ -164,7 +151,7 @@ const JoinOpForm = ({
   };
 
   const handleSave = async (data: FormProps) => {
-    const finalNode = node?.data.isDummy ? parentNode : node;
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
       const opConfig: any = {
@@ -283,11 +270,11 @@ const JoinOpForm = ({
     } else {
       fetchAndSetSourceColumns();
       setValue('table1.tab', {
-        id: nodeData?.uuid || '',
+        id: node?.data?.dbtmodel?.uuid || '',
         label: [CanvasNodeTypeEnum.Source.toString(), CanvasNodeTypeEnum.Model.toString()].includes(
-          nodeData?.node_type || ''
+          node?.data?.node_type || ''
         )
-          ? nodeData?.name || ''
+          ? node?.data?.dbtmodel?.name || ''
           : 'Chained Model',
       });
     }

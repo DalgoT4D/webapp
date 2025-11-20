@@ -2,14 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useForm } from 'react-hook-form';
 
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
-import { useOpForm } from '@/customHooks/useOpForm';
 import {
   CanvasNodeDataResponse,
   CanvasNodeTypeEnum,
@@ -58,16 +56,7 @@ const FlattenJsonOpForm = ({
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const [jsonColumns, setJsonColumns] = useState<string[]>([]);
   const [inputModels, setInputModels] = useState<DbtModelResponse[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
+
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       json_column: '',
@@ -122,7 +111,7 @@ const FlattenJsonOpForm = ({
   };
 
   const handleSave = async (formData: any) => {
-    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
       const opConfig: any = {

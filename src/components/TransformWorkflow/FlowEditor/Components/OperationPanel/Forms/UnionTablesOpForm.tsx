@@ -1,9 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -15,7 +12,6 @@ import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBo
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { generateDummySrcModelNode } from '../../dummynodes';
 import { SecondaryInput } from './JoinOpForm';
-import { useOpForm } from '@/customHooks/useOpForm';
 import {
   CanvasNodeDataResponse,
   CreateOperationNodePayload,
@@ -44,16 +40,6 @@ const UnionTablesOpForm = ({
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const { deleteElements, addEdges, addNodes, getEdges, getNodes } = useReactFlow();
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
 
   const { control, handleSubmit, reset, setValue } = useForm<{
     tables: Array<{ id: string; label: string }>;

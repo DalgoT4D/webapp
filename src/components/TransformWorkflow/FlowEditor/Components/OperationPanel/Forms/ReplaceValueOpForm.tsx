@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, FormHelperText } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
-import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 import { parseStringForNull } from '@/utils/common';
-import { useOpForm } from '@/customHooks/useOpForm';
 import {
   CanvasNodeDataResponse,
   CreateOperationNodePayload,
