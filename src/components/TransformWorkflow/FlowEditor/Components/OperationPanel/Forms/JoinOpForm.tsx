@@ -16,7 +16,9 @@ import { useOpForm } from '@/customHooks/useOpForm';
 import {
   CanvasNodeDataResponse,
   CanvasNodeTypeEnum,
+  CreateOperationNodePayload,
   DbtModelResponse,
+  EditOperationNodePayload,
 } from '@/types/transform-v2.types';
 
 export interface SecondaryInput {
@@ -165,41 +167,50 @@ const JoinOpForm = ({
     const finalNode = node?.data.isDummy ? parentNode : node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      const postData: any = {
-        op_type: operation.slug,
-        input_node_uuid: data.table1.tab.id,
-        source_columns: nodeSrcColumns,
-        other_inputs: [
-          {
-            input_model_uuid: data.table2.tab.id,
-            columns: table2Columns,
-            seq: data.join_type === 'right' ? 0 : 2,
-          },
-        ],
-        config: {
-          join_type: data.join_type === 'right' ? 'left' : data.join_type,
-          join_on: {
-            key1: data.table1.key,
-            key2: data.table2.key,
-            compare_with: '=',
-          },
+      let opConfig: any = {
+        join_type: data.join_type === 'right' ? 'left' : data.join_type,
+        join_on: {
+          key1: data.table1.key,
+          key2: data.table2.key,
+          compare_with: '=',
         },
       };
+      const other_inputs = [
+        {
+          input_model_uuid: data.table2.tab.id,
+          columns: table2Columns,
+          seq: data.join_type === 'right' ? 0 : 2,
+        },
+      ];
+
       // api call
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          input_node_uuid: data.table1.tab.id,
+          source_columns: nodeSrcColumns,
+          other_inputs: other_inputs,
+          config: opConfig,
+        };
         operationNode = await httpPost(
           session,
           `transform/v2/dbt_project/operations/nodes/`,
-          postData
+          payloadData
         );
       } else if (finalAction === 'edit') {
-        // For v2 edit, other_inputs are already in correct format
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: nodeSrcColumns,
+          other_inputs: other_inputs,
+          config: opConfig,
+        };
+
         operationNode = await httpPut(
           session,
           `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
-          postData
+          payloadData
         );
       }
 
