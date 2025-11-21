@@ -132,6 +132,7 @@ export const mockNode = {
     dbtmodel: {
       schema: 'intermediate',
       name: 'sheet2_mod2',
+      uuid: 'fake-id',
     },
     output_columns: [
       'salinity',

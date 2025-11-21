@@ -104,14 +104,17 @@ describe('ProjectTree Component', () => {
     });
   });
 
-  it('displays no results when search yields nothing', async () => {
+  it('displays empty tree when search yields nothing', async () => {
     renderComponent();
 
     const searchInput = screen.getByLabelText(/Search by table/i);
     fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
     await waitFor(() => {
-      expect(screen.getByText(/No results found/i)).toBeInTheDocument();
+      // When search yields no results, only the Data folder should be visible with no children
+      expect(screen.getByText('Data')).toBeInTheDocument();
+      expect(screen.queryByText('public')).not.toBeInTheDocument();
+      expect(screen.queryByText('sales')).not.toBeInTheDocument();
     });
   });
 
