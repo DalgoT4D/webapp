@@ -56,6 +56,7 @@ const node = {
   id: '1',
   type: 'sourceModel',
   data: {
+    name: 'test_input_name',
     input_name: 'test_input_name',
     schema: 'test_schema',
     isDummy: false,
@@ -133,6 +134,7 @@ describe('DbtSourceModelNode Component', () => {
       id: '1',
       type: 'sourceModel',
       data: {
+        name: 'test_input_name',
         input_name: 'test_input_name',
         schema: 'test_schema',
         isDummy: false,
