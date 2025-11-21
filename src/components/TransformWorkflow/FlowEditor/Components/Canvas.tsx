@@ -76,16 +76,6 @@ export interface OperationNodeData {
   seq?: number;
 }
 
-// export type DbtSourceModel = {
-//   source_name: string;
-//   input_name: string;
-//   input_type: 'model' | 'source';
-//   schema: string;
-//   id: string;
-//   type: typeof SRC_MODEL_NODE;
-//   isDummy?: boolean;
-// };
-
 export interface WarehouseTable {
   id: string;
   input_name: string;
@@ -99,14 +89,8 @@ export interface DbtSourceModel extends WarehouseTable {
   output_cols: string[];
 }
 
-// export interface OperationNodeType extends NodeProps {
-//   data: OperationNodeData;
-// }
 export type OperationNodeType = NodeProps<CanvasNodeRender>;
 
-// export interface SrcModelNodeType extends NodeProps {
-//   data: DbtSourceModel;
-// }
 export type SrcModelNodeType = NodeProps<CanvasNodeRender>;
 
 type EdgeData = {

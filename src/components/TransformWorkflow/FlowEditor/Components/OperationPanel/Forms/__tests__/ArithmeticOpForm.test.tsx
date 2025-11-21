@@ -43,7 +43,7 @@ const props: OperationFormProps = {
         json: () => Promise.resolve(intermediateTableResponse),
       });
 
-    case url.includes('transform/dbt_project/model'):
+    case url.includes('transform/v2/dbt_project/operations/nodes/'):
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),

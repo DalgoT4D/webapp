@@ -43,7 +43,7 @@ const props: OperationFormProps = {
         json: () => Promise.resolve(intermediateTableResponse),
       });
 
-    case url.includes('transform/dbt_project/model'):
+    case url.includes('transform/v2/dbt_project/operations/nodes/'):
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve(),
@@ -67,7 +67,7 @@ describe('Flatter json form', () => {
   it('renders correct initial form state', async () => {
     render(groupByForm);
     await waitFor(() => {
-      expect(screen.getByText('Select dimensios')).toBeInTheDocument();
+      expect(screen.getByText('Select dimensions')).toBeInTheDocument();
       expect(screen.getByText('ADD AGGREGATION 01')).toBeInTheDocument();
       expect(screen.getByText('Select metric*')).toBeInTheDocument();
       expect(screen.getByText('Select aggregation*')).toBeInTheDocument();
