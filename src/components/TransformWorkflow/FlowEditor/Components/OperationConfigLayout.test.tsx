@@ -66,9 +66,9 @@ jest.mock('reactflow', () => ({
 jest.mock('../constant', () => ({
   OPERATION_NODE: 'operation-node',
   SRC_MODEL_NODE: 'src-model-node',
-  RENAME_COLUMNS_OP: 'rename-columns',
+  RENAME_COLUMNS_OP: 'renamecolumns',
   operations: [
-    { slug: 'rename-columns', label: 'Rename Columns', infoToolTip: 'Rename columns tooltip' },
+    { slug: 'renamecolumns', label: 'Rename Columns', infoToolTip: 'Rename columns tooltip' },
     { slug: 'join', label: 'Join Tables', infoToolTip: 'Join tables tooltip' },
     { slug: 'create-table', label: 'Create Output Table', infoToolTip: 'Create table tooltip' },
   ],
@@ -215,8 +215,8 @@ describe('OperationConfigLayout', () => {
         id: 'test-node',
         type: 'operation-node',
         data: {
-          config: {
-            type: 'rename-columns',
+          operation_config: {
+            type: 'renamecolumns',
           },
         },
       },

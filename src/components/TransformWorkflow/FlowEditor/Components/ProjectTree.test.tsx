@@ -8,10 +8,22 @@ import { SRC_MODEL_NODE } from '../constant';
 jest.mock('use-resize-observer', () => () => ({ ref: jest.fn(), width: 300, height: 500 }));
 
 const mockDbtSourceModels = [
-  { id: '1', schema: 'public', input_name: 'users', input_type: 'source', type: SRC_MODEL_NODE },
-  { id: '2', schema: 'public', input_name: 'orders', input_type: 'source', type: SRC_MODEL_NODE },
   {
-    id: '3',
+    id: 'node-1',
+    schema: 'public',
+    input_name: 'users',
+    input_type: 'source',
+    type: SRC_MODEL_NODE,
+  },
+  {
+    id: 'node-2',
+    schema: 'public',
+    input_name: 'orders',
+    input_type: 'source',
+    type: SRC_MODEL_NODE,
+  },
+  {
+    id: 'node-3',
     schema: 'sales',
     input_name: 'transactions',
     input_type: 'source',

@@ -33,6 +33,7 @@ jest.mock('react-hook-form', () => ({
 
 const defaultProps = {
   node: {
+    id: 'nodeId',
     type: 'operation_node',
     data: {
       config: {
@@ -53,13 +54,17 @@ describe('GenericSqlOpForm', () => {
   beforeEach(() => {
     useSession.mockReturnValue({ data: { session: 'mockSession' } });
     httpGet.mockResolvedValue({
-      config: {
+      operation_config: {
         config: {
-          sql_statement_1: '',
-          sql_statement_2: '',
-          input_models: [],
+          sql_statement_1: 'SELECT * FROM table1',
+          sql_statement_2: 'FROM table2',
         },
       },
+      input_nodes: [
+        {
+          dbtmodel: { name: 'Test Input Model', schema: 'test_schema' },
+        },
+      ],
     });
     httpPost.mockResolvedValue({});
     httpPut.mockResolvedValue({});
@@ -71,7 +76,8 @@ describe('GenericSqlOpForm', () => {
   it('renders the form', () => {
     render(<GenericSqlOpForm {...defaultProps} />);
     expect(screen.getByText('SELECT')).toBeInTheDocument();
-    expect(screen.getByText('FROM Test Input Model')).toBeInTheDocument();
+    // For create action, it shows "FROM chained" initially
+    expect(screen.getByText('FROM chained')).toBeInTheDocument();
   });
 
   it('handles form submission for create action', async () => {
@@ -112,7 +118,7 @@ describe('GenericSqlOpForm', () => {
       expect(mockHandleSubmit).toHaveBeenCalled();
       expect(httpPut).toHaveBeenCalledWith(
         { session: 'mockSession' },
-        'transform/v2/dbt_project/operations/nodeId/',
+        'transform/v2/dbt_project/operations/nodes/nodeId/',
         expect.any(Object)
       );
       expect(mockContinueOperationChain).toHaveBeenCalled();
@@ -136,7 +142,7 @@ describe('GenericSqlOpForm', () => {
     await waitFor(() => {
       expect(httpGet).toHaveBeenCalledWith(
         { session: 'mockSession' },
-        'transform/v2/dbt_project/operations/nodeId/'
+        'transform/v2/dbt_project/nodes/nodeId/'
       );
       expect(mockSetLoading).toHaveBeenCalledTimes(2);
     });

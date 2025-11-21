@@ -27,6 +27,10 @@ const mockPreviewAction = {
   data: {
     schema: 'public',
     input_name: 'test_table',
+    dbtmodel: {
+      schema: 'public',
+      name: 'test_table',
+    },
   },
 };
 

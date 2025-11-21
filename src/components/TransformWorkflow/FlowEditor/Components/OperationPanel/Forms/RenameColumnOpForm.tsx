@@ -163,7 +163,7 @@ const RenameColumnOp = ({
     configValues.at(-1)?.old === '';
 
   return (
-    <Box sx={{ ...sx, marginTop: '17px' }}>
+    <Box sx={{ ...sx, marginTop: '17px' }} data-testid="rename-column-form">
       <form onSubmit={handleSubmit(handleSave)}>
         <GridTable
           removeItem={
