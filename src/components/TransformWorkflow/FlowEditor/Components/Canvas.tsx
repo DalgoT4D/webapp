@@ -404,7 +404,7 @@ const Canvas = ({
     console.log('delete source node');
     try {
       if (type === SRC_MODEL_NODE && !isDummy)
-        await httpDelete(session, `transform/v2/dbt_project/nodes/${nodeId}/`);
+        await httpDelete(session, `transform/v2/dbt_project/model/${nodeId}/`);
     } catch (error) {
       console.log(error);
     } finally {
