@@ -22,11 +22,9 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const width = node.tree.props.width;
   const { setCanvasAction } = useCanvasAction();
 
-  const stringLengthWithWidth = Math.abs(width / 15);
   /* This node instance can do many things. See the API reference. */
   const data: DbtSourceModel = node.data;
-  let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
-  name = trimString(name, stringLengthWithWidth);
+  const name = !node.isLeaf ? data.schema : data.input_name;
 
   // Check if this is the Data folder and it's empty
   const isEmptyDataFolder =
@@ -52,64 +50,120 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
         }}
         onClick={() => (node.isLeaf || node.level === 0 ? undefined : node.toggle())}
       >
-        {node.isLeaf ? (
-          <Image src={TocIcon} alt="Toc icon" />
-        ) : node.isOpen ? (
-          <FolderOpenIcon />
-        ) : (
-          <FolderIcon />
-        )}
-        <Box sx={{ display: 'flex', width: '100%' }}>
-          <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>{name}</Typography>
-          {node.isLeaf && (
-            <Box sx={{ display: 'flex', ml: 'auto', alignItems: 'center' }}>
-              <AddIcon sx={{ cursor: 'pointer' }} />
-              {node.data?.input_type == 'source' && (
-                <DeleteIcon
-                  sx={{ cursor: 'pointer' }}
-                  fontSize="small"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setCanvasAction({
-                      type: 'delete-source-tree-node',
-                      data: {
-                        nodeId: node.id,
-                        nodeType: SRC_MODEL_NODE,
-                        shouldRefreshGraph: true,
-                        isDummy: node.data?.isDummy,
-                      },
-                    });
-                  }}
-                />
-              )}
-            </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            minWidth: '24px',
+            justifyContent: 'center',
+          }}
+        >
+          {node.isLeaf ? (
+            <Image src={TocIcon} alt="Toc icon" style={{ width: '18px', height: '18px' }} />
+          ) : node.isOpen ? (
+            <FolderOpenIcon sx={{ fontSize: '20px' }} />
+          ) : (
+            <FolderIcon sx={{ fontSize: '20px' }} />
           )}
-          {!node.isLeaf &&
-            node.level === 0 &&
-            (!isSyncing ? (
-              <Tooltip title="Sync Sources">
-                <ReplayIcon
-                  data-testid="sync-button"
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            width: 'calc(100% - 24px)',
+            alignItems: 'center',
+            minWidth: 0,
+          }}
+        >
+          <Tooltip title={name}>
+            <Typography
+              sx={{
+                ml: 1,
+                fontWeight: 600,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {name}
+            </Typography>
+          </Tooltip>
+          {node.isLeaf && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                ml: 1,
+                flexShrink: 0,
+              }}
+            >
+              <Tooltip title="Add to canvas">
+                <AddIcon
                   sx={{
-                    ml: 'auto',
                     cursor: 'pointer',
-                    opacity: permissions.includes('can_sync_sources') ? 1 : 0.5,
-                  }}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    console.log('here clicking the sync button');
-                    handleSyncClick();
+                    fontSize: '20px',
+                    '&:hover': { opacity: 0.7 },
                   }}
                 />
               </Tooltip>
-            ) : (
-              <CircularProgress
-                sx={{
-                  ml: 'auto',
-                }}
-                size={24}
-              />
-            ))}
+              {node.data?.input_type == 'source' && (
+                <Tooltip title="Delete source">
+                  <DeleteIcon
+                    sx={{
+                      cursor: 'pointer',
+                      fontSize: '20px',
+                      '&:hover': { opacity: 0.7 },
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setCanvasAction({
+                        type: 'delete-source-tree-node',
+                        data: {
+                          nodeId: node.id,
+                          nodeType: SRC_MODEL_NODE,
+                          shouldRefreshGraph: true,
+                          isDummy: node.data?.isDummy,
+                        },
+                      });
+                    }}
+                  />
+                </Tooltip>
+              )}
+            </Box>
+          )}
+          {!node.isLeaf && node.level === 0 && (
+            <Box
+              sx={{
+                ml: 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                flexShrink: 0,
+              }}
+            >
+              {!isSyncing ? (
+                <Tooltip title="Sync Sources">
+                  <ReplayIcon
+                    data-testid="sync-button"
+                    sx={{
+                      cursor: 'pointer',
+                      opacity: permissions.includes('can_sync_sources') ? 1 : 0.5,
+                      fontSize: '20px',
+                      '&:hover': { opacity: 0.7 },
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      console.log('here clicking the sync button');
+                      handleSyncClick();
+                    }}
+                  />
+                </Tooltip>
+              ) : (
+                <CircularProgress size={20} />
+              )}
+            </Box>
+          )}
         </Box>
       </Box>
       {isEmptyDataFolder && node.isOpen && (

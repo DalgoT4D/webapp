@@ -31,7 +31,7 @@ import { OperationNode } from './Nodes/OperationNode';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
 import { httpDelete, httpGet, httpPost } from '@/helpers/http';
-import { successToast } from '@/components/ToastMessage/ToastHelper';
+import { successToast, errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
 import { OPERATION_NODE, SRC_MODEL_NODE, operationIconMapping } from '../constant';
@@ -404,9 +404,10 @@ const Canvas = ({
     console.log('delete source node');
     try {
       if (type === SRC_MODEL_NODE && !isDummy)
-        await httpDelete(session, `transform/v2/dbt_project/nodes/${nodeId}/`);
-    } catch (error) {
+        await httpDelete(session, `transform/v2/dbt_project/model/${nodeId}/`);
+    } catch (error: any) {
       console.log(error);
+      errorToast(error.message, [], globalContext);
     } finally {
       setTempLockCanvas(false);
     }
