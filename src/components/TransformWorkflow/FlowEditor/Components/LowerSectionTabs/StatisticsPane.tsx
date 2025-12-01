@@ -23,7 +23,6 @@ import {
   ColumnDef,
 } from '@tanstack/react-table';
 import { httpGet, httpPost } from '@/helpers/http';
-import { DbtSourceModel } from '../Canvas';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { RangeChart } from '@/components/Charts/RangeChart';
 import { delay } from '@/utils/common';
@@ -32,6 +31,7 @@ import { DateTimeInsights } from '@/components/Charts/DateTimeInsights';
 import { StringInsights } from '@/components/Charts/StringInsights';
 import { NumberInsights } from '@/components/Charts/NumberInsights';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
+import { DbtModelResponse } from '@/types/transform-v2.types';
 
 const useDebounce = (value: number, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -142,7 +142,7 @@ export const pollTaskStatus = async (
 };
 
 export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
-  const [modelToPreview, setModelToPreview] = useState<DbtSourceModel | null>();
+  const [modelToPreview, setModelToPreview] = useState<DbtModelResponse | null>();
 
   const debouncedHeight = useDebounce(height, 500);
 
@@ -385,8 +385,9 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   }, []);
 
   useEffect(() => {
-    if (previewAction.type === 'preview') {
-      setModelToPreview(previewAction.data);
+    if (previewAction.type === 'preview' && previewAction.data) {
+      // Extract the dbtmodel from the CanvasNodeRenderData
+      setModelToPreview(previewAction.data.dbtmodel);
     } else if (previewAction.type === 'clear-preview') {
       setModelToPreview(null);
     }
@@ -395,7 +396,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
   useEffect(() => {
     if (modelToPreview) {
       setData([]);
-      fetchRowCountAndColumns(modelToPreview.schema, modelToPreview.input_name);
+      fetchRowCountAndColumns(modelToPreview.schema, modelToPreview.name);
     }
   }, [modelToPreview]);
 
@@ -426,7 +427,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', padding: '6px 8px 6px 44px' }}>
               <Typography variant="body1" fontWeight="bold">
-                {modelToPreview?.input_name}
+                {modelToPreview?.name}
               </Typography>
               <Box
                 sx={{
@@ -460,7 +461,7 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
                 <Button
                   variant="contained"
                   sx={{ mr: 2 }}
-                  onClick={() => fetchColumns(modelToPreview.schema, modelToPreview.input_name)}
+                  onClick={() => fetchColumns(modelToPreview.schema, modelToPreview.name)}
                 >
                   Refresh
                 </Button>

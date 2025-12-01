@@ -5,10 +5,10 @@ import { StatisticsPane } from '../StatisticsPane';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { httpGet, httpPost } from '@/helpers/http';
-import { DbtSourceModel } from '../../Canvas';
 import { SessionProvider } from 'next-auth/react';
 import { Session } from 'next-auth';
 import { pollTaskStatus } from '../StatisticsPane';
+import { CanvasNodeRenderData, DbtModelResponse } from '@/types/transform-v2.types';
 
 // Mock external dependencies
 jest.mock('@/helpers/http', () => ({
@@ -29,12 +29,29 @@ const mockPostBody = {
   db_table: 'test_table',
   column_name: 'test_column',
 };
+const mockDbtModel: DbtModelResponse = {
+  name: 'test_table',
+  display_name: 'Test Table',
+  schema: 'test_schema',
+  sql_path: 'path/to/sql',
+  type: 'source',
+  source_name: 'test_source',
+  output_cols: [],
+  uuid: 'test-uuid',
+};
+
 const mockPreviewAction = {
-  type: 'preview',
+  type: 'preview' as const,
   data: {
-    schema: 'test_schema',
-    input_name: 'test_table',
-  } as DbtSourceModel,
+    uuid: 'test-uuid',
+    name: 'test_node',
+    output_columns: [],
+    node_type: 'SRC' as any,
+    dbtmodel: mockDbtModel,
+    operation_config: {} as any,
+    is_last_in_chain: false,
+    isDummy: false,
+  } as CanvasNodeRenderData,
 };
 
 describe('StatisticsPane', () => {
@@ -110,7 +127,7 @@ describe('StatisticsPane', () => {
 
   it('renders select a table message when no model is selected', () => {
     (usePreviewAction as jest.Mock).mockReturnValue({
-      previewAction: { type: 'clear-preview' },
+      previewAction: { type: 'clear-preview', data: null },
     });
 
     render(
