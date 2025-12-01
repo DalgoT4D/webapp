@@ -65,8 +65,10 @@ export const Explore = () => {
   };
 
   useEffect(() => {
-    fetchSourcesModels();
-  }, []);
+    if (session) {
+      fetchSourcesModels();
+    }
+  }, [session]);
 
   useEffect(() => {
     const dialogBox = document.querySelector('.MuiDialog-container');
