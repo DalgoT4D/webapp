@@ -25,7 +25,7 @@ jobs:
         run: yarn run eslint 'src/**/*.{js,ts,tsx}' --quiet
 
       - name: Check for build errors
-        run: yarn build --dry-run
+        run: yarn build
 
       - name: Run test and generate coverage report
         run: yarn test:coverage
