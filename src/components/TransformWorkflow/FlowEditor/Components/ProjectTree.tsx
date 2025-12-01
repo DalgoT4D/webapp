@@ -27,6 +27,11 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const data: DbtSourceModel = node.data;
   let name: string | JSX.Element = !node.isLeaf ? data.schema : data.input_name;
   name = trimString(name, stringLengthWithWidth);
+
+  // Check if this is the Data folder and it's empty
+  const isEmptyDataFolder =
+    !node.isLeaf && node.level === 0 && (!node.children || node.children.length === 0);
+
   useEffect(() => {
     if (!node.isLeaf && node.level === 0 && !node.isOpen) {
       node.toggle();
@@ -34,78 +39,85 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   }, [node]);
 
   return (
-    <Box
-      style={style}
-      ref={dragHandle}
-      sx={{
-        alignItems: 'center',
-        display: 'flex',
-        mr: 2,
-        width: (250 * width) / 270 + 'px',
-        opacity: permissions.includes('can_create_dbt_model') ? 1 : 0.5,
-      }}
-      onClick={() => (node.isLeaf || node.level === 0 ? undefined : node.toggle())}
-    >
-      {node.isLeaf ? (
-        <Image src={TocIcon} alt="Toc icon" />
-      ) : node.isOpen ? (
-        <FolderOpenIcon />
-      ) : (
-        <FolderIcon />
-      )}
-      <Box sx={{ display: 'flex', width: '100%' }}>
-        <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>{name}</Typography>
-        {node.isLeaf && (
-          <Box sx={{ display: 'flex', ml: 'auto', alignItems: 'center' }}>
-            <AddIcon sx={{ cursor: 'pointer' }} />
-            {node.data?.input_type == 'source' && (
-              <DeleteIcon
-                sx={{ cursor: 'pointer' }}
-                fontSize="small"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setCanvasAction({
-                    type: 'delete-source-tree-node',
-                    data: {
-                      nodeId: node.id,
-                      nodeType: SRC_MODEL_NODE,
-                      shouldRefreshGraph: true,
-                      isDummy: node.data?.isDummy,
-                    },
-                  });
-                }}
-              />
-            )}
-          </Box>
+    <>
+      <Box
+        style={style}
+        ref={dragHandle}
+        sx={{
+          alignItems: 'center',
+          display: 'flex',
+          mr: 2,
+          width: (250 * width) / 270 + 'px',
+          opacity: permissions.includes('can_create_dbt_model') ? 1 : 0.5,
+        }}
+        onClick={() => (node.isLeaf || node.level === 0 ? undefined : node.toggle())}
+      >
+        {node.isLeaf ? (
+          <Image src={TocIcon} alt="Toc icon" />
+        ) : node.isOpen ? (
+          <FolderOpenIcon />
+        ) : (
+          <FolderIcon />
         )}
-        {!node.isLeaf &&
-          node.level === 0 &&
-          (!isSyncing ? (
-            <Tooltip title="Sync Sources">
-              <ReplayIcon
-                data-testid="sync-button"
+        <Box sx={{ display: 'flex', width: '100%' }}>
+          <Typography sx={{ ml: 1, minWidth: 0, fontWeight: 600 }}>{name}</Typography>
+          {node.isLeaf && (
+            <Box sx={{ display: 'flex', ml: 'auto', alignItems: 'center' }}>
+              <AddIcon sx={{ cursor: 'pointer' }} />
+              {node.data?.input_type == 'source' && (
+                <DeleteIcon
+                  sx={{ cursor: 'pointer' }}
+                  fontSize="small"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setCanvasAction({
+                      type: 'delete-source-tree-node',
+                      data: {
+                        nodeId: node.id,
+                        nodeType: SRC_MODEL_NODE,
+                        shouldRefreshGraph: true,
+                        isDummy: node.data?.isDummy,
+                      },
+                    });
+                  }}
+                />
+              )}
+            </Box>
+          )}
+          {!node.isLeaf &&
+            node.level === 0 &&
+            (!isSyncing ? (
+              <Tooltip title="Sync Sources">
+                <ReplayIcon
+                  data-testid="sync-button"
+                  sx={{
+                    ml: 'auto',
+                    cursor: 'pointer',
+                    opacity: permissions.includes('can_sync_sources') ? 1 : 0.5,
+                  }}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    console.log('here clicking the sync button');
+                    handleSyncClick();
+                  }}
+                />
+              </Tooltip>
+            ) : (
+              <CircularProgress
                 sx={{
                   ml: 'auto',
-                  cursor: 'pointer',
-                  opacity: permissions.includes('can_sync_sources') ? 1 : 0.5,
                 }}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  console.log('here clicking the sync button');
-                  handleSyncClick();
-                }}
+                size={24}
               />
-            </Tooltip>
-          ) : (
-            <CircularProgress
-              sx={{
-                ml: 'auto',
-              }}
-              size={24}
-            />
-          ))}
+            ))}
+        </Box>
       </Box>
-    </Box>
+      {isEmptyDataFolder && node.isOpen && (
+        <Box sx={{ pl: 4, py: 1, color: 'text.secondary', fontSize: '0.875rem' }}>
+          <Typography variant="body2">No data sources available</Typography>
+        </Box>
+      )}
+    </>
   );
 };
 
@@ -150,12 +162,15 @@ const ProjectTree = ({
       return {
         id: String(idx + 1),
         schema: schema,
-        children: leafNodesBySchema[schema],
+        children: leafNodesBySchema[schema].map((item: WarehouseTable, j) => ({
+          ...item,
+          id: String(item.id),
+        })),
       };
     });
 
-    if (treeData.length == 0) setProjectTreeData([]);
-    else setProjectTreeData([{ id: '0', schema: 'Data', children: treeData }]);
+    // Always show the Data folder, even if it's empty
+    setProjectTreeData([{ id: '0', schema: 'Data', children: treeData }]);
 
     if (filterBy === 'table' && searchTermRef.current.trim() !== '') {
       setOpenByDefault(true);
@@ -241,10 +256,10 @@ const ProjectTree = ({
             />
           </Box>
         </Box>
-        {projectTreeData.length > 0 ? (
+        {projectTreeData.length > 0 && (
           <Tree
             childrenAccessor={(d: any) => d.children}
-            openByDefault={openByDefault}
+            openByDefault={openByDefault || true} // Always open Data folder by default
             data={projectTreeData}
             height={height}
             width={width}
@@ -253,10 +268,6 @@ const ProjectTree = ({
           >
             {(props) => <Node {...props} handleSyncClick={handleSyncClick} isSyncing={isSyncing} />}
           </Tree>
-        ) : (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography>No results found.</Typography>
-          </Box>
         )}
       </Box>
     </Box>

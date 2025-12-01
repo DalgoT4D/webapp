@@ -1,9 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
-import { DbtSourceModel } from '../../Canvas';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
@@ -15,7 +12,12 @@ import InfoBox from '@/components/TransformWorkflow/FlowEditor/Components/InfoBo
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { generateDummySrcModelNode } from '../../dummynodes';
 import { SecondaryInput } from './JoinOpForm';
-import { useOpForm } from '@/customHooks/useOpForm';
+import {
+  CanvasNodeDataResponse,
+  CreateOperationNodePayload,
+  DbtModelResponse,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 interface UnionDataConfig {
   other_inputs: SecondaryInput[];
@@ -33,21 +35,11 @@ const UnionTablesOpForm = ({
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
-  const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
+  const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const { deleteElements, addEdges, addNodes, getEdges, getNodes } = useReactFlow();
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
 
   const { control, handleSubmit, reset, setValue } = useForm<{
     tables: Array<{ id: string; label: string }>;
@@ -59,14 +51,15 @@ const UnionTablesOpForm = ({
       ],
     },
   });
+
   // Include this for multi-row input
   const { fields, append, remove } = useFieldArray({ control, name: 'tables' });
 
   const fetchSourcesModels = async () => {
     try {
-      const response: DbtSourceModel[] = await httpGet(
+      const response: DbtModelResponse[] = await httpGet(
         session,
-        'transform/dbt_project/sources_models/'
+        'transform/v2/dbt_project/sources_models/'
       );
       setSourcesModels(response);
     } catch (error) {
@@ -74,7 +67,7 @@ const UnionTablesOpForm = ({
     }
   };
 
-  const fetchWareohuseTableColumns = async (schema: string, input_name: string) => {
+  const fetchWarehouseTableColumns = async (schema: string, input_name: string) => {
     try {
       const data: ColumnData[] = await httpGet(
         session,
@@ -88,24 +81,12 @@ const UnionTablesOpForm = ({
   };
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      try {
-        const data: Array<string> = await fetchWareohuseTableColumns(
-          nodeData?.schema,
-          nodeData?.input_name
-        );
-        setNodeSrcColumns(data);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (node?.type === OPERATION_NODE) {
-      setNodeSrcColumns(nodeData.output_cols);
+    if (node) {
+      setNodeSrcColumns(node.data.output_columns);
     }
   };
 
-  const clearAndAddDummyModelNode = (model: DbtSourceModel | undefined | null, index: number) => {
+  const clearAndAddDummyModelNode = (model: DbtModelResponse | undefined | null, index: number) => {
     index = index - 1;
     let currentModelDummyNodeIds = modelDummyNodeIds.current;
     const edges: Edge[] = getEdges();
@@ -148,7 +129,7 @@ const UnionTablesOpForm = ({
 
     // create and update the new dummy node at same index
     if (model) {
-      let dummySourceNodeData: any = getNodes().find((node) => node.id === model.id);
+      let dummySourceNodeData: any = getNodes().find((node) => node.id === model.uuid);
 
       if (!dummySourceNodeData) {
         // create a new dummy node if its not on the canvas
@@ -170,50 +151,55 @@ const UnionTablesOpForm = ({
   };
 
   const handleSave = async (data: { tables: { id: string; label: string }[] }) => {
-    const finalNode = node?.data.isDummy ? parentNode : node;
-    const finalAction = node?.data.isDummy ? 'create' : action;
     if (data.tables.length < 2) {
       errorToast('Please select atleast two tables to union', [], globalContext);
       return;
     }
 
-    const otherInputPromises = data.tables.slice(1).map(async (table: any, index: number) => {
-      const srcModel = sourcesModels.find((model: DbtSourceModel) => model.id === table.id);
-      let srcColumns: string[] = [];
-
-      if (srcModel) {
-        srcColumns = await fetchWareohuseTableColumns(srcModel.schema, srcModel.input_name);
-      }
-      return {
-        uuid: table.id,
-        columns: srcColumns,
-        seq: index,
-      };
-    });
-
     try {
-      const postData: any = {
-        op_type: operation.slug,
-        input_uuid: data.tables[0].id,
-        source_columns: nodeSrcColumns,
-        other_inputs: await Promise.all(otherInputPromises),
-        config: {},
-        target_model_uuid: nodeData?.target_model_id || '',
-      };
+      const otherInputPromises = data.tables.slice(1).map(async (table: any, index: number) => {
+        const srcModel = sourcesModels.find((model: DbtModelResponse) => model.uuid === table.id);
+        let srcColumns: string[] = [];
+
+        if (srcModel) {
+          srcColumns = await fetchWarehouseTableColumns(srcModel.schema, srcModel.name);
+        }
+        return {
+          input_model_uuid: table.id,
+          columns: srcColumns,
+          seq: index + 2, // 1 is for the current node input
+        };
+      });
+
+      const otherInputs = await Promise.all(otherInputPromises);
 
       // api call
       setLoading(true);
       let operationNode: any;
       if (action === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          input_node_uuid: node?.id || '',
+          source_columns: nodeSrcColumns,
+          other_inputs: otherInputs,
+          config: {},
+        };
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          payloadData
+        );
       } else if (action === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: nodeSrcColumns,
+          other_inputs: otherInputs,
+          config: {},
+        };
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${node?.id}/`,
-          postData
+          `transform/v2/dbt_project/operations/nodes/${node?.id}/`,
+          payloadData
         );
       }
 
@@ -229,23 +215,26 @@ const UnionTablesOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponseData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponseData;
 
       // form data; will differ based on operations in progress
-      const { source_columns }: UnionDataConfig = opConfig;
+      const { source_columns }: UnionDataConfig = operation_config.config;
       setNodeSrcColumns(source_columns);
 
       // pre-fill form
       reset({
-        tables: input_models.map((model: any) => ({
-          id: model.uuid,
-          label: model.name,
-        })),
+        tables:
+          input_nodes
+            ?.map((node: CanvasNodeDataResponse) => node.dbtmodel)
+            .filter((model): model is DbtModelResponse => model != null)
+            .map((model: DbtModelResponse) => ({
+              id: model.uuid,
+              label: model.name,
+            })) ?? [],
       });
     } catch (error) {
       console.error(error);
@@ -263,11 +252,13 @@ const UnionTablesOpForm = ({
     } else {
       fetchAndSetSourceColumns();
       setValue(`tables.${0}`, {
-        id: nodeData?.id || '',
-        label: nodeData?.input_name,
+        id: node?.data.dbtmodel?.uuid || '',
+        label: node?.data.dbtmodel?.name || '',
       });
     }
   }, [session, node]);
+
+  console.log('current node', node);
 
   return (
     <Box sx={{ ...sx, padding: '0px 16px 0px 16px' }}>
@@ -290,9 +281,9 @@ const UnionTablesOpForm = ({
                   key={`${index}`}
                   disabled={index === 0}
                   options={sourcesModels
-                    .map((model: DbtSourceModel) => ({
-                      id: model.id,
-                      label: model.input_name,
+                    .map((model: DbtModelResponse) => ({
+                      id: model.uuid,
+                      label: model.name,
                     }))
                     .sort((a, b) => a.label.localeCompare(b.label))}
                   isOptionEqualToValue={(option: any, value: any) => {
@@ -300,8 +291,8 @@ const UnionTablesOpForm = ({
                   }}
                   onChange={(data: any) => {
                     field.onChange(data);
-                    const model: DbtSourceModel | undefined = sourcesModels.find(
-                      (model: DbtSourceModel) => model.id === data?.id
+                    const model: DbtModelResponse | undefined = sourcesModels.find(
+                      (model: DbtModelResponse) => model.uuid === data?.id
                     );
                     clearAndAddDummyModelNode(model, index);
                   }}

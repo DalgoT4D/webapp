@@ -1,8 +1,9 @@
-import { DbtSourceModel, UIOperationType } from './Canvas';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../constant';
+import { UIOperationType } from './Canvas';
 import { getNextNodePosition } from '@/utils/editor';
+import { CanvasNodeTypeEnum, DbtModelResponse, GenericNode } from '@/types/transform-v2.types';
 
-export const generateDummySrcModelNode = (node: any, model: DbtSourceModel, height = 200) => {
+export const generateDummySrcModelNode = (node: any, model: DbtModelResponse, height = 200) => {
+  const nodeId = String(Date.now());
   const { x: xnew, y: ynew } = getNextNodePosition([
     {
       position: { x: node?.xPos, y: node?.yPos },
@@ -11,16 +12,31 @@ export const generateDummySrcModelNode = (node: any, model: DbtSourceModel, heig
   ]);
 
   const dummyNode: any = {
-    id: model.id,
-    type: SRC_MODEL_NODE,
-    data: {},
+    id: nodeId,
+    type:
+      model.type === 'source'
+        ? CanvasNodeTypeEnum.Source.toString()
+        : CanvasNodeTypeEnum.Model.toString(),
+    data: {
+      name: `${model.schema}.${model.name}`,
+      uuid: nodeId,
+      node_type:
+        model.type === 'source'
+          ? CanvasNodeTypeEnum.Source.toString()
+          : CanvasNodeTypeEnum.Model.toString(),
+      output_columns: model.output_cols,
+      operation_config: {},
+      isDummy: true,
+      dbtmodel: model,
+      is_last_in_chain: true,
+    },
     position: {
       x: xnew,
       y: ynew,
     },
   };
 
-  dummyNode.data = { ...model, isDummy: true, parentNode: node };
+  // dummyNode.data = { ...model, isDummy: true, parentNode: node };
 
   return dummyNode;
 };
@@ -30,20 +46,20 @@ export const generateDummyOperationlNode = (node: any, op: UIOperationType, heig
   const { x: xnew, y: ynew } = getNextNodePosition([
     { position: { x: node?.xPos, y: node?.yPos }, height: height },
   ]);
-  const dummyTargetNodeData: any = {
+
+  const dummyTargetNodeData: GenericNode = {
     id: nodeId,
+    type: 'operation',
     selected: true,
-    type: OPERATION_NODE,
     data: {
-      id: nodeId,
-      type: OPERATION_NODE,
-      output_cols: [],
-      target_model_id: '',
-      target_model_name: '',
-      target_model_schema: '',
-      config: { type: op.slug },
+      name: op.label,
+      uuid: nodeId,
+      node_type: CanvasNodeTypeEnum.Operation,
+      output_columns: [],
+      operation_config: { type: op.slug, config: {} },
       isDummy: true,
-      parentNode: node, //added to check parent node.
+      dbtmodel: null,
+      is_last_in_chain: true,
     },
     position: {
       x: xnew,

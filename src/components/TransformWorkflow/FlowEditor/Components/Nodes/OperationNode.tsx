@@ -9,8 +9,9 @@ import { useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import Image from 'next/image';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
+import { CanvasNodeTypeEnum, GenericNode, GenericNodeProps } from '@/types/transform-v2.types';
 
-export function OperationNode(node: OperationNodeType) {
+export function OperationNode(node: GenericNodeProps) {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const edges = useEdges();
@@ -34,7 +35,7 @@ export function OperationNode(node: OperationNodeType) {
         nodeType: node.type,
         shouldRefreshGraph:
           edgesGoingIntoNode.length + edgesEmanatingOutOfNode.length == 0 ? false : true,
-        isDummy: node.data?.isDummy,
+        isDummy: node.data.isDummy,
       },
     });
   };
@@ -59,7 +60,7 @@ export function OperationNode(node: OperationNodeType) {
     // This event is triggered via the ProjectTree component
     if (
       canvasAction.type === 'update-canvas-node' &&
-      canvasAction.data?.type === OPERATION_NODE &&
+      canvasAction.data?.type === CanvasNodeTypeEnum.Operation.toString() &&
       canvasAction.data?.id === node.id
     ) {
       setCanvasNode(node);
@@ -106,7 +107,10 @@ export function OperationNode(node: OperationNodeType) {
               justifyContent: 'center',
             }}
           >
-            <Image src={operationIconMapping[node.data?.config.type]} alt="operation icon"></Image>
+            <Image
+              src={operationIconMapping[node.data.operation_config?.type]}
+              alt="operation icon"
+            ></Image>
             {isDeletable && (
               <IconButton
                 sx={{ position: 'absolute', right: -15, top: -15 }}
@@ -131,7 +135,8 @@ export function OperationNode(node: OperationNodeType) {
             }}
           >
             <Typography fontWeight="600" fontSize="12px" padding="8px" sx={{ textAlign: 'center' }}>
-              {operations.find((op) => op.slug === node.data.config?.type)?.label || 'Not found'}
+              {operations.find((op) => op.slug === node.data.operation_config?.type)?.label ||
+                'Not found'}
             </Typography>
           </Box>
         </Box>

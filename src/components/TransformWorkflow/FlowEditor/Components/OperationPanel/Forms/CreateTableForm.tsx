@@ -14,27 +14,30 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 
 const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   const { data: session } = useSession();
-  const { canvasNode } = useCanvasNode() as { canvasNode: OperationNodeType };
+  const { canvasNode } = useCanvasNode();
   const { setCanvasAction } = useCanvasAction();
   const globalContext = useContext(GlobalContext);
   const { control, register, handleSubmit, reset, formState } = useForm({
     defaultValues: canvasNode?.data.is_last_in_chain
       ? {
-          output_name: canvasNode?.data.target_model_name || '',
-          dest_schema: canvasNode?.data.target_model_schema || '',
+          output_name: canvasNode?.data?.dbtmodel?.name || '',
+          dest_schema: canvasNode?.data?.dbtmodel?.schema || '',
         }
       : { output_name: '', dest_schema: '' },
   });
 
   const handleCreateTableAndRun = async (data: any) => {
-    if (canvasNode?.type === OPERATION_NODE) {
-      const nodeData = canvasNode?.data as OperationNodeData;
+    if (canvasNode?.type === 'operation') {
       try {
-        await httpPost(session, `transform/dbt_project/model/${nodeData?.target_model_id}/save/`, {
-          name: data.output_name,
-          display_name: data.output_name,
-          dest_schema: data.dest_schema,
-        });
+        await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/${canvasNode.id}/terminate/`,
+          {
+            name: data.output_name,
+            display_name: data.output_name,
+            dest_schema: data.dest_schema,
+          }
+        );
         reset();
         setCanvasAction({ type: 'run-workflow', data: null });
         if (clearAndClosePanel) {

@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, FormHelperText } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
-import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GridTable } from '@/components/UI/GridTable/GridTable';
 import { parseStringForNull } from '@/utils/common';
-import { useOpForm } from '@/customHooks/useOpForm';
+import {
+  CanvasNodeDataResponse,
+  CreateOperationNodePayload,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 interface ReplaceOp {
   find: string;
@@ -38,18 +39,6 @@ const ReplaceValueOpForm = ({
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
 
   const { control, register, handleSubmit, reset, formState } = useForm<{
     config: Array<{ old: string; new: string }>;
@@ -74,50 +63,30 @@ const ReplaceValueOpForm = ({
   });
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      //change
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-        );
-        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols);
+    if (node) {
+      setSrcColumns(node.data.output_columns.sort((a, b) => a.localeCompare(b)));
     }
   };
 
   const handleSave = async (data: any) => {
-    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action; //change
     try {
       const output_column_name = data.column_name;
 
-      const postData: any = {
-        op_type: operation.slug,
-        source_columns: srcColumns.filter((col) => col !== output_column_name),
-        other_inputs: [],
-        config: {
-          columns: [
-            {
-              col_name: output_column_name,
-              output_column_name: output_column_name,
-              replace_ops: [],
-            },
-          ],
-        },
-        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
-        target_model_uuid: finalNode?.data.target_model_id || '',
+      const opConfig: any = {
+        columns: [
+          {
+            col_name: output_column_name,
+            output_column_name: output_column_name,
+            replace_ops: [],
+          },
+        ],
       };
 
       data.config.forEach((item: any) => {
         if (item.old || item.new)
-          postData.config.columns[0].replace_ops.push({
+          opConfig.columns[0].replace_ops.push({
             find: parseStringForNull(item.old),
             replace: parseStringForNull(item.new),
           });
@@ -127,15 +96,29 @@ const ReplaceValueOpForm = ({
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+          input_node_uuid: finalNode?.id || '',
+        };
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          payloadData
+        );
       } else if (finalAction === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+        };
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${finalNode?.id}/`,
-          postData
+          `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
+          payloadData
         );
       }
 
@@ -151,15 +134,14 @@ const ReplaceValueOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponeData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponeData;
 
       // form data; will differ based on operations in progress
-      const { source_columns, columns }: ReplaceDataConfig = opConfig;
+      const { source_columns, columns }: ReplaceDataConfig = operation_config.config;
       setSrcColumns(source_columns);
 
       // pre-fill form

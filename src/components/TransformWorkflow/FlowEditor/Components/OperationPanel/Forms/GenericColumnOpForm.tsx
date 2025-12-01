@@ -1,10 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, FormControlLabel, Radio, RadioGroup } from '@mui/material';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
-import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import Input from '@/components/UI/Input/Input';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -12,7 +9,11 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { parseStringForNull } from '@/utils/common';
-import { useOpForm } from '@/customHooks/useOpForm';
+import {
+  CanvasNodeDataResponse,
+  CreateOperationNodePayload,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 export interface GenericCol {
   function_name: string;
@@ -45,17 +46,7 @@ const GenericColumnOpForm = ({
   const { data: session } = useSession();
   const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const globalContext = useContext(GlobalContext);
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
+
   type FormProps = {
     computed_columns: {
       function_name: string;
@@ -89,59 +80,55 @@ const GenericColumnOpForm = ({
   });
 
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      try {
-        const data: ColumnData[] = await httpGet(
-          session,
-          `warehouse/table_columns/${nodeData.schema}/${nodeData.input_name}`
-        );
-        setSrcColumns(data.map((col: ColumnData) => col.name).sort((a, b) => a.localeCompare(b)));
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (node?.type === OPERATION_NODE) {
-      setSrcColumns(nodeData.output_cols);
+    if (node) {
+      setSrcColumns(node.data.output_columns);
     }
   };
 
   const handleSave = async (data: FormProps) => {
-    const finalNode = node?.data.isDummy ? parentNode : node; //change  //this checks for edit case too.
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      const postData: any = {
-        op_type: operation.slug,
-        source_columns: srcColumns,
-        config: {
-          computed_columns: data.computed_columns.map((item) => ({
-            function_name: item.function_name,
-            operands: item.operands.map(
-              (op: { type: string; col_val: string; const_val: string | undefined }) => ({
-                is_col: op.type === 'col',
-                value: op.type === 'col' ? op.col_val : parseStringForNull(op.const_val),
-              })
-            ),
-            output_column_name: item.output_column_name,
-          })),
-        },
-        input_uuid: finalNode?.type === SRC_MODEL_NODE ? finalNode?.id : '',
-        target_model_uuid: finalNode?.data.target_model_id || '',
+      const opConfig: any = {
+        computed_columns: data.computed_columns.map((item) => ({
+          function_name: item.function_name,
+          operands: item.operands.map(
+            (op: { type: string; col_val: string; const_val: string | undefined }) => ({
+              is_col: op.type === 'col',
+              value: op.type === 'col' ? op.col_val : parseStringForNull(op.const_val),
+            })
+          ),
+          output_column_name: item.output_column_name,
+        })),
       };
 
       setLoading(true);
       // api call
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+          input_node_uuid: finalNode?.id || '',
+        };
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          payloadData
+        );
       } else if (finalAction === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: srcColumns,
+          other_inputs: [],
+          config: opConfig,
+        };
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${finalNode?.id}/`,
-          postData
+          `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
+          payloadData
         );
       }
 
@@ -158,15 +145,14 @@ const GenericColumnOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponseData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponseData;
 
       // form data; will differ based on operations in progress
-      const { source_columns, computed_columns }: GenericColDataConfig = opConfig;
+      const { source_columns, computed_columns }: GenericColDataConfig = operation_config.config;
       setSrcColumns(source_columns);
 
       // pre-fill form

@@ -16,11 +16,9 @@ import {
 } from '@mui/material';
 import React, { memo, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
-import { OperationNodeData, OperationNodeType, SrcModelNodeType, UIOperationType } from './Canvas';
+import { UIOperationType } from './Canvas';
 import {
-  OPERATION_NODE,
   RENAME_COLUMNS_OP,
-  SRC_MODEL_NODE,
   JOIN_OP,
   REPLACE_COLUMN_VALUE_OP,
   DROP_COLUMNS_OP,
@@ -65,6 +63,13 @@ import GenericColumnOpForm from './OperationPanel/Forms/GenericColumnOpForm';
 import { getNextNodePosition } from '@/utils/editor';
 import GenericSqlOpForm from './OperationPanel/Forms/GenericSqlOpForm';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import {
+  CanvasNodeDataResponse,
+  CanvasNodeTypeEnum,
+  GenericEdge,
+  GenericNode,
+  GenericNodeProps,
+} from '@/types/transform-v2.types';
 
 interface OperationConfigProps {
   sx: SxProps;
@@ -73,7 +78,7 @@ interface OperationConfigProps {
 }
 
 export interface OperationFormProps {
-  node: SrcModelNodeType | OperationNodeType | null | undefined;
+  node: GenericNodeProps | null | undefined;
   operation: UIOperationType;
   sx: SxProps;
   continueOperationChain: (...args: any) => void;
@@ -184,8 +189,8 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
   const handleSelectOp = (op: UIOperationType) => {
     // Create the dummy node on canvas
     // For multi input operation we might have to do it inside the operation once they select the other inputs
-    const dummyTargetNodeData: any = generateDummyOperationlNode(canvasNode, op);
-    const newEdge: any = {
+    const dummyTargetNodeData: GenericNode = generateDummyOperationlNode(canvasNode, op);
+    const newEdge: GenericEdge = {
       id: `${canvasNode ? canvasNode.id : ''}_${dummyTargetNodeData.id}`,
       source: canvasNode ? canvasNode.id : '',
       target: dummyTargetNodeData.id,
@@ -216,9 +221,9 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
       setSelectedOp(null);
       panelOpFormState.current = canvasAction.data || 'view';
       if (['view', 'edit'].includes(panelOpFormState.current)) {
-        const nodeData = canvasNode?.data as OperationNodeData;
+        const nodeData = canvasNode?.data;
         if (permissions.includes('can_view_dbt_operation')) {
-          setSelectedOp(operations.find((op) => op.slug === nodeData?.config?.type));
+          setSelectedOp(operations.find((op) => op.slug === nodeData?.operation_config?.type));
         }
       }
     }
@@ -239,6 +244,7 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
       handleClosePanel();
     }
   }, [canvasAction]);
+
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
@@ -290,7 +296,7 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
 
     const handleBackButtonOnCreateTableAddFunction = () => {
       // show the form
-      const { config } = canvasNode?.data as OperationNodeData;
+      const config = canvasNode?.data.operation_config;
       if (config && config.type) {
         const editingOperation = operations.find((op) => op.slug === config.type);
         setSelectedOp({
@@ -372,7 +378,8 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
         <List>
           {operations.map((op, index) => {
             const canSelectOperation = !(
-              cantChainOperationsInMiddle.includes(op.slug) && canvasNode?.type === OPERATION_NODE
+              cantChainOperationsInMiddle.includes(op.slug) &&
+              canvasNode?.type === CanvasNodeTypeEnum.Operation.toString()
             );
             return (
               <ListItemButton
@@ -427,9 +434,9 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
     panelOpFormState.current = 'create';
   };
 
-  const prepareForNextOperation = async (opNodeData: OperationNodeData) => {
+  const prepareForNextOperation = async (opNodeData: CanvasNodeDataResponse) => {
     // opNodeData - the node that just got saved
-    if (opNodeData.id !== canvasNode?.id) {
+    if (opNodeData.uuid !== canvasNode?.id) {
       const dummyNodeId: string = dummyNodeIdRef.current;
       // get all edges of this dummy node and save
       const dummyNodeEdges = getEdges().filter(
@@ -444,8 +451,8 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
         },
       ]);
       const dummyToRealNode = {
-        id: opNodeData.id,
-        type: OPERATION_NODE,
+        id: opNodeData.uuid,
+        type: CanvasNodeTypeEnum.Operation.toString(),
         data: opNodeData,
         position: { x: xnew, y: ynew },
       };
@@ -477,7 +484,7 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
     setSelectedOp(null);
     setCanvasAction({
       type: 'update-canvas-node',
-      data: { id: opNodeData.id, type: OPERATION_NODE },
+      data: { id: opNodeData.uuid, type: CanvasNodeTypeEnum.Operation.toString() },
     });
     // if its end of the chain continue to chain more or just close the operation panel
     if (opNodeData?.is_last_in_chain) {
@@ -493,7 +500,10 @@ const OperationConfigLayout = ({ openPanel, setOpenPanel, sx }: OperationConfigP
 
   const panelState = selectedOp
     ? 'op-form'
-    : showFunctionsList || canvasNode?.type === SRC_MODEL_NODE
+    : showFunctionsList ||
+        [CanvasNodeTypeEnum.Source.toString(), CanvasNodeTypeEnum.Model.toString()].includes(
+          canvasNode?.type || ''
+        )
       ? 'op-list'
       : 'create-table-or-add-function';
 

@@ -1,18 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Edge, useReactFlow } from 'reactflow';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
-import { DbtSourceModel, OperationNodeData } from '../../Canvas';
 import { generateDummySrcModelNode } from '../../dummynodes';
-import { OPERATION_NODE, SRC_MODEL_NODE } from '../../../constant';
 import { OperationFormProps } from '../../OperationConfigLayout';
 
 import { useSession } from 'next-auth/react';
 import { Controller, useForm } from 'react-hook-form';
-import { ColumnData } from '../../Nodes/DbtSourceModelNode';
 import { Box, Button } from '@mui/material';
 
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
-import { useOpForm } from '@/customHooks/useOpForm';
+import {
+  CanvasNodeDataResponse,
+  CanvasNodeTypeEnum,
+  CreateOperationNodePayload,
+  DbtModelResponse,
+  EditOperationNodePayload,
+} from '@/types/transform-v2.types';
 
 export interface SecondaryInput {
   input: { input_name: string; input_type: string; source_name: string };
@@ -39,20 +42,10 @@ const JoinOpForm = ({
   const { data: session } = useSession();
   const [nodeSrcColumns, setNodeSrcColumns] = useState<string[]>([]);
   const [table2Columns, setTable2Columns] = useState<string[]>([]);
-  const [inputModels, setInputModels] = useState<any[]>([]); // used for edit; will have information about the input nodes to the operation being edited
-  const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
+  const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const modelDummyNodeIds: any = useRef<string[]>([]); // array of dummy node ids being attached to current operation node
   const { deleteElements, addEdges, addNodes, getEdges, getNodes } = useReactFlow();
-  const { parentNode, nodeData } = useOpForm({
-    props: {
-      node,
-      operation,
-      sx,
-      continueOperationChain,
-      action,
-      setLoading,
-    },
-  });
+
   type FormProps = {
     table1: {
       tab: { id: string; label: string };
@@ -82,9 +75,9 @@ const JoinOpForm = ({
 
   const fetchSourcesModels = async () => {
     try {
-      const response: DbtSourceModel[] = await httpGet(
+      const response: DbtModelResponse[] = await httpGet(
         session,
-        'transform/dbt_project/sources_models/'
+        'transform/v2/dbt_project/sources_models/'
       );
       setSourcesModels(response);
     } catch (error) {
@@ -92,38 +85,11 @@ const JoinOpForm = ({
     }
   };
 
-  const fetchWareohuseTableColumns = async (schema: string, input_name: string) => {
-    try {
-      const data: ColumnData[] = await httpGet(
-        session,
-        `warehouse/table_columns/${schema}/${input_name}`
-      );
-      return data.map((col: ColumnData) => col.name);
-    } catch (error) {
-      console.log(error);
-    }
-    return [];
-  };
-
   const fetchAndSetSourceColumns = async () => {
-    if (node?.type === SRC_MODEL_NODE) {
-      try {
-        const data: Array<string> = await fetchWareohuseTableColumns(
-          nodeData?.schema,
-          nodeData?.input_name
-        );
-        setNodeSrcColumns(data.sort((a, b) => a.localeCompare(b)));
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    if (node?.type === OPERATION_NODE) {
-      setNodeSrcColumns(nodeData.output_cols);
-    }
+    setNodeSrcColumns(node?.data.output_columns || []);
   };
 
-  const clearAndAddDummyModelNode = (model: DbtSourceModel | undefined | null) => {
+  const clearAndAddDummyModelNode = (model: DbtModelResponse | undefined | null) => {
     const edges: Edge[] = getEdges();
 
     const removeNodeId = modelDummyNodeIds.current.pop();
@@ -148,7 +114,7 @@ const JoinOpForm = ({
 
     // push the new one
     if (model) {
-      let dummySourceNodeData: any = getNodes().find((node) => node.id === model.id);
+      let dummySourceNodeData: any = getNodes().find((node) => node.id === model.uuid);
 
       if (!dummySourceNodeData) {
         dummySourceNodeData = generateDummySrcModelNode(node, model, 400);
@@ -167,18 +133,15 @@ const JoinOpForm = ({
   };
 
   const handleSelectSecondTable = async (id: string | null) => {
-    const model: DbtSourceModel | null | undefined = sourcesModels.find(
-      (model: DbtSourceModel) => model.id === id
+    const model: DbtModelResponse | null | undefined = sourcesModels.find(
+      (model: DbtModelResponse) => model.uuid === id
     );
     // clear the key of second table also
     setValue('table2.key', '');
 
     if (model) {
       try {
-        const data: Array<string> = await fetchWareohuseTableColumns(
-          model.schema,
-          model.input_name
-        );
+        const data: Array<string> = model.output_cols;
         setTable2Columns(data.sort((a, b) => a.localeCompare(b)));
       } catch (error) {
         console.log(error);
@@ -188,43 +151,53 @@ const JoinOpForm = ({
   };
 
   const handleSave = async (data: FormProps) => {
-    const finalNode = node?.data.isDummy ? parentNode : node;
+    const finalNode = node;
     const finalAction = node?.data.isDummy ? 'create' : action;
     try {
-      const postData: any = {
-        op_type: operation.slug,
-        input_uuid: data.table1.tab.id,
-        source_columns: nodeSrcColumns,
-        other_inputs: [
-          {
-            uuid: data.table2.tab.id,
-            columns: table2Columns,
-            seq: data.join_type === 'right' ? 0 : 2,
-          },
-        ],
-        config: {
-          join_type: data.join_type === 'right' ? 'left' : data.join_type,
-          join_on: {
-            key1: data.table1.key,
-            key2: data.table2.key,
-            compare_with: '=',
-          },
+      const opConfig: any = {
+        join_type: data.join_type === 'right' ? 'left' : data.join_type,
+        join_on: {
+          key1: data.table1.key,
+          key2: data.table2.key,
+          compare_with: '=',
         },
-        target_model_uuid: finalNode?.data.target_model_id || '',
       };
+      const other_inputs = [
+        {
+          input_model_uuid: data.table2.tab.id,
+          columns: table2Columns,
+          seq: data.join_type === 'right' ? 0 : 2,
+        },
+      ];
+
       // api call
       setLoading(true);
       let operationNode: any;
       if (finalAction === 'create') {
-        operationNode = await httpPost(session, `transform/dbt_project/model/`, postData);
+        const payloadData: CreateOperationNodePayload = {
+          op_type: operation.slug,
+          input_node_uuid: finalNode?.id || '',
+          source_columns: nodeSrcColumns,
+          other_inputs: other_inputs,
+          config: opConfig,
+        };
+        operationNode = await httpPost(
+          session,
+          `transform/v2/dbt_project/operations/nodes/`,
+          payloadData
+        );
       } else if (finalAction === 'edit') {
-        // need this input to be sent for the first step in chain
-        postData.input_uuid =
-          inputModels.length > 0 && inputModels[0]?.uuid ? inputModels[0].uuid : '';
+        const payloadData: EditOperationNodePayload = {
+          op_type: operation.slug,
+          source_columns: nodeSrcColumns,
+          other_inputs: other_inputs,
+          config: opConfig,
+        };
+
         operationNode = await httpPut(
           session,
-          `transform/dbt_project/model/operations/${finalNode?.id}/`,
-          postData
+          `transform/v2/dbt_project/operations/nodes/${finalNode?.id}/`,
+          payloadData
         );
       }
 
@@ -240,44 +213,47 @@ const JoinOpForm = ({
   const fetchAndSetConfigForEdit = async () => {
     try {
       setLoading(true);
-      const { config }: OperationNodeData = await httpGet(
+      const nodeResponseData: CanvasNodeDataResponse = await httpGet(
         session,
-        `transform/dbt_project/model/operations/${node?.id}/`
+        `transform/v2/dbt_project/nodes/${node?.id}/`
       );
-      const { config: opConfig, input_models } = config;
-      setInputModels(input_models);
+      const { operation_config, input_nodes } = nodeResponseData;
 
       // form data; will differ based on operations in progress
-      const { source_columns, join_on, join_type, other_inputs }: JoinDataConfig = opConfig;
+      const { source_columns, join_on, join_type }: JoinDataConfig = operation_config.config;
       setNodeSrcColumns(source_columns);
 
       // pre-fill form
-      const lengthInputModels: number = input_models.length;
-      let jointype: string = join_type;
-      if (other_inputs.length === 1) {
-        jointype = other_inputs[0].seq === 0 && jointype == 'left' ? 'right' : jointype;
-        setTable2Columns(other_inputs[0].source_columns);
+      if (input_nodes) {
+        let jointype: string = join_type;
+        const lengthInputModels: number = input_nodes.length;
+
+        if (lengthInputModels === 1) {
+          jointype = input_nodes[0].seq === 0 && jointype === 'left' ? 'right' : jointype;
+          setTable2Columns(input_nodes[0].dbtmodel?.output_cols || []);
+        }
+
+        reset({
+          table1: {
+            tab:
+              input_nodes.length === 2
+                ? { id: input_nodes[0].dbtmodel?.uuid, label: input_nodes[0].dbtmodel?.name }
+                : { id: '', label: 'Chained Model' },
+            key: join_on.key1,
+          },
+          table2: {
+            tab:
+              input_nodes.length >= 1
+                ? {
+                    id: input_nodes[lengthInputModels - 1].dbtmodel?.uuid,
+                    label: input_nodes[lengthInputModels - 1].dbtmodel?.name,
+                  }
+                : { id: '', label: '' },
+            key: join_on.key2,
+          },
+          join_type: jointype,
+        });
       }
-      reset({
-        table1: {
-          tab:
-            input_models.length == 2
-              ? { id: input_models[0].uuid, label: input_models[0].name }
-              : { id: '', label: 'Chained Model' },
-          key: join_on.key1,
-        },
-        table2: {
-          tab:
-            input_models.length >= 1
-              ? {
-                  id: input_models[lengthInputModels - 1].uuid,
-                  label: input_models[lengthInputModels - 1].name,
-                }
-              : { id: '', label: '' },
-          key: join_on.key2,
-        },
-        join_type: jointype,
-      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -294,8 +270,12 @@ const JoinOpForm = ({
     } else {
       fetchAndSetSourceColumns();
       setValue('table1.tab', {
-        id: nodeData?.id,
-        label: nodeData?.type === SRC_MODEL_NODE ? nodeData?.input_name : 'Chained Model',
+        id: node?.data?.dbtmodel?.uuid || '',
+        label: [CanvasNodeTypeEnum.Source.toString(), CanvasNodeTypeEnum.Model.toString()].includes(
+          node?.data?.node_type || ''
+        )
+          ? node?.data?.dbtmodel?.name || ''
+          : 'Chained Model',
       });
     }
   }, [session, node]);
@@ -319,8 +299,8 @@ const JoinOpForm = ({
               options={sourcesModels
                 .map((model) => {
                   return {
-                    id: model.id,
-                    label: model.input_name,
+                    id: model.uuid,
+                    label: model.name,
                     schema: model.schema,
                   };
                 })
@@ -387,8 +367,8 @@ const JoinOpForm = ({
                 options={sourcesModels
                   .map((model) => {
                     return {
-                      id: model.id,
-                      label: model.input_name,
+                      id: model.uuid,
+                      label: model.name,
                       schema: model.schema,
                     };
                   })

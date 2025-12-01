@@ -9,16 +9,28 @@ import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasConte
 jest.mock('next-auth/react');
 jest.mock('@/helpers/http');
 jest.mock('@/contexts/FlowEditorCanvasContext');
+jest.mock('@/contexts/ContextProvider', () => ({
+  GlobalContext: React.createContext({}),
+}));
 
 const mockSetCanvasAction = jest.fn();
 const mockClearAndClosePanel = jest.fn();
+const mockHandleSubmit = jest.fn();
 
 jest.mock('react-hook-form', () => ({
   useForm: () => ({
     control: {},
-    handleSubmit: jest.fn((fn) => (data) => fn(data)),
+    handleSubmit: (fn) =>
+      mockHandleSubmit.mockImplementation(async (e) => {
+        e?.preventDefault?.();
+        await fn({
+          output_name: 'Test Table',
+          dest_schema: 'production',
+        });
+      }),
     reset: jest.fn(),
     register: jest.fn(),
+    formState: { errors: {} },
   }),
   Controller: ({ render }) => render({ field: {}, fieldState: {} }),
 }));
@@ -27,7 +39,7 @@ describe('CreateTableForm', () => {
   beforeEach(() => {
     useSession.mockReturnValue({ data: { session: 'mockSession' } });
     useCanvasNode.mockReturnValue({
-      canvasNode: { type: 'operation_node', data: { target_model_id: '123' } },
+      canvasNode: { type: 'operation', id: 'test-id', data: { target_model_id: '123' } },
     });
     useCanvasAction.mockReturnValue({ setCanvasAction: mockSetCanvasAction });
     httpPost.mockResolvedValue({});
@@ -51,13 +63,12 @@ describe('CreateTableForm', () => {
   it('calls clearAndClosePanel if provided', async () => {
     renderComponent({ clearAndClosePanel: mockClearAndClosePanel });
 
-    fireEvent.change(screen.getByLabelText(/Output Name/i), {
-      target: { value: 'Test Table' },
-    });
+    const form = screen.getByTestId('savebutton').closest('form');
 
-    fireEvent.click(screen.getByTestId('savebutton'));
+    fireEvent.submit(form);
 
     await waitFor(() => {
+      expect(mockHandleSubmit).toHaveBeenCalled();
       expect(mockClearAndClosePanel).toHaveBeenCalled();
     });
   });

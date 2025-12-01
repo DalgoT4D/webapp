@@ -2,13 +2,14 @@ import {
   OperationNodeType,
   SrcModelNodeType,
 } from '@/components/TransformWorkflow/FlowEditor/Components/Canvas';
+import { GenericNode, GenericNodeProps } from '@/types/transform-v2.types';
 import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
 ///////////////////////////// Canvas Node ////////////////////////////////
 
 interface CanvasNodeContext {
-  canvasNode: SrcModelNodeType | OperationNodeType | null | undefined;
-  setCanvasNode: Dispatch<SetStateAction<SrcModelNodeType | OperationNodeType | null | undefined>>;
+  canvasNode: GenericNodeProps | null | undefined;
+  setCanvasNode: Dispatch<SetStateAction<GenericNodeProps | null | undefined>>;
 }
 
 export const CanvasNodeContext = React.createContext<CanvasNodeContext>({
@@ -17,9 +18,7 @@ export const CanvasNodeContext = React.createContext<CanvasNodeContext>({
 });
 
 export const CanvasNodeProvider = ({ children }: any) => {
-  const [canvasNode, setCanvasNode] = useState<
-    SrcModelNodeType | OperationNodeType | null | undefined
-  >(null);
+  const [canvasNode, setCanvasNode] = useState<GenericNodeProps | null | undefined>(null);
 
   return (
     <CanvasNodeContext.Provider value={{ canvasNode, setCanvasNode }}>

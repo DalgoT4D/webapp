@@ -56,9 +56,14 @@ const node = {
   id: '1',
   type: 'sourceModel',
   data: {
+    name: 'test_input_name',
     input_name: 'test_input_name',
     schema: 'test_schema',
     isDummy: false,
+    dbtmodel: {
+      schema: 'test_schema',
+      name: 'test_input_name',
+    },
   },
 };
 
@@ -82,6 +87,7 @@ beforeEach(() => {
 
   global.fetch = jest.fn(() =>
     Promise.resolve({
+      ok: true,
       json: () => Promise.resolve(columns),
     })
   );
@@ -95,17 +101,23 @@ describe('DbtSourceModelNode Component', () => {
       </GlobalContext.Provider>
     );
 
-    expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
+    });
     expect(screen.getByTestId('target-left')).toBeInTheDocument();
     expect(screen.getByTestId('source-right')).toBeInTheDocument();
   });
 
-  it('should call handleSelectNode on click', () => {
+  it('should call handleSelectNode on click', async () => {
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <DbtSourceModelNode {...node} />
       </GlobalContext.Provider>
     );
+
+    await waitFor(() => {
+      expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
+    });
 
     fireEvent.click(screen.getByText(/test_input_name/i));
 
@@ -122,9 +134,14 @@ describe('DbtSourceModelNode Component', () => {
       id: '1',
       type: 'sourceModel',
       data: {
+        name: 'test_input_name',
         input_name: 'test_input_name',
         schema: 'test_schema',
         isDummy: false,
+        dbtmodel: {
+          schema: 'test_schema',
+          name: 'test_input_name',
+        },
       },
     };
     render(

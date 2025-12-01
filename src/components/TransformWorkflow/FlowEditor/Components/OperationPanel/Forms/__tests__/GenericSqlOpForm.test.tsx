@@ -13,10 +13,19 @@ const mockContinueOperationChain = jest.fn();
 const mockClearAndClosePanel = jest.fn();
 const mockReset = jest.fn();
 
+const mockHandleSubmit = jest.fn();
+
 jest.mock('react-hook-form', () => ({
   useForm: () => ({
     control: {},
-    handleSubmit: jest.fn((fn) => (data) => fn(data)),
+    handleSubmit: (fn) =>
+      mockHandleSubmit.mockImplementation(async (e) => {
+        e?.preventDefault?.();
+        await fn({
+          sql_statement_1: 'SELECT * FROM table1',
+          sql_statement_2: 'FROM table2',
+        });
+      }),
     reset: mockReset,
   }),
   Controller: ({ render }) => render({ field: {}, fieldState: {} }),
@@ -24,6 +33,7 @@ jest.mock('react-hook-form', () => ({
 
 const defaultProps = {
   node: {
+    id: 'nodeId',
     type: 'operation_node',
     data: {
       config: {
@@ -44,7 +54,17 @@ describe('GenericSqlOpForm', () => {
   beforeEach(() => {
     useSession.mockReturnValue({ data: { session: 'mockSession' } });
     httpGet.mockResolvedValue({
-      config: { sql_statement_1: '', sql_statement_2: '', input_models: [] },
+      operation_config: {
+        config: {
+          sql_statement_1: 'SELECT * FROM table1',
+          sql_statement_2: 'FROM table2',
+        },
+      },
+      input_nodes: [
+        {
+          dbtmodel: { name: 'Test Input Model', schema: 'test_schema' },
+        },
+      ],
     });
     httpPost.mockResolvedValue({});
     httpPut.mockResolvedValue({});
@@ -56,25 +76,21 @@ describe('GenericSqlOpForm', () => {
   it('renders the form', () => {
     render(<GenericSqlOpForm {...defaultProps} />);
     expect(screen.getByText('SELECT')).toBeInTheDocument();
-    expect(screen.getByText('FROM Test Input Model')).toBeInTheDocument();
+    // For create action, it shows "FROM chained" initially
+    expect(screen.getByText('FROM chained')).toBeInTheDocument();
   });
 
   it('handles form submission for create action', async () => {
     render(<GenericSqlOpForm {...defaultProps} />);
-    const textboxes = screen.getAllByRole('textbox');
-    fireEvent.change(textboxes[0], {
-      target: { value: 'SELECT * FROM table1' },
-    });
-    fireEvent.change(textboxes[1], {
-      target: { value: 'FROM table2' },
-    });
 
-    fireEvent.click(screen.getByTestId('savebutton'));
+    const form = screen.getByTestId('savebutton').closest('form');
+    fireEvent.submit(form);
 
     await waitFor(() => {
+      expect(mockHandleSubmit).toHaveBeenCalled();
       expect(httpPost).toHaveBeenCalledWith(
         { session: 'mockSession' },
-        'transform/dbt_project/model/',
+        'transform/v2/dbt_project/operations/nodes/',
         expect.any(Object)
       );
       expect(mockContinueOperationChain).toHaveBeenCalled();
@@ -95,20 +111,14 @@ describe('GenericSqlOpForm', () => {
     };
     render(<GenericSqlOpForm {...editProps} />);
 
-    const textboxes = screen.getAllByRole('textbox');
-    fireEvent.change(textboxes[0], {
-      target: { value: 'SELECT * FROM table1' },
-    });
-    fireEvent.change(textboxes[1], {
-      target: { value: 'FROM table2' },
-    });
-
-    fireEvent.click(screen.getByTestId('savebutton'));
+    const form = screen.getByTestId('savebutton').closest('form');
+    fireEvent.submit(form);
 
     await waitFor(() => {
+      expect(mockHandleSubmit).toHaveBeenCalled();
       expect(httpPut).toHaveBeenCalledWith(
         { session: 'mockSession' },
-        'transform/dbt_project/model/operations/nodeId/',
+        'transform/v2/dbt_project/operations/nodes/nodeId/',
         expect.any(Object)
       );
       expect(mockContinueOperationChain).toHaveBeenCalled();
@@ -132,7 +142,7 @@ describe('GenericSqlOpForm', () => {
     await waitFor(() => {
       expect(httpGet).toHaveBeenCalledWith(
         { session: 'mockSession' },
-        'transform/dbt_project/model/operations/nodeId/'
+        'transform/v2/dbt_project/nodes/nodeId/'
       );
       expect(mockSetLoading).toHaveBeenCalledTimes(2);
     });
