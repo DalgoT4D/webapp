@@ -3,31 +3,38 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ProjectTree from './ProjectTree';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { CanvasActionContext } from '@/contexts/FlowEditorCanvasContext';
-import { SRC_MODEL_NODE } from '../constant';
-
 jest.mock('use-resize-observer', () => () => ({ ref: jest.fn(), width: 300, height: 500 }));
 
 const mockDbtSourceModels = [
   {
-    id: 'node-1',
+    uuid: 'node-1',
+    name: 'users',
+    display_name: 'users',
     schema: 'public',
-    input_name: 'users',
-    input_type: 'source',
-    type: SRC_MODEL_NODE,
+    sql_path: '',
+    type: 'source' as const,
+    source_name: 'users',
+    output_cols: [],
   },
   {
-    id: 'node-2',
+    uuid: 'node-2',
+    name: 'orders',
+    display_name: 'orders',
     schema: 'public',
-    input_name: 'orders',
-    input_type: 'source',
-    type: SRC_MODEL_NODE,
+    sql_path: '',
+    type: 'source' as const,
+    source_name: 'orders',
+    output_cols: [],
   },
   {
-    id: 'node-3',
+    uuid: 'node-3',
+    name: 'transactions',
+    display_name: 'transactions',
     schema: 'sales',
-    input_name: 'transactions',
-    input_type: 'source',
-    type: SRC_MODEL_NODE,
+    sql_path: '',
+    type: 'source' as const,
+    source_name: 'transactions',
+    output_cols: [],
   },
 ];
 
@@ -53,6 +60,7 @@ const renderComponent = (permissions = globalPermissions) => {
           handleNodeClick={mockHandleNodeClick}
           handleSyncClick={mockHandleSyncClick}
           isSyncing={false}
+          included_in="visual_designer"
         />
       </CanvasActionContext.Provider>
     </GlobalContext.Provider>
@@ -91,9 +99,6 @@ describe('ProjectTree Component', () => {
 
   it('filters by table', async () => {
     renderComponent();
-
-    const tableCheckbox = screen.getByLabelText(/filter by table/i);
-    fireEvent.click(tableCheckbox);
 
     const searchInput = screen.getByLabelText(/Search by table/i);
     fireEvent.change(searchInput, { target: { value: 'users' } });
@@ -147,6 +152,7 @@ describe('ProjectTree Component', () => {
             handleNodeClick={mockHandleNodeClick}
             handleSyncClick={mockHandleSyncClick}
             isSyncing={true}
+            included_in="visual_designer"
           />
         </CanvasActionContext.Provider>
       </GlobalContext.Provider>
