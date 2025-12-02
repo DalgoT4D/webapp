@@ -5,16 +5,14 @@ import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@/assets/icons/datatable.svg';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { DbtSourceModel, WarehouseTable } from './Canvas';
 import AddIcon from '@mui/icons-material/Add';
 import useResizeObserver from 'use-resize-observer';
-import { trimString } from '@/utils/common';
 import Image from 'next/image';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
-import { SRC_MODEL_NODE } from '../constant';
 import { TextField, FormControlLabel, Checkbox } from '@mui/material';
+import { DbtModelResponse } from '@/types/transform-v2.types';
 
 const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const globalContext = useContext(GlobalContext);
@@ -23,8 +21,8 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
   const { setCanvasAction } = useCanvasAction();
 
   /* This node instance can do many things. See the API reference. */
-  const data: DbtSourceModel = node.data;
-  const name = !node.isLeaf ? data.schema : data.input_name;
+  const data: DbtModelResponse = node.data;
+  const name = !node.isLeaf ? data.schema : data.name;
 
   // Check if this is the Data folder and it's empty
   const isEmptyDataFolder =
@@ -108,7 +106,7 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
                   }}
                 />
               </Tooltip>
-              {node.data?.input_type == 'source' && (
+              {node.data?.type == 'source' && (
                 <Tooltip title="Delete source">
                   <DeleteIcon
                     sx={{
@@ -122,7 +120,7 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
                         type: 'delete-source-tree-node',
                         data: {
                           nodeId: node.id,
-                          nodeType: SRC_MODEL_NODE,
+                          nodeType: node.data?.type,
                           shouldRefreshGraph: true,
                           isDummy: node.data?.isDummy,
                         },
@@ -176,7 +174,7 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
 };
 
 interface ProjectTreeProps {
-  dbtSourceModels: WarehouseTable[];
+  dbtSourceModels: DbtModelResponse[];
   handleNodeClick: (...args: any) => void;
   handleSyncClick: (...args: any) => void;
   isSyncing?: boolean;
@@ -196,7 +194,7 @@ const ProjectTree = ({
   const [filterBy, setFilterBy] = useState<'schema' | 'table'>('table');
   const [openByDefault, setOpenByDefault] = useState(false);
 
-  const constructAndSetProjectTreeData = (dbtSourceModels: WarehouseTable[]) => {
+  const constructAndSetProjectTreeData = (dbtSourceModels: DbtModelResponse[]) => {
     // group by schema and push dbtSourceModels under the children key
     const leafNodesBySchema = dbtSourceModels.reduce(
       (acc, dbtSourceModel) => {
@@ -208,7 +206,7 @@ const ProjectTree = ({
         }
         return acc;
       },
-      {} as { [key: string]: WarehouseTable[] }
+      {} as { [key: string]: DbtModelResponse[] }
     );
 
     // construct the tree data
@@ -216,9 +214,9 @@ const ProjectTree = ({
       return {
         id: String(idx + 1),
         schema: schema,
-        children: leafNodesBySchema[schema].map((item: WarehouseTable, j) => ({
+        children: leafNodesBySchema[schema].map((item: DbtModelResponse, j) => ({
           ...item,
-          id: String(item.id),
+          id: String(item.uuid),
         })),
       };
     });
@@ -239,7 +237,7 @@ const ProjectTree = ({
       if (filterBy === 'schema') {
         return dbtSourceModel.schema.toLowerCase().includes(searchTerm.toLowerCase());
       } else if (filterBy === 'table') {
-        return dbtSourceModel.input_name.toLowerCase().includes(searchTerm.toLowerCase());
+        return dbtSourceModel.name.toLowerCase().includes(searchTerm.toLowerCase());
       }
       return false;
     });

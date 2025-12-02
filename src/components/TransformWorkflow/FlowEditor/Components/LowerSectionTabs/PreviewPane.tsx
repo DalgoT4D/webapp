@@ -25,7 +25,6 @@ import SyncIcon from '@/assets/icons/sync.svg';
 import styles from '@/styles/Common.module.css';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { httpGet } from '@/helpers/http';
-import { DbtSourceModel } from '../Canvas';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import Image from 'next/image';
 import { CanvasNodeRenderData } from '@/types/transform-v2.types';

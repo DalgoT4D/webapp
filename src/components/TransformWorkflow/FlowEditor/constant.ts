@@ -152,7 +152,3 @@ export const operations = [
     infoToolTip: 'Add a generic sql operation',
   },
 ].sort((a, b) => a.label.localeCompare(b.label));
-
-// Node types
-export const SRC_MODEL_NODE = 'src_model_node';
-export const OPERATION_NODE = 'operation_node';

@@ -11,7 +11,6 @@ export enum CanvasNodeTypeEnum {
   Model = 'model',
   Operation = 'operation',
 }
-export type CanvasNodeType = 'source' | 'model' | 'operation';
 
 // Input payload for multi-input operations
 export interface ModelSrcOtherInputPayload {

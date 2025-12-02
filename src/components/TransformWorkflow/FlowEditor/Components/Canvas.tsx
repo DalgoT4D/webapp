@@ -34,7 +34,6 @@ import { httpDelete, httpGet, httpPost } from '@/helpers/http';
 import { successToast, errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
-import { OPERATION_NODE, SRC_MODEL_NODE, operationIconMapping } from '../constant';
 import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { getNextNodePosition } from '@/utils/editor';
@@ -45,9 +44,9 @@ import {
   CanvasNodeDataResponse,
   CanvasNodeRender,
   DbtProjectGraphApiResponse,
-  CanvasNodeType,
   CanvasNodeTypeEnum,
   CanvasNodeRenderData,
+  DbtModelResponse,
 } from '@/types/transform-v2.types';
 
 type CanvasProps = {
@@ -59,45 +58,9 @@ type CanvasProps = {
 
 const nodeGap = 30;
 
-export interface OperationNodeData {
-  id: string;
-  output_cols: Array<string>;
-  type: typeof OPERATION_NODE;
-  target_model_id: string;
-  target_model_name: string;
-  target_model_schema: string;
-  config: {
-    type: keyof typeof operationIconMapping;
-    [key: string]: any;
-  };
-  isDummy?: boolean;
-  prev_source_columns?: string[];
-  is_last_in_chain?: boolean;
-  seq?: number;
-}
-
-export interface WarehouseTable {
-  id: string;
-  input_name: string;
-  schema: string;
-  type: typeof SRC_MODEL_NODE;
-}
-export interface DbtSourceModel extends WarehouseTable {
-  source_name: string;
-  input_type: 'model' | 'source';
-  isDummy?: boolean;
-  output_cols: string[];
-}
-
 export type OperationNodeType = NodeProps<CanvasNodeRender>;
 
 export type SrcModelNodeType = NodeProps<CanvasNodeRender>;
-
-type EdgeData = {
-  id: string;
-  source: string;
-  target: string;
-};
 
 type EdgeStyleProps = {
   markerEnd?: EdgeMarkerType;
@@ -403,7 +366,12 @@ const Canvas = ({
   ) => {
     console.log('delete source node');
     try {
-      if (type === SRC_MODEL_NODE && !isDummy)
+      if (
+        [CanvasNodeTypeEnum.Model.toString(), CanvasNodeTypeEnum.Source.toString()].includes(
+          type
+        ) &&
+        !isDummy
+      )
         await httpDelete(session, `transform/v2/dbt_project/model/${nodeId}/`);
     } catch (error: any) {
       console.log(error);
@@ -415,7 +383,7 @@ const Canvas = ({
     if (shouldRefreshGraph) setRedrawGraph(!redrawGraph);
   };
 
-  const addSrcModelNodeToCanvas = async (dbtSourceModel: DbtSourceModel | null | undefined) => {
+  const addSrcModelNodeToCanvas = async (dbtSourceModel: DbtModelResponse | null | undefined) => {
     if (dbtSourceModel) {
       try {
         setTempLockCanvas(true);
@@ -423,7 +391,7 @@ const Canvas = ({
         // Call v2 API to create CanvasNode in backend
         const canvasNode: CanvasNodeDataResponse = await httpPost(
           session,
-          `transform/v2/dbt_project/models/${dbtSourceModel.id}/nodes/`,
+          `transform/v2/dbt_project/models/${dbtSourceModel.uuid}/nodes/`,
           {} // Empty payload as the endpoint uses the dbtmodel_uuid from URL
         );
 
@@ -447,20 +415,6 @@ const Canvas = ({
       } finally {
         setTempLockCanvas(false);
       }
-    }
-  };
-
-  const addOperationNodeToCanvas = (operationNode: OperationNodeData | null | undefined) => {
-    if (operationNode) {
-      console.log('adding an operation node to canvas', operationNode);
-      const newNode = {
-        id: operationNode.id,
-        type: OPERATION_NODE,
-        data: operationNode,
-        position: { x: 100, y: 125 },
-      };
-      // handleNodesChange([{ type: 'add', item: newNode }]);
-      addNodes([newNode]);
     }
   };
 

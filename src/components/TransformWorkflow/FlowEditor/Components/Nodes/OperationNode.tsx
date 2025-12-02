@@ -3,7 +3,7 @@ import 'react';
 import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { OperationNodeType } from '../Canvas';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { OPERATION_NODE, operationIconMapping, operations } from '../../constant';
+import { operationIconMapping, operations } from '../../constant';
 import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { useContext, useEffect } from 'react';
 import { GlobalContext } from '@/contexts/ContextProvider';
