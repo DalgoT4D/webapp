@@ -14,7 +14,7 @@ import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import { TextField, FormControlLabel, Checkbox } from '@mui/material';
 import { DbtModelResponse } from '@/types/transform-v2.types';
 
-const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
+const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing, included_in }: any) => {
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const width = node.tree.props.width;
@@ -106,7 +106,7 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing }: any) => {
                   }}
                 />
               </Tooltip>
-              {node.data?.type == 'source' && (
+              {included_in !== 'explore' && (
                 <Tooltip title="Delete source">
                   <DeleteIcon
                     sx={{
@@ -178,6 +178,7 @@ interface ProjectTreeProps {
   handleNodeClick: (...args: any) => void;
   handleSyncClick: (...args: any) => void;
   isSyncing?: boolean;
+  included_in: 'explore' | 'visual_designer';
 }
 
 const ProjectTree = ({
@@ -185,6 +186,7 @@ const ProjectTree = ({
   handleNodeClick,
   handleSyncClick,
   isSyncing = false,
+  included_in = 'visual_designer',
 }: ProjectTreeProps) => {
   const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
@@ -318,7 +320,14 @@ const ProjectTree = ({
             rowHeight={30}
             onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
           >
-            {(props) => <Node {...props} handleSyncClick={handleSyncClick} isSyncing={isSyncing} />}
+            {(props) => (
+              <Node
+                {...props}
+                handleSyncClick={handleSyncClick}
+                isSyncing={isSyncing}
+                included_in={included_in}
+              />
+            )}
           </Tree>
         )}
       </Box>

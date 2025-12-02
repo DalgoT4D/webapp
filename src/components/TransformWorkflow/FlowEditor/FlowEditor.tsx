@@ -78,6 +78,7 @@ const UpperSection = ({
           dbtSourceModels={sourcesModels}
           handleNodeClick={handleNodeClick}
           handleSyncClick={initiateSyncSources}
+          included_in="visual_designer"
         />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />

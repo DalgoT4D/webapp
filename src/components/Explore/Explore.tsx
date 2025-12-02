@@ -109,7 +109,6 @@ export const Explore = () => {
 
   const handleNodeClick = (nodes: NodeApi<any>[]) => {
     if (nodes.length > 0 && nodes[0].isLeaf) {
-      console.log('clicked node:', nodes[0].data);
       setPreviewAction({
         type: 'preview',
         data: { schema: nodes[0].data.schema, table: nodes[0].data.name },
@@ -150,6 +149,7 @@ export const Explore = () => {
               handleNodeClick={handleNodeClick}
               handleSyncClick={fetchSourcesModels}
               isSyncing={loading}
+              included_in="explore"
             />
           </ResizableBox>
           <Divider orientation="vertical" sx={{ color: 'black' }} />
