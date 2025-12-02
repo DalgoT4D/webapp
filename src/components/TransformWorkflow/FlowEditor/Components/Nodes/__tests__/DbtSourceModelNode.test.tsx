@@ -54,16 +54,25 @@ const mockPreviewAction = {
 
 const node = {
   id: '1',
-  type: 'sourceModel',
+  type: 'source',
   data: {
+    uuid: '1',
     name: 'test_input_name',
-    input_name: 'test_input_name',
-    schema: 'test_schema',
-    isDummy: false,
+    output_columns: ['column1', 'column2'],
+    node_type: 'source',
     dbtmodel: {
-      schema: 'test_schema',
+      uuid: '1',
       name: 'test_input_name',
+      display_name: 'test_input_name',
+      schema: 'test_schema',
+      sql_path: '',
+      type: 'source',
+      source_name: 'test_input_name',
+      output_cols: ['column1', 'column2'],
     },
+    operation_config: null,
+    is_last_in_chain: false,
+    isDummy: false,
   },
 };
 
@@ -122,7 +131,13 @@ describe('DbtSourceModelNode Component', () => {
     fireEvent.click(screen.getByText(/test_input_name/i));
 
     expect(mockSetCanvasNode).toHaveBeenCalledWith(node);
-    expect(mockSetPreviewAction).toHaveBeenCalledWith({ type: 'preview', data: node.data });
+    expect(mockSetPreviewAction).toHaveBeenCalledWith({
+      type: 'preview',
+      data: {
+        schema: 'test_schema',
+        table: 'test_input_name',
+      },
+    });
     expect(mockSetCanvasAction).toHaveBeenCalledWith({
       type: 'open-opconfig-panel',
       data: 'create',
@@ -130,23 +145,32 @@ describe('DbtSourceModelNode Component', () => {
   });
 
   it('should call handleDeleteAction on delete icon click', () => {
-    const node = {
+    const deleteNode = {
       id: '1',
-      type: 'sourceModel',
+      type: 'source',
       data: {
+        uuid: '1',
         name: 'test_input_name',
-        input_name: 'test_input_name',
-        schema: 'test_schema',
-        isDummy: false,
+        output_columns: ['column1', 'column2'],
+        node_type: 'source',
         dbtmodel: {
-          schema: 'test_schema',
+          uuid: '1',
           name: 'test_input_name',
+          display_name: 'test_input_name',
+          schema: 'test_schema',
+          sql_path: '',
+          type: 'source',
+          source_name: 'test_input_name',
+          output_cols: ['column1', 'column2'],
         },
+        operation_config: null,
+        is_last_in_chain: false,
+        isDummy: false,
       },
     };
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
-        <DbtSourceModelNode {...node} />
+        <DbtSourceModelNode {...deleteNode} />
       </GlobalContext.Provider>
     );
 
@@ -156,7 +180,7 @@ describe('DbtSourceModelNode Component', () => {
       type: 'delete-node',
       data: {
         nodeId: '1',
-        nodeType: 'sourceModel',
+        nodeType: 'source',
         shouldRefreshGraph: false,
         isDummy: false,
       },
