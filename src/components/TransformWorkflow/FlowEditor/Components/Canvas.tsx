@@ -47,6 +47,7 @@ import {
   CanvasNodeTypeEnum,
   CanvasNodeRenderData,
   DbtModelResponse,
+  PreviewTableData,
 } from '@/types/transform-v2.types';
 
 type CanvasProps = {
@@ -245,7 +246,7 @@ const Canvas = ({
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { canvasNode } = useCanvasNode();
   const { previewAction, setPreviewAction } = usePreviewAction();
-  const previewNodeRef = useRef<CanvasNodeRenderData | null>();
+  const previewNodeRef = useRef<PreviewTableData | null>();
   const globalContext = useContext(GlobalContext);
   const EdgeStyle: EdgeStyleProps = {
     markerEnd: {

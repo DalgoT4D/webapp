@@ -109,7 +109,11 @@ export const Explore = () => {
 
   const handleNodeClick = (nodes: NodeApi<any>[]) => {
     if (nodes.length > 0 && nodes[0].isLeaf) {
-      setPreviewAction({ type: 'preview', data: nodes[0].data });
+      console.log('clicked node:', nodes[0].data);
+      setPreviewAction({
+        type: 'preview',
+        data: { schema: nodes[0].data.schema, table: nodes[0].data.name },
+      });
     }
   };
   return (

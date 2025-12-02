@@ -134,3 +134,8 @@ export type DbtProjectGraphApiResponse = {
 export type GenericNode = Node<CanvasNodeRenderData>;
 export type GenericNodeProps = NodeProps<CanvasNodeRenderData>;
 export type GenericEdge = Edge<CanvasEdgeDataResponse>;
+
+export interface PreviewTableData {
+  table: string;
+  schema: string;
+}

@@ -1,11 +1,15 @@
-import { CanvasNodeRender, CanvasNodeRenderData } from '@/types/transform-v2.types';
+import {
+  CanvasNodeRender,
+  CanvasNodeRenderData,
+  PreviewTableData,
+} from '@/types/transform-v2.types';
 import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
 ///////////////////////////// Preview Action ////////////////////////////////
 
 interface Action {
   type: 'preview' | 'clear-preview' | '' | undefined | null;
-  data: CanvasNodeRenderData | null;
+  data: PreviewTableData | null;
 }
 
 interface PreviewActionContext {

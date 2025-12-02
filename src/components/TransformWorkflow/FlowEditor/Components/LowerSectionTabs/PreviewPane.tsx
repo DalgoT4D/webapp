@@ -27,10 +27,10 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { httpGet } from '@/helpers/http';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import Image from 'next/image';
-import { CanvasNodeRenderData } from '@/types/transform-v2.types';
+import { PreviewTableData } from '@/types/transform-v2.types';
 
 const PreviewPane = ({ height }: { height: number }) => {
-  const [modelToPreview, setModelToPreview] = useState<CanvasNodeRenderData | null>();
+  const [modelToPreview, setModelToPreview] = useState<PreviewTableData | null>(null);
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
   const { previewAction } = usePreviewAction();
@@ -58,10 +58,10 @@ const PreviewPane = ({ height }: { height: number }) => {
   }, [previewAction]);
 
   useEffect(() => {
-    if (modelToPreview && modelToPreview?.dbtmodel) {
+    if (modelToPreview) {
       fetchColumns(
-        modelToPreview.dbtmodel.schema,
-        modelToPreview.dbtmodel.name,
+        modelToPreview.schema,
+        modelToPreview.table,
         currentPageIndex,
         pageSize,
         sortedColumn,
@@ -139,10 +139,10 @@ const PreviewPane = ({ height }: { height: number }) => {
   const handleTableDataDownload = async () => {
     setDownloadInProgress(true);
     try {
-      if (modelToPreview && modelToPreview?.dbtmodel) {
+      if (modelToPreview) {
         console.log('Downloading table data');
-        const schema = modelToPreview.dbtmodel.schema;
-        const table = modelToPreview.dbtmodel.name;
+        const schema = modelToPreview.schema;
+        const table = modelToPreview.table;
 
         const filename = `${schema}__${table}.csv`;
 
@@ -177,7 +177,7 @@ const PreviewPane = ({ height }: { height: number }) => {
     }
   };
 
-  return modelToPreview && modelToPreview?.dbtmodel ? (
+  return modelToPreview ? (
     <Box>
       <Box
         sx={{
@@ -188,7 +188,7 @@ const PreviewPane = ({ height }: { height: number }) => {
         }}
       >
         <Typography variant="body1" fontWeight="bold">
-          {modelToPreview.dbtmodel.name}
+          {modelToPreview.schema}.{modelToPreview.table}
         </Typography>
         <Button
           onClick={handleTableDataDownload}

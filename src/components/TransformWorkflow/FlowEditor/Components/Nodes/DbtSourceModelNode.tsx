@@ -122,7 +122,13 @@ export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
       });
     }
     setCanvasNode(nodeProps);
-    setPreviewAction({ type: 'preview', data: nodeProps.data });
+    setPreviewAction({
+      type: 'preview',
+      data: {
+        schema: nodeProps.data.dbtmodel?.schema || '',
+        table: nodeProps.data.dbtmodel?.name || '',
+      },
+    });
   };
 
   useMemo(() => {
