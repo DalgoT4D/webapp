@@ -241,10 +241,10 @@ const Canvas = ({
   const [nodes, setNodes, onNodesChange] = useNodesState([]); //works when we click the node or move it.
   const [edges, setEdges, onEdgesChange] = useEdgesState([]); //workds when we click the edges.
   const [openOperationConfig, setOpenOperationConfig] = useState<boolean>(false); // this is the right form with sql operations.
-  const { addNodes, setCenter, getZoom } = useReactFlow();
+  const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
-  const { canvasNode } = useCanvasNode();
+  const { canvasNode, setCanvasNode } = useCanvasNode();
   const { previewAction, setPreviewAction } = usePreviewAction();
   const previewNodeRef = useRef<PreviewTableData | null>();
   const globalContext = useContext(GlobalContext);
@@ -388,6 +388,30 @@ const Canvas = ({
     if (dbtSourceModel) {
       try {
         setTempLockCanvas(true);
+
+        // Check if node already exists on canvas by checking if any node's data matches the dbtmodel uuid
+        const existingNode = nodes.find((node) => {
+          // Check if the node has a dbtmodel and it matches the source model uuid
+          return node.data?.dbtmodel?.uuid === dbtSourceModel.uuid;
+        });
+
+        if (existingNode) {
+          // Node already exists, focus and select it instead of creating a duplicate
+          setCenter(existingNode.position.x, existingNode.position.y, {
+            zoom: getZoom(), // Zoom in 1.5x, but cap at 2x max zoom
+            duration: 500,
+          });
+
+          // Select the existing node by updating its selected state
+          setNodes((nds) =>
+            nds.map((node) => ({
+              ...node,
+              selected: node.id === existingNode.id,
+            }))
+          );
+
+          return; // Exit early, don't create a new node
+        }
 
         // Call v2 API to create CanvasNode in backend
         const canvasNode: CanvasNodeDataResponse = await httpPost(
