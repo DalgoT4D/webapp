@@ -177,11 +177,14 @@ const FlowCreate = ({
 
           //if "data.transformTasks" and "tasksToApply" are same then the alignment is simple else advanced.
           // In the case of dbt cloud job, the taskToApply is an empty array as there are no system tasks being fetched, hence the check.
+          // Make sure both arrays have the same length and that the corresponding
+          // indexed item exists before comparing uuids to avoid reading uuid of undefined.
           const ifTasksAligned =
-            tasksToApply.length &&
+            tasksToApply.length > 0 &&
+            tasksToApply.length === data.transformTasks.length &&
             data.transformTasks.every(
               (task: { uuid: string; seq: number }, index: number) =>
-                task.uuid === tasksToApply[index].uuid
+                !!tasksToApply[index] && task.uuid === tasksToApply[index].uuid
             );
           if (data.transformTasks.length > 0 && !ifTasksAligned) {
             const uuidOrder = data.transformTasks.reduce((acc: any, obj: any) => {
