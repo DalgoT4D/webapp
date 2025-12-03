@@ -11,7 +11,6 @@ export enum CanvasNodeTypeEnum {
   Model = 'model',
   Operation = 'operation',
 }
-export type CanvasNodeType = 'source' | 'model' | 'operation';
 
 // Input payload for multi-input operations
 export interface ModelSrcOtherInputPayload {
@@ -135,3 +134,8 @@ export type DbtProjectGraphApiResponse = {
 export type GenericNode = Node<CanvasNodeRenderData>;
 export type GenericNodeProps = NodeProps<CanvasNodeRenderData>;
 export type GenericEdge = Edge<CanvasEdgeDataResponse>;
+
+export interface PreviewTableData {
+  table: string;
+  schema: string;
+}

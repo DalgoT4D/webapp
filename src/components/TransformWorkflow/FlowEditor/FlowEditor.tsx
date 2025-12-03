@@ -6,7 +6,6 @@ import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/LowerSectionTabs/PreviewPane';
 import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-import { DbtSourceModel } from './Components/Canvas';
 import { useDbtRunLogs, useDbtRunLogsUpdate } from '@/contexts/DbtRunLogsContext';
 import { ReactFlowProvider } from 'reactflow';
 import { ResizableBox } from 'react-resizable';
@@ -21,9 +20,10 @@ import { useLockCanvas } from '@/customHooks/useLockCanvas';
 import { useTracking } from '@/contexts/TrackingContext';
 import { NodeApi } from 'react-arborist';
 import { FeatureFlagKeys, useFeatureFlags } from '@/customHooks/useFeatureFlags';
+import { DbtModelResponse } from '@/types/transform-v2.types';
 
 type UpperSectionProps = {
-  sourcesModels: DbtSourceModel[];
+  sourcesModels: DbtModelResponse[];
   refreshEditor: boolean;
   setRefreshEditor: any;
   finalLockCanvas: boolean;
@@ -78,6 +78,7 @@ const UpperSection = ({
           dbtSourceModels={sourcesModels}
           handleNodeClick={handleNodeClick}
           handleSyncClick={initiateSyncSources}
+          included_in="visual_designer"
         />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />
@@ -167,7 +168,7 @@ const LowerSection = ({
 
 const FlowEditor = ({}) => {
   const { data: session } = useSession();
-  const [sourcesModels, setSourcesModels] = useState<DbtSourceModel[]>([]);
+  const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
@@ -182,8 +183,8 @@ const FlowEditor = ({}) => {
     setLowerSectionHeight(dailogHeight - event.clientY);
   };
   const fetchSourcesModels = () => {
-    httpGet(session, 'transform/dbt_project/sources_models/')
-      .then((response: DbtSourceModel[]) => {
+    httpGet(session, 'transform/v2/dbt_project/sources_models/')
+      .then((response: DbtModelResponse[]) => {
         setSourcesModels(response);
       })
       .catch((error) => {

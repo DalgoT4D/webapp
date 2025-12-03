@@ -1,9 +1,8 @@
 import { PageHead } from '@/components/PageHead';
-import { WarehouseTable } from '@/components/TransformWorkflow/FlowEditor/Components/Canvas';
 import { StatisticsPane } from '@/components/TransformWorkflow/FlowEditor/Components/LowerSectionTabs/StatisticsPane';
 
 import { httpGet } from '@/helpers/http';
-import { Box, Dialog, Divider, IconButton, Tab, Tabs } from '@mui/material';
+import { Box, Dialog, Divider, Tab, Tabs } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
@@ -16,8 +15,15 @@ import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { successToast } from '../ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { FeatureFlagKeys, useFeatureFlags } from '@/customHooks/useFeatureFlags';
-import { Close } from '@mui/icons-material';
 import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
+import { DbtModelResponse } from '@/types/transform-v2.types';
+
+interface WarehouseTable {
+  id: string;
+  name: string;
+  schema: string;
+  type: 'source' | 'model';
+}
 
 export const Explore = () => {
   const { data: session } = useSession();
@@ -30,7 +36,7 @@ export const Explore = () => {
   const [width, setWidth] = useState(260);
 
   const [height, setheight] = useState(500);
-  const [sourceModels, setSourcesModels] = useState<WarehouseTable[]>([]);
+  const [sourceModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
 
   const { isFeatureFlagEnabled } = useFeatureFlags();
 
@@ -41,19 +47,33 @@ export const Explore = () => {
   const fetchSourcesModels = () => {
     setLoading(true);
     httpGet(session, 'warehouse/sync_tables?fresh=1')
-      .then((response: WarehouseTable[]) => {
-        response.sort((a, b) => {
-          //Comparing schemas
-          if (a.schema < b.schema) return -1;
-          if (a.schema > b.schema) return 1;
+      .then((response: any[]) => {
+        // Normalize every record to ensure fields expected by ProjectTree/Canvas exist
+        const normalized: DbtModelResponse[] = (response || []).map((r: WarehouseTable) => ({
+          id: r.id,
+          name: r.name,
+          schema: r.schema,
+          type: r.type,
+          display_name: r.name,
+          source_name: r.name,
+          sql_path: '',
+          output_cols: [],
+          uuid: r.id,
+        }));
 
-          // if schemas are same, then compare by the input name.
-          if (a.input_name < b.input_name) return -1;
-          if (a.input_name > b.input_name) return 1;
+        normalized.sort((a, b) => {
+          // Compare schemas
+          if ((a.schema ?? '') < (b.schema ?? '')) return -1;
+          if ((a.schema ?? '') > (b.schema ?? '')) return 1;
 
-          return 0; // if input name and schema are same
+          // if schemas are same, then compare by the table/name
+          if ((a.name ?? '') < (b.name ?? '')) return -1;
+          if ((a.name ?? '') > (b.name ?? '')) return 1;
+
+          return 0;
         });
-        setSourcesModels(response);
+
+        setSourcesModels(normalized);
         successToast('Tables synced with warehouse', [], globalContext);
       })
       .catch((error) => {
@@ -89,7 +109,10 @@ export const Explore = () => {
 
   const handleNodeClick = (nodes: NodeApi<any>[]) => {
     if (nodes.length > 0 && nodes[0].isLeaf) {
-      setPreviewAction({ type: 'preview', data: nodes[0].data });
+      setPreviewAction({
+        type: 'preview',
+        data: { schema: nodes[0].data.schema, table: nodes[0].data.name },
+      });
     }
   };
   return (
@@ -126,6 +149,7 @@ export const Explore = () => {
               handleNodeClick={handleNodeClick}
               handleSyncClick={fetchSourcesModels}
               isSyncing={loading}
+              included_in="explore"
             />
           </ResizableBox>
           <Divider orientation="vertical" sx={{ color: 'black' }} />

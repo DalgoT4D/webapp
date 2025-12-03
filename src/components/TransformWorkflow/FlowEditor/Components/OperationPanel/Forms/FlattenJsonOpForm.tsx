@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import { Box, Button, Grid, SxProps, Typography } from '@mui/material';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';

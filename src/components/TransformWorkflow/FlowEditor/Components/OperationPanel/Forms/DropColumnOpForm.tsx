@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { OperationNodeData } from '../../Canvas';
 import { useSession } from 'next-auth/react';
 import {
   Box,

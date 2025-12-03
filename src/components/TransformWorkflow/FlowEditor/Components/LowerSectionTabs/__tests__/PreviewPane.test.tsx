@@ -26,11 +26,7 @@ const mockPreviewAction = {
   type: 'preview',
   data: {
     schema: 'public',
-    input_name: 'test_table',
-    dbtmodel: {
-      schema: 'public',
-      name: 'test_table',
-    },
+    table: 'test_table',
   },
 };
 
@@ -61,7 +57,7 @@ describe('PreviewPane Component', () => {
 
     render(<PreviewPane height={600} />);
 
-    expect(screen.getByText('test_table')).toBeInTheDocument();
+    expect(screen.getByText('public.test_table')).toBeInTheDocument();
     await waitFor(() => expect(httpGet).toHaveBeenCalledTimes(3));
     await waitFor(() => {
       expect(screen.getByText('id')).toBeInTheDocument();

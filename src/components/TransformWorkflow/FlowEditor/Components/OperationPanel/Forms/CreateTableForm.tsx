@@ -4,8 +4,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { Box, Button, FormHelperText } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
-import { OPERATION_NODE } from '../../../constant';
-import { OperationNodeData, OperationNodeType } from '../../Canvas';
 import { httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
