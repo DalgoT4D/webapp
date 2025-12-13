@@ -35,7 +35,7 @@
     "eslint-config-next": "^14.2.30",
     "mock-socket": "^9.3.1",
     "moment": "^2.30.1",
-    "next": "^14.2.31",
+    "next": "14.2.35",
     "next-auth": "^4.24.11",
     "react": "^18.3.1",
     "react-arborist": "^3.4.3",
