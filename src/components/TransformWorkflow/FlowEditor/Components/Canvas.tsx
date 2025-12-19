@@ -95,10 +95,10 @@ const WorkflowValues: any = {
 
 const CanvasHeader = ({
   finalLockCanvas,
-  lockToken,
+  canInteractWithCanvas,
 }: {
   finalLockCanvas: boolean;
-  lockToken: string | null;
+  canInteractWithCanvas: () => boolean;
 }) => {
   const { setCanvasAction } = useCanvasAction();
   const { canvasNode } = useCanvasNode();
@@ -186,10 +186,10 @@ const CanvasHeader = ({
         <Button
           variant="contained"
           onClick={handleDiscardChanges}
-          disabled={!lockToken}
+          disabled={!canInteractWithCanvas()}
           startIcon={<ClearIcon />}
           sx={{
-            background: lockToken ? '#00897B' : '#ccc',
+            background: canInteractWithCanvas() ? '#00897B' : '#ccc',
             color: '#FFFFFF',
             fontWeight: 600,
             fontSize: '12px',
@@ -198,7 +198,7 @@ const CanvasHeader = ({
             minWidth: '120px',
             height: '32px',
             '&:hover': {
-              background: lockToken ? '#00695C' : '#ccc',
+              background: canInteractWithCanvas() ? '#00695C' : '#ccc',
             },
             '&:disabled': {
               color: '#FFFFFF',
@@ -213,11 +213,14 @@ const CanvasHeader = ({
         <Button
           variant="contained"
           onClick={handleRunClick}
-          disabled={!permissions.includes('can_run_pipeline') || !lockToken}
+          disabled={!permissions.includes('can_run_pipeline') || !canInteractWithCanvas()}
           endIcon={<KeyboardArrowDown />}
           startIcon={<PlayArrowIcon />}
           sx={{
-            background: permissions.includes('can_run_pipeline') && lockToken ? '#00897B' : '#ccc',
+            background:
+              permissions.includes('can_run_pipeline') && canInteractWithCanvas()
+                ? '#00897B'
+                : '#ccc',
             color: '#FFFFFF',
             fontWeight: 600,
             fontSize: '12px',
@@ -227,7 +230,9 @@ const CanvasHeader = ({
             height: '32px',
             '&:hover': {
               background:
-                permissions.includes('can_run_pipeline') && lockToken ? '#00695C' : '#ccc',
+                permissions.includes('can_run_pipeline') && canInteractWithCanvas()
+                  ? '#00695C'
+                  : '#ccc',
             },
             '&:disabled': {
               color: '#FFFFFF',
@@ -271,10 +276,10 @@ const CanvasHeader = ({
         <Button
           variant="contained"
           onClick={handlePublish}
-          disabled={!lockToken}
+          disabled={!canInteractWithCanvas()}
           startIcon={<PublishIcon />}
           sx={{
-            background: lockToken ? '#00897B' : '#ccc',
+            background: canInteractWithCanvas() ? '#00897B' : '#ccc',
             color: '#FFFFFF',
             fontWeight: 600,
             fontSize: '12px',
@@ -283,7 +288,7 @@ const CanvasHeader = ({
             minWidth: '90px',
             height: '32px',
             '&:hover': {
-              background: lockToken ? '#00695C' : '#ccc',
+              background: canInteractWithCanvas() ? '#00695C' : '#ccc',
             },
             '&:disabled': {
               color: '#FFFFFF',
@@ -387,9 +392,11 @@ const Canvas = ({
   const [canvasLockStatus, setCanvasLockStatus] = useState<{
     isLocked: boolean;
     lockedBy?: string;
+    loading?: boolean;
   }>({
-    isLocked: false,
+    isLocked: true, // Start locked until we confirm we can acquire lock
     lockedBy: undefined,
+    loading: true, // Loading state while checking lock
   });
   const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
 
@@ -450,22 +457,51 @@ const Canvas = ({
   }, [session, redrawGraph]);
 
   // Canvas Lock Management State
-  const [lockToken, setLockToken] = useState<string | null>(null);
   const [lockRefreshTimer, setLockRefreshTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // Helper function to determine if current user can interact with canvas
+  const canInteractWithCanvas = (): boolean => {
+    // If still loading, don't allow interaction (secure by default)
+    if (canvasLockStatus.loading) {
+      return false;
+    }
+
+    // If canvas is not locked by anyone, we can interact
+    if (!canvasLockStatus.isLocked) {
+      return true;
+    }
+
+    // Check if the lock is owned by the current user
+    const currentUserEmail = session?.user?.email;
+    if (currentUserEmail && canvasLockStatus.lockedBy === currentUserEmail) {
+      return true;
+    }
+
+    // Canvas is locked by someone else, we cannot interact
+    return false;
+  };
 
   // Acquire canvas lock
   const acquireCanvasLock = async (): Promise<boolean> => {
+    console.log('Attempting to acquire canvas lock...');
     try {
       const response = await httpPost(session, `transform/dbt_project/canvas/lock/`, {});
 
       if (response.success) {
-        setLockToken(response.res.lock_token);
         setCanvasLockStatus({
           isLocked: true,
           lockedBy: response.res.locked_by,
+          loading: false,
         });
         console.log('Canvas lock acquired successfully');
         return true;
+      } else {
+        console.log('Canvas lock acquire response not successful:', response);
+        setCanvasLockStatus({
+          isLocked: false,
+          lockedBy: undefined,
+          loading: false,
+        });
       }
     } catch (error: any) {
       console.error('Failed to acquire canvas lock:', error);
@@ -476,29 +512,62 @@ const Canvas = ({
           setCanvasLockStatus({
             isLocked: true,
             lockedBy: match[1],
+            loading: false,
           });
+          console.log('Canvas is locked by another user:', match[1]);
+          return false;
         }
       }
-      setLockToken(null);
+      // Unknown error
+      setCanvasLockStatus({
+        isLocked: false,
+        lockedBy: undefined,
+        loading: false,
+      });
       return false;
     }
+    return false;
   };
 
   // Refresh canvas lock
   const refreshCanvasLock = async (): Promise<boolean> => {
-    if (!lockToken) return false;
+    console.log('refreshCanvasLock called');
+
+    // Only refresh if we currently own the lock
+    const currentUserEmail = session?.user?.email;
+    if (
+      !currentUserEmail ||
+      !canvasLockStatus.isLocked ||
+      canvasLockStatus.lockedBy !== currentUserEmail
+    ) {
+      console.log('Cannot refresh - we do not own the lock');
+      return false;
+    }
 
     try {
+      console.log('Making API call to refresh lock...');
       const response = await httpPost(session, `transform/dbt_project/canvas/lock/refresh/`, {});
 
       if (response.success) {
-        console.log('Canvas lock refreshed');
+        console.log('Canvas lock refreshed successfully');
+        // Update the lock status with fresh data
+        setCanvasLockStatus({
+          isLocked: true,
+          lockedBy: response.res.locked_by,
+          loading: false,
+        });
         return true;
+      } else {
+        console.log('Lock refresh response not successful:', response);
       }
     } catch (error) {
       console.error('Failed to refresh canvas lock:', error);
-      // Lock expired or lost, try to acquire new one
-      setLockToken(null);
+      // Lock expired or lost
+      setCanvasLockStatus({
+        isLocked: false,
+        lockedBy: undefined,
+        loading: false,
+      });
       return false;
     }
     return false;
@@ -506,7 +575,15 @@ const Canvas = ({
 
   // Release canvas lock
   const releaseCanvasLock = async (): Promise<void> => {
-    if (!lockToken) return;
+    // Only release if we currently own the lock
+    const currentUserEmail = session?.user?.email;
+    if (
+      !currentUserEmail ||
+      !canvasLockStatus.isLocked ||
+      canvasLockStatus.lockedBy !== currentUserEmail
+    ) {
+      return;
+    }
 
     try {
       await httpDelete(session, `transform/dbt_project/canvas/lock/`);
@@ -514,10 +591,10 @@ const Canvas = ({
     } catch (error) {
       console.error('Failed to release canvas lock:', error);
     } finally {
-      setLockToken(null);
       setCanvasLockStatus({
         isLocked: false,
         lockedBy: undefined,
+        loading: false,
       });
     }
   };
@@ -532,29 +609,41 @@ const Canvas = ({
 
       // Set up refresh timer every 30 seconds
       const refreshTimer = setInterval(async () => {
+        console.log('Attempting to refresh canvas lock...');
         const refreshed = await refreshCanvasLock();
         if (!refreshed) {
+          console.log('Lock refresh failed, trying to re-acquire...');
           // Try to re-acquire if refresh failed
           await acquireCanvasLock();
         }
       }, 30000);
 
       setLockRefreshTimer(refreshTimer);
+      console.log('Canvas lock refresh timer started - will refresh every 30 seconds');
     };
 
     initializeLock();
 
     return () => {
       mounted = false;
+      if (lockRefreshTimer) {
+        clearInterval(lockRefreshTimer);
+        setLockRefreshTimer(null);
+      }
     };
-  }, [session, globalContext?.CurrentOrg.state.id]);
+  }, [session]);
 
   // Cleanup handlers for comprehensive lock management
   useEffect(() => {
     // Function to handle cleanup synchronously for critical scenarios
     const handleSyncCleanup = () => {
-      if (lockToken) {
-        // Fire and forget emergency cleanup
+      // Fire and forget emergency cleanup if we own the lock
+      const currentUserEmail = session?.user?.email;
+      if (
+        currentUserEmail &&
+        canvasLockStatus.isLocked &&
+        canvasLockStatus.lockedBy === currentUserEmail
+      ) {
         releaseCanvasLock().catch(() => {
           console.error('Emergency lock cleanup failed');
         });
@@ -613,7 +702,7 @@ const Canvas = ({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('click', handleLinkClick, true);
     };
-  }, [lockToken, lockRefreshTimer]);
+  }, [canvasLockStatus, lockRefreshTimer, session?.user?.email]);
 
   useEffect(() => {
     previewNodeRef.current = previewAction.data;
@@ -889,7 +978,10 @@ const Canvas = ({
           borderTop: '1px #CCD6E2 solid',
         }}
       >
-        <CanvasHeader finalLockCanvas={finalLockCanvas} lockToken={lockToken} />
+        <CanvasHeader
+          finalLockCanvas={finalLockCanvas}
+          canInteractWithCanvas={canInteractWithCanvas}
+        />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box
@@ -904,23 +996,23 @@ const Canvas = ({
           nodes={nodes} // are the tables and the operations.
           selectNodesOnDrag={false}
           edges={edges} // flexible lines connecting tables, table-node.
-          onNodeDragStop={lockToken ? onNodeDragStop : undefined}
-          onPaneClick={lockToken ? handlePaneClick : undefined} //back canvas click.
-          onNodesChange={lockToken ? handleNodesChange : undefined} // when node (table or operation) is clicked or moved.
-          onEdgesChange={lockToken ? handleEdgesChange : undefined}
-          onConnect={lockToken ? handleNewConnection : undefined}
+          onNodeDragStop={canInteractWithCanvas() ? onNodeDragStop : undefined}
+          onPaneClick={canInteractWithCanvas() ? handlePaneClick : undefined} //back canvas click.
+          onNodesChange={canInteractWithCanvas() ? handleNodesChange : undefined} // when node (table or operation) is clicked or moved.
+          onEdgesChange={canInteractWithCanvas() ? handleEdgesChange : undefined}
+          onConnect={canInteractWithCanvas() ? handleNewConnection : undefined}
           nodeTypes={nodeTypes}
           minZoom={0.1}
           proOptions={{ hideAttribution: true }}
           defaultViewport={defaultViewport}
           fitView
-          nodesDraggable={lockToken ? true : false}
-          nodesConnectable={lockToken ? true : false}
-          elementsSelectable={lockToken ? true : false}
+          nodesDraggable={canInteractWithCanvas() ? true : false}
+          nodesConnectable={canInteractWithCanvas() ? true : false}
+          elementsSelectable={canInteractWithCanvas() ? true : false}
           panOnDrag={true} // Always allow panning (for zoom/navigation)
           zoomOnScroll={true} // Always allow zoom
           zoomOnPinch={true} // Always allow zoom
-          zoomOnDoubleClick={lockToken ? true : false} // Only allow double-click zoom if locked
+          zoomOnDoubleClick={canInteractWithCanvas() ? true : false} // Only allow double-click zoom if can interact
         >
           <Background />
           <Controls>
