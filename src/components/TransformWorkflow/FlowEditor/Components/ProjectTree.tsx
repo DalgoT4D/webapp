@@ -75,7 +75,7 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing, included_in
           <Tooltip title={name}>
             <Typography
               sx={{
-                ml: 1,
+                ml: 0.5,
                 fontWeight: 600,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -314,6 +314,7 @@ const ProjectTree = ({
           <Tree
             childrenAccessor={(d: any) => d.children}
             openByDefault={openByDefault || true} // Always open Data folder by default
+            indent={8}
             data={projectTreeData}
             height={height}
             width={width}
