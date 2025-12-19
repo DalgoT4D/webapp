@@ -15,7 +15,6 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PublishIcon from '@mui/icons-material/Publish';
 import ClearIcon from '@mui/icons-material/Clear';
 import LockIcon from '@mui/icons-material/Lock';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   useNodesState,
@@ -1014,8 +1013,9 @@ const Canvas = ({
           zoomOnPinch={true} // Always allow zoom
           zoomOnDoubleClick={canInteractWithCanvas() ? true : false} // Only allow double-click zoom if can interact
         >
-          <Background />
-          <Controls>
+          {/* Hide default zoom (+/-), fit view and interactive (lock) controls
+             and keep only the custom control button(s) we want. */}
+          <Controls showInteractive={false} showZoom={true} showFitView={true}>
             <ControlButton
               onClick={() => {
                 successToast('Graph has been refreshed', [], globalContext);
@@ -1029,6 +1029,7 @@ const Canvas = ({
               <ReplayIcon />
             </ControlButton>
           </Controls>
+          <Background />
         </ReactFlow>
 
         {/* Lock Status Indicator */}
