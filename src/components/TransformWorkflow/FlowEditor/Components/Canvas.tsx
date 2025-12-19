@@ -36,7 +36,7 @@ import 'reactflow/dist/style.css';
 import { OperationNode } from './Nodes/OperationNode';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
-import { httpDelete, httpGet, httpPost } from '@/helpers/http';
+import { httpDelete, httpGet, httpPost, httpPut } from '@/helpers/http';
 import { successToast, errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
@@ -342,8 +342,19 @@ const getLayoutedElements = ({
   };
 };
 
-const LockStatusIndicator = ({ isLocked, lockedBy }: { isLocked: boolean; lockedBy?: string }) => {
-  if (!isLocked && !lockedBy) {
+const LockStatusIndicator = ({
+  isLocked,
+  lockedBy,
+  currentUserEmail,
+}: {
+  isLocked: boolean;
+  lockedBy?: string;
+  currentUserEmail?: string;
+}) => {
+  // Don't show indicator if:
+  // 1. Canvas is not locked
+  // 2. Current user owns the lock
+  if (!isLocked || !lockedBy || lockedBy === currentUserEmail) {
     return null;
   }
 
@@ -372,7 +383,7 @@ const LockStatusIndicator = ({ isLocked, lockedBy }: { isLocked: boolean; locked
           fontWeight: 500,
         }}
       >
-        Locked. In use by {lockedBy || 'unknown user'}
+        Locked. In use by {lockedBy}
       </Typography>
     </Box>
   );
@@ -456,7 +467,77 @@ const Canvas = ({
   }, [session, redrawGraph]);
 
   // Canvas Lock Management State
-  const [lockRefreshTimer, setLockRefreshTimer] = useState<NodeJS.Timeout | null>(null);
+  const lockRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Acquire canvas lock
+  const acquireCanvasLock = async () => {
+    try {
+      console.log('Attempting to acquire canvas lock...');
+      const response = await httpPost(session, 'transform/dbt_project/canvas/lock/', {});
+      console.log('Lock acquired successfully:', response);
+      setCanvasLockStatus({
+        isLocked: true,
+        lockedBy: response.locked_by,
+        loading: false,
+      });
+      return true;
+    } catch (error: any) {
+      console.error('Lock acquisition failed:', {
+        message: error.message,
+        cause: error.cause,
+        detail: error.cause?.detail,
+        stack: error.stack,
+      });
+      if (error.cause?.detail) {
+        const match = error.cause.detail.match(/locked by (.+)$/);
+        if (match) {
+          setCanvasLockStatus({
+            isLocked: true,
+            lockedBy: match[1],
+            loading: false,
+          });
+        }
+      } else {
+        // Set canvas as unlocked if we can't acquire lock and no specific lock owner
+        setCanvasLockStatus({
+          isLocked: false,
+          lockedBy: undefined,
+          loading: false,
+        });
+      }
+      return false;
+    }
+  };
+
+  // Refresh canvas lock
+  const refreshCanvasLock = async () => {
+    try {
+      await httpPut(session, 'transform/dbt_project/canvas/lock/refresh/', {});
+      console.log('Lock refreshed successfully at', new Date().toLocaleTimeString());
+      return true;
+    } catch (error: any) {
+      console.error('Lock refresh failed:', {
+        message: error.message,
+        detail: error.cause?.detail,
+      });
+      return false;
+    }
+  };
+
+  // Release canvas lock
+  const releaseCanvasLock = async () => {
+    try {
+      await httpDelete(session, 'transform/dbt_project/canvas/lock/');
+      console.log('Lock released');
+      setCanvasLockStatus({
+        isLocked: false,
+        lockedBy: undefined,
+        loading: false,
+      });
+    } catch (error) {
+      console.log('Lock release failed:', error);
+    }
+  };
 
   // Helper function to determine if current user can interact with canvas
   const canInteractWithCanvas = (): boolean => {
@@ -480,154 +561,59 @@ const Canvas = ({
     return false;
   };
 
-  // Acquire canvas lock
-  const acquireCanvasLock = async (): Promise<boolean> => {
-    console.log('Attempting to acquire canvas lock...');
-    try {
-      const response = await httpPost(session, `transform/dbt_project/canvas/lock/`, {});
-
-      if (response.success) {
-        setCanvasLockStatus({
-          isLocked: true,
-          lockedBy: response.res.locked_by,
-          loading: false,
-        });
-        console.log('Canvas lock acquired successfully');
-        return true;
-      } else {
-        console.log('Canvas lock acquire response not successful:', response);
-        setCanvasLockStatus({
-          isLocked: false,
-          lockedBy: undefined,
-          loading: false,
-        });
-      }
-    } catch (error: any) {
-      console.error('Failed to acquire canvas lock:', error);
-      if (error?.cause?.detail) {
-        // Another user has the lock
-        const match = error.cause.detail.match(/locked by (.+)$/);
-        if (match) {
-          setCanvasLockStatus({
-            isLocked: true,
-            lockedBy: match[1],
-            loading: false,
-          });
-          console.log('Canvas is locked by another user:', match[1]);
-          return false;
-        }
-      }
-      // Unknown error
-      setCanvasLockStatus({
-        isLocked: false,
-        lockedBy: undefined,
-        loading: false,
-      });
-      return false;
-    }
-    return false;
-  };
-
-  // Refresh canvas lock
-  const refreshCanvasLock = async (): Promise<boolean> => {
-    console.log('refreshCanvasLock called');
-
-    // Only refresh if we currently own the lock
-    const currentUserEmail = session?.user?.email;
-    if (
-      !currentUserEmail ||
-      !canvasLockStatus.isLocked ||
-      canvasLockStatus.lockedBy !== currentUserEmail
-    ) {
-      console.log('Cannot refresh - we do not own the lock');
-      return false;
-    }
-
-    try {
-      console.log('Making API call to refresh lock...');
-      const response = await httpPost(session, `transform/dbt_project/canvas/lock/refresh/`, {});
-
-      if (response.success) {
-        console.log('Canvas lock refreshed successfully');
-        // Update the lock status with fresh data
-        setCanvasLockStatus({
-          isLocked: true,
-          lockedBy: response.res.locked_by,
-          loading: false,
-        });
-        return true;
-      } else {
-        console.log('Lock refresh response not successful:', response);
-      }
-    } catch (error) {
-      console.error('Failed to refresh canvas lock:', error);
-      // Lock expired or lost
-      setCanvasLockStatus({
-        isLocked: false,
-        lockedBy: undefined,
-        loading: false,
-      });
-      return false;
-    }
-    return false;
-  };
-
-  // Release canvas lock
-  const releaseCanvasLock = async (): Promise<void> => {
-    // Only release if we currently own the lock
-    const currentUserEmail = session?.user?.email;
-    if (
-      !currentUserEmail ||
-      !canvasLockStatus.isLocked ||
-      canvasLockStatus.lockedBy !== currentUserEmail
-    ) {
-      return;
-    }
-
-    try {
-      await httpDelete(session, `transform/dbt_project/canvas/lock/`);
-      console.log('Canvas lock released');
-    } catch (error) {
-      console.error('Failed to release canvas lock:', error);
-    } finally {
-      setCanvasLockStatus({
-        isLocked: false,
-        lockedBy: undefined,
-        loading: false,
-      });
-    }
-  };
-
-  // Lock management effect - acquire lock on mount
+  // Lock management effect - acquire lock on mount and setup 30-second refresh timer
   useEffect(() => {
+    if (!session) return;
+
     let mounted = true;
 
     const initializeLock = async () => {
       const acquired = await acquireCanvasLock();
-      if (!acquired || !mounted) return;
+      console.log('Canvas lock acquired:', acquired);
 
-      // Set up refresh timer every 30 seconds
-      const refreshTimer = setInterval(async () => {
-        console.log('Attempting to refresh canvas lock...');
-        const refreshed = await refreshCanvasLock();
-        if (!refreshed) {
-          console.log('Lock refresh failed, trying to re-acquire...');
-          // Try to re-acquire if refresh failed
-          await acquireCanvasLock();
+      if (!acquired || !mounted) {
+        console.log('Lock not acquired or component unmounted');
+        return;
+      }
+
+      // Set up refresh timer - refresh every 30 seconds
+      console.log('Setting up 30-second refresh timer...');
+      const timer = setInterval(() => {
+        if (!mounted) {
+          console.log('Component unmounted, skipping refresh');
+          return;
         }
-      }, 30000);
 
-      setLockRefreshTimer(refreshTimer);
-      console.log('Canvas lock refresh timer started - will refresh every 30 seconds');
+        console.log('30 seconds elapsed - attempting to refresh lock...');
+        refreshCanvasLock().then((success) => {
+          if (!success && mounted) {
+            console.log('Refresh failed, attempting to re-acquire lock...');
+            acquireCanvasLock();
+          }
+        });
+      }, 30000); // 30 seconds
+
+      lockRefreshTimerRef.current = timer;
+      console.log('Lock refresh timer started - will refresh every 30 seconds');
     };
 
     initializeLock();
 
     return () => {
       mounted = false;
-      if (lockRefreshTimer) {
-        clearInterval(lockRefreshTimer);
-        setLockRefreshTimer(null);
+
+      // Clear the refresh timer
+      if (lockRefreshTimerRef.current) {
+        console.log('Clearing refresh timer');
+        clearInterval(lockRefreshTimerRef.current);
+        lockRefreshTimerRef.current = null;
+      }
+
+      // Only release lock if we actually own it
+      const currentUserEmail = session?.user?.email;
+      if (canvasLockStatus.isLocked && canvasLockStatus.lockedBy === currentUserEmail) {
+        console.log('Releasing lock on unmount');
+        releaseCanvasLock();
       }
     };
   }, [session]);
@@ -659,13 +645,6 @@ const Canvas = ({
       handleSyncCleanup();
     };
 
-    // Handle page visibility change (when tab becomes hidden/inactive)
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        handleSyncCleanup();
-      }
-    };
-
     // Intercept link clicks to navigate away from canvas
     const handleLinkClick = (e: Event) => {
       const target = e.target as HTMLElement;
@@ -683,25 +662,18 @@ const Canvas = ({
     // Add event listeners
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('click', handleLinkClick, true); // Use capture phase
 
     // Cleanup function that runs when component unmounts
     return () => {
       handleSyncCleanup();
 
-      // Clear refresh timer
-      if (lockRefreshTimer) {
-        clearInterval(lockRefreshTimer);
-      }
-
       // Clean up event listeners
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('popstate', handlePopState);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('click', handleLinkClick, true);
     };
-  }, [canvasLockStatus, lockRefreshTimer, session?.user?.email]);
+  }, [canvasLockStatus, session?.user?.email]);
 
   useEffect(() => {
     previewNodeRef.current = previewAction.data;
@@ -1036,6 +1008,7 @@ const Canvas = ({
         <LockStatusIndicator
           isLocked={canvasLockStatus.isLocked}
           lockedBy={canvasLockStatus.lockedBy}
+          currentUserEmail={session?.user?.email || ''}
         />
         {/* This is what renders the right form */}
         <OperationConfigLayout
