@@ -7,8 +7,15 @@ import {
   MenuItem,
   Select,
   Typography,
+  Button,
+  Menu,
 } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PublishIcon from '@mui/icons-material/Publish';
+import ClearIcon from '@mui/icons-material/Clear';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   useNodesState,
@@ -86,17 +93,36 @@ const WorkflowValues: any = {
   'run-from-node': 'Run from node',
 };
 
-const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
+const CanvasHeader = ({
+  finalLockCanvas,
+  lockToken,
+}: {
+  finalLockCanvas: boolean;
+  lockToken: string | null;
+}) => {
   const { setCanvasAction } = useCanvasAction();
   const { canvasNode } = useCanvasNode();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const [selectedAction, setSelectedAction] = useState('');
+  const [runMenuAnchor, setRunMenuAnchor] = useState<null | HTMLElement>(null);
   const trackAmplitudeEvent: any = useTracking();
-  const nodeData: any = canvasNode?.data;
+  const nodeData = canvasNode?.data;
 
-  const handleRunClick = (event: any) => {
-    const action = event.target.value;
+  const handleDiscardChanges = () => {
+    console.log('Discard Changes clicked');
+    trackAmplitudeEvent('[Discard Changes] Button Clicked');
+  };
+
+  const handleRunClick = (event: React.MouseEvent<HTMLElement>) => {
+    setRunMenuAnchor(event.currentTarget);
+  };
+
+  const handleRunMenuClose = () => {
+    setRunMenuAnchor(null);
+  };
+
+  const handleRunAction = (action: string) => {
     setSelectedAction(action);
     trackAmplitudeEvent(`[${WorkflowValues[action]}] Button Clicked`);
     if (action === 'run') {
@@ -104,14 +130,20 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
     } else if (action === 'run-to-node') {
       setCanvasAction({
         type: 'run-workflow',
-        data: { options: { select: `+${nodeData?.input_name}` } },
+        data: { options: { select: `+${nodeData?.dbtmodel?.name}` } },
       });
     } else if (action === 'run-from-node') {
       setCanvasAction({
         type: 'run-workflow',
-        data: { options: { select: `${nodeData?.input_name}+` } },
+        data: { options: { select: `${nodeData?.dbtmodel?.name}+` } },
       });
     }
+    handleRunMenuClose();
+  };
+
+  const handlePublish = () => {
+    console.log('Publish clicked');
+    trackAmplitudeEvent('[Publish] Button Clicked');
   };
 
   const disableToAndFromNodeRunOptions =
@@ -145,47 +177,122 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
         sx={{
           marginLeft: 'auto',
           display: 'flex',
-          gap: '20px',
+          gap: '10px',
           minWidth: '30%',
           justifyContent: 'flex-end',
         }}
       >
-        {' '}
-        <Select
-          labelId="run-workflow-action"
-          value={selectedAction}
-          onChange={handleRunClick}
-          label="Action"
-          disabled={!permissions.includes('can_run_pipeline')}
-          displayEmpty
-          placeholder="Select Action"
-          renderValue={(value) => {
-            return value === '' ? 'Select Action' : WorkflowValues[value];
-          }}
-          IconComponent={(props: any) => {
-            return <KeyboardArrowDown {...props} style={{ color: '#FFFFFF', width: '21px' }} />;
-          }}
+        {/* Discard Changes Button */}
+        <Button
+          variant="contained"
+          onClick={handleDiscardChanges}
+          disabled={!lockToken}
+          startIcon={<ClearIcon />}
           sx={{
-            background: '#00897B',
+            background: lockToken ? '#00897B' : '#ccc',
             color: '#FFFFFF',
-            fontWeight: 700,
+            fontWeight: 600,
             fontSize: '12px',
-            border: '1px solid #00897B',
             borderRadius: '6px',
-            minWidth: '7rem',
-            height: '1.688rem',
-            textAlign: 'center',
-            boxShadow: '0px 2px 4px 0px ',
+            textTransform: 'none',
+            minWidth: '120px',
+            height: '32px',
+            '&:hover': {
+              background: lockToken ? '#00695C' : '#ccc',
+            },
+            '&:disabled': {
+              color: '#FFFFFF',
+              opacity: 0.6,
+            },
           }}
         >
-          <MenuItem value="run">Run workflow</MenuItem>
-          <MenuItem value="run-to-node" disabled={disableToAndFromNodeRunOptions}>
+          Discard Changes
+        </Button>
+
+        {/* Run Button with Dropdown */}
+        <Button
+          variant="contained"
+          onClick={handleRunClick}
+          disabled={!permissions.includes('can_run_pipeline') || !lockToken}
+          endIcon={<KeyboardArrowDown />}
+          startIcon={<PlayArrowIcon />}
+          sx={{
+            background: permissions.includes('can_run_pipeline') && lockToken ? '#00897B' : '#ccc',
+            color: '#FFFFFF',
+            fontWeight: 600,
+            fontSize: '12px',
+            borderRadius: '6px',
+            textTransform: 'none',
+            minWidth: '80px',
+            height: '32px',
+            '&:hover': {
+              background:
+                permissions.includes('can_run_pipeline') && lockToken ? '#00695C' : '#ccc',
+            },
+            '&:disabled': {
+              color: '#FFFFFF',
+              opacity: 0.6,
+            },
+          }}
+        >
+          Run
+        </Button>
+
+        {/* Run Menu Dropdown */}
+        <Menu
+          anchorEl={runMenuAnchor}
+          open={Boolean(runMenuAnchor)}
+          onClose={handleRunMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+        >
+          <MenuItem onClick={() => handleRunAction('run')}>Run workflow</MenuItem>
+          <MenuItem
+            onClick={() => handleRunAction('run-to-node')}
+            disabled={disableToAndFromNodeRunOptions}
+          >
             Run to node
           </MenuItem>
-          <MenuItem value="run-from-node" disabled={disableToAndFromNodeRunOptions}>
+          <MenuItem
+            onClick={() => handleRunAction('run-from-node')}
+            disabled={disableToAndFromNodeRunOptions}
+          >
             Run from node
           </MenuItem>
-        </Select>
+        </Menu>
+
+        {/* Publish Button */}
+        <Button
+          variant="contained"
+          onClick={handlePublish}
+          disabled={!lockToken}
+          startIcon={<PublishIcon />}
+          sx={{
+            background: lockToken ? '#00897B' : '#ccc',
+            color: '#FFFFFF',
+            fontWeight: 600,
+            fontSize: '12px',
+            borderRadius: '6px',
+            textTransform: 'none',
+            minWidth: '90px',
+            height: '32px',
+            '&:hover': {
+              background: lockToken ? '#00695C' : '#ccc',
+            },
+            '&:disabled': {
+              color: '#FFFFFF',
+              opacity: 0.6,
+            },
+          }}
+        >
+          Publish
+        </Button>
       </Box>
     </Box>
   );
@@ -231,6 +338,42 @@ const getLayoutedElements = ({
   };
 };
 
+const LockStatusIndicator = ({ isLocked, lockedBy }: { isLocked: boolean; lockedBy?: string }) => {
+  if (!isLocked && !lockedBy) {
+    return null;
+  }
+
+  return (
+    <Box
+      sx={{
+        position: 'absolute',
+        top: '16px',
+        right: '16px',
+        zIndex: 1000,
+        backgroundColor: '#E0F2F1',
+        border: '1px solid #00897B',
+        borderRadius: '8px',
+        padding: '8px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+      }}
+    >
+      <LockIcon sx={{ color: '#00897B', fontSize: '16px' }} />
+      <Typography
+        sx={{
+          fontSize: '12px',
+          color: '#00897B',
+          fontWeight: 500,
+        }}
+      >
+        Locked. In use by {lockedBy || 'unknown user'}
+      </Typography>
+    </Box>
+  );
+};
+
 const Canvas = ({
   redrawGraph,
   setRedrawGraph,
@@ -241,6 +384,13 @@ const Canvas = ({
   const [nodes, setNodes, onNodesChange] = useNodesState([]); //works when we click the node or move it.
   const [edges, setEdges, onEdgesChange] = useEdgesState([]); //workds when we click the edges.
   const [openOperationConfig, setOpenOperationConfig] = useState<boolean>(false); // this is the right form with sql operations.
+  const [canvasLockStatus, setCanvasLockStatus] = useState<{
+    isLocked: boolean;
+    lockedBy?: string;
+  }>({
+    isLocked: false,
+    lockedBy: undefined,
+  });
   const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
@@ -298,6 +448,172 @@ const Canvas = ({
       fetchDbtProjectGraph();
     }
   }, [session, redrawGraph]);
+
+  // Canvas Lock Management State
+  const [lockToken, setLockToken] = useState<string | null>(null);
+  const [lockRefreshTimer, setLockRefreshTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // Acquire canvas lock
+  const acquireCanvasLock = async (): Promise<boolean> => {
+    try {
+      const response = await httpPost(session, `transform/dbt_project/canvas/lock/`, {});
+
+      if (response.success) {
+        setLockToken(response.res.lock_token);
+        setCanvasLockStatus({
+          isLocked: true,
+          lockedBy: response.res.locked_by,
+        });
+        console.log('Canvas lock acquired successfully');
+        return true;
+      }
+    } catch (error: any) {
+      console.error('Failed to acquire canvas lock:', error);
+      if (error?.cause?.detail) {
+        // Another user has the lock
+        const match = error.cause.detail.match(/locked by (.+)$/);
+        if (match) {
+          setCanvasLockStatus({
+            isLocked: true,
+            lockedBy: match[1],
+          });
+        }
+      }
+      setLockToken(null);
+      return false;
+    }
+  };
+
+  // Refresh canvas lock
+  const refreshCanvasLock = async (): Promise<boolean> => {
+    if (!lockToken) return false;
+
+    try {
+      const response = await httpPost(session, `transform/dbt_project/canvas/lock/refresh/`, {});
+
+      if (response.success) {
+        console.log('Canvas lock refreshed');
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to refresh canvas lock:', error);
+      // Lock expired or lost, try to acquire new one
+      setLockToken(null);
+      return false;
+    }
+    return false;
+  };
+
+  // Release canvas lock
+  const releaseCanvasLock = async (): Promise<void> => {
+    if (!lockToken) return;
+
+    try {
+      await httpDelete(session, `transform/dbt_project/canvas/lock/`);
+      console.log('Canvas lock released');
+    } catch (error) {
+      console.error('Failed to release canvas lock:', error);
+    } finally {
+      setLockToken(null);
+      setCanvasLockStatus({
+        isLocked: false,
+        lockedBy: undefined,
+      });
+    }
+  };
+
+  // Lock management effect - acquire lock on mount
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeLock = async () => {
+      const acquired = await acquireCanvasLock();
+      if (!acquired || !mounted) return;
+
+      // Set up refresh timer every 30 seconds
+      const refreshTimer = setInterval(async () => {
+        const refreshed = await refreshCanvasLock();
+        if (!refreshed) {
+          // Try to re-acquire if refresh failed
+          await acquireCanvasLock();
+        }
+      }, 30000);
+
+      setLockRefreshTimer(refreshTimer);
+    };
+
+    initializeLock();
+
+    return () => {
+      mounted = false;
+    };
+  }, [session, globalContext?.CurrentOrg.state.id]);
+
+  // Cleanup handlers for comprehensive lock management
+  useEffect(() => {
+    // Function to handle cleanup synchronously for critical scenarios
+    const handleSyncCleanup = () => {
+      if (lockToken) {
+        // Fire and forget emergency cleanup
+        releaseCanvasLock().catch(() => {
+          console.error('Emergency lock cleanup failed');
+        });
+      }
+    };
+
+    // Handle browser navigation (back/forward buttons, direct navigation)
+    const handleBeforeUnload = () => {
+      handleSyncCleanup();
+    };
+
+    // Handle popstate for browser back/forward
+    const handlePopState = () => {
+      handleSyncCleanup();
+    };
+
+    // Handle page visibility change (when tab becomes hidden/inactive)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handleSyncCleanup();
+      }
+    };
+
+    // Intercept link clicks to navigate away from canvas
+    const handleLinkClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a[href]') as HTMLAnchorElement;
+
+      if (link && link.href) {
+        const url = new URL(link.href, window.location.origin);
+        // Check if navigating away from current canvas
+        if (url.pathname !== window.location.pathname) {
+          handleSyncCleanup();
+        }
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('click', handleLinkClick, true); // Use capture phase
+
+    // Cleanup function that runs when component unmounts
+    return () => {
+      handleSyncCleanup();
+
+      // Clear refresh timer
+      if (lockRefreshTimer) {
+        clearInterval(lockRefreshTimer);
+      }
+
+      // Clean up event listeners
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('click', handleLinkClick, true);
+    };
+  }, [lockToken, lockRefreshTimer]);
 
   useEffect(() => {
     previewNodeRef.current = previewAction.data;
@@ -573,7 +889,7 @@ const Canvas = ({
           borderTop: '1px #CCD6E2 solid',
         }}
       >
-        <CanvasHeader finalLockCanvas={finalLockCanvas} />
+        <CanvasHeader finalLockCanvas={finalLockCanvas} lockToken={lockToken} />
       </Box>
       <Divider orientation="horizontal" sx={{ color: 'black' }} />
       <Box
@@ -581,22 +897,30 @@ const Canvas = ({
           display: 'flex',
           height: 'calc(100% - 44px)',
           background: 'white',
+          position: 'relative',
         }}
       >
         <ReactFlow
           nodes={nodes} // are the tables and the operations.
           selectNodesOnDrag={false}
           edges={edges} // flexible lines connecting tables, table-node.
-          onNodeDragStop={onNodeDragStop}
-          onPaneClick={handlePaneClick} //back canvas click.
-          onNodesChange={handleNodesChange} // when node (table or operation) is clicked or moved.
-          onEdgesChange={handleEdgesChange}
-          onConnect={handleNewConnection}
+          onNodeDragStop={lockToken ? onNodeDragStop : undefined}
+          onPaneClick={lockToken ? handlePaneClick : undefined} //back canvas click.
+          onNodesChange={lockToken ? handleNodesChange : undefined} // when node (table or operation) is clicked or moved.
+          onEdgesChange={lockToken ? handleEdgesChange : undefined}
+          onConnect={lockToken ? handleNewConnection : undefined}
           nodeTypes={nodeTypes}
           minZoom={0.1}
           proOptions={{ hideAttribution: true }}
           defaultViewport={defaultViewport}
           fitView
+          nodesDraggable={lockToken ? true : false}
+          nodesConnectable={lockToken ? true : false}
+          elementsSelectable={lockToken ? true : false}
+          panOnDrag={true} // Always allow panning (for zoom/navigation)
+          zoomOnScroll={true} // Always allow zoom
+          zoomOnPinch={true} // Always allow zoom
+          zoomOnDoubleClick={lockToken ? true : false} // Only allow double-click zoom if locked
         >
           <Background />
           <Controls>
@@ -614,6 +938,12 @@ const Canvas = ({
             </ControlButton>
           </Controls>
         </ReactFlow>
+
+        {/* Lock Status Indicator */}
+        <LockStatusIndicator
+          isLocked={canvasLockStatus.isLocked}
+          lockedBy={canvasLockStatus.lockedBy}
+        />
         {/* This is what renders the right form */}
         <OperationConfigLayout
           openPanel={openOperationConfig}
