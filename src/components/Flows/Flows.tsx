@@ -240,7 +240,7 @@ const Actions = memo(
             key={'menu-' + idx}
             color="info"
             sx={{ px: 0, minWidth: 32 }}
-            disabled={tempSyncState || lock ? true : false}
+            disabled={tempSyncState && !lock}
           >
             <MoreHorizIcon />
           </Button>
@@ -373,6 +373,7 @@ export const Flows = ({ flows, updateCrudVal, mutate, setSelectedFlowId }: Flows
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
 
+  const [currentFlowState, setCurrentFlowState] = useState(false);
   const open = Boolean(anchorEl);
   const handleClose = () => {
     setAnchorEl(null);
@@ -389,9 +390,27 @@ export const Flows = ({ flows, updateCrudVal, mutate, setSelectedFlowId }: Flows
     updateCrudVal('update');
   };
 
+  const handleViewConnection = () => {
+    handleClose();
+    setSelectedFlowId(deploymentId);
+    updateCrudVal('read');
+  };
+
   const handleClick = (blockId: string, event: HTMLElement | null) => {
     setDeploymentId(blockId);
     setAnchorEl(event);
+
+    const currentFlow = flows.find((flow) => flow.deploymentId === blockId);
+
+    if (currentFlow) {
+      const isFlowRunning =
+        currentFlow.lock?.status === 'running' ||
+        currentFlow.lock?.status === 'queued' ||
+        currentFlow.lock?.status === 'locked' ||
+        runningDeploymentIds.includes(blockId);
+
+      setCurrentFlowState(isFlowRunning);
+    }
   };
 
   const handleQuickRunDeployment = async (deploymentId: string) => {
@@ -508,6 +527,8 @@ export const Flows = ({ flows, updateCrudVal, mutate, setSelectedFlowId }: Flows
         handleEdit={handleEditConnection}
         handleClose={handleClose}
         handleDelete={handleDeleteConnection}
+        viewMode={currentFlowState}
+        handleView={handleViewConnection}
       />
       <Box
         sx={{ display: 'flex', justifyContent: 'space-between' }}
