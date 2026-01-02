@@ -45,6 +45,7 @@ import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { getNextNodePosition } from '@/utils/editor';
 import { KeyboardArrowDown } from '@mui/icons-material';
 import { useTracking } from '@/contexts/TrackingContext';
+import PublishModal from './PublishModal';
 import {
   CanvasEdgeDataResponse,
   CanvasNodeDataResponse,
@@ -96,9 +97,11 @@ const WorkflowValues: any = {
 const CanvasHeader = ({
   finalLockCanvas,
   canInteractWithCanvas,
+  onPublishClick,
 }: {
   finalLockCanvas: boolean;
   canInteractWithCanvas: () => boolean;
+  onPublishClick: () => void;
 }) => {
   const { setCanvasAction } = useCanvasAction();
   const { canvasNode } = useCanvasNode();
@@ -144,6 +147,7 @@ const CanvasHeader = ({
   const handlePublish = () => {
     console.log('Publish clicked');
     trackAmplitudeEvent('[Publish] Button Clicked');
+    onPublishClick();
   };
 
   const disableToAndFromNodeRunOptions =
@@ -411,6 +415,7 @@ const Canvas = ({
     lockedBy: undefined,
     loading: isPreviewMode ? false : true, // No loading in preview mode
   });
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
   const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
@@ -962,6 +967,7 @@ const Canvas = ({
             <CanvasHeader
               finalLockCanvas={finalLockCanvas}
               canInteractWithCanvas={canInteractWithCanvas}
+              onPublishClick={() => setPublishModalOpen(true)}
             />
           </Box>
           <Divider orientation="horizontal" sx={{ color: 'black' }} />
@@ -1034,6 +1040,17 @@ const Canvas = ({
             boxShadow: '0px 0px 4px 0px rgba(0, 0, 0, 0.16)',
             borderRadius: '6px 0px 0px 6px',
             zIndex: 1000,
+          }}
+        />
+
+        {/* Publish Modal */}
+        <PublishModal
+          open={publishModalOpen}
+          onClose={() => setPublishModalOpen(false)}
+          onPublishSuccess={() => {
+            // Refresh the canvas to show updated publish status
+            setRedrawGraph(!redrawGraph);
+            successToast('Changes published successfully', [], globalContext);
           }}
         />
       </Box>
