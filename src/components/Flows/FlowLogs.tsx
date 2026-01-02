@@ -15,7 +15,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import { Transition } from '../DBT/DBTTransformType';
+import { Transition } from '../DBT/UITransformTab';
 import { useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';

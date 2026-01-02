@@ -6,7 +6,7 @@ import { Box, Dialog, Divider, Tab, Tabs } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
-import { TopNavBar, Transition } from '@/components/DBT/DBTTransformType';
+import { TopNavBar, Transition } from '@/components/DBT/UITransformTab';
 import { ResizableBox } from 'react-resizable';
 import ProjectTree from '@/components/TransformWorkflow/FlowEditor/Components/ProjectTree';
 import PreviewPane from '@/components/TransformWorkflow/FlowEditor/Components/LowerSectionTabs/PreviewPane';
