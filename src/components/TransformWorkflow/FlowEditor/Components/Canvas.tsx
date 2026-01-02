@@ -61,6 +61,7 @@ type CanvasProps = {
   setRedrawGraph: (...args: any) => void;
   finalLockCanvas: boolean;
   setTempLockCanvas: any;
+  isPreviewMode?: boolean; // NEW: Skip lock acquisition in preview mode
 };
 
 const nodeGap = 30;
@@ -156,6 +157,7 @@ const CanvasHeader = ({
       setSelectedAction('');
     }
   }, [finalLockCanvas]);
+
   return (
     <Box
       sx={{
@@ -394,6 +396,7 @@ const Canvas = ({
   setRedrawGraph,
   finalLockCanvas,
   setTempLockCanvas,
+  isPreviewMode = false,
 }: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]); //works when we click the node or move it.
@@ -404,9 +407,9 @@ const Canvas = ({
     lockedBy?: string;
     loading?: boolean;
   }>({
-    isLocked: true, // Start locked until we confirm we can acquire lock
+    isLocked: isPreviewMode ? true : true, // Start locked until we confirm we can acquire lock
     lockedBy: undefined,
-    loading: true, // Loading state while checking lock
+    loading: isPreviewMode ? false : true, // No loading in preview mode
   });
   const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
 
@@ -541,6 +544,11 @@ const Canvas = ({
 
   // Helper function to determine if current user can interact with canvas
   const canInteractWithCanvas = (): boolean => {
+    // If in preview mode, never allow interaction
+    if (isPreviewMode) {
+      return false;
+    }
+
     // If still loading, don't allow interaction (secure by default)
     if (canvasLockStatus.loading) {
       return false;
@@ -563,7 +571,7 @@ const Canvas = ({
 
   // Lock management effect - acquire lock on mount and setup 30-second refresh timer
   useEffect(() => {
-    if (!session) return;
+    if (!session || isPreviewMode) return; // Skip lock acquisition in preview mode
 
     let mounted = true;
 
@@ -942,19 +950,23 @@ const Canvas = ({
           }}
         />
       </Backdrop>
-      <Box
-        sx={{
-          height: '44px',
-          background: '#F5FAFA',
-          borderTop: '1px #CCD6E2 solid',
-        }}
-      >
-        <CanvasHeader
-          finalLockCanvas={finalLockCanvas}
-          canInteractWithCanvas={canInteractWithCanvas}
-        />
-      </Box>
-      <Divider orientation="horizontal" sx={{ color: 'black' }} />
+      {!isPreviewMode && (
+        <>
+          <Box
+            sx={{
+              height: '44px',
+              background: '#F5FAFA',
+              borderTop: '1px #CCD6E2 solid',
+            }}
+          >
+            <CanvasHeader
+              finalLockCanvas={finalLockCanvas}
+              canInteractWithCanvas={canInteractWithCanvas}
+            />
+          </Box>
+          <Divider orientation="horizontal" sx={{ color: 'black' }} />
+        </>
+      )}
       <Box
         sx={{
           display: 'flex',
@@ -988,18 +1000,20 @@ const Canvas = ({
           {/* Hide default zoom (+/-), fit view and interactive (lock) controls
              and keep only the custom control button(s) we want. */}
           <Controls showInteractive={false} showZoom={true} showFitView={true}>
-            <ControlButton
-              onClick={() => {
-                successToast('Graph has been refreshed', [], globalContext);
-                setRedrawGraph(!redrawGraph);
-                setCanvasAction({
-                  type: 'refresh-canvas',
-                  data: null,
-                });
-              }}
-            >
-              <ReplayIcon />
-            </ControlButton>
+            {!isPreviewMode && (
+              <ControlButton
+                onClick={() => {
+                  successToast('Graph has been refreshed', [], globalContext);
+                  setRedrawGraph(!redrawGraph);
+                  setCanvasAction({
+                    type: 'refresh-canvas',
+                    data: null,
+                  });
+                }}
+              >
+                <ReplayIcon />
+              </ControlButton>
+            )}
           </Controls>
           <Background />
         </ReactFlow>
