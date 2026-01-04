@@ -42,9 +42,14 @@ const CanvasMessages: React.FC<CanvasMessagesProps> = ({ messages }) => {
             alignItems: 'center',
             boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
             maxWidth: '300px',
+            minWidth: 'fit-content',
+            width: 'auto',
             fontSize: '12px',
             color: '#00897B',
             fontWeight: 500,
+            wordWrap: 'break-word',
+            whiteSpace: 'normal',
+            marginLeft: 'auto',
           }}
         >
           {message.content}
