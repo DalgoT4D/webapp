@@ -46,6 +46,7 @@ import { getNextNodePosition } from '@/utils/editor';
 import { KeyboardArrowDown } from '@mui/icons-material';
 import { useTracking } from '@/contexts/TrackingContext';
 import PublishModal from './PublishModal';
+import CanvasMessages, { CanvasMessage } from './CanvasMessages';
 import {
   CanvasEdgeDataResponse,
   CanvasNodeDataResponse,
@@ -348,53 +349,6 @@ const getLayoutedElements = ({
   };
 };
 
-const LockStatusIndicator = ({
-  isLocked,
-  lockedBy,
-  currentUserEmail,
-}: {
-  isLocked: boolean;
-  lockedBy?: string;
-  currentUserEmail?: string;
-}) => {
-  // Don't show indicator if:
-  // 1. Canvas is not locked
-  // 2. Current user owns the lock
-  if (!isLocked || !lockedBy || lockedBy === currentUserEmail) {
-    return null;
-  }
-
-  return (
-    <Box
-      sx={{
-        position: 'absolute',
-        top: '16px',
-        right: '16px',
-        zIndex: 1000,
-        backgroundColor: '#E0F2F1',
-        border: '1px solid #00897B',
-        borderRadius: '8px',
-        padding: '8px 12px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-      }}
-    >
-      <LockIcon sx={{ color: '#00897B', fontSize: '16px' }} />
-      <Typography
-        sx={{
-          fontSize: '12px',
-          color: '#00897B',
-          fontWeight: 500,
-        }}
-      >
-        Locked. In use by {lockedBy}
-      </Typography>
-    </Box>
-  );
-};
-
 const Canvas = ({
   redrawGraph,
   setRedrawGraph,
@@ -417,6 +371,42 @@ const Canvas = ({
   });
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
+
+  // Generate canvas messages
+  const getCanvasMessages = (): CanvasMessage[] => {
+    const messages: CanvasMessage[] = [];
+
+    // Lock status message
+    if (
+      canvasLockStatus.isLocked &&
+      canvasLockStatus.lockedBy &&
+      canvasLockStatus.lockedBy !== session?.user?.email
+    ) {
+      messages.push({
+        id: 'lock-status',
+        content: (
+          <>
+            <LockIcon sx={{ color: '#00897B', fontSize: '16px', mr: '6px' }} />
+            <span>Locked. In use by {canvasLockStatus.lockedBy}</span>
+          </>
+        ),
+        show: true,
+      });
+    }
+
+    // Unpublished changes message
+    const hasUnpublishedNodes = nodes.some((node) => node.data.isPublished === false);
+
+    if (hasUnpublishedNodes) {
+      messages.push({
+        id: 'unpublished-changes',
+        content: <span>Unpublished Changes</span>,
+        show: true,
+      });
+    }
+
+    return messages;
+  };
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { canvasNode, setCanvasNode } = useCanvasNode();
@@ -1024,12 +1014,8 @@ const Canvas = ({
           <Background />
         </ReactFlow>
 
-        {/* Lock Status Indicator */}
-        <LockStatusIndicator
-          isLocked={canvasLockStatus.isLocked}
-          lockedBy={canvasLockStatus.lockedBy}
-          currentUserEmail={session?.user?.email || ''}
-        />
+        {/* Canvas Messages */}
+        <CanvasMessages messages={getCanvasMessages()} />
         {/* This is what renders the right form */}
         <OperationConfigLayout
           openPanel={openOperationConfig}
