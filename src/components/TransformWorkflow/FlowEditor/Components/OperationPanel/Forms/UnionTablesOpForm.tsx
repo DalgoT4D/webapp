@@ -157,7 +157,14 @@ const UnionTablesOpForm = ({
     }
 
     try {
-      const otherInputPromises = data.tables.slice(1).map(async (table: any, index: number) => {
+      // For edit mode, all tables go into other_inputs starting from seq=1
+      // Since backend might have deleted seq=1, we need to recreate it
+      const otherInputPromises = data.tables.map(async (table: any, index: number) => {
+        // Skip empty entries
+        if (!table.id) {
+          return null;
+        }
+
         const srcModel = sourcesModels.find((model: DbtModelResponse) => model.uuid === table.id);
         let srcColumns: string[] = [];
 
@@ -167,11 +174,20 @@ const UnionTablesOpForm = ({
         return {
           input_model_uuid: table.id,
           columns: srcColumns,
-          seq: index + 2, // 1 is for the current node input
+          seq: index + 1, // Start from seq=1 for all tables
         };
       });
 
-      const otherInputs = await Promise.all(otherInputPromises);
+      const otherInputsResults = await Promise.all(otherInputPromises);
+      // Filter out null values (from empty entries)
+      const otherInputs = otherInputsResults.filter((input) => input !== null);
+
+      // For create action, exclude the first item as it's the input_node
+      // For edit action, include all items as other_inputs
+      const finalOtherInputs =
+        action === 'create'
+          ? otherInputs.slice(1).map((input, index) => ({ ...input, seq: index + 2 })) // For create, start from seq=2
+          : otherInputs; // For edit, keep all with seq starting from 1
 
       // api call
       setLoading(true);
@@ -181,7 +197,7 @@ const UnionTablesOpForm = ({
           op_type: operation.slug,
           input_node_uuid: node?.id || '',
           source_columns: nodeSrcColumns,
-          other_inputs: otherInputs,
+          other_inputs: finalOtherInputs,
           config: {},
         };
         operationNode = await httpPost(
@@ -193,7 +209,7 @@ const UnionTablesOpForm = ({
         const payloadData: EditOperationNodePayload = {
           op_type: operation.slug,
           source_columns: nodeSrcColumns,
-          other_inputs: otherInputs,
+          other_inputs: finalOtherInputs,
           config: {},
         };
         operationNode = await httpPut(
@@ -225,16 +241,21 @@ const UnionTablesOpForm = ({
       const { source_columns }: UnionDataConfig = operation_config.config;
       setNodeSrcColumns(source_columns);
 
+      // Sort input_nodes by seq to ensure correct order
+      const sortedInputNodes =
+        input_nodes?.sort((a: any, b: any) => (a.seq || 0) - (b.seq || 0)) || [];
+
+      // Build the tables array - just use sorted nodes in order
+      const tablesData = sortedInputNodes
+        .filter((node: any) => node.dbtmodel)
+        .map((node: any) => ({
+          id: node.dbtmodel.uuid,
+          label: node.dbtmodel.name,
+        }));
+
       // pre-fill form
       reset({
-        tables:
-          input_nodes
-            ?.map((node: CanvasNodeDataResponse) => node.dbtmodel)
-            .filter((model): model is DbtModelResponse => model != null)
-            .map((model: DbtModelResponse) => ({
-              id: model.uuid,
-              label: model.name,
-            })) ?? [],
+        tables: tablesData,
       });
     } catch (error) {
       console.error(error);
