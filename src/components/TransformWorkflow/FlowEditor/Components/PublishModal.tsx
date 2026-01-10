@@ -22,11 +22,17 @@ interface PublishModalProps {
   onPublishSuccess?: () => void;
 }
 
+interface GitStatusSummary {
+  added: string[];
+  modified: string[];
+  deleted: string[];
+}
+
 const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuccess }) => {
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
   const [commitMessage, setCommitMessage] = useState('');
-  const [gitStatus, setGitStatus] = useState('');
+  const [gitStatus, setGitStatus] = useState<GitStatusSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
@@ -41,7 +47,7 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
   useEffect(() => {
     if (!open) {
       setCommitMessage('');
-      setGitStatus('');
+      setGitStatus(null);
       setLoading(false);
       setPublishing(false);
     }
@@ -51,11 +57,12 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
     setLoading(true);
     try {
       const response = await httpGet(session, 'dbt/git_status/');
-      setGitStatus(response.summary);
+      console.log('Git status response:', response);
+      setGitStatus(response);
     } catch (error: any) {
       console.error('Error fetching git status:', error);
       errorToast('Failed to load git status', [], globalContext);
-      setGitStatus('Unable to load git status');
+      setGitStatus(null);
     } finally {
       setLoading(false);
     }
@@ -128,11 +135,101 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
                 minHeight: 100,
                 maxHeight: 200,
                 overflow: 'auto',
-                fontFamily: 'monospace',
-                fontSize: '0.875rem',
               }}
             >
-              {gitStatus || 'No changes to publish'}
+              {gitStatus ? (
+                <Box>
+                  {gitStatus.added.length > 0 && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 'bold', color: '#2e7d32', mb: 0.5 }}
+                      >
+                        Added ({gitStatus.added.length})
+                      </Typography>
+                      {gitStatus.added.map((file, index) => (
+                        <Typography
+                          key={index}
+                          variant="body2"
+                          sx={{
+                            fontFamily: 'monospace',
+                            fontSize: '0.75rem',
+                            color: '#2e7d32',
+                            pl: 1,
+                          }}
+                        >
+                          + {file}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
+
+                  {gitStatus.modified.length > 0 && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0.5 }}
+                      >
+                        Modified ({gitStatus.modified.length})
+                      </Typography>
+                      {gitStatus.modified.map((file, index) => (
+                        <Typography
+                          key={index}
+                          variant="body2"
+                          sx={{
+                            fontFamily: 'monospace',
+                            fontSize: '0.75rem',
+                            color: '#f57f17',
+                            pl: 1,
+                          }}
+                        >
+                          ~ {file}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
+
+                  {gitStatus.deleted.length > 0 && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 'bold', color: '#d32f2f', mb: 0.5 }}
+                      >
+                        Deleted ({gitStatus.deleted.length})
+                      </Typography>
+                      {gitStatus.deleted.map((file, index) => (
+                        <Typography
+                          key={index}
+                          variant="body2"
+                          sx={{
+                            fontFamily: 'monospace',
+                            fontSize: '0.75rem',
+                            color: '#d32f2f',
+                            pl: 1,
+                          }}
+                        >
+                          - {file}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
+
+                  {gitStatus.added.length === 0 &&
+                    gitStatus.modified.length === 0 &&
+                    gitStatus.deleted.length === 0 && (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: 'text.secondary', fontStyle: 'italic' }}
+                      >
+                        No changes to publish
+                      </Typography>
+                    )}
+                </Box>
+              ) : (
+                <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                  No changes to publish
+                </Typography>
+              )}
             </Box>
           )}
         </Box>
