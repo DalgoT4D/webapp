@@ -60,6 +60,7 @@ export const generateDummyOperationlNode = (node: any, op: UIOperationType, heig
       isDummy: true,
       dbtmodel: null,
       is_last_in_chain: true,
+      isPublished: false,
     },
     position: {
       x: xnew,
