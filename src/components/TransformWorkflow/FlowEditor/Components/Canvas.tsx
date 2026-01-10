@@ -188,8 +188,8 @@ const CanvasHeader = ({
           justifyContent: 'flex-end',
         }}
       >
-        {/* Discard Changes Button */}
-        <Button
+        {/* Discard Changes Button - Hidden for future release */}
+        {/* <Button
           variant="contained"
           onClick={handleDiscardChanges}
           disabled={!canInteractWithCanvas()}
@@ -213,7 +213,7 @@ const CanvasHeader = ({
           }}
         >
           Discard Changes
-        </Button>
+        </Button> */}
 
         {/* Run Button with Dropdown */}
         <Button
