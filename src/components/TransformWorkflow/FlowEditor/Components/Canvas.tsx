@@ -413,6 +413,7 @@ const Canvas = ({
   const { previewAction, setPreviewAction } = usePreviewAction();
   const previewNodeRef = useRef<PreviewTableData | null>();
   const globalContext = useContext(GlobalContext);
+  const hasInitializedRef = useRef(false);
   const EdgeStyle: EdgeStyleProps = {
     markerEnd: {
       type: MarkerType.Arrow,
@@ -421,8 +422,21 @@ const Canvas = ({
       color: 'black',
     },
   };
-  // const [tempLockCanvas, setTempLockCanvas] = useState(true);
-  // const finalLockCanvas = tempLockCanvas || lockUpperSection;
+
+  // Sync canvas with remote repository
+  const syncRemoteToCanvas = async () => {
+    setTempLockCanvas(true);
+    try {
+      await httpPost(session, 'transform/v2/dbt_project/sync_remote_dbtproject_to_canvas/', {});
+    } catch (error) {
+      console.error('Failed to sync with remote:', error);
+      throw error; // Let caller decide how to handle
+    } finally {
+      setTempLockCanvas(false);
+    }
+  };
+
+  // Fetch graph data from backend (pure function - only fetches)
   const fetchDbtProjectGraph = async () => {
     setTempLockCanvas(true);
     try {
@@ -457,12 +471,41 @@ const Canvas = ({
     }
   };
 
+  // Initialize canvas on first load: sync then fetch
+  const initializeCanvas = async () => {
+    try {
+      // Step 1: Sync with remote (only if not in preview mode)
+      if (!isPreviewMode) {
+        await syncRemoteToCanvas();
+      }
+
+      // Step 2: Fetch updated graph (handles its own lock state)
+      await fetchDbtProjectGraph();
+    } catch (error) {
+      console.error('Canvas initialization failed:', error);
+      // Even if sync fails, try to fetch local graph
+      try {
+        await fetchDbtProjectGraph();
+      } catch (fetchError) {
+        console.error('Failed to fetch graph after sync failure:', fetchError);
+      }
+    }
+  };
+
+  // Initial load effect - only runs once when session becomes available
   useEffect(() => {
-    setTempLockCanvas(true);
-    if (session) {
+    if (session && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      initializeCanvas();
+    }
+  }, [session]);
+
+  // Redraw effect - only runs when redrawGraph changes (and session exists)
+  useEffect(() => {
+    if (session && hasInitializedRef.current) {
       fetchDbtProjectGraph();
     }
-  }, [session, redrawGraph]);
+  }, [redrawGraph]);
 
   // Canvas Lock Management State
   const lockRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);

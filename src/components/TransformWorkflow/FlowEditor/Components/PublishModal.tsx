@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -14,6 +14,7 @@ import {
 import { useSession } from 'next-auth/react';
 import { httpGet, httpPost } from '@/helpers/http';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import { GlobalContext } from '@/contexts/ContextProvider';
 
 interface PublishModalProps {
   open: boolean;
@@ -23,6 +24,7 @@ interface PublishModalProps {
 
 const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuccess }) => {
   const { data: session } = useSession();
+  const globalContext = useContext(GlobalContext);
   const [commitMessage, setCommitMessage] = useState('');
   const [gitStatus, setGitStatus] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,7 +54,7 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
       setGitStatus(response.summary);
     } catch (error: any) {
       console.error('Error fetching git status:', error);
-      errorToast('Failed to load git status');
+      errorToast('Failed to load git status', [], globalContext);
       setGitStatus('Unable to load git status');
     } finally {
       setLoading(false);
@@ -61,7 +63,7 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
 
   const handlePublish = async () => {
     if (!commitMessage.trim()) {
-      errorToast('Commit message is required');
+      errorToast('Commit message is required', [], globalContext);
       return;
     }
 
@@ -72,15 +74,15 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
       });
 
       if (response.success) {
-        successToast('Changes published successfully');
+        successToast('Changes published successfully', [], globalContext);
         onPublishSuccess?.();
         onClose();
       } else {
-        errorToast(response.message || 'Failed to publish changes');
+        errorToast(response.message || 'Failed to publish changes', [], globalContext);
       }
     } catch (error: any) {
       console.error('Error publishing changes:', error);
-      errorToast(error.message || 'Failed to publish changes');
+      errorToast(error.message || 'Failed to publish changes', [], globalContext);
     } finally {
       setPublishing(false);
     }
