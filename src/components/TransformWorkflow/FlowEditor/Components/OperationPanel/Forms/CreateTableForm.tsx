@@ -71,7 +71,10 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
             name: data.output_name,
             display_name: data.output_name,
             dest_schema: data.dest_schema,
-            rel_dir_to_models: data.rel_dir_to_models?.value || '',
+            rel_dir_to_models:
+              typeof data.rel_dir_to_models === 'string'
+                ? data.rel_dir_to_models
+                : data.rel_dir_to_models?.value || '',
           }
         );
         reset();
@@ -130,9 +133,10 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
               options={directories}
               loading={loadingDirectories}
               {...field}
+              freeSolo
               autoSelect
               label="Directory under models*"
-              placeholder="Select directory under models/"
+              placeholder="Select or type directory under models/"
               getOptionLabel={(option: any) => (typeof option === 'string' ? option : option.label)}
             />
           )}
