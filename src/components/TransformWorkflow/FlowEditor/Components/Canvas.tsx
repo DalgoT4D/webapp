@@ -47,6 +47,7 @@ import { KeyboardArrowDown } from '@mui/icons-material';
 import { useTracking } from '@/contexts/TrackingContext';
 import PublishModal from './PublishModal';
 import CanvasMessages, { CanvasMessage } from './CanvasMessages';
+import PatRequiredModal from './PatRequiredModal';
 import {
   CanvasEdgeDataResponse,
   CanvasNodeDataResponse,
@@ -370,6 +371,10 @@ const Canvas = ({
     loading: isPreviewMode ? false : true, // No loading in preview mode
   });
   const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [patModalOpen, setPatModalOpen] = useState(false);
+  const [patRequired, setPatRequired] = useState(false);
+  const [isViewOnlyMode, setIsViewOnlyMode] = useState(false);
+  const [gitRepoUrl, setGitRepoUrl] = useState('');
   const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
 
   // Generate canvas messages
@@ -401,6 +406,29 @@ const Canvas = ({
       messages.push({
         id: 'unpublished-changes',
         content: <span>Unpublished Changes</span>,
+        show: true,
+      });
+    }
+
+    // PAT required message
+    if (patRequired && isViewOnlyMode) {
+      messages.push({
+        id: 'pat-required',
+        content: (
+          <span>
+            Update key to make changes.{' '}
+            <span
+              style={{
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+              onClick={() => setPatModalOpen(true)}
+            >
+              Add key here
+            </span>
+          </span>
+        ),
         show: true,
       });
     }
@@ -490,6 +518,18 @@ const Canvas = ({
         console.error('Failed to fetch graph after sync failure:', fetchError);
       }
     }
+  };
+
+  // PAT handler functions
+  const handlePatAddKey = () => {
+    setPatRequired(false);
+    setIsViewOnlyMode(false);
+    setPatModalOpen(false);
+  };
+
+  const handlePatViewOnly = () => {
+    setIsViewOnlyMode(true);
+    setPatModalOpen(false);
   };
 
   // Initial load effect - only runs once when session becomes available
@@ -589,6 +629,11 @@ const Canvas = ({
 
     // If still loading, don't allow interaction (secure by default)
     if (canvasLockStatus.loading) {
+      return false;
+    }
+
+    // If PAT is required but user is in view-only mode, don't allow interaction
+    if (patRequired && isViewOnlyMode) {
       return false;
     }
 
@@ -720,6 +765,34 @@ const Canvas = ({
       document.removeEventListener('click', handleLinkClick, true);
     };
   }, [canvasLockStatus, session?.user?.email]);
+
+  // Check PAT status on canvas load
+  useEffect(() => {
+    const checkPatStatus = async () => {
+      if (!session || isPreviewMode) return; // Skip PAT check in preview mode
+
+      try {
+        const response = await httpGet(session, 'dbt/dbt_workspace');
+
+        if (response && !response.error) {
+          const needsPAT =
+            response.transform_type === 'github' && response.gitrepo_access_token === null;
+
+          setPatRequired(needsPAT);
+          setGitRepoUrl(response.gitrepo_url || '');
+
+          // Show PAT modal immediately if PAT is required (and not in preview mode)
+          if (needsPAT) {
+            setPatModalOpen(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking PAT status:', error);
+      }
+    };
+
+    checkPatStatus();
+  }, [session, isPreviewMode]);
 
   useEffect(() => {
     previewNodeRef.current = previewAction.data;
@@ -1081,6 +1154,15 @@ const Canvas = ({
             setRedrawGraph(!redrawGraph);
             successToast('Changes published successfully', [], globalContext);
           }}
+        />
+
+        {/* PAT Required Modal */}
+        <PatRequiredModal
+          open={patModalOpen}
+          onClose={() => setPatModalOpen(false)}
+          onAddKey={handlePatAddKey}
+          onViewOnly={handlePatViewOnly}
+          gitRepoUrl={gitRepoUrl}
         />
       </Box>
     </Box>

@@ -1,27 +1,23 @@
 import React, { useContext, useEffect, useState } from 'react';
-import {
-  Box,
-  Card,
-  Typography,
-  Button,
-  Link,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Card, Typography, Button, Link, Alert, CircularProgress } from '@mui/material';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
+import { useForm } from 'react-hook-form';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { httpGet, httpPost, httpPut } from '@/helpers/http';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
+import CustomDialog from '../Dialog/CustomDialog';
+import Input from '../UI/Input/Input';
 import Dbt from '@/assets/images/dbt.png';
 
 interface DBTRepositoryCardProps {
   onConnectGit?: () => void; // Made optional since we handle internally now
+}
+
+interface DBTFormData {
+  gitrepoUrl: string;
+  gitrepoAccessToken: string;
+  defaultSchema: string;
 }
 
 const DBTRepositoryCard: React.FC<DBTRepositoryCardProps> = ({ onConnectGit }) => {
@@ -31,17 +27,19 @@ const DBTRepositoryCard: React.FC<DBTRepositoryCardProps> = ({ onConnectGit }) =
   });
   const [isConnected, setIsConnected] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    gitrepoUrl: '',
-    gitrepoAccessToken: '',
-    defaultSchema: '',
-  });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+    setValue,
+  } = useForm<DBTFormData>();
 
   const fetchDbtWorkspace = async () => {
     if (!session) return;
@@ -103,66 +101,24 @@ const DBTRepositoryCard: React.FC<DBTRepositoryCardProps> = ({ onConnectGit }) =
       if (response && !response.error) {
         if (isConnected && response.gitrepo_url) {
           // Edit mode: prefill all fields
-          setFormData({
-            gitrepoUrl: response.gitrepo_url,
-            gitrepoAccessToken: response.gitrepo_access_token ? '*********' : '',
-            defaultSchema: response.default_schema || '',
-          });
+          setValue('gitrepoUrl', response.gitrepo_url);
+          setValue('gitrepoAccessToken', response.gitrepo_access_token ? '*********' : '');
+          setValue('defaultSchema', response.default_schema || '');
         } else {
           // Connect mode: only prefill schema from workspace, leave git fields empty
-          setFormData({
-            gitrepoUrl: '',
-            gitrepoAccessToken: '',
-            defaultSchema: response.default_schema || '',
-          });
+          setValue('gitrepoUrl', '');
+          setValue('gitrepoAccessToken', '');
+          setValue('defaultSchema', response.default_schema || '');
         }
       } else {
         // No workspace data available, reset form completely
-        setFormData({
-          gitrepoUrl: '',
-          gitrepoAccessToken: '',
-          defaultSchema: '',
-        });
+        setValue('gitrepoUrl', '');
+        setValue('gitrepoAccessToken', '');
+        setValue('defaultSchema', '');
       }
-      setErrors({});
     } catch (error) {
       console.error('Error fetching workspace data:', error);
     }
-  };
-
-  const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: event.target.value,
-    }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: '',
-      }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!formData.gitrepoUrl.trim()) {
-      newErrors.gitrepoUrl = 'Repository URL is required';
-    } else if (!isValidGitHubUrl(formData.gitrepoUrl)) {
-      newErrors.gitrepoUrl = 'Please enter a valid GitHub repository URL';
-    }
-
-    if (!formData.gitrepoAccessToken.trim()) {
-      newErrors.gitrepoAccessToken = 'Personal Access Token is required';
-    }
-
-    if (!formData.defaultSchema.trim()) {
-      newErrors.defaultSchema = 'Default schema is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const isValidGitHubUrl = (url: string): boolean => {
@@ -170,31 +126,27 @@ const DBTRepositoryCard: React.FC<DBTRepositoryCardProps> = ({ onConnectGit }) =
     return githubUrlPattern.test(url);
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+  const onSubmit = async (data: DBTFormData) => {
     setLoading(true);
     try {
       const currentWorkspace = await getCurrentWorkspaceData();
-      const schemaChanged = currentWorkspace?.default_schema !== formData.defaultSchema;
+      const schemaChanged = currentWorkspace?.default_schema !== data.defaultSchema;
       const gitRepoChanged =
-        currentWorkspace?.gitrepo_url !== formData.gitrepoUrl ||
-        (formData.gitrepoAccessToken && formData.gitrepoAccessToken !== '*********');
+        currentWorkspace?.gitrepo_url !== data.gitrepoUrl ||
+        (data.gitrepoAccessToken && data.gitrepoAccessToken !== '*********');
 
       // If only schema changed, use schema endpoint
       if (schemaChanged && !gitRepoChanged) {
         await httpPut(session, 'dbt/v1/schema/', {
-          target_configs_schema: formData.defaultSchema,
+          target_configs_schema: data.defaultSchema,
         });
         successToast('Schema updated successfully!', [], globalContext);
       }
       // If git repo changed (or both changed), use connect_git_remote endpoint
       else if (gitRepoChanged) {
         await httpPut(session, 'dbt/connect_git_remote/', {
-          gitrepoUrl: formData.gitrepoUrl,
-          gitrepoAccessToken: formData.gitrepoAccessToken,
+          gitrepoUrl: data.gitrepoUrl,
+          gitrepoAccessToken: data.gitrepoAccessToken,
         });
         successToast(
           isConnected
@@ -207,7 +159,7 @@ const DBTRepositoryCard: React.FC<DBTRepositoryCardProps> = ({ onConnectGit }) =
         // If schema also changed, update it separately after git repo update
         if (schemaChanged) {
           await httpPut(session, 'dbt/v1/schema/', {
-            target_configs_schema: formData.defaultSchema,
+            target_configs_schema: data.defaultSchema,
           });
         }
       } else {
@@ -237,17 +189,60 @@ const DBTRepositoryCard: React.FC<DBTRepositoryCardProps> = ({ onConnectGit }) =
   };
 
   const handleDialogClose = () => {
-    setFormData({
-      gitrepoUrl: '',
-      gitrepoAccessToken: '',
-      defaultSchema: '',
-    });
-    setErrors({});
+    reset();
     setShowDialog(false);
   };
 
   const handleButtonClick = () => {
     setShowDialog(true);
+  };
+
+  const GitConnectionForm = () => {
+    return (
+      <Box display="flex" flexDirection="column" gap={3} sx={{ mt: 1 }}>
+        <Input
+          label="GitHub repo URL"
+          placeholder="https://github.com/username/repository-name"
+          register={register}
+          name="gitrepoUrl"
+          required
+          error={!!errors.gitrepoUrl}
+          helperText={errors.gitrepoUrl?.message}
+          fullWidth
+        />
+
+        <Input
+          label="Personal access token"
+          data-testid="github-pat"
+          type="password"
+          placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+          register={register}
+          name="gitrepoAccessToken"
+          required
+          error={!!errors.gitrepoAccessToken}
+          helperText={errors.gitrepoAccessToken?.message}
+          fullWidth
+        />
+
+        <Input
+          label="Dbt default Schema"
+          placeholder="e.g., intermediate, staging, marts"
+          register={register}
+          name="defaultSchema"
+          required
+          error={!!errors.defaultSchema}
+          helperText={errors.defaultSchema?.message}
+          fullWidth
+        />
+
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <Typography variant="body2">
+            Make sure your Personal Access Token has the following permissions:
+            <strong> repo, workflow</strong>
+          </Typography>
+        </Alert>
+      </Box>
+    );
   };
 
   return (
@@ -333,91 +328,39 @@ const DBTRepositoryCard: React.FC<DBTRepositoryCardProps> = ({ onConnectGit }) =
       </Card>
 
       {/* Git Connection Dialog */}
-      <Dialog
-        open={showDialog}
-        onClose={handleDialogClose}
+      <CustomDialog
+        title={isConnected ? 'Edit GitHub Connection' : 'Connect to GitHub'}
+        show={showDialog}
+        handleClose={handleDialogClose}
+        handleSubmit={handleSubmit(onSubmit)}
+        loading={loading}
         maxWidth="sm"
         fullWidth
-        PaperProps={{
-          sx: { borderRadius: 2 },
-        }}
-      >
-        <DialogTitle>
-          <Typography variant="h6">
-            {isConnected ? 'Edit GitHub Connection' : 'Connect to GitHub'}
-          </Typography>
-        </DialogTitle>
-
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={3} sx={{ mt: 1 }}>
-            <Alert severity="info" icon={false} sx={{ mb: 2, textAlign: 'left' }}>
-              <Typography variant="body2" sx={{ textAlign: 'left' }}>
-                {isConnected
-                  ? 'Update your GitHub repository connection settings.'
-                  : 'Connect your GitHub repository to sync your DBT models and enable version control.'}
-              </Typography>
-            </Alert>
-
-            <TextField
-              label="GitHub Repository URL"
-              placeholder="https://github.com/username/repository-name"
-              value={formData.gitrepoUrl}
-              onChange={handleInputChange('gitrepoUrl')}
-              error={!!errors.gitrepoUrl}
-              helperText={errors.gitrepoUrl || 'Enter the full URL of your GitHub repository'}
+        formContent={<GitConnectionForm />}
+        formActions={
+          <Box display="flex" flexDirection="column" gap={2} sx={{ width: '100%' }}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={16} /> : undefined}
+              data-testid="save-github-url"
               fullWidth
+            >
+              Save & Connect
+            </Button>
+            <Button
+              onClick={handleDialogClose}
+              disabled={loading}
+              data-testid="cancel"
               variant="outlined"
-            />
-
-            <TextField
-              label="Personal Access Token"
-              type="password"
-              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-              value={formData.gitrepoAccessToken}
-              onChange={handleInputChange('gitrepoAccessToken')}
-              error={!!errors.gitrepoAccessToken}
-              helperText={
-                errors.gitrepoAccessToken ||
-                'GitHub Personal Access Token with repository permissions'
-              }
               fullWidth
-              variant="outlined"
-            />
-
-            <TextField
-              label="Default Schema"
-              placeholder="e.g., intermediate, staging, marts"
-              value={formData.defaultSchema}
-              onChange={handleInputChange('defaultSchema')}
-              error={!!errors.defaultSchema}
-              helperText={errors.defaultSchema || 'Default schema for DBT models'}
-              fullWidth
-              variant="outlined"
-            />
-
-            <Alert severity="warning">
-              <Typography variant="body2">
-                Make sure your Personal Access Token has the following permissions:
-                <strong> repo, workflow</strong>
-              </Typography>
-            </Alert>
+            >
+              Cancel
+            </Button>
           </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={handleDialogClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={16} /> : undefined}
-          >
-            {loading ? 'Connecting...' : isConnected ? 'Update' : 'Connect'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        }
+      />
     </>
   );
 };
