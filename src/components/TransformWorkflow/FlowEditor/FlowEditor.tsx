@@ -28,6 +28,7 @@ type UpperSectionProps = {
   setRefreshEditor: any;
   finalLockCanvas: boolean;
   setTempLockCanvas: any;
+  isSyncing: boolean;
 };
 
 const UpperSection = ({
@@ -36,6 +37,7 @@ const UpperSection = ({
   setRefreshEditor,
   finalLockCanvas,
   setTempLockCanvas,
+  isSyncing,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
   const globalContext = useContext(GlobalContext);
@@ -79,6 +81,7 @@ const UpperSection = ({
           handleNodeClick={handleNodeClick}
           handleSyncClick={initiateSyncSources}
           included_in="visual_designer"
+          isSyncing={isSyncing}
         />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />
@@ -174,6 +177,8 @@ const FlowEditor = ({}) => {
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
   const { finalLockCanvas, setTempLockCanvas } = useLockCanvas(lockUpperSection);
   const [selectedTab, setSelectedTab] = useState<LowerSectionTabValues>('logs');
+  const [isSyncingSources, setIsSyncingSources] = useState<boolean>(false);
+  const hasAutoSynced = useRef(false); // maintains the state -- if the auto sync has run or not.
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction, setCanvasAction } = useCanvasAction();
@@ -271,9 +276,12 @@ const FlowEditor = ({}) => {
     }
   };
 
-  const syncSources = async () => {
+  const syncSources = async (lockCanvas = true) => {
     try {
-      setLockUpperSection(true);
+      if (lockCanvas) {
+        setLockUpperSection(true);
+      }
+      setIsSyncingSources(true);
       // tab to logs
       setSelectedTab('logs');
       // Clear previous logs
@@ -287,7 +295,10 @@ const FlowEditor = ({}) => {
     } catch (error) {
       console.error(error);
     } finally {
-      setLockUpperSection(false);
+      if (lockCanvas) {
+        setLockUpperSection(false);
+      }
+      setIsSyncingSources(false);
     }
   };
 
@@ -346,8 +357,17 @@ const FlowEditor = ({}) => {
       (async () => {
         await checkForAnyRunningProcess();
         fetchSourcesModels();
+        // Auto-sync sources only on first open, not on refreshEditor changes
+        if (!hasAutoSynced.current) {
+          const permissions = globalContext?.Permissions.state || [];
+          if (permissions.includes('can_sync_sources')) {
+            hasAutoSynced.current = true;
+            setCanvasAction({ type: 'sync-sources', data: { autoSync: true } });
+          }
+        }
       })();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, refreshEditor]);
 
   useEffect(() => {
@@ -356,23 +376,13 @@ const FlowEditor = ({}) => {
     }
 
     if (canvasAction.type === 'sync-sources') {
+      const isAutoSync = canvasAction.data?.autoSync === true;
       (async () => {
-        await syncSources();
+        await syncSources(!isAutoSync); // lockCanvas = false for auto-sync
         fetchSourcesModels();
       })();
     }
   }, [canvasAction]);
-
-  // Auto-sync sources when canvas opens
-  useEffect(() => {
-    if (session) {
-      const permissions = globalContext?.Permissions.state || [];
-      if (permissions.includes('can_sync_sources')) {
-        setCanvasAction({ type: 'sync-sources', data: null });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
 
   return (
     <Box
@@ -389,6 +399,7 @@ const FlowEditor = ({}) => {
         refreshEditor={refreshEditor}
         finalLockCanvas={finalLockCanvas}
         setTempLockCanvas={setTempLockCanvas}
+        isSyncing={isSyncingSources}
       />
 
       <ResizableBox
