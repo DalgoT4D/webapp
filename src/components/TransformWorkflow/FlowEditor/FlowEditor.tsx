@@ -368,7 +368,7 @@ const FlowEditor = ({}) => {
     if (session) {
       const permissions = globalContext?.Permissions.state || [];
       if (permissions.includes('can_sync_sources')) {
-        syncSources();
+        setCanvasAction({ type: 'sync-sources', data: null });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
