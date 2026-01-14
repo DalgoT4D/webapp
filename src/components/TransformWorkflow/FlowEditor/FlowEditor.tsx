@@ -177,7 +177,6 @@ const FlowEditor = ({}) => {
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction, setCanvasAction } = useCanvasAction();
-  const hasAutoSynced = useRef(false);
 
   const onResize = (event: any) => {
     const dailogHeight = document.querySelector('.MuiDialog-root')?.clientHeight || 0;
@@ -366,15 +365,14 @@ const FlowEditor = ({}) => {
 
   // Auto-sync sources when canvas opens
   useEffect(() => {
-    if (session && !hasAutoSynced.current) {
+    if (session) {
       const permissions = globalContext?.Permissions.state || [];
       if (permissions.includes('can_sync_sources')) {
-        hasAutoSynced.current = true;
         syncSources();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, globalContext?.Permissions.state]);
+  }, [session]);
 
   return (
     <Box
