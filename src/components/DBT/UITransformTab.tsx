@@ -51,9 +51,16 @@ interface UITransformTabProps {
 
 const UITransformTab: React.FC<UITransformTabProps> = ({ onGitConnected, gitConnected }) => {
   const [showWorkflow, setShowWorkflow] = useState(false);
+  const [previewRefreshKey, setPreviewRefreshKey] = useState(0);
 
   const handleGoToWorkflow = () => {
     setShowWorkflow(true);
+  };
+
+  const handleCloseWorkflow = () => {
+    setShowWorkflow(false);
+    // Increment key to force CanvasPreview to remount and refetch data
+    setPreviewRefreshKey((prev) => prev + 1);
   };
 
   return (
@@ -104,14 +111,14 @@ const UITransformTab: React.FC<UITransformTabProps> = ({ onGitConnected, gitConn
               overflow: 'hidden',
             }}
           >
-            <CanvasPreview />
+            <CanvasPreview key={previewRefreshKey} />
           </Box>
         </Card>
       </Box>
 
       {/* Full-screen Workflow Editor Dialog */}
       <Dialog fullScreen open={showWorkflow} TransitionComponent={Transition}>
-        <TopNavBar handleClose={() => setShowWorkflow(false)} />
+        <TopNavBar handleClose={handleCloseWorkflow} />
         {showWorkflow && <WorkflowEditor />}
       </Dialog>
     </Box>
