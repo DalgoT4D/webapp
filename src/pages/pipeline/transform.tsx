@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
-import { httpGet, httpPost, httpDelete } from '@/helpers/http';
+import { httpGet, httpPost, httpDelete, httpPut } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
 import { Box, Typography, Button, Tabs, Tab } from '@mui/material';
 import { useSession } from 'next-auth/react';
@@ -8,6 +8,7 @@ import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import UITransformTab from '@/components/DBT/UITransformTab';
 import DBTTransformTab from '@/components/DBT/DBTTransformTab';
+import useSWR from 'swr';
 
 export type TransformType = 'github' | 'ui' | 'none' | 'dbtcloud' | null;
 
@@ -61,11 +62,26 @@ const Transform = () => {
   const [setupError, setSetupError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<number>(0);
   const [gitConnected, setGitConnected] = useState<boolean>(false);
+  const [preferencesLoaded, setPreferencesLoaded] = useState<boolean>(false);
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
+  const { data: preferences, mutate: mutateUserPreferences } = useSWR(`userpreferences/`);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = async (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
+
+    // Save the tab preference
+    const transformTabValue = newValue === 0 ? 'ui' : 'github';
+    try {
+      await httpPut(session, 'userpreferences/', {
+        last_visited_transform_tab: transformTabValue,
+      });
+      // Update the local SWR cache
+      mutateUserPreferences();
+    } catch (error) {
+      console.error('Error saving tab preference:', error);
+      // Don't show error to user as this is a non-critical feature
+    }
   };
 
   const checkGitConnection = async () => {
@@ -76,6 +92,20 @@ const Transform = () => {
       setGitConnected(false);
     }
   };
+
+  // Load saved tab preference when preferences are fetched
+  useEffect(() => {
+    if (preferences && preferences.res && !preferencesLoaded) {
+      const savedTab = preferences.res.last_visited_transform_tab;
+      if (savedTab === 'ui') {
+        setActiveTab(0);
+      } else if (savedTab === 'github') {
+        setActiveTab(1);
+      }
+      // If savedTab is null/undefined, keep default (0)
+      setPreferencesLoaded(true);
+    }
+  }, [preferences, preferencesLoaded]);
 
   useEffect(() => {
     if (session) {
