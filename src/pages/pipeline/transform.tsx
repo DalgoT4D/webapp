@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
 import { httpGet, httpPost, httpDelete, httpPut } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
@@ -92,6 +92,8 @@ const Transform = () => {
       setGitConnected(false);
     }
   };
+  // Prevents duplicate setup calls in React Strict Mode
+  const hasInitiatedSetup = useRef(false);
 
   // Load saved tab preference when preferences are fetched
   useEffect(() => {
@@ -108,31 +110,30 @@ const Transform = () => {
   }, [preferences, preferencesLoaded]);
 
   useEffect(() => {
-    if (session) {
-      // Check if dbt workspace exists
-      // TODO: API_BINDING - Replace with new unified workspace check endpoint
-      fetchTransformType(session)
-        .then((response: TransformTypeResponse) => {
-          const transformType = response.transform_type;
-          if (
-            transformType === 'ui' ||
-            transformType === 'github' ||
-            transformType === 'dbtcloud'
-          ) {
-            setWorkspaceSetup(true);
-            // TODO: API_BINDING - Check if git repository is connected
-            checkGitConnection();
-          } else {
-            // Auto-setup unified workspace for new users
-            setupUnifiedWorkspace();
-          }
-        })
-        .catch((error) => {
-          console.error('Error fetching transform type:', error);
-          // If no workspace exists, setup unified workspace
-          setupUnifiedWorkspace();
-        });
-    }
+    if (!session) return;
+
+    const initializeWorkspace = async () => {
+      try {
+        const { transform_type: transformType }: TransformTypeResponse =
+          await fetchTransformType(session);
+
+        if (['ui', 'github', 'dbtcloud'].includes(transformType as string)) {
+          setWorkspaceSetup(true);
+          checkGitConnection();
+        } else if (!hasInitiatedSetup.current) {
+          hasInitiatedSetup.current = true;
+          await setupUnifiedWorkspace();
+        }
+      } catch (error) {
+        console.error('Error fetching transform type:', error);
+        if (!hasInitiatedSetup.current) {
+          hasInitiatedSetup.current = true;
+          await setupUnifiedWorkspace();
+        }
+      }
+    };
+
+    initializeWorkspace();
   }, [session]);
 
   const setupUnifiedWorkspace = async () => {
