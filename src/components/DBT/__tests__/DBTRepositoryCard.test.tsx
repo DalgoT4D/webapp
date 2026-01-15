@@ -23,9 +23,7 @@ jest.mock('next/image', () => {
 
 const mockUseSession = useSession as jest.MockedFunction<typeof useSession>;
 const mockHttpGet = httpGet as jest.MockedFunction<typeof httpGet>;
-const mockHttpPost = httpPost as jest.MockedFunction<typeof httpPost>;
 const mockHttpPut = httpPut as jest.MockedFunction<typeof httpPut>;
-const mockSuccessToast = successToast as jest.MockedFunction<typeof successToast>;
 const mockErrorToast = errorToast as jest.MockedFunction<typeof errorToast>;
 
 const mockGlobalContextValue = {
