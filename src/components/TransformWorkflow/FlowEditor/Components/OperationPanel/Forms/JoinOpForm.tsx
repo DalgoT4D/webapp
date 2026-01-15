@@ -237,7 +237,10 @@ const JoinOpForm = ({
           table1: {
             tab:
               input_nodes.length === 2
-                ? { id: input_nodes[0].dbtmodel?.uuid, label: input_nodes[0].dbtmodel?.name }
+                ? {
+                    id: input_nodes[0].dbtmodel?.uuid,
+                    label: `${input_nodes[0].dbtmodel?.schema}.${input_nodes[0].dbtmodel?.name}`,
+                  }
                 : { id: '', label: 'Chained Model' },
             key: join_on.key1,
           },
@@ -246,7 +249,7 @@ const JoinOpForm = ({
               input_nodes.length >= 1
                 ? {
                     id: input_nodes[lengthInputModels - 1].dbtmodel?.uuid,
-                    label: input_nodes[lengthInputModels - 1].dbtmodel?.name,
+                    label: `${input_nodes[lengthInputModels - 1].dbtmodel?.schema}.${input_nodes[lengthInputModels - 1].dbtmodel?.name}`,
                   }
                 : { id: '', label: '' },
             key: join_on.key2,
@@ -274,7 +277,7 @@ const JoinOpForm = ({
         label: [CanvasNodeTypeEnum.Source.toString(), CanvasNodeTypeEnum.Model.toString()].includes(
           node?.data?.node_type || ''
         )
-          ? node?.data?.dbtmodel?.name || ''
+          ? `${node?.data?.dbtmodel?.schema || ''}.${node?.data?.dbtmodel?.name || ''}`
           : 'Chained Model',
       });
     }
@@ -300,7 +303,7 @@ const JoinOpForm = ({
                 .map((model) => {
                   return {
                     id: model.uuid,
-                    label: model.name,
+                    label: `${model.schema}.${model.name}`,
                     schema: model.schema,
                   };
                 })
@@ -368,7 +371,7 @@ const JoinOpForm = ({
                   .map((model) => {
                     return {
                       id: model.uuid,
-                      label: model.name,
+                      label: `${model.schema}.${model.name}`,
                       schema: model.schema,
                     };
                   })

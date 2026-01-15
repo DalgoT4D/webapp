@@ -250,7 +250,7 @@ const UnionTablesOpForm = ({
         .filter((node: any) => node.dbtmodel)
         .map((node: any) => ({
           id: node.dbtmodel.uuid,
-          label: node.dbtmodel.name,
+          label: `${node.dbtmodel.schema}.${node.dbtmodel.name}`,
         }));
 
       // pre-fill form
@@ -274,7 +274,7 @@ const UnionTablesOpForm = ({
       fetchAndSetSourceColumns();
       setValue(`tables.${0}`, {
         id: node?.data.dbtmodel?.uuid || '',
-        label: node?.data.dbtmodel?.name || '',
+        label: `${node?.data.dbtmodel?.schema || ''}.${node?.data.dbtmodel?.name || ''}`,
       });
     }
   }, [session, node]);
@@ -304,7 +304,7 @@ const UnionTablesOpForm = ({
                   options={sourcesModels
                     .map((model: DbtModelResponse) => ({
                       id: model.uuid,
-                      label: model.name,
+                      label: `${model.schema}.${model.name}`,
                     }))
                     .sort((a, b) => a.label.localeCompare(b.label))}
                   isOptionEqualToValue={(option: any, value: any) => {
