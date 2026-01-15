@@ -305,8 +305,26 @@ const UnionTablesOpForm = ({
                     .map((model: DbtModelResponse) => ({
                       id: model.uuid,
                       label: `${model.schema}.${model.name}`,
+                      schema: model.schema,
                     }))
                     .sort((a, b) => a.label.localeCompare(b.label))}
+                  renderGroup={(params) => (
+                    <li key={params.key}>
+                      <Box
+                        sx={{
+                          fontWeight: 600,
+                          position: 'sticky',
+                          top: '-8px',
+                          padding: '4px 10px',
+                          background: 'white',
+                        }}
+                      >
+                        {params.group}
+                      </Box>
+                      <Box>{params.children}</Box>
+                    </li>
+                  )}
+                  groupBy={(option: any) => option.schema}
                   isOptionEqualToValue={(option: any, value: any) => {
                     return option?.id === value?.id;
                   }}
