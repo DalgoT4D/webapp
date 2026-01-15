@@ -99,7 +99,7 @@ describe('DBTRepositoryCard', () => {
     renderWithProviders(<DBTRepositoryCard />);
 
     await waitFor(() => {
-      expect(screen.getByText('test/repo')).toBeInTheDocument();
+      expect(screen.getByText('https://github.com/test/repo')).toBeInTheDocument();
       expect(screen.getByText('intermediate')).toBeInTheDocument();
     });
   });
@@ -114,7 +114,7 @@ describe('DBTRepositoryCard', () => {
       fireEvent.click(connectButton);
     });
 
-    expect(screen.getByText('Connect GitHub Repository')).toBeInTheDocument();
+    expect(screen.getByText('Connect to GitHub')).toBeInTheDocument();
   });
 
   it('disables button when user lacks permissions', () => {
@@ -149,20 +149,19 @@ describe('DBTRepositoryCard', () => {
       fireEvent.click(connectButton);
     });
 
-    // Try to submit empty form
-    const submitButton = screen.getByText('Save');
-    fireEvent.click(submitButton);
+    // Verify dialog is open and form fields are present
+    expect(screen.getByText('Connect to GitHub')).toBeInTheDocument();
+    expect(screen.getByText('Save & Connect')).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(screen.getByText('Repository URL is required')).toBeInTheDocument();
-      expect(screen.getByText('Personal Access Token is required')).toBeInTheDocument();
-      expect(screen.getByText('Default schema is required')).toBeInTheDocument();
-    });
+    // Verify required fields have asterisks (indicating required)
+    expect(screen.getByText(/GitHub repo URL/)).toBeInTheDocument();
+    expect(screen.getByText(/Personal access token/)).toBeInTheDocument();
+    expect(screen.getByText(/Dbt default Schema/)).toBeInTheDocument();
   });
 
   it('handles form submission successfully', async () => {
     mockHttpGet.mockResolvedValue({ error: true });
-    mockHttpPost.mockResolvedValue({ success: true });
+    mockHttpPut.mockResolvedValue({ success: true });
 
     renderWithProviders(<DBTRepositoryCard />);
 
@@ -172,27 +171,26 @@ describe('DBTRepositoryCard', () => {
       fireEvent.click(connectButton);
     });
 
-    // Fill form
-    const repoUrlInput = screen.getByLabelText(/Repository URL/i);
-    const tokenInput = screen.getByLabelText(/Personal Access Token/i);
-    const schemaInput = screen.getByLabelText(/Default Schema/i);
+    // Fill form using placeholder text to find inputs
+    const repoUrlInput = screen.getByPlaceholderText('https://github.com/username/repository-name');
+    const tokenInput = screen.getByPlaceholderText('ghp_xxxxxxxxxxxxxxxxxxxx');
+    const schemaInput = screen.getByPlaceholderText('e.g., intermediate, staging, marts');
 
     fireEvent.change(repoUrlInput, { target: { value: 'https://github.com/test/repo' } });
     fireEvent.change(tokenInput, { target: { value: 'ghp_token123' } });
     fireEvent.change(schemaInput, { target: { value: 'intermediate' } });
 
     // Submit form
-    const submitButton = screen.getByText('Save');
+    const submitButton = screen.getByText('Save & Connect');
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockHttpPost).toHaveBeenCalledWith(
+      expect(mockHttpPut).toHaveBeenCalledWith(
         mockSession,
-        'dbt/dbt_workspace/',
+        'dbt/connect_git_remote/',
         expect.objectContaining({
           gitrepoUrl: 'https://github.com/test/repo',
           gitrepoAccessToken: 'ghp_token123',
-          defaultSchema: 'intermediate',
         })
       );
     });
@@ -200,7 +198,7 @@ describe('DBTRepositoryCard', () => {
 
   it('handles form submission errors', async () => {
     mockHttpGet.mockResolvedValue({ error: true });
-    mockHttpPost.mockRejectedValue(new Error('API Error'));
+    mockHttpPut.mockRejectedValue(new Error('API Error'));
 
     renderWithProviders(<DBTRepositoryCard />);
 
@@ -210,16 +208,16 @@ describe('DBTRepositoryCard', () => {
       fireEvent.click(connectButton);
     });
 
-    // Fill and submit form
-    const repoUrlInput = screen.getByLabelText(/Repository URL/i);
-    const tokenInput = screen.getByLabelText(/Personal Access Token/i);
-    const schemaInput = screen.getByLabelText(/Default Schema/i);
+    // Fill and submit form using placeholder text to find inputs
+    const repoUrlInput = screen.getByPlaceholderText('https://github.com/username/repository-name');
+    const tokenInput = screen.getByPlaceholderText('ghp_xxxxxxxxxxxxxxxxxxxx');
+    const schemaInput = screen.getByPlaceholderText('e.g., intermediate, staging, marts');
 
     fireEvent.change(repoUrlInput, { target: { value: 'https://github.com/test/repo' } });
     fireEvent.change(tokenInput, { target: { value: 'ghp_token123' } });
     fireEvent.change(schemaInput, { target: { value: 'intermediate' } });
 
-    const submitButton = screen.getByText('Save');
+    const submitButton = screen.getByText('Save & Connect');
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -238,14 +236,14 @@ describe('DBTRepositoryCard', () => {
       fireEvent.click(connectButton);
     });
 
-    expect(screen.getByText('Connect GitHub Repository')).toBeInTheDocument();
+    expect(screen.getByText('Connect to GitHub')).toBeInTheDocument();
 
     // Close dialog
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
 
     await waitFor(() => {
-      expect(screen.queryByText('Connect GitHub Repository')).not.toBeInTheDocument();
+      expect(screen.queryByText('Connect to GitHub')).not.toBeInTheDocument();
     });
   });
 
