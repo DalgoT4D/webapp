@@ -10,7 +10,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 jest.mock('next-auth/react');
 jest.mock('@/helpers/http');
 jest.mock('@/utils/common', () => ({
-  delay: jest.fn(() => Promise.resolve()),
+  delay: jest.fn(() => new Promise(() => {})), // Never resolves to prevent infinite loop
 }));
 jest.mock('@/config/constant', () => ({
   flowRunLogsOffsetLimit: 50,

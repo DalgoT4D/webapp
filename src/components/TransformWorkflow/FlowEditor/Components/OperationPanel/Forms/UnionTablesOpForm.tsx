@@ -250,7 +250,7 @@ const UnionTablesOpForm = ({
         .filter((node: any) => node.dbtmodel)
         .map((node: any) => ({
           id: node.dbtmodel.uuid,
-          label: node.dbtmodel.name,
+          label: `${node.dbtmodel.schema}.${node.dbtmodel.name}`,
         }));
 
       // pre-fill form
@@ -274,7 +274,7 @@ const UnionTablesOpForm = ({
       fetchAndSetSourceColumns();
       setValue(`tables.${0}`, {
         id: node?.data.dbtmodel?.uuid || '',
-        label: node?.data.dbtmodel?.name || '',
+        label: `${node?.data.dbtmodel?.schema || ''}.${node?.data.dbtmodel?.name || ''}`,
       });
     }
   }, [session, node]);
@@ -304,9 +304,27 @@ const UnionTablesOpForm = ({
                   options={sourcesModels
                     .map((model: DbtModelResponse) => ({
                       id: model.uuid,
-                      label: model.name,
+                      label: `${model.schema}.${model.name}`,
+                      schema: model.schema,
                     }))
                     .sort((a, b) => a.label.localeCompare(b.label))}
+                  renderGroup={(params) => (
+                    <li key={params.key}>
+                      <Box
+                        sx={{
+                          fontWeight: 600,
+                          position: 'sticky',
+                          top: '-8px',
+                          padding: '4px 10px',
+                          background: 'white',
+                        }}
+                      >
+                        {params.group}
+                      </Box>
+                      <Box>{params.children}</Box>
+                    </li>
+                  )}
+                  groupBy={(option: any) => option.schema}
                   isOptionEqualToValue={(option: any, value: any) => {
                     return option?.id === value?.id;
                   }}

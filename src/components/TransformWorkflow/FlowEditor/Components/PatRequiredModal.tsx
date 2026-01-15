@@ -69,8 +69,8 @@ const PatRequiredModal: React.FC<PatRequiredModalProps> = ({
       <Box display="flex" flexDirection="column" gap={3} sx={{ mt: 1 }}>
         <Typography variant="body2" color="text.secondary">
           Add your Personal Access Token to make changes to this workspace. You can view the canvas
-          without authentication, but you'll need a Personal Access Token to make changes or publish
-          to Git.
+          without authentication, but you&apos;ll need a Personal Access Token to make changes or
+          publish to Git.
         </Typography>
 
         <Box>
