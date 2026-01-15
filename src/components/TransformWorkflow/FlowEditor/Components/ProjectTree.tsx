@@ -274,10 +274,49 @@ const ProjectTree = ({
           pr: 0,
           pb: 0,
           height: 'calc(100% - 44px)',
+          position: 'relative',
         }}
         ref={ref}
       >
-        <Box sx={{ px: 2, py: 1 }}>
+        {isSyncing && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(245, 250, 250, 0.85)',
+              zIndex: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 2,
+            }}
+          >
+            <CircularProgress size={32} />
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'text.secondary',
+                fontSize: '0.875rem',
+                textAlign: 'center',
+                px: 2,
+              }}
+            >
+              Fetching latest schemas and tables...
+            </Typography>
+          </Box>
+        )}
+        <Box
+          sx={{
+            px: 2,
+            py: 1,
+            opacity: isSyncing ? 0.5 : 1,
+            pointerEvents: isSyncing ? 'none' : 'auto',
+          }}
+        >
           <TextField
             label={`Search by ${filterBy}`}
             onChange={(e) => {
@@ -286,6 +325,7 @@ const ProjectTree = ({
             }}
             fullWidth
             size="small"
+            disabled={isSyncing}
           />
           <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
             <FormControlLabel
@@ -294,6 +334,7 @@ const ProjectTree = ({
                   aria-label="filter by schema"
                   checked={filterBy === 'schema'}
                   onChange={() => setFilterBy('schema')}
+                  disabled={isSyncing}
                 />
               }
               label="schema"
@@ -304,49 +345,41 @@ const ProjectTree = ({
                   aria-label="filter by table"
                   checked={filterBy === 'table'}
                   onChange={() => setFilterBy('table')}
+                  disabled={isSyncing}
                 />
               }
               label="table"
             />
           </Box>
         </Box>
-        {isSyncing && (
-          <Box
-            sx={{
-              px: 2,
-              py: 1,
-              backgroundColor: '#E8F4F4',
-              borderRadius: 1,
-              mx: 2,
-              mb: 1,
-            }}
-          >
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
-              Fetching latest schemas and tables from warehouse...
-            </Typography>
-          </Box>
-        )}
-        {projectTreeData.length > 0 && (
-          <Tree
-            childrenAccessor={(d: any) => d.children}
-            openByDefault={openByDefault || true} // Always open Data folder by default
-            indent={8}
-            data={projectTreeData}
-            height={height}
-            width={width}
-            rowHeight={30}
-            onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
-          >
-            {(props) => (
-              <Node
-                {...props}
-                handleSyncClick={handleSyncClick}
-                isSyncing={isSyncing}
-                included_in={included_in}
-              />
-            )}
-          </Tree>
-        )}
+        <Box
+          sx={{
+            opacity: isSyncing ? 0.5 : 1,
+            pointerEvents: isSyncing ? 'none' : 'auto',
+          }}
+        >
+          {projectTreeData.length > 0 && (
+            <Tree
+              childrenAccessor={(d: any) => d.children}
+              openByDefault={openByDefault || true} // Always open Data folder by default
+              indent={8}
+              data={projectTreeData}
+              height={height}
+              width={width}
+              rowHeight={30}
+              onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
+            >
+              {(props) => (
+                <Node
+                  {...props}
+                  handleSyncClick={handleSyncClick}
+                  isSyncing={isSyncing}
+                  included_in={included_in}
+                />
+              )}
+            </Tree>
+          )}
+        </Box>
       </Box>
     </Box>
   );
