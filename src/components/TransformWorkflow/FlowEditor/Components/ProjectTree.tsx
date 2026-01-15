@@ -310,6 +310,22 @@ const ProjectTree = ({
             />
           </Box>
         </Box>
+        {isSyncing && (
+          <Box
+            sx={{
+              px: 2,
+              py: 1,
+              backgroundColor: '#E8F4F4',
+              borderRadius: 1,
+              mx: 2,
+              mb: 1,
+            }}
+          >
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+              Fetching latest schemas and tables from warehouse...
+            </Typography>
+          </Box>
+        )}
         {projectTreeData.length > 0 && (
           <Tree
             childrenAccessor={(d: any) => d.children}
