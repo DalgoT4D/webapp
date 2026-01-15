@@ -177,7 +177,7 @@ const CanvasHeader = ({
       }}
     >
       <Typography variant="h6" sx={{ marginLeft: 'auto' }}>
-        Workflow01
+        Workflow
       </Typography>
 
       <Box
