@@ -276,11 +276,8 @@ const FlowEditor = ({}) => {
     }
   };
 
-  const syncSources = async (lockCanvas = true) => {
+  const syncSources = async () => {
     try {
-      if (lockCanvas) {
-        setLockUpperSection(true);
-      }
       setIsSyncingSources(true);
       // tab to logs
       setSelectedTab('logs');
@@ -295,9 +292,6 @@ const FlowEditor = ({}) => {
     } catch (error) {
       console.error(error);
     } finally {
-      if (lockCanvas) {
-        setLockUpperSection(false);
-      }
       setIsSyncingSources(false);
     }
   };
@@ -362,7 +356,7 @@ const FlowEditor = ({}) => {
           const permissions = globalContext?.Permissions.state || [];
           if (permissions.includes('can_sync_sources')) {
             hasAutoSynced.current = true;
-            setCanvasAction({ type: 'sync-sources', data: { autoSync: true } });
+            setCanvasAction({ type: 'sync-sources', data: null });
           }
         }
       })();
@@ -376,9 +370,8 @@ const FlowEditor = ({}) => {
     }
 
     if (canvasAction.type === 'sync-sources') {
-      const isAutoSync = canvasAction.data?.autoSync === true;
       (async () => {
-        await syncSources(!isAutoSync); // lockCanvas = false for auto-sync
+        await syncSources();
         fetchSourcesModels();
       })();
     }
