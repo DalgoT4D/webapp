@@ -11,7 +11,7 @@ import Image from 'next/image';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
-import { TextField, FormControlLabel, Checkbox } from '@mui/material';
+import { TextField } from '@mui/material';
 import { DbtModelResponse } from '@/types/transform-v2.types';
 
 const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing, included_in }: any) => {
@@ -193,8 +193,12 @@ const ProjectTree = ({
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const searchTermRef = useRef('');
-  const [filterBy, setFilterBy] = useState<'schema' | 'table'>('table');
   const [openByDefault, setOpenByDefault] = useState(false);
+
+  // Calculate the height available for the tree by subtracting search area height
+  const SEARCH_AREA_HEIGHT = 70; // Approximate height of search input + padding (reduced since no checkboxes)
+  const BOTTOM_PADDING = 16; // Extra padding to prevent last element cutoff
+  const treeHeight = height ? Math.max(200, height - SEARCH_AREA_HEIGHT - BOTTOM_PADDING) : 400;
 
   const constructAndSetProjectTreeData = (dbtSourceModels: DbtModelResponse[]) => {
     // group by schema and push dbtSourceModels under the children key
@@ -226,7 +230,8 @@ const ProjectTree = ({
     // Always show the Data folder, even if it's empty
     setProjectTreeData([{ id: '0', schema: 'Data', children: treeData }]);
 
-    if (filterBy === 'table' && searchTermRef.current.trim() !== '') {
+    // Auto-expand when searching to show matching results
+    if (searchTermRef.current.trim() !== '') {
       setOpenByDefault(true);
     } else {
       setOpenByDefault(false);
@@ -235,14 +240,22 @@ const ProjectTree = ({
 
   const onSearchValueChange = (searchTerm: string) => {
     searchTerm = searchTerm.trim();
+
+    if (searchTerm === '') {
+      // Show all data when search is empty
+      constructAndSetProjectTreeData(dbtSourceModels);
+      return;
+    }
+
+    const searchTermLower = searchTerm.toLowerCase();
+
+    // Filter models that match either schema name or table name
     const filteredData = dbtSourceModels.filter((dbtSourceModel) => {
-      if (filterBy === 'schema') {
-        return dbtSourceModel.schema.toLowerCase().includes(searchTerm.toLowerCase());
-      } else if (filterBy === 'table') {
-        return dbtSourceModel.name.toLowerCase().includes(searchTerm.toLowerCase());
-      }
-      return false;
+      const schemaMatches = dbtSourceModel.schema.toLowerCase().includes(searchTermLower);
+      const tableMatches = dbtSourceModel.name.toLowerCase().includes(searchTermLower);
+      return schemaMatches || tableMatches;
     });
+
     constructAndSetProjectTreeData(filteredData);
   };
 
@@ -250,7 +263,7 @@ const ProjectTree = ({
     if (dbtSourceModels) {
       onSearchValueChange(searchTermRef.current);
     }
-  }, [dbtSourceModels, filterBy]);
+  }, [dbtSourceModels]);
 
   return (
     <Box
@@ -318,7 +331,8 @@ const ProjectTree = ({
           }}
         >
           <TextField
-            label={`Search by ${filterBy}`}
+            label="Search schemas and tables"
+            placeholder="Type to search across schemas and tables..."
             onChange={(e) => {
               searchTermRef.current = e.target.value;
               onSearchValueChange(e.target.value);
@@ -327,35 +341,12 @@ const ProjectTree = ({
             size="small"
             disabled={isSyncing}
           />
-          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  aria-label="filter by schema"
-                  checked={filterBy === 'schema'}
-                  onChange={() => setFilterBy('schema')}
-                  disabled={isSyncing}
-                />
-              }
-              label="schema"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  aria-label="filter by table"
-                  checked={filterBy === 'table'}
-                  onChange={() => setFilterBy('table')}
-                  disabled={isSyncing}
-                />
-              }
-              label="table"
-            />
-          </Box>
         </Box>
         <Box
           sx={{
             opacity: isSyncing ? 0.5 : 1,
             pointerEvents: isSyncing ? 'none' : 'auto',
+            pb: 2, // Add bottom padding to prevent last element cutoff
           }}
         >
           {projectTreeData.length > 0 && (
@@ -364,7 +355,7 @@ const ProjectTree = ({
               openByDefault={openByDefault || true} // Always open Data folder by default
               indent={8}
               data={projectTreeData}
-              height={height}
+              height={treeHeight} // Use calculated height instead of container height
               width={width}
               rowHeight={30}
               onSelect={permissions.includes('can_create_dbt_model') ? handleNodeClick : undefined}
