@@ -143,7 +143,7 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
                     <Box sx={{ mb: 2 }}>
                       <Typography
                         variant="body2"
-                        sx={{ fontWeight: 'bold', color: '#2e7d32', mb: 0.5 }}
+                        sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5 }}
                       >
                         Added ({gitStatus.added.length})
                       </Typography>
@@ -154,7 +154,7 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
                           sx={{
                             fontFamily: 'monospace',
                             fontSize: '0.75rem',
-                            color: '#2e7d32',
+                            color: 'text.primary',
                             pl: 1,
                           }}
                         >
@@ -168,7 +168,7 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
                     <Box sx={{ mb: 2 }}>
                       <Typography
                         variant="body2"
-                        sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0.5 }}
+                        sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5 }}
                       >
                         Modified ({gitStatus.modified.length})
                       </Typography>
@@ -179,7 +179,7 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
                           sx={{
                             fontFamily: 'monospace',
                             fontSize: '0.75rem',
-                            color: '#f57f17',
+                            color: 'text.primary',
                             pl: 1,
                           }}
                         >
@@ -193,7 +193,7 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
                     <Box sx={{ mb: 2 }}>
                       <Typography
                         variant="body2"
-                        sx={{ fontWeight: 'bold', color: '#d32f2f', mb: 0.5 }}
+                        sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5 }}
                       >
                         Deleted ({gitStatus.deleted.length})
                       </Typography>
@@ -204,7 +204,7 @@ const PublishModal: React.FC<PublishModalProps> = ({ open, onClose, onPublishSuc
                           sx={{
                             fontFamily: 'monospace',
                             fontSize: '0.75rem',
-                            color: '#d32f2f',
+                            color: 'text.primary',
                             pl: 1,
                           }}
                         >
