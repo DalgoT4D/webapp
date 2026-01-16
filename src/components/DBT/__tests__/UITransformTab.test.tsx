@@ -52,7 +52,7 @@ describe('UITransformTab', () => {
     render(<UITransformTab {...defaultProps} />);
 
     expect(screen.getByTestId('dbt-repository-card')).toBeInTheDocument();
-    expect(screen.getByText('Workflow 1')).toBeInTheDocument();
+    expect(screen.getByText('Workflow')).toBeInTheDocument();
     expect(screen.getByTestId('gotoworkflow')).toBeInTheDocument();
     expect(screen.getByTestId('canvas-preview')).toBeInTheDocument();
   });
@@ -79,7 +79,7 @@ describe('UITransformTab', () => {
     render(<UITransformTab {...defaultProps} gitConnected={true} />);
 
     expect(screen.getByTestId('dbt-repository-card')).toBeInTheDocument();
-    expect(screen.getByText('Workflow 1')).toBeInTheDocument();
+    expect(screen.getByText('Workflow')).toBeInTheDocument();
   });
 });
 

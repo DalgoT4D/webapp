@@ -89,7 +89,7 @@ const UITransformTab: React.FC<UITransformTabProps> = ({ onGitConnected, gitConn
             }}
           >
             <Typography sx={{ fontWeight: 700 }} variant="h4" color="#000">
-              Workflow 1
+              Workflow
             </Typography>
             <Button
               variant="contained"
