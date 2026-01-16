@@ -97,15 +97,6 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing, included_in
                 flexShrink: 0,
               }}
             >
-              <Tooltip title="Add to canvas">
-                <AddIcon
-                  sx={{
-                    cursor: 'pointer',
-                    fontSize: '20px',
-                    '&:hover': { opacity: 0.7 },
-                  }}
-                />
-              </Tooltip>
               {included_in !== 'explore' && (
                 <Tooltip title="Delete source">
                   <DeleteIcon
@@ -129,6 +120,15 @@ const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing, included_in
                   />
                 </Tooltip>
               )}
+              <Tooltip title="Add to canvas">
+                <AddIcon
+                  sx={{
+                    cursor: 'pointer',
+                    fontSize: '20px',
+                    '&:hover': { opacity: 0.7 },
+                  }}
+                />
+              </Tooltip>
             </Box>
           )}
           {!node.isLeaf && node.level === 0 && (

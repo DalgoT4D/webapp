@@ -104,43 +104,83 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
           <FormHelperText error>Output name is required</FormHelperText>
         )}
         <Box sx={{ m: 2 }} />
-        <Controller
-          control={control}
-          name="dest_schema"
-          rules={{ required: true }}
-          render={({ field }) => (
-            <Autocomplete
-              fieldStyle="transformation"
-              options={['intermediate', 'production']}
-              {...field}
-              freeSolo
-              autoSelect
-              label="Output Schema Name*"
-            />
-          )}
-        />
+        <Box>
+          <Controller
+            control={control}
+            name="dest_schema"
+            rules={{ required: true }}
+            render={({ field }) => (
+              <Autocomplete
+                fieldStyle="transformation"
+                options={['intermediate', 'production']}
+                {...field}
+                freeSolo
+                autoSelect
+                label={
+                  <Box component="span" sx={{ display: 'block', width: '100%' }}>
+                    Output Schema Name*
+                    <FormHelperText
+                      component="div"
+                      sx={{
+                        mt: 0.5,
+                        fontSize: '0.75rem',
+                        color: 'text.secondary',
+                        whiteSpace: 'normal',
+                        wordWrap: 'break-word',
+                      }}
+                    >
+                      Choose from existing schemas or type a name to create a new one
+                    </FormHelperText>
+                  </Box>
+                }
+                placeholder="Select existing or type to create new schema"
+              />
+            )}
+          />
+        </Box>
         {formState?.errors?.dest_schema && (
           <FormHelperText error>Output schema is required</FormHelperText>
         )}
         <Box sx={{ m: 2 }} />
-        <Controller
-          control={control}
-          name="rel_dir_to_models"
-          rules={{ required: true }}
-          render={({ field }) => (
-            <Autocomplete
-              fieldStyle="transformation"
-              options={directories}
-              loading={loadingDirectories}
-              {...field}
-              freeSolo
-              autoSelect
-              label="Directory under models*"
-              placeholder="Select or type directory under models/"
-              getOptionLabel={(option: any) => (typeof option === 'string' ? option : option.label)}
-            />
-          )}
-        />
+        <Box>
+          <Controller
+            control={control}
+            name="rel_dir_to_models"
+            rules={{ required: true }}
+            render={({ field }) => (
+              <Autocomplete
+                fieldStyle="transformation"
+                options={directories}
+                loading={loadingDirectories}
+                {...field}
+                freeSolo
+                autoSelect
+                label={
+                  <Box component="span" sx={{ display: 'block', width: '100%' }}>
+                    Directory under models*
+                    <FormHelperText
+                      component="div"
+                      sx={{
+                        mt: 0.5,
+                        fontSize: '0.75rem',
+                        color: 'text.secondary',
+                        whiteSpace: 'normal',
+                        wordWrap: 'break-word',
+                      }}
+                    >
+                      Choose from existing directories or type a path to create new folders (e.g.,
+                      staging/orders)
+                    </FormHelperText>
+                  </Box>
+                }
+                placeholder="Select existing or type to create new directory"
+                getOptionLabel={(option: any) =>
+                  typeof option === 'string' ? option : option.label
+                }
+              />
+            )}
+          />
+        </Box>
         {formState?.errors?.rel_dir_to_models && (
           <FormHelperText error>Model directory is required</FormHelperText>
         )}
