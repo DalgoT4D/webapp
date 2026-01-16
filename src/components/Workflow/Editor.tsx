@@ -6,7 +6,11 @@ import { DbtRunLogsProvider } from '@/contexts/DbtRunLogsContext';
 import { CanvasActionProvider, CanvasNodeProvider } from '@/contexts/FlowEditorCanvasContext';
 import { PreviewActionProvider } from '@/contexts/FlowEditorPreviewContext';
 
-export default function WorkflowEditor() {
+interface WorkflowEditorProps {
+  onClose?: () => void;
+}
+
+export default function WorkflowEditor({ onClose }: WorkflowEditorProps = {}) {
   return (
     <>
       <PageHead title="Dalgo | FlowEditor" />
@@ -15,7 +19,7 @@ export default function WorkflowEditor() {
           <CanvasActionProvider>
             <PreviewActionProvider>
               <DbtRunLogsProvider>
-                <FlowEditor />
+                <FlowEditor onClose={onClose} />
               </DbtRunLogsProvider>
             </PreviewActionProvider>
           </CanvasActionProvider>

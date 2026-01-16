@@ -7,6 +7,7 @@ import DBTRepositoryCard from './DBTRepositoryCard';
 import CanvasPreview from '@/components/TransformWorkflow/FlowEditor/Components/CanvasPreview';
 import WorkflowEditor from '@/components/Workflow/Editor';
 import { TransitionProps } from '@mui/material/transitions';
+import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
 export const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -17,32 +18,39 @@ export const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} timeout={400} />;
 });
 
-export const TopNavBar = ({ handleClose }: any) => (
-  <Box sx={{ display: 'flex' }}>
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 4,
-        ml: 1.8,
-        height: '56px',
-      }}
-    >
-      <Image src={Logo} alt="dalgo logo" />
-    </Box>
-    <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
-      <IconButton
-        edge="start"
-        color="inherit"
-        onClick={handleClose}
-        sx={{ mr: 1 }}
-        aria-label="close"
+export const TopNavBar = ({ handleClose, hideHeader = false }: any) => {
+  // If header should be hidden (embedded mode), don't render anything
+  if (hideHeader) {
+    return null;
+  }
+
+  return (
+    <Box sx={{ display: 'flex' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          ml: 1.8,
+          height: '56px',
+        }}
       >
-        <Close />
-      </IconButton>
+        <Image src={Logo} alt="dalgo logo" />
+      </Box>
+      <Box display="flex" alignItems="center" sx={{ marginLeft: 'auto' }}>
+        <IconButton
+          edge="start"
+          color="inherit"
+          onClick={handleClose}
+          sx={{ mr: 1 }}
+          aria-label="close"
+        >
+          <Close />
+        </IconButton>
+      </Box>
     </Box>
-  </Box>
-);
+  );
+};
 
 interface UITransformTabProps {
   onGitConnected: () => void;
@@ -52,6 +60,7 @@ interface UITransformTabProps {
 const UITransformTab: React.FC<UITransformTabProps> = ({ onGitConnected, gitConnected }) => {
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0);
+  const { hideHeader } = useParentCommunication();
 
   const handleGoToWorkflow = () => {
     setShowWorkflow(true);
@@ -118,8 +127,8 @@ const UITransformTab: React.FC<UITransformTabProps> = ({ onGitConnected, gitConn
 
       {/* Full-screen Workflow Editor Dialog */}
       <Dialog fullScreen open={showWorkflow} TransitionComponent={Transition}>
-        <TopNavBar handleClose={handleCloseWorkflow} />
-        {showWorkflow && <WorkflowEditor />}
+        <TopNavBar handleClose={handleCloseWorkflow} hideHeader={hideHeader} />
+        {showWorkflow && <WorkflowEditor onClose={handleCloseWorkflow} />}
       </Dialog>
     </Box>
   );

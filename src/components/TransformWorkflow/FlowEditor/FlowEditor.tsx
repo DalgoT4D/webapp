@@ -1,6 +1,6 @@
 import { Box, Divider, IconButton, Tab, Tabs } from '@mui/material';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { OpenInFull } from '@mui/icons-material';
+import { OpenInFull, Close } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/LowerSectionTabs/PreviewPane';
@@ -29,6 +29,7 @@ type UpperSectionProps = {
   finalLockCanvas: boolean;
   setTempLockCanvas: any;
   isSyncing: boolean;
+  onClose?: () => void;
 };
 
 const UpperSection = ({
@@ -38,10 +39,12 @@ const UpperSection = ({
   finalLockCanvas,
   setTempLockCanvas,
   isSyncing,
+  onClose,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
   const globalContext = useContext(GlobalContext);
   const { setCanvasAction } = useCanvasAction();
+
   const onResize = (event: any, { size }: any) => {
     setWidth(size.width);
   };
@@ -82,6 +85,7 @@ const UpperSection = ({
           handleSyncClick={initiateSyncSources}
           included_in="visual_designer"
           isSyncing={isSyncing}
+          onClose={onClose}
         />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />
@@ -169,7 +173,7 @@ const LowerSection = ({
   );
 };
 
-const FlowEditor = ({}) => {
+const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
   const { data: session } = useSession();
   const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
@@ -393,6 +397,7 @@ const FlowEditor = ({}) => {
         finalLockCanvas={finalLockCanvas}
         setTempLockCanvas={setTempLockCanvas}
         isSyncing={isSyncingSources}
+        onClose={onClose}
       />
 
       <ResizableBox

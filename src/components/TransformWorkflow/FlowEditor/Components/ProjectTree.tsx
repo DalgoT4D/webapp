@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, Tooltip, Typography, IconButton } from '@mui/material';
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import { Tree } from 'react-arborist';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -6,6 +6,7 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TocIcon from '@/assets/icons/datatable.svg';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import Close from '@mui/icons-material/Close';
 import useResizeObserver from 'use-resize-observer';
 import Image from 'next/image';
 import ReplayIcon from '@mui/icons-material/Replay';
@@ -13,6 +14,7 @@ import { GlobalContext } from '@/contexts/ContextProvider';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
 import { TextField } from '@mui/material';
 import { DbtModelResponse } from '@/types/transform-v2.types';
+import { useParentCommunication } from '@/contexts/ParentCommunicationProvider';
 
 const Node = ({ node, style, dragHandle, handleSyncClick, isSyncing, included_in }: any) => {
   const globalContext = useContext(GlobalContext);
@@ -179,6 +181,7 @@ interface ProjectTreeProps {
   handleSyncClick: (...args: any) => void;
   isSyncing?: boolean;
   included_in: 'explore' | 'visual_designer';
+  onClose?: () => void;
 }
 
 const ProjectTree = ({
@@ -187,6 +190,7 @@ const ProjectTree = ({
   handleSyncClick,
   isSyncing = false,
   included_in = 'visual_designer',
+  onClose,
 }: ProjectTreeProps) => {
   const { ref, width, height } = useResizeObserver();
   const [projectTreeData, setProjectTreeData] = useState<any[]>([]);
@@ -194,6 +198,7 @@ const ProjectTree = ({
   const permissions = globalContext?.Permissions.state || [];
   const searchTermRef = useRef('');
   const [openByDefault, setOpenByDefault] = useState(false);
+  const { hideHeader } = useParentCommunication();
 
   // Calculate the height available for the tree by subtracting search area height
   const SEARCH_AREA_HEIGHT = 70; // Approximate height of search input + padding (reduced since no checkboxes)
@@ -279,8 +284,28 @@ const ProjectTree = ({
           border: '1px #CCD6E2 solid',
           borderLeft: 0,
           borderRight: 0,
+          display: 'flex',
+          alignItems: 'center',
+          px: 1,
         }}
-      ></Box>
+      >
+        {/* Show close button when header is hidden (embedded mode) */}
+        {hideHeader && onClose && (
+          <IconButton
+            onClick={onClose}
+            aria-label="close canvas"
+            size="small"
+            sx={{
+              color: 'text.secondary',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              },
+            }}
+          >
+            <Close fontSize="small" />
+          </IconButton>
+        )}
+      </Box>
       <Box
         sx={{
           p: '10px',
