@@ -99,6 +99,14 @@ export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
   const isDeletable: boolean =
     permissions.includes('can_delete_dbt_model') && edgesEmanatingOutOfNode.length <= 0;
 
+  // Determine node color based on publish status (only for model nodes)
+  const getNodeBackgroundColor = () => {
+    if (nodeProps.type === 'model' && nodeProps.data.isPublished === false) {
+      return '#50A85C'; // Lighter green for unpublished model nodes
+    }
+    return '#00897B'; // Default green for published or non-model nodes
+  };
+
   const cacheRef = useRef<{ [key: string]: ColumnData[] }>({});
 
   const handleDeleteAction = () => {
@@ -182,7 +190,7 @@ export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
       >
         <Box
           sx={{
-            background: '#00897B',
+            background: getNodeBackgroundColor(),
             display: 'flex',
             borderRadius: '5px 5px 0px 0px',
             alignItems: 'center',

@@ -7,8 +7,14 @@ import {
   MenuItem,
   Select,
   Typography,
+  Button,
+  Menu,
 } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PublishIcon from '@mui/icons-material/Publish';
+import ClearIcon from '@mui/icons-material/Clear';
+import LockIcon from '@mui/icons-material/Lock';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   useNodesState,
@@ -30,7 +36,7 @@ import 'reactflow/dist/style.css';
 import { OperationNode } from './Nodes/OperationNode';
 import { DbtSourceModelNode } from './Nodes/DbtSourceModelNode';
 import { useSession } from 'next-auth/react';
-import { httpDelete, httpGet, httpPost } from '@/helpers/http';
+import { httpDelete, httpGet, httpPost, httpPut } from '@/helpers/http';
 import { successToast, errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import OperationConfigLayout from './OperationConfigLayout';
@@ -39,6 +45,9 @@ import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { getNextNodePosition } from '@/utils/editor';
 import { KeyboardArrowDown } from '@mui/icons-material';
 import { useTracking } from '@/contexts/TrackingContext';
+import PublishModal from './PublishModal';
+import CanvasMessages, { CanvasMessage } from './CanvasMessages';
+import PatRequiredModal from './PatRequiredModal';
 import {
   CanvasEdgeDataResponse,
   CanvasNodeDataResponse,
@@ -55,6 +64,7 @@ type CanvasProps = {
   setRedrawGraph: (...args: any) => void;
   finalLockCanvas: boolean;
   setTempLockCanvas: any;
+  isPreviewMode?: boolean; // NEW: Skip lock acquisition in preview mode
 };
 
 const nodeGap = 30;
@@ -86,17 +96,38 @@ const WorkflowValues: any = {
   'run-from-node': 'Run from node',
 };
 
-const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
+const CanvasHeader = ({
+  finalLockCanvas,
+  canInteractWithCanvas,
+  onPublishClick,
+}: {
+  finalLockCanvas: boolean;
+  canInteractWithCanvas: () => boolean;
+  onPublishClick: () => void;
+}) => {
   const { setCanvasAction } = useCanvasAction();
   const { canvasNode } = useCanvasNode();
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
   const [selectedAction, setSelectedAction] = useState('');
+  const [runMenuAnchor, setRunMenuAnchor] = useState<null | HTMLElement>(null);
   const trackAmplitudeEvent: any = useTracking();
-  const nodeData: any = canvasNode?.data;
+  const nodeData = canvasNode?.data;
 
-  const handleRunClick = (event: any) => {
-    const action = event.target.value;
+  const handleDiscardChanges = () => {
+    console.log('Discard Changes clicked');
+    trackAmplitudeEvent('[Discard Changes] Button Clicked');
+  };
+
+  const handleRunClick = (event: React.MouseEvent<HTMLElement>) => {
+    setRunMenuAnchor(event.currentTarget);
+  };
+
+  const handleRunMenuClose = () => {
+    setRunMenuAnchor(null);
+  };
+
+  const handleRunAction = (action: string) => {
     setSelectedAction(action);
     trackAmplitudeEvent(`[${WorkflowValues[action]}] Button Clicked`);
     if (action === 'run') {
@@ -104,14 +135,21 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
     } else if (action === 'run-to-node') {
       setCanvasAction({
         type: 'run-workflow',
-        data: { options: { select: `+${nodeData?.input_name}` } },
+        data: { options: { select: `+${nodeData?.dbtmodel?.name}` } },
       });
     } else if (action === 'run-from-node') {
       setCanvasAction({
         type: 'run-workflow',
-        data: { options: { select: `${nodeData?.input_name}+` } },
+        data: { options: { select: `${nodeData?.dbtmodel?.name}+` } },
       });
     }
+    handleRunMenuClose();
+  };
+
+  const handlePublish = () => {
+    console.log('Publish clicked');
+    trackAmplitudeEvent('[Publish] Button Clicked');
+    onPublishClick();
   };
 
   const disableToAndFromNodeRunOptions =
@@ -125,6 +163,7 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
       setSelectedAction('');
     }
   }, [finalLockCanvas]);
+
   return (
     <Box
       sx={{
@@ -138,54 +177,134 @@ const CanvasHeader = ({ finalLockCanvas }: { finalLockCanvas: boolean }) => {
       }}
     >
       <Typography variant="h6" sx={{ marginLeft: 'auto' }}>
-        Workflow01
+        Workflow
       </Typography>
 
       <Box
         sx={{
           marginLeft: 'auto',
           display: 'flex',
-          gap: '20px',
+          gap: '10px',
           minWidth: '30%',
           justifyContent: 'flex-end',
         }}
       >
-        {' '}
-        <Select
-          labelId="run-workflow-action"
-          value={selectedAction}
-          onChange={handleRunClick}
-          label="Action"
-          disabled={!permissions.includes('can_run_pipeline')}
-          displayEmpty
-          placeholder="Select Action"
-          renderValue={(value) => {
-            return value === '' ? 'Select Action' : WorkflowValues[value];
-          }}
-          IconComponent={(props: any) => {
-            return <KeyboardArrowDown {...props} style={{ color: '#FFFFFF', width: '21px' }} />;
-          }}
+        {/* Discard Changes Button - Hidden for future release */}
+        {/* <Button
+          variant="contained"
+          onClick={handleDiscardChanges}
+          disabled={!canInteractWithCanvas()}
+          startIcon={<ClearIcon />}
           sx={{
-            background: '#00897B',
+            background: canInteractWithCanvas() ? '#00897B' : '#ccc',
             color: '#FFFFFF',
-            fontWeight: 700,
+            fontWeight: 600,
             fontSize: '12px',
-            border: '1px solid #00897B',
             borderRadius: '6px',
-            minWidth: '7rem',
-            height: '1.688rem',
-            textAlign: 'center',
-            boxShadow: '0px 2px 4px 0px ',
+            textTransform: 'none',
+            minWidth: '120px',
+            height: '32px',
+            '&:hover': {
+              background: canInteractWithCanvas() ? '#00695C' : '#ccc',
+            },
+            '&:disabled': {
+              color: '#FFFFFF',
+              opacity: 0.6,
+            },
           }}
         >
-          <MenuItem value="run">Run workflow</MenuItem>
-          <MenuItem value="run-to-node" disabled={disableToAndFromNodeRunOptions}>
+          Discard Changes
+        </Button> */}
+
+        {/* Run Button with Dropdown */}
+        <Button
+          variant="contained"
+          onClick={handleRunClick}
+          disabled={!permissions.includes('can_run_pipeline') || !canInteractWithCanvas()}
+          endIcon={<KeyboardArrowDown />}
+          startIcon={<PlayArrowIcon />}
+          sx={{
+            background:
+              permissions.includes('can_run_pipeline') && canInteractWithCanvas()
+                ? '#00897B'
+                : '#ccc',
+            color: '#FFFFFF',
+            fontWeight: 600,
+            fontSize: '12px',
+            borderRadius: '6px',
+            textTransform: 'none',
+            minWidth: '80px',
+            height: '32px',
+            '&:hover': {
+              background:
+                permissions.includes('can_run_pipeline') && canInteractWithCanvas()
+                  ? '#00695C'
+                  : '#ccc',
+            },
+            '&:disabled': {
+              color: '#FFFFFF',
+              opacity: 0.6,
+            },
+          }}
+        >
+          Run
+        </Button>
+
+        {/* Run Menu Dropdown */}
+        <Menu
+          anchorEl={runMenuAnchor}
+          open={Boolean(runMenuAnchor)}
+          onClose={handleRunMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+        >
+          <MenuItem onClick={() => handleRunAction('run')}>Run workflow</MenuItem>
+          <MenuItem
+            onClick={() => handleRunAction('run-to-node')}
+            disabled={disableToAndFromNodeRunOptions}
+          >
             Run to node
           </MenuItem>
-          <MenuItem value="run-from-node" disabled={disableToAndFromNodeRunOptions}>
+          <MenuItem
+            onClick={() => handleRunAction('run-from-node')}
+            disabled={disableToAndFromNodeRunOptions}
+          >
             Run from node
           </MenuItem>
-        </Select>
+        </Menu>
+
+        {/* Publish Button */}
+        <Button
+          variant="contained"
+          onClick={handlePublish}
+          disabled={!canInteractWithCanvas()}
+          startIcon={<PublishIcon />}
+          sx={{
+            background: canInteractWithCanvas() ? '#00897B' : '#ccc',
+            color: '#FFFFFF',
+            fontWeight: 600,
+            fontSize: '12px',
+            borderRadius: '6px',
+            textTransform: 'none',
+            minWidth: '90px',
+            height: '32px',
+            '&:hover': {
+              background: canInteractWithCanvas() ? '#00695C' : '#ccc',
+            },
+            '&:disabled': {
+              color: '#FFFFFF',
+              opacity: 0.6,
+            },
+          }}
+        >
+          Publish
+        </Button>
       </Box>
     </Box>
   );
@@ -236,18 +355,93 @@ const Canvas = ({
   setRedrawGraph,
   finalLockCanvas,
   setTempLockCanvas,
+  isPreviewMode = false,
 }: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]); //works when we click the node or move it.
   const [edges, setEdges, onEdgesChange] = useEdgesState([]); //workds when we click the edges.
   const [openOperationConfig, setOpenOperationConfig] = useState<boolean>(false); // this is the right form with sql operations.
+  const [canvasLockStatus, setCanvasLockStatus] = useState<{
+    isLocked: boolean;
+    lockedBy?: string;
+    loading?: boolean;
+  }>({
+    isLocked: isPreviewMode ? true : true, // Start locked until we confirm we can acquire lock
+    lockedBy: undefined,
+    loading: isPreviewMode ? false : true, // No loading in preview mode
+  });
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [patModalOpen, setPatModalOpen] = useState(false);
+  const [patRequired, setPatRequired] = useState(false);
+  const [isViewOnlyMode, setIsViewOnlyMode] = useState(false);
+  const [gitRepoUrl, setGitRepoUrl] = useState('');
   const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
+
+  // Generate canvas messages
+  const getCanvasMessages = (): CanvasMessage[] => {
+    const messages: CanvasMessage[] = [];
+
+    // Lock status message
+    if (
+      canvasLockStatus.isLocked &&
+      canvasLockStatus.lockedBy &&
+      canvasLockStatus.lockedBy !== session?.user?.email
+    ) {
+      messages.push({
+        id: 'lock-status',
+        content: (
+          <>
+            <LockIcon sx={{ color: '#00897B', fontSize: '16px', mr: '6px' }} />
+            <span>Locked. In use by {canvasLockStatus.lockedBy}</span>
+          </>
+        ),
+        show: true,
+      });
+    }
+
+    // Unpublished changes message
+    const hasUnpublishedNodes = nodes.some((node) => node.data.isPublished === false);
+
+    if (hasUnpublishedNodes) {
+      messages.push({
+        id: 'unpublished-changes',
+        content: <span>Unpublished Changes</span>,
+        show: true,
+      });
+    }
+
+    // PAT required message
+    if (patRequired && isViewOnlyMode) {
+      messages.push({
+        id: 'pat-required',
+        content: (
+          <span>
+            Update key to make changes.{' '}
+            <span
+              style={{
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+              onClick={() => setPatModalOpen(true)}
+            >
+              Add key here
+            </span>
+          </span>
+        ),
+        show: true,
+      });
+    }
+
+    return messages;
+  };
 
   const { canvasAction, setCanvasAction } = useCanvasAction();
   const { canvasNode, setCanvasNode } = useCanvasNode();
   const { previewAction, setPreviewAction } = usePreviewAction();
   const previewNodeRef = useRef<PreviewTableData | null>();
   const globalContext = useContext(GlobalContext);
+  const hasInitializedRef = useRef(false);
   const EdgeStyle: EdgeStyleProps = {
     markerEnd: {
       type: MarkerType.Arrow,
@@ -256,8 +450,21 @@ const Canvas = ({
       color: 'black',
     },
   };
-  // const [tempLockCanvas, setTempLockCanvas] = useState(true);
-  // const finalLockCanvas = tempLockCanvas || lockUpperSection;
+
+  // Sync canvas with remote repository
+  const syncRemoteToCanvas = async () => {
+    setTempLockCanvas(true);
+    try {
+      await httpPost(session, 'transform/v2/dbt_project/sync_remote_dbtproject_to_canvas/', {});
+    } catch (error) {
+      console.error('Failed to sync with remote:', error);
+      throw error; // Let caller decide how to handle
+    } finally {
+      setTempLockCanvas(false);
+    }
+  };
+
+  // Fetch graph data from backend (pure function - only fetches)
   const fetchDbtProjectGraph = async () => {
     setTempLockCanvas(true);
     try {
@@ -292,12 +499,300 @@ const Canvas = ({
     }
   };
 
+  // Initialize canvas on first load: sync then fetch
+  const initializeCanvas = async () => {
+    try {
+      // Step 1: Sync with remote (only if not in preview mode)
+      if (!isPreviewMode) {
+        await syncRemoteToCanvas();
+      }
+
+      // Step 2: Fetch updated graph (handles its own lock state)
+      await fetchDbtProjectGraph();
+    } catch (error) {
+      console.error('Canvas initialization failed:', error);
+      // Even if sync fails, try to fetch local graph
+      try {
+        await fetchDbtProjectGraph();
+      } catch (fetchError) {
+        console.error('Failed to fetch graph after sync failure:', fetchError);
+      }
+    }
+  };
+
+  // PAT handler functions
+  const handlePatAddKey = () => {
+    setPatRequired(false);
+    setIsViewOnlyMode(false);
+    setPatModalOpen(false);
+  };
+
+  const handlePatViewOnly = () => {
+    setIsViewOnlyMode(true);
+    setPatModalOpen(false);
+  };
+
+  // Initial load effect - only runs once when session becomes available
   useEffect(() => {
-    setTempLockCanvas(true);
-    if (session) {
+    if (session && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      initializeCanvas();
+    }
+  }, [session]);
+
+  // Redraw effect - only runs when redrawGraph changes (and session exists)
+  useEffect(() => {
+    if (session && hasInitializedRef.current) {
       fetchDbtProjectGraph();
     }
-  }, [session, redrawGraph]);
+  }, [redrawGraph]);
+
+  // Canvas Lock Management State
+  const lockRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Acquire canvas lock
+  const acquireCanvasLock = async () => {
+    try {
+      console.log('Attempting to acquire canvas lock...');
+      const response = await httpPost(session, 'transform/dbt_project/canvas/lock/', {});
+      console.log('Lock acquired successfully:', response);
+      setCanvasLockStatus({
+        isLocked: true,
+        lockedBy: response.locked_by,
+        loading: false,
+      });
+      return true;
+    } catch (error: any) {
+      console.error('Lock acquisition failed:', {
+        message: error.message,
+        cause: error.cause,
+        detail: error.cause?.detail,
+        stack: error.stack,
+      });
+      if (error.cause?.detail) {
+        const match = error.cause.detail.match(/locked by (.+)$/);
+        if (match) {
+          setCanvasLockStatus({
+            isLocked: true,
+            lockedBy: match[1],
+            loading: false,
+          });
+        }
+      } else {
+        // Set canvas as unlocked if we can't acquire lock and no specific lock owner
+        setCanvasLockStatus({
+          isLocked: false,
+          lockedBy: undefined,
+          loading: false,
+        });
+      }
+      return false;
+    }
+  };
+
+  // Refresh canvas lock
+  const refreshCanvasLock = async () => {
+    try {
+      await httpPut(session, 'transform/dbt_project/canvas/lock/refresh/', {});
+      console.log('Lock refreshed successfully at', new Date().toLocaleTimeString());
+      return true;
+    } catch (error: any) {
+      console.error('Lock refresh failed:', {
+        message: error.message,
+        detail: error.cause?.detail,
+      });
+      return false;
+    }
+  };
+
+  // Release canvas lock
+  const releaseCanvasLock = async () => {
+    try {
+      await httpDelete(session, 'transform/dbt_project/canvas/lock/');
+      console.log('Lock released');
+      setCanvasLockStatus({
+        isLocked: false,
+        lockedBy: undefined,
+        loading: false,
+      });
+    } catch (error) {
+      console.log('Lock release failed:', error);
+    }
+  };
+
+  // Helper function to determine if current user can interact with canvas
+  const canInteractWithCanvas = (): boolean => {
+    // If in preview mode, never allow interaction
+    if (isPreviewMode) {
+      return false;
+    }
+
+    // If still loading, don't allow interaction (secure by default)
+    if (canvasLockStatus.loading) {
+      return false;
+    }
+
+    // If PAT is required but user is in view-only mode, don't allow interaction
+    if (patRequired && isViewOnlyMode) {
+      return false;
+    }
+
+    // If canvas is not locked by anyone, we can interact
+    if (!canvasLockStatus.isLocked) {
+      return true;
+    }
+
+    // Check if the lock is owned by the current user
+    const currentUserEmail = session?.user?.email;
+    if (currentUserEmail && canvasLockStatus.lockedBy === currentUserEmail) {
+      return true;
+    }
+
+    // Canvas is locked by someone else, we cannot interact
+    return false;
+  };
+
+  // Lock management effect - acquire lock on mount and setup 30-second refresh timer
+  useEffect(() => {
+    if (!session || isPreviewMode) return; // Skip lock acquisition in preview mode
+
+    let mounted = true;
+
+    const initializeLock = async () => {
+      const acquired = await acquireCanvasLock();
+      console.log('Canvas lock acquired:', acquired);
+
+      if (!acquired || !mounted) {
+        console.log('Lock not acquired or component unmounted');
+        return;
+      }
+
+      // Set up refresh timer - refresh every 30 seconds
+      console.log('Setting up 30-second refresh timer...');
+      const timer = setInterval(() => {
+        if (!mounted) {
+          console.log('Component unmounted, skipping refresh');
+          return;
+        }
+
+        console.log('30 seconds elapsed - attempting to refresh lock...');
+        refreshCanvasLock().then((success) => {
+          if (!success && mounted) {
+            console.log('Refresh failed, attempting to re-acquire lock...');
+            acquireCanvasLock();
+          }
+        });
+      }, 30000); // 30 seconds
+
+      lockRefreshTimerRef.current = timer;
+      console.log('Lock refresh timer started - will refresh every 30 seconds');
+    };
+
+    initializeLock();
+
+    return () => {
+      mounted = false;
+
+      // Clear the refresh timer
+      if (lockRefreshTimerRef.current) {
+        console.log('Clearing refresh timer');
+        clearInterval(lockRefreshTimerRef.current);
+        lockRefreshTimerRef.current = null;
+      }
+
+      // Only release lock if we actually own it
+      const currentUserEmail = session?.user?.email;
+      if (canvasLockStatus.isLocked && canvasLockStatus.lockedBy === currentUserEmail) {
+        console.log('Releasing lock on unmount');
+        releaseCanvasLock();
+      }
+    };
+  }, [session]);
+
+  // Cleanup handlers for comprehensive lock management
+  useEffect(() => {
+    // Function to handle cleanup synchronously for critical scenarios
+    const handleSyncCleanup = () => {
+      // Fire and forget emergency cleanup if we own the lock
+      const currentUserEmail = session?.user?.email;
+      if (
+        currentUserEmail &&
+        canvasLockStatus.isLocked &&
+        canvasLockStatus.lockedBy === currentUserEmail
+      ) {
+        releaseCanvasLock().catch(() => {
+          console.error('Emergency lock cleanup failed');
+        });
+      }
+    };
+
+    // Handle browser navigation (back/forward buttons, direct navigation)
+    const handleBeforeUnload = () => {
+      handleSyncCleanup();
+    };
+
+    // Handle popstate for browser back/forward
+    const handlePopState = () => {
+      handleSyncCleanup();
+    };
+
+    // Intercept link clicks to navigate away from canvas
+    const handleLinkClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a[href]') as HTMLAnchorElement;
+
+      if (link && link.href) {
+        const url = new URL(link.href, window.location.origin);
+        // Check if navigating away from current canvas
+        if (url.pathname !== window.location.pathname) {
+          handleSyncCleanup();
+        }
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('click', handleLinkClick, true); // Use capture phase
+
+    // Cleanup function that runs when component unmounts
+    return () => {
+      handleSyncCleanup();
+
+      // Clean up event listeners
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('click', handleLinkClick, true);
+    };
+  }, [canvasLockStatus, session?.user?.email]);
+
+  // Check PAT status on canvas load
+  useEffect(() => {
+    const checkPatStatus = async () => {
+      if (!session || isPreviewMode) return; // Skip PAT check in preview mode
+
+      try {
+        const response = await httpGet(session, 'dbt/dbt_workspace');
+
+        if (response && !response.error) {
+          const needsPAT =
+            response.transform_type === 'github' && response.gitrepo_access_token === null;
+
+          setPatRequired(needsPAT);
+          setGitRepoUrl(response.gitrepo_url || '');
+
+          // Show PAT modal immediately if PAT is required (and not in preview mode)
+          if (needsPAT) {
+            setPatModalOpen(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking PAT status:', error);
+      }
+    };
+
+    checkPatStatus();
+  }, [session, isPreviewMode]);
 
   useEffect(() => {
     previewNodeRef.current = previewAction.data;
@@ -566,54 +1061,77 @@ const Canvas = ({
           }}
         />
       </Backdrop>
-      <Box
-        sx={{
-          height: '44px',
-          background: '#F5FAFA',
-          borderTop: '1px #CCD6E2 solid',
-        }}
-      >
-        <CanvasHeader finalLockCanvas={finalLockCanvas} />
-      </Box>
-      <Divider orientation="horizontal" sx={{ color: 'black' }} />
+      {!isPreviewMode && (
+        <>
+          <Box
+            sx={{
+              height: '44px',
+              background: '#F5FAFA',
+              borderTop: '1px #CCD6E2 solid',
+            }}
+          >
+            <CanvasHeader
+              finalLockCanvas={finalLockCanvas}
+              canInteractWithCanvas={canInteractWithCanvas}
+              onPublishClick={() => setPublishModalOpen(true)}
+            />
+          </Box>
+          <Divider orientation="horizontal" sx={{ color: 'black' }} />
+        </>
+      )}
       <Box
         sx={{
           display: 'flex',
           height: 'calc(100% - 44px)',
           background: 'white',
+          position: 'relative',
         }}
       >
         <ReactFlow
           nodes={nodes} // are the tables and the operations.
           selectNodesOnDrag={false}
           edges={edges} // flexible lines connecting tables, table-node.
-          onNodeDragStop={onNodeDragStop}
-          onPaneClick={handlePaneClick} //back canvas click.
-          onNodesChange={handleNodesChange} // when node (table or operation) is clicked or moved.
-          onEdgesChange={handleEdgesChange}
-          onConnect={handleNewConnection}
+          onNodeDragStop={canInteractWithCanvas() ? onNodeDragStop : undefined}
+          onPaneClick={canInteractWithCanvas() ? handlePaneClick : undefined} //back canvas click.
+          onNodesChange={canInteractWithCanvas() ? handleNodesChange : undefined} // when node (table or operation) is clicked or moved.
+          onEdgesChange={canInteractWithCanvas() ? handleEdgesChange : undefined}
+          onConnect={canInteractWithCanvas() ? handleNewConnection : undefined}
           nodeTypes={nodeTypes}
           minZoom={0.1}
           proOptions={{ hideAttribution: true }}
           defaultViewport={defaultViewport}
           fitView
+          nodesDraggable={canInteractWithCanvas() ? true : false}
+          nodesConnectable={canInteractWithCanvas() ? true : false}
+          elementsSelectable={canInteractWithCanvas() ? true : false}
+          panOnDrag={true} // Always allow panning (for zoom/navigation)
+          zoomOnScroll={true} // Always allow zoom
+          zoomOnPinch={true} // Always allow zoom
+          zoomOnDoubleClick={canInteractWithCanvas() ? true : false} // Only allow double-click zoom if can interact
         >
-          <Background />
-          <Controls>
-            <ControlButton
-              onClick={() => {
-                successToast('Graph has been refreshed', [], globalContext);
-                setRedrawGraph(!redrawGraph);
-                setCanvasAction({
-                  type: 'refresh-canvas',
-                  data: null,
-                });
-              }}
-            >
-              <ReplayIcon />
-            </ControlButton>
+          {/* Hide default zoom (+/-), fit view and interactive (lock) controls
+             and keep only the custom control button(s) we want. */}
+          <Controls showInteractive={false} showZoom={true} showFitView={true}>
+            {!isPreviewMode && (
+              <ControlButton
+                onClick={() => {
+                  successToast('Graph has been refreshed', [], globalContext);
+                  setRedrawGraph(!redrawGraph);
+                  setCanvasAction({
+                    type: 'refresh-canvas',
+                    data: null,
+                  });
+                }}
+              >
+                <ReplayIcon />
+              </ControlButton>
+            )}
           </Controls>
+          <Background />
         </ReactFlow>
+
+        {/* Canvas Messages */}
+        <CanvasMessages messages={getCanvasMessages()} />
         {/* This is what renders the right form */}
         <OperationConfigLayout
           openPanel={openOperationConfig}
@@ -625,6 +1143,26 @@ const Canvas = ({
             borderRadius: '6px 0px 0px 6px',
             zIndex: 1000,
           }}
+        />
+
+        {/* Publish Modal */}
+        <PublishModal
+          open={publishModalOpen}
+          onClose={() => setPublishModalOpen(false)}
+          onPublishSuccess={() => {
+            // Refresh the canvas to show updated publish status
+            setRedrawGraph(!redrawGraph);
+            successToast('Changes published successfully', [], globalContext);
+          }}
+        />
+
+        {/* PAT Required Modal */}
+        <PatRequiredModal
+          open={patModalOpen}
+          onClose={() => setPatModalOpen(false)}
+          onAddKey={handlePatAddKey}
+          onViewOnly={handlePatViewOnly}
+          gitRepoUrl={gitRepoUrl}
         />
       </Box>
     </Box>

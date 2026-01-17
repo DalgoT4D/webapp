@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ProjectTree from './ProjectTree';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { CanvasActionContext } from '@/contexts/FlowEditorCanvasContext';
+
 jest.mock('use-resize-observer', () => () => ({ ref: jest.fn(), width: 300, height: 500 }));
 
 const mockDbtSourceModels = [
@@ -68,11 +69,15 @@ const renderComponent = (permissions = globalPermissions) => {
 };
 
 describe('ProjectTree Component', () => {
-  it('renders ProjectTree with search and checkboxes', () => {
+  it('renders ProjectTree with unified search', () => {
     renderComponent();
-    expect(screen.getByLabelText(/Search by table/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/filter by schema/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/filter by table/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Search schemas and tables/i)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Type to search across schemas and tables/i)
+    ).toBeInTheDocument();
+    // Verify the filter checkboxes are no longer present
+    expect(screen.queryByLabelText(/filter by schema/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/filter by table/i)).not.toBeInTheDocument();
   });
 
   it('shows tree nodes when data is provided', () => {
@@ -82,13 +87,10 @@ describe('ProjectTree Component', () => {
     expect(screen.getByText('sales')).toBeInTheDocument();
   });
 
-  it('filters by schema', async () => {
+  it('filters by schema name using unified search', async () => {
     renderComponent();
 
-    const schemaCheckbox = screen.getByLabelText(/filter by schema/i);
-    fireEvent.click(schemaCheckbox);
-
-    const searchInput = screen.getByLabelText(/Search by schema/i);
+    const searchInput = screen.getByLabelText(/Search schemas and tables/i);
     fireEvent.change(searchInput, { target: { value: 'sales' } });
 
     await waitFor(() => {
@@ -97,10 +99,10 @@ describe('ProjectTree Component', () => {
     });
   });
 
-  it('filters by table', async () => {
+  it('filters by table name using unified search', async () => {
     renderComponent();
 
-    const searchInput = screen.getByLabelText(/Search by table/i);
+    const searchInput = screen.getByLabelText(/Search schemas and tables/i);
     fireEvent.change(searchInput, { target: { value: 'users' } });
 
     await waitFor(() => {
@@ -109,10 +111,31 @@ describe('ProjectTree Component', () => {
     });
   });
 
+  it('searches across both schemas and tables simultaneously', async () => {
+    renderComponent();
+
+    const searchInput = screen.getByLabelText(/Search schemas and tables/i);
+    // Search for 'transaction' which should match the 'transactions' table
+    fireEvent.change(searchInput, { target: { value: 'transaction' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('sales')).toBeInTheDocument(); // Schema containing the matching table
+      expect(screen.queryByText('public')).not.toBeInTheDocument(); // Schema not containing the match
+    });
+
+    // Clear search and try searching for schema name
+    fireEvent.change(searchInput, { target: { value: 'publ' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('public')).toBeInTheDocument(); // Schema name matches
+      expect(screen.queryByText('sales')).not.toBeInTheDocument(); // Other schema filtered out
+    });
+  });
+
   it('displays empty tree when search yields nothing', async () => {
     renderComponent();
 
-    const searchInput = screen.getByLabelText(/Search by table/i);
+    const searchInput = screen.getByLabelText(/Search schemas and tables/i);
     fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
     await waitFor(() => {
@@ -158,6 +181,8 @@ describe('ProjectTree Component', () => {
       </GlobalContext.Provider>
     );
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // When syncing, there should be multiple progress bars (overlay and sync button)
+    expect(screen.getAllByRole('progressbar')).toHaveLength(2);
+    expect(screen.getByText('Fetching latest schemas and tables...')).toBeInTheDocument();
   });
 });

@@ -1,17 +1,14 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { PageHead } from '@/components/PageHead';
-import { httpGet, httpPost, httpDelete } from '@/helpers/http';
+import { httpGet, httpPost, httpDelete, httpPut } from '@/helpers/http';
 import styles from '@/styles/Home.module.css';
-import { Box, Grid, Typography, Button } from '@mui/material';
-import { ActionsMenu } from '../../components/UI/Menu/Menu';
-import Image from 'next/image';
-import Github from '@/assets/images/github_transform.png';
-import UI from '@/assets/images/ui_transform.png';
+import { Box, Typography, Button, Tabs, Tab } from '@mui/material';
 import { useSession } from 'next-auth/react';
-import DBTTransformType from '@/components/DBT/DBTTransformType';
-import ConfirmationDialog from '@/components/Dialog/ConfirmationDialog';
 import { errorToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
+import UITransformTab from '@/components/DBT/UITransformTab';
+import DBTTransformTab from '@/components/DBT/DBTTransformTab';
+import useSWR from 'swr';
 
 export type TransformType = 'github' | 'ui' | 'none' | 'dbtcloud' | null;
 
@@ -30,208 +27,237 @@ export const fetchTransformType = async (session: any) => {
   }
 };
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`transform-tabpanel-${index}`}
+      aria-labelledby={`transform-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 0 }}>{children}</Box>}
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `transform-tab-${index}`,
+    'aria-controls': `transform-tabpanel-${index}`,
+  };
+}
+
 const Transform = () => {
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
-  const [transformClickedOn, setTransformClickedOn] = useState<TransformType>('none');
-  const [selectedTransform, setSelectedTransform] = useState<TransformType>(null);
-  const [dialogLoader, setDialogLoader] = useState<boolean>(false);
+  const [workspaceSetup, setWorkspaceSetup] = useState<boolean>(false);
+  const [setupLoading, setSetupLoading] = useState<boolean>(false);
+  const [setupError, setSetupError] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [gitConnected, setGitConnected] = useState<boolean>(false);
+  const [preferencesLoaded, setPreferencesLoaded] = useState<boolean>(false);
   const { data: session } = useSession();
   const globalContext = useContext(GlobalContext);
-  const permissions = globalContext?.Permissions.state || [];
+  const { data: preferences, mutate: mutateUserPreferences } = useSWR(`userpreferences/`);
 
-  const open = Boolean(anchorEl);
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleTabChange = async (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+
+    // Save the tab preference
+    const transformTabValue = newValue === 0 ? 'ui' : 'github';
+    try {
+      await httpPut(session, 'userpreferences/', {
+        last_visited_transform_tab: transformTabValue,
+      });
+      // Update the local SWR cache
+      mutateUserPreferences();
+    } catch (error) {
+      console.error('Error saving tab preference:', error);
+      // Don't show error to user as this is a non-critical feature
+    }
   };
 
-  const handleSetup = (transformType: TransformType) => {
-    setTransformClickedOn(transformType);
-    setConfirmationOpen(true);
+  const checkGitConnection = async () => {
+    try {
+      setGitConnected(true); // TODO: API_BINDING - Set to true for demo/testing
+    } catch (error) {
+      console.error('Error checking git connection:', error);
+      setGitConnected(false);
+    }
   };
+  // Prevents duplicate setup calls in React Strict Mode
+  const hasInitiatedSetup = useRef(false);
+
+  // Load saved tab preference when preferences are fetched
+  useEffect(() => {
+    if (preferences && preferences.res && !preferencesLoaded) {
+      const savedTab = preferences.res.last_visited_transform_tab;
+      if (savedTab === 'ui') {
+        setActiveTab(0);
+      } else if (savedTab === 'github') {
+        setActiveTab(1);
+      }
+      // If savedTab is null/undefined, keep default (0)
+      setPreferencesLoaded(true);
+    }
+  }, [preferences, preferencesLoaded]);
 
   useEffect(() => {
-    if (session) {
-      fetchTransformType(session)
-        .then((response: TransformTypeResponse) => {
-          const transformType = response.transform_type;
-          if (transformType === 'ui' || transformType === 'github' || transformType === 'dbtcloud')
-            setSelectedTransform(transformType);
-          else setSelectedTransform('none');
-        })
-        .catch((error) => {
-          setSelectedTransform('none');
-          console.error('Error fetching transform type:', error);
-        });
-    }
+    if (!session) return;
+
+    const initializeWorkspace = async () => {
+      try {
+        const { transform_type: transformType }: TransformTypeResponse =
+          await fetchTransformType(session);
+
+        if (['ui', 'github', 'dbtcloud'].includes(transformType as string)) {
+          setWorkspaceSetup(true);
+          checkGitConnection();
+        } else if (!hasInitiatedSetup.current) {
+          hasInitiatedSetup.current = true;
+          await setupUnifiedWorkspace();
+        }
+      } catch (error) {
+        console.error('Error fetching transform type:', error);
+        if (!hasInitiatedSetup.current) {
+          hasInitiatedSetup.current = true;
+          await setupUnifiedWorkspace();
+        }
+      }
+    };
+
+    initializeWorkspace();
   }, [session]);
 
-  const handleSelectTransformTypeConfirm = async () => {
-    setDialogLoader(true);
-    if (transformClickedOn === 'ui') {
-      try {
-        // setup local project
-        await httpPost(session, 'transform/dbt_project/', {
-          default_schema: 'intermediate',
-        });
+  const setupUnifiedWorkspace = async () => {
+    setSetupLoading(true);
+    setSetupError(''); // Clear any previous errors
+    try {
+      // Setup local project for unified experience
+      await httpPost(session, 'transform/dbt_project/', {
+        default_schema: 'intermediate',
+      });
 
-        // create system transform tasks
-        await httpPost(session, `prefect/tasks/transform/`, {});
+      // Create system transform tasks
+      await httpPost(session, `prefect/tasks/transform/`, {});
 
-        // hit sync sources api
-        await httpPost(session, `transform/dbt_project/sync_sources/`, {});
+      // Hit sync sources api
+      await httpPost(session, `transform/dbt_project/sync_sources/`, {});
 
-        setSelectedTransform('ui');
-      } catch (err: any) {
-        console.error('Error occurred while setting up:', err);
-        if (err.cause) {
-          errorToast(err.cause.detail, [], globalContext);
-        } else {
-          errorToast(err.message, [], globalContext);
-        }
-        // roll back the changes
-        await httpDelete(session, 'transform/dbt_project/dbtrepo');
+      setWorkspaceSetup(true);
+    } catch (err: any) {
+      console.error('Error occurred while setting up unified workspace:', err);
+
+      // Set error message to display to user
+      let errorMessage = 'Failed to set up transform workspace. Please try again.';
+      if (err.cause?.detail) {
+        errorMessage = err.cause.detail;
+      } else if (err.message) {
+        errorMessage = err.message;
       }
-    } else if (transformClickedOn === 'github') {
-      setSelectedTransform('github');
+
+      setSetupError(errorMessage);
+
+      // Try to cleanup - if it fails, ignore
+      try {
+        await httpDelete(session, 'transform/dbt_project/dbtrepo');
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+        console.warn('Cleanup failed (workspace might not exist):', cleanupError);
+      }
+
+      // Keep workspace setup as false - user shouldn't see interface until setup completes
+      setWorkspaceSetup(false);
+    } finally {
+      setSetupLoading(false);
     }
-    // close the dialogx
-    setConfirmationOpen(false);
-    setDialogLoader(false);
   };
 
   return (
     <>
-      <ActionsMenu
-        eleType="dbtworkspace"
-        anchorEl={anchorEl}
-        open={open}
-        handleClose={handleClose}
-      />
-
-      <ConfirmationDialog
-        loading={dialogLoader}
-        show={confirmationOpen}
-        handleClose={() => setConfirmationOpen(false)}
-        handleConfirm={handleSelectTransformTypeConfirm}
-        message={`You have opted to continue using the ${
-          transformClickedOn === 'ui' ? 'UI' : 'GitHub'
-        } method to
-        set up your transformation`}
-      />
-
       <PageHead title="Dalgo | Transform" />
       <main className={styles.main}>
-        {selectedTransform === 'none' ? (
+        {setupLoading ? (
+          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+            <Typography variant="h6" color="#808080">
+              Setting up your unified transform workspace...
+            </Typography>
+            {/* TODO: Add loading spinner component */}
+          </Box>
+        ) : setupError ? (
           <Box>
             <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
-              Transformation
+              Transform
             </Typography>
-            <Typography
-              sx={{ fontWeight: 400, marginBottom: '40px' }}
-              variant="h6"
-              gutterBottom
-              color="#808080"
-            >
-              Please select one method you would like to proceed with:
+            <Box display="flex" flexDirection="column" alignItems="center" gap={3} sx={{ mt: 4 }}>
+              <Typography variant="h6" color="error" textAlign="center">
+                Setup Failed
+              </Typography>
+              <Typography variant="body1" color="#808080" textAlign="center" sx={{ maxWidth: 500 }}>
+                {setupError}
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={setupUnifiedWorkspace}
+                disabled={setupLoading}
+              >
+                Try Again
+              </Button>
+            </Box>
+          </Box>
+        ) : workspaceSetup ? (
+          <Box>
+            <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
+              Transform
             </Typography>
 
-            <Grid container spacing={2} columns={12}>
-              <Grid item xs={12} md={6}>
-                <Box
-                  height="450px"
-                  bgcolor="white"
-                  color="grey"
-                  textAlign="left"
-                  lineHeight={2}
-                  display="flex"
-                  flexDirection="column"
-                  justifyContent="space-between"
-                  sx={{ padding: '30px' }}
-                >
-                  <Image
-                    src={UI}
-                    alt="ui_transform"
-                    style={{
-                      height: '60%',
-                      width: 'auto',
-                    }}
-                  />
-                  <Typography sx={{ fontWeight: 600 }} variant="h5" align="left" color="#000">
-                    UI Users <span style={{ color: 'grey' }}>(Click and Configure)</span>
-                  </Typography>
-                  <Typography
-                    sx={{ fontWeight: 400, marginBottom: '10px' }}
-                    variant="body1"
-                    color="#808080"
-                  >
-                    Use the UI to build your transformation workflow using a simple and intuitive
-                    user interface.
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ width: '100%' }}
-                    onClick={() => handleSetup('ui')}
-                    disabled={!permissions.includes('can_create_dbt_workspace')}
-                  >
-                    Setup using UI
-                  </Button>
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Box
-                  height="450px"
-                  bgcolor="white"
-                  color="grey"
-                  textAlign="left"
-                  lineHeight={2}
-                  display="flex"
-                  flexDirection="column"
-                  justifyContent="space-between"
-                  sx={{ padding: '30px' }}
-                >
-                  <Image
-                    src={Github}
-                    alt="github_transform"
-                    style={{
-                      height: '60%',
-                      width: 'auto',
-                    }}
-                  />
-                  <Typography sx={{ fontWeight: 600 }} variant="h5" align="left" color="#000">
-                    Github Users <span style={{ color: 'grey' }}>(Code)</span>
-                  </Typography>
-                  <Typography
-                    sx={{ fontWeight: 400 }}
-                    variant="body1"
-                    color="#808080"
-                    style={{
-                      maxHeight: '40%',
-                      overflowY: 'auto',
-                      marginBottom: '10px',
-                    }}
-                  >
-                    Create a project to integrate your dbt repository by providing your repository
-                    URL and authentication details.
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ width: '100%' }}
-                    onClick={() => handleSetup('github')}
-                    disabled={!permissions.includes('can_create_dbt_workspace')}
-                  >
-                    Setup using Github
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
+            {/* Tab Navigation */}
+            <Box>
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                aria-label="transform tabs"
+                sx={{
+                  mb: 3,
+                  '& .MuiTab-root': {
+                    textTransform: 'none', // Prevents Material-UI from making tabs uppercase
+                  },
+                }}
+              >
+                <Tab label="UI Transform" {...a11yProps(0)} />
+                <Tab label="DBT Transform" {...a11yProps(1)} />
+              </Tabs>
+            </Box>
+
+            {/* Tab Content */}
+            <TabPanel value={activeTab} index={0}>
+              <UITransformTab
+                onGitConnected={() => setGitConnected(true)}
+                gitConnected={gitConnected}
+              />
+            </TabPanel>
+
+            <TabPanel value={activeTab} index={1}>
+              <DBTTransformTab
+                gitConnected={gitConnected}
+                onConnectGit={() => setGitConnected(true)}
+              />
+            </TabPanel>
           </Box>
-        ) : selectedTransform && ['ui', 'github', 'dbtcloud'].includes(selectedTransform) ? (
-          <DBTTransformType transformType={selectedTransform}></DBTTransformType>
         ) : (
-          ''
+          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+            <Typography variant="h6" color="#808080">
+              Preparing your transform workspace...
+            </Typography>
+          </Box>
         )}
       </main>
     </>

@@ -25,7 +25,7 @@ interface AutocompleteProps
     AutocompleteElementProps<unknown, boolean, boolean, boolean>,
     'renderInput' | 'onChange'
   > {
-  label?: string;
+  label?: string | JSX.Element;
   fieldStyle?: 'normal' | 'transformation' | 'none';
   error?: boolean;
   helperText?: string;

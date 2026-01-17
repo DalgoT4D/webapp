@@ -1,6 +1,6 @@
 import { Box, Divider, IconButton, Tab, Tabs } from '@mui/material';
-import React, { useContext, useEffect, useState } from 'react';
-import { OpenInFull } from '@mui/icons-material';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { OpenInFull, Close } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/LowerSectionTabs/PreviewPane';
@@ -28,6 +28,8 @@ type UpperSectionProps = {
   setRefreshEditor: any;
   finalLockCanvas: boolean;
   setTempLockCanvas: any;
+  isSyncing: boolean;
+  onClose?: () => void;
 };
 
 const UpperSection = ({
@@ -36,10 +38,13 @@ const UpperSection = ({
   setRefreshEditor,
   finalLockCanvas,
   setTempLockCanvas,
+  isSyncing,
+  onClose,
 }: UpperSectionProps) => {
   const [width, setWidth] = useState(260);
   const globalContext = useContext(GlobalContext);
   const { setCanvasAction } = useCanvasAction();
+
   const onResize = (event: any, { size }: any) => {
     setWidth(size.width);
   };
@@ -79,6 +84,8 @@ const UpperSection = ({
           handleNodeClick={handleNodeClick}
           handleSyncClick={initiateSyncSources}
           included_in="visual_designer"
+          isSyncing={isSyncing}
+          onClose={onClose}
         />
       </ResizableBox>
       <Divider orientation="vertical" sx={{ color: 'black' }} />
@@ -166,7 +173,7 @@ const LowerSection = ({
   );
 };
 
-const FlowEditor = ({}) => {
+const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
   const { data: session } = useSession();
   const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
@@ -174,6 +181,8 @@ const FlowEditor = ({}) => {
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
   const { finalLockCanvas, setTempLockCanvas } = useLockCanvas(lockUpperSection);
   const [selectedTab, setSelectedTab] = useState<LowerSectionTabValues>('logs');
+  const [isSyncingSources, setIsSyncingSources] = useState<boolean>(false);
+  const hasAutoSynced = useRef(false); // maintains the state -- if the auto sync has run or not.
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction, setCanvasAction } = useCanvasAction();
@@ -273,7 +282,7 @@ const FlowEditor = ({}) => {
 
   const syncSources = async () => {
     try {
-      setLockUpperSection(true);
+      setIsSyncingSources(true);
       // tab to logs
       setSelectedTab('logs');
       // Clear previous logs
@@ -287,7 +296,7 @@ const FlowEditor = ({}) => {
     } catch (error) {
       console.error(error);
     } finally {
-      setLockUpperSection(false);
+      setIsSyncingSources(false);
     }
   };
 
@@ -346,8 +355,17 @@ const FlowEditor = ({}) => {
       (async () => {
         await checkForAnyRunningProcess();
         fetchSourcesModels();
+        // Auto-sync sources only on first open, not on refreshEditor changes
+        if (!hasAutoSynced.current) {
+          const permissions = globalContext?.Permissions.state || [];
+          if (permissions.includes('can_sync_sources')) {
+            hasAutoSynced.current = true;
+            setCanvasAction({ type: 'sync-sources', data: null });
+          }
+        }
       })();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, refreshEditor]);
 
   useEffect(() => {
@@ -378,6 +396,8 @@ const FlowEditor = ({}) => {
         refreshEditor={refreshEditor}
         finalLockCanvas={finalLockCanvas}
         setTempLockCanvas={setTempLockCanvas}
+        isSyncing={isSyncingSources}
+        onClose={onClose}
       />
 
       <ResizableBox

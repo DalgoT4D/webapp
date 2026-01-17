@@ -1,10 +1,10 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { OperationFormProps } from '../../OperationConfigLayout';
 import { Controller, useForm } from 'react-hook-form';
 import { Box, Button, FormHelperText } from '@mui/material';
 import Input from '@/components/UI/Input/Input';
 import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
-import { httpPost } from '@/helpers/http';
+import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { Autocomplete } from '@/components/UI/Autocomplete/Autocomplete';
 import { GlobalContext } from '@/contexts/ContextProvider';
@@ -15,14 +15,51 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
   const { canvasNode } = useCanvasNode();
   const { setCanvasAction } = useCanvasAction();
   const globalContext = useContext(GlobalContext);
+  const [directories, setDirectories] = useState<{ value: string; label: string }[]>([]);
+  const [loadingDirectories, setLoadingDirectories] = useState(true);
+
   const { control, register, handleSubmit, reset, formState } = useForm({
     defaultValues: canvasNode?.data.is_last_in_chain
       ? {
           output_name: canvasNode?.data?.dbtmodel?.name || '',
           dest_schema: canvasNode?.data?.dbtmodel?.schema || '',
+          rel_dir_to_models: '',
         }
-      : { output_name: '', dest_schema: '' },
+      : { output_name: '', dest_schema: '', rel_dir_to_models: '' },
   });
+
+  // Fetch directories when component mounts
+  useEffect(() => {
+    const fetchDirectories = async () => {
+      try {
+        setLoadingDirectories(true);
+        const response = await httpGet(session, 'transform/v2/dbt_project/models_directories/');
+
+        // Format directories for display
+        const formattedDirectories = response.directories.map((dir: string) => ({
+          value: dir,
+          label: dir === '' ? '/' : `${dir}/`,
+        }));
+
+        setDirectories(formattedDirectories);
+      } catch (error: any) {
+        console.error('Error fetching directories:', error);
+        errorToast('Failed to load model directories', [], globalContext);
+        // Set default directories as fallback
+        setDirectories([
+          { value: '', label: '/' },
+          { value: 'intermediate', label: 'intermediate/' },
+          { value: 'production', label: 'production/' },
+        ]);
+      } finally {
+        setLoadingDirectories(false);
+      }
+    };
+
+    if (session) {
+      fetchDirectories();
+    }
+  }, [session, globalContext]);
 
   const handleCreateTableAndRun = async (data: any) => {
     if (canvasNode?.type === 'operation') {
@@ -34,6 +71,10 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
             name: data.output_name,
             display_name: data.output_name,
             dest_schema: data.dest_schema,
+            rel_dir_to_models:
+              typeof data.rel_dir_to_models === 'string'
+                ? data.rel_dir_to_models
+                : data.rel_dir_to_models?.value || '',
           }
         );
         reset();
@@ -59,24 +100,89 @@ const CreateTableForm = ({ sx, clearAndClosePanel }: OperationFormProps) => {
           register={register}
           required
         />
+        {formState?.errors?.output_name && (
+          <FormHelperText error>Output name is required</FormHelperText>
+        )}
         <Box sx={{ m: 2 }} />
-        <Controller
-          control={control}
-          name="dest_schema"
-          rules={{ required: true }}
-          render={({ field }) => (
-            <Autocomplete
-              fieldStyle="transformation"
-              options={['intermediate', 'production']}
-              {...field}
-              freeSolo
-              autoSelect
-              label="Output Schema Name"
-            />
-          )}
-        />
+        <Box>
+          <Controller
+            control={control}
+            name="dest_schema"
+            rules={{ required: true }}
+            render={({ field }) => (
+              <Autocomplete
+                fieldStyle="transformation"
+                options={['intermediate', 'production']}
+                {...field}
+                freeSolo
+                autoSelect
+                label={
+                  <Box component="span" sx={{ display: 'block', width: '100%' }}>
+                    Output Schema Name*
+                    <FormHelperText
+                      component="div"
+                      sx={{
+                        mt: 0.5,
+                        fontSize: '0.75rem',
+                        color: 'text.secondary',
+                        whiteSpace: 'normal',
+                        wordWrap: 'break-word',
+                      }}
+                    >
+                      Choose from existing schemas or type a name to create a new one
+                    </FormHelperText>
+                  </Box>
+                }
+                placeholder="Select existing or type to create new schema"
+              />
+            )}
+          />
+        </Box>
         {formState?.errors?.dest_schema && (
-          <FormHelperText error>Schema is required</FormHelperText>
+          <FormHelperText error>Output schema is required</FormHelperText>
+        )}
+        <Box sx={{ m: 2 }} />
+        <Box>
+          <Controller
+            control={control}
+            name="rel_dir_to_models"
+            rules={{ required: true }}
+            render={({ field }) => (
+              <Autocomplete
+                fieldStyle="transformation"
+                options={directories}
+                loading={loadingDirectories}
+                {...field}
+                freeSolo
+                autoSelect
+                label={
+                  <Box component="span" sx={{ display: 'block', width: '100%' }}>
+                    Directory under models*
+                    <FormHelperText
+                      component="div"
+                      sx={{
+                        mt: 0.5,
+                        fontSize: '0.75rem',
+                        color: 'text.secondary',
+                        whiteSpace: 'normal',
+                        wordWrap: 'break-word',
+                      }}
+                    >
+                      Choose from existing directories or type a path to create new folders (e.g.,
+                      staging/orders)
+                    </FormHelperText>
+                  </Box>
+                }
+                placeholder="Select existing or type to create new directory"
+                getOptionLabel={(option: any) =>
+                  typeof option === 'string' ? option : option.label
+                }
+              />
+            )}
+          />
+        </Box>
+        {formState?.errors?.rel_dir_to_models && (
+          <FormHelperText error>Model directory is required</FormHelperText>
         )}
         <Box sx={{ m: 2 }} />
         <Box sx={{ position: 'sticky', bottom: 0, background: '#fff', pb: 2 }}>

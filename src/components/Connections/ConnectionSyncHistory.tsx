@@ -15,7 +15,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import { Transition } from '../DBT/DBTTransformType';
+import { Transition } from '../DBT/UITransformTab';
 import Close from '@mui/icons-material/Close';
 import { useContext, useEffect, useState } from 'react';
 import { httpGet } from '@/helpers/http';

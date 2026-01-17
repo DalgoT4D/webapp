@@ -81,6 +81,8 @@ export interface CanvasNodeDataResponse {
 
   is_last_in_chain: boolean;
 
+  isPublished: boolean | null;
+
   seq?: number; // sequence number; to be used in case of multi-input operations
 }
 
