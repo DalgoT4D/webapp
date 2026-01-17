@@ -6,16 +6,6 @@ import { CanvasActionContext } from '@/contexts/FlowEditorCanvasContext';
 
 jest.mock('use-resize-observer', () => () => ({ ref: jest.fn(), width: 300, height: 500 }));
 
-// Mock the useParentCommunication hook directly
-jest.mock('@/contexts/ParentCommunicationProvider', () => ({
-  useParentCommunication: () => ({
-    hideHeader: false,
-    isEmbedded: false,
-    parentOrigin: null,
-    sendMessageToParent: jest.fn(),
-  }),
-}));
-
 const mockDbtSourceModels = [
   {
     uuid: 'node-1',
