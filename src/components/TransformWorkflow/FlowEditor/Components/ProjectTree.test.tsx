@@ -3,7 +3,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ProjectTree from './ProjectTree';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { CanvasActionContext } from '@/contexts/FlowEditorCanvasContext';
+
 jest.mock('use-resize-observer', () => () => ({ ref: jest.fn(), width: 300, height: 500 }));
+
+// Mock the useParentCommunication hook directly
+jest.mock('@/contexts/ParentCommunicationProvider', () => ({
+  useParentCommunication: () => ({
+    hideHeader: false,
+    isEmbedded: false,
+    parentOrigin: null,
+    sendMessageToParent: jest.fn(),
+  }),
+}));
 
 const mockDbtSourceModels = [
   {
