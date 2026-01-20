@@ -91,6 +91,7 @@ export type Connection = {
   clearConnDeploymentId: string | null;
   queuedFlowRunWaitTime: QueuedRuntimeInfo | null;
   blockId: string;
+  description: string | null;
 };
 // type LockStatus = 'running' | 'queued' | 'locked' | null;
 const truncateString = (input: string) => {
@@ -712,9 +713,14 @@ export const Connections = () => {
     const tempRows = filteredData.map((connection: Connection) => [
       <Box key={`name-${connection.connectionId}`} sx={{ display: 'flex', alignItems: 'center' }}>
         <Image style={{ marginRight: 10 }} src={connectionIcon} alt="dbt icon" />
-        <Typography variant="body1" fontWeight={600}>
-          {connection.name}
-        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Typography variant="body1" fontWeight={600}>
+            {connection.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, maxWidth: '300px' }}>
+            {connection.description}
+          </Typography>
+        </Box>
       </Box>,
       getSourceDest(connection),
       <SyncStatus
