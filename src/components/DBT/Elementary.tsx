@@ -23,8 +23,15 @@ import styles from '@/styles/Common.module.css';
 
 type ElementaryStatus = {
   exists: {
-    elementary_package?: string;
-    elementary_target_schema?: string;
+    elementary_package?: {
+      package: string;
+      version: string;
+      needs_upgrade?: string;
+    };
+    elementary_target_schema?: {
+      schema?: string;
+      '+schema'?: string;
+    };
   };
   missing: {
     elementary_package?: string;
@@ -135,6 +142,8 @@ export const Elementary = () => {
   const [showSetupElementaryButtom, setShowSetupElementaryButtom] = useState(false);
   const [dbtStatus, setDbtStatus] = useState('');
   const [elementaryStatus, setElementaryStatus] = useState<ElementaryStatus | null>(null);
+  const [upgradeMessage, setUpgradeMessage] = useState<string>('');
+  const [upgradeInProgress, setUpgradeInProgress] = useState(false);
   const { data: session }: any = useSession();
 
   const refreshReport = async () => {
@@ -196,6 +205,7 @@ export const Elementary = () => {
       const response = await httpGet(session, `dbt/elementary-setup-status`);
 
       if (response.status == 'set-up') {
+        handleCheckDbtFiles(false);
         fetchElementaryToken();
         checkForLock();
       } else if (response.status == 'not-set-up') {
@@ -263,16 +273,25 @@ export const Elementary = () => {
     }
   };
 
-  const handleCheckDbtFiles = async () => {
+  const handleCheckDbtFiles = async (firstTimeSetup: boolean) => {
     setLoading(true);
     try {
-      const response_git_pull: any = await httpPost(session, 'dbt/git_pull/', {});
-      if (!response_git_pull.success) errorToast('Something went wrong', [], globalContext);
       // first will be git pull, which pulls the latest changes and then the dbt files are checked.
-      const response: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
-      setElementaryStatus(response);
+      const checkDbtFilesResponse: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
+      setElementaryStatus(checkDbtFilesResponse);
+      const needsUpgrade = checkDbtFilesResponse?.exists?.elementary_package?.needs_upgrade;
 
-      if (Object.keys(response.missing).length === 0) {
+      // Check for upgrade requirement and set message
+      if (needsUpgrade) {
+        setUpgradeMessage(
+          `Please update the version of "elementary-data/elementary" in your packages.yml to ${needsUpgrade} and click the button when done`
+        );
+      }
+      if (
+        firstTimeSetup &&
+        checkDbtFilesResponse?.missing &&
+        Object.keys(checkDbtFilesResponse?.missing).length === 0
+      ) {
         // Wait for all API calls including polling to complete before setting loading to false
         // git pull
 
@@ -285,6 +304,37 @@ export const Elementary = () => {
       errorToast(err.message, [], globalContext);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const gitPullAndMigrateElementaryTrackingTables = async () => {
+    setUpgradeInProgress(true);
+    try {
+      const gitPullResponse: any = await httpPost(session, 'dbt/git_pull/', {});
+      if (!gitPullResponse.success) {
+        errorToast('Something went wrong running git-pull', [], globalContext);
+        return;
+      }
+      const checkDbtFilesResponse: ElementaryStatus = await httpGet(session, 'dbt/check-dbt-files');
+      setElementaryStatus(checkDbtFilesResponse);
+      const needsUpgrade = checkDbtFilesResponse?.exists?.elementary_package?.needs_upgrade;
+
+      // Check for upgrade requirement and set message
+      if (needsUpgrade) {
+        setUpgradeMessage(
+          `Please update the version of "elementary-data/elementary" in your packages.yml to ${needsUpgrade} and click the button when done`
+        );
+      } else {
+        // and then call
+        await createElementaryTrackingTables();
+        // once this is done we show
+        // "upgrade successfull, please regenerate the report at your convenience"
+        setUpgradeMessage('Upgrade successful, please regenerate the report at your convenience');
+      }
+    } catch (err: any) {
+      errorToast(err.message, [], globalContext);
+    } finally {
+      setUpgradeInProgress(false);
     }
   };
 
@@ -329,6 +379,46 @@ export const Elementary = () => {
   return (
     <>
       <Box data-testid="outerbox" sx={{ width: '100%', pt: 3, pr: 3, pl: 3 }}>
+        {/* Upgrade Message Section */}
+        {upgradeMessage && (
+          <Card sx={{ mb: 2, backgroundColor: '#fff3cd', border: '1px solid #ffeaa7' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body1" sx={{ color: '#856404', fontWeight: 500 }}>
+                    {upgradeMessage}
+                  </Typography>
+                </Box>
+                {upgradeMessage.includes('click the button when done') && (
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    onClick={gitPullAndMigrateElementaryTrackingTables}
+                    disabled={upgradeInProgress}
+                    sx={{ ml: 2, minWidth: '120px' }}
+                  >
+                    {upgradeInProgress ? (
+                      <>
+                        <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
+                        Upgrading...
+                      </>
+                    ) : (
+                      'Complete Upgrade'
+                    )}
+                  </Button>
+                )}
+                <Button
+                  size="small"
+                  onClick={() => setUpgradeMessage('')}
+                  sx={{ ml: 1, minWidth: 'auto', color: '#856404' }}
+                >
+                  ✕
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        )}
+
         {showSetupElementaryButtom ? (
           <Box
             sx={{
@@ -348,7 +438,7 @@ export const Elementary = () => {
                   You currently dont have elementary setup. Please click the button below to setup
                   elementary.
                 </Typography>
-                <Button onClick={handleCheckDbtFiles} variant="contained">
+                <Button onClick={() => handleCheckDbtFiles(true)} variant="contained">
                   Setup Elementary
                 </Button>
               </>
