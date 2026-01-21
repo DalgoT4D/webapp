@@ -50,7 +50,7 @@
     "remark-gfm": "^4.0.0",
     "sharp": "^0.34.2",
     "superset-ui": "^0.0.0-1",
-    "swr": "^2.3.3",
+    "swr": "^2.3.6",
     "typescript": "5.8.2",
     "use-resize-observer": "^9.1.0"
   },
