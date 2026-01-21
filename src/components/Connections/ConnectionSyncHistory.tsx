@@ -22,6 +22,7 @@ import { httpGet } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
 import { Connection } from './Connections';
 import DownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
 
 import moment from 'moment';
 import { delay, formatDuration } from '@/utils/common';
@@ -91,6 +92,15 @@ enum ConnectionJobType {
   reset_connection = 'reset_connection',
 }
 
+type StreamStat = {
+  streamName: string;
+  recordsEmitted: number;
+  recordsCommitted: number;
+  bytesEmitted: number;
+  bytesCommitted: number;
+  wasResumed: boolean;
+  wasBackfilled: boolean;
+};
 interface ConnectionSyncJobObject {
   job_type: ConnectionJobType;
   last_attempt_no: number;
@@ -102,6 +112,7 @@ interface ConnectionSyncJobObject {
   status: string;
   duration_seconds: number;
   reset_config: any | null;
+  stream_stats: StreamStat[];
 }
 
 const LogsColumn = ({
@@ -157,6 +168,42 @@ const LogsColumn = ({
   );
 };
 
+const StreamStatsTable = ({ streamStats }: { streamStats: StreamStat[] }) => {
+  return (
+    <Box sx={{ p: 2, display: 'flex', width: '100%' }}>
+      <Table
+        size="small"
+        sx={{
+          width: '100%',
+          border: '1px solid #ccc',
+          borderCollapse: 'collapse',
+          '& td, & th': {
+            border: '1px solid #ccc',
+            textAlign: 'center',
+          },
+        }}
+      >
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 700, color: '#00897B' }}>Stream Name</TableCell>
+            <TableCell sx={{ fontWeight: 700, color: '#00897B' }}>Records Committed</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {streamStats.map((stream, index) => (
+            <TableRow key={index}>
+              <TableCell sx={{ fontWeight: 500 }}>{stream.streamName}</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>
+                {stream.recordsCommitted.toLocaleString()}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Box>
+  );
+};
+
 const Row = ({
   allowLogsSummary,
   connectionSyncJob,
@@ -174,6 +221,8 @@ const Row = ({
   const [summarizedLogsLoading, setSummarizedLogsLoading] = useState(false);
   // const detailedLogsLoading = useRef<any[]>([]);
   const [detailedLogsLoading, setDetailedLogsLoading] = useState(false);
+  const [showStreamStats, setShowStreamStats] = useState(false);
+
   const { data: session }: any = useSession();
   const trackAmplitudeEvent = useTracking();
   const pollForTaskRun = async (taskId: string) => {
@@ -324,52 +373,98 @@ const Row = ({
         </TableCell>
         <TableCell
           sx={{
-            width: '300px',
+            width: '350px',
             fontWeight: 500,
             borderTopRightRadius: '10px',
             borderBottomRightRadius: '10px',
           }}
         >
-          <ToggleButtonGroup
-            size="small"
-            color="primary"
-            sx={{ textAlign: 'right' }}
-            value={action}
-            exclusive
-            disabled={detailedLogsLoading || summarizedLogsLoading}
-            onChange={(event, newAction) => {
-              setAction(newAction);
-              handleLogActions(newAction);
-              trackAmplitudeEvent('[connection-logs] Button clicked');
-            }}
-            aria-label="text alignment"
+          <Box
+            sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'space-between' }}
           >
-            <ToggleButton value="detail" aria-label="left" data-testid="logs">
-              Logs
-              <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
-            </ToggleButton>
-            {allowLogsSummary && connectionSyncJob.status === AIRBYTE_JOB_STATUS_FAILED && (
-              <ToggleButton
-                value="summary"
-                aria-label="right"
-                data-testid={`aisummary-${connectionId}`}
-              >
-                AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
+            <ToggleButtonGroup
+              size="small"
+              color="primary"
+              sx={{ textAlign: 'right' }}
+              value={action}
+              exclusive
+              disabled={detailedLogsLoading || summarizedLogsLoading}
+              onChange={(event, newAction) => {
+                setAction(newAction);
+                handleLogActions(newAction);
+                trackAmplitudeEvent('[connection-logs] Button clicked');
+              }}
+              aria-label="text alignment"
+            >
+              <ToggleButton value="detail" aria-label="left" data-testid="logs">
+                Logs
+                <AssignmentIcon sx={{ ml: '2px', fontSize: '16px' }} />
               </ToggleButton>
-            )}
-          </ToggleButtonGroup>
+              {allowLogsSummary && connectionSyncJob.status === AIRBYTE_JOB_STATUS_FAILED && (
+                <ToggleButton
+                  value="summary"
+                  aria-label="right"
+                  data-testid={`aisummary-${connectionId}`}
+                >
+                  AI summary <InsightsIcon sx={{ ml: '2px', fontSize: '16px' }} />
+                </ToggleButton>
+              )}
+            </ToggleButtonGroup>
+            <IconButton
+              size="small"
+              onClick={() => setShowStreamStats(!showStreamStats)}
+              disabled={
+                !connectionSyncJob.stream_stats || connectionSyncJob.stream_stats.length === 0
+              }
+              sx={{
+                color: '#00897B',
+                '&.Mui-disabled': {
+                  color: '#ccc',
+                },
+              }}
+            >
+              {showStreamStats ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          </Box>
         </TableCell>
       </TableRow>
-
       <TableRow>
-        <TableCell colSpan={5} style={{ paddingBottom: 0, paddingTop: 0 }}>
-          <LogsColumn
-            logsLoading={detailedLogsLoading}
-            summarizedLogsLoading={summarizedLogsLoading}
-            logs={detailedLogs}
-            summarizedLogs={summarizedLogs}
-            action={action}
-          />
+        <TableCell colSpan={8} style={{ paddingBottom: 0, paddingTop: 0 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection:
+                action && showStreamStats && connectionSyncJob.stream_stats?.length > 0
+                  ? 'row'
+                  : 'column',
+              gap: action && showStreamStats && connectionSyncJob.stream_stats?.length > 0 ? 1 : 0,
+              width: '100%',
+            }}
+          >
+            <Box
+              sx={{
+                flex:
+                  action && showStreamStats && connectionSyncJob.stream_stats?.length > 0
+                    ? '7'
+                    : '1',
+              }}
+            >
+              <LogsColumn
+                logsLoading={detailedLogsLoading}
+                summarizedLogsLoading={summarizedLogsLoading}
+                logs={detailedLogs}
+                summarizedLogs={summarizedLogs}
+                action={action}
+              />
+            </Box>
+            {showStreamStats &&
+              connectionSyncJob.stream_stats &&
+              connectionSyncJob.stream_stats.length > 0 && (
+                <Box sx={{ flex: '3' }}>
+                  <StreamStatsTable streamStats={connectionSyncJob.stream_stats} />
+                </Box>
+              )}
+          </Box>
         </TableCell>
       </TableRow>
     </>
