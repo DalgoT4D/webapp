@@ -37,6 +37,7 @@ interface FlowCreateInterface {
   flowId?: string;
   setSelectedFlowId?: (args: string) => any;
   tasks: Array<TransformTask>;
+  readonly?: boolean;
 }
 
 // DispConnection is for the AutoComplete list: {id, label}
@@ -79,6 +80,7 @@ const FlowCreate = ({
   mutate,
   setSelectedFlowId = () => {},
   tasks,
+  readonly = false,
 }: FlowCreateInterface) => {
   const isEditPage = flowId !== '' && flowId !== undefined;
   const { data: session } = useSession();
@@ -311,7 +313,7 @@ const FlowCreate = ({
         </Backdrop>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography sx={{ fontWeight: 700 }} variant="h4" gutterBottom color="#000">
-            {flowId ? 'Update pipeline' : 'Create a new Pipeline'}
+            {flowId ? (readonly ? 'View pipeline' : 'Update pipeline') : 'Create a new Pipeline'}
           </Typography>
           <Box display="flex" alignItems="center">
             <Typography
@@ -322,9 +324,11 @@ const FlowCreate = ({
             >
               Cancel
             </Typography>
-            <Button variant="contained" sx={{ m: 1 }} type="submit" data-testid="savebutton">
-              Save changes
-            </Button>
+            {!readonly && (
+              <Button variant="contained" sx={{ m: 1 }} type="submit" data-testid="savebutton">
+                Save changes
+              </Button>
+            )}
           </Box>
         </Box>
         <Box
@@ -351,6 +355,7 @@ const FlowCreate = ({
                           data-testid="activeSwitch"
                           checked={value}
                           value={value}
+                          disabled={readonly}
                           onChange={(event, value) => {
                             onChange(value);
                           }}
@@ -372,6 +377,7 @@ const FlowCreate = ({
                   required
                   error={!!errors.name}
                   helperText={errors.name?.message}
+                  disabled={readonly}
                 ></Input>
               </Box>
               <Box>
@@ -396,6 +402,7 @@ const FlowCreate = ({
                           val && option?.id === val?.id
                         }
                         onChange={(e, data) => field.onChange(data)}
+                        disabled={readonly}
                         renderInput={(params) => (
                           <Input
                             {...params}
@@ -405,6 +412,7 @@ const FlowCreate = ({
                             label="Connections"
                             error={!!errors.connections}
                             helperText={errors.connections?.message}
+                            disabled={readonly}
                           />
                         )}
                       />
@@ -421,6 +429,7 @@ const FlowCreate = ({
                     exclusive
                     onChange={handleChange}
                     aria-label="Platform"
+                    disabled={readonly}
                   >
                     <ToggleButton sx={{ padding: '4px 11px' }} value="simple">
                       Simple
@@ -457,6 +466,7 @@ const FlowCreate = ({
                           control={
                             <Checkbox
                               checked={field.value.length > 0}
+                              disabled={readonly}
                               onChange={() => {
                                 if (field.value.length > 0) {
                                   field.onChange([]);
@@ -496,6 +506,7 @@ const FlowCreate = ({
                       id="cron"
                       value={field.value}
                       data-testid="cronautocomplete"
+                      disabled={readonly}
                       options={[
                         { id: 'manual', label: 'manual' },
                         { id: 'daily', label: 'daily' },
@@ -514,6 +525,7 @@ const FlowCreate = ({
                           variant="outlined"
                           error={!!errors.cron}
                           helperText={errors.cron?.message}
+                          disabled={readonly}
                         />
                       )}
                     />
@@ -540,6 +552,7 @@ const FlowCreate = ({
                           val && option?.id === val?.id
                         }
                         onChange={(e, data: readonly any[]) => field.onChange(data)}
+                        disabled={readonly}
                         renderInput={(params) => (
                           <Input
                             name="cronDaysOfWeek"
@@ -578,6 +591,7 @@ const FlowCreate = ({
                               helperText: error?.message,
                             },
                           }}
+                          disabled={readonly}
                           onChange={(value: Moment | null) => {
                             // the value will have a local time moment object
                             const utcMinutes = moment.utc(value).minute();
