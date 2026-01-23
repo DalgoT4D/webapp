@@ -171,13 +171,15 @@ const LowerSection = ({
           </IconButton>
         </div>
       </Box>
-      <Box sx={{ height: '100vh' }}>
-        {selectedTab === 'preview' && <PreviewPane height={height} />}
-        {selectedTab === 'logs' && (
-          <LogsPane height={height} dbtRunLogs={dbtRunLogs} finalLockCanvas={finalLockCanvas} />
-        )}
-        {selectedTab === 'statistics' && <StatisticsPane height={height} />}
-      </Box>
+      {!isMinimized && (
+        <Box sx={{ height: '100vh' }}>
+          {selectedTab === 'preview' && <PreviewPane height={height} />}
+          {selectedTab === 'logs' && (
+            <LogsPane height={height} dbtRunLogs={dbtRunLogs} finalLockCanvas={finalLockCanvas} />
+          )}
+          {selectedTab === 'statistics' && <StatisticsPane height={height} />}
+        </Box>
+      )}
     </Box>
   );
 };
