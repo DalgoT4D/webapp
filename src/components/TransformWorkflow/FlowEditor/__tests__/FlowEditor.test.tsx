@@ -32,14 +32,41 @@ window.ResizeObserver =
 
 describe('FlowEditor', () => {
   const mockGlobalContext = {
-    Permissions: { state: [] },
-    CurrentOrg: { state: { slug: 'mock-org-slug' } },
+    Permissions: { state: [], dispatch: jest.fn() },
+    CurrentOrg: {
+      state: {
+        slug: 'mock-org-slug',
+        name: 'Mock Org',
+        airbyte_workspace_id: '',
+        viz_url: '',
+        viz_login_type: '',
+        wtype: '',
+        is_demo: false,
+      },
+      dispatch: jest.fn(),
+    },
+    Toast: {
+      state: {
+        open: false,
+        severity: 'info' as const,
+        message: '',
+        seconds: 0,
+        messages: [],
+        handleClose: jest.fn(),
+      },
+      dispatch: jest.fn(),
+    },
+    OrgUsers: { state: [], dispatch: jest.fn() },
+    UnsavedChanges: { state: false, dispatch: jest.fn() },
   };
 
   const mockDbtRunLogsContext = jest.fn();
 
-  const mockFlowEditorCanvasContext = {
-    canvasAction: { type: null },
+  const mockFlowEditorCanvasContext: React.ComponentProps<
+    typeof CanvasActionContext.Provider
+  >['value'] = {
+    canvasAction: { type: null, data: null },
+    setCanvasAction: jest.fn(),
   };
 
   beforeEach(() => {
@@ -190,7 +217,11 @@ describe('FlowEditor', () => {
     }
   });
 
-  const flowEditor = (canvasContext = mockFlowEditorCanvasContext) => (
+  const flowEditor = (
+    canvasContext: React.ComponentProps<
+      typeof CanvasActionContext.Provider
+    >['value'] = mockFlowEditorCanvasContext
+  ) => (
     <GlobalContext.Provider value={mockGlobalContext}>
       <DbtRunLogsUpdateContext.Provider value={mockDbtRunLogsContext}>
         <CanvasActionContext.Provider value={canvasContext}>
@@ -224,10 +255,11 @@ describe('FlowEditor', () => {
   });
 
   test('handles run workflow action', async () => {
-    const mockCanvasAction = { type: 'run-workflow' };
+    const mockCanvasAction = { type: 'run-workflow' as const, data: null };
     render(
       flowEditor({
         canvasAction: mockCanvasAction,
+        setCanvasAction: jest.fn(),
       })
     );
 

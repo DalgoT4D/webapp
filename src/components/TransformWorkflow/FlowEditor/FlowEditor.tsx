@@ -1,6 +1,6 @@
 import { Box, Divider, IconButton, Tab, Tabs } from '@mui/material';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { OpenInFull, Close } from '@mui/icons-material';
+import { OpenInFull, Close, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/LowerSectionTabs/PreviewPane';
@@ -111,6 +111,8 @@ type LowerSectionProps = {
   setSelectedTab: (value: LowerSectionTabValues) => void;
   finalLockCanvas: boolean;
   setFullScreen?: any;
+  isMinimized: boolean;
+  onToggleMinimize: () => void;
 };
 
 export type TaskProgressLog = {
@@ -125,6 +127,8 @@ const LowerSection = ({
   setSelectedTab,
   setFullScreen,
   finalLockCanvas,
+  isMinimized,
+  onToggleMinimize,
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
   const trackAmplitudeEvent = useTracking();
@@ -158,9 +162,14 @@ const LowerSection = ({
             <Tab label="Data statistics" value="statistics" />
           )}
         </Tabs>
-        <IconButton sx={{ ml: 'auto' }} onClick={setFullScreen}>
-          <OpenInFull />
-        </IconButton>
+        <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
+          <IconButton onClick={onToggleMinimize} sx={{ ml: 'auto' }}>
+            {isMinimized ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+          </IconButton>
+          <IconButton onClick={setFullScreen}>
+            <OpenInFull />
+          </IconButton>
+        </div>
       </Box>
       <Box sx={{ height: '100vh' }}>
         {selectedTab === 'preview' && <PreviewPane height={height} />}
@@ -178,6 +187,7 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
   const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
+  const [isLowerSectionMinimized, setIsLowerSectionMinimized] = useState<boolean>(false);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
   const { finalLockCanvas, setTempLockCanvas } = useLockCanvas(lockUpperSection);
   const [selectedTab, setSelectedTab] = useState<LowerSectionTabValues>('logs');
@@ -420,6 +430,19 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
           setSelectedTab={setSelectedTab}
           selectedTab={selectedTab}
           finalLockCanvas={finalLockCanvas}
+          isMinimized={isLowerSectionMinimized}
+          onToggleMinimize={() => {
+            const dialogBox = document.querySelector('.MuiDialog-root');
+            if (dialogBox) {
+              if (isLowerSectionMinimized) {
+                setLowerSectionHeight(300);
+                setIsLowerSectionMinimized(false);
+              } else {
+                setLowerSectionHeight(100);
+                setIsLowerSectionMinimized(true);
+              }
+            }
+          }}
         />
       </ResizableBox>
     </Box>
