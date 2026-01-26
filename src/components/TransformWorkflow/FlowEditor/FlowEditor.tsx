@@ -163,10 +163,15 @@ const LowerSection = ({
           )}
         </Tabs>
         <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
-          <IconButton onClick={onToggleMinimize} sx={{ ml: 'auto' }}>
+          <IconButton
+            onClick={onToggleMinimize}
+            sx={{ ml: 'auto' }}
+            aria-label={isMinimized ? 'Restore panel' : 'Minimize panel'}
+            aria-expanded={!isMinimized}
+          >
             {isMinimized ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
           </IconButton>
-          <IconButton onClick={setFullScreen}>
+          <IconButton onClick={setFullScreen} aria-label="Toggle fullscreen">
             <OpenInFull />
           </IconButton>
         </div>
