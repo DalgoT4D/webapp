@@ -205,8 +205,10 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
   const { canvasAction, setCanvasAction } = useCanvasAction();
 
   const onResize = (event: any) => {
-    const dailogHeight = document.querySelector('.MuiDialog-root')?.clientHeight || 0;
-    setLowerSectionHeight(dailogHeight - event.clientY);
+    const dialogHeight = document.querySelector('.MuiDialog-root')?.clientHeight || 0;
+    const newHeight = dialogHeight - event.clientY;
+    setLowerSectionHeight(newHeight);
+    setIsLowerSectionMinimized(newHeight <= 100);
   };
   const fetchSourcesModels = () => {
     httpGet(session, 'transform/v2/dbt_project/sources_models/')
