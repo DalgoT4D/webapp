@@ -203,12 +203,15 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction, setCanvasAction } = useCanvasAction();
+  const LOWER_SECTION_MIN_HEIGHT = 55;
+  const LOWER_SECTION_DEFAULT_HEIGHT = 300;
 
   const onResize = (event: any) => {
     const dialogHeight = document.querySelector('.MuiDialog-root')?.clientHeight || 0;
-    const newHeight = dialogHeight - event.clientY;
+    const calculatedHeight = dialogHeight - event.clientY;
+    const newHeight = Math.max(calculatedHeight, LOWER_SECTION_MIN_HEIGHT);
     setLowerSectionHeight(newHeight);
-    setIsLowerSectionMinimized(newHeight <= 100);
+    setIsLowerSectionMinimized(newHeight === LOWER_SECTION_MIN_HEIGHT);
   };
   const fetchSourcesModels = () => {
     httpGet(session, 'transform/v2/dbt_project/sources_models/')
@@ -444,13 +447,13 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
             // const dialogBox = document.querySelector('.MuiDialog-root');
             // if (dialogBox) {
             if (isLowerSectionMinimized) {
-              setLowerSectionHeight(300);
+              setLowerSectionHeight(LOWER_SECTION_DEFAULT_HEIGHT);
               setIsLowerSectionMinimized(false);
             } else {
-              setLowerSectionHeight(100);
+              setLowerSectionHeight(LOWER_SECTION_MIN_HEIGHT);
               setIsLowerSectionMinimized(true);
-              // }
             }
+            // }
           }}
         />
       </ResizableBox>
