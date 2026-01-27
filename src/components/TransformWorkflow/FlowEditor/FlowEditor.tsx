@@ -441,15 +441,15 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
           finalLockCanvas={finalLockCanvas}
           isMinimized={isLowerSectionMinimized}
           onToggleMinimize={() => {
-            const dialogBox = document.querySelector('.MuiDialog-root');
-            if (dialogBox) {
-              if (isLowerSectionMinimized) {
-                setLowerSectionHeight(300);
-                setIsLowerSectionMinimized(false);
-              } else {
-                setLowerSectionHeight(100);
-                setIsLowerSectionMinimized(true);
-              }
+            // const dialogBox = document.querySelector('.MuiDialog-root');
+            // if (dialogBox) {
+            if (isLowerSectionMinimized) {
+              setLowerSectionHeight(300);
+              setIsLowerSectionMinimized(false);
+            } else {
+              setLowerSectionHeight(100);
+              setIsLowerSectionMinimized(true);
+              // }
             }
           }}
         />
