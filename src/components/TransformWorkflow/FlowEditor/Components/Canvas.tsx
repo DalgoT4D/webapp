@@ -1202,7 +1202,7 @@ const Canvas = ({
           : {
               stroke: '#D0D0D0',
               strokeWidth: 1,
-              opacity: 0.15,
+              opacity: 0.4,
               transition: 'stroke 0.3s, opacity 0.3s',
             },
         animated: isHighlighted,

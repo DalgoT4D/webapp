@@ -82,8 +82,8 @@ export function OperationNode(node: GenericNodeProps) {
         boxShadow: node.data?.isHighlighted
           ? '0 0 0 3px rgba(0, 137, 123, 0.15), 0 0 12px rgba(0, 137, 123, 0.25)'
           : 'none',
-        opacity: node.data?.isDimmed ? 0.2 : 1,
-        filter: node.data?.isDimmed ? 'grayscale(0.6)' : 'none',
+        opacity: node.data?.isDimmed ? 0.45 : 1,
+        filter: node.data?.isDimmed ? 'blur(1.5px)' : 'none',
         transition:
           'opacity 0.3s ease, filter 0.3s ease, border 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease',
         transform: node.data?.isHighlighted ? 'scale(1.06)' : 'scale(1)',

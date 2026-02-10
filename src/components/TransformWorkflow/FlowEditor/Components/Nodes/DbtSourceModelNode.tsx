@@ -90,8 +90,8 @@ export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
       sx={{
         position: 'relative',
         paddingTop: '10px', // space for schema badge
-        opacity: nodeProps.data.isDimmed ? 0.2 : 1,
-        filter: nodeProps.data.isDimmed ? 'grayscale(0.6)' : 'none',
+        opacity: nodeProps.data.isDimmed ? 0.45 : 1,
+        filter: nodeProps.data.isDimmed ? 'blur(1.5px)' : 'none',
         transition: 'opacity 0.3s ease, filter 0.3s ease, transform 0.2s ease',
         transform: nodeProps.data.isHighlighted ? 'scale(1.04)' : 'scale(1)',
       }}
