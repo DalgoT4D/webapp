@@ -1342,13 +1342,23 @@ const Canvas = ({
               borderRadius: '20px',
               boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.15)',
               cursor: 'pointer',
-              zIndex: 1000,
+              zIndex: (theme: any) => theme.zIndex.drawer + 2,
               '&:hover': { backgroundColor: '#F5F5F5' },
             }}
           >
             <CircularProgress size={16} sx={{ color: '#00897B' }} />
             <Typography sx={{ fontSize: '13px', fontWeight: 500, color: '#333' }}>
               Running workflow...
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#00897B',
+                textDecoration: 'underline',
+              }}
+            >
+              View logs
             </Typography>
           </Box>
         )}
