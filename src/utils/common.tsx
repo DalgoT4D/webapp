@@ -141,6 +141,29 @@ export const copyToClipboard = (dataToCopy: any) => {
     });
 };
 
+// Deterministic schema color: hash schema name → fixed hue → HSL color
+// Same schema name ALWAYS produces the same color, regardless of order or total count
+const hashString = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return Math.abs(hash);
+};
+
+export const getSchemaColor = (schema: string): string => {
+  if (!schema) return 'hsl(174, 40%, 45%)'; // default muted teal
+  const index = hashString(schema) % 360;
+  // Golden angle (137.508°) ensures adjacent indices are maximally spread on the color wheel
+  const hue = Math.round((index * 137.508) % 360);
+  // Alternate lightness and saturation so even nearby hues look distinct
+  const lightness = [44, 52, 58][index % 3];
+  const saturation = [50, 42, 55][index % 3];
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
 export const calculatePlanStatus = (endDateStr: string) => {
   const endDate = moment.utc(endDateStr);
   const now = moment.utc();

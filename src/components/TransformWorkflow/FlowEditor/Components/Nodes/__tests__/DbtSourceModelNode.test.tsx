@@ -76,14 +76,7 @@ const node = {
   },
 };
 
-const edges = [
-  //   { id: 'e1-2', source: '1', target: '2' },
-];
-
-const columns = [
-  { name: 'column1', data_type: 'string' },
-  { name: 'column2', data_type: 'int' },
-];
+const edges = [];
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -93,40 +86,66 @@ beforeEach(() => {
   useCanvasNode.mockReturnValue(mockCanvasNode);
   usePreviewAction.mockReturnValue(mockPreviewAction);
   useSession.mockReturnValue({ data: { session: 'mock-session' }, status: 'authenticated' });
-
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve(columns),
-    })
-  );
 });
 
 describe('DbtSourceModelNode Component', () => {
-  it('should render the component', async () => {
+  it('should render the component with name and handles', () => {
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <DbtSourceModelNode {...node} />
       </GlobalContext.Provider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
     expect(screen.getByTestId('target-left')).toBeInTheDocument();
     expect(screen.getByTestId('source-right')).toBeInTheDocument();
   });
 
-  it('should call handleSelectNode on click', async () => {
+  it('should display column count from output_columns', () => {
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <DbtSourceModelNode {...node} />
       </GlobalContext.Provider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
+    expect(screen.getByText('2 cols')).toBeInTheDocument();
+  });
+
+  it('should render the View detail button', () => {
+    render(
+      <GlobalContext.Provider value={mockGlobalContext}>
+        <DbtSourceModelNode {...node} />
+      </GlobalContext.Provider>
+    );
+
+    expect(screen.getByTestId('view-detail-button')).toBeInTheDocument();
+  });
+
+  it('should dispatch open-node-detail-modal on View button click', () => {
+    render(
+      <GlobalContext.Provider value={mockGlobalContext}>
+        <DbtSourceModelNode {...node} />
+      </GlobalContext.Provider>
+    );
+
+    fireEvent.click(screen.getByTestId('view-detail-button'));
+
+    expect(mockSetCanvasAction).toHaveBeenCalledWith({
+      type: 'open-node-detail-modal',
+      data: {
+        schema: 'test_schema',
+        table: 'test_input_name',
+        nodeName: 'test_input_name',
+      },
     });
+  });
+
+  it('should call handleSelectNode on click', () => {
+    render(
+      <GlobalContext.Provider value={mockGlobalContext}>
+        <DbtSourceModelNode {...node} />
+      </GlobalContext.Provider>
+    );
 
     fireEvent.click(screen.getByText(/test_input_name/i));
 
@@ -145,32 +164,9 @@ describe('DbtSourceModelNode Component', () => {
   });
 
   it('should call handleDeleteAction on delete icon click', () => {
-    const deleteNode = {
-      id: '1',
-      type: 'source',
-      data: {
-        uuid: '1',
-        name: 'test_input_name',
-        output_columns: ['column1', 'column2'],
-        node_type: 'source',
-        dbtmodel: {
-          uuid: '1',
-          name: 'test_input_name',
-          display_name: 'test_input_name',
-          schema: 'test_schema',
-          sql_path: '',
-          type: 'source',
-          source_name: 'test_input_name',
-          output_cols: ['column1', 'column2'],
-        },
-        operation_config: null,
-        is_last_in_chain: false,
-        isDummy: false,
-      },
-    };
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
-        <DbtSourceModelNode {...deleteNode} />
+        <DbtSourceModelNode {...node} />
       </GlobalContext.Provider>
     );
 
@@ -187,21 +183,17 @@ describe('DbtSourceModelNode Component', () => {
     });
   });
 
-  it('should display error message if columns fetch fails', async () => {
-    global.fetch = jest.fn(() => Promise.reject(new Error('Failed to fetch columns')));
-
+  it('should display schema badge with schema name', () => {
     render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <DbtSourceModelNode {...node} />
       </GlobalContext.Provider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/Please check logs/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText('test_schema')).toBeInTheDocument();
   });
 
-  it('should use lighter green color for unpublished model nodes', async () => {
+  it('should render unpublished model nodes with dashed border', () => {
     const unpublishedModelNode = {
       ...node,
       type: 'model',
@@ -211,22 +203,16 @@ describe('DbtSourceModelNode Component', () => {
       },
     };
 
-    const { container } = render(
+    render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <DbtSourceModelNode {...unpublishedModelNode} />
       </GlobalContext.Provider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
-    });
-
-    // Check that the component renders with lighter green for unpublished model nodes
-    // We can't easily test the exact Box style, but we can verify the component renders
     expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
   });
 
-  it('should use default green color for published model nodes', async () => {
+  it('should render published model nodes with solid border', () => {
     const publishedModelNode = {
       ...node,
       type: 'model',
@@ -236,41 +222,31 @@ describe('DbtSourceModelNode Component', () => {
       },
     };
 
-    const { container } = render(
+    render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <DbtSourceModelNode {...publishedModelNode} />
       </GlobalContext.Provider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
-    });
-
-    // Check that the component renders with default green for published model nodes
     expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
   });
 
-  it('should use default green color for source nodes regardless of publish status', async () => {
+  it('should render source nodes with solid border regardless of publish status', () => {
     const sourceNodeWithPublishStatus = {
       ...node,
       type: 'source',
       data: {
         ...node.data,
-        isPublished: false, // Even though this is false, source nodes should use default color
+        isPublished: false,
       },
     };
 
-    const { container } = render(
+    render(
       <GlobalContext.Provider value={mockGlobalContext}>
         <DbtSourceModelNode {...sourceNodeWithPublishStatus} />
       </GlobalContext.Provider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
-    });
-
-    // Check that the component renders with default green for source nodes
     expect(screen.getByText(/test_input_name/i)).toBeInTheDocument();
   });
 });

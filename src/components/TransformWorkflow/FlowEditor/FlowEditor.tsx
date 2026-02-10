@@ -1,25 +1,20 @@
-import { Box, Divider, IconButton, Tab, Tabs } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { OpenInFull, Close } from '@mui/icons-material';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
-import PreviewPane from './Components/LowerSectionTabs/PreviewPane';
 import { httpGet, httpPost } from '@/helpers/http';
 import { useSession } from 'next-auth/react';
-import { useDbtRunLogs, useDbtRunLogsUpdate } from '@/contexts/DbtRunLogsContext';
+import { useDbtRunLogsUpdate } from '@/contexts/DbtRunLogsContext';
 import { ReactFlowProvider } from 'reactflow';
-import { ResizableBox } from 'react-resizable';
 import { TransformTask } from '@/components/DBT/DBTTarget';
 import { errorToast, successToast } from '@/components/ToastMessage/ToastHelper';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { delay } from '@/utils/common';
 import { useCanvasAction } from '@/contexts/FlowEditorCanvasContext';
-import { LogsPane } from './Components/LowerSectionTabs/LogsPane';
-import { StatisticsPane } from './Components/LowerSectionTabs/StatisticsPane';
 import { useLockCanvas } from '@/customHooks/useLockCanvas';
-import { useTracking } from '@/contexts/TrackingContext';
 import { NodeApi } from 'react-arborist';
-import { FeatureFlagKeys, useFeatureFlags } from '@/customHooks/useFeatureFlags';
 import { DbtModelResponse } from '@/types/transform-v2.types';
 
 type UpperSectionProps = {
@@ -29,6 +24,7 @@ type UpperSectionProps = {
   finalLockCanvas: boolean;
   setTempLockCanvas: any;
   isSyncing: boolean;
+  isRunning: boolean;
   onClose?: () => void;
 };
 
@@ -39,15 +35,12 @@ const UpperSection = ({
   finalLockCanvas,
   setTempLockCanvas,
   isSyncing,
+  isRunning,
   onClose,
 }: UpperSectionProps) => {
-  const [width, setWidth] = useState(260);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const globalContext = useContext(GlobalContext);
   const { setCanvasAction } = useCanvasAction();
-
-  const onResize = (event: any, { size }: any) => {
-    setWidth(size.width);
-  };
 
   const handleNodeClick = (nodes: NodeApi<any>[]) => {
     if (nodes.length > 0 && nodes[0].isLeaf) {
@@ -62,22 +55,61 @@ const UpperSection = ({
       setCanvasAction({ type: 'sync-sources', data: null });
     }
   };
+
   return (
     <Box
       sx={{
         flexGrow: 1,
         display: 'flex',
-        overflow: 'inherit',
+        overflow: 'hidden',
         position: 'relative',
       }}
     >
-      <ResizableBox
-        axis="x"
-        width={width}
-        onResize={onResize}
-        minConstraints={[280, Infinity]}
-        maxConstraints={[550, Infinity]}
-        resizeHandles={['e']}
+      {/* Sidebar toggle button */}
+      <IconButton
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        sx={{
+          position: 'absolute',
+          left: 8,
+          top: 52,
+          zIndex: 1100,
+          backgroundColor: 'white',
+          border: '1px solid #E0E0E0',
+          '&:hover': { backgroundColor: '#F5F5F5' },
+        }}
+      >
+        {sidebarOpen ? <ChevronLeftIcon /> : <AccountTreeIcon />}
+      </IconButton>
+
+      {/* Backdrop overlay when sidebar is open */}
+      {sidebarOpen && (
+        <Box
+          onClick={() => setSidebarOpen(false)}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.15)',
+            zIndex: 1040,
+          }}
+        />
+      )}
+
+      {/* Slide-over sidebar panel */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: '320px',
+          transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 250ms ease-in-out',
+          zIndex: 1050,
+          boxShadow: sidebarOpen ? '4px 0 12px rgba(0,0,0,0.1)' : 'none',
+        }}
       >
         <ProjectTree
           dbtSourceModels={sourcesModels}
@@ -85,10 +117,11 @@ const UpperSection = ({
           handleSyncClick={initiateSyncSources}
           included_in="visual_designer"
           isSyncing={isSyncing}
-          onClose={onClose}
+          onClose={() => setSidebarOpen(false)}
         />
-      </ResizableBox>
-      <Divider orientation="vertical" sx={{ color: 'black' }} />
+      </Box>
+
+      {/* Canvas takes full width */}
       <Box sx={{ width: '100%' }}>
         <ReactFlowProvider>
           <Canvas
@@ -96,21 +129,12 @@ const UpperSection = ({
             setRedrawGraph={setRefreshEditor}
             finalLockCanvas={finalLockCanvas}
             setTempLockCanvas={setTempLockCanvas}
+            isRunning={isRunning}
           />
         </ReactFlowProvider>
       </Box>
     </Box>
   );
-};
-
-export type LowerSectionTabValues = 'preview' | 'logs' | 'statistics';
-
-type LowerSectionProps = {
-  height: number;
-  selectedTab: LowerSectionTabValues;
-  setSelectedTab: (value: LowerSectionTabValues) => void;
-  finalLockCanvas: boolean;
-  setFullScreen?: any;
 };
 
 export type TaskProgressLog = {
@@ -119,78 +143,19 @@ export type TaskProgressLog = {
   timestamp: string;
 };
 
-const LowerSection = ({
-  height,
-  selectedTab,
-  setSelectedTab,
-  setFullScreen,
-  finalLockCanvas,
-}: LowerSectionProps) => {
-  const dbtRunLogs = useDbtRunLogs();
-  const trackAmplitudeEvent = useTracking();
-  const handleTabChange = (event: React.SyntheticEvent, newValue: LowerSectionTabValues) => {
-    trackAmplitudeEvent(`[${newValue}-tab] Button Clicked`);
-    setSelectedTab(newValue);
-  };
-  const { isFeatureFlagEnabled } = useFeatureFlags();
-
-  return (
-    <Box sx={{ height: 'unset' }}>
-      <Box
-        sx={{
-          height: '50px',
-          display: 'flex',
-          alignItems: 'center',
-          background: '#F5FAFA',
-          borderTop: '1px solid #CCCCCC',
-          borderBottom: '1px solid #CCCCCC',
-        }}
-      >
-        <Tabs
-          value={selectedTab}
-          onChange={handleTabChange}
-          sx={{ display: 'flex', alignItems: 'center', height: '100%', paddingLeft: '28px' }}
-        >
-          <Tab label="Preview" value="preview" />
-          <Tab label="Logs" value="logs" />
-
-          {isFeatureFlagEnabled(FeatureFlagKeys.DATA_STATISTICS) && (
-            <Tab label="Data statistics" value="statistics" />
-          )}
-        </Tabs>
-        <IconButton sx={{ ml: 'auto' }} onClick={setFullScreen}>
-          <OpenInFull />
-        </IconButton>
-      </Box>
-      <Box sx={{ height: '100vh' }}>
-        {selectedTab === 'preview' && <PreviewPane height={height} />}
-        {selectedTab === 'logs' && (
-          <LogsPane height={height} dbtRunLogs={dbtRunLogs} finalLockCanvas={finalLockCanvas} />
-        )}
-        {selectedTab === 'statistics' && <StatisticsPane height={height} />}
-      </Box>
-    </Box>
-  );
-};
-
 const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
   const { data: session } = useSession();
   const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
-  const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
   const { finalLockCanvas, setTempLockCanvas } = useLockCanvas(lockUpperSection);
-  const [selectedTab, setSelectedTab] = useState<LowerSectionTabValues>('logs');
+  const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isSyncingSources, setIsSyncingSources] = useState<boolean>(false);
-  const hasAutoSynced = useRef(false); // maintains the state -- if the auto sync has run or not.
+  const hasAutoSynced = useRef(false);
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction, setCanvasAction } = useCanvasAction();
 
-  const onResize = (event: any) => {
-    const dailogHeight = document.querySelector('.MuiDialog-root')?.clientHeight || 0;
-    setLowerSectionHeight(dailogHeight - event.clientY);
-  };
   const fetchSourcesModels = () => {
     httpGet(session, 'transform/v2/dbt_project/sources_models/')
       .then((response: DbtModelResponse[]) => {
@@ -218,7 +183,7 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
         });
 
         if (celery_task_id) {
-          setSelectedTab('logs');
+          setIsRunning(true);
           await pollForTaskRun(celery_task_id);
         }
 
@@ -228,6 +193,7 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
       console.error(error);
     } finally {
       setLockUpperSection(false);
+      setIsRunning(false);
     }
   };
 
@@ -256,9 +222,7 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
   const handleRunWorkflow = async (runParams: object) => {
     try {
       setLockUpperSection(true);
-      // tab to logs
-      setSelectedTab('logs');
-      // Clear previous logs
+      setIsRunning(true);
       setDbtRunLogs([]);
 
       console.log('data passed for run_dbt_via_celery', runParams);
@@ -277,15 +241,14 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
       console.log(error);
     } finally {
       setLockUpperSection(false);
+      setIsRunning(false);
     }
   };
 
   const syncSources = async () => {
     try {
       setIsSyncingSources(true);
-      // tab to logs
-      setSelectedTab('logs');
-      // Clear previous logs
+      setIsRunning(true);
       setDbtRunLogs([]);
 
       const response: any = await httpPost(session, `transform/dbt_project/sync_sources/`, {});
@@ -297,6 +260,7 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
       console.error(error);
     } finally {
       setIsSyncingSources(false);
+      setIsRunning(false);
     }
   };
 
@@ -336,12 +300,13 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
     const syncSourcesHashKey = `syncsources-${syncSourcesTaskId}`;
     try {
       setLockUpperSection(true);
-      setSelectedTab('logs');
+      setIsRunning(true);
       if (syncSourcesTaskId) await pollForSyncSourcesTask(syncSourcesTaskId, syncSourcesHashKey);
     } catch (error) {
       console.error(error);
     } finally {
       setLockUpperSection(false);
+      setIsRunning(false);
     }
   };
 
@@ -387,7 +352,7 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 56px)',
+        height: '100vh',
       }}
     >
       <UpperSection
@@ -397,31 +362,9 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
         finalLockCanvas={finalLockCanvas}
         setTempLockCanvas={setTempLockCanvas}
         isSyncing={isSyncingSources}
+        isRunning={isRunning}
         onClose={onClose}
       />
-
-      <ResizableBox
-        axis="y"
-        resizeHandles={['n']}
-        width={Infinity}
-        height={lowerSectionHeight}
-        onResize={onResize}
-        minConstraints={[Infinity, 100]}
-      >
-        <LowerSection
-          setFullScreen={() => {
-            const dialogBox = document.querySelector('.MuiDialog-root');
-            if (dialogBox) {
-              const fullHeight = dialogBox?.clientHeight - 50;
-              setLowerSectionHeight(lowerSectionHeight === fullHeight ? 300 : fullHeight);
-            }
-          }}
-          height={lowerSectionHeight}
-          setSelectedTab={setSelectedTab}
-          selectedTab={selectedTab}
-          finalLockCanvas={finalLockCanvas}
-        />
-      </ResizableBox>
     </Box>
   );
 };

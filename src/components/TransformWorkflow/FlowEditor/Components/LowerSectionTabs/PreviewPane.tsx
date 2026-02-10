@@ -29,7 +29,15 @@ import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import Image from 'next/image';
 import { PreviewTableData } from '@/types/transform-v2.types';
 
-const PreviewPane = ({ height }: { height: number }) => {
+const PreviewPane = ({
+  height,
+  schema: propSchema,
+  table: propTable,
+}: {
+  height: number;
+  schema?: string;
+  table?: string;
+}) => {
   const [modelToPreview, setModelToPreview] = useState<PreviewTableData | null>(null);
   const { data: session } = useSession();
   const toastContext = useContext(GlobalContext);
@@ -49,13 +57,21 @@ const PreviewPane = ({ height }: { height: number }) => {
   // download in progress flag
   const [downloadInProgress, setDownloadInProgress] = useState(false);
 
+  // If schema/table props are provided (modal mode), use them directly
   useEffect(() => {
+    if (propSchema && propTable) {
+      setModelToPreview({ schema: propSchema, table: propTable });
+    }
+  }, [propSchema, propTable]);
+
+  useEffect(() => {
+    if (propSchema && propTable) return; // Skip context-based updates in modal mode
     if (previewAction.type === 'preview') {
       setModelToPreview(previewAction.data);
     } else if (previewAction.type === 'clear-preview') {
       setModelToPreview(null);
     }
-  }, [previewAction]);
+  }, [previewAction, propSchema, propTable]);
 
   useEffect(() => {
     if (modelToPreview) {

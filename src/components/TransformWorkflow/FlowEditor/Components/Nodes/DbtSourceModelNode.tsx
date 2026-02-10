@@ -1,92 +1,24 @@
-import {
-  Box,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Typography,
-  tableCellClasses,
-} from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Handle, Position, useNodeId, useEdges, Edge, NodeProps } from 'reactflow';
-import { SrcModelNodeType } from '../Canvas';
-import { httpGet } from '@/helpers/http';
-import { useSession } from 'next-auth/react';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import TableChartOutlined from '@mui/icons-material/TableChartOutlined';
+import { useContext } from 'react';
+import { Handle, Position, useNodeId, useEdges, Edge } from 'reactflow';
 import { usePreviewAction } from '@/contexts/FlowEditorPreviewContext';
 import { useCanvasAction, useCanvasNode } from '@/contexts/FlowEditorCanvasContext';
 import { trimString } from '@/utils/common';
-import styled from '@emotion/styled';
 import { GlobalContext } from '@/contexts/ContextProvider';
-import { GenericNode, GenericNodeProps } from '@/types/transform-v2.types';
+import { GenericNodeProps } from '@/types/transform-v2.types';
 
 export interface ColumnData {
   name: string;
   data_type: string | null;
 }
 
-const StyledTableCell = styled(TableCell)(() => ({
-  padding: '4px 0px 4px 10px',
-  fontSize: '11px',
-  [`&.${tableCellClasses.head}`]: {
-    fontWeight: 600,
-    backgroundColor: '#EEF3F3',
-  },
-  [`&.${tableCellClasses.body}`]: {
-    fontWeight: 500,
-    color: '#212121',
-  },
-}));
-
-const StyledTableRow = styled(TableRow)(() => ({
-  borderRadius: 0,
-  '&:nth-of-type(odd)': {
-    backgroundColor: '#F7F7F7',
-  },
-  '&:last-child td, &:last-child th': {
-    borderBottom: 0,
-  },
-}));
-
-const NodeDataTableComponent = ({ columns }: { columns: ColumnData[] }) => {
-  return (
-    <Table sx={{ borderSpacing: '0px' }}>
-      <TableHead>
-        <TableRow
-          sx={{
-            boxShadow: 'none',
-            background: '#F5F5F5',
-          }}
-          key={'NAME'}
-        >
-          <StyledTableCell align="left" sx={{ borderRight: '1px solid #E8E8E8' }}>
-            NAME
-          </StyledTableCell>
-          <StyledTableCell align="left">TYPE</StyledTableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {columns.map((row: ColumnData) => (
-          <StyledTableRow key={row.name}>
-            <StyledTableCell align="left" sx={{ borderRight: '1px solid #E8E8E8' }}>
-              {row.name}
-            </StyledTableCell>
-            <StyledTableCell align="left">{row.data_type}</StyledTableCell>
-          </StyledTableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-};
-
 export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
-  const { data: session } = useSession();
   const { setPreviewAction } = usePreviewAction();
-  const { canvasAction, setCanvasAction } = useCanvasAction();
+  const { setCanvasAction } = useCanvasAction();
   const { setCanvasNode } = useCanvasNode();
-  const [columns, setColumns] = useState<Array<any>>([]);
   const globalContext = useContext(GlobalContext);
   const permissions = globalContext?.Permissions.state || [];
 
@@ -95,19 +27,17 @@ export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
 
   const edgesGoingIntoNode: Edge[] = edges.filter((edge: Edge) => edge.target === nodeId);
   const edgesEmanatingOutOfNode: Edge[] = edges.filter((edge: Edge) => edge.source === nodeId);
-  // can only this node if it doesn't have anything emanating edge from it i.e. leaf node
   const isDeletable: boolean =
     permissions.includes('can_delete_dbt_model') && edgesEmanatingOutOfNode.length <= 0;
 
-  // Determine node color based on publish status (only for model nodes)
-  const getNodeBackgroundColor = () => {
-    if (nodeProps.type === 'model' && nodeProps.data.isPublished === false) {
-      return '#50A85C'; // Lighter green for unpublished model nodes
-    }
-    return '#00897B'; // Default green for published or non-model nodes
-  };
+  const schema = nodeProps.data.dbtmodel?.schema || '';
+  const tableName = nodeProps.data.dbtmodel?.name || nodeProps.data.name || '';
+  const isUnpublished = nodeProps.type === 'model' && nodeProps.data.isPublished === false;
 
-  const cacheRef = useRef<{ [key: string]: ColumnData[] }>({});
+  const getNodeBackgroundColor = () => {
+    if (isUnpublished) return '#50A85C';
+    return '#00897B';
+  };
 
   const handleDeleteAction = () => {
     setCanvasAction({
@@ -139,118 +69,134 @@ export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
     });
   };
 
-  useMemo(() => {
-    const cacheKey = `${nodeProps.data.dbtmodel?.schema}/${nodeProps.data.dbtmodel?.name}-${nodeId}`;
+  const handleViewDetail = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    setCanvasNode(nodeProps);
+    setCanvasAction({
+      type: 'open-node-detail-modal',
+      data: {
+        schema: nodeProps.data.dbtmodel?.schema || '',
+        table: nodeProps.data.dbtmodel?.name || '',
+        nodeName: nodeProps.data.name || '',
+      },
+    });
+  };
 
-    if (cacheRef.current[cacheKey]) {
-      setColumns(cacheRef.current[cacheKey]);
-    } else {
-      (async () => {
-        try {
-          const data: ColumnData[] = await httpGet(
-            session,
-            `warehouse/table_columns/${nodeProps.data.dbtmodel?.schema}/${nodeProps.data.dbtmodel?.name}`
-          );
-          cacheRef.current[cacheKey] = data;
-          setColumns(data);
-        } catch (error) {
-          console.log(error);
-        }
-      })();
-    }
-  }, [session, edges]);
-
-  useEffect(() => {
-    if (canvasAction.type === 'refresh-canvas') {
-      cacheRef.current = {};
-    }
-  }, [canvasAction]);
+  const columnCount = nodeProps.data.output_columns?.length || 0;
 
   return (
     <Box
       onClick={handleSelectNode}
       sx={{
-        display: 'flex',
-        border: nodeProps.selected || nodeProps.data.isDummy ? '2px solid black' : '0px',
-        borderRadius: '5px',
-        borderStyle: 'dotted',
+        position: 'relative',
+        paddingTop: '10px', // space for schema badge
+        opacity: nodeProps.data.isDimmed ? 0.3 : 1,
+        transition: 'opacity 0.2s ease',
       }}
     >
       <>
-        <Handle type="target" position={Position.Left} />
-        <Handle type="source" position={Position.Right} />
+        <Handle type="target" position={Position.Left} style={{ top: '60%' }} />
+        <Handle type="source" position={Position.Right} style={{ top: '60%' }} />
       </>
+
+      {/* Schema label - sits above the node in grey */}
+      {schema && (
+        <Typography
+          sx={{
+            position: 'absolute',
+            top: '0px',
+            left: '8px',
+            color: '#757575',
+            fontSize: '8px',
+            fontWeight: 600,
+            lineHeight: 1.2,
+            letterSpacing: '0.3px',
+          }}
+        >
+          {schema}
+        </Typography>
+      )}
+
+      {/* Main node body */}
       <Box
         sx={{
           borderRadius: '5px',
           display: 'flex',
           flexDirection: 'column',
-          width: '250px',
+          width: '160px',
+          border: nodeProps.data.isHighlighted
+            ? '2px solid #1976D2'
+            : isUnpublished
+              ? '2px dashed #50A85C'
+              : nodeProps.selected || nodeProps.data.isDummy
+                ? '2px dotted black'
+                : '0px',
+          boxShadow: nodeProps.data.isHighlighted
+            ? '0 0 8px rgba(25, 118, 210, 0.5)'
+            : '0px 2px 4px 0px rgba(0, 0, 0, 0.16)',
         }}
       >
+        {/* Header - table name + delete */}
         <Box
           sx={{
             background: getNodeBackgroundColor(),
             display: 'flex',
-            borderRadius: '5px 5px 0px 0px',
+            borderRadius: '3px 3px 0px 0px',
             alignItems: 'center',
-            padding: '8px 12px',
-            gap: '30px',
+            padding: '6px 8px',
+            gap: '4px',
           }}
         >
-          <Box>
-            <Typography variant="subtitle2" fontWeight={700} color="white">
-              {trimString(nodeProps.data.name || '', 25)}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              variant="subtitle2"
+              fontWeight={700}
+              color="white"
+              sx={{ fontSize: '11px', lineHeight: 1.3 }}
+            >
+              {trimString(tableName, 20)}
             </Typography>
           </Box>
-          <Box sx={{ marginLeft: 'auto' }}>
+          <Box sx={{ flexShrink: 0 }}>
             {isDeletable && (
               <IconButton
-                sx={{ color: 'white' }}
+                sx={{ color: 'white', padding: '2px' }}
                 onClick={(event) => {
                   event.stopPropagation();
                   handleDeleteAction();
                 }}
                 data-testid="closebutton"
               >
-                <DeleteIcon fontSize="small" />
+                <DeleteIcon sx={{ fontSize: '14px' }} />
               </IconButton>
             )}
           </Box>
         </Box>
+
+        {/* Footer - column count + view */}
         <Box
           sx={{
             background: '#F8F8F8',
             display: 'flex',
-            flexDirection: 'column',
-            borderRadius: '0px 0px 4px 4px',
-            maxHeight: '120px',
-            boxShadow: '0px 2px 4px 0px rgba(0, 0, 0, 0.16)',
-            overflow: 'auto',
-            width: '100%',
-          }}
-          onWheelCapture={(event) => {
-            event.stopPropagation();
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderRadius: '0px 0px 3px 3px',
+            padding: '4px 8px',
           }}
         >
-          {columns.length > 0 ? (
-            <Box>
-              <NodeDataTableComponent columns={columns} />
-            </Box>
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '120px',
-                width: '100%',
-              }}
-            >
-              <Typography>Please check logs</Typography>
-            </Box>
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <TableChartOutlined sx={{ fontSize: '12px', color: '#757575' }} />
+            <Typography sx={{ fontSize: '10px', color: '#757575', fontWeight: 500 }}>
+              {columnCount} cols
+            </Typography>
+          </Box>
+          <IconButton
+            sx={{ padding: '2px', color: '#757575' }}
+            onClick={handleViewDetail}
+            data-testid="view-detail-button"
+          >
+            <VisibilityIcon sx={{ fontSize: '14px' }} />
+          </IconButton>
         </Box>
       </Box>
     </Box>

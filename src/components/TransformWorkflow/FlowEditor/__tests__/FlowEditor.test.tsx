@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import FlowEditor from '../FlowEditor';
 import { GlobalContext } from '@/contexts/ContextProvider';
 import { DbtRunLogsUpdateContext } from '@/contexts/DbtRunLogsContext';
@@ -13,12 +12,6 @@ jest.mock('next-auth/react', () => ({
       expires: 'true',
       user: { email: 'a' },
     },
-  }),
-}));
-
-jest.mock('react-resizable', () => ({
-  ResizableBox: jest.fn(({ children }) => {
-    return <div data-testid="mock-resizable-box">{children}</div>;
   }),
 }));
 
@@ -68,72 +61,6 @@ describe('FlowEditor', () => {
                 command: 'dbt run',
                 generated_by: 'system',
                 seq: 4,
-              },
-              {
-                label: 'DBT deps',
-                slug: 'dbt-deps',
-                id: 180,
-                uuid: '1603b541-df3b-40ea-a721-1ded738636d3',
-                deploymentId: null,
-                lock: null,
-                command: 'dbt deps',
-                generated_by: 'system',
-                seq: 3,
-              },
-              {
-                label: 'DBT test',
-                slug: 'dbt-test',
-                id: 182,
-                uuid: '3441ea62-52c5-4b50-862e-bc0415ba7702',
-                deploymentId: null,
-                lock: null,
-                command: 'dbt test',
-                generated_by: 'system',
-                seq: 5,
-              },
-              {
-                label: 'DBT docs generate',
-                slug: 'dbt-docs-generate',
-                id: 183,
-                uuid: '673fc167-02be-449e-9335-09ccd2723840',
-                deploymentId: null,
-                lock: null,
-                command: 'dbt docs generate',
-                generated_by: 'system',
-                seq: 6,
-              },
-              {
-                label: 'DBT clean',
-                slug: 'dbt-clean',
-                id: 179,
-                uuid: 'b0467b54-14d8-4779-b750-c2e3b8f07a67',
-                deploymentId: null,
-                lock: null,
-                command: 'dbt clean',
-                generated_by: 'system',
-                seq: 2,
-              },
-              {
-                label: 'DBT run',
-                slug: 'dbt-run',
-                id: 187,
-                uuid: 'e894d03c-ba00-4161-b0d8-49a40786c0c3',
-                deploymentId: '8f269b11-2f90-43e9-a71d-7c84919ed4d6',
-                lock: null,
-                command: 'dbt run --full-refresh',
-                generated_by: 'client',
-                seq: 4,
-              },
-              {
-                label: 'DBT seed',
-                slug: 'dbt-seed',
-                id: 186,
-                uuid: '70fbdb0d-3abf-4b37-866b-e0d749a81471',
-                deploymentId: null,
-                lock: null,
-                command: 'dbt seed',
-                generated_by: 'client',
-                seq: 0,
               },
             ]),
         });
@@ -203,24 +130,9 @@ describe('FlowEditor', () => {
   test('renders FlowEditor component', async () => {
     render(flowEditor());
     await waitFor(() => {
-      expect(screen.getByText('Preview')).toBeInTheDocument();
-      expect(screen.getByText('Logs')).toBeInTheDocument();
+      // Canvas header should render with "Workflow" text
+      expect(screen.getByText('Workflow')).toBeInTheDocument();
     });
-  });
-
-  test('switches between Preview and Logs tabs', async () => {
-    render(flowEditor());
-
-    const previewTab = screen.getByText('Preview');
-    const logsTab = screen.getByText('Logs');
-
-    expect(previewTab).toHaveAttribute('aria-selected', 'false');
-    expect(logsTab).toHaveAttribute('aria-selected', 'true');
-
-    await userEvent.click(logsTab);
-
-    expect(previewTab).toHaveAttribute('aria-selected', 'false');
-    expect(logsTab).toHaveAttribute('aria-selected', 'true');
   });
 
   test('handles run workflow action', async () => {
