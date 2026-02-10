@@ -374,7 +374,7 @@ const getLayoutedElements = ({
 
   // Find connected components using Dagre's graphlib
   const g = new Dagre.graphlib.Graph();
-  nodes.forEach((n) => g.setNode(n.id));
+  nodes.forEach((n) => g.setNode(n.id, {}));
   edges.forEach((e) => g.setEdge(e.source, e.target));
   const components: string[][] = Dagre.graphlib.alg.components(g);
 
