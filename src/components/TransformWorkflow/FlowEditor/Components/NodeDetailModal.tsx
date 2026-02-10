@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Box, Dialog, DialogContent, IconButton, Tab, Tabs, Typography } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Dialog, IconButton, Slide, Tab, Tabs, Typography } from '@mui/material';
+import { TransitionProps } from '@mui/material/transitions';
 import Close from '@mui/icons-material/Close';
 import PreviewPane from './LowerSectionTabs/PreviewPane';
 import { LogsPane } from './LowerSectionTabs/LogsPane';
@@ -19,7 +20,12 @@ interface NodeDetailModalProps {
   initialTab?: NodeDetailTab;
 }
 
-const MODAL_CONTENT_HEIGHT = 500;
+const Transition = React.forwardRef(function Transition(
+  props: TransitionProps & { children: React.ReactElement },
+  ref: React.Ref<unknown>
+) {
+  return <Slide direction="up" ref={ref} {...props} timeout={400} />;
+});
 
 const NodeDetailModal = ({
   open,
@@ -34,74 +40,108 @@ const NodeDetailModal = ({
   const dbtRunLogs = useDbtRunLogs();
   const { isFeatureFlagEnabled } = useFeatureFlags();
 
+  useEffect(() => {
+    if (open) {
+      setSelectedTab(initialTab);
+    }
+  }, [open, initialTab]);
+
   const handleTabChange = (_event: React.SyntheticEvent, newValue: NodeDetailTab) => {
     setSelectedTab(newValue);
   };
 
   return (
     <Dialog
+      sx={{
+        m: '74px 24px 22px 24px',
+        background: '#00000000',
+      }}
+      fullScreen
+      PaperProps={{
+        sx: {
+          borderRadius: '12px',
+        },
+      }}
       open={open}
       onClose={onClose}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{
-        sx: { height: '80vh', maxHeight: '80vh' },
-      }}
+      TransitionComponent={Transition}
     >
+      {/* Top Nav Bar */}
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 16px',
-          borderBottom: '1px solid #E0E0E0',
-          background: '#F5FAFA',
+          padding: '16px 28px 12px 28px',
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '16px' }}>
-          {nodeName}
-          <Typography
-            component="span"
-            sx={{ color: '#757575', fontSize: '13px', ml: 1, fontWeight: 400 }}
-          >
-            {schema}.{table}
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            {nodeName}
           </Typography>
-        </Typography>
-        <IconButton onClick={onClose} size="small">
+          {schema && table && (
+            <Typography sx={{ color: '#757575', fontSize: '14px', fontWeight: 400 }}>
+              {schema}.{table}
+            </Typography>
+          )}
+        </Box>
+        <IconButton onClick={onClose} sx={{ mr: 1 }} aria-label="close">
           <Close />
         </IconButton>
       </Box>
 
+      {/* Tabs */}
       <Box
         sx={{
           borderBottom: '1px solid #E0E0E0',
-          background: '#F5FAFA',
+          px: '28px',
         }}
       >
-        <Tabs value={selectedTab} onChange={handleTabChange} sx={{ px: 2, minHeight: '40px' }}>
-          <Tab label="Preview" value="preview" sx={{ minHeight: '40px' }} />
-          <Tab label="Logs" value="logs" sx={{ minHeight: '40px' }} />
+        <Tabs
+          value={selectedTab}
+          onChange={handleTabChange}
+          sx={{
+            minHeight: '40px',
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '14px',
+              minHeight: '40px',
+            },
+            '& .Mui-selected': {
+              color: '#00897B',
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#00897B',
+            },
+          }}
+        >
+          <Tab label="Data" value="preview" />
+          <Tab label="Logs" value="logs" />
           {isFeatureFlagEnabled(FeatureFlagKeys.DATA_STATISTICS) && (
-            <Tab label="Data Statistics" value="statistics" sx={{ minHeight: '40px' }} />
+            <Tab label="Statistics" value="statistics" />
           )}
         </Tabs>
       </Box>
 
-      <DialogContent sx={{ padding: 0, overflow: 'auto' }}>
-        {selectedTab === 'preview' && (
-          <PreviewPane height={MODAL_CONTENT_HEIGHT} schema={schema} table={table} />
-        )}
-        {selectedTab === 'logs' && (
-          <LogsPane
-            height={MODAL_CONTENT_HEIGHT}
-            dbtRunLogs={dbtRunLogs}
-            finalLockCanvas={finalLockCanvas}
-          />
-        )}
-        {selectedTab === 'statistics' && (
-          <StatisticsPane height={MODAL_CONTENT_HEIGHT} schema={schema} table={table} />
-        )}
-      </DialogContent>
+      {/* Content */}
+      <Box sx={{ p: '0px 28px', flex: 1, overflow: 'auto' }}>
+        <Box sx={{ height: 'calc(100vh - 210px)', overflow: 'auto' }}>
+          {selectedTab === 'preview' && (
+            <PreviewPane height={window.innerHeight - 250} schema={schema} table={table} />
+          )}
+          {selectedTab === 'logs' && (
+            <LogsPane
+              height={window.innerHeight - 250}
+              dbtRunLogs={dbtRunLogs}
+              finalLockCanvas={finalLockCanvas}
+            />
+          )}
+          {selectedTab === 'statistics' && (
+            <StatisticsPane height={window.innerHeight - 250} schema={schema} table={table} />
+          )}
+        </Box>
+      </Box>
     </Dialog>
   );
 };

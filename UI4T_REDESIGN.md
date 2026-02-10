@@ -387,7 +387,12 @@ Tried multiple approaches to visually distinguish schemas on the canvas using co
 - **Problem**: Layout didn't look right in practice — Dagre's compound clustering produced awkward spacing and node arrangements when schemas had cross-schema edges. The visual result was messy rather than clarifying. Same fundamental issue as color coding — with 27+ schemas, visual grouping adds noise rather than clarity.
 - **Reverted**: Removed `SchemaGroupNode`, compound graph logic, `getNodeSchema()` helper, and `schemaGroup` node type
 
-**6. MiniMap (bird's eye view)** ❌
+**6. ELK layout engine (elkjs)** ❌
+- Replaced Dagre with ELK's `layered` algorithm + `LAYER_SWEEP` crossing minimization
+- ELK handles disconnected subgraphs natively (`elk.separateConnectedComponents`)
+- **Removed**: Did not noticeably improve layout for our complex graph (50+ nodes, many cross-rank edges). ELK's layered algorithm produced similar results to Dagre for this graph topology.
+
+**7. MiniMap (bird's eye view)** ❌
 - Added React Flow's built-in `<MiniMap />` component with pannable + zoomable interaction
 - Showed node overview in bottom-right corner
 - **Removed**: User didn't find it useful for their workflow

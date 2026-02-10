@@ -8,18 +8,11 @@ import {
   Typography,
   Button,
   Menu,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PublishIcon from '@mui/icons-material/Publish';
 import LockIcon from '@mui/icons-material/Lock';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import GridViewIcon from '@mui/icons-material/GridView';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
   useNodesState,
@@ -467,21 +460,6 @@ const Canvas = ({
   const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
   const [highlightedEdgeIds, setHighlightedEdgeIds] = useState<Set<string>>(new Set());
-  const [layoutDirection, setLayoutDirection] = useState<string>('LR');
-  const [layoutSpacing, setLayoutSpacing] = useState<LayoutSpacing>(DEFAULT_SPACING);
-
-  // Re-layout current nodes/edges with given direction and spacing
-  const reLayoutCanvas = (direction: string, spacing: LayoutSpacing) => {
-    if (nodes.length === 0) return;
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements({
-      nodes,
-      edges,
-      options: { direction, spacing },
-    });
-    setNodes([...layoutedNodes]);
-    setEdges([...layoutedEdges]);
-  };
-
   // Generate canvas messages
   const getCanvasMessages = (): CanvasMessage[] => {
     const messages: CanvasMessage[] = [];
@@ -591,7 +569,7 @@ const Canvas = ({
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements({
         nodes: nodes,
         edges: edges,
-        options: { direction: layoutDirection, spacing: layoutSpacing },
+        options: { direction: 'LR' },
       });
 
       setNodes([...layoutedNodes]);
@@ -1214,16 +1192,25 @@ const Canvas = ({
 
   const styledEdges = useMemo(() => {
     if (!hasHighlight) return edges;
-    return edges.map((edge) => ({
-      ...edge,
-      style: highlightedEdgeIds.has(edge.id)
-        ? { stroke: '#1976D2', strokeWidth: 2.5 }
-        : { stroke: '#E0E0E0', strokeWidth: 1, opacity: 0.3 },
-      animated: highlightedEdgeIds.has(edge.id),
-      markerEnd: highlightedEdgeIds.has(edge.id)
-        ? { type: MarkerType.Arrow, width: 20, height: 20, color: '#1976D2' }
-        : { type: MarkerType.Arrow, width: 20, height: 20, color: '#E0E0E0' },
-    }));
+    return edges.map((edge) => {
+      const isHighlighted = highlightedEdgeIds.has(edge.id);
+      return {
+        ...edge,
+        type: edge.type,
+        style: isHighlighted
+          ? { stroke: '#00897B', strokeWidth: 2, transition: 'stroke 0.3s, opacity 0.3s' }
+          : {
+              stroke: '#D0D0D0',
+              strokeWidth: 1,
+              opacity: 0.15,
+              transition: 'stroke 0.3s, opacity 0.3s',
+            },
+        animated: isHighlighted,
+        markerEnd: isHighlighted
+          ? { type: MarkerType.ArrowClosed, width: 16, height: 16, color: '#00897B' }
+          : { type: MarkerType.Arrow, width: 12, height: 12, color: '#D0D0D0' },
+      };
+    });
   }, [edges, highlightedEdgeIds, hasHighlight]);
 
   return (
@@ -1326,126 +1313,6 @@ const Canvas = ({
           </Controls>
           <Background />
         </ReactFlow>
-
-        {/* Layout Controls */}
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 8,
-            left: 52,
-            display: 'flex',
-            gap: '4px',
-            background: 'white',
-            borderRadius: '6px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-            padding: '4px',
-            alignItems: 'center',
-            zIndex: 5,
-          }}
-        >
-          <Tooltip title="Horizontal layout" placement="bottom">
-            <IconButton
-              size="small"
-              onClick={() => {
-                setLayoutDirection('LR');
-                reLayoutCanvas('LR', layoutSpacing);
-              }}
-              sx={{
-                bgcolor: layoutDirection === 'LR' ? '#E3F2FD' : 'transparent',
-                color: layoutDirection === 'LR' ? '#1976D2' : '#757575',
-                '&:hover': { bgcolor: '#E3F2FD' },
-                width: 30,
-                height: 30,
-              }}
-            >
-              <ArrowForwardIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Vertical layout" placement="bottom">
-            <IconButton
-              size="small"
-              onClick={() => {
-                setLayoutDirection('TB');
-                reLayoutCanvas('TB', layoutSpacing);
-              }}
-              sx={{
-                bgcolor: layoutDirection === 'TB' ? '#E3F2FD' : 'transparent',
-                color: layoutDirection === 'TB' ? '#1976D2' : '#757575',
-                '&:hover': { bgcolor: '#E3F2FD' },
-                width: 30,
-                height: 30,
-              }}
-            >
-              <ArrowDownwardIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Default layout" placement="bottom">
-            <IconButton
-              size="small"
-              onClick={() => {
-                setLayoutDirection('LR');
-                setLayoutSpacing(DEFAULT_SPACING);
-                reLayoutCanvas('LR', DEFAULT_SPACING);
-              }}
-              sx={{
-                color: '#757575',
-                '&:hover': { bgcolor: '#E3F2FD' },
-                width: 30,
-                height: 30,
-              }}
-            >
-              <GridViewIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Tooltip>
-          <Divider orientation="vertical" flexItem sx={{ mx: '2px' }} />
-          <Tooltip title="Decrease spacing" placement="bottom">
-            <IconButton
-              size="small"
-              onClick={() => {
-                const newSpacing = {
-                  nodesep: Math.max(20, layoutSpacing.nodesep - 20),
-                  ranksep: Math.max(60, layoutSpacing.ranksep - 40),
-                };
-                setLayoutSpacing(newSpacing);
-                reLayoutCanvas(layoutDirection, newSpacing);
-              }}
-              sx={{
-                color: '#757575',
-                '&:hover': { bgcolor: '#E3F2FD' },
-                width: 30,
-                height: 30,
-              }}
-            >
-              <RemoveIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Tooltip>
-          <Typography
-            sx={{ fontSize: '10px', color: '#757575', minWidth: '32px', textAlign: 'center' }}
-          >
-            Space
-          </Typography>
-          <Tooltip title="Increase spacing" placement="bottom">
-            <IconButton
-              size="small"
-              onClick={() => {
-                const newSpacing = {
-                  nodesep: layoutSpacing.nodesep + 20,
-                  ranksep: layoutSpacing.ranksep + 40,
-                };
-                setLayoutSpacing(newSpacing);
-                reLayoutCanvas(layoutDirection, newSpacing);
-              }}
-              sx={{
-                color: '#757575',
-                '&:hover': { bgcolor: '#E3F2FD' },
-                width: 30,
-                height: 30,
-              }}
-            >
-              <AddIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
 
         {/* Canvas Messages */}
         <CanvasMessages messages={getCanvasMessages()} />

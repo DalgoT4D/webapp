@@ -90,8 +90,10 @@ export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
       sx={{
         position: 'relative',
         paddingTop: '10px', // space for schema badge
-        opacity: nodeProps.data.isDimmed ? 0.3 : 1,
-        transition: 'opacity 0.2s ease',
+        opacity: nodeProps.data.isDimmed ? 0.2 : 1,
+        filter: nodeProps.data.isDimmed ? 'grayscale(0.6)' : 'none',
+        transition: 'opacity 0.3s ease, filter 0.3s ease, transform 0.2s ease',
+        transform: nodeProps.data.isHighlighted ? 'scale(1.04)' : 'scale(1)',
       }}
     >
       <>
@@ -125,15 +127,16 @@ export function DbtSourceModelNode(nodeProps: GenericNodeProps) {
           flexDirection: 'column',
           width: '160px',
           border: nodeProps.data.isHighlighted
-            ? '2px solid #1976D2'
+            ? '2px solid #00897B'
             : isUnpublished
               ? '2px dashed #50A85C'
               : nodeProps.selected || nodeProps.data.isDummy
                 ? '2px dotted black'
                 : '0px',
           boxShadow: nodeProps.data.isHighlighted
-            ? '0 0 8px rgba(25, 118, 210, 0.5)'
+            ? '0 0 0 3px rgba(0, 137, 123, 0.15), 0 0 12px rgba(0, 137, 123, 0.25)'
             : '0px 2px 4px 0px rgba(0, 0, 0, 0.16)',
+          transition: 'border 0.3s ease, box-shadow 0.3s ease',
         }}
       >
         {/* Header - table name + delete */}
