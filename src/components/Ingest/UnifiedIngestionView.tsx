@@ -6,7 +6,6 @@ import { StreamSelectionDialog } from '@/components/Connections/StreamSelectionD
 import ConfirmationDialog from '@/components/Dialog/ConfirmationDialog';
 import { ConnectionSyncHistory } from '@/components/Connections/ConnectionSyncHistory';
 import SchemaChangeDetailsForm from '@/components/Connections/SchemaChangeDetailsForm';
-import { LogCard } from '@/components/Logs/LogCard';
 import { useIngestData } from './useIngestData';
 import { warehouseContainerSx, colors } from './ingestStyles';
 import WarehouseHeader from './WarehouseHeader';
@@ -53,73 +52,69 @@ export default function UnifiedIngestionView() {
           />
         )}
 
-        {/* Search + Add Source toolbar */}
-        <SearchToolbar
-          searchText={data.searchText}
-          onSearchChange={data.setSearchText}
-          onAddSource={() => {
-            data.setSourceIdToEdit('');
-            data.setShowSourceDialog(true);
-          }}
-          canCreateSource={data.permissions.includes('can_create_source')}
-        />
+        {/* Sources section — only show after warehouse is set up */}
+        {data.warehouse && (
+          <>
+            {/* Search + Add Source toolbar */}
+            <SearchToolbar
+              searchText={data.searchText}
+              onSearchChange={data.setSearchText}
+              onAddSource={() => {
+                data.setSourceIdToEdit('');
+                data.setShowSourceDialog(true);
+              }}
+              canCreateSource={data.permissions.includes('can_create_source')}
+            />
 
-        {/* Main Table or Empty State */}
-        {data.isLoading ? (
-          <Box sx={{ py: 6, textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ color: colors.textTertiary }}>
-              Loading...
-            </Typography>
-          </Box>
-        ) : data.filteredGroups.length === 0 ? (
-          <EmptyState
-            searchText={data.searchText}
-            onAddSource={() => {
-              data.setSourceIdToEdit('');
-              data.setShowSourceDialog(true);
-            }}
-            canCreateSource={data.permissions.includes('can_create_source')}
-          />
-        ) : (
-          <SourceTable
-            groups={data.filteredGroups}
-            schemaChanges={data.schemaChanges}
-            isSourceNew={data.isSourceNew}
-            isConnectionNew={data.isConnectionNew}
-            onAddConnection={data.handleAddConnection}
-            onSchemaReview={(connectionId) => {
-              data.setSchemaChangeConnectionId(connectionId);
-              data.setShowSchemaChangeDialog(true);
-            }}
-            onViewHistory={(conn) => {
-              data.setShowLogsDialog(true);
-              data.setLogsConnection(conn);
-              data.trackAmplitudeEvent('[View history] Button clicked');
-            }}
-            onEditSource={data.handleEditSourceDirect}
-            onDeleteSource={data.handleDeleteSourceDirect}
-            onEditConnection={data.handleEditConnectionDirect}
-            onDeleteConnection={data.handleDeleteConnectionDirect}
-            onRefreshSchema={data.handleRefreshConnectionDirect}
-            onClearStreams={data.handleClearStreamsDirect}
-            onViewConnection={data.handleViewConnectionDirect}
-            permissions={data.permissions}
-            isDemo={data.isDemo}
-            syncingConnectionIds={data.syncingConnectionIds}
-            setSyncingConnectionIds={data.setSyncingConnectionIds}
-            syncConnection={data.syncConnection}
-            trackAmplitudeEvent={data.trackAmplitudeEvent}
-          />
+            {/* Main Table or Empty State */}
+            {data.isLoading ? (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ color: colors.textTertiary }}>
+                  Loading...
+                </Typography>
+              </Box>
+            ) : data.filteredGroups.length === 0 ? (
+              <EmptyState
+                searchText={data.searchText}
+                onAddSource={() => {
+                  data.setSourceIdToEdit('');
+                  data.setShowSourceDialog(true);
+                }}
+                canCreateSource={data.permissions.includes('can_create_source')}
+              />
+            ) : (
+              <SourceTable
+                groups={data.filteredGroups}
+                schemaChanges={data.schemaChanges}
+                isSourceNew={data.isSourceNew}
+                isConnectionNew={data.isConnectionNew}
+                onAddConnection={data.handleAddConnection}
+                onSchemaReview={(connectionId) => {
+                  data.setSchemaChangeConnectionId(connectionId);
+                  data.setShowSchemaChangeDialog(true);
+                }}
+                onViewHistory={(conn) => {
+                  data.setShowLogsDialog(true);
+                  data.setLogsConnection(conn);
+                  data.trackAmplitudeEvent('[View history] Button clicked');
+                }}
+                onEditSource={data.handleEditSourceDirect}
+                onDeleteSource={data.handleDeleteSourceDirect}
+                onEditConnection={data.handleEditConnectionDirect}
+                onDeleteConnection={data.handleDeleteConnectionDirect}
+                onRefreshSchema={data.handleRefreshConnectionDirect}
+                onClearStreams={data.handleClearStreamsDirect}
+                onViewConnection={data.handleViewConnectionDirect}
+                permissions={data.permissions}
+                isDemo={data.isDemo}
+                syncingConnectionIds={data.syncingConnectionIds}
+                setSyncingConnectionIds={data.setSyncingConnectionIds}
+                syncConnection={data.syncConnection}
+                trackAmplitudeEvent={data.trackAmplitudeEvent}
+              />
+            )}
+          </>
         )}
-      </Box>
-
-      {/* LogCard at bottom */}
-      <Box sx={{ mt: 3 }}>
-        <LogCard
-          logs={data.syncLogs}
-          expand={data.expandSyncLogs}
-          setExpand={data.setExpandSyncLogs}
-        />
       </Box>
 
       {/* --- Dialogs --- */}
