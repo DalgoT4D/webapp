@@ -137,7 +137,7 @@ class ConnectorConfigInput {
     if (exclude.length > 0) {
       if (exclude[0] in data?.properties) {
         dropdownEnums.push(
-          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum[0]
+          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum?.[0]
         );
       }
     }
