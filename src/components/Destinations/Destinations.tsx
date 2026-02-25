@@ -97,7 +97,7 @@ export const Destinations = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
-    if (data && data.warehouses && data.warehouses.length > 0) {
+    if (data && data.warehouses && Array.isArray(data.warehouses) && data.warehouses.length > 0) {
       const w_house = data.warehouses[0];
       setWarehouse({
         airbyteWorkspaceId: w_house.airbyte_destination.workspaceId,
