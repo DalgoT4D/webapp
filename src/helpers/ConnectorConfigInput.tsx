@@ -136,9 +136,22 @@ class ConnectorConfigInput {
     // Push the parent enum in the array
     if (exclude.length > 0) {
       if (exclude[0] in data?.properties) {
-        dropdownEnums.push(
-          data?.properties[exclude[0]]?.const || data?.properties[exclude[0]]?.enum[0]
-        );
+        const discriminatorField = data?.properties[exclude[0]];
+        let enumValue = discriminatorField?.const || discriminatorField?.enum?.[0];
+
+        // Handle new format where discriminator might be the title or default value
+        if (!enumValue && discriminatorField?.default) {
+          enumValue = discriminatorField.default;
+        }
+
+        // For new object-type format, extract from title or use parent data title
+        if (!enumValue && data?.title) {
+          enumValue = data.title.toLowerCase();
+        }
+
+        if (enumValue) {
+          dropdownEnums.push(enumValue);
+        }
       }
     }
 
@@ -195,18 +208,46 @@ class ConnectorConfigInput {
         if (value['oneOf'] && value['oneOf'].length > 1) {
           value['oneOf']?.forEach((ele: any) => {
             if (commonField.length > 0) {
-              commonField = Object.keys(ele?.properties)
-                .filter((key: any) => 'const' in ele?.properties[key]) // mongodb connector case. Only cluster type had const property and was not at the top level but with the other properties that were to be rendered if a cluster type is selected.
-                .filter((value: any) => commonField.includes(value));
+              // Find fields that exist in all oneOf options
+              const currentFields = Object.keys(ele?.properties || {});
+              commonField = commonField.filter((field: any) => currentFields.includes(field));
             } else {
-              commonField = Object.keys(ele?.properties);
+              commonField = Object.keys(ele?.properties || {});
             }
           });
+
+          // For discriminator fields, prefer those with const, enum, or default values
+          if (commonField.length > 0) {
+            const discriminatorFields = commonField.filter((field: any) => {
+              return value['oneOf'].every((ele: any) => {
+                const prop = ele?.properties?.[field];
+                return (
+                  prop?.const !== undefined ||
+                  (prop?.enum && prop.enum.length === 1) ||
+                  prop?.default !== undefined
+                );
+              });
+            });
+
+            if (discriminatorFields.length > 0) {
+              commonField = discriminatorFields;
+            }
+          }
         } else if (value['oneOf'] && value['oneOf'].length === 1) {
           const ele = value['oneOf'][0];
-          commonField = Object.keys(ele?.properties).filter(
-            (key: any) => 'const' in ele.properties[key]
-          );
+          const allFields = Object.keys(ele?.properties || {});
+
+          // Prefer discriminator fields with const, enum, or default
+          const discriminatorFields = allFields.filter((key: any) => {
+            const prop = ele?.properties?.[key];
+            return (
+              prop?.const !== undefined ||
+              (prop?.enum && prop.enum.length === 1) ||
+              prop?.default !== undefined
+            );
+          });
+
+          commonField = discriminatorFields.length > 0 ? discriminatorFields : allFields;
         }
 
         // an object type can either have oneOf or properties
@@ -265,6 +306,41 @@ class ConnectorConfigInput {
       const valIsObject = typeof value === 'object' && value !== null && !Array.isArray(value);
 
       if (valIsObject) {
+        // Find any field in the object that looks like a discriminator
+        // A discriminator typically has a string value and the object has only one property
+        // or it's one of a few properties where one acts as the main identifier
+        const objectKeys = Object.keys(value);
+
+        // Look for a field that has the same name as the parent key or a simple string value
+        let discriminatorField = null;
+
+        for (const objKey of objectKeys) {
+          const objValue = (value as any)[objKey];
+          if (typeof objValue === 'string') {
+            // If there's only one string property, it's likely the discriminator
+            if (objectKeys.length === 1) {
+              discriminatorField = objKey;
+              break;
+            }
+            // If the key matches the parent field name, it's likely the discriminator
+            if (objKey === key) {
+              discriminatorField = objKey;
+              break;
+            }
+            // Common discriminator patterns - check if this could be one
+            if (objKey.includes('mode') || objKey.includes('type') || objKey.includes('method')) {
+              discriminatorField = objKey;
+              break;
+            }
+          }
+        }
+
+        if (discriminatorField && (value as any)[discriminatorField]) {
+          // Set the parent field to the discriminator value
+          setFormValueCallback(field, (value as any)[discriminatorField]);
+        }
+
+        // Also set nested fields for any additional properties
         ConnectorConfigInput.prefillFormFields(value, field, setFormValueCallback);
       } else {
         setFormValueCallback(field, value);

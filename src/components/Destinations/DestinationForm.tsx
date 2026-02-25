@@ -117,12 +117,26 @@ const DestinationForm = ({ showForm, setShowForm, warehouse, mutate }: Destinati
       (async () => {
         try {
           setLoading(true);
-          const data = await httpGet(
-            session,
-            `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`
-          );
+          let data;
 
-          const connectorConfigInput = new ConnectorConfigInput('destination', data);
+          if (warehouse) {
+            // For editing, use the destination-specific endpoint
+            data = await httpGet(
+              session,
+              `airbyte/destinations/${warehouse.destinationId}/specifications`
+            );
+          } else {
+            // For new destinations, use the destination definition endpoint
+            data = await httpGet(
+              session,
+              `airbyte/destination_definitions/${watchSelectedDestinationDef.id}/specifications`
+            );
+          }
+
+          const connectorConfigInput = new ConnectorConfigInput(
+            'destination',
+            data.connectionSpecification || data
+          );
 
           connectorConfigInput.setValidOrderToAllProperties();
 
