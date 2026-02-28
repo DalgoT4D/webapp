@@ -289,8 +289,8 @@ const ProjectTree = ({
           px: 1,
         }}
       >
-        {/* Show close button when header is hidden (embedded mode) */}
-        {hideHeader && onClose && (
+        {/* Show close button when onClose is provided */}
+        {onClose && (
           <IconButton
             onClick={onClose}
             aria-label="close canvas"

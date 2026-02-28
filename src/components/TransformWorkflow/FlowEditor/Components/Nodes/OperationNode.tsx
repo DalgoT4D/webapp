@@ -73,9 +73,20 @@ export function OperationNode(node: GenericNodeProps) {
       onClick={handleSelectNode}
       data-testid="nodeselectbox"
       sx={{
-        border: node.id === canvasNode?.id || node.data?.isDummy ? '2px solid black' : '0px',
+        border: node.data?.isHighlighted
+          ? '2px solid #00897B'
+          : node.id === canvasNode?.id || node.data?.isDummy
+            ? '2px dotted black'
+            : '0px',
         borderRadius: '5px',
-        borderStyle: 'dotted',
+        boxShadow: node.data?.isHighlighted
+          ? '0 0 0 3px rgba(0, 137, 123, 0.15), 0 0 12px rgba(0, 137, 123, 0.25)'
+          : 'none',
+        opacity: node.data?.isDimmed ? 0.45 : 1,
+        filter: node.data?.isDimmed ? 'blur(1.5px)' : 'none',
+        transition:
+          'opacity 0.3s ease, filter 0.3s ease, border 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease',
+        transform: node.data?.isHighlighted ? 'scale(1.06)' : 'scale(1)',
       }}
     >
       <>
@@ -84,24 +95,39 @@ export function OperationNode(node: GenericNodeProps) {
       </>
       <Box
         sx={{
-          width: '90px',
-          height: '100px',
+          width: '72px',
           background: 'white',
           boxShadow: '0px 2px 4px 0px rgba(0, 0, 0, 0.16)',
-          borderRadius: '5px 5px 5px 5px',
+          borderRadius: '5px',
+          position: 'relative',
         }}
       >
+        {isDeletable && (
+          <IconButton
+            sx={{ position: 'absolute', right: -12, top: -12, padding: '2px', zIndex: 1 }}
+            onClick={(event) => {
+              event.stopPropagation();
+              handleDeleteAction();
+            }}
+            data-testid="closebutton"
+          >
+            <DeleteIcon sx={{ fontSize: '14px' }} />
+          </IconButton>
+        )}
         <Box
           sx={{
-            padding: '8px',
+            padding: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           <Box
             sx={{
-              height: '48px',
+              height: '32px',
+              width: '32px',
               background: '#F5FAFA',
               borderRadius: '4px',
-              position: 'relative',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -110,36 +136,20 @@ export function OperationNode(node: GenericNodeProps) {
             <Image
               src={operationIconMapping[node.data.operation_config?.type]}
               alt="operation icon"
-            ></Image>
-            {isDeletable && (
-              <IconButton
-                sx={{ position: 'absolute', right: -15, top: -15 }}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  handleDeleteAction();
-                }}
-                data-testid="closebutton"
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            )}
+              width={20}
+              height={20}
+            />
           </Box>
         </Box>
         <Divider orientation="horizontal" sx={{ color: '#EEEEEE' }} />
-        <Box sx={{ display: 'flex' }}>
-          <Box
-            sx={{
-              flex: '1',
-              textOverflow: 'ellipsis',
-              overflow: 'hidden',
-            }}
-          >
-            <Typography fontWeight="600" fontSize="12px" padding="8px" sx={{ textAlign: 'center' }}>
-              {operations.find((op) => op.slug === node.data.operation_config?.type)?.label ||
-                'Not found'}
-            </Typography>
-          </Box>
-        </Box>
+        <Typography
+          fontWeight="600"
+          fontSize="9px"
+          sx={{ textAlign: 'center', padding: '4px 4px', lineHeight: 1.3 }}
+        >
+          {operations.find((op) => op.slug === node.data.operation_config?.type)?.label ||
+            'Not found'}
+        </Typography>
       </Box>
     </Box>
   );

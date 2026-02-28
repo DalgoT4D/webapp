@@ -5,7 +5,6 @@ import {
   CircularProgress,
   Divider,
   MenuItem,
-  Select,
   Typography,
   Button,
   Menu,
@@ -13,9 +12,8 @@ import {
 import ReplayIcon from '@mui/icons-material/Replay';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PublishIcon from '@mui/icons-material/Publish';
-import ClearIcon from '@mui/icons-material/Clear';
 import LockIcon from '@mui/icons-material/Lock';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
   useNodesState,
   Controls,
@@ -48,6 +46,7 @@ import { useTracking } from '@/contexts/TrackingContext';
 import PublishModal from './PublishModal';
 import CanvasMessages, { CanvasMessage } from './CanvasMessages';
 import PatRequiredModal from './PatRequiredModal';
+import NodeDetailModal from './NodeDetailModal';
 import {
   CanvasEdgeDataResponse,
   CanvasNodeDataResponse,
@@ -64,7 +63,8 @@ type CanvasProps = {
   setRedrawGraph: (...args: any) => void;
   finalLockCanvas: boolean;
   setTempLockCanvas: any;
-  isPreviewMode?: boolean; // NEW: Skip lock acquisition in preview mode
+  isPreviewMode?: boolean;
+  isRunning?: boolean;
 };
 
 const nodeGap = 30;
@@ -74,6 +74,7 @@ export type OperationNodeType = NodeProps<CanvasNodeRender>;
 export type SrcModelNodeType = NodeProps<CanvasNodeRender>;
 
 type EdgeStyleProps = {
+  type?: string;
   markerEnd?: EdgeMarkerType;
   markerStart?: EdgeMarkerType;
 };
@@ -312,7 +313,51 @@ const CanvasHeader = ({
 
 const defaultViewport = { x: 0, y: 0, zoom: 0.8 };
 
-const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+type LayoutSpacing = { nodesep: number; ranksep: number };
+const DEFAULT_SPACING: LayoutSpacing = { nodesep: 80, ranksep: 200 };
+
+// Layout a single connected component with Dagre
+const layoutComponent = (
+  componentNodes: CanvasNodeRender[],
+  componentEdges: Edge[],
+  direction: string,
+  spacing: LayoutSpacing = DEFAULT_SPACING
+) => {
+  const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+  g.setGraph({
+    rankdir: direction,
+    nodesep: spacing.nodesep,
+    edgesep: 50,
+    width: 160,
+    height: 60,
+    marginx: 20,
+    marginy: 20,
+    ranksep: spacing.ranksep,
+  });
+
+  componentEdges.forEach((edge: Edge) => g.setEdge(edge.source, edge.target));
+  componentNodes.forEach((node: CanvasNodeRender) => g.setNode(node.id, {}));
+  Dagre.layout(g);
+
+  const positioned = componentNodes.map((node: CanvasNodeRender) => {
+    const { x, y } = g.node(node.id);
+    return { ...node, position: { x, y } };
+  });
+
+  // Compute bounding box of this component
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  for (const n of positioned) {
+    minX = Math.min(minX, n.position.x);
+    minY = Math.min(minY, n.position.y);
+    maxX = Math.max(maxX, n.position.x + 160);
+    maxY = Math.max(maxY, n.position.y + 60);
+  }
+
+  return { nodes: positioned, width: maxX - minX, height: maxY - minY, minX, minY };
+};
 
 const getLayoutedElements = ({
   nodes,
@@ -321,33 +366,62 @@ const getLayoutedElements = ({
 }: {
   nodes: CanvasNodeRender[];
   edges: Edge[];
-  options: { direction: string };
+  options: { direction: string; spacing?: LayoutSpacing };
 }) => {
-  g.setGraph({
-    rankdir: options.direction,
-    nodesep: 200,
-    edgesep: 100,
-    width: 250,
-    height: 120,
-    marginx: 100,
-    marginy: 100,
-    ranksep: 350,
+  if (nodes.length === 0) return { nodes, edges };
+
+  const spacing = options.spacing || DEFAULT_SPACING;
+
+  // Find connected components using Dagre's graphlib
+  const g = new Dagre.graphlib.Graph();
+  nodes.forEach((n) => g.setNode(n.id, {}));
+  edges.forEach((e) => g.setEdge(e.source, e.target));
+  const components: string[][] = Dagre.graphlib.alg.components(g);
+
+  // Sort: larger components first for better grid packing
+  components.sort((a, b) => b.length - a.length);
+
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+
+  // Layout each component separately
+  const layoutedComponents = components.map((nodeIds) => {
+    const nodeIdSet = new Set(nodeIds);
+    const compNodes = nodeIds.map((id) => nodeMap.get(id)!);
+    const compEdges = edges.filter((e) => nodeIdSet.has(e.source) && nodeIdSet.has(e.target));
+    return layoutComponent(compNodes, compEdges, options.direction, spacing);
   });
 
-  edges.forEach((edge: Edge) => g.setEdge(edge.source, edge.target));
-  nodes.forEach((node: CanvasNodeRender) => g.setNode(node.id, {}));
+  // Arrange components in a grid (fill horizontally, then wrap)
+  const clusterGap = 100;
+  const maxRowWidth = 2000;
 
-  // build the layout
-  Dagre.layout(g);
+  let cursorX = 0;
+  let cursorY = 0;
+  let rowMaxHeight = 0;
+  const allNodes: CanvasNodeRender[] = [];
 
-  return {
-    nodes: nodes.map((node: CanvasNodeRender) => {
-      const { x, y } = g.node(node.id);
+  for (const comp of layoutedComponents) {
+    if (cursorX > 0 && cursorX + comp.width > maxRowWidth) {
+      cursorY += rowMaxHeight + clusterGap;
+      cursorX = 0;
+      rowMaxHeight = 0;
+    }
 
-      return { ...node, position: { x, y } };
-    }),
-    edges,
-  };
+    for (const node of comp.nodes) {
+      allNodes.push({
+        ...node,
+        position: {
+          x: node.position.x - comp.minX + cursorX,
+          y: node.position.y - comp.minY + cursorY,
+        },
+      });
+    }
+
+    cursorX += comp.width + clusterGap;
+    rowMaxHeight = Math.max(rowMaxHeight, comp.height);
+  }
+
+  return { nodes: allNodes, edges };
 };
 
 const Canvas = ({
@@ -356,6 +430,7 @@ const Canvas = ({
   finalLockCanvas,
   setTempLockCanvas,
   isPreviewMode = false,
+  isRunning = false,
 }: CanvasProps) => {
   const { data: session } = useSession();
   const [nodes, setNodes, onNodesChange] = useNodesState([]); //works when we click the node or move it.
@@ -375,8 +450,16 @@ const Canvas = ({
   const [patRequired, setPatRequired] = useState(false);
   const [isViewOnlyMode, setIsViewOnlyMode] = useState(false);
   const [gitRepoUrl, setGitRepoUrl] = useState('');
+  const [nodeDetailModal, setNodeDetailModal] = useState<{
+    open: boolean;
+    schema: string;
+    table: string;
+    nodeName: string;
+    initialTab?: 'preview' | 'logs' | 'statistics';
+  }>({ open: false, schema: '', table: '', nodeName: '' });
   const { addNodes, setCenter, getZoom, getNodes, setNodes: setReactFlowNodes } = useReactFlow();
-
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<Set<string>>(new Set());
+  const [highlightedEdgeIds, setHighlightedEdgeIds] = useState<Set<string>>(new Set());
   // Generate canvas messages
   const getCanvasMessages = (): CanvasMessage[] => {
     const messages: CanvasMessage[] = [];
@@ -972,6 +1055,16 @@ const Canvas = ({
         canvasAction.data.isDummy !== undefined ? canvasAction.data.isDummy : false
       );
     }
+
+    if (canvasAction.type === 'open-node-detail-modal') {
+      setNodeDetailModal({
+        open: true,
+        schema: canvasAction.data.schema,
+        table: canvasAction.data.table,
+        nodeName: canvasAction.data.nodeName,
+        initialTab: canvasAction.data.initialTab,
+      });
+    }
   }, [canvasAction]);
 
   const onNodeDragStop = (event: any, node: any) => {
@@ -1024,11 +1117,101 @@ const Canvas = ({
     );
   };
 
+  // Graph traversal: BFS downstream (source→target direction)
+  const getDownstreamPath = (startNodeId: string, allEdges: Edge[]) => {
+    const visitedNodes = new Set<string>([startNodeId]);
+    const visitedEdges = new Set<string>();
+    const queue = [startNodeId];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      for (const edge of allEdges) {
+        if (edge.source === current && !visitedNodes.has(edge.target)) {
+          visitedNodes.add(edge.target);
+          visitedEdges.add(edge.id);
+          queue.push(edge.target);
+        }
+      }
+    }
+    return { nodeIds: visitedNodes, edgeIds: visitedEdges };
+  };
+
+  // Graph traversal: BFS upstream (target→source direction)
+  const getUpstreamPath = (startNodeId: string, allEdges: Edge[]) => {
+    const visitedNodes = new Set<string>([startNodeId]);
+    const visitedEdges = new Set<string>();
+    const queue = [startNodeId];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      for (const edge of allEdges) {
+        if (edge.target === current && !visitedNodes.has(edge.source)) {
+          visitedNodes.add(edge.source);
+          visitedEdges.add(edge.id);
+          queue.push(edge.source);
+        }
+      }
+    }
+    return { nodeIds: visitedNodes, edgeIds: visitedEdges };
+  };
+
+  const handleNodeClick = (_event: React.MouseEvent, node: { id: string }) => {
+    const outgoingEdges = edges.filter((e) => e.source === node.id);
+    let result;
+    if (outgoingEdges.length > 0) {
+      // Has downstream connections → highlight downstream path
+      result = getDownstreamPath(node.id, edges);
+    } else {
+      // End node → highlight upstream path back to source
+      result = getUpstreamPath(node.id, edges);
+    }
+    setHighlightedNodeIds(result.nodeIds);
+    setHighlightedEdgeIds(result.edgeIds);
+  };
+
   const handlePaneClick = () => {
     // clicking the background canvas.
     setCanvasAction({ type: 'close-reset-opconfig-panel', data: null });
     setPreviewAction({ type: 'clear-preview', data: null });
+    setHighlightedNodeIds(new Set());
+    setHighlightedEdgeIds(new Set());
   };
+
+  // Apply highlight/dim styles to nodes and edges
+  const hasHighlight = highlightedNodeIds.size > 0;
+
+  const styledNodes = useMemo(() => {
+    if (!hasHighlight) return nodes;
+    return nodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        isHighlighted: highlightedNodeIds.has(node.id),
+        isDimmed: !highlightedNodeIds.has(node.id),
+      },
+    }));
+  }, [nodes, highlightedNodeIds, hasHighlight]);
+
+  const styledEdges = useMemo(() => {
+    if (!hasHighlight) return edges;
+    return edges.map((edge) => {
+      const isHighlighted = highlightedEdgeIds.has(edge.id);
+      return {
+        ...edge,
+        type: edge.type,
+        style: isHighlighted
+          ? { stroke: '#00897B', strokeWidth: 2, transition: 'stroke 0.3s, opacity 0.3s' }
+          : {
+              stroke: '#D0D0D0',
+              strokeWidth: 1,
+              opacity: 0.4,
+              transition: 'stroke 0.3s, opacity 0.3s',
+            },
+        animated: isHighlighted,
+        markerEnd: isHighlighted
+          ? { type: MarkerType.ArrowClosed, width: 16, height: 16, color: '#00897B' }
+          : { type: MarkerType.Arrow, width: 12, height: 12, color: '#D0D0D0' },
+      };
+    });
+  }, [edges, highlightedEdgeIds, hasHighlight]);
 
   return (
     <Box
@@ -1088,11 +1271,12 @@ const Canvas = ({
         }}
       >
         <ReactFlow
-          nodes={nodes} // are the tables and the operations.
+          nodes={styledNodes}
           selectNodesOnDrag={false}
-          edges={edges} // flexible lines connecting tables, table-node.
+          edges={styledEdges}
           onNodeDragStop={canInteractWithCanvas() ? onNodeDragStop : undefined}
-          onPaneClick={canInteractWithCanvas() ? handlePaneClick : undefined} //back canvas click.
+          onNodeClick={handleNodeClick}
+          onPaneClick={handlePaneClick} //back canvas click.
           onNodesChange={canInteractWithCanvas() ? handleNodesChange : undefined} // when node (table or operation) is clicked or moved.
           onEdgesChange={canInteractWithCanvas() ? handleEdgesChange : undefined}
           onConnect={canInteractWithCanvas() ? handleNewConnection : undefined}
@@ -1132,6 +1316,53 @@ const Canvas = ({
 
         {/* Canvas Messages */}
         <CanvasMessages messages={getCanvasMessages()} />
+
+        {/* Floating running indicator */}
+        {isRunning && (
+          <Box
+            onClick={() => {
+              setNodeDetailModal({
+                open: true,
+                schema: '',
+                table: '',
+                nodeName: 'Workflow',
+                initialTab: 'logs',
+              });
+            }}
+            sx={{
+              position: 'absolute',
+              bottom: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              padding: '8px 20px',
+              backgroundColor: 'white',
+              borderRadius: '20px',
+              boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.15)',
+              cursor: 'pointer',
+              zIndex: (theme: any) => theme.zIndex.drawer + 2,
+              '&:hover': { backgroundColor: '#F5F5F5' },
+            }}
+          >
+            <CircularProgress size={16} sx={{ color: '#00897B' }} />
+            <Typography sx={{ fontSize: '13px', fontWeight: 500, color: '#333' }}>
+              Running workflow...
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#00897B',
+                textDecoration: 'underline',
+              }}
+            >
+              View logs
+            </Typography>
+          </Box>
+        )}
+
         {/* This is what renders the right form */}
         <OperationConfigLayout
           openPanel={openOperationConfig}
@@ -1163,6 +1394,17 @@ const Canvas = ({
           onAddKey={handlePatAddKey}
           onViewOnly={handlePatViewOnly}
           gitRepoUrl={gitRepoUrl}
+        />
+
+        {/* Node Detail Modal */}
+        <NodeDetailModal
+          open={nodeDetailModal.open}
+          onClose={() => setNodeDetailModal({ open: false, schema: '', table: '', nodeName: '' })}
+          schema={nodeDetailModal.schema}
+          table={nodeDetailModal.table}
+          nodeName={nodeDetailModal.nodeName}
+          finalLockCanvas={finalLockCanvas}
+          initialTab={nodeDetailModal.initialTab}
         />
       </Box>
     </Box>

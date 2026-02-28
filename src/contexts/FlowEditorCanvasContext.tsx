@@ -1,8 +1,4 @@
-import {
-  OperationNodeType,
-  SrcModelNodeType,
-} from '@/components/TransformWorkflow/FlowEditor/Components/Canvas';
-import { GenericNode, GenericNodeProps } from '@/types/transform-v2.types';
+import { GenericNodeProps } from '@/types/transform-v2.types';
 import React, { useState, useContext, Dispatch, SetStateAction } from 'react';
 
 ///////////////////////////// Canvas Node ////////////////////////////////
@@ -44,6 +40,7 @@ interface Action {
     | 'sync-sources'
     | 'run-workflow'
     | 'update-canvas-node'
+    | 'open-node-detail-modal'
     | ''
     | undefined
     | null;
