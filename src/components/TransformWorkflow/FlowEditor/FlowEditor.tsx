@@ -1,6 +1,6 @@
 import { Box, Divider, IconButton, Tab, Tabs } from '@mui/material';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { OpenInFull, Close } from '@mui/icons-material';
+import { OpenInFull, Close, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import Canvas from './Components/Canvas';
 import ProjectTree from './Components/ProjectTree';
 import PreviewPane from './Components/LowerSectionTabs/PreviewPane';
@@ -111,6 +111,8 @@ type LowerSectionProps = {
   setSelectedTab: (value: LowerSectionTabValues) => void;
   finalLockCanvas: boolean;
   setFullScreen?: any;
+  isMinimized: boolean;
+  onToggleMinimize: () => void;
 };
 
 export type TaskProgressLog = {
@@ -125,6 +127,8 @@ const LowerSection = ({
   setSelectedTab,
   setFullScreen,
   finalLockCanvas,
+  isMinimized,
+  onToggleMinimize,
 }: LowerSectionProps) => {
   const dbtRunLogs = useDbtRunLogs();
   const trackAmplitudeEvent = useTracking();
@@ -158,17 +162,29 @@ const LowerSection = ({
             <Tab label="Data statistics" value="statistics" />
           )}
         </Tabs>
-        <IconButton sx={{ ml: 'auto' }} onClick={setFullScreen}>
-          <OpenInFull />
-        </IconButton>
+        <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
+          <IconButton
+            onClick={onToggleMinimize}
+            sx={{ ml: 'auto' }}
+            aria-label={isMinimized ? 'Restore panel' : 'Minimize panel'}
+            aria-expanded={!isMinimized}
+          >
+            {isMinimized ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+          </IconButton>
+          <IconButton onClick={setFullScreen} aria-label="Toggle fullscreen">
+            <OpenInFull />
+          </IconButton>
+        </div>
       </Box>
-      <Box sx={{ height: '100vh' }}>
-        {selectedTab === 'preview' && <PreviewPane height={height} />}
-        {selectedTab === 'logs' && (
-          <LogsPane height={height} dbtRunLogs={dbtRunLogs} finalLockCanvas={finalLockCanvas} />
-        )}
-        {selectedTab === 'statistics' && <StatisticsPane height={height} />}
-      </Box>
+      {!isMinimized && (
+        <Box sx={{ height: '100vh' }}>
+          {selectedTab === 'preview' && <PreviewPane height={height} />}
+          {selectedTab === 'logs' && (
+            <LogsPane height={height} dbtRunLogs={dbtRunLogs} finalLockCanvas={finalLockCanvas} />
+          )}
+          {selectedTab === 'statistics' && <StatisticsPane height={height} />}
+        </Box>
+      )}
     </Box>
   );
 };
@@ -178,6 +194,7 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
   const [sourcesModels, setSourcesModels] = useState<DbtModelResponse[]>([]);
   const [refreshEditor, setRefreshEditor] = useState<boolean>(false);
   const [lowerSectionHeight, setLowerSectionHeight] = useState(300);
+  const [isLowerSectionMinimized, setIsLowerSectionMinimized] = useState<boolean>(false);
   const [lockUpperSection, setLockUpperSection] = useState<boolean>(false);
   const { finalLockCanvas, setTempLockCanvas } = useLockCanvas(lockUpperSection);
   const [selectedTab, setSelectedTab] = useState<LowerSectionTabValues>('logs');
@@ -186,10 +203,15 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
   const globalContext = useContext(GlobalContext);
   const setDbtRunLogs = useDbtRunLogsUpdate();
   const { canvasAction, setCanvasAction } = useCanvasAction();
+  const LOWER_SECTION_MIN_HEIGHT = 55;
+  const LOWER_SECTION_DEFAULT_HEIGHT = 300;
 
   const onResize = (event: any) => {
-    const dailogHeight = document.querySelector('.MuiDialog-root')?.clientHeight || 0;
-    setLowerSectionHeight(dailogHeight - event.clientY);
+    const dialogHeight = document.querySelector('.MuiDialog-root')?.clientHeight || 0;
+    const calculatedHeight = dialogHeight - event.clientY;
+    const newHeight = Math.max(calculatedHeight, LOWER_SECTION_MIN_HEIGHT);
+    setLowerSectionHeight(newHeight);
+    setIsLowerSectionMinimized(newHeight === LOWER_SECTION_MIN_HEIGHT);
   };
   const fetchSourcesModels = () => {
     httpGet(session, 'transform/v2/dbt_project/sources_models/')
@@ -420,6 +442,19 @@ const FlowEditor = ({ onClose }: { onClose?: () => void } = {}) => {
           setSelectedTab={setSelectedTab}
           selectedTab={selectedTab}
           finalLockCanvas={finalLockCanvas}
+          isMinimized={isLowerSectionMinimized}
+          onToggleMinimize={() => {
+            // const dialogBox = document.querySelector('.MuiDialog-root');
+            // if (dialogBox) {
+            if (isLowerSectionMinimized) {
+              setLowerSectionHeight(LOWER_SECTION_DEFAULT_HEIGHT);
+              setIsLowerSectionMinimized(false);
+            } else {
+              setLowerSectionHeight(LOWER_SECTION_MIN_HEIGHT);
+              setIsLowerSectionMinimized(true);
+            }
+            // }
+          }}
         />
       </ResizableBox>
     </Box>
