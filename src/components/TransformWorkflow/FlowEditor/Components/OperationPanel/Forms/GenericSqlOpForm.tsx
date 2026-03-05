@@ -33,6 +33,7 @@ const GenericSqlOpForm = ({
 }: OperationFormProps) => {
   const { data: session } = useSession();
   const [inputModels, setInputModels] = useState<DbtModelResponse[]>([]);
+  const [srcColumns, setSrcColumns] = useState<string[]>([]);
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       sql_statement_1: '',
@@ -46,6 +47,12 @@ const GenericSqlOpForm = ({
   } else {
     inputName = 'chained';
   }
+
+  const fetchAndSetSourceColumns = async () => {
+    if (node) {
+      setSrcColumns(node.data.output_columns);
+    }
+  };
 
   const handleSave = async (data: any) => {
     const finalNode = node;
@@ -65,7 +72,7 @@ const GenericSqlOpForm = ({
           other_inputs: [],
           config: opConfig,
           input_node_uuid: finalNode?.id || '',
-          source_columns: [],
+          source_columns: srcColumns,
         };
         operationNode = await httpPost(
           session,
@@ -77,7 +84,7 @@ const GenericSqlOpForm = ({
           op_type: operation.slug,
           other_inputs: [],
           config: opConfig,
-          source_columns: [],
+          source_columns: srcColumns,
         };
         operationNode = await httpPut(
           session,
@@ -109,7 +116,9 @@ const GenericSqlOpForm = ({
           .filter((model): model is DbtModelResponse => model !== undefined) || []
       );
 
-      const { sql_statement_2, sql_statement_1 }: GenericDataConfig = operation_config.config;
+      const { sql_statement_2, sql_statement_1, source_columns }: GenericDataConfig =
+        operation_config.config;
+      setSrcColumns(source_columns);
 
       // pre-fill form
       reset({
@@ -127,6 +136,8 @@ const GenericSqlOpForm = ({
     if (node?.data.isDummy) return;
     if (['edit', 'view'].includes(action)) {
       fetchAndSetConfigForEdit();
+    } else {
+      fetchAndSetSourceColumns();
     }
   }, [session, node]);
 
