@@ -114,9 +114,9 @@ const ClauseOperands = ({
       {operandFields
         .slice(
           0,
-          ['IS NULL', 'IS NOT NULL'].includes(data.logicalOp?.id)
+          ['IS NULL', 'IS NOT NULL'].includes(data.logicalOp?.id || '')
             ? 0
-            : data.logicalOp?.id === 'between'
+            : (data.logicalOp?.id || '') === 'between'
               ? 2
               : 1
         )
@@ -297,14 +297,14 @@ const CaseWhenOpForm = ({
         when_clauses: data.clauses.map((clause: clauseType) => {
           return {
             column: clause.filterCol,
-            operands: ['IS NULL', 'IS NOT NULL'].includes(clause.logicalOp?.id)
+            operands: ['IS NULL', 'IS NOT NULL'].includes(clause.logicalOp?.id || '')
               ? [] // No operands for null checks
               : clause.operands
                   .map((op: { type: string; col_val: string; const_val: string }) => ({
                     value: op.type === 'col' ? op.col_val : parseStringForNull(op.const_val),
                     is_col: op.type === 'col',
                   }))
-                  .slice(0, clause.logicalOp?.id === 'between' ? 2 : 1),
+                  .slice(0, (clause.logicalOp?.id || '') === 'between' ? 2 : 1),
             then: {
               value:
                 clause.then.type === 'col'
@@ -312,7 +312,7 @@ const CaseWhenOpForm = ({
                   : parseStringForNull(clause.then.const_val),
               is_col: clause.then.type === 'col',
             },
-            operator: clause.logicalOp?.id,
+            operator: clause.logicalOp?.id || '',
           };
         }),
         else_clause: {
