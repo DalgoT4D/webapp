@@ -78,6 +78,8 @@ const WhereFilterOpForm = ({
 
   const radioValue = watch('operand.type');
   const advanceFilter = watch('advanceFilter');
+  const logicalOp = watch('logicalOp');
+  const isNullOperator = ['IS NULL', 'IS NOT NULL'].includes(logicalOp?.id);
 
   const fetchAndSetSourceColumns = async () => {
     if (node) {
@@ -95,13 +97,15 @@ const WhereFilterOpForm = ({
           {
             column: data.filterCol,
             operator: data.logicalOp.id,
-            operand: {
-              value:
-                data.operand.type === 'col'
-                  ? data.operand.col_val
-                  : parseStringForNull(data.operand.const_val),
-              is_col: data.operand.type === 'col',
-            },
+            operand: ['IS NULL', 'IS NOT NULL'].includes(data.logicalOp.id)
+              ? null // No operand for null checks
+              : {
+                  value:
+                    data.operand.type === 'col'
+                      ? data.operand.col_val
+                      : parseStringForNull(data.operand.const_val),
+                  is_col: data.operand.type === 'col',
+                },
           },
         ],
         sql_snippet: data.sql_snippet,
@@ -167,13 +171,15 @@ const WhereFilterOpForm = ({
         clauseFields = {
           filterCol: column,
           logicalOp: LogicalOperators.find((op) => op.id === operator),
-          operand: operand
-            ? {
-                type: operand.is_col ? 'col' : 'val',
-                col_val: operand.is_col ? operand.value : '',
-                const_val: !operand.is_col ? operand.value : '',
-              }
-            : { type: 'col', col_val: '', const_val: '' },
+          operand: ['IS NULL', 'IS NOT NULL'].includes(operator)
+            ? { type: 'val', col_val: '', const_val: '' } // Default structure for null operators
+            : operand
+              ? {
+                  type: operand.is_col ? 'col' : 'val',
+                  col_val: operand.is_col ? operand.value : '',
+                  const_val: !operand.is_col ? operand.value : '',
+                }
+              : { type: 'col', col_val: '', const_val: '' },
         };
       }
 
@@ -251,75 +257,79 @@ const WhereFilterOpForm = ({
               )}
             />
             <Box sx={{ m: 2 }} />
-            <Controller
-              name={`operand.type`}
-              control={control}
-              render={({ field }) => {
-                return (
-                  <RadioGroup
-                    {...field}
-                    defaultValue="col"
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      gap: '20px',
+            {!isNullOperator && (
+              <>
+                <Controller
+                  name={`operand.type`}
+                  control={control}
+                  render={({ field }) => {
+                    return (
+                      <RadioGroup
+                        {...field}
+                        defaultValue="col"
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          gap: '20px',
+                        }}
+                      >
+                        <FormControlLabel
+                          value="col"
+                          control={<Radio />}
+                          label="Column"
+                          disabled={isNonAdancedFieldsDisabled}
+                        />
+                        <FormControlLabel
+                          value="val"
+                          control={<Radio />}
+                          label="Value"
+                          disabled={isNonAdancedFieldsDisabled}
+                        />
+                      </RadioGroup>
+                    );
+                  }}
+                />
+                {radioValue === 'col' ? (
+                  <Controller
+                    control={control}
+                    rules={{
+                      required: advanceFilter === 'no' && 'Column is required',
                     }}
-                  >
-                    <FormControlLabel
-                      value="col"
-                      control={<Radio />}
-                      label="Column"
-                      disabled={isNonAdancedFieldsDisabled}
-                    />
-                    <FormControlLabel
-                      value="val"
-                      control={<Radio />}
-                      label="Value"
-                      disabled={isNonAdancedFieldsDisabled}
-                    />
-                  </RadioGroup>
-                );
-              }}
-            />
-            {radioValue === 'col' ? (
-              <Controller
-                control={control}
-                rules={{
-                  required: advanceFilter === 'no' && 'Column is required',
-                }}
-                key="operand.col_val"
-                name="operand.col_val"
-                render={({ field, fieldState }) => (
-                  <Autocomplete
-                    {...field}
-                    data-testid="checkAgainstColumn"
-                    error={!!fieldState.error}
-                    helperText={fieldState.error?.message}
-                    fieldStyle="transformation"
-                    options={srcColumns}
-                    disabled={isNonAdancedFieldsDisabled}
-                    placeholder="Select column*"
+                    key="operand.col_val"
+                    name="operand.col_val"
+                    render={({ field, fieldState }) => (
+                      <Autocomplete
+                        {...field}
+                        data-testid="checkAgainstColumn"
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
+                        fieldStyle="transformation"
+                        options={srcColumns}
+                        disabled={isNonAdancedFieldsDisabled}
+                        placeholder="Select column*"
+                      />
+                    )}
+                  />
+                ) : (
+                  <Controller
+                    control={control}
+                    key="operand.const_val"
+                    name="operand.const_val"
+                    render={({ field, fieldState }) => (
+                      <Input
+                        {...field}
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
+                        fieldStyle="transformation"
+                        label=""
+                        sx={{ padding: '0' }}
+                        placeholder="Enter the value"
+                        disabled={isNonAdancedFieldsDisabled}
+                      />
+                    )}
                   />
                 )}
-              />
-            ) : (
-              <Controller
-                control={control}
-                key="operand.const_val"
-                name="operand.const_val"
-                render={({ field, fieldState }) => (
-                  <Input
-                    {...field}
-                    error={!!fieldState.error}
-                    helperText={fieldState.error?.message}
-                    fieldStyle="transformation"
-                    label=""
-                    sx={{ padding: '0' }}
-                    placeholder="Enter the value"
-                    disabled={isNonAdancedFieldsDisabled}
-                  />
-                )}
-              />
+              </>
             )}
             <Box sx={{ m: 2 }} />
             <Box
