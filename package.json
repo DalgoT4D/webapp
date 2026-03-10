@@ -16,7 +16,7 @@
     "format:write": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\" \"cypress/**/*.{js,jsx,ts,tsx}\" && git add ."
   },
   "dependencies": {
-    "@amplitude/analytics-browser": "^2.17.6",
+    "@amplitude/analytics-browser": "^2.21.1",
     "@dagrejs/dagre": "^1.1.5",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
