@@ -32,6 +32,7 @@ interface CreateConnectionFormProps {
   setShowForm: (...args: any) => any;
   setConnectionId: (...args: any) => any;
   readonly?: boolean;
+  preselectedSourceId?: string;
 }
 
 type CursorFieldConfig = {
@@ -69,6 +70,7 @@ const CreateConnectionForm = ({
   showForm,
   setShowForm,
   readonly = false, // by default
+  preselectedSourceId,
 }: CreateConnectionFormProps) => {
   const { data: session }: any = useSession();
   const globalContext = useContext(GlobalContext);
@@ -244,8 +246,16 @@ const CreateConnectionForm = ({
         id: element.sourceId,
       }));
       setSources(rows);
+
+      // Auto-select source if preselectedSourceId is provided
+      if (preselectedSourceId && !connectionId) {
+        const match = rows.find((r: any) => r.id === preselectedSourceId);
+        if (match) {
+          setValue('sources', match);
+        }
+      }
     }
-  }, [sourcesData]);
+  }, [sourcesData, preselectedSourceId]);
 
   // source selection changes
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
@@ -575,7 +585,7 @@ const CreateConnectionForm = ({
             rules={{ required: true }}
             render={({ field }: any) => (
               <Autocomplete
-                readOnly={connectionId ? true : false}
+                readOnly={!!connectionId || !!preselectedSourceId}
                 disabled={readonly}
                 data-testid="sourceList"
                 options={sources}
