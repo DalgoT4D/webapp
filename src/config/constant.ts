@@ -30,9 +30,6 @@ export const demoAccDestSchema = process.env.NEXT_PUBLIC_DEMO_ACCOUNT_DEST_SCHEM
 // Product walkthrough for demo account
 export const demoProductWalkthrough = process.env.NEXT_PUBLIC_DEMO_WALKTHROUGH_ENABLED || false;
 
-// alpha features
-export const enableLogSummaries = process.env.NEXT_PUBLIC_ENABLE_LOG_SUMMARIES;
-
 // Airbyte job statuses
 export const AIRBYTE_JOB_STATUS_FAILED = 'failed';
 export const AIRBYTE_JOB_STATUS_SUCCEEDED = 'succeeded';
