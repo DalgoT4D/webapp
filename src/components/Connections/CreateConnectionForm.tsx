@@ -75,6 +75,7 @@ const CreateConnectionForm = ({
   const { register, handleSubmit, control, watch, reset, setValue } = useForm({
     defaultValues: {
       name: '',
+      description: '',
       sources: { label: '', id: '' },
       destinations: { label: '', id: '' },
       destinationSchema: globalContext?.CurrentOrg.state.is_demo ? demoAccDestSchema : 'staging',
@@ -208,6 +209,7 @@ const CreateConnectionForm = ({
         try {
           const data: any = await httpGet(session, `airbyte/v1/connections/${connectionId}`);
           setValue('name', data?.name);
+          setValue('description', data?.description || '');
           setValue('sources', {
             label: data?.source.name,
             id: data?.source.id,
@@ -328,6 +330,7 @@ const CreateConnectionForm = ({
     // remove the cursorFieldConfig key before posting
     const payload: any = {
       name: data.name,
+      description: data.description,
       sourceId: data.sources.id,
       streams: sourceStreams.map((stream: SourceStream) => {
         return {
@@ -553,6 +556,21 @@ const CreateConnectionForm = ({
             required
             name="name"
             disabled={readonly}
+          ></Input>
+
+          <Box sx={{ m: 2 }} />
+
+          <Input
+            data-testid="connectionDescription"
+            sx={{ width: '100%' }}
+            label="Description (Optional)"
+            variant="outlined"
+            register={register}
+            name="description"
+            disabled={readonly}
+            multiline
+            rows={2}
+            inputProps={{ maxLength: 100 }}
           ></Input>
 
           <Box sx={{ m: 2 }} />
