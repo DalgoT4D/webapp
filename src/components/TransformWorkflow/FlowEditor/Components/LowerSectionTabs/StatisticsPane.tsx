@@ -51,6 +51,8 @@ const useDebounce = (value: number, delay: number) => {
 
 interface StatisticsPaneProps {
   height: number;
+  schema?: string;
+  table?: string;
 }
 
 export interface DateTimeFilter {
@@ -141,7 +143,11 @@ export const pollTaskStatus = async (
   return new Promise(poll);
 };
 
-export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
+export const StatisticsPane: React.FC<StatisticsPaneProps> = ({
+  height,
+  schema: propSchema,
+  table: propTable,
+}) => {
   const [modelToPreview, setModelToPreview] = useState<PreviewTableData | null>();
 
   const debouncedHeight = useDebounce(height, 500);
@@ -384,14 +390,21 @@ export const StatisticsPane: React.FC<StatisticsPaneProps> = ({ height }) => {
     };
   }, []);
 
+  // If schema/table props are provided (modal mode), use them directly
   useEffect(() => {
+    if (propSchema && propTable) {
+      setModelToPreview({ schema: propSchema, table: propTable });
+    }
+  }, [propSchema, propTable]);
+
+  useEffect(() => {
+    if (propSchema && propTable) return; // Skip context-based updates in modal mode
     if (previewAction.type === 'preview' && previewAction.data) {
-      // Extract the dbtmodel from the CanvasNodeRenderData
       setModelToPreview(previewAction.data);
     } else if (previewAction.type === 'clear-preview') {
       setModelToPreview(null);
     }
-  }, [previewAction]);
+  }, [previewAction, propSchema, propTable]);
 
   useEffect(() => {
     if (modelToPreview) {

@@ -73,6 +73,8 @@ describe('UITransformTab', () => {
     fireEvent.click(editWorkflowButton);
 
     expect(screen.getByTestId('workflow-editor')).toBeInTheDocument();
+    // Floating close button should be present in the dialog
+    expect(screen.getByLabelText('close')).toBeInTheDocument();
   });
 
   it('renders with git connected state', () => {

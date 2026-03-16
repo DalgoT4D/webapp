@@ -126,8 +126,32 @@ const UITransformTab: React.FC<UITransformTabProps> = ({ onGitConnected, gitConn
       </Box>
 
       {/* Full-screen Workflow Editor Dialog */}
-      <Dialog fullScreen open={showWorkflow} TransitionComponent={Transition}>
-        <TopNavBar handleClose={handleCloseWorkflow} hideHeader={hideHeader} />
+      <Dialog
+        fullScreen
+        open={showWorkflow}
+        onClose={handleCloseWorkflow}
+        TransitionComponent={Transition}
+      >
+        {/* Floating close button replaces TopNavBar for full-screen canvas */}
+        {!hideHeader && (
+          <IconButton
+            onClick={handleCloseWorkflow}
+            aria-label="close"
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 2000,
+              backgroundColor: 'white',
+              border: '1px solid #E0E0E0',
+              '&:hover': {
+                backgroundColor: '#F5F5F5',
+              },
+            }}
+          >
+            <Close />
+          </IconButton>
+        )}
         {showWorkflow && <WorkflowEditor onClose={handleCloseWorkflow} />}
       </Dialog>
     </Box>

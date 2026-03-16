@@ -119,6 +119,8 @@ export interface DbtProjectGraphV2Response {
  */
 export interface CanvasNodeRenderData extends CanvasNodeDataResponse {
   isDummy: boolean;
+  isHighlighted?: boolean;
+  isDimmed?: boolean;
 }
 
 export interface CanvasNodeRender {
