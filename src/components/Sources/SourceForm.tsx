@@ -283,7 +283,7 @@ export const SourceForm: React.FC<SourceFormProps> = ({
     }
   }, [sourceId, reset]);
 
-  // Helper function to clean config by removing empty start_date
+  // Helper function to clean config by removing empty start_date and reader_options
   const cleanConfig = (config: Record<string, any>): Record<string, any> => {
     const cleaned = { ...config };
 
@@ -294,6 +294,15 @@ export const SourceForm: React.FC<SourceFormProps> = ({
       cleaned.start_date === undefined
     ) {
       delete cleaned.start_date;
+    }
+
+    // Remove reader_options if it's an empty string.
+    // In Airbyte's File/Excel source, reader_options is a JSON-encoded string
+    // field; the backend rejects "" with "Field reader_options is not valid
+    // JSON object" (see issue #1648). Dropping the empty value lets the
+    // backend fall back to its default (equivalent to {}).
+    if (cleaned.reader_options === '') {
+      delete cleaned.reader_options;
     }
 
     return cleaned;
