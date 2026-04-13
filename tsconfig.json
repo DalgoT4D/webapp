@@ -17,9 +17,9 @@
     "types": ["jest", "@testing-library/jest-dom"],
     "paths": {
       "@/*": ["./src/*"],
-      "react": ["./node_modules/@types/react"],
-    },
+      "react": ["./node_modules/@types/react"]
+    }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "./jest.setup.ts"],
-  "exclude": ["cypress.config.ts", "cypress", "node_modules"],
+  "exclude": ["cypress.config.ts", "cypress", "node_modules"]
 }

@@ -34,6 +34,31 @@ interface SourceFormState {
   config: Record<string, any>;
 }
 
+// Exported for testability — a pure transform with no component-state deps.
+export const cleanConfig = (config: Record<string, any>): Record<string, any> => {
+  const cleaned = { ...config };
+
+  // Remove start_date if it's empty or null
+  if (
+    cleaned.start_date === '' ||
+    cleaned.start_date === null ||
+    cleaned.start_date === undefined
+  ) {
+    delete cleaned.start_date;
+  }
+
+  // Remove reader_options if it's an empty string.
+  // In Airbyte's File/Excel source, reader_options is a JSON-encoded string
+  // field; the backend rejects "" with "Field reader_options is not valid
+  // JSON object" (see issue #1648). Dropping the empty value lets the
+  // backend fall back to its default (equivalent to {}).
+  if (cleaned.reader_options === '') {
+    delete cleaned.reader_options;
+  }
+
+  return cleaned;
+};
+
 export const SourceForm: React.FC<SourceFormProps> = ({
   mutate,
   showForm,
@@ -282,31 +307,6 @@ export const SourceForm: React.FC<SourceFormProps> = ({
       setPendingFormData(null); // Reset pending form data
     }
   }, [sourceId, reset]);
-
-  // Helper function to clean config by removing empty start_date and reader_options
-  const cleanConfig = (config: Record<string, any>): Record<string, any> => {
-    const cleaned = { ...config };
-
-    // Remove start_date if it's empty or null
-    if (
-      cleaned.start_date === '' ||
-      cleaned.start_date === null ||
-      cleaned.start_date === undefined
-    ) {
-      delete cleaned.start_date;
-    }
-
-    // Remove reader_options if it's an empty string.
-    // In Airbyte's File/Excel source, reader_options is a JSON-encoded string
-    // field; the backend rejects "" with "Field reader_options is not valid
-    // JSON object" (see issue #1648). Dropping the empty value lets the
-    // backend fall back to its default (equivalent to {}).
-    if (cleaned.reader_options === '') {
-      delete cleaned.reader_options;
-    }
-
-    return cleaned;
-  };
 
   const handleSaveSource = async () => {
     if (!pendingFormData) return;
