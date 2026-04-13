@@ -14,7 +14,6 @@ yarn install
 This project uses `Prettier` for code formatting to maintain consistent style across all JavaScript and TypeScript files.
 `Husky` is used as a pre-commit hook. It automatically formats the code and adds the changes to the commit if any formatting inconsistencies are found.
 
-
 ## Run the development server
 
 You will need to run the [Django backend](https://github.com/DalgoT4D/DDP_backend). Once that is running, specify its URL in the `.env` under
@@ -58,15 +57,19 @@ Make sure you have docker and docker compose installed.
 
 ### Step 2: Build the Docker image
 
-The env varibales will be picked up from the .env file during the yarn build stage. This will copy all the env variables starting with NEXT_PUBLIC_ (that get embedd into the javascript code). The env varibales starting without NEXT_PUBLIC_ will be picked up during run time. 
-Run the script: 
+The env varibales will be picked up from the .env file during the yarn build stage. This will copy all the env variables starting with NEXT*PUBLIC* (that get embedd into the javascript code). The env varibales starting without NEXT*PUBLIC* will be picked up during run time.
+Run the script:
+
 ```bash
 bash docker-build.sh "image_name:tag"
 ```
+
 Once the image is built, add that image_name:tag to the Docker/docker-compose.yaml file
 
 ### Step 3: Start the application
+
 Run the script:
+
 ```bash
 bash docker-compose.sh
 ```
